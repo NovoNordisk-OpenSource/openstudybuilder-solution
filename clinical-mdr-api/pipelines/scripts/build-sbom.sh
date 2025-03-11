@@ -48,10 +48,6 @@ temp_files="$temp_files $package_list"
 pip list --format freeze > "$package_list"
 
 {
-#    echo '```'
-#    pipenv graph
-#    echo '```'
-#} || {
     echo "|            Package             |       Version        |"
     echo "|--------------------------------|----------------------|"
     awk -F == '{ printf("| %-30s | %-20s |\n", $1, $2) }' "$package_list"
@@ -66,7 +62,7 @@ EOF
 
 all_license_files="$(mktemp)" || fatal "couldn't get a temporary file"
 temp_files="$temp_files $all_license_files"
-find "$search_dirs" -iregex ".*\(licen[cs]e\|copying\).*" -type f > "$all_license_files"
+find "$search_dirs" -iregex ".*\(licen[cs]e\|copying\).*" -type f ! -iname "*.py" ! -iname "*.pyc" > "$all_license_files"
 
 while IFS="=" read -a line; do
     # actually this can find multiple files

@@ -1,8 +1,8 @@
 ## Open-source Licenses for OpenStudyBuilder Project
 
 The OpenStudyBuilder Project uses different licenses for different components. The overall project and binary distribution license is GPLv3, but single components have a different license.
-Please refere to the corresponding component subfolders together with their LICENSE.md file. The different components contains software licensed under different
-licenses when compiled, refer to the sbom.md file within the corresponding component folder for further
+
+Please refere to the corresponding component subfolders together with their LICENSE.md file. The different components contains software licensed under different licenses when compiled, refer to the sbom.md file within the corresponding component folder for further
 information and full license texts.
 
 ### Component Folders and license overview
@@ -10,18 +10,19 @@ information and full license texts.
 System Component (License) | Location
 -- | --
 OpenStudyBuilder App (GPLv3) | studybuilder
-OpenStudyBuilder Documentation Portal (CC-BY-4.0 for content and MIT for source code) | Documentation-portal
-Clinical MDR API Specification (MIT) | Clinical-mdr-api (swagger documentation)
-Clinical MDR API (GPLv3) | Clinical-mdr-api
-Clinical MDR (MIT) | Neo4j-mdr-db (does not include Neo4j database which is needed as third party software)
+OpenStudyBuilder Documentation Portal (CC-BY-4.0 for content and MIT for source code) | documentation-portal
+Clinical MDR API Specification (MIT) | clinical-mdr-api (swagger documentation)
+Clinical MDR API (GPLv3) | clinical-mdr-api
+Clinical MDR (MIT) | neo4j-mdr-db (does not include Neo4j database which is needed as third party software as pre-requisite)
 Sponsor Data Import (MIT) | studybuilder-import
 Data Export (MIT) | studybuilder-export
-Standards Import (GPLv3) | Mdr-standards-import
+Standards Import (GPLv3) | mdr-standards-import
 DB Schema Migration (MIT) | db-schema-migration
+System Tests (MIT) | system-tests
 
 ## License Terms (GPLv3)
 
-Copyright (C) 2022 Novo Nordisk A/S, Danish company registration no. 24256790
+Copyright (C) 2025 Novo Nordisk A/S, Danish company registration no. 24256790
 
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 

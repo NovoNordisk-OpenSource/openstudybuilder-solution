@@ -53,7 +53,7 @@
 | orderly-set                    | 5.2.2                |
 | pandas                         | 2.2.3                |
 | pillow                         | 11.0.0               |
-| pip                            | 24.3.1               |
+| pip                            | 25.0.1               |
 | portalocker                    | 2.10.1               |
 | proto-plus                     | 1.25.0               |
 | protobuf                       | 5.29.2               |

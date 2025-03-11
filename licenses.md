@@ -24,11 +24,13 @@ The OpenStudyBuilder App frontend can be released under GPLv3 License.
 | certifi (2024.12.14) | MPL v. 2.0 | OK |
 | hypothesis (6.115.6) | MPL v. 2.0 | OK |
 | portalocker (2.10.1) | Python License | OK |
+| pyphen (0.17.0) | GPL 2.0+/LGPL 2.1+/MPL 1.1 tri-license | OK |
 | typing_extensions (4.12.2) | Python License | OK |
+| usdm (0.53.0) | GPL 3.0 | OK |
 | yattag (1.16.1) | LGPL 3.0 | OK |
 
 As the licenses consumed within the Clinical MDR API is using MPL version 2.0 it is assessed that it poses no issue to release in combination with GPL and GPL derivatives since version 2.0 of the MPL license was rewritten to allow for combination with the GPL versions as well as derivatives of GPL.  
-The Python Software Foundation License, also referred to as the PSFL, is a permissive license and can be combined with sub-components that are licensed under GPL and GPL derivatives.  
+The Python Software Foundation License, also referred to as the PSFL, is a permissive license and can be combined with sub-components that are licensed under GPL and GPL derivatives. The GPL 2.0+ includes also all higher GPL version, for this also GPLv3. GPLv3 is compatible with GPLv3.
 **Conclusion**  
 The Clinical MDR API can be released under GPLv3 License.
 

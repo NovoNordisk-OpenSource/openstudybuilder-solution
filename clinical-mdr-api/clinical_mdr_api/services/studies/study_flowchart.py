@@ -1423,6 +1423,15 @@ class StudyFlowchartService:
                 )
                 rows.append(activity_group_row)
 
+            else:
+                # Unhide ActivityGroup row if any of the StudyActivityGroup members requests to show it.
+                if getattr(
+                    study_selection_activity,
+                    "show_activity_group_in_protocol_flowchart",
+                    True,
+                ):
+                    activity_group_row.hide = False
+
             # Add Activity Sub-Group row
             activity_subgroup_uid = (
                 study_selection_activity.study_activity_subgroup.activity_subgroup_uid
@@ -1436,6 +1445,15 @@ class StudyFlowchartService:
                     study_selection_activity, num_cols
                 )
                 rows.append(activity_subgroup_row)
+
+            else:
+                # Unhide ActivitySubGroup row if any of the StudyActivitySubGroup members requests to show it.
+                if getattr(
+                    study_selection_activity,
+                    "show_activity_subgroup_in_protocol_flowchart",
+                    True,
+                ):
+                    activity_subgroup_row.hide = False
 
             # Add Activity row
             study_selection_id = study_selection_activity.study_activity_uid

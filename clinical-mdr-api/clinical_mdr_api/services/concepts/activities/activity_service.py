@@ -19,6 +19,7 @@ from clinical_mdr_api.models.concepts.activities.activity import (
     ActivityCreateInput,
     ActivityEditInput,
     ActivityFromRequestInput,
+    ActivityGrouping,
     ActivityOverview,
     ActivityRequestRejectInput,
     ActivityVersion,
@@ -48,15 +49,69 @@ class ActivityService(ConceptGenericService[ActivityAR]):
     def _transform_aggregate_root_to_pydantic_model(
         self, item_ar: ActivityAR
     ) -> Activity:
-        return Activity.from_activity_ar(
-            activity_ar=item_ar,
-            find_activity_subgroup_by_uid=self._repos.activity_subgroup_repository.find_by_uid_2,
-            find_activity_group_by_uid=self._repos.activity_group_repository.find_by_uid_2,
+        return Activity.from_activity_ar(activity_ar=item_ar)
+
+    def _to_activity_grouping_vo(
+        self, activity_groupings: list[ActivityGrouping | ActivityGroupingVO]
+    ) -> list[ActivityGroupingVO]:
+        """Converts to a list of ActivityGroupingVOs with name property resolve from the db"""
+
+        activity_grouping_vos = []
+
+        # collect activity group and subgroup uids
+        activity_group_uids = set()
+        activity_subgroup_uids = set()
+        for activity_grouping in activity_groupings:
+            activity_group_uids.add(activity_grouping.activity_group_uid)
+            activity_subgroup_uids.add(activity_grouping.activity_subgroup_uid)
+
+        activity_groups, _ = self._repos.activity_group_repository.get_all_optimized(
+            filter_by={"uid": {"v": list(activity_group_uids), "op": "in"}},
         )
+        activity_groups_by_uid = {group.uid: group for group in activity_groups}
+
+        activity_subgroups, _ = (
+            self._repos.activity_subgroup_repository.get_all_optimized(
+                filter_by={"uid": {"v": list(activity_subgroup_uids), "op": "in"}},
+            )
+        )
+        activity_subgroups_by_uid = {group.uid: group for group in activity_subgroups}
+
+        # create ActivityGroupingVO-s with names
+        for activity_grouping in activity_groupings:
+            activity_grouping_vos.append(
+                ActivityGroupingVO(
+                    activity_group_uid=activity_grouping.activity_group_uid,
+                    activity_group_name=(
+                        activity_groups_by_uid[
+                            activity_grouping.activity_group_uid
+                        ].name
+                        if activity_grouping.activity_group_uid
+                        in activity_groups_by_uid
+                        else None
+                    ),
+                    activity_subgroup_uid=activity_grouping.activity_subgroup_uid,
+                    activity_subgroup_name=(
+                        activity_subgroups_by_uid[
+                            activity_grouping.activity_subgroup_uid
+                        ].name
+                        if activity_grouping.activity_subgroup_uid
+                        in activity_subgroups_by_uid
+                        else None
+                    ),
+                )
+            )
+
+        return activity_grouping_vos
 
     def _create_aggregate_root(
         self, concept_input: ActivityCreateInput, library
     ) -> _AggregateRootType:
+        activity_groupings = (
+            self._to_activity_grouping_vo(concept_input.activity_groupings)
+            if concept_input.activity_groupings
+            else []
+        )
         return ActivityAR.from_input_values(
             author_id=self.author_id,
             concept_vo=ActivityVO.from_repository_values(
@@ -67,17 +122,7 @@ class ActivityService(ConceptGenericService[ActivityAR]):
                 synonyms=concept_input.synonyms or [],
                 definition=concept_input.definition,
                 abbreviation=concept_input.abbreviation,
-                activity_groupings=(
-                    [
-                        ActivityGroupingVO(
-                            activity_group_uid=activity_grouping.activity_group_uid,
-                            activity_subgroup_uid=activity_grouping.activity_subgroup_uid,
-                        )
-                        for activity_grouping in concept_input.activity_groupings
-                    ]
-                    if concept_input.activity_groupings
-                    else []
-                ),
+                activity_groupings=activity_groupings,
                 request_rationale=concept_input.request_rationale,
                 is_request_final=concept_input.is_request_final,
                 is_data_collected=concept_input.is_data_collected,
@@ -106,13 +151,7 @@ class ActivityService(ConceptGenericService[ActivityAR]):
                 definition=concept_edit_input.definition,
                 abbreviation=concept_edit_input.abbreviation,
                 activity_groupings=(
-                    [
-                        ActivityGroupingVO(
-                            activity_group_uid=activity_grouping.activity_group_uid,
-                            activity_subgroup_uid=activity_grouping.activity_subgroup_uid,
-                        )
-                        for activity_grouping in concept_edit_input.activity_groupings
-                    ]
+                    self._to_activity_grouping_vo(concept_edit_input.activity_groupings)
                     if concept_edit_input.activity_groupings
                     else []
                 ),

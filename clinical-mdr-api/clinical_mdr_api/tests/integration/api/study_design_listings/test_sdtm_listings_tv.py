@@ -174,7 +174,7 @@ def test_tv_listing_versioning(api_client):
 
     # get all visits
     response = api_client.get(
-        f"/studies/{study_uid}/study-visit/audit-trail/",
+        f"/studies/{study_uid}/study-visits/audit-trail/",
     )
     res = response.json()
     assert_response_status_code(response, 200)

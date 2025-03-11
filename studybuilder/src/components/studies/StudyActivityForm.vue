@@ -96,43 +96,47 @@
           :filters-modify-function="modifyFilters"
           @filter="getActivities"
         >
-        <template #beforeSwitches="">
-          <v-switch
-            v-model="selectedOnly"
-            color="primary"
-            :label="$t('StudyActivityForm.show_selected')"
-            data-cy="show-selected"
-            class="mt-4"
-            @update:model-value="switchTableItems"
-          />
-        </template>
-        <template #[`header.data-table-select`] >
-          <v-btn
-            :disabled="exchangeMode"
-            data-cy="copy-all-activities"
-            icon="mdi-content-copy"
-            color="nnWhite"
-            :title="$t('StudyActivityForm.copy_all_activities')"
-            variant="text"
-            @click="selectAllStudyActivities()"
-          />
-        </template>
-        <template
-          #[`item.data-table-select`]="{ internalItem, isSelected, toggleSelect }"
-        >
-          <v-checkbox-btn
-            :model-value="isSelected(internalItem)"
-            color="primary"
-            data-cy="select-activity"
-            :disabled="
-              isStudyActivitySelected(internalItem.raw) ||
-              isStudyActivityRequested(internalItem.raw) ||
-              !isGroupingValid(internalItem.raw) ||
-              multipleSelectedInExchangeMode(internalItem.raw)
-            "
-            @update:model-value="toggleSelect(internalItem)"
-          ></v-checkbox-btn>
-        </template>
+          <template #beforeSwitches="">
+            <v-switch
+              v-model="selectedOnly"
+              color="primary"
+              :label="$t('StudyActivityForm.show_selected')"
+              data-cy="show-selected"
+              class="mt-4"
+              @update:model-value="switchTableItems"
+            />
+          </template>
+          <template #[`header.data-table-select`]>
+            <v-btn
+              :disabled="exchangeMode"
+              data-cy="copy-all-activities"
+              icon="mdi-content-copy"
+              color="nnWhite"
+              :title="$t('StudyActivityForm.copy_all_activities')"
+              variant="text"
+              @click="selectAllStudyActivities()"
+            />
+          </template>
+          <template
+            #[`item.data-table-select`]="{
+              internalItem,
+              isSelected,
+              toggleSelect,
+            }"
+          >
+            <v-checkbox-btn
+              :model-value="isSelected(internalItem)"
+              color="primary"
+              data-cy="select-activity"
+              :disabled="
+                isStudyActivitySelected(internalItem.raw) ||
+                isStudyActivityRequested(internalItem.raw) ||
+                !isGroupingValid(internalItem.raw) ||
+                multipleSelectedInExchangeMode(internalItem.raw)
+              "
+              @update:model-value="toggleSelect(internalItem)"
+            ></v-checkbox-btn>
+          </template>
           <template #[`item.activity.is_data_collected`]="{ item }">
             <div v-if="item.activity">
               {{ $filters.yesno(item.activity.is_data_collected) }}
@@ -163,66 +167,94 @@
           :filters-modify-function="modifyFilters"
           @filter="getActivities"
         >
-        <template #beforeSwitches="">
-          <v-switch
-            v-model="selectedOnly"
-            color="primary"
-            :label="$t('StudyActivityForm.show_selected')"
-            data-cy="show-selected"
-            class="mt-4"
-            @update:model-value="switchTableItems"
-          />
-        </template>
-        <template #[`item.soa_group`]="{ item }">
-          <v-autocomplete
-            v-model="item.flowchart_group"
-            :label="$t('StudyActivityForm.flowchart_group_title')"
-            data-cy="flowchart-group"
-            :items="flowchartGroups"
-            item-title="name.sponsor_preferred_name"
-            style="min-width: 250px;"
-            class="mt-2 mb-n4"
-            rounded="lg"
-            variant="outlined"
-            color="nnBaseBlue"
-            density="compact"
-            return-object
-            clearable
-            :disabled="
-              isActivitySelected(item) ||
-              isActivityNotFinal(item) ||
-              isActivityRequested(item) ||
-              multipleSelectedInExchangeMode(item)
-            "
-          />
-        </template>
-        <template #[`header.data-table-select`] >
-          <v-btn
-            :disabled="exchangeMode"
-            icon="mdi-content-copy"
-            color="nnWhite"
-            data-cy="copy-all-activities"
-            :title="$t('StudyActivityForm.copy_all_activities')"
-            variant="text"
-            @click="selectAllActivities()"
-          />
-        </template>
-        <template
-          #[`item.data-table-select`]="{ internalItem, isSelected, toggleSelect }"
-        >
-          <v-checkbox-btn
-            :model-value="isSelected(internalItem)"
-            color="primary"
-            data-cy="select-activity"
-            :disabled="
-              isActivitySelected(internalItem.raw) ||
-              isActivityNotFinal(internalItem.raw) ||
-              isActivityRequested(internalItem.raw) ||
-              multipleSelectedInExchangeMode(internalItem.raw)
-            "
-            @update:model-value="toggleSelect(internalItem)"
-          ></v-checkbox-btn>
-        </template>
+          <template #beforeSwitches="">
+            <v-switch
+              v-model="selectedOnly"
+              color="primary"
+              :label="$t('StudyActivityForm.show_selected')"
+              data-cy="show-selected"
+              class="mt-6"
+              @update:model-value="switchTableItems"
+            />
+            <v-checkbox
+              v-model="sameGroup"
+              :label="$t('StudyActivityForm.use_the_same_group')"
+              class="mt-6 ml-10"
+              @update:model-value="clearSelectedGroups"
+            />
+            <v-autocomplete
+              v-if="sameGroup"
+              v-model="unifiedGroup"
+              :label="$t('StudyActivityForm.flowchart_group_title')"
+              :items="flowchartGroups"
+              item-title="name.sponsor_preferred_name"
+              style="min-width: 250px"
+              class="mt-6 ml-2"
+              rounded="lg"
+              variant="outlined"
+              color="nnBaseBlue"
+              density="compact"
+              :rules="[formRules.required]"
+              return-object
+              clearable
+            />
+          </template>
+          <template #[`item.soa_group`]="{ item }">
+            <v-autocomplete
+              v-model="item.flowchart_group"
+              :label="$t('StudyActivityForm.flowchart_group_title')"
+              data-cy="flowchart-group"
+              :items="flowchartGroups"
+              item-title="name.sponsor_preferred_name"
+              style="min-width: 250px"
+              class="mt-2 mb-n4"
+              rounded="lg"
+              variant="outlined"
+              color="nnBaseBlue"
+              density="compact"
+              return-object
+              clearable
+              :disabled="
+                sameGroup ||
+                isActivitySelected(item) ||
+                isActivityNotFinal(item) ||
+                isActivityRequested(item) ||
+                multipleSelectedInExchangeMode(item)
+              "
+              @update:model-value="pushActivityToSelected(item)"
+            />
+          </template>
+          <template #[`header.data-table-select`]>
+            <v-btn
+              :disabled="exchangeMode"
+              icon="mdi-content-copy"
+              color="nnWhite"
+              data-cy="copy-all-activities"
+              :title="$t('StudyActivityForm.copy_all_activities')"
+              variant="text"
+              @click="selectAllActivities()"
+            />
+          </template>
+          <template
+            #[`item.data-table-select`]="{
+              internalItem,
+              isSelected,
+              toggleSelect,
+            }"
+          >
+            <v-checkbox-btn
+              :model-value="isSelected(internalItem)"
+              color="primary"
+              data-cy="select-activity"
+              :disabled="
+                isActivitySelected(internalItem.raw) ||
+                isActivityNotFinal(internalItem.raw) ||
+                isActivityRequested(internalItem.raw) ||
+                multipleSelectedInExchangeMode(internalItem.raw)
+              "
+              @update:model-value="toggleSelect(internalItem)"
+            ></v-checkbox-btn>
+          </template>
           <template #[`item.is_data_collected`]="{ item }">
             {{ $filters.yesno(item.is_data_collected) }}
           </template>
@@ -267,7 +299,11 @@
                 color="nnBaseBlue"
                 density="compact"
                 clearable
-                :rules="form.activity_groupings[0].activity_group_uid ? [formRules.required] : []"
+                :rules="
+                  form.activity_groupings[0].activity_group_uid
+                    ? [formRules.required]
+                    : []
+                "
                 :disabled="
                   form.activity_groupings[0].activity_group_uid ? false : true
                 "
@@ -288,20 +324,20 @@
               />
             </v-col>
             <v-col cols="3">
-            <v-autocomplete
-              v-model="form.flowchart_group"
-              :label="$t('StudyActivityForm.flowchart_group_title')"
-              data-cy="flowchart-group"
-              :items="flowchartGroups"
-              :rules="[formRules.required]"
-              item-title="name.sponsor_preferred_name"
-              rounded="lg"
-              variant="outlined"
-              color="nnBaseBlue"
-              density="compact"
-              return-object
-              clearable
-            />
+              <v-autocomplete
+                v-model="form.flowchart_group"
+                :label="$t('StudyActivityForm.flowchart_group_title')"
+                data-cy="flowchart-group"
+                :items="flowchartGroups"
+                :rules="[formRules.required]"
+                item-title="name.sponsor_preferred_name"
+                rounded="lg"
+                variant="outlined"
+                color="nnBaseBlue"
+                density="compact"
+                return-object
+                clearable
+              />
             </v-col>
           </v-row>
           <v-row>
@@ -330,7 +366,9 @@
             </v-col>
           </v-row>
           <div v-if="activities.length > 0">
-            <span class="dialog-title">{{ $t('ActivityForms.similar_activity_title') }}</span>
+            <span class="dialog-title">{{
+              $t('ActivityForms.similar_activity_title')
+            }}</span>
             <v-alert
               color="nnGoldenSun200"
               icon="mdi-information-outline"
@@ -356,7 +394,7 @@
                   data-cy="flowchart-group"
                   :items="flowchartGroups"
                   item-title="name.sponsor_preferred_name"
-                  style="min-width: 250px;"
+                  style="min-width: 250px"
                   class="mt-2 mb-n4"
                   rounded="lg"
                   variant="outlined"
@@ -372,7 +410,7 @@
                   "
                 />
               </template>
-              <template #[`header.data-table-select`] >
+              <template #[`header.data-table-select`]>
                 <v-btn
                   :disabled="exchangeMode"
                   icon="mdi-content-copy"
@@ -383,7 +421,11 @@
                 />
               </template>
               <template
-                #[`item.data-table-select`]="{ internalItem, isSelected, toggleSelect }"
+                #[`item.data-table-select`]="{
+                  internalItem,
+                  isSelected,
+                  toggleSelect,
+                }"
               >
                 <v-checkbox-btn
                   :model-value="isSelected(internalItem)"
@@ -434,16 +476,16 @@ const studiesGeneralStore = useStudiesGeneralStore()
 const props = defineProps({
   exchangeMode: {
     type: Boolean,
-    default: false
+    default: false,
   },
   exchangeActivityUid: {
     type: String,
-    default: null
+    default: null,
   },
   order: {
     type: Number,
-    default: null
-  }
+    default: null,
+  },
 })
 
 const creationMode = ref('selectFromLibrary')
@@ -474,6 +516,8 @@ const selectionTable = ref()
 const selectionLibraryTable = ref()
 const selectedOnly = ref(false)
 const timeout = ref(null)
+const sameGroup = ref(false)
+const unifiedGroup = ref(null)
 
 const requestTypes = [
   {
@@ -490,7 +534,11 @@ const requestTypes = [
 
 const activityHeaders = [
   { title: t('_global.library'), key: 'library_name', noFilter: true },
-  { title: t('StudyActivityForm.flowchart_group'), key: 'soa_group', noFilter: true },
+  {
+    title: t('StudyActivityForm.flowchart_group'),
+    key: 'soa_group',
+    noFilter: true,
+  },
   {
     title: t('StudyActivity.activity_group'),
     key: 'activity_group.name',
@@ -503,7 +551,11 @@ const activityHeaders = [
     externalFilterSource: 'concepts/activities/activity-sub-groups$name',
     exludeFromHeader: ['is_data_collected'],
   },
-  { title: t('StudyActivity.activity'), key: 'name', exludeFromHeader: ['is_data_collected'], },
+  {
+    title: t('StudyActivity.activity'),
+    key: 'name',
+    exludeFromHeader: ['is_data_collected'],
+  },
   { title: t('StudyActivity.data_collection'), key: 'is_data_collected' },
   { title: t('_global.status'), key: 'status' },
 ]
@@ -630,7 +682,9 @@ function switchTableItems() {
   if (selectedOnly.value) {
     activities.value = selectedActivities.value
   } else {
-    creationMode.value === 'selectFromLibrary' ?  selectionLibraryTable.value.filterTable() : selectionTable.value.filterTable()
+    creationMode.value === 'selectFromLibrary'
+      ? selectionLibraryTable.value.filterTable()
+      : selectionTable.value.filterTable()
   }
 }
 
@@ -664,6 +718,18 @@ function placeholderSearch(filters) {
     timeout.value = setTimeout(() => {
       getActivities(filters)
     }, 500)
+  }
+}
+
+function clearSelectedGroups() {
+  selectedActivities.value.forEach((activity) => {
+    activity.flowchart_group = null
+  })
+}
+
+function pushActivityToSelected(item) {
+  if (!selectedActivities.value.find((activity) => activity.uid === item.uid)) {
+    selectedActivities.value.push(item)
   }
 }
 
@@ -784,7 +850,11 @@ function getActivities(filters, options) {
       activities.value = result
       if (selectedActivities.value.length > 0) {
         for (const sa of selectedActivities.value) {
-          activities.value[activities.value.indexOf(activities.value.find(ac => ac.item_key === sa.item_key))] = sa
+          activities.value[
+            activities.value.indexOf(
+              activities.value.find((ac) => ac.item_key === sa.item_key)
+            )
+          ] = sa
         }
       }
       activitiesTotal.value = resp.data.total
@@ -886,7 +956,11 @@ function getActivities(filters, options) {
     activities.value = items
     if (selectedActivities.value.length > 0) {
       for (const sa of selectedActivities.value) {
-        activities.value[activities.value.indexOf(activities.value.find(ac => ac.item_key === sa.item_key))] = sa
+        activities.value[
+          activities.value.indexOf(
+            activities.value.find((ac) => ac.item_key === sa.item_key)
+          )
+        ] = sa
       }
     }
     activitiesTotal.value = resp.data.total
@@ -922,7 +996,10 @@ function modifyFilters(jsonFilter, params, externalFilterSource) {
   }
   if (!externalFilterSource) {
     if (creationMode.value === 'selectFromStudies') {
-      jsonFilter['activity.is_used_by_legacy_instances'] = { v: [false], op: 'eq' }
+      jsonFilter['activity.is_used_by_legacy_instances'] = {
+        v: [false],
+        op: 'eq',
+      }
     } else {
       jsonFilter['is_used_by_legacy_instances'] = { v: [false], op: 'eq' }
     }
@@ -967,7 +1044,7 @@ function isGroupingValid(studyActivity) {
 
 function multipleSelectedInExchangeMode(item) {
   if (selectedActivities.value.length > 0 && props.exchangeMode) {
-    if(item && selectedActivities.value[0].uid === item.uid) {
+    if (item && selectedActivities.value[0].uid === item.uid) {
       return false
     }
     return true
@@ -1028,6 +1105,68 @@ function isStudyActivitySelected(studyActivity) {
   return selected !== undefined
 }
 
+function getCreationPayload(selectedItem) {
+  function getPayloadFromActivity() {
+    const result = {
+      soa_group_term_uid: sameGroup.value
+        ? unifiedGroup.value.term_uid
+        : selectedItem.flowchart_group.term_uid,
+      activity_uid: selectedItem.uid,
+      order: props.order,
+    }
+    if (form.value.activity_groupings) {
+      result.activity_group_uid = selectedItem.activity_group.uid
+      result.activity_subgroup_uid = selectedItem.activity_subgroup.uid
+    }
+    return result
+  }
+
+  function getPayloadFromStudyActivity() {
+    return {
+      soa_group_term_uid: selectedItem.study_soa_group.soa_group_term_uid,
+      activity_uid: selectedItem.activity.uid,
+      activity_group_uid: selectedItem.study_activity_group.activity_group_uid,
+      activity_subgroup_uid:
+        selectedItem.study_activity_subgroup.activity_subgroup_uid,
+      order: props.order,
+    }
+  }
+
+  const payloadFuncByCreationMode = {
+    selectFromStudies: getPayloadFromStudyActivity,
+    selectFromLibrary: getPayloadFromActivity,
+    createPlaceholder: getPayloadFromActivity,
+  }
+  return payloadFuncByCreationMode[creationMode.value]()
+}
+
+async function batchCreateStudyActivities() {
+  const operations = []
+  for (const item of selectedActivities.value) {
+    let payload = getCreationPayload(item)
+    operations.push({
+      method: 'POST',
+      content: payload,
+    })
+  }
+  await study.studyActivityBatchOperations(
+    studiesGeneralStore.selectedStudy.uid,
+    operations
+  )
+}
+
+async function exchangeStudyActivity() {
+  for (const item of selectedActivities.value) {
+    let payload = getCreationPayload(item)
+    payload.show_activity_in_protocol_flowchart = true
+    await study.exchangeStudyActivity(
+      studiesGeneralStore.selectedStudy.uid,
+      props.exchangeActivityUid,
+      payload
+    )
+  }
+}
+
 async function submit() {
   if (
     creationMode.value !== 'selectFromLibrary' &&
@@ -1068,7 +1207,10 @@ async function submit() {
         selectedActivities.value.push(activity)
       })
   }
-  if (!selectedActivities.value.length && creationMode.value !== 'createPlaceholder') {
+  if (
+    !selectedActivities.value.length &&
+    creationMode.value !== 'createPlaceholder'
+  ) {
     eventBusEmit('notification', {
       type: 'info',
       msg: t('StudyActivityForm.select_activities_info'),
@@ -1078,57 +1220,35 @@ async function submit() {
   }
 
   // Check if every activity has SoA group selected
-  if (['createPlaceholder', 'selectFromLibrary'].indexOf(creationMode.value) !== -1) {
-    for(const activity of selectedActivities.value) {
-      if (!activity.flowchart_group) {
-        eventBusEmit('notification', {
-          type: 'info',
-          msg: t('StudyActivityForm.soa_group_required_info'),
-        })
-        resetLoading.value += 1
-        return
+  if (
+    ['createPlaceholder', 'selectFromLibrary'].indexOf(creationMode.value) !==
+    -1
+  ) {
+    if (sameGroup.value && !unifiedGroup.value) {
+      eventBusEmit('notification', {
+        type: 'info',
+        msg: t('StudyActivityForm.soa_group_required_info'),
+      })
+      resetLoading.value += 1
+      return
+    } else if (!sameGroup.value) {
+      for (const activity of selectedActivities.value) {
+        if (!activity.flowchart_group) {
+          eventBusEmit('notification', {
+            type: 'info',
+            msg: t('StudyActivityForm.soa_group_required_info'),
+          })
+          resetLoading.value += 1
+          return
+        }
       }
     }
   }
   try {
-    for (const item of selectedActivities.value) {
-      let payload
-      if (
-        creationMode.value === 'selectFromLibrary' ||
-        creationMode.value === 'createPlaceholder'
-      ) {
-        payload = {
-          soa_group_term_uid: item.flowchart_group.term_uid,
-          activity_uid: item.uid,
-          order: props.order,
-        }
-        if (form.value.activity_groupings) {
-          payload.activity_group_uid = item.activity_group.uid
-          payload.activity_subgroup_uid = item.activity_subgroup.uid
-        }
-      } else {
-        payload = {
-          soa_group_term_uid: item.study_soa_group.soa_group_term_uid,
-          activity_uid: item.activity.uid,
-          activity_group_uid: item.study_activity_group.activity_group_uid,
-          activity_subgroup_uid:
-            item.study_activity_subgroup.activity_subgroup_uid,
-          order: props.order,
-        }
-      }
-      if (!props.exchangeMode) {
-        await study.createStudyActivity(
-          studiesGeneralStore.selectedStudy.uid,
-          payload
-        )
-      } else {
-        payload.show_activity_in_protocol_flowchart = true
-        await study.exchangeStudyActivity(
-          studiesGeneralStore.selectedStudy.uid,
-          props.exchangeActivityUid,
-          payload
-        )
-      }
+    if (!props.exchangeMode) {
+      await batchCreateStudyActivities()
+    } else {
+      await exchangeStudyActivity()
     }
   } catch (error) {
     stepper.value.loading = false

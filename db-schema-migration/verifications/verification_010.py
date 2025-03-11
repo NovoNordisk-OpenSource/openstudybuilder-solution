@@ -50,3 +50,6 @@ def test_migrate_user_initials_into_author_id_and_user_nodes():
 
 def test_migrate_unify_study_visit_window_units():
     test_migration_010.test_migrate_unify_study_visit_window_units(migration)
+
+def test_migrate_study_selection_metadata_merge():
+    test_migration_010.test_migrate_study_selection_metadata_merge(migration)

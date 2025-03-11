@@ -438,6 +438,7 @@ class StudyActivitySelectionService(StudyActivitySelectionBaseService):
             study_uid=study_uid,
             author_id=self.author,
             activity_subgroup_uid=activity_subgroup_uid,
+            activity_subgroup_name=activity_subgroup_ar.concept_vo.name,
             activity_subgroup_version=activity_subgroup_ar.item_metadata.version,
             generate_uid_callback=self._repos.study_activity_subgroup_repository.generate_uid,
         )
@@ -498,21 +499,17 @@ class StudyActivitySelectionService(StudyActivitySelectionBaseService):
             new_selection, _ = selection_aggregate.get_specific_object_selection(
                 study_selection_uid=current_study_activity.study_activity_subgroup_uid
             )
-            is_activity_subgroup_changed = (
-                current_study_activity.activity_subgroup_uid
-                != selection_create_input.activity_subgroup_uid
+
+            self._validate_activity_subgroup(
+                activity_subgroup_uid=activity_subgroup_uid
             )
-            if is_activity_subgroup_changed:
-                self._validate_activity_subgroup(
-                    activity_subgroup_uid=activity_subgroup_uid
-                )
-                # create new VO to add
-                new_selection = self._get_or_create_study_activity_subgroup(
-                    study_uid=study_uid,
-                    activity_subgroup_uid=activity_subgroup_uid,
-                    activity_group_uid=activity_group_uid,
-                    soa_group_term_uid=soa_group_term_uid,
-                )
+            # create new VO to add
+            new_selection = self._get_or_create_study_activity_subgroup(
+                study_uid=study_uid,
+                activity_subgroup_uid=activity_subgroup_uid,
+                activity_group_uid=activity_group_uid,
+                soa_group_term_uid=soa_group_term_uid,
+            )
 
         return new_selection
 
@@ -557,6 +554,7 @@ class StudyActivitySelectionService(StudyActivitySelectionBaseService):
             study_uid=study_uid,
             author_id=self.author,
             activity_group_uid=activity_group_uid,
+            activity_group_name=activity_group_ar.concept_vo.name,
             activity_group_version=activity_group_ar.item_metadata.version,
             generate_uid_callback=self._repos.study_activity_group_repository.generate_uid,
         )
@@ -590,18 +588,15 @@ class StudyActivitySelectionService(StudyActivitySelectionBaseService):
             new_selection, _ = selection_aggregate.get_specific_object_selection(
                 study_selection_uid=current_study_activity.study_activity_group_uid
             )
-            is_activity_group_changed = (
-                current_study_activity.activity_group_uid != activity_group_uid
+
+            self._validate_activity_group(activity_group_uid=activity_group_uid)
+            # create new VO to add
+            new_selection = self._get_or_create_study_activity_group(
+                study_uid=study_uid,
+                activity_subgroup_uid=activity_subgroup_uid,
+                activity_group_uid=activity_group_uid,
+                soa_group_term_uid=soa_group_term_uid,
             )
-            if is_activity_group_changed:
-                self._validate_activity_group(activity_group_uid=activity_group_uid)
-                # create new VO to add
-                new_selection = self._get_or_create_study_activity_group(
-                    study_uid=study_uid,
-                    activity_subgroup_uid=activity_subgroup_uid,
-                    activity_group_uid=activity_group_uid,
-                    soa_group_term_uid=soa_group_term_uid,
-                )
 
         return new_selection
 
@@ -1331,9 +1326,15 @@ class StudyActivitySelectionService(StudyActivitySelectionBaseService):
         current_object: StudySelectionActivityVO,
         is_soa_group_changed: bool,
     ):
-        if request_object.activity_group_uid:
+
+        activity_group_uid = current_object.activity_group_uid
+        activity_group_name = current_object.activity_group_name
+        study_activity_group_uid = current_object.study_activity_group_uid
+        if (
+            request_object.activity_group_uid
+            and current_object.activity_group_uid != request_object.activity_group_uid
+        ):
             activity_group_uid = request_object.activity_group_uid
-            activity_group_name = None  # This gets filled in later
             study_activity_group = (
                 self._patch_study_activity_group_selection_value_object(
                     study_uid=current_object.study_uid,
@@ -1342,12 +1343,13 @@ class StudyActivitySelectionService(StudyActivitySelectionBaseService):
                 )
             )
             study_activity_group_uid = study_activity_group.study_selection_uid
+            activity_group_name = study_activity_group.activity_group_name
         # When SoAGroup is changed we need to update StudyActivityGroup for other shared nodes
-        elif is_soa_group_changed:
+        if is_soa_group_changed:
             activity_group_selection = self._get_or_create_study_activity_group(
                 study_uid=current_object.study_uid,
                 activity_subgroup_uid=current_object.activity_subgroup_uid,
-                activity_group_uid=current_object.activity_group_uid,
+                activity_group_uid=activity_group_uid,
                 soa_group_term_uid=request_object.soa_group_term_uid,
                 perform_group_validation=False,
             )
@@ -1360,10 +1362,6 @@ class StudyActivitySelectionService(StudyActivitySelectionBaseService):
                 None,
                 activity_group_selection.study_selection_uid,
             )
-        else:
-            activity_group_uid = current_object.activity_group_uid
-            activity_group_name = current_object.activity_group_name
-            study_activity_group_uid = current_object.study_activity_group_uid
         return activity_group_uid, activity_group_name, study_activity_group_uid
 
     def _patch_or_get_study_activity_subgroup(
@@ -1378,9 +1376,15 @@ class StudyActivitySelectionService(StudyActivitySelectionBaseService):
         is_soa_group_changed: bool,
         is_study_activity_group_changed: bool,
     ):
-        if request_object.activity_subgroup_uid:
+        activity_subgroup_uid = current_object.activity_subgroup_uid
+        activity_subgroup_name = current_object.activity_subgroup_name
+        study_activity_subgroup_uid = current_object.study_activity_subgroup_uid
+        if (
+            request_object.activity_subgroup_uid
+            and current_object.activity_subgroup_uid
+            != request_object.activity_subgroup_uid
+        ):
             activity_subgroup_uid = request_object.activity_subgroup_uid
-            activity_subgroup_name = None  # This gets filled in later
             study_activity_subgroup = (
                 self._patch_study_activity_subgroup_selection_value_object(
                     study_uid=current_object.study_uid,
@@ -1389,11 +1393,12 @@ class StudyActivitySelectionService(StudyActivitySelectionBaseService):
                 )
             )
             study_activity_subgroup_uid = study_activity_subgroup.study_selection_uid
+            activity_subgroup_name = study_activity_subgroup.activity_subgroup_name
         # When SoAGroup or StudyActivityGroup is changed we need to update StudyActivitySubGroup for other shared nodes
-        elif is_soa_group_changed or is_study_activity_group_changed:
+        if is_soa_group_changed or is_study_activity_group_changed:
             activity_subgroup_selection = self._get_or_create_study_activity_subgroup(
                 study_uid=current_object.study_uid,
-                activity_subgroup_uid=current_object.activity_subgroup_uid,
+                activity_subgroup_uid=activity_subgroup_uid,
                 activity_group_uid=current_object.activity_group_uid,
                 soa_group_term_uid=request_object.soa_group_term_uid,
                 perform_subgroup_validation=False,
@@ -1407,10 +1412,7 @@ class StudyActivitySelectionService(StudyActivitySelectionBaseService):
                 None,
                 activity_subgroup_selection.study_selection_uid,
             )
-        else:
-            activity_subgroup_uid = current_object.activity_subgroup_uid
-            activity_subgroup_name = current_object.activity_subgroup_name
-            study_activity_subgroup_uid = current_object.study_activity_subgroup_uid
+
         return (
             activity_subgroup_uid,
             activity_subgroup_name,

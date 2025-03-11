@@ -20,6 +20,7 @@ from starlette_context import context
 
 from common import config
 from common.telemetry.request_metrics import (
+    add_request_metrics_header,
     include_request_metrics,
     init_request_metrics,
 )
@@ -114,6 +115,8 @@ class TracingMiddleware:
         async def _send(message: Message) -> None:
             if message["type"] == "http.response.start":
                 self.add_traceresponse_header(message)
+                if config.TRACING_METRICS_HEADER:
+                    add_request_metrics_header(message)
                 self.log_access(scope, message)
                 self.add_attributes_form_request_body(
                     request_size=request_body_size,

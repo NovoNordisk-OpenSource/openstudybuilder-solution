@@ -55,8 +55,7 @@ class StudyVisit(StudySelection):
         cardinality=ZeroOrOne,
     )
 
-    visit_sublabel = StringProperty()
-    visit_sublabel_uid = StringProperty()
+    # uid of the anchor StudyVisit given Subvisit refers to
     visit_sublabel_reference = StringProperty()
 
     visit_name_label = StringProperty()

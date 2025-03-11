@@ -197,26 +197,12 @@ def test_all_history_of_specific_selection6(api_client):
     assert res[0]["branch_arm_roots_uids"] is None
     assert res[0]["arm_roots_uids"] == ["StudyArm_000001"]
     assert res[0]["changes"] == {
-        "study_uid": False,
-        "order": False,
-        "project_number": False,
-        "project_name": False,
-        "study_version": False,
-        "cohort_uid": False,
         "name": True,
         "short_name": True,
         "code": True,
-        "description": False,
-        "colour_code": False,
-        "number_of_subjects": False,
         "start_date": True,
-        "author_username": False,
         "end_date": True,
-        "status": False,
         "change_type": True,
-        "accepted_version": False,
-        "branch_arm_roots_uids": False,
-        "arm_roots_uids": False,
     }
     assert res[1]["study_uid"] == "study_root"
     assert res[1]["order"] == 1

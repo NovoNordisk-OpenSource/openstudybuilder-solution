@@ -174,7 +174,6 @@ class TestStudyVisitManagement(unittest.TestCase):
             time_reference_uid="VisitSubType_0005",
             time_value=30,
             time_unit_uid=self.day_uid,
-            visit_sublabel_codelist_uid="VisitSubLabel_0001",
             visit_sublabel_reference=None,
             is_global_anchor_visit=False,
             visit_class="SINGLE_VISIT",
@@ -186,7 +185,6 @@ class TestStudyVisitManagement(unittest.TestCase):
             time_reference_uid="VisitSubType_0002",
             time_value=31,
             time_unit_uid=self.day_uid,
-            visit_sublabel_codelist_uid="VisitSubLabel_0002",
             visit_sublabel_reference=version4.uid,
             is_global_anchor_visit=False,
             visit_class="SINGLE_VISIT",
@@ -247,7 +245,6 @@ class TestStudyVisitManagement(unittest.TestCase):
             "time_reference_uid": "VisitSubType_0002",
             "time_value": 40,
             "time_unit_uid": self.day_uid,
-            "visit_sublabel_codelist_uid": "VisitSubLabel_0003",
             "visit_sublabel_reference": version4.uid,
             "is_global_anchor_visit": False,
             "visit_class": "SINGLE_VISIT",
@@ -482,7 +479,7 @@ class TestStudyVisitManagement(unittest.TestCase):
 
     def test__version_visits(self):
         visit_service = StudyVisitService(study_uid=self.study.uid)
-        visit = create_visit_with_update(
+        first_visit = create_visit_with_update(
             study_epoch_uid=self.epoch1.uid,
             visit_type_uid="VisitType_0001",
             time_reference_uid="VisitSubType_0005",
@@ -494,7 +491,7 @@ class TestStudyVisitManagement(unittest.TestCase):
             visit_subclass="SINGLE_VISIT",
             epoch_allocation_uid="EpochAllocation_0001",
         )
-        self.assertEqual(visit.is_soa_milestone, True)
+        self.assertEqual(first_visit.is_soa_milestone, True)
 
         epoch_service: StudyEpochService = StudyEpochService()
         epochs = epoch_service.get_all_epochs(self.study.uid).items
@@ -517,8 +514,8 @@ class TestStudyVisitManagement(unittest.TestCase):
         )
 
         edit_input = {
-            "uid": visit.uid,
-            "study_epoch_uid": visit.study_epoch_uid,
+            "uid": first_visit.uid,
+            "study_epoch_uid": first_visit.study_epoch_uid,
             "visit_type_uid": "VisitType_0001",
             "time_reference_uid": "VisitSubType_0005",
             "time_value": 7,
@@ -526,7 +523,7 @@ class TestStudyVisitManagement(unittest.TestCase):
             "visit_contact_mode_uid": "VisitContactMode_0002",
             "max_visit_window_value": 10,
             "min_visit_window_value": 0,
-            "visit_window_unit_uid": visit.visit_window_unit_uid,
+            "visit_window_unit_uid": first_visit.visit_window_unit_uid,
             "show_visit": True,
             "is_global_anchor_visit": False,
             "is_soa_milestone": False,
@@ -535,12 +532,12 @@ class TestStudyVisitManagement(unittest.TestCase):
             "epoch_allocation_uid": "EpochAllocation_0002",
         }
         visit_service.edit(
-            study_uid=visit.study_uid,
-            study_visit_uid=visit.uid,
+            study_uid=first_visit.study_uid,
+            study_visit_uid=first_visit.uid,
             study_visit_input=StudyVisitEditInput(**edit_input),
         )
         visit_after_update = visit_service.find_by_uid(
-            study_uid=self.study.uid, uid=visit.uid
+            study_uid=self.study.uid, uid=first_visit.uid
         )
 
         self.assertEqual(visit_after_update.is_soa_milestone, False)
@@ -571,60 +568,110 @@ class TestStudyVisitManagement(unittest.TestCase):
         self.assertEqual(visit_after_update.study_duration_weeks_label, "1 weeks")
         self.assertEqual(visit_after_update.week_in_study_label, "Week 1")
 
-        visit_service.audit_trail(
-            visit_uid=visit.uid,
-            study_uid=visit.study_uid,
+        # Verify specific StudyVisit audit-trail
+        visits_versions = visit_service.audit_trail(
+            visit_uid=first_visit.uid,
+            study_uid=first_visit.study_uid,
         )
+        first_visit_after_edit = visits_versions[0]
+        first_visit_after_create = visits_versions[1]
+        self.assertEqual(first_visit_after_edit.uid, first_visit.uid)
+        self.assertEqual(
+            first_visit_after_edit.visit_contact_mode_uid,
+            edit_input["visit_contact_mode_uid"],
+        )
+        self.assertEqual(
+            first_visit_after_edit.max_visit_window_value,
+            edit_input["max_visit_window_value"],
+        )
+        self.assertEqual(
+            first_visit_after_edit.min_visit_window_value,
+            edit_input["min_visit_window_value"],
+        )
+        self.assertEqual(first_visit_after_edit.time_value, edit_input["time_value"])
+
+        self.assertEqual(
+            first_visit_after_edit.epoch_allocation_uid,
+            edit_input["epoch_allocation_uid"],
+        )
+        self.assertGreater(
+            first_visit_after_edit.start_date, first_visit_after_create.start_date
+        )
+        self.assertEqual(first_visit_after_edit.study_duration_weeks_label, "1 weeks")
+        self.assertEqual(first_visit_after_edit.week_in_study_label, "Week 1")
+        self.assertEqual(first_visit_after_edit.change_type, "Edit")
+        self.assertEqual(
+            first_visit_after_create.end_date, first_visit_after_edit.start_date
+        )
+        self.assertEqual(first_visit_after_create.change_type, "Create")
+        self.assertEqual(first_visit_after_create.changes, {})
+        self.assertEqual(first_visit_after_create.study_duration_weeks_label, "0 weeks")
+        self.assertEqual(first_visit_after_create.week_in_study_label, "Week 0")
 
         time_value = 30
-        create_visit_with_update(
+        second_visit = create_visit_with_update(
             study_epoch_uid=self.epoch2.uid,
             visit_type_uid="VisitType_0002",
             time_reference_uid="VisitSubType_0005",
             time_value=time_value,
             time_unit_uid=self.day_uid,
-            visit_sublabel_codelist_uid="VisitSubLabel_0001",
             visit_sublabel_reference=None,
             is_global_anchor_visit=False,
             visit_class="SINGLE_VISIT",
             visit_subclass="ANCHOR_VISIT_IN_GROUP_OF_SUBV",
         )
-        visits_versions = visit_service.audit_trail_all_visits(
-            study_uid=visit.study_uid,
+        # Verify all StudyVisits in a Study audit-trail
+        all_visits_versions = visit_service.audit_trail_all_visits(
+            study_uid=first_visit.study_uid,
         )
 
-        current_visit = visits_versions[0]
-        previous_visit = visits_versions[1]
-        current_visit_2 = visits_versions[2]
+        first_visit_after_edit = all_visits_versions[0]
+        first_visit_after_create = all_visits_versions[1]
+        second_visit_history = all_visits_versions[2]
+        self.assertEqual(first_visit_after_edit.uid, first_visit.uid)
         self.assertEqual(
-            current_visit.visit_contact_mode_uid, edit_input["visit_contact_mode_uid"]
+            first_visit_after_edit.visit_contact_mode_uid,
+            edit_input["visit_contact_mode_uid"],
         )
         self.assertEqual(
-            current_visit.max_visit_window_value, edit_input["max_visit_window_value"]
+            first_visit_after_edit.max_visit_window_value,
+            edit_input["max_visit_window_value"],
         )
         self.assertEqual(
-            current_visit.min_visit_window_value, edit_input["min_visit_window_value"]
+            first_visit_after_edit.min_visit_window_value,
+            edit_input["min_visit_window_value"],
         )
-        self.assertEqual(current_visit.time_unit_uid, edit_input["time_unit_uid"])
-        self.assertEqual(current_visit.time_value, edit_input["time_value"])
-        self.assertEqual(current_visit.show_visit, edit_input["show_visit"])
         self.assertEqual(
-            current_visit.time_reference_uid, edit_input["time_reference_uid"]
+            first_visit_after_edit.time_unit_uid, edit_input["time_unit_uid"]
         )
-        self.assertEqual(current_visit.visit_type_uid, edit_input["visit_type_uid"])
+        self.assertEqual(first_visit_after_edit.time_value, edit_input["time_value"])
+        self.assertEqual(first_visit_after_edit.show_visit, edit_input["show_visit"])
         self.assertEqual(
-            current_visit.epoch_allocation_uid, edit_input["epoch_allocation_uid"]
+            first_visit_after_edit.time_reference_uid, edit_input["time_reference_uid"]
         )
-        self.assertEqual(current_visit.uid, previous_visit.uid)
-        self.assertGreater(current_visit.start_date, previous_visit.start_date)
-        self.assertEqual(previous_visit.changes, {})
-        self.assertEqual(current_visit_2.changes, {})
-        self.assertEqual(current_visit.change_type, "Edit")
-        self.assertEqual(previous_visit.change_type, "Create")
-        self.assertEqual(current_visit.study_duration_weeks_label, "1 weeks")
-        self.assertEqual(current_visit.week_in_study_label, "Week 1")
-        self.assertEqual(previous_visit.study_duration_weeks_label, "0 weeks")
-        self.assertEqual(previous_visit.week_in_study_label, "Week 0")
+        self.assertEqual(
+            first_visit_after_edit.visit_type_uid, edit_input["visit_type_uid"]
+        )
+        self.assertEqual(
+            first_visit_after_edit.epoch_allocation_uid,
+            edit_input["epoch_allocation_uid"],
+        )
+        self.assertEqual(first_visit_after_edit.uid, first_visit_after_create.uid)
+        self.assertGreater(
+            first_visit_after_edit.start_date, first_visit_after_create.start_date
+        )
+        self.assertEqual(
+            first_visit_after_create.end_date, first_visit_after_edit.start_date
+        )
+        self.assertEqual(first_visit_after_edit.study_duration_weeks_label, "1 weeks")
+        self.assertEqual(first_visit_after_edit.week_in_study_label, "Week 1")
+        self.assertEqual(first_visit_after_edit.change_type, "Edit")
+        self.assertEqual(first_visit_after_create.change_type, "Create")
+        self.assertEqual(first_visit_after_create.changes, {})
+        self.assertEqual(first_visit_after_create.study_duration_weeks_label, "0 weeks")
+        self.assertEqual(first_visit_after_create.week_in_study_label, "Week 0")
+        self.assertEqual(second_visit_history.changes, {})
+        self.assertEqual(second_visit_history.uid, second_visit.uid)
 
     def test__create_subvisits_uvn__reordered_successfully(self):
         visit_service = StudyVisitService(study_uid=self.study.uid)
@@ -645,7 +692,6 @@ class TestStudyVisitManagement(unittest.TestCase):
             time_reference_uid="VisitSubType_0005",
             time_value=time_value,
             time_unit_uid=self.day_uid,
-            visit_sublabel_codelist_uid="VisitSubLabel_0001",
             visit_sublabel_reference=None,
             is_global_anchor_visit=False,
             visit_class="SINGLE_VISIT",
@@ -661,7 +707,6 @@ class TestStudyVisitManagement(unittest.TestCase):
                 time_reference_uid="VisitSubType_0005",
                 time_value=time_value + i,
                 time_unit_uid=self.day_uid,
-                visit_sublabel_codelist_uid="VisitSubLabel_0002",
                 visit_sublabel_reference=first_visit_in_seq_of_subvisits.uid,
                 is_global_anchor_visit=False,
                 visit_class="SINGLE_VISIT",
@@ -724,7 +769,6 @@ class TestStudyVisitManagement(unittest.TestCase):
             time_reference_uid="VisitSubType_0005",
             time_value=-1,
             time_unit_uid=self.day_uid,
-            visit_sublabel_codelist_uid="VisitSubLabel_0002",
             visit_sublabel_reference=first_visit_in_seq_of_subvisits.uid,
             is_global_anchor_visit=False,
             visit_class="SINGLE_VISIT",
@@ -828,7 +872,6 @@ class TestStudyVisitManagement(unittest.TestCase):
             time_reference_uid="VisitSubType_0005",
             time_value=30,
             time_unit_uid=self.day_uid,
-            visit_sublabel_codelist_uid="VisitSubLabel_0001",
             visit_sublabel_reference=None,
             is_global_anchor_visit=False,
             visit_class="SINGLE_VISIT",
@@ -1771,7 +1814,6 @@ class TestStudyVisitManagement(unittest.TestCase):
             time_value=12,
             time_unit_uid=self.day_uid,
             is_global_anchor_visit=False,
-            visit_sublabel_codelist_uid="VisitSubLabel_0002",
             visit_sublabel_reference=third_visit.uid,
             visit_class="SINGLE_VISIT",
             visit_subclass="ADDITIONAL_SUBVISIT_IN_A_GROUP_OF_SUBV",
@@ -1783,7 +1825,6 @@ class TestStudyVisitManagement(unittest.TestCase):
             time_value=13,
             time_unit_uid=self.day_uid,
             is_global_anchor_visit=False,
-            visit_sublabel_codelist_uid="VisitSubLabel_0002",
             visit_sublabel_reference=third_visit.uid,
             visit_class="SINGLE_VISIT",
             visit_subclass="ADDITIONAL_SUBVISIT_IN_A_GROUP_OF_SUBV",

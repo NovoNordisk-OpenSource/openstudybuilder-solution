@@ -1,0 +1,60 @@
+This file holds shared notes for study visits.   
+   
+   We have 4 classess of visits
+   - 'Scheduled visits'
+   - 'Unscheduled visits'
+   - 'Non-visits'
+   - 'Special visit'
+   - 'Manual visits'
+   # The previously defined insertion visits is identical to manually defined visits - so these are redefined to be manually defined visits.
+
+   For 'Scheduled visits' we have the following sub classes (sub types):
+   - 'Single visits'
+   - 'Anchor visit in visit group'
+   - 'Additional sub-visit'
+   - 'Repeating visits'
+
+   Automatic naming and numbering notes:
+     Only study visits defined as scheduled visits will have automatic visit numbering derived, and only these study scheduled visits will be included when deriving the numbering.
+     The visit number is derived as an running integer with 1 for the very first visit sorted by chronological order (i.e. 1, 2. 3, 4, etc.).
+     Exception is if the initial visit is an information visit, then it will be numbered as visit 0.
+     The unique visit number for single visits is derived as an integer with 100 for the very first visit, increasing with +100 for each single visit, sorted by chronological order (i.e., 100, 200. 300, etc.).
+
+     The sub visit will however keep the visit number from the visit initiating the sequence of sub visits.
+     The unique visit number for sub visits will be derived as an integer from the visit initiating the sequence of sub visits +10 (if less than 10 sub visits), alternative + 5, sorted by chronological order (i.e., 310, 320, 330, etc.).
+
+     Study visits defined not to have automatic visit numbering must have the visit numbering specified manually.
+
+     Study visits defined as class:
+     - 'Unscheduled visits'
+     - 'Non-visits'
+     Will get a fixed name and numbers.
+
+
+   Automatic visit time notes:
+     Only study visits defined as scheduled visits will be at a specific point in time will get the time point calculated.
+     Scheduled study visits can have their time reference defined with a time reference to:
+      - Global anchor visit
+      - Note Global anchor visit also exist as term in the Time Reference sponsor codelist
+     - Time reference visit (any visit defined with a visit type also being a time reference)
+     - Anchor visit in visit group (but only applicable and required for the sub-visits in the sequence)
+     - Previous visit
+    
+   Manually defined visists will have the time points specified manually.
+   Unscheduled visits and non-visits cannot have any study time defined.
+
+   Manual visit notes:
+   
+     Manual visits is made so they will not impact existing visit names and numbering.
+     Note, the Manual visits can represent scheduled visits, but these are named and numbered manually are not following the name and numbering rules - but vaulues still need to be unique.
+     We also have the possibility for manual numbering - the manually defined visits will have a manually defined visit number, and these are not included in the logic for automatic numbering.
+     The system will however check for uniqueness on the visit numbers defined manually or automatically - so some updates might be stopped by the API due to these constraints.  
+
+
+   Gherkin files:
+
+     General requrements are described in "study-visits.feature".
+     Visit timing is described in file "study-visit-timing.feature".
+     Visit numbering based on timing is described in "study-visit-numbering.feature" and "study-visit-sub-numbering.feature".
+     Visit naming is described in "study-visit-naming.feature".
+     Manual visits are described in "study-visits-manually-defined.feature".

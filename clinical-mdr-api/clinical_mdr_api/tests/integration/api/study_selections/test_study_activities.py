@@ -1390,6 +1390,81 @@ def test_reusing_study_activity_group_study_activity_subgroup_study_soa_group(
     )
 
 
+def test_reusing_study_activity_group_study_activity_subgroup_when_study_soa_group_is_changed(
+    api_client,
+):
+    test_study = TestUtils.create_study(project_number=project.project_number)
+
+    another_randomized_activity = TestUtils.create_activity(
+        name="Another randomized",
+        activity_subgroups=[randomisation_activity_subgroup.uid],
+        activity_groups=[general_activity_group.uid],
+        library_name="Sponsor",
+    )
+    response = api_client.post(
+        f"/studies/{test_study.uid}/study-activities",
+        json={
+            "activity_uid": randomized_activity.uid,
+            "activity_subgroup_uid": randomisation_activity_subgroup.uid,
+            "activity_group_uid": general_activity_group.uid,
+            "soa_group_term_uid": term_efficacy_uid,
+        },
+    )
+    assert_response_status_code(response, 201)
+    randomized_sa = response.json()
+
+    response = api_client.post(
+        f"/studies/{test_study.uid}/study-activities",
+        json={
+            "activity_uid": another_randomized_activity.uid,
+            "activity_subgroup_uid": randomisation_activity_subgroup.uid,
+            "activity_group_uid": general_activity_group.uid,
+            "soa_group_term_uid": informed_consent_uid,
+        },
+    )
+    assert_response_status_code(response, 201)
+    another_randomized_sa = response.json()
+
+    assert (
+        another_randomized_sa["study_soa_group"]["study_soa_group_uid"]
+        != randomized_sa["study_soa_group"]["study_soa_group_uid"]
+    )
+    assert (
+        another_randomized_sa["study_activity_group"]["study_activity_group_uid"]
+        != randomized_sa["study_activity_group"]["study_activity_group_uid"]
+    )
+    assert (
+        another_randomized_sa["study_activity_subgroup"]["study_activity_subgroup_uid"]
+        != randomized_sa["study_activity_subgroup"]["study_activity_subgroup_uid"]
+    )
+
+    response = api_client.patch(
+        f"/studies/{test_study.uid}/study-activities/{another_randomized_sa['study_activity_uid']}",
+        json={
+            "soa_group_term_uid": term_efficacy_uid,
+            # when patching SoAGroup we send activity_group and activity_subgroup from UI as well
+            # and that made the API to not update StudyActivityGroup/StudyActivitySubGroup when changing SoAGroup
+            # such case should be also handled by the API
+            "activity_group_uid": general_activity_group.uid,
+            "activity_subgroup_uid": randomisation_activity_subgroup.uid,
+        },
+    )
+    assert_response_status_code(response, 200)
+    another_randomized_sa = response.json()
+    assert (
+        another_randomized_sa["study_soa_group"]["study_soa_group_uid"]
+        == randomized_sa["study_soa_group"]["study_soa_group_uid"]
+    )
+    assert (
+        another_randomized_sa["study_activity_group"]["study_activity_group_uid"]
+        == randomized_sa["study_activity_group"]["study_activity_group_uid"]
+    )
+    assert (
+        another_randomized_sa["study_activity_subgroup"]["study_activity_subgroup_uid"]
+        == randomized_sa["study_activity_subgroup"]["study_activity_subgroup_uid"]
+    )
+
+
 def test_modify_visibility_flag_in_protocol_flowchart(
     api_client,
 ):

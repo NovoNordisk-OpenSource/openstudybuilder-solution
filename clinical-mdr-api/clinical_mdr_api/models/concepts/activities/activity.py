@@ -25,6 +25,10 @@ from common.utils import convert_to_datetime
 
 
 class ActivityHierarchySimpleModel(BaseModel):
+
+    uid: Annotated[str, Field()]
+    name: Annotated[str | None, Field(nullable=True)] = None
+
     @classmethod
     def from_activity_uid(
         cls,
@@ -121,32 +125,21 @@ class Activity(ActivityBase):
     nci_concept_name: Annotated[str | None, Field(nullable=True)] = None
 
     @classmethod
-    def from_activity_ar(
-        cls,
-        activity_ar: ActivityAR,
-        find_activity_subgroup_by_uid: Callable[[str], ActivitySubGroupAR | None],
-        find_activity_group_by_uid: Callable[[str], ActivityGroupAR | None],
-    ) -> Self:
+    def from_activity_ar(cls, activity_ar: ActivityAR) -> Self:
         activity_groupings = []
         for activity_grouping in activity_ar.concept_vo.activity_groupings:
-            activity_group = ActivityHierarchySimpleModel.from_activity_uid(
-                uid=activity_grouping.activity_group_uid,
-                find_activity_by_uid=find_activity_group_by_uid,
-                version=activity_grouping.activity_group_version,
-            )
-            activity_subgroup = ActivityHierarchySimpleModel.from_activity_uid(
-                uid=activity_grouping.activity_subgroup_uid,
-                find_activity_by_uid=find_activity_subgroup_by_uid,
-                version=activity_grouping.activity_subgroup_version,
-            )
             activity_groupings.append(
                 ActivityGroupingHierarchySimpleModel(
-                    activity_group_uid=activity_group.uid,
-                    activity_group_name=activity_group.name,
-                    activity_subgroup_uid=activity_subgroup.uid,
-                    activity_subgroup_name=activity_subgroup.name,
+                    activity_group_uid=activity_grouping.activity_group_uid,
+                    activity_group_name=activity_grouping.activity_group_name,
+                    activity_subgroup_uid=activity_grouping.activity_subgroup_uid,
+                    activity_subgroup_name=activity_grouping.activity_subgroup_name,
                 )
             )
+        activity_groupings.sort(
+            key=lambda item: (item.activity_subgroup_name, item.activity_group_name)
+        )
+
         return cls(
             uid=activity_ar.uid,
             nci_concept_id=activity_ar.concept_vo.nci_concept_id,
@@ -156,13 +149,7 @@ class Activity(ActivityBase):
             synonyms=activity_ar.concept_vo.synonyms,
             definition=activity_ar.concept_vo.definition,
             abbreviation=activity_ar.concept_vo.abbreviation,
-            activity_groupings=sorted(
-                activity_groupings,
-                key=lambda item: (
-                    item.activity_subgroup_name,
-                    item.activity_group_name,
-                ),
-            ),
+            activity_groupings=activity_groupings,
             library_name=Library.from_library_vo(activity_ar.library).name,
             start_date=activity_ar.item_metadata.start_date,
             end_date=activity_ar.item_metadata.end_date,
@@ -373,7 +360,7 @@ class Activity(ActivityBase):
 class ActivityForStudyActivity(Activity):
     activity_groupings: Annotated[
         list[ActivityGroupingHierarchySimpleModel], Field(remove_from_wildcard=True)
-    ] = []
+    ]
 
 
 class ActivityGrouping(InputModel):

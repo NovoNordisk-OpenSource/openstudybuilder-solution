@@ -17,7 +17,10 @@ from clinical_mdr_api.models.biomedical_concepts.activity_instance_class import 
 from clinical_mdr_api.models.biomedical_concepts.activity_item_class import (
     ActivityItemClass,
 )
-from clinical_mdr_api.models.concepts.activities.activity import Activity
+from clinical_mdr_api.models.concepts.activities.activity import (
+    Activity,
+    ActivityGrouping,
+)
 from clinical_mdr_api.models.concepts.activities.activity_group import ActivityGroup
 from clinical_mdr_api.models.concepts.activities.activity_instance import (
     ActivityInstance,
@@ -46,7 +49,9 @@ log = logging.getLogger(__name__)
 
 # Global variables shared between fixtures and tests
 activity_group: ActivityGroup
+different_activity_group: ActivityGroup
 activity_subgroup: ActivitySubGroup
+different_activity_subgroup: ActivitySubGroup
 activities_all: list[Activity]
 activity_instances_all: list[ActivityInstance]
 activity_instance_classes: list[ActivityInstanceClass]
@@ -79,9 +84,11 @@ def test_data():
         name="activity_subgroup", activity_groups=[activity_group.uid]
     )
 
+    global different_activity_group
     different_activity_group = TestUtils.create_activity_group(
         name="different activity_group"
     )
+    global different_activity_subgroup
     different_activity_subgroup = TestUtils.create_activity_subgroup(
         name="different activity_subgroup",
         activity_groups=[different_activity_group.uid],
@@ -781,17 +788,25 @@ def test_update_activity(api_client):
 
     response = api_client.patch(
         f"/concepts/activities/activities/{activities_all[2].uid}",
-        json={"synonyms": ["new name", "CCC"]},
+        json={
+            "synonyms": ["new name", "CCC"],
+            "activity_groupings": [
+                activities_all[2].activity_groupings[0].dict(),
+                ActivityGrouping(
+                    activity_group_uid=different_activity_group.uid,
+                    activity_subgroup_uid=different_activity_subgroup.uid,
+                ).dict(),
+            ],
+        },
     )
+    assert_response_status_code(response, 200)
     res = response.json()
-
-    assert response.status_code == 200
 
     assert res["uid"] == activities_all[2].uid
     assert res["name"] == "name-CCC"
     assert res["name_sentence_case"] == "name-CCC"
     assert res["synonyms"] == ["new name", "CCC"]
-    assert len(res["activity_groupings"]) == 1
+    assert len(res["activity_groupings"]) == 2
     assert res["activity_groupings"][0]["activity_group_uid"] == activity_group.uid
     assert res["activity_groupings"][0]["activity_group_name"] == activity_group.name
     assert (
@@ -799,6 +814,22 @@ def test_update_activity(api_client):
     )
     assert (
         res["activity_groupings"][0]["activity_subgroup_name"] == activity_subgroup.name
+    )
+    assert (
+        res["activity_groupings"][1]["activity_group_uid"]
+        == different_activity_group.uid
+    )
+    assert (
+        res["activity_groupings"][1]["activity_group_name"]
+        == different_activity_group.name
+    )
+    assert (
+        res["activity_groupings"][1]["activity_subgroup_uid"]
+        == different_activity_subgroup.uid
+    )
+    assert (
+        res["activity_groupings"][1]["activity_subgroup_name"]
+        == different_activity_subgroup.name
     )
 
     assert res["library_name"] == "Sponsor"

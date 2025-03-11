@@ -1,0 +1,54 @@
+services:
+
+  cypress:
+    build:
+      args:
+        CYPRESS_IMAGE: "${CYPRESS_IMAGE:-cypress/browsers}"
+        UID: "${UID:-1000}"
+        WORKDIR: /tests
+      context: ./
+      dockerfile: cypress.Dockerfile
+    environment:
+      CYPRESS_BASE_URL: "${CYPRESS_BASE_URL:-}"
+      CYPRESS_API: "${CYPRESS_API:-}"
+      CYPRESS_CLIENT_ID: "${CYPRESS_CLIENT_ID:-}"
+      CYPRESS_CLIENT_SECRET: "${CYPRESS_CLIENT_SECRET:-}"
+      CYPRESS_STUDYBUILDER_CLIENT_ID: "${CYPRESS_STUDYBUILDER_CLIENT_ID:-}"
+      CYPRESS_TOKEN_ENDPOINT: "${CYPRESS_TOKEN_ENDPOINT:-}"
+      CYPRESS_SCOPE: "${CYPRESS_SCOPE:-}"
+      CYPRESS_TESTUSER_MAIL: "${CYPRESS_TESTUSER_MAIL:-}"
+      CYPRESS_TESTUSER_NAME: "${CYPRESS_TESTUSER_NAME:-}"
+      CYPRESS_STATIC_IDTOKEN: "${CYPRESS_STATIC_IDTOKEN:-}"
+      CYPRESS_STATIC_SESSION_STATE: "${CYPRESS_STATIC_SESSION_STATE:-}"
+      CYPRESS_GRANT_TYPE: "${CYPRESS_GRANT_TYPE:-}"
+    profiles:
+      - build
+    network_mode: host
+    user: "${UID-:1000}"
+    volumes:
+      - type: bind
+        source: ./results
+        target: /tests/results
+
+  allure:
+    command: allure generate --clean --output /results/allure-report /results/allure
+    image: "${ALLURE_IMAGE:-novo-allure}"
+    profiles:
+      - allure
+    user: "${UID-:1000}"
+    volumes:
+      - type: bind
+        source: ./results
+        target: /results
+
+  report:
+    build:
+      args:
+        NGINX_IMAGE: "${NGINX_IMAGE:-nginx:alpine}"
+      context: ./
+      dockerfile: report.Dockerfile
+    image: "${REPORT_IMAGE:-}"
+    profiles:
+      - report
+    ports:
+      - "127.0.0.1:5007:5007"

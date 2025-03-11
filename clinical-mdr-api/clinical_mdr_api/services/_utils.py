@@ -108,11 +108,15 @@ def get_input_or_new_value(
 
 def object_diff(objt1, objt2=None):
     """
-    Calculate difference table between pydantic objects
+    Calculate difference table between pydantic objects and return only those fields in the payload that have changed
     """
     if objt2 is None:
         return {}
-    return {name: objt1[name] != objt2[name] for name in objt1.keys()}
+    return {
+        name: objt1[name] != objt2[name]
+        for name in objt1.keys()
+        if objt1[name] != objt2[name]
+    }
 
 
 def get_otv(version_object_class, object1, object2=None):

@@ -1,7 +1,6 @@
 import datetime
 
 from neomodel import db
-from neomodel.sync_.match import Optional
 
 from clinical_mdr_api.domain_repositories.concepts.unit_definitions.unit_definition_repository import (
     UnitDefinitionRepository,
@@ -9,7 +8,6 @@ from clinical_mdr_api.domain_repositories.concepts.unit_definitions.unit_definit
 from clinical_mdr_api.domain_repositories.generic_repository import (
     manage_previous_connected_study_selection_relationships,
 )
-from clinical_mdr_api.domain_repositories.models._utils import ListDistinct
 from clinical_mdr_api.domain_repositories.models.concepts import (
     StudyDayRoot,
     StudyDurationDaysRoot,
@@ -32,7 +30,6 @@ from clinical_mdr_api.domain_repositories.models.study_audit_trail import (
 from clinical_mdr_api.domain_repositories.models.study_epoch import StudyEpoch
 from clinical_mdr_api.domain_repositories.models.study_visit import StudyVisit
 from clinical_mdr_api.domain_repositories.study_selections.study_epoch_repository import (
-    StudyEpochRepository,
     get_ctlist_terms_by_name,
 )
 from clinical_mdr_api.domains.concepts.unit_definitions.unit_definition import (
@@ -41,17 +38,24 @@ from clinical_mdr_api.domains.concepts.unit_definitions.unit_definition import (
 from clinical_mdr_api.domains.study_definition_aggregates.study_metadata import (
     StudyStatus,
 )
+from clinical_mdr_api.domains.study_selections.study_epoch import StudyEpochEpoch
 from clinical_mdr_api.domains.study_selections.study_visit import (
     NumericValue,
+    SimpleStudyEpoch,
+    StudyVisitContactMode,
+    StudyVisitEpochAllocation,
     StudyVisitHistoryVO,
+    StudyVisitRepeatingFrequency,
+    StudyVisitTimeReference,
+    StudyVisitType,
     StudyVisitVO,
     TextValue,
+    TimePoint,
     TimeUnit,
+    VisitClass,
+    VisitSubclass,
 )
-from clinical_mdr_api.models.study_selections.study_visit import (
-    StudyVisitOGM,
-    StudyVisitOGMVer,
-)
+from common import config
 from common.config import (
     GLOBAL_ANCHOR_VISIT_NAME,
     PREVIOUS_VISIT_NAME,
@@ -129,8 +133,8 @@ class StudyVisitRepository:
     def generate_uid(self) -> str:
         return StudyVisit.get_next_free_uid_and_increment_counter()
 
-    def fetch_ctlist(self, code_list_name: str, effective_date=None):
-        return get_ctlist_terms_by_name(code_list_name, effective_date=effective_date)
+    def fetch_ctlist(self, codelist_names: str, effective_date=None):
+        return get_ctlist_terms_by_name(codelist_names, effective_date=effective_date)
 
     def get_day_week_units(self):
         return (self._day_unit, self._week_unit)
@@ -172,170 +176,18 @@ class StudyVisitRepository:
         ).resolve_subgraph()
         return len(nodes)
 
-    def from_neomodel_to_vo(
-        self,
-        study_visit_ogm_input: StudyVisitOGM,
-        study_value_version: str | None = None,
-    ):
-        epoch_repository = StudyEpochRepository(author_id=self.author_id)
-        study_epoch_object = epoch_repository.find_by_uid(
-            uid=study_visit_ogm_input.epoch_uid,
-            study_uid=study_visit_ogm_input.study_uid,
-            study_value_version=study_value_version,
-        )
-
-        unit_repository = UnitDefinitionRepository(self.author_id)
-        if study_visit_ogm_input.timepoint:
-            req_time_unit_ar: UnitDefinitionAR = unit_repository.find_by_uid_2(
-                study_visit_ogm_input.timepoint.time_unit_uid
-            )
-            req_time_unit = req_time_unit_ar.concept_vo
-            time_unit_object = TimeUnit(
-                name=req_time_unit.name,
-                conversion_factor_to_master=req_time_unit.conversion_factor_to_master,
-                from_timedelta=lambda u, x: u.conversion_factor_to_master * x,
-            )
-        else:
-            time_unit_object = None
-
-        if study_visit_ogm_input.window_unit_uid is not None:
-            window_time_unit_ar: UnitDefinitionAR = unit_repository.find_by_uid_2(
-                study_visit_ogm_input.window_unit_uid
-            )
-            window_time_unit = window_time_unit_ar.concept_vo
-            window_unit_object = TimeUnit(
-                name=window_time_unit.name,
-                conversion_factor_to_master=window_time_unit.conversion_factor_to_master,
-                from_timedelta=lambda u, x: u.conversion_factor_to_master * x,
-            )
-        else:
-            window_unit_object = None
-
-        if study_visit_ogm_input.study_day:
-            study_day = StudyDayRoot.nodes.get(
-                uid=study_visit_ogm_input.study_day.uid
-            ).has_latest_value.get()
-        else:
-            study_day = None
-        if study_visit_ogm_input.study_duration_days:
-            study_duration_days = StudyDurationDaysRoot.nodes.get(
-                uid=study_visit_ogm_input.study_duration_days.uid
-            ).has_latest_value.get()
-        else:
-            study_duration_days = None
-        if study_visit_ogm_input.study_week:
-            study_week = StudyWeekRoot.nodes.get(
-                uid=study_visit_ogm_input.study_week.uid
-            ).has_latest_value.get()
-        else:
-            study_week = None
-        if study_visit_ogm_input.study_duration_weeks:
-            study_duration_weeks = StudyDurationWeeksRoot.nodes.get(
-                uid=study_visit_ogm_input.study_duration_weeks.uid
-            ).has_latest_value.get()
-        else:
-            study_duration_weeks = None
-        if study_visit_ogm_input.week_in_study:
-            week_in_study = WeekInStudyRoot.nodes.get(
-                uid=study_visit_ogm_input.week_in_study.uid
-            ).has_latest_value.get()
-        else:
-            week_in_study = None
-        visit_name = VisitNameRoot.nodes.get(
-            uid=study_visit_ogm_input.visit_name_sc.uid
-        ).has_latest_value.get()
-        return StudyVisitVO(
-            uid=study_visit_ogm_input.uid,
-            visit_number=study_visit_ogm_input.visit_number,
-            visit_sublabel=study_visit_ogm_input.visit_sublabel,
-            visit_sublabel_reference=study_visit_ogm_input.visit_sublabel_reference,
-            visit_sublabel_uid=study_visit_ogm_input.visit_sublabel_uid,
-            consecutive_visit_group=study_visit_ogm_input.consecutive_visit_group,
-            show_visit=study_visit_ogm_input.show_visit,
-            timepoint=study_visit_ogm_input.timepoint,
-            study_day=(
-                NumericValue(
-                    uid=study_visit_ogm_input.study_day.uid, value=int(study_day.value)
-                )
-                if study_visit_ogm_input.study_day
-                else None
-            ),
-            study_duration_days=(
-                NumericValue(
-                    uid=study_visit_ogm_input.study_duration_days.uid,
-                    value=int(study_duration_days.value),
-                )
-                if study_visit_ogm_input.study_duration_days
-                else None
-            ),
-            study_week=(
-                NumericValue(
-                    uid=study_visit_ogm_input.study_week.uid,
-                    value=int(study_week.value),
-                )
-                if study_visit_ogm_input.study_week
-                else None
-            ),
-            study_duration_weeks=(
-                NumericValue(
-                    uid=study_visit_ogm_input.study_duration_weeks.uid,
-                    value=int(study_duration_weeks.value),
-                )
-                if study_visit_ogm_input.study_duration_weeks
-                else None
-            ),
-            week_in_study=(
-                NumericValue(
-                    uid=study_visit_ogm_input.week_in_study.uid,
-                    value=int(week_in_study.value),
-                )
-                if study_visit_ogm_input.week_in_study
-                else None
-            ),
-            visit_name_sc=TextValue(
-                uid=study_visit_ogm_input.visit_name_sc.uid, name=visit_name.name
-            ),
-            time_unit_object=time_unit_object,
-            window_unit_object=window_unit_object,
-            visit_window_min=study_visit_ogm_input.visit_window_min,
-            visit_window_max=study_visit_ogm_input.visit_window_max,
-            window_unit_uid=study_visit_ogm_input.window_unit_uid,
-            description=study_visit_ogm_input.description,
-            start_rule=study_visit_ogm_input.start_rule,
-            end_rule=study_visit_ogm_input.end_rule,
-            visit_contact_mode=study_visit_ogm_input.visit_contact_mode,
-            epoch_allocation=study_visit_ogm_input.epoch_allocation,
-            visit_type=study_visit_ogm_input.visit_type,
-            status=StudyStatus(study_visit_ogm_input.status),
-            start_date=study_visit_ogm_input.start_date,
-            author_id=study_visit_ogm_input.author_id,
-            day_unit_object=study_visit_ogm_input.day_unit_object,
-            week_unit_object=study_visit_ogm_input.week_unit_object,
-            epoch_connector=study_epoch_object,
-            visit_class=study_visit_ogm_input.visit_class,
-            visit_subclass=(
-                study_visit_ogm_input.visit_subclass
-                if study_visit_ogm_input.visit_subclass
-                else None
-            ),
-            is_global_anchor_visit=study_visit_ogm_input.is_global_anchor_visit,
-            is_soa_milestone=study_visit_ogm_input.is_soa_milestone,
-            visit_order=study_visit_ogm_input.visit_number,
-            vis_unique_number=study_visit_ogm_input.vis_unique_number,
-            vis_short_name=study_visit_ogm_input.vis_short_name,
-        )
-
-    def _from_neomodel_to_history_vo(
-        self,
-        study_visit_ogm_input: StudyVisitOGMVer,
-    ):
-        study_visit_vo = self.from_neomodel_to_vo(study_visit_ogm_input)
+    def from_study_visit_vo_to_history_vo(
+        self, study_visit_vo: StudyVisitVO, input_dict: dict
+    ) -> StudyVisitHistoryVO:
+        change_type = input_dict.get("change_type")
+        for action in change_type:
+            if "StudyAction" not in action:
+                change_type = action
+        study_action_before = input_dict.get("study_action_before") or {}
         return StudyVisitHistoryVO(
             uid=study_visit_vo.uid,
             visit_number=study_visit_vo.visit_number,
-            visit_sublabel=study_visit_vo.visit_sublabel,
             visit_sublabel_reference=study_visit_vo.visit_sublabel_reference,
-            visit_sublabel_uid=study_visit_vo.visit_sublabel_uid,
             consecutive_visit_group=study_visit_vo.consecutive_visit_group,
             show_visit=study_visit_vo.show_visit,
             timepoint=study_visit_vo.timepoint,
@@ -359,6 +211,7 @@ class StudyVisitRepository:
             status=study_visit_vo.status,
             start_date=study_visit_vo.start_date,
             author_id=study_visit_vo.author_id,
+            author_username=study_visit_vo.author_username,
             day_unit_object=study_visit_vo.day_unit_object,
             week_unit_object=study_visit_vo.week_unit_object,
             epoch_connector=study_visit_vo.epoch_connector,
@@ -370,57 +223,288 @@ class StudyVisitRepository:
             vis_unique_number=study_visit_vo.vis_unique_number,
             vis_short_name=study_visit_vo.vis_short_name,
             # History VO params
-            change_type=study_visit_ogm_input.change_type,
-            end_date=study_visit_ogm_input.end_date,
+            change_type=change_type,
+            end_date=study_action_before.get("date"),
         )
+
+    def _create_aggregate_root_instance_from_cypher_result(
+        self, input_dict: dict, audit_trail: bool = False
+    ) -> StudyVisitVO | StudyVisitHistoryVO:
+        study_uid = input_dict.get("study_uid")
+        study_epoch = input_dict.get("epoch")
+        study_epoch_uid = study_epoch.get("study_epoch_uid")
+        simple_study_epoch = SimpleStudyEpoch(
+            uid=study_epoch_uid,
+            study_uid=study_uid,
+            order=study_epoch.get("order"),
+            epoch=StudyEpochEpoch[study_epoch.get("epoch_ct_uid")],
+        )
+        timepoint = input_dict.get("timepoint")
+        if timepoint:
+            unit_definition = timepoint.get("unit_definition")
+            time_unit_object = TimeUnit(
+                name=unit_definition.get("name"),
+                conversion_factor_to_master=unit_definition.get(
+                    "conversion_factor_to_master"
+                ),
+                from_timedelta=lambda u, x: u.conversion_factor_to_master * x,
+            )
+        else:
+            time_unit_object = None
+        if timepoint:
+            timpeoint_object = TimePoint(
+                uid=timepoint.get("uid"),
+                time_unit_uid=timepoint.get("unit_definition").get("uid"),
+                visit_timereference=StudyVisitTimeReference.get(
+                    timepoint.get("time_reference_uid")
+                ),
+                visit_value=timepoint.get("value").get("value"),
+            )
+        else:
+            timpeoint_object = None
+        window_unit = input_dict.get("window_unit") or {}
+        if window_unit is not None:
+            window_unit_object = TimeUnit(
+                name=window_unit.get("name"),
+                conversion_factor_to_master=window_unit.get(
+                    "conversion_factor_to_master"
+                ),
+                from_timedelta=lambda u, x: u.conversion_factor_to_master * x,
+            )
+        else:
+            window_unit_object = None
+        day_unit_object = TimeUnit(
+            name=config.DAY_UNIT_NAME,
+            conversion_factor_to_master=config.DAY_UNIT_CONVERSION_FACTOR_TO_MASTER,
+            from_timedelta=lambda u, x: u.conversion_factor_to_master * x,
+        )
+
+        week_unit_object = TimeUnit(
+            name=config.WEEK_UNIT_NAME,
+            conversion_factor_to_master=config.WEEK_UNIT_CONVERSION_FACTOR_TO_MASTER,
+            from_timedelta=lambda u, x: u.conversion_factor_to_master * x,
+        )
+        visit_name = input_dict.get("visit_name")
+        study_day = input_dict.get("study_day")
+        study_duration_days = input_dict.get("study_duration_days")
+        study_week = input_dict.get("study_week")
+        study_duration_weeks = input_dict.get("study_duration_weeks")
+        week_in_study = input_dict.get("week_in_study")
+        vis_subclass = input_dict.get("study_visit").get("visit_subclass")
+        visit_subclass = VisitSubclass[vis_subclass] if vis_subclass else None
+        is_soa_milestone = input_dict.get("study_visit").get("is_soa_milestone")
+        study_visit_vo = StudyVisitVO(
+            uid=input_dict.get("study_visit").get("uid"),
+            visit_number=input_dict.get("study_visit").get("visit_number"),
+            visit_sublabel_reference=input_dict.get("study_visit").get(
+                "visit_sublabel_reference"
+            ),
+            consecutive_visit_group=input_dict.get("study_visit").get(
+                "consecutive_visit_group"
+            ),
+            show_visit=input_dict.get("study_visit").get("show_visit"),
+            timepoint=timpeoint_object,
+            study_day=(
+                NumericValue(
+                    uid=study_day.get("uid"), value=int(study_day.get("value"))
+                )
+                if study_day
+                else None
+            ),
+            study_duration_days=(
+                NumericValue(
+                    uid=study_duration_days.get("uid"),
+                    value=int(study_duration_days.get("value")),
+                )
+                if study_duration_days
+                else None
+            ),
+            study_week=(
+                NumericValue(
+                    uid=study_week.get("uid"),
+                    value=int(study_week.get("value")),
+                )
+                if study_week
+                else None
+            ),
+            study_duration_weeks=(
+                NumericValue(
+                    uid=study_duration_weeks.get("uid"),
+                    value=int(study_duration_weeks.get("value")),
+                )
+                if study_week
+                else None
+            ),
+            week_in_study=(
+                NumericValue(
+                    uid=week_in_study.get("uid"),
+                    value=int(week_in_study.get("value")),
+                )
+                if week_in_study
+                else None
+            ),
+            visit_name_sc=TextValue(
+                uid=visit_name.get("uid"), name=visit_name.get("name")
+            ),
+            time_unit_object=time_unit_object,
+            window_unit_object=window_unit_object,
+            visit_window_min=input_dict.get("study_visit").get("visit_window_min"),
+            visit_window_max=input_dict.get("study_visit").get("visit_window_max"),
+            window_unit_uid=window_unit.get("uid"),
+            description=input_dict.get("study_visit").get("description"),
+            start_rule=input_dict.get("study_visit").get("start_rule"),
+            end_rule=input_dict.get("study_visit").get("end_rule"),
+            visit_contact_mode=StudyVisitContactMode.get(
+                input_dict.get("visit_contact_mode_uid")
+            ),
+            epoch_allocation=StudyVisitEpochAllocation.get(
+                input_dict.get("epoch_allocation_uid")
+            ),
+            visit_type=StudyVisitType.get(input_dict.get("visit_type_uid")),
+            status=StudyStatus(input_dict.get("study_visit").get("status")),
+            start_date=input_dict.get("study_action").get("date"),
+            author_id=input_dict.get("study_action").get("author_id"),
+            author_username=input_dict.get("author_username"),
+            day_unit_object=day_unit_object,
+            week_unit_object=week_unit_object,
+            epoch_connector=simple_study_epoch,
+            visit_class=VisitClass[input_dict.get("study_visit").get("visit_class")],
+            visit_subclass=visit_subclass,
+            is_global_anchor_visit=input_dict.get("study_visit").get(
+                "is_global_anchor_visit"
+            ),
+            is_soa_milestone=(
+                is_soa_milestone if is_soa_milestone is not None else False
+            ),
+            visit_order=input_dict.get("study_visit").get("visit_order"),
+            vis_unique_number=int(
+                input_dict.get("study_visit").get("unique_visit_number")
+            ),
+            vis_short_name=input_dict.get("study_visit").get("short_visit_label"),
+            repeating_frequency=StudyVisitRepeatingFrequency.get(
+                input_dict.get("repeating_frequency_uid")
+            ),
+            number_of_assigned_activities=input_dict.get("count_activities"),
+        )
+        if not audit_trail:
+            return study_visit_vo
+        return self.from_study_visit_vo_to_history_vo(
+            study_visit_vo=study_visit_vo, input_dict=input_dict
+        )
+
+    def _retrieve_concepts_from_cypher_res(
+        self, result_array, attribute_names, audit_trail: bool = False
+    ) -> list[StudyVisitVO]:
+        """
+        Method maps the result of the cypher query into real aggregate objects.
+        :param result_array:
+        :param attribute_names:
+        :return Iterable[_AggregateRootType]:
+        """
+        concept_ars = []
+        for concept in result_array:
+            concept_dictionary = {}
+            for concept_property, attribute_name in zip(concept, attribute_names):
+                concept_dictionary[attribute_name] = concept_property
+            concept_ars.append(
+                self._create_aggregate_root_instance_from_cypher_result(
+                    concept_dictionary, audit_trail=audit_trail
+                )
+            )
+        return concept_ars
+
+    def find_all_visits_query(
+        self,
+        study_uid: str,
+        study_value_version: str | None = None,
+        study_visit_uid: str | None = None,
+        audit_trail: bool = False,
+    ) -> tuple[str, dict]:
+        params = {}
+        if not audit_trail:
+            if study_value_version:
+                query = "MATCH (study_root:StudyRoot {uid: $study_uid})-[:HAS_VERSION{status: $study_status, version: $study_value_version}]->(study_value:StudyValue)"
+                params["study_value_version"] = study_value_version
+                params["study_status"] = StudyStatus.RELEASED.value
+            else:
+                query = "MATCH (study_root:StudyRoot {uid: $study_uid})-[:LATEST]->(study_value:StudyValue)"
+            params["study_uid"] = study_uid
+            if study_visit_uid:
+                query += "MATCH (study_value)-[:HAS_STUDY_VISIT]->(study_visit:StudyVisit {uid: $study_visit_uid})<-[:AFTER]-(study_action:StudyAction)"
+                params["study_visit_uid"] = study_visit_uid
+            else:
+                query += "MATCH (study_value)-[:HAS_STUDY_VISIT]->(study_visit:StudyVisit)<-[:AFTER]-(study_action:StudyAction)"
+        else:
+            if study_visit_uid:
+                query = "MATCH (study_visit:StudyVisit {uid: $study_visit_uid})<-[:AFTER]-(study_action:StudyAction)<-[:AUDIT_TRAIL]-(study_root:StudyRoot)"
+                params["study_visit_uid"] = study_visit_uid
+            else:
+                query = "MATCH (study_visit:StudyVisit)<-[:AFTER]-(study_action:StudyAction)<-[:AUDIT_TRAIL]-(study_root:StudyRoot {uid:$study_uid})"
+                params["study_uid"] = study_uid
+        if not (study_value_version or audit_trail):
+            query += "WHERE NOT (study_visit)-[:BEFORE]-()"
+
+        query += """
+            WITH 
+                study_root.uid AS study_uid,
+                study_action,
+                study_visit,
+                head([(study_visit)<-[:STUDY_EPOCH_HAS_STUDY_VISIT]-(study_epoch:StudyEpoch)-[:HAS_EPOCH]->(epoch_ct_term:CTTermRoot) 
+                    | {study_epoch_uid:study_epoch.uid, epoch_ct_uid:epoch_ct_term.uid, order: study_epoch.order}]) AS epoch,
+                head([(study_visit)-[:HAS_VISIT_TYPE]->(visit_type:CTTermRoot) | visit_type.uid]) AS visit_type_uid,
+                head([(study_visit)-[:HAS_VISIT_CONTACT_MODE]->(visit_contact_mode:CTTermRoot) | visit_contact_mode.uid]) AS visit_contact_mode_uid,
+                head([(study_visit)-[:HAS_VISIT_NAME]->(visit_name_root:VisitNameRoot)-[:LATEST]->(visit_name_value:VisitNameValue) 
+                    | {uid:visit_name_root.uid, name: visit_name_value.name }]) AS visit_name,
+                head([(study_visit)-[:HAS_REPEATING_FREQUENCY]->(repeating_frequency:CTTermRoot) | repeating_frequency.uid]) AS repeating_frequency_uid,
+                head([(study_visit)-[:HAS_WINDOW_UNIT]->(udr:UnitDefinitionRoot)-[:LATEST]->(udv:UnitDefinitionValue) 
+                    | {
+                        uid:udr.uid, 
+                        name:udv.name,
+                        conversion_factor_to_master: udv.conversion_factor_to_master
+                    }]) AS window_unit,
+                head([(study_visit)-[:HAS_TIMEPOINT]->(timepoint_root:TimePointRoot)-[:LATEST]->(timepoint_value:TimePointValue) 
+                    | {
+                        uid:timepoint_root.uid,
+                        unit_definition: head([(timepoint_value)-[:HAS_UNIT_DEFINITION]->(udr:UnitDefinitionRoot)-[:LATEST]->(udv:UnitDefinitionValue) 
+                            | {
+                                uid:udr.uid, 
+                                name:udv.name,
+                                conversion_factor_to_master: udv.conversion_factor_to_master
+                            }]),
+                        time_reference_uid: head([(timepoint_value)-[:HAS_TIME_REFERENCE]->(time_reference_ct_term:CTTermRoot) | time_reference_ct_term.uid]),
+                        value: head([(timepoint_value)-[:HAS_VALUE]->(nvr:NumericValueRoot)-[:LATEST]->(nvv:NumericValue) | {uid:nvr.uid, value:nvv.value}])
+                    }]) AS timepoint,
+                head([(study_visit)-[:HAS_STUDY_DAY]->(sdr:StudyDayRoot)-[:LATEST]->(sdv:StudyDayValue) | {uid:sdr.uid, value:sdv.value}]) AS study_day,
+                head([(study_visit)-[:HAS_STUDY_DURATION_DAYS]->(sdr:StudyDurationDaysRoot)-[:LATEST]->(sdv:StudyDurationDaysValue) | {uid:sdr.uid, value:sdv.value}]) AS study_duration_days,
+                head([(study_visit)-[:HAS_STUDY_WEEK]->(swr:StudyWeekRoot)-[:LATEST]->(swv:StudyWeekValue) | {uid:swr.uid, value:swv.value}]) AS study_week,
+                head([(study_visit)-[:HAS_STUDY_DURATION_WEEKS]->(swr:StudyDurationWeeksRoot)-[:LATEST]->(swv:StudyDurationWeeksValue) | {uid:swr.uid, value:swv.value}]) AS study_duration_weeks,
+                head([(study_visit)-[:HAS_WEEK_IN_STUDY]->(wisr:WeekInStudyRoot)-[:LATEST]->(wisv:WeekInStudyValue) | {uid:wisr.uid, value:wisv.value}]) AS week_in_study,
+                head([(study_visit)-[:HAS_EPOCH_ALLOCATION]->(epoch_allocation:CTTermRoot) | epoch_allocation.uid]) AS epoch_allocation_uid,
+                size([(study_visit)-[:STUDY_VISIT_HAS_SCHEDULE]->(activity_schedule:StudyActivitySchedule)<-[:HAS_STUDY_ACTIVITY_SCHEDULE]-(:StudyValue) | activity_schedule]) AS count_activities,
+                coalesce(head([(user:User)-[*0]-() WHERE user.user_id=study_action.author_id | user.username]), study_action.author_id) AS author_username
+        """
+        if audit_trail:
+            query += """,head([(study_visit:StudyVisit)<-[:BEFORE]-(study_action_before:StudyAction) | study_action_before]) AS study_action_before,
+                labels(study_action) AS change_type
+                RETURN * ORDER BY study_visit.uid, study_action.date DESC
+            """
+        else:
+            query += "RETURN * ORDER BY study_visit.unique_visit_number"
+        return query, params
 
     def find_all_visits_by_study_uid(
         self, study_uid: str, study_value_version: str | None = None
-    ) -> list[StudyVisitOGM]:
-        if study_value_version:
-            filters = {
-                "has_study_visit__has_version|version": study_value_version,
-                "study_epoch_has_study_visit__study_value__has_version|version": study_value_version,
-                "has_study_visit__has_version__uid": study_uid,
-                "study_epoch_has_study_visit__study_value__has_version__uid": study_uid,
-            }
-        else:
-            filters = {
-                "has_study_visit__latest_value__uid": study_uid,
-                "study_epoch_has_study_visit__study_value__latest_value__uid": study_uid,
-            }
+    ) -> list[StudyVisitVO]:
+        query, params = self.find_all_visits_query(
+            study_uid=study_uid, study_value_version=study_value_version
+        )
 
-        return [
-            StudyVisitOGM.from_orm(sas_node)
-            for sas_node in ListDistinct(
-                StudyVisit.nodes.fetch_relations(
-                    "study_epoch_has_study_visit__has_epoch",
-                    "has_visit_type",
-                    "has_visit_contact_mode",
-                    "has_visit_name__has_latest_value",
-                    "has_after__audit_trail",
-                    "study_epoch_has_study_visit__study_value",
-                    Optional("has_repeating_frequency"),
-                    Optional("has_window_unit__has_latest_value"),
-                    Optional(
-                        "has_timepoint__has_latest_value__has_unit_definition__has_latest_value"
-                    ),
-                    Optional("has_timepoint__has_latest_value__has_time_reference"),
-                    Optional(
-                        "has_timepoint__has_latest_value__has_value__has_latest_value"
-                    ),
-                    Optional("has_study_day__has_latest_value"),
-                    Optional("has_study_duration_days__has_latest_value"),
-                    Optional("has_study_week__has_latest_value"),
-                    Optional("has_study_duration_weeks__has_latest_value"),
-                    Optional("has_week_in_study__has_latest_value"),
-                    Optional("has_epoch_allocation"),
-                )
-                .filter(**filters)
-                .order_by("unique_visit_number")
-                .resolve_subgraph()
-            ).distinct()
-        ]
+        study_visits, attributes_names = db.cypher_query(query=query, params=params)
+
+        extracted_items = self._retrieve_concepts_from_cypher_res(
+            study_visits, attributes_names
+        )
+        return extracted_items
 
     def find_all_visits_referencing_study_visit(
         self, study_visit_uid: str
@@ -437,99 +521,38 @@ class StudyVisitRepository:
     def find_by_uid(
         self, study_uid: str, uid: str, study_value_version: str | None = None
     ) -> StudyVisitVO:
-        if study_value_version:
-            filters = {
-                "uid": uid,
-                "has_study_visit__has_version|version": study_value_version,
-                "study_epoch_has_study_visit__study_value__has_version|version": study_value_version,
-                "has_study_visit__has_version__uid": study_uid,
-                "study_epoch_has_study_visit__study_value__has_version__uid": study_uid,
-            }
-        else:
-            filters = {
-                "uid": uid,
-                "has_study_visit__latest_value__uid": study_uid,
-                "study_epoch_has_study_visit__study_value__latest_value__uid": study_uid,
-            }
-
-        visit_node = (
-            StudyVisit.nodes.fetch_relations(
-                "study_epoch_has_study_visit__has_epoch",
-                "study_epoch_has_study_visit__study_value",
-                "has_visit_type",
-                "has_visit_contact_mode",
-                "has_visit_name__has_latest_value",
-                "has_after__audit_trail",
-                Optional("has_repeating_frequency"),
-                Optional("has_window_unit__has_latest_value"),
-                Optional(
-                    "has_timepoint__has_latest_value__has_unit_definition__has_latest_value"
-                ),
-                Optional("has_timepoint__has_latest_value__has_time_reference"),
-                Optional(
-                    "has_timepoint__has_latest_value__has_value__has_latest_value"
-                ),
-                Optional("has_study_day__has_latest_value"),
-                Optional("has_study_duration_days__has_latest_value"),
-                Optional("has_study_week__has_latest_value"),
-                Optional("has_study_duration_weeks__has_latest_value"),
-                Optional("has_week_in_study__has_latest_value"),
-                Optional("has_epoch_allocation"),
-            )
-            .filter(**filters)
-            .resolve_subgraph()
+        query, params = self.find_all_visits_query(
+            study_uid=study_uid,
+            study_value_version=study_value_version,
+            study_visit_uid=uid,
         )
-        unique_visits = []
-        for ith_visit_node in visit_node:
-            if ith_visit_node not in unique_visits:
-                unique_visits.extend([ith_visit_node])
+        study_visits, attributes_names = db.cypher_query(query=query, params=params)
+        extracted_items = self._retrieve_concepts_from_cypher_res(
+            study_visits, attributes_names
+        )
         ValidationException.raise_if(
-            len(unique_visits) > 1,
+            len(extracted_items) > 1,
             msg=f"Found more than one StudyVisit node with UID '{uid}'.",
         )
         ValidationException.raise_if(
-            len(unique_visits) == 0,
-            msg=f"Study Visit with UID '{uid}' doesn't exist.",
+            len(extracted_items) == 0,
+            msg=f"StudyVisit with UID '{uid}' doesn't exist.",
         )
-        return self.from_neomodel_to_vo(
-            study_visit_ogm_input=StudyVisitOGM.from_orm(unique_visits[0]),
-            study_value_version=study_value_version,
-        )
+        return extracted_items[0]
 
     def get_all_versions(
         self,
-        uid: str,
         study_uid: str,
-    ):
-        se_nodes = ListDistinct(
-            StudyVisit.nodes.fetch_relations(
-                "study_epoch_has_study_visit__has_epoch",
-                "has_visit_type",
-                "has_visit_contact_mode",
-                "has_visit_name__has_latest_value",
-                "has_after__audit_trail",
-                "study_epoch_has_study_visit__study_value",
-                Optional("has_window_unit__has_latest_value"),
-                Optional(
-                    "has_timepoint__has_latest_value__has_unit_definition__has_latest_value"
-                ),
-                Optional("has_timepoint__has_latest_value__has_time_reference"),
-                Optional(
-                    "has_timepoint__has_latest_value__has_value__has_latest_value"
-                ),
-                Optional("has_study_day__has_latest_value"),
-                Optional("has_study_duration_days__has_latest_value"),
-                Optional("has_study_week__has_latest_value"),
-                Optional("has_study_duration_weeks__has_latest_value"),
-                Optional("has_week_in_study__has_latest_value"),
-                Optional("has_epoch_allocation"),
-                Optional("has_before"),
-            )
-            .filter(uid=uid, has_after__audit_trail__uid=study_uid)
-            .resolve_subgraph()
-        ).distinct()
-
-        return se_nodes
+        uid: str | None = None,
+    ) -> list[StudyVisitHistoryVO]:
+        query, params = self.find_all_visits_query(
+            study_uid=study_uid, study_visit_uid=uid, audit_trail=True
+        )
+        study_visits, attributes_names = db.cypher_query(query=query, params=params)
+        extracted_items = self._retrieve_concepts_from_cypher_res(
+            study_visits, attributes_names, audit_trail=True
+        )
+        return extracted_items
 
     def manage_versioning_create(
         self, study_root: StudyRoot, study_visit: StudyVisitVO, new_item: StudyVisit
@@ -589,8 +612,6 @@ class StudyVisitRepository:
         new_visit = StudyVisit(
             uid=study_visit.uid,
             visit_number=study_visit.visit_number,
-            visit_sublabel=study_visit.visit_sublabel,
-            visit_sublabel_uid=study_visit.visit_sublabel_uid,
             visit_sublabel_reference=study_visit.visit_sublabel_reference,
             short_visit_label=study_visit.visit_short_name,
             unique_visit_number=study_visit.unique_visit_number,

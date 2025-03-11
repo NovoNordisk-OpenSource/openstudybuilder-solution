@@ -85,10 +85,16 @@ class ActivityRepository(ConceptGenericRepository[ActivityAR]):
                         activity_group_uid=activity_grouping.get("activity_group").get(
                             "uid"
                         ),
+                        activity_group_name=activity_grouping.get("activity_group").get(
+                            "name"
+                        ),
                         activity_group_version=f"{activity_grouping.get('activity_group').get('major_version')}.{activity_grouping.get('activity_group').get('minor_version')}",
                         activity_subgroup_uid=activity_grouping.get(
                             "activity_subgroup"
                         ).get("uid"),
+                        activity_subgroup_name=activity_grouping.get(
+                            "activity_subgroup"
+                        ).get("name"),
                         activity_subgroup_version=f"{activity_grouping.get('activity_subgroup').get('major_version')}.{activity_grouping.get('activity_subgroup').get('minor_version')}",
                     )
                     for activity_grouping in input_dict.get("activity_groupings")
@@ -130,19 +136,29 @@ class ActivityRepository(ConceptGenericRepository[ActivityAR]):
     def _create_ar(
         self,
         root: VersionRoot,
-        library: Library | None,
+        library: Library,
         relationship: VersionRelationship,
         value: VersionValue,
-        **_kwargs,
+        study_count: int = 0,
+        *,
+        activity_root,
+        **kwargs,
     ) -> ActivityAR:
-        requester_study_id = None
-        # We are only interested in the StudyId of the Activity Requests
-        if library.name == REQUESTED_LIBRARY_NAME:
-            if study_activity := value.has_selected_activity.single():
-                if activity := study_activity.has_study_activity.single():
-                    requester_study_id = (
-                        f"{activity.study_id_prefix}-{activity.study_number}"
-                    )
+        activity_groupings = []
+        for activity_grouping in activity_root["activity_groupings"]:
+            activity_group = activity_grouping["activity_group"]
+            activity_subgroup = activity_grouping["activity_subgroup"]
+            activity_groupings.append(
+                ActivityGroupingVO(
+                    activity_group_uid=activity_group.get("uid"),
+                    activity_group_name=activity_group.get("name"),
+                    activity_group_version=f"{activity_group.get('major_version')}.{activity_group.get('minor_version')}",
+                    activity_subgroup_uid=activity_subgroup.get("uid"),
+                    activity_subgroup_name=activity_subgroup.get("name"),
+                    activity_subgroup_version=f"{activity_subgroup.get('major_version')}.{activity_subgroup.get('minor_version')}",
+                )
+            )
+
         return ActivityAR.from_repository_values(
             uid=root.uid,
             concept_vo=ActivityVO.from_repository_values(
@@ -153,27 +169,13 @@ class ActivityRepository(ConceptGenericRepository[ActivityAR]):
                 synonyms=value.synonyms or [],
                 definition=value.definition,
                 abbreviation=value.abbreviation,
-                activity_groupings=[
-                    ActivityGroupingVO(
-                        activity_group_uid=activity_grouping.get("activity_group").get(
-                            "uid"
-                        ),
-                        activity_group_version=f"{activity_grouping.get('activity_group').get('major_version')}.{activity_grouping.get('activity_group').get('minor_version')}",
-                        activity_subgroup_uid=activity_grouping.get(
-                            "activity_subgroup"
-                        ).get("uid"),
-                        activity_subgroup_version=f"{activity_grouping.get('activity_subgroup').get('major_version')}.{activity_grouping.get('activity_subgroup').get('minor_version')}",
-                    )
-                    for activity_grouping in _kwargs["activity_root"][
-                        "activity_groupings"
-                    ]
-                ],
+                activity_groupings=activity_groupings,
                 request_rationale=value.request_rationale,
                 is_request_final=(
                     value.is_request_final if value.is_request_final else False
                 ),
-                requester_study_id=requester_study_id,
-                replaced_by_activity=_kwargs["activity_root"]["replaced_activity_uid"],
+                requester_study_id=activity_root["requester_study_id"],
+                replaced_by_activity=activity_root["replaced_activity_uid"],
                 reason_for_rejecting=value.reason_for_rejecting,
                 contact_person=value.contact_person,
                 is_request_rejected=(
@@ -188,8 +190,7 @@ class ActivityRepository(ConceptGenericRepository[ActivityAR]):
                     else True
                 ),
                 is_finalized=bool(
-                    value.is_request_rejected
-                    or _kwargs["activity_root"]["replaced_activity_uid"]
+                    value.is_request_rejected or activity_root["replaced_activity_uid"]
                 ),
             ),
             library=LibraryVO.from_input_values_2(
@@ -249,8 +250,10 @@ class ActivityRepository(ConceptGenericRepository[ActivityAR]):
                 activity_groupings.append(
                     ActivityGroupingVO(
                         activity_group_uid=activity_group_root.uid,
+                        activity_group_name=activity_group_value.name,
                         activity_group_version=latest_group.version,
                         activity_subgroup_uid=activity_subgroup_root.uid,
+                        activity_subgroup_name=activity_subgroup_value.name,
                         activity_subgroup_version=latest_subgroup.version,
                     )
                 )
@@ -533,13 +536,13 @@ class ActivityRepository(ConceptGenericRepository[ActivityAR]):
             coalesce(concept_value.is_multiple_selection_allowed, True) AS is_multiple_selection_allowed,
             apoc.coll.toSet([(concept_value)-[:HAS_GROUPING]->(:ActivityGrouping)-[:IN_SUBGROUP]->(activity_valid_group:ActivityValidGroup)
             {'WHERE size([(activity_valid_group)<-[:HAS_GROUP]-(activity_subgroup_value) WHERE activity_subgroup_value.name in $activity_subgroup_names | activity_subgroup_value.name]) > 0 '
-            if activity_subgroup_names
-            else ''}
+        if activity_subgroup_names
+        else ''}
             {'AND' if activity_subgroup_names and activity_group_names else ''}
             {'' if activity_subgroup_names and activity_group_names else 'WHERE' if not activity_subgroup_names and activity_group_names else ''}
             {'size([(activity_valid_group)-[:IN_GROUP]-(activity_group_value) WHERE activity_group_value.name in $activity_group_names | activity_group_value.name]) > 0 '
-            if activity_group_names
-            else ''}
+        if activity_group_names
+        else ''}
              | {{
                  activity_subgroup: head(apoc.coll.sortMulti([(activity_valid_group)<-[:HAS_GROUP]-(activity_subgroup_value:ActivitySubGroupValue)
                  <-[has_version:HAS_VERSION]-(activity_subgroup_root:ActivitySubGroupRoot)
@@ -810,11 +813,12 @@ class ActivityRepository(ConceptGenericRepository[ActivityAR]):
         query = (
             match
             + """
-        WITH 
-            apoc.coll.sortMulti([(activity_value)-[:HAS_GROUPING]->(:ActivityGrouping)<-[:HAS_ACTIVITY]-
+        MATCH (activity_value)-[:HAS_GROUPING]->(:ActivityGrouping)<-[:HAS_ACTIVITY]-
             (activity_instance_value:ActivityInstanceValue)<-[aihv:HAS_VERSION]-(activity_instance_root:ActivityInstanceRoot)
-            WHERE aihv.end_date IS NULL AND NOT EXISTS ((activity_instance_value)<--(:DeletedActivityInstanceRoot))
-            | {
+        WITH DISTINCT activity_root, activity_value, activity_instance_root, activity_instance_value, aihv
+        WHERE aihv.end_date IS NULL AND NOT EXISTS ((activity_instance_value)<--(:DeletedActivityInstanceRoot))
+        WITH *,
+            {
                 activity_instance_library_name: head([(library)-[:CONTAINS_CONCEPT]->(activity_instance_root) | library.name]),
                 uid: activity_instance_root.uid,
                 version: 
@@ -824,7 +828,6 @@ class ActivityRepository(ConceptGenericRepository[ActivityAR]):
                         status:aihv.status
                     },
                 name:activity_instance_value.name,
-                name_sentence_case:activity_instance_value.name_sentence_case,
                 name_sentence_case:activity_instance_value.name_sentence_case,
                 abbreviation:activity_instance_value.abbreviation,
                 definition:activity_instance_value.definition,
@@ -837,9 +840,9 @@ class ActivityRepository(ConceptGenericRepository[ActivityAR]):
                 topic_code:activity_instance_value.topic_code,
                 activity_instance_class: head([(activity_instance_value)-[:ACTIVITY_INSTANCE_CLASS]->(activity_instance_class_root:ActivityInstanceClassRoot)
                     -[:LATEST]->(activity_instance_class_value:ActivityInstanceClassValue) | activity_instance_class_value])
-            }], ['^uid', 'major_version', 'minor_version']) AS activity_instances
+            } AS activity_instance ORDER BY activity_instance.uid, activity_instance.name
         RETURN
-            apoc.coll.sortMaps(activity_instances, '^name') as activity_instances
+            collect(activity_instance) as activity_instances
         """
         )
         result_array, attribute_names = db.cypher_query(query=query, params=params)

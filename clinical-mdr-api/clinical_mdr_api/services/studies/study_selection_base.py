@@ -16,6 +16,7 @@ from clinical_mdr_api.models.concepts.compound_alias import CompoundAlias
 from clinical_mdr_api.models.concepts.medicinal_product import MedicinalProduct
 from clinical_mdr_api.models.controlled_terminologies.ct_term import (
     CTTermName,
+    SimpleCTTermNameWithConflictFlag,
     SimpleTermModel,
 )
 from clinical_mdr_api.models.study_selections.study_selection import (
@@ -189,13 +190,10 @@ class StudySelectionMixin:
         self, activity_uid: str
     ) -> ActivityForStudyActivity:
         """Finds the activity with a given UID."""
-        return ActivityForStudyActivity.from_activity_ar(
-            activity_ar=self._repos.activity_repository.find_by_uid_optimized(
-                activity_uid
-            ),
-            find_activity_subgroup_by_uid=self._repos.activity_subgroup_repository.find_by_uid_optimized,
-            find_activity_group_by_uid=self._repos.activity_group_repository.find_by_uid_optimized,
+        activity_ar = self._repos.activity_repository.find_by_uid_optimized(
+            activity_uid
         )
+        return ActivityForStudyActivity.from_activity_ar(activity_ar=activity_ar)
 
     def _transform_activity_model(
         self, activity_uid: str, activity_version: str
@@ -204,9 +202,7 @@ class StudySelectionMixin:
         return ActivityForStudyActivity.from_activity_ar(
             activity_ar=self._repos.activity_repository.find_by_uid_optimized(
                 activity_uid, version=activity_version
-            ),
-            find_activity_subgroup_by_uid=self._repos.activity_subgroup_repository.find_by_uid_optimized,
-            find_activity_group_by_uid=self._repos.activity_group_repository.find_by_uid_optimized,
+            )
         )
 
     def _transform_latest_activity_instance_model(
@@ -303,12 +299,17 @@ class StudySelectionMixin:
         term_uids: list,
         status: LibraryItemStatus | None = LibraryItemStatus.FINAL,
         at_specific_date: datetime | None = None,
-    ) -> list[CTTermName]:
+        return_simple_object: bool = False,
+    ) -> list[CTTermName] | list[SimpleCTTermNameWithConflictFlag]:
         items = self._repos.ct_term_name_repository.find_by_uids(
             at_specific_date=at_specific_date,
             term_uids=term_uids,
             status=status,
         )
+        if return_simple_object:
+            return [
+                SimpleCTTermNameWithConflictFlag.from_ct_term_ar(ith) for ith in items
+            ]
         return [CTTermName.from_ct_term_ar(ith) for ith in items]
 
     def _find_branch_arms_connected_to_arm_uid(

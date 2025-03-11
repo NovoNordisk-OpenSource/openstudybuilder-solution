@@ -304,8 +304,9 @@ def test_migrate_unify_study_visit_window_units(migration):
     records, _ = run_cypher_query(
         DB_DRIVER,
         """
-        MATCH (study_root:StudyRoot)-[:LATEST]->(study_value:StudyValue)-[:HAS_STUDY_VISIT]
-            ->(study_visit:StudyVisit)-[:HAS_WINDOW_UNIT]->(unit_root:UnitDefinitionRoot)-[:LATEST]->(unit_value:UnitDefinitionValue)
+        MATCH (study_root:StudyRoot)-[:LATEST]->(study_value:StudyValue)
+        WHERE NOT (study_root)-[:LATEST_LOCKED]-(study_value)
+        MATCH (study_value)-[:HAS_STUDY_VISIT]->(study_visit:StudyVisit)-[:HAS_WINDOW_UNIT]->(unit_root:UnitDefinitionRoot)-[:LATEST]->(unit_value:UnitDefinitionValue)
         WITH DISTINCT study_root, collect(DISTINCT unit_value.name) AS units
         WHERE size(units) > 1
         RETURN study_root.uid
@@ -331,3 +332,168 @@ def test_migrate_unify_study_visit_window_units(migration):
 @pytest.mark.order(after="test_migrate_unify_study_visit_window_units")
 def test_repeat_migrate_unify_study_visit_window_units(migration):
     assert not migration_010.migrate_unify_study_visit_window_units(DB_DRIVER, logger)
+
+
+def test_migrate_study_selection_metadata_merge(migration):
+    studies, _ = run_cypher_query(
+        DB_DRIVER,
+        """
+        MATCH (study_root:StudyRoot)-[:LATEST]->(study_value:StudyValue)
+        WHERE NOT (study_root)-[:LATEST_LOCKED]->(study_value)
+        return study_root.uid
+        """,
+    )
+    for study in studies:
+        study_uid = study[0]
+        logger.info(
+            "Verifying successful StudySelectionMetadata merge for the following Study (%s)",
+            study_uid,
+        )
+
+        # GET all study-activities
+        res = api_get(f"/studies/{study_uid}/study-activities", params={"page_size": 0})
+        assert res.status_code == 200
+        study_activities = res.json()["items"]
+        study_soa_groups = {}
+        study_activity_groups = {}
+        study_activity_subgroups = {}
+
+        for study_activity in study_activities:
+            study_soa_groups.setdefault(
+                study_activity["study_soa_group"]["soa_group_term_uid"],
+                study_activity["study_soa_group"]["study_soa_group_uid"],
+            )
+            if (
+                study_activity["study_activity_group"]["study_activity_group_uid"]
+                is not None
+            ):
+                study_activity_groups.setdefault(
+                    study_activity["study_soa_group"]["soa_group_term_uid"], {}
+                ).setdefault(
+                    study_activity["study_activity_group"]["activity_group_uid"],
+                    study_activity["study_activity_group"]["study_activity_group_uid"],
+                )
+            if (
+                study_activity["study_activity_subgroup"]["study_activity_subgroup_uid"]
+                is not None
+            ):
+                study_activity_subgroups.setdefault(
+                    study_activity["study_soa_group"]["soa_group_term_uid"], {}
+                ).setdefault(
+                    study_activity["study_activity_group"]["activity_group_uid"], {}
+                ).setdefault(
+                    study_activity["study_activity_subgroup"]["activity_subgroup_uid"],
+                    study_activity["study_activity_subgroup"][
+                        "study_activity_subgroup_uid"
+                    ],
+                )
+
+        for study_activity in study_activities:
+            # assert each StudyActivity with the same SoAGroup CTTerm selected should have same SoAGroup selection
+            assert (
+                study_activity["study_soa_group"]["study_soa_group_uid"]
+                == study_soa_groups[
+                    study_activity["study_soa_group"]["soa_group_term_uid"]
+                ]
+            )
+
+            if (
+                study_activity["study_activity_group"]["study_activity_group_uid"]
+                is not None
+            ):
+                # assert each StudyActivity with the same SoAGroup CTTerm and ActivityGroup selected should have same StudyActivityGroup
+                assert (
+                    study_activity["study_activity_group"]["study_activity_group_uid"]
+                    == study_activity_groups[
+                        study_activity["study_soa_group"]["soa_group_term_uid"]
+                    ][study_activity["study_activity_group"]["activity_group_uid"]]
+                )
+
+            if (
+                study_activity["study_activity_subgroup"]["study_activity_subgroup_uid"]
+                is not None
+            ):
+                # assert each StudyActivity with the same SoAGroup CTTerm, ActivityGroup and ActivitySubGroup selected should have same StudyActivitySubGroup
+                assert (
+                    study_activity["study_activity_subgroup"][
+                        "study_activity_subgroup_uid"
+                    ]
+                    == study_activity_subgroups[
+                        study_activity["study_soa_group"]["soa_group_term_uid"]
+                    ][study_activity["study_activity_group"]["activity_group_uid"]][
+                        study_activity["study_activity_subgroup"][
+                            "activity_subgroup_uid"
+                        ]
+                    ]
+                )
+
+        # StudySoAGroup
+        _result, _ = run_cypher_query(
+            DB_DRIVER,
+            """
+            MATCH (study_root:StudyRoot {uid: $study_uid})-[:LATEST]->(study_value:StudyValue)
+            WITH DISTINCT study_root, study_value
+            MATCH (study_value)-[:HAS_STUDY_ACTIVITY]->(study_activity:StudyActivity)-[:STUDY_ACTIVITY_HAS_STUDY_SOA_GROUP]->
+                (study_soa_group:StudySoAGroup)-[:HAS_FLOWCHART_GROUP]->(flowchart_group_term_root:CTTermRoot)
+            WHERE NOT (study_soa_group)<-[:BEFORE]-() AND NOT (study_soa_group)<-[]-(:Delete)
+
+            // leave only a few rows that will represent distinct CTTermRoots that represent chosen SoA/Flowchart group
+            WITH DISTINCT flowchart_group_term_root
+            RETURN flowchart_group_term_root
+            """,
+            params={"study_uid": study_uid},
+        )
+        amount_of_soa_group_nodes = len(_result) if _result else 0
+        assert amount_of_soa_group_nodes == len(study_soa_groups.keys())
+
+        # StudyActivityGroup
+        _result, _ = run_cypher_query(
+            DB_DRIVER,
+            """
+            MATCH (study_root:StudyRoot {uid: $study_uid})-[:LATEST]->(study_value:StudyValue)
+            WITH DISTINCT study_root, study_value
+            MATCH (study_value)-[:HAS_STUDY_ACTIVITY]->(study_activity:StudyActivity)-[:STUDY_ACTIVITY_HAS_STUDY_ACTIVITY_GROUP]->
+                (study_activity_group:StudyActivityGroup)-[:HAS_SELECTED_ACTIVITY_GROUP]->(:ActivityGroupValue)<-[:HAS_VERSION]-(activity_group_root:ActivityGroupRoot)
+            MATCH (study_activity)-[:STUDY_ACTIVITY_HAS_STUDY_SOA_GROUP]->(study_soa_group:StudySoAGroup)
+            WHERE NOT (study_activity_group)<-[:BEFORE]-() AND NOT (study_activity_group)<-[]-(:Delete)
+
+            // leave only a few rows that will represent distinct ActivityGroups in a specific StudySoAGroup
+            WITH DISTINCT activity_group_root, study_soa_group
+            RETURN activity_group_root, study_soa_group
+            """,
+            params={"study_uid": study_uid},
+        )
+        amount_of_study_activity_group_nodes = len(_result) if _result else 0
+        all_group_nodes = 0
+        for study_activity_group_dict in study_activity_groups.values():
+            all_group_nodes += len(study_activity_group_dict.keys())
+        assert amount_of_study_activity_group_nodes == all_group_nodes
+
+        # StudyActivitySubGroup
+        _result, _ = run_cypher_query(
+            DB_DRIVER,
+            """
+            MATCH (study_root:StudyRoot {uid: $study_uid})-[:LATEST]->(study_value:StudyValue)
+            WITH DISTINCT study_root, study_value
+            MATCH (study_value)-[:HAS_STUDY_ACTIVITY]->(study_activity:StudyActivity)-[:STUDY_ACTIVITY_HAS_STUDY_ACTIVITY_SUBGROUP]->
+                (study_activity_subgroup:StudyActivitySubGroup)-[:HAS_SELECTED_ACTIVITY_SUBGROUP]->(:ActivitySubGroupValue)<-[:HAS_VERSION]-(activity_subgroup_root:ActivitySubGroupRoot)
+            MATCH (study_activity_group:StudyActivityGroup)<-[:STUDY_ACTIVITY_HAS_STUDY_ACTIVITY_GROUP]-(study_activity)
+                -[:STUDY_ACTIVITY_HAS_STUDY_SOA_GROUP]->(study_soa_group:StudySoAGroup)
+            WHERE NOT (study_activity_subgroup)<-[:BEFORE]-() AND NOT (study_activity_subgroup)<-[]-(:Delete)
+
+            // leave only a few rows that will represent distinct ActivitySubGroups in a specific StudySoAGroup and StudyActivityGroup
+            WITH DISTINCT activity_subgroup_root, study_soa_group, study_activity_group
+            RETURN activity_subgroup_root, study_soa_group, study_activity_group
+            """,
+            params={"study_uid": study_uid},
+        )
+        amount_of_study_activity_sub_group_nodes = len(_result) if _result else 0
+        all_subgroup_nodes = 0
+        for study_activity_group_dict in study_activity_subgroups.values():
+            for study_activity_subgroup_dict in study_activity_group_dict.values():
+                all_subgroup_nodes += len(study_activity_subgroup_dict.keys())
+        assert amount_of_study_activity_sub_group_nodes == all_subgroup_nodes
+
+@pytest.mark.order(after="test_migrate_study_selection_metadata_merge")
+def test_repeat_migrate_study_selection_metadata_merge(migration):
+    assert not migration_010.migrate_study_selection_metadata_merge(DB_DRIVER, logger)

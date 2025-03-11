@@ -7,23 +7,25 @@ from typing import Any, Callable, Self
 from clinical_mdr_api.domains.study_definition_aggregates.study_metadata import (
     StudyStatus,
 )
-from clinical_mdr_api.models.controlled_terminologies.ct_term_name import CTTermName
+from clinical_mdr_api.models.controlled_terminologies.ct_term import (
+    SimpleCTTermNameWithConflictFlag,
+)
 from common import exceptions
 from common.config import GLOBAL_ANCHOR_VISIT_NAME
 
-VisitTypeNamedTuple = CTTermName
+VisitTypeNamedTuple = SimpleCTTermNameWithConflictFlag
 StudyVisitType: dict[str, VisitTypeNamedTuple] = {}
 
-VisitRepeatingFrequencyNamedTuple = CTTermName
+VisitRepeatingFrequencyNamedTuple = SimpleCTTermNameWithConflictFlag
 StudyVisitRepeatingFrequency: dict[str, VisitRepeatingFrequencyNamedTuple] = {}
 
-VisitTimeReferenceNamedTuple = CTTermName
+VisitTimeReferenceNamedTuple = SimpleCTTermNameWithConflictFlag
 StudyVisitTimeReference: dict[str, VisitTimeReferenceNamedTuple] = {}
 
-VisitContactModeNamedTuple = CTTermName
+VisitContactModeNamedTuple = SimpleCTTermNameWithConflictFlag
 StudyVisitContactMode: dict[str, VisitContactModeNamedTuple] = {}
 
-VisitEpochAllocationNamedTuple = CTTermName
+VisitEpochAllocationNamedTuple = SimpleCTTermNameWithConflictFlag
 StudyVisitEpochAllocation: dict[str, VisitEpochAllocationNamedTuple] = {}
 
 
@@ -54,7 +56,7 @@ class TimeUnit:
 @dataclass
 class TimePoint:
     uid: str
-    visit_timereference: CTTermName
+    visit_timereference: SimpleCTTermNameWithConflictFlag
     time_unit_uid: str
     visit_value: int
 
@@ -72,6 +74,14 @@ class TextValue:
 
 
 @dataclass
+class SimpleStudyEpoch:
+    uid: str
+    study_uid: str
+    epoch: SimpleCTTermNameWithConflictFlag
+    order: int
+
+
+@dataclass
 class StudyVisitVO:
     consecutive_visit_group: str
     visit_window_min: int | None
@@ -81,12 +91,15 @@ class StudyVisitVO:
     description: str
     start_rule: str  # Free text
     end_rule: str  # Free text
-    visit_contact_mode: CTTermName  # CT Codelist Visit Contact Mode
-    visit_type: CTTermName  # CT Codelist VISIT_TYPE -
+    visit_contact_mode: (
+        SimpleCTTermNameWithConflictFlag  # CT Codelist Visit Contact Mode
+    )
+    visit_type: SimpleCTTermNameWithConflictFlag  # CT Codelist VISIT_TYPE -
 
     status: StudyStatus
     start_date: datetime.datetime
     author_id: str
+    author_username: str
 
     visit_class: VisitClass
     visit_subclass: VisitSubclass
@@ -94,7 +107,7 @@ class StudyVisitVO:
     visit_number: float
     visit_order: int
     show_visit: bool
-    epoch_allocation: CTTermName | None = None
+    epoch_allocation: SimpleCTTermNameWithConflictFlag | None = None
     timepoint: TimePoint | None = None
     study_day: NumericValue | None = None
     study_duration_days: NumericValue | None = None
@@ -118,20 +131,19 @@ class StudyVisitVO:
     day_unit_object: TimeUnit | None = None
     week_unit_object: TimeUnit | None = None
 
-    visit_sublabel: str | None = None  # label for subvisit
     visit_sublabel_reference: str | None = (
         None  # reference (uid) of the first subvisit in subvisit stream
     )
-    visit_sublabel_uid: str | None = None  # uid of subvisit label from Codelist
 
     vis_unique_number: int | None = None
     vis_short_name: str | None = None
 
-    repeating_frequency: CTTermName | None = None
+    repeating_frequency: SimpleCTTermNameWithConflictFlag | None = None
 
     study_id: str | None = None
     study_id_prefix: str | None = None
     study_number: str | None = None
+    number_of_assigned_activities: int | None = None
 
     @property
     def visit_name(self):
@@ -333,8 +345,6 @@ class StudyVisitVO:
 
     @property
     def visit_subname(self):
-        if self.visit_sublabel:
-            return f"{self.visit_name} {self.visit_sublabel}"
         return f"{self.visit_name}"
 
     @property

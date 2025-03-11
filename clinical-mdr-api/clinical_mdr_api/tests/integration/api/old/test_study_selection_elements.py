@@ -852,29 +852,12 @@ def test_all_history_of_specific_selection7(api_client):
     assert res[0]["change_type"] == "Edit"
     assert res[0]["accepted_version"] is False
     assert res[0]["changes"] == {
-        "study_uid": False,
-        "order": False,
-        "project_number": False,
-        "project_name": False,
-        "study_version": False,
-        "element_uid": False,
         "name": True,
-        "short_name": False,
-        "code": False,
-        "description": False,
         "planned_duration": True,
-        "start_rule": False,
-        "end_rule": False,
-        "element_colour": False,
-        "element_type": False,
         "element_subtype": True,
-        "study_compound_dosing_count": False,
         "start_date": True,
-        "author_username": False,
         "end_date": True,
-        "status": False,
         "change_type": True,
-        "accepted_version": False,
     }
     assert res[1]["study_uid"] == "study_root"
     assert res[1]["order"] == 2
@@ -1039,29 +1022,10 @@ def test_all_history_of_all_selection_study_elements(api_client):
     assert res[0]["change_type"] == "Edit"
     assert res[0]["accepted_version"] is False
     assert res[0]["changes"] == {
-        "study_uid": False,
         "order": True,
-        "project_number": False,
-        "project_name": False,
-        "study_version": False,
-        "element_uid": False,
-        "name": False,
-        "short_name": False,
-        "code": False,
-        "description": False,
-        "planned_duration": False,
-        "start_rule": False,
-        "end_rule": False,
-        "element_colour": False,
-        "element_type": False,
-        "element_subtype": False,
-        "study_compound_dosing_count": False,
         "start_date": True,
-        "author_username": False,
         "end_date": True,
-        "status": False,
         "change_type": True,
-        "accepted_version": False,
     }
     assert res[1]["study_uid"] == "study_root"
     assert res[1]["order"] == 1
@@ -1171,29 +1135,9 @@ def test_all_history_of_all_selection_study_elements(api_client):
     assert res[2]["change_type"] == "Edit"
     assert res[2]["accepted_version"] is False
     assert res[2]["changes"] == {
-        "study_uid": False,
         "order": True,
-        "project_number": False,
-        "project_name": False,
-        "study_version": False,
-        "element_uid": False,
-        "name": False,
-        "short_name": False,
-        "code": False,
-        "description": False,
-        "planned_duration": False,
-        "start_rule": False,
-        "end_rule": False,
-        "element_colour": False,
-        "element_type": False,
-        "element_subtype": False,
-        "study_compound_dosing_count": False,
         "start_date": True,
-        "author_username": False,
         "end_date": True,
-        "status": False,
-        "change_type": False,
-        "accepted_version": False,
     }
     assert res[3]["study_uid"] == "study_root"
     assert res[3]["order"] == 2
@@ -1250,29 +1194,12 @@ def test_all_history_of_all_selection_study_elements(api_client):
     assert res[3]["change_type"] == "Edit"
     assert res[3]["accepted_version"] is False
     assert res[3]["changes"] == {
-        "study_uid": False,
-        "order": False,
-        "project_number": False,
-        "project_name": False,
-        "study_version": False,
-        "element_uid": False,
         "name": True,
-        "short_name": False,
-        "code": False,
-        "description": False,
         "planned_duration": True,
-        "start_rule": False,
-        "end_rule": False,
-        "element_colour": False,
-        "element_type": False,
         "element_subtype": True,
-        "study_compound_dosing_count": False,
         "start_date": True,
-        "author_username": False,
         "end_date": True,
-        "status": False,
         "change_type": True,
-        "accepted_version": False,
     }
     assert res[4]["study_uid"] == "study_root"
     assert res[4]["order"] == 2

@@ -496,7 +496,7 @@ def get_study_visit_audit_trail(
 
 
 @router.get(
-    "/studies/{study_uid}/study-visit/audit-trail",
+    "/studies/{study_uid}/study-visits/audit-trail",
     dependencies=[rbac.STUDY_READ],
     summary="List audit trail related to definition of all study visits within the specified study-uid.",
     description="""

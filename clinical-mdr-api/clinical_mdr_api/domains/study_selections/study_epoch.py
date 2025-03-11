@@ -10,7 +10,9 @@ from clinical_mdr_api.domains.study_selections.study_visit import (
     VisitClass,
     VisitSubclass,
 )
-from clinical_mdr_api.models.controlled_terminologies.ct_term_name import CTTermName
+from clinical_mdr_api.models.controlled_terminologies.ct_term import (
+    SimpleCTTermNameWithConflictFlag,
+)
 from common.config import (
     BASIC_EPOCH_NAME,
     FIXED_WEEK_PERIOD,
@@ -21,11 +23,11 @@ from common.config import (
     VISIT_0_NUMBER,
 )
 
-StudyEpochType: dict[str, CTTermName] = {}
+StudyEpochType: dict[str, SimpleCTTermNameWithConflictFlag] = {}
 
-StudyEpochSubType: dict[str, CTTermName] = {}
+StudyEpochSubType: dict[str, SimpleCTTermNameWithConflictFlag] = {}
 
-StudyEpochEpoch: dict[str, CTTermName] = {}
+StudyEpochEpoch: dict[str, SimpleCTTermNameWithConflictFlag] = {}
 
 
 @dataclass
@@ -34,9 +36,9 @@ class StudyEpochVO:
     start_rule: str
     end_rule: str
 
-    epoch: CTTermName
-    subtype: CTTermName
-    epoch_type: CTTermName
+    epoch: SimpleCTTermNameWithConflictFlag
+    subtype: SimpleCTTermNameWithConflictFlag
+    epoch_type: SimpleCTTermNameWithConflictFlag
     description: str
 
     order: int
@@ -44,6 +46,7 @@ class StudyEpochVO:
     status: StudyStatus
     start_date: datetime.datetime
     author_id: str
+    author_username: str
 
     duration: int | None = None
     duration_unit: str | None = None
@@ -55,6 +58,7 @@ class StudyEpochVO:
     short_name: str = "TBD"
 
     accepted_version: bool = False
+    number_of_assigned_visits: int | None = 0
 
     uid: str | None = None
     _is_deleted: bool = False
@@ -69,9 +73,9 @@ class StudyEpochVO:
         start_rule: str,
         end_rule: str,
         description: str,
-        epoch: CTTermName,
-        subtype: CTTermName,
-        epoch_type: CTTermName,
+        epoch: SimpleCTTermNameWithConflictFlag,
+        subtype: SimpleCTTermNameWithConflictFlag,
+        epoch_type: SimpleCTTermNameWithConflictFlag,
         order: int,
         change_description: str,
         color_hash: str | None,
@@ -221,7 +225,7 @@ class TimelineAR:
     """
 
     study_uid: str
-    _visits: list["StudyVisitOGM"]
+    _visits: list[StudyVisitVO]
 
     def _generate_timeline(self):
         """
@@ -230,7 +234,7 @@ class TimelineAR:
 
         @dataclass
         class Subvisit:
-            visit: "StudyVisitOGM"
+            visit: StudyVisitVO
             number: int
 
         anchors = {}

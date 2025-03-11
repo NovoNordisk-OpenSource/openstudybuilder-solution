@@ -256,7 +256,7 @@ def api_post(path: str, payload: dict, params: Optional[Any] = None):
     url = API_BASE_URL + path
     logger.info("POST %s %s", url, params)
     res = requests.post(
-        url, json=payload, params=params, timeout=30, headers=API_HEADERS
+        url, json=payload, params=params, timeout=60, headers=API_HEADERS
     )
     assert res.status_code in {
         201,
@@ -271,7 +271,7 @@ def api_patch(path: str, payload: dict, params: Optional[Any] = None):
     url = API_BASE_URL + path
     logger.info("PATCH %s", url)
     res = requests.patch(
-        url, json=payload, params=params, timeout=30, headers=API_HEADERS
+        url, json=payload, params=params, timeout=60, headers=API_HEADERS
     )
     assert res.status_code in [200], f"Response status {res.status_code} is not 200."
     return res

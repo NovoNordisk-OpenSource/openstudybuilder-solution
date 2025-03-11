@@ -1852,22 +1852,37 @@ class LibraryItemRepositoryImplBase(
                     f"Supported parameters are: {list(self.basemodel_to_cypher_mapping_optimized())}",
                 )
 
-                if "op" in items and items["op"] == ComparisonOperator.EQUALS.value:
+                op = items.get("op")
+                if op == ComparisonOperator.EQUALS.value:
                     operator = "="
+                elif op == ComparisonOperator.IN.value:
+                    operator = ComparisonOperator.IN.value
                 else:
                     operator = "CONTAINS"
 
                 if any(not isinstance(value, str) for value in items["v"]):
                     operator = "="
 
-                for idx, value in enumerate(items["v"]):
-                    param_variable = (
-                        f"{mapping[filter_name]}_non_generic_{idx}".replace(".", "_")
+                if operator == ComparisonOperator.IN.value:
+                    param_variable = f"{mapping[filter_name]}_non_generic".replace(
+                        ".", "_"
                     )
-                    params[param_variable] = value
+                    params[param_variable] = items["v"]
                     fields_non_generic.append(
                         f" {mapping[filter_name]} {operator} ${param_variable} "
                     )
+
+                else:
+                    for idx, value in enumerate(items["v"]):
+                        param_variable = (
+                            f"{mapping[filter_name]}_non_generic_{idx}".replace(
+                                ".", "_"
+                            )
+                        )
+                        params[param_variable] = value
+                        fields_non_generic.append(
+                            f" {mapping[filter_name]} {operator} ${param_variable} "
+                        )
 
             if not where_stmt:
                 where_stmt += f" {filter_operator.value} ".join(fields_non_generic)
@@ -2485,30 +2500,34 @@ class LibraryItemRepositoryImplBase(
                 WITH root,activity_value,ver_rel
                 WITH *, [(root)-[ver_rel]->(activity_value:ActivityValue)-[:HAS_GROUPING]->(:ActivityGrouping)-[:IN_SUBGROUP]->(activity_valid_group:ActivityValidGroup) | 
                     {
-                        activity_subgroup: head(apoc.coll.sortMulti([(activity_valid_group)<-[:HAS_GROUP]-(:ActivitySubGroupValue)<-[has_version:HAS_VERSION]-
+                        activity_subgroup: head(apoc.coll.sortMulti([(activity_valid_group)<-[:HAS_GROUP]-(activity_subgroup_value:ActivitySubGroupValue)<-[has_version:HAS_VERSION]-
                             (activity_subgroup_root:ActivitySubGroupRoot) | 
                             {
                                 uid:activity_subgroup_root.uid,
                                 major_version: toInteger(split(has_version.version,'.')[0]),
-                                minor_version: toInteger(split(has_version.version,'.')[1])
+                                minor_version: toInteger(split(has_version.version,'.')[1]),
+                                name: activity_subgroup_value.name
                             }], ['major_version', 'minor_version'])), 
-                        activity_group: head(apoc.coll.sortMulti([(activity_valid_group)-[:IN_GROUP]-(:ActivityGroupValue)<-[has_version:HAS_VERSION]-
+                        activity_group: head(apoc.coll.sortMulti([(activity_valid_group)-[:IN_GROUP]-(activity_group_value:ActivityGroupValue)<-[has_version:HAS_VERSION]-
                             (activity_group_root:ActivityGroupRoot) | 
                             {
                                 uid:activity_group_root.uid,
                                 major_version: toInteger(split(has_version.version,'.')[0]),
-                                minor_version: toInteger(split(has_version.version,'.')[1])
+                                minor_version: toInteger(split(has_version.version,'.')[1]),
+                                name: activity_group_value.name
                             }], ['major_version', 'minor_version']))
                     }
-                    ] as activity_groupings
-                RETURN activity_groupings
+                    ] as activity_groupings,
+                    head([(library:Library)--(activity_root)--(activity_value)<-[:HAS_SELECTED_ACTIVITY]-(:StudyActivity)<-[:HAS_STUDY_ACTIVITY]-(study_value:StudyValue) WHERE library.name="Requested" | study_value.study_id_prefix + "-" + study_value.study_number]) AS requester_study_id
+                RETURN activity_groupings, requester_study_id
             }
         """
 
         activity_root_return = """,
             {
                 activity_groupings: activity_groupings,
-                replaced_activity_uid: replaced_by_activity.uid
+                replaced_activity_uid: replaced_by_activity.uid,
+                requester_study_id: requester_study_id
             } as activity_root
         """
 
@@ -2521,12 +2540,13 @@ class LibraryItemRepositoryImplBase(
                 WITH *,
                 [(root)-[:LATEST]->(concept_value)-[:HAS_GROUP]->(activity_valid_group:ActivityValidGroup) |
                     {
-                        activity_group:head(apoc.coll.sortMulti([(activity_valid_group)-[:IN_GROUP]-(:ActivityGroupValue)<-[has_version:HAS_VERSION]-
+                        activity_group:head(apoc.coll.sortMulti([(activity_valid_group)-[:IN_GROUP]-(activity_group_value:ActivityGroupValue)<-[has_version:HAS_VERSION]-
                             (activity_group_root:ActivityGroupRoot) | 
                             {
                                 uid:activity_group_root.uid,
                                 major_version: toInteger(split(has_version.version,'.')[0]),
-                                minor_version: toInteger(split(has_version.version,'.')[1])
+                                minor_version: toInteger(split(has_version.version,'.')[1]),
+                                name: activity_group_value.name
                             }], ['major_version', 'minor_version']))
                     }] AS activity_groups
                 RETURN activity_groups

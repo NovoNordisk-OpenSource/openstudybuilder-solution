@@ -1,0 +1,29 @@
+{
+    "name": "system-tests",
+    "version": "0.1.0",
+    "private": true,
+    "scripts": {
+        "test": "failsafe test:clean test:run",
+        "test-chrome": "failsafe test:clean test:run-chrome",
+        "test:no-allure": "failsafe test:clean test:junit",
+        "test:no-allure-chrome": "failsafe test:clean test:junit-chrome",
+        "test:clean": "rimraf results",
+        "test:run": "cypress run  --env allure=true,allureResultsPath=results/allure,host=$cypresshost --spec cypress/e2e/**/*.feature --headless",
+        "test:run-chrome": "cypress run  --env allure=true,allureResultsPath=results/allure,host=$cypresshost --spec cypress/e2e/**/*.feature --headless --browser chrome",
+        "test:junit": "cypress run  --env allure=false,host=$cypresshost --spec cypress/e2e/**/*.feature --headless",
+        "test:junit-chrome": "cypress run  --env allure=false,host=$cypresshost --spec cypress/e2e/**/*.feature --headless --browser chrome"
+    },
+    "dependencies": {
+        "@badeball/cypress-cucumber-preprocessor": "^15.1.4",
+        "@cucumber/cucumber": "^7.3.1",
+        "@cypress/browserify-preprocessor": "^3.0.2",
+        "@shelex/cypress-allure-plugin": "^2.26.2",
+        "cypress": "12.10.0",
+        "npm-failsafe": "^0.4.3",
+        "rimraf": "^3.0.2",
+        "xmldom": "^0.6.0"
+    },
+    "cypress-cucumber-preprocessor": {
+        "stepDefinitions": "cypress/e2e/step_definitions/*.js"
+    }
+}

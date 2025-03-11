@@ -180,20 +180,12 @@ def test_version_display1(api_client):
     assert res[0]["parameter_terms"] == []
     assert res[0]["library"] == {"name": "Test library", "is_editable": True}
     assert res[0]["changes"] == {
-        "uid": False,
-        "name": False,
-        "name_plain": False,
         "start_date": True,
         "end_date": True,
         "status": True,
         "version": True,
         "change_description": True,
-        "author_username": False,
         "possible_actions": True,
-        "template": False,
-        "library": False,
-        "parameter_terms": False,
-        "study_count": False,
     }
     assert res[1]["uid"] == "Timeframe_000001"
     assert res[1]["name"] == "Test_Name_Template"

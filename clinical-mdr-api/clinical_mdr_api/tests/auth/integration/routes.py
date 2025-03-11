@@ -2254,7 +2254,7 @@ ALL_ROUTES_METHODS_ROLES = (
         "GET",
         {"Study.Read"},
     ),
-    ("/studies/{study_uid}/study-epoch/audit-trail", "GET", {"Study.Read"}),
+    ("/studies/{study_uid}/study-epochs/audit-trail", "GET", {"Study.Read"}),
     ("/studies/{study_uid}/study-epochs", "POST", {"Study.Write"}),
     ("/studies/{study_uid}/study-epochs/preview", "POST", {"Study.Write"}),
     ("/studies/{study_uid}/study-epochs/{study_epoch_uid}", "DELETE", {"Study.Write"}),
@@ -2283,7 +2283,7 @@ ALL_ROUTES_METHODS_ROLES = (
         "GET",
         {"Study.Read"},
     ),
-    ("/studies/{study_uid}/study-visit/audit-trail", "GET", {"Study.Read"}),
+    ("/studies/{study_uid}/study-visits/audit-trail", "GET", {"Study.Read"}),
     ("/studies/{study_uid}/study-visits/{study_visit_uid}", "GET", {"Study.Read"}),
     (
         "/studies/{study_uid}/get-amount-of-visits-in-epoch/{study_epoch_uid}",

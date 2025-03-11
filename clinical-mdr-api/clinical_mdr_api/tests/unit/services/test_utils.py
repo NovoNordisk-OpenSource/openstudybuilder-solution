@@ -56,8 +56,8 @@ class TestServiceUtils(unittest.TestCase):
 
     @parameterized.expand(
         [
-            ({"x": 1, "y": 2}, {"x": 1, "y": 3}, {"x": False, "y": True}),
-            ({"x": 1, "y": 2}, {"x": 1, "y": 2}, {"x": False, "y": False}),
+            ({"x": 1, "y": 2}, {"x": 1, "y": 3}, {"y": True}),
+            ({"x": 1, "y": 2}, {"x": 1, "y": 2}, {}),
             ({"x": 1, "y": 2}, None, {}),
         ]
     )

@@ -250,6 +250,15 @@ class SimpleCTTermNameWithConflictFlag(BaseModel):
                     )
         return simple_ctterm_models
 
+    @classmethod
+    def from_ct_term_ar(cls, ct_term_name_ar: CTTermNameAR) -> Self:
+        return cls(
+            term_uid=ct_term_name_ar.uid,
+            sponsor_preferred_name=ct_term_name_ar.ct_term_vo.name,
+            queried_effective_date=ct_term_name_ar.ct_term_vo.queried_effective_date,
+            date_conflict=ct_term_name_ar.ct_term_vo.date_conflict,
+        )
+
     term_uid: Annotated[str, Field()]
     sponsor_preferred_name: Annotated[str | None, Field(nullable=True)] = None
     queried_effective_date: Annotated[datetime | None, Field(nullable=True)] = None

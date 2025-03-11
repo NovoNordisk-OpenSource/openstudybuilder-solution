@@ -263,7 +263,7 @@ class StudySelectionActivitySubGroupRepository(
         soa_group_term_uid: str,
     ) -> StudyActivitySubGroup | None:
         query = """
-            MATCH (activity_subgroup_root:ActivitySubGroupRoot)-[:HAS_VERSION]->(:ActivitySubGroupValue)
+            MATCH (activity_subgroup_root:ActivitySubGroupRoot)-[:HAS_VERSION]->(activity_sub_group_value:ActivitySubGroupValue)
                 <-[:HAS_SELECTED_ACTIVITY_SUBGROUP]-(study_activity_subgroup:StudyActivitySubGroup)<-[:STUDY_ACTIVITY_HAS_STUDY_ACTIVITY_SUBGROUP]
                 -(study_activity:StudyActivity)<-[:HAS_STUDY_ACTIVITY]-(:StudyValue)<-[:LATEST]-(:StudyRoot {uid:$study_uid})
             MATCH (study_activity)-[:STUDY_ACTIVITY_HAS_STUDY_ACTIVITY_GROUP]->(:StudyActivityGroup)
@@ -273,7 +273,7 @@ class StudySelectionActivitySubGroupRepository(
                 AND activity_subgroup_root.uid=$activity_subgroup_uid
                 AND activity_group_root.uid=$activity_group_uid
                 AND flowchart_group_term.uid=$soa_group_term_uid
-            RETURN DISTINCT study_activity_subgroup
+            RETURN DISTINCT study_activity_subgroup, activity_sub_group_value
         """
         study_activity_subgroups, _ = db.cypher_query(
             query,

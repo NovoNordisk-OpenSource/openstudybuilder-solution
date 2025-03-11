@@ -166,7 +166,7 @@ def test_visit_modify_actions_on_locked_study(api_client):
 
     # get all visits
     response = api_client.get(
-        f"/studies/{study.uid}/study-visit/audit-trail/",
+        f"/studies/{study.uid}/study-visits/audit-trail/",
     )
     res = response.json()
     assert_response_status_code(response, 200)
@@ -234,7 +234,7 @@ def test_visit_modify_actions_on_locked_study(api_client):
 
     # get all history when was locked
     response = api_client.get(
-        f"/studies/{study.uid}/study-visit/audit-trail/",
+        f"/studies/{study.uid}/study-visits/audit-trail/",
     )
     res = response.json()
     assert_response_status_code(response, 200)
@@ -1701,7 +1701,7 @@ def test_study_visist_version_selecting_ct_package(api_client):
 
     # get all versions
     response = api_client.get(
-        f"/studies/{study_for_ctterm_versioning.uid}/{study_selection_breadcrumb[:-1]}/audit-trail/",
+        f"/studies/{study_for_ctterm_versioning.uid}/{study_selection_breadcrumb}/audit-trail/",
     )
     res = response.json()
     assert_response_status_code(response, 200)

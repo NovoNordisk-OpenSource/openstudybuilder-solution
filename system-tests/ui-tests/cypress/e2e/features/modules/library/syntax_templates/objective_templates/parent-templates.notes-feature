@@ -1,0 +1,397 @@
+@REQ_ID:1070684 @pending_implementation
+Feature: Library - Objective templates
+
+    As a user, I want to manage every Objective template under the Syntax Template Library
+    Background: User must be logged in
+        Given The user is logged in
+
+    #############################################
+    # Naming notes:
+    #   SyntaxTemplate.name := Objective Parent Template
+    #   SyntaxPreInstantiation.name := Objective Pre-instantiation Template
+    #   SyntaxTemplate.name | SyntaxPreInstantiation.name := Objective Template
+    #   SyntaxInstantiation.name := Objective instance used by a study
+
+
+    ################################
+    ### Page and Table viewing
+
+    Scenario: User must be able to navigate to the Objective template under the Syntax Template Library
+        Given The '/library' page is opened
+        When The 'Objective Templates' submenu is clicked in the 'Syntax Templates' section
+        Then The current URL is '/library/objective_templates'
+
+    Scenario: User must be able to see the Parent Objective template table with listed columns
+        Given The '/library/objective_templates' page is opened
+        And A table is visible with following headers
+            | headers                |
+            | Sequence number        |
+            | Indication or disorder |
+            | Objective category     |
+            | Confirmatory testing   |
+            | Parent template        |
+            | Modified               |
+            | Status                 |
+            | Version                |
+    #### NOTES:
+    # The sequence number reflect the creation order of Objective Parent Templates
+    # As some columns are very text intensive, we suggest some columns by default is hidden
+    # Any user preferences will however overrule the default column display
+
+    Scenario: User must be able to see the list of Pre-instance Objective Templates on the main page with options listed
+        Given The '/library/objective_templates' page is opened
+        When The 'Pre-instance Templates' tab is selected
+        And A table is visible with following headers
+            | headers                   |
+            | Sequence number           |
+            | Indication or disorder    |
+            | Objective category        |
+            | Confirmatory testing      |
+            | Parent template           |
+            | Pre-instantiated template |
+            | Modified                  |
+            | Status                    |
+            | Version                   |
+    #### NOTES:
+    # The sequence number reflect the creation order of Objective Pre-instance templates by Parent Template
+    # As some columns are very text intensive, we suggest some columns by default is hidden
+    # Any user preferences will however overrule the default column display
+
+    Scenario: User must be able to see the list of User Defined Objective Templates on the main page with options listed
+        Given The '/library/objective_templates' page is opened
+        When The 'User Defined Templates' tab is selected
+        Then A table is visible with following headers
+            | headers     |
+            | Template    |
+            | Modified    |
+            | Modified by |
+    #### NOTES:
+    # User Defined Templates are created at study level, the distinct templates can be displayed here
+    # Under Template Instantiations the usage on studies can be seen.
+
+
+    ################################
+    ### Sequence number generation
+    ### NOTE, these scenarios could be tested as part of API testing
+    @pending_implementation @api_test
+    Scenario: System must generated sequence number for Objective Parent Templates when they are created
+        Given an Objective Parent Template is created
+        # This could be with a reference to the API POST Endpoint and a following API GET Endpoint - or just formulated as a functional requrement
+        Then the attribute for 'Sequence number' will hold an automatic generated number as 'OT'+[Order of Objective Parent Template]
+
+    @pending_implementation @api_test
+    Scenario: System must generated sequence number for Objective Pre-instance Templates when they are created
+        Given an Objective Pre-instance Template is created
+        Then the attribute for 'Sequence number' will hold an automatic generated number as 'OT'+[Order of Objective Parent Template]+'-OP'+[Order of Pre-instantiation]
+
+
+    ################################
+    ### Display controls
+    ### NOTE, currently postponed - to be assessed if needed later
+    #
+    #   Scenario: User must be able to see a combined column of either the parent syntax template text or the pre-instantiation text
+    #       Given The '/library/objective_templates' page is opened on the 'Sponsor Standards' tab
+    #       And a table display the Objective Parent and Pre-instantiation Templates
+    #       Then the column 'Template' will show the Parent Template text for Objective Template Syntax Templates rows
+    #       And the column 'Template' will show the Pre-instantiation text for Pre-instantiations rows of the Syntax Template
+    #   # 'Parent Template' is name property on the SyntaxTemplateValue node
+    #   # 'Pre-instantiation' is name property on the SyntacPreInstanceValue node
+    #
+    #   Scenario: User must be able to see both Parents and related Pre-instantiations of the Objective Syntax Templates
+    #       Given The '/library/objective_templates' page is opened on the 'Sponsor Standards' tab
+    #       And a table display the Objective Templates
+    #       When the user enable the display of the Pre-instantiation control
+    #       Then rows for both Objective Parent and related Pre-instantiations is displayed
+    #
+    #   Scenario: User must be able to only see Parents of the Objective Syntax Templates
+    #       Given The '/library/objective_templates' page is opened on the 'Sponsor Standards' tab
+    #       And a table display the Objective Templates
+    #       When the user disable the Display Pre-instantiation control
+    #       Then only rows for Objective Parent Templates is displayed
+
+
+    ################################
+    ### Valid Row Actions for Possible States
+    # The below scenarios is intended for API testing
+    # First for Parent Templates
+    # Revert action postponed for later implementation (and should be a general action for library elements)
+
+    # Scenario: Valid row actions for Objective Parent Template when status is draft and version below 1.0
+    #     Given an Objective Parent Template is in status Draft
+    #     And version below 1.0
+    #     Then the following row actions must be available
+    #         | Edit    |
+    #         | Approve |
+    #         | Delete  |
+    #         | History |
+
+    # Scenario: Valid row actions for Objective Parent Template when status is draft and version is equal to or above 1.0
+    #     Given an Objective Parent Template is in status Draft
+    #     And version is equal to or above version 1.0
+    #     Then the following row actions must be available
+    #         | Edit    |
+    #         | Approve |
+    #         | History |
+
+    # Scenario: Valid row actions for Objective Parent Template when status is Final
+    #     Given an Objective Parent Template is in status Final
+    #     Then the following row actions must be available
+    #         | Edit Indexing                    |
+    #         | Create pre-instantiated Template |
+    #         | New version                      |
+    #         | Inactivate                       |
+    #         | History                          |
+
+    # Scenario: Valid row actions for Objective Parent Template when status is Retired
+    #     Given an Objective Parent Template is in status Retired
+    #     Then the following row actions must be available
+    #         | Reactivate |
+    #         #            | New version |
+    #         # Assume it should be possible to create new version when current state is retired - but currently this is not possible
+    #         | History    |
+
+
+    # Second for Pre-Instantiations
+
+    # Scenario: Valid row actions for Objective Pre-instantiation Template when status is draft and version below 1.0
+    #     Given an Objective Pre-instantiation Template is in status Draft
+    #     And version below 1.0
+    #     Then the following row actions must be available
+    #         | Edit    |
+    #         | Approve |
+    #         | Delete  |
+    #         | History |
+
+    # Scenario: Valid row actions for Objective Pre-instantiation Template when status is draft and version equal to or above 1.0
+    #     Given an Objective Pre-instantiation Template is in status Draft
+    #     And version is equal to or above version 1.0
+    #     Then the following row actions must be available
+    #         | Edit    |
+    #         | Approve |
+    #         | History |
+
+    # Scenario: Valid row actions for Objective Pre-instantiation Template when status is Final
+    #     Given an Objective Pre-instantiation Template is in status Final
+    #     Then the following row actions must be available
+    #         | Edit Indexing |
+    #         | New version   |
+    #         | Duplicate     |
+    #         #            | Inactivate    |
+    #         # Assume it should be possible to Inactivate version when current state is final - but currently this is not possible
+    #         | History       |
+
+    # #    Scenario: Valid row actions for Objective Pre-instantiation Template when status is Retired
+    # #        Given an Objective Pre-instantiation Template is in status Retired
+    # #        Then the following row actions must be available
+    # #            | Reactivate  |
+    # #            | New version |
+    # #            | History     |
+
+    # # No row actions for User Defined Templates
+
+
+
+    ################################
+    ### Add new Objective Parent Template
+
+    # Scenario: User must be able to add a new Objective Parent Template in 'Parent Templates' tab
+    #     Given The '/library/objective_templates' page is opened
+    #     When The new criteria is added in the library
+    #     Then The new Criteria is visible in the Criteria Templates Table
+
+    # Scenario: User must not be able to add a new Objective Parent Template without mandatory field filled in under 'create template'
+    #     Given The '/library/objective_templates' page is opened
+    #     And The 'Add Parent Template' button is clicked
+    #     When The 'Create template' section not selected with test data
+    #     And The 'Continue' button is clicked
+    #     Then The notification is displayed as 'This field is required'
+    #     And The user is not able to continue further step
+
+    # Scenario: User must be able to verify valid syntax when adding a new Objective Parent Template
+    #     Given The '/library/objective_templates' page is opened
+    #     And The 'Add Parent Template' button is clicked
+    #     When The 'Create template' section is selected with test data
+    #     And The 'VERIFY SYNTAX' button is clicked
+    #     Then The pop up displays 'This syntax is valid'
+
+    # # We suggest all indexing is made optional - then no need for NA
+    # #    Scenario: User must not be able to save a new Objective Parent Template without mandatory fields filled in under 'Index template'
+    #        Given The '/library/objective_templates' page is opened
+    #        And The 'Add Parent Template' button is clicked
+    #        And The 'Create template' and 'Test or set parameter values' section is filled with test data
+    #        When The 'Index template' section is not selected with test data
+    #        And The 'Save' button is clicked
+    #        Then The pop up displays 'This field is required' for 'Indication or disorder', 'Objective category' and 'Related to confirmatory testing'
+    #        And The user is not able to save the edited objective template
+    #? We have some indexing is required, and some you can select NA, should the option of NA be tested?
+    # Check new stories on indexing - what is changed
+
+
+    ################################
+    ### Edit Objective Parent Template
+
+    # Scenario: User must be able to edit draft version of the Objective Parent Template
+    #     Given The test objective parent template exists with a status as 'Draft'
+    #     When The 'Edit' option is selected from the three dot menu list
+    #     And The template is updated with test data and saved
+    #     Then The pop up displays 'Objective Parent Template updated'
+
+    # Default Change Description is 'Work in progress', this should only be applicable in draft versions before version 1.0
+    # After version 1.0 a change description must be provided
+    # Update so Change description must be filled in after version 1.0
+    Scenario: Default value for change description when Objective Parent Template version is below version 1.0
+        Given The test objective parent template exists with a status as 'Draft'
+        And objective parent template version is below version 1.0
+        When The 'Edit' option is selected from the three dot menu list
+        Then the default value for change description must be 'Work in progress'
+
+    Scenario: No default value for change description when Objective Parent Template version is above version 1.0
+        Given The test objective parent template exists with a status as 'Draft'
+        When The 'Edit' option is selected from the three dot menu list
+        And objective parent template version is above version 1.0
+        Then no default value for change description should be provided
+
+    # Scenario: User must not be able to save the edited version of the draft Objective Parent Template without filled in mandatory field 'Change description'
+    #     Given The test objective parent template exists with a status as 'Draft'
+    #     When The 'Edit' option is selected from the three dot menu list
+    #     And The 'Change description' field is not filled with test data
+    #     Then The pop up displays 'This field is required'
+    #     And The user is not able to save the edited objective parent template
+
+    Scenario: User must be able to edit indexing properties for the Objective Parent Template with a status as 'Final'
+        Given The test objective parent template exists with a status as 'Final'
+        When The 'Edit indexing' is selected from the three dot menu list
+        Then The 'Edit indexing properties' container fields are re-selected and saved
+        And The pop-up snack displayed with a value as 'Indexing properties updated'
+
+
+    ################################
+    ### Test Parameter Selection for Objective Template
+
+    Scenario: User must be able to test parameter selection for an Objective Parent Template
+        Given The '/library/objective_templates' page is opened
+        And an Objective Parent Template is being added or edited
+        When the user select Template Parameter values on the 'Test parameter values' page step
+        Then a rich text representation of Objective Template instantiation is displayed with selected parameter values in green text
+        And non-selected parameters the parameter is displayed in yellow text
+        And the resolving Objective Template instantiation is displayed in plain black text in separate field
+
+
+    ################################
+    ### Uniqueness check for Parent Template
+
+    Scenario: System must ensure uniqueness of Objective Parent Template text
+        Given The '/library/objective_templates' page is opened
+        And an Objective Parent Template is being added or edited
+        When the user select 'Continue'
+        # Currently error message is shown when user select SAVE on last step - pending review comment
+        And the Entered Objective Parent Template text is a duplicate of an existing Objective Parent Template
+        Then a notification must be given to the user stating this is a duplicate Objective Parent Template that not can be made
+        And the page cannot be saved
+
+
+    ################################
+    ### Delete Objective Parent Template
+
+    # Scenario: User must be able to delete the Objective Parent Template with status as 'Draft' and version is below version 1.0
+    #     Given The test Objective Parent Template exists with a status as 'Draft'
+    #     And Objective Parent Template version is below version 1.0
+    #     When The 'Delete' option is clicked from the three dot menu list
+    #     Then The pop up displays 'Template deleted'
+    #     And The drafted template is disappeared from the table
+
+
+    ################################
+    ### Approve Objective Template with Cascade Updates
+
+    # Scenario: User must be able to approve the drafted version of Objective Parent Template
+    #     Given The test Objective Parent Template exists with a status as 'Draft'
+    #     When The'Approve' option is clicked from the three dot menu list
+    #     Then The pop up displays 'Parent Template is now in Final state'
+    #     And The status of the template displayed as 'Final'
+
+    # If approval is for version +1.0 and any instantiations exist then a cascade update and approval is needed
+    Scenario: Related objective template instantiations must be cascade updated to new version and approved when objective template is approved
+        Given The test Objective Parent Template exists with a status as 'Draft'
+        When The'Approve' option is clicked from the three dot menu list
+        Then all related objective template instantiations must be cascade updated to new version and approved
+        # Both related Pre-instantiations as well as normal instantiations - maybe this need to be more clear?
+        And the displayed pop-up snack must include information on number of updated objective template instantiations
+
+
+    ################################
+    ### New Version, Inactivate and Reactivate
+
+    Scenario: User must be able to add a new version for the Objective Parent Template with a status as 'Final'
+        #? Should it also be possible to do when status is 'Retired'
+        # MT: Yes
+        Given The test Objective Parent Template exists with a status as 'Final' with an incremented value as an example '1.0'
+        When The 'New version' button is clicked from the three dot menu list
+        Then The pop up displays 'New version created'
+        And The approved objective template is created as Draft version with an incremented value as an example '1.1'
+
+    # Scenario: User must be able to inactivate the Objective Parent Template with a status as 'Final'
+    #     Given The test Objective Parent Template exists with a status as 'Final'
+    #     When The 'inactivate' button is clicked from the three dot menu list
+    #     Then The pop-up snack displayed with a value as 'Template in-activated'
+    #     And The objective template is displayed with a status as 'Retired' with the same version as before
+    # #? I assume a cascade inactivation should happen to all related Instantiations
+    # MT: Yes
+
+    # Scenario: User must be able to reactivate the Objective Parent Template with a status as 'Retired'
+    #     Given The test Objective Parent Template exists with a status as 'Retired'
+    #     When The 'reactivate' button is clicked from the three dot menu list
+    #     Then The pop-up snack displayed with a value as 'Template reactivated'
+    #     And The objective template is displayed with a status as 'Final' with the same version as before
+    # #? I assume a cascade reactivation is needed as well for any related instantiations
+    # # MT: Yes
+
+    # Notify the standards developer if the current version is used by x # of studies in current versions - with the option to cancel new version creation
+
+    # NOTE, TBD, we need to do the same for Pre-instantiations as they are also versioned
+
+
+    ################################
+    ### View History
+    # Display value changes + status changes
+    # On page level as well as at row level
+    # NOTE, Indexing is not part of the Syntax Template, therefore the indexing is not part of the versioning nor part of the view history
+
+    # Page level is not implemented yet
+    # Scenario: User must be able to view history of value and status changes for Objective Parent Templates
+    #     Given the '/library/objective_templates' page is opened
+    #     And the 'Parent Template' tab is selected
+    #     When The 'View Page History' is clicked
+    #     Then The 'History for templates' window is displayed with the following column list with values
+    #         | Column | Header             |
+    #         | 1      | Uid                |
+    #         | 2      | Sequence number    |
+    #         | 3      | Partent Template   |
+    #         | 4      | Status             |
+    #         | 5      | Version            |
+    #         | 6      | Change description |
+    #         | 7      | Change type        |
+    #         | 8      | User               |
+    #         | 9      | From               |
+    #         | 10     | To                 |
+    #     And latest 10 rows of the history is displayed
+
+    # Scenario: User must be able to view history of value and status changes for a selected Objective Parent Template
+    #     #? Question, this must be possible for all states, Draft Final or Retired - do we need to test all combinations?
+    #     # MT: no, I see no need to test all combinations - so have removed these
+    #     Given The test objective parent template exists
+    #     When The 'History' option is clicked from the three dot menu list
+    #     Then The 'History for template [uid]' window is displayed with the following column list with values
+    #         | Column | Header             |
+    #         | 1      | Sequence number    |
+    #         | 2      | Partent Template   |
+    #         | 3      | Status             |
+    #         | 4      | Version            |
+    #         | 5      | Change description |
+    #         | 6      | Change type        |
+    #         | 7      | User               |
+    #         | 8      | From               |
+    #         | 9      | To                 |
+
+
+    

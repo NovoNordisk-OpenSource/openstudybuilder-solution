@@ -158,17 +158,9 @@ def test_version_display(api_client):
     assert res[0]["changes"] == {
         "change_description": True,
         "end_date": True,
-        "library": False,
-        "name": False,
-        "name_plain": False,
-        "template": False,
-        "parameter_terms": False,
         "possible_actions": True,
         "start_date": True,
         "status": True,
-        "study_count": False,
-        "uid": False,
-        "author_username": False,
         "version": True,
     }
     assert res[0]["end_date"] is None

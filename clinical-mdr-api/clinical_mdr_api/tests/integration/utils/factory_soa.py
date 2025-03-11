@@ -737,7 +737,6 @@ class SoATestData:
                 ].term_uid,
                 time_value=vis["day"],
                 time_unit_uid=self._unit_definitions["day"].uid,
-                visit_sublabel_codelist_uid=None,
                 visit_sublabel_reference=None,
                 consecutive_visit_group=vis.get("consecutive_visit_group"),
                 show_visit=True,

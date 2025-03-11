@@ -1,5 +1,49 @@
 # OpenStudyBuilder Commits changelog
 
+## V 0.14.2
+
+New Features and Enhancements
+============
+This release does not include any new features.
+
+Solved Bugs
+============
+### Studies
+
+ **Define Study -> Study Activities -> Schedule of Activities -> Detailed** 
+
+- Issue in detailed soa with hiding and/or unhiding activities groups and/or subgroups
+
+## V 0.14.1
+
+New Features and Enhancements
+============
+
+- Enhancements to API performance concerning study visits, study epochs, and study activities are expected to significantly boost the performance of the StudyBuilder system when managing the Schedule of Activities (SoA).
+- Schema migration scripts updated which unifies window units for StudyVisits within a single study. This migration also resulted in the unification of window units for Locked Studies.
+- An option is now available to select the same Schedule of Activities (SoA) group for all chosen Study Activities.
+
+Solved Bugs
+============
+
+### Library
+
+ **Concepts -> Activities -> Activities** 
+
+- Automatic instance up versioning creates more than one new version of instances
+- User is unable to save edited item from the existing activities resulted in showing '2 Validation errors'
+
+### Studies
+
+ **Define Study -> Study Activities ->  Study Activities** 
+
+- Error while adding Library activities to a study with a Bulk copying function
+
+ **Define Study -> Study Activities -> Schedule of Activities -> Protocol** 
+
+- Issue where some Activity groups and subgroups were missing in the protocol SoA, that affected both draft and locked studies.
+
+
 ## V 0.14
 
 ### Fixes and Enhancements
@@ -12,6 +56,7 @@
 - We have implemented a new Boolean field to indicate complex unit conversion, and "molecular weight" has been included as an activity instance property. Please note that the feature implementation is ongoing, and additional updates will be released in upcoming versions.
 - Alias is a temporary solution to hold Veeva internal identifiers, until an actual Veeva namespace is implemented.
 - Updates to the import scripts and import data to prepare for the future activity instance wizard stepper, this is mostly relevant while developing the StudyBuilder application. Added extensions to the API to support the upcoming activity instance wizard stepper.
+- Removed "Process Overview" screen as it did not add value as the process steps can be followed along the navigation menu
 
 ### New Features
 
@@ -68,7 +113,6 @@ Solved Bugs
  **Define Study -> Study Activities ->  Study Activities** 
 
 - 'Update Activity Version' should be removed/nor displayed for placeholders which were rejected.
-- Error while adding Library activities to a study
 - Menu item option "delete" should be changed to "remove" for consistency
 - Searching is not working as intended
 
@@ -114,10 +158,6 @@ Solved Bugs
  **View Specifications -> SDTM Study Design Datasets -> Trial Arm** 
 
 - SDTM Study Design Datasets - trial arm table can not be shown due to missing value in ARMCD
-
- **View Specifications -> USDM** 
-
-- USDM page results in error
 
 
 ## V 0.13

@@ -63,7 +63,6 @@ def generate_default_input_data_for_visit():
     day_uid = get_unit_uid_by_name("day")
     week_uid = get_unit_uid_by_name("week")
     return {
-        "visit_sublabel_codelist_uid": None,
         "visit_sublabel_reference": None,
         "consecutive_visit_group": None,
         "show_visit": True,
@@ -228,43 +227,7 @@ def create_study_visit_codelists(
     )
 
     codelist = create_codelist(
-        "Visit Sub Label", "CTCodelist_00006", catalogue_name, library_name
-    )
-    create_ct_term(
-        codelist.codelist_uid,
-        "Visit Sub Label",
-        "VisitSubLabel_0001",
-        1,
-        catalogue_name,
-        library_name,
-    )
-    create_ct_term(
-        codelist.codelist_uid,
-        "Visit Sub Label1",
-        "VisitSubLabel_0002",
-        2,
-        catalogue_name,
-        library_name,
-    )
-    create_ct_term(
-        codelist.codelist_uid,
-        "Visit Sub Label2",
-        "VisitSubLabel_0003",
-        3,
-        catalogue_name,
-        library_name,
-    )
-    create_ct_term(
-        codelist.codelist_uid,
-        "Visit Sub Label3",
-        "VisitSubLabel_0004",
-        4,
-        catalogue_name,
-        library_name,
-    )
-
-    codelist = create_codelist(
-        "Visit Contact Mode", "CTCodelist_00007", catalogue_name, library_name
+        "Visit Contact Mode", "CTCodelist_00006", catalogue_name, library_name
     )
     create_ct_term(
         codelist.codelist_uid,
@@ -292,7 +255,7 @@ def create_study_visit_codelists(
     )
 
     codelist = create_codelist(
-        "Epoch Allocation", "CTCodelist_00008", catalogue_name, library_name
+        "Epoch Allocation", "CTCodelist_00007", catalogue_name, library_name
     )
     create_ct_term(
         codelist.codelist_uid,
@@ -406,7 +369,6 @@ def create_some_visits(
         time_reference_uid="VisitSubType_0001",
         time_value=30,
         time_unit_uid=day_uid,
-        visit_sublabel_codelist_uid="VisitSubLabel_0001",
         visit_sublabel_reference=None,
         visit_class="SINGLE_VISIT",
         visit_subclass="ANCHOR_VISIT_IN_GROUP_OF_SUBV",
@@ -418,7 +380,6 @@ def create_some_visits(
         time_reference_uid="VisitSubType_0002",
         time_value=31,
         time_unit_uid=day_uid,
-        visit_sublabel_codelist_uid="VisitSubLabel_0002",
         visit_sublabel_reference=version4.uid,
         visit_class="SINGLE_VISIT",
         visit_subclass="ADDITIONAL_SUBVISIT_IN_A_GROUP_OF_SUBV",

@@ -1,6 +1,6 @@
 import dataclasses
 import datetime
-from typing import Any, Sequence
+from typing import Any
 
 from neomodel import Q, db
 
@@ -81,8 +81,6 @@ from clinical_mdr_api.models.study_selections.study_visit import (
     StudyVisit,
     StudyVisitCreateInput,
     StudyVisitEditInput,
-    StudyVisitOGM,
-    StudyVisitOGMVer,
     StudyVisitVersion,
 )
 from clinical_mdr_api.models.utils import (
@@ -129,6 +127,14 @@ class StudyVisitService(StudySelectionMixin):
     ):
         self._repos = MetaRepository()
         self.repo = self._repos.study_visit_repository
+        self.study_epoch_types = []
+        self.study_epoch_subtypes = []
+        self.study_epoch_epochs = []
+        self.study_visit_types = []
+        self.study_visit_repeating_frequency = []
+        self.study_visit_timeref = []
+        self.study_visit_contact_mode = []
+        self.study_visit_epoch_allocation = []
         self.author = user().id()
         self.terms_at_specific_datetime = self._extract_effective_date(
             study_uid=study_uid,
@@ -170,30 +176,35 @@ class StudyVisitService(StudySelectionMixin):
         )
 
     def _create_ctlist_map(self):
-        self.study_epoch_types = list(
-            self.repo.fetch_ctlist(settings.STUDY_EPOCH_TYPE_NAME)
+        ct_terms = self.repo.fetch_ctlist(
+            codelist_names=[
+                settings.STUDY_EPOCH_TYPE_NAME,
+                settings.STUDY_EPOCH_SUBTYPE_NAME,
+                settings.STUDY_EPOCH_EPOCH_NAME,
+                settings.STUDY_VISIT_TYPE_NAME,
+                settings.STUDY_VISIT_REPEATING_FREQUENCY,
+                settings.STUDY_VISIT_TIMEREF_NAME,
+                settings.STUDY_VISIT_CONTACT_MODE_NAME,
+                settings.STUDY_VISIT_EPOCH_ALLOCATION_NAME,
+            ]
         )
-        self.study_epoch_subtypes = list(
-            self.repo.fetch_ctlist(settings.STUDY_EPOCH_SUBTYPE_NAME)
-        )
-        self.study_epoch_epochs = list(
-            self.repo.fetch_ctlist(settings.STUDY_EPOCH_EPOCH_NAME)
-        )
-        self.study_visit_types = list(
-            self.repo.fetch_ctlist(settings.STUDY_VISIT_TYPE_NAME)
-        )
-        self.study_visit_repeating_frequency = list(
-            self.repo.fetch_ctlist(settings.STUDY_VISIT_REPEATING_FREQUENCY)
-        )
-        self.study_visit_timeref = list(
-            self.repo.fetch_ctlist(settings.STUDY_VISIT_TIMEREF_NAME)
-        )
-        self.study_visit_contact_mode = list(
-            self.repo.fetch_ctlist(settings.STUDY_VISIT_CONTACT_MODE_NAME)
-        )
-        self.study_visit_epoch_allocation = list(
-            self.repo.fetch_ctlist(settings.STUDY_VISIT_EPOCH_ALLOCATION_NAME)
-        )
+        for ct_term_uid, codelist_names in ct_terms.items():
+            if settings.STUDY_EPOCH_TYPE_NAME in codelist_names:
+                self.study_epoch_types.append(ct_term_uid)
+            if settings.STUDY_EPOCH_SUBTYPE_NAME in codelist_names:
+                self.study_epoch_subtypes.append(ct_term_uid)
+            if settings.STUDY_EPOCH_EPOCH_NAME in codelist_names:
+                self.study_epoch_epochs.append(ct_term_uid)
+            if settings.STUDY_VISIT_TYPE_NAME in codelist_names:
+                self.study_visit_types.append(ct_term_uid)
+            if settings.STUDY_VISIT_REPEATING_FREQUENCY in codelist_names:
+                self.study_visit_repeating_frequency.append(ct_term_uid)
+            if settings.STUDY_VISIT_TIMEREF_NAME in codelist_names:
+                self.study_visit_timeref.append(ct_term_uid)
+            if settings.STUDY_VISIT_CONTACT_MODE_NAME in codelist_names:
+                self.study_visit_contact_mode.append(ct_term_uid)
+            if settings.STUDY_VISIT_EPOCH_ALLOCATION_NAME in codelist_names:
+                self.study_visit_epoch_allocation.append(ct_term_uid)
 
         ctterm_uids = list(
             set(
@@ -211,6 +222,7 @@ class StudyVisitService(StudySelectionMixin):
         ctterms = self._find_terms_by_uids(
             term_uids=ctterm_uids,
             at_specific_date=self.terms_at_specific_datetime,
+            return_simple_object=True,
         )
 
         StudyEpochType.clear()
@@ -285,11 +297,6 @@ class StudyVisitService(StudySelectionMixin):
             ]
         )
 
-        self.study_visit_sublabels = self.repo.fetch_ctlist(
-            settings.STUDY_VISIT_SUBLABEL,
-            effective_date=self.terms_at_specific_datetime,
-        )
-
     def get_allowed_time_references_for_study(self, study_uid: str):
         resp = []
         for uid, name in get_valid_time_references_for_study(
@@ -315,6 +322,24 @@ class StudyVisitService(StudySelectionMixin):
         study_value_version: str | None = None,
     ) -> StudyVisit:
         timepoint = visit.timepoint
+        if timepoint:
+            visit_timereference = StudyVisitTimeReference.get(
+                timepoint.visit_timereference.term_uid
+            )
+            timepoint.visit_timereference = visit_timereference
+        visit.epoch_connector.epoch = StudyEpochEpoch.get(visit.epoch.epoch.term_uid)
+        visit.visit_type = StudyVisitType.get(visit.visit_type.term_uid)
+        visit.visit_contact_mode = StudyVisitContactMode.get(
+            visit.visit_contact_mode.term_uid
+        )
+        epoch_allocation_uid = getattr(visit.epoch_allocation, "term_uid", None)
+        if epoch_allocation_uid:
+            visit.epoch_allocation = StudyVisitEpochAllocation.get(epoch_allocation_uid)
+        repeating_frequency_uid = getattr(visit.repeating_frequency, "term_uid", None)
+        if repeating_frequency_uid:
+            visit.repeating_frequency = StudyVisitRepeatingFrequency.get(
+                repeating_frequency_uid
+            )
         return StudyVisit(
             visit_type_name=visit.visit_type.sponsor_preferred_name,
             uid=visit.uid,
@@ -360,7 +385,6 @@ class StudyVisitService(StudySelectionMixin):
             visit_subnumber=visit.visit_subnumber,
             unique_visit_number=visit.unique_visit_number,
             visit_subname=visit.visit_subname,
-            visit_sublabel=visit.visit_sublabel,
             visit_sublabel_reference=visit.visit_sublabel_reference,
             visit_name=visit.visit_name,
             visit_short_name=visit.visit_short_name,
@@ -375,22 +399,18 @@ class StudyVisitService(StudySelectionMixin):
             end_rule=visit.end_rule,
             visit_contact_mode_uid=visit.visit_contact_mode.term_uid,
             visit_contact_mode=visit.visit_contact_mode,
-            epoch_allocation_uid=getattr(visit.epoch_allocation, "term_uid", None),
+            epoch_allocation_uid=epoch_allocation_uid,
             epoch_allocation=getattr(visit, "epoch_allocation", None),
             status=visit.status.value,
             start_date=visit.start_date.strftime(settings.DATE_TIME_FORMAT),
-            author_username=UserInfoService.get_author_username_from_id(
-                visit.author_id
-            ),
+            author_username=visit.author_username or visit.author_id,
             possible_actions=visit.possible_actions,
             study_activity_count=study_activity_count,
             visit_class=visit.visit_class.name,
             visit_subclass=getattr(visit.visit_subclass, "name", None),
             is_global_anchor_visit=visit.is_global_anchor_visit,
             is_soa_milestone=visit.is_soa_milestone,
-            repeating_frequency_uid=getattr(
-                visit.repeating_frequency, "term_uid", None
-            ),
+            repeating_frequency_uid=repeating_frequency_uid,
             repeating_frequency=getattr(visit, "repeating_frequency", None),
         )
 
@@ -511,9 +531,7 @@ class StudyVisitService(StudySelectionMixin):
         visits = [
             self._transform_all_to_response_model(
                 visit,
-                study_activity_count=self.repo.count_activities(
-                    visit_uid=visit.uid, study_value_version=study_value_version
-                ),
+                study_activity_count=visit.number_of_assigned_activities,
                 study_value_version=study_value_version,
             )
             for visit in visits
@@ -705,7 +723,7 @@ class StudyVisitService(StudySelectionMixin):
         timeline: TimelineAR,
         create: bool = True,
         preview: bool = False,
-        study_visits: list[StudyVisitOGM | None] = None,
+        study_visits: list[StudyVisitVO | None] = None,
     ):
         if study_visits is None:
             study_visits = []
@@ -951,14 +969,6 @@ class StudyVisitService(StudySelectionMixin):
                 timeline.remove_visit(visit_vo)
 
         ValidationException.raise_if(
-            visit_input.visit_sublabel_codelist_uid
-            and (
-                visit_input.visit_sublabel_codelist_uid
-                not in self.study_visit_sublabels
-            ),
-            msg="Visit Sub Label codelist is not used properly",
-        )
-        ValidationException.raise_if(
             visit_input.visit_contact_mode_uid not in StudyVisitContactMode,
             msg=f"CT Term with UID '{visit_input.visit_contact_mode_uid}' is not a valid Visit Contact Mode term.",
         )
@@ -1117,15 +1127,6 @@ class StudyVisitService(StudySelectionMixin):
             )
         else:
             window_unit_object = None
-        if (
-            create_input.visit_sublabel_codelist_uid != ""
-            and create_input.visit_sublabel_codelist_uid is not None
-        ):
-            visit_sublabel = self.study_visit_sublabels[
-                create_input.visit_sublabel_codelist_uid
-            ]
-        else:
-            visit_sublabel = None
 
         if req_time_unit:
             time_unit_object = TimeUnit(
@@ -1156,8 +1157,6 @@ class StudyVisitService(StudySelectionMixin):
         )
         study_visit_vo = StudyVisitVO(
             uid=self.repo.generate_uid(),
-            visit_sublabel=visit_sublabel,
-            visit_sublabel_uid=create_input.visit_sublabel_codelist_uid,
             visit_sublabel_reference=create_input.visit_sublabel_reference,
             consecutive_visit_group=create_input.consecutive_visit_group,
             show_visit=create_input.show_visit,
@@ -1180,6 +1179,9 @@ class StudyVisitService(StudySelectionMixin):
             visit_type=StudyVisitType[create_input.visit_type_uid],
             start_date=datetime.datetime.now(datetime.timezone.utc),
             author_id=self.author,
+            author_username=UserInfoService().get_author_username_from_id(
+                user_id=self.author
+            ),
             status=StudyStatus.DRAFT,
             day_unit_object=day_unit_object,
             week_unit_object=week_unit_object,
@@ -1464,41 +1466,34 @@ class StudyVisitService(StudySelectionMixin):
         visit_uid: str,
         study_uid: str,
     ) -> list[StudyVisitVersion]:
-        se_nodes = self.repo.get_all_versions(
-            visit_uid,
+        all_versions = self.repo.get_all_versions(
+            uid=visit_uid,
             study_uid=study_uid,
         )
 
         # Extract start dates from the selection history
-        start_dates = [history.has_after.single().date for history in se_nodes]
+        start_dates = [history.start_date for history in all_versions]
 
         # Extract effective dates for each version based on the start dates
         effective_dates = self._extract_multiple_version_study_standards_effective_date(
             study_uid=study_uid, list_of_start_dates=start_dates
         )
 
-        selection_history: Sequence[StudyVisitOGMVer] = []
-        for se_node, effective_date in zip(se_nodes, effective_dates):
-            self.terms_at_specific_datetime = effective_date
-            self._create_ctlist_map()
-            selection_history.append(StudyVisitOGMVer.from_orm(se_node))
+        selection_history: list[StudyVisit] = []
+        previous_effective_date = None
+        for study_visit_version, effective_date in zip(all_versions, effective_dates):
+            # The CTTerms should be only reloaded when effective_date changed for some of StudyVisits
+            if effective_date != previous_effective_date:
+                previous_effective_date = effective_date
+                self.terms_at_specific_datetime = effective_date
+                self._create_ctlist_map()
+            selection_history.append(
+                self._transform_all_to_response_history_model(
+                    study_visit_version
+                ).dict()
+            )
 
-        all_versions = sorted(
-            [
-                self.repo._from_neomodel_to_history_vo(
-                    study_visit_ogm_input=selection_version,
-                )
-                for selection_version in selection_history
-            ],
-            key=lambda item: item.start_date,
-            reverse=True,
-        )
-
-        versions = [
-            self._transform_all_to_response_history_model(_).dict()
-            for _ in all_versions
-        ]
-        data = calculate_diffs(versions, StudyVisitVersion)
+        data = calculate_diffs(selection_history, StudyVisitVersion)
         return data
 
     @db.transaction
@@ -1506,53 +1501,44 @@ class StudyVisitService(StudySelectionMixin):
         self,
         study_uid: str,
     ) -> list[StudyVisitVersion]:
-        study_visits = self.repo.find_all_visits_by_study_uid(study_uid=study_uid)
-
-        unique_list_uids = list({x.uid for x in study_visits})
-        unique_list_uids.sort()
-        # list of all study_elements
         data = []
-        ith_selection_history = []
-        for i_unique in unique_list_uids:
-            se_nodes = self.repo.get_all_versions(
-                i_unique,
-                study_uid=study_uid,
-            )
-            # Extract start dates from the selection history
-            start_dates = [history.has_after.single().date for history in se_nodes]
+        all_versions = self.repo.get_all_versions(
+            study_uid=study_uid,
+        )
+        # Extract start dates from the selection history
+        start_dates = [history.start_date for history in all_versions]
 
-            # Extract effective dates for each version based on the start dates
-            effective_dates = (
-                self._extract_multiple_version_study_standards_effective_date(
-                    study_uid=study_uid, list_of_start_dates=start_dates
+        effective_dates = self._extract_multiple_version_study_standards_effective_date(
+            study_uid=study_uid, list_of_start_dates=start_dates
+        )
+
+        selection_history: list[StudyVisit] = []
+        previous_effective_date = None
+        all_versions_dict = {}
+        for study_visit_version, effective_date in zip(all_versions, effective_dates):
+            all_versions_dict.setdefault(study_visit_version.uid, []).append(
+                (study_visit_version, effective_date)
+            )
+
+        for study_visit_versions_of_same_uid in all_versions_dict.values():
+            for study_visit_version, effective_date in study_visit_versions_of_same_uid:
+                # The CTTerms should be only reloaded when effective_date changed for some of StudyVisits
+                if effective_date != previous_effective_date:
+                    previous_effective_date = effective_date
+                    self.terms_at_specific_datetime = effective_date
+                    self._create_ctlist_map()
+                selection_history.append(
+                    self._transform_all_to_response_history_model(
+                        study_visit_version
+                    ).dict()
                 )
-            )
-
-            ith_selection_history: Sequence[StudyVisitOGMVer] = []
-            for se_node, effective_date in zip(se_nodes, effective_dates):
-                self.terms_at_specific_datetime = effective_date
-                self._create_ctlist_map()
-                ith_selection_history.append(StudyVisitOGMVer.from_orm(se_node))
-
-            all_versions = sorted(
-                [
-                    self.repo._from_neomodel_to_history_vo(
-                        study_visit_ogm_input=selection_version,
-                    )
-                    for selection_version in ith_selection_history
-                ],
-                key=lambda item: item.start_date,
-                reverse=True,
-            )
-            versions = [
-                self._transform_all_to_response_history_model(_).dict()
-                for _ in all_versions
-            ]
-
             if not data:
-                data = calculate_diffs(versions, StudyVisitVersion)
+                data = calculate_diffs(selection_history, StudyVisitVersion)
             else:
-                data.extend(calculate_diffs(versions, StudyVisitVersion))
+                data.extend(calculate_diffs(selection_history, StudyVisitVersion))
+            # All StudyVisits of same uid are processed, the selection_history array is being prepared for the new uid
+            selection_history.clear()
+
         return data
 
     @db.transaction
@@ -1565,7 +1551,7 @@ class StudyVisitService(StudySelectionMixin):
         for visit in ordered_visits:
             if visit.consecutive_visit_group == consecutive_visit_group:
                 visit.consecutive_visit_group = None
-                self.repo.save(self.repo.from_neomodel_to_vo(visit))
+                self.repo.save(visit)
 
     @db.transaction
     def assign_visit_consecutive_group(
@@ -1607,7 +1593,7 @@ class StudyVisitService(StudySelectionMixin):
         for visit in ordered_visits:
             if visit.uid in visits_to_assign:
                 visit.consecutive_visit_group = consecutive_visit_group
-                self.repo.save(self.repo.from_neomodel_to_vo(visit))
+                self.repo.save(visit)
                 updated_visits.append(self._transform_all_to_response_model(visit))
         return updated_visits
 

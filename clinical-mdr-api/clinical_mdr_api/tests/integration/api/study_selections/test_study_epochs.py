@@ -164,7 +164,7 @@ def test_epoch_modify_actions_on_locked_study(api_client):
 
     # get all epochs
     response = api_client.get(
-        f"/studies/{study.uid}/study-epoch/audit-trail/",
+        f"/studies/{study.uid}/study-epochs/audit-trail/",
     )
     res = response.json()
     assert_response_status_code(response, 200)
@@ -211,7 +211,7 @@ def test_epoch_modify_actions_on_locked_study(api_client):
 
     # get all history when was locked
     response = api_client.get(
-        f"/studies/{study.uid}/study-epoch/audit-trail/",
+        f"/studies/{study.uid}/study-epochs/audit-trail/",
     )
     assert_response_status_code(response, 200)
     res = response.json()
@@ -584,7 +584,7 @@ def test_study_epoch_version_selecting_ct_package(api_client):
 
     # get all objectives
     response = api_client.get(
-        f"/studies/{study_for_ctterm_versioning.uid}/{study_selection_breadcrumb[:-1]}/audit-trail/",
+        f"/studies/{study_for_ctterm_versioning.uid}/{study_selection_breadcrumb}/audit-trail/",
     )
     res = response.json()
     assert_response_status_code(response, 200)

@@ -608,26 +608,10 @@ def test_all_history_of_specific_selection5(api_client):
     assert res[0]["branch_arm_roots_uids"] is None
     assert res[0]["arm_roots_uids"] == ["StudyArm_000001", "StudyArm_000002"]
     assert res[0]["changes"] == {
-        "study_uid": False,
-        "order": False,
-        "project_number": False,
-        "project_name": False,
-        "study_version": False,
-        "cohort_uid": False,
         "name": True,
-        "short_name": False,
-        "code": False,
-        "description": False,
-        "colour_code": False,
-        "number_of_subjects": False,
         "start_date": True,
-        "author_username": False,
         "end_date": True,
-        "status": False,
         "change_type": True,
-        "accepted_version": False,
-        "branch_arm_roots_uids": False,
-        "arm_roots_uids": False,
     }
     assert res[1]["study_uid"] == "study_root"
     assert res[1]["order"] == 1
@@ -1669,26 +1653,9 @@ def test_all_history_of_all_selection_study_cohort(api_client):
     assert res[0]["branch_arm_roots_uids"] is None
     assert res[0]["arm_roots_uids"] == ["StudyArm_000001", "StudyArm_000002"]
     assert res[0]["changes"] == {
-        "study_uid": False,
-        "order": False,
-        "project_number": False,
-        "project_name": False,
-        "study_version": False,
-        "cohort_uid": False,
-        "name": False,
-        "short_name": False,
-        "code": False,
-        "description": False,
-        "colour_code": False,
-        "number_of_subjects": False,
         "start_date": True,
-        "author_username": False,
         "end_date": True,
-        "status": False,
         "change_type": True,
-        "accepted_version": False,
-        "branch_arm_roots_uids": False,
-        "arm_roots_uids": False,
     }
     assert res[1]["study_uid"] == "study_root"
     assert res[1]["order"] == 1
@@ -1710,26 +1677,10 @@ def test_all_history_of_all_selection_study_cohort(api_client):
     assert res[1]["branch_arm_roots_uids"] is None
     assert res[1]["arm_roots_uids"] == ["StudyArm_000001", "StudyArm_000002"]
     assert res[1]["changes"] == {
-        "study_uid": False,
-        "order": False,
-        "project_number": False,
-        "project_name": False,
-        "study_version": False,
-        "cohort_uid": False,
         "name": True,
-        "short_name": False,
-        "code": False,
-        "description": False,
-        "colour_code": False,
-        "number_of_subjects": False,
         "start_date": True,
-        "author_username": False,
         "end_date": True,
-        "status": False,
         "change_type": True,
-        "accepted_version": False,
-        "branch_arm_roots_uids": False,
-        "arm_roots_uids": False,
     }
     assert res[2]["study_uid"] == "study_root"
     assert res[2]["order"] == 1
@@ -1771,26 +1722,10 @@ def test_all_history_of_all_selection_study_cohort(api_client):
     assert res[3]["branch_arm_roots_uids"] is None
     assert res[3]["arm_roots_uids"] == ["StudyArm_000001"]
     assert res[3]["changes"] == {
-        "study_uid": False,
         "order": True,
-        "project_number": False,
-        "project_name": False,
-        "study_version": False,
-        "cohort_uid": False,
-        "name": False,
-        "short_name": False,
-        "code": False,
-        "description": False,
-        "colour_code": False,
-        "number_of_subjects": False,
         "start_date": True,
-        "author_username": False,
         "end_date": True,
-        "status": False,
         "change_type": True,
-        "accepted_version": False,
-        "branch_arm_roots_uids": False,
-        "arm_roots_uids": False,
     }
     assert res[4]["study_uid"] == "study_root"
     assert res[4]["order"] == 2
@@ -1832,26 +1767,10 @@ def test_all_history_of_all_selection_study_cohort(api_client):
     assert res[5]["branch_arm_roots_uids"] is None
     assert res[5]["arm_roots_uids"] == ["StudyArm_000001"]
     assert res[5]["changes"] == {
-        "study_uid": False,
         "order": True,
-        "project_number": False,
-        "project_name": False,
-        "study_version": False,
-        "cohort_uid": False,
-        "name": False,
-        "short_name": False,
-        "code": False,
-        "description": False,
-        "colour_code": False,
-        "number_of_subjects": False,
         "start_date": True,
-        "author_username": False,
         "end_date": True,
-        "status": False,
         "change_type": True,
-        "accepted_version": False,
-        "branch_arm_roots_uids": False,
-        "arm_roots_uids": False,
     }
     assert res[6]["study_uid"] == "study_root"
     assert res[6]["order"] == 2
@@ -1893,26 +1812,10 @@ def test_all_history_of_all_selection_study_cohort(api_client):
     assert res[7]["branch_arm_roots_uids"] is None
     assert res[7]["arm_roots_uids"] == ["StudyArm_000002"]
     assert res[7]["changes"] == {
-        "study_uid": False,
         "order": True,
-        "project_number": False,
-        "project_name": False,
-        "study_version": False,
-        "cohort_uid": False,
-        "name": False,
-        "short_name": False,
-        "code": False,
-        "description": False,
-        "colour_code": False,
-        "number_of_subjects": False,
         "start_date": True,
-        "author_username": False,
         "end_date": True,
-        "status": False,
         "change_type": True,
-        "accepted_version": False,
-        "branch_arm_roots_uids": False,
-        "arm_roots_uids": False,
     }
     assert res[8]["study_uid"] == "study_root"
     assert res[8]["order"] == 3
@@ -1954,26 +1857,10 @@ def test_all_history_of_all_selection_study_cohort(api_client):
     assert res[9]["branch_arm_roots_uids"] is None
     assert res[9]["arm_roots_uids"] is None
     assert res[9]["changes"] == {
-        "study_uid": False,
         "order": True,
-        "project_number": False,
-        "project_name": False,
-        "study_version": False,
-        "cohort_uid": False,
-        "name": False,
-        "short_name": False,
-        "code": False,
-        "description": False,
-        "colour_code": False,
-        "number_of_subjects": False,
         "start_date": True,
-        "author_username": False,
         "end_date": True,
-        "status": False,
         "change_type": True,
-        "accepted_version": False,
-        "branch_arm_roots_uids": False,
-        "arm_roots_uids": False,
     }
     assert res[10]["study_uid"] == "study_root"
     assert res[10]["order"] == 4

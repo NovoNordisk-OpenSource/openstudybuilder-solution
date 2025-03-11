@@ -17,6 +17,8 @@ from common.exceptions import AlreadyExistsException, BusinessLogicException
 class ActivityGroupingVO:
     activity_subgroup_uid: str
     activity_group_uid: str
+    activity_subgroup_name: str | None = None
+    activity_group_name: str | None = None
     activity_subgroup_version: str | None = None
     activity_group_version: str | None = None
 

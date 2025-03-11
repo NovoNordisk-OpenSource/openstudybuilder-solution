@@ -1,0 +1,40 @@
+const { When, Then } = require("@badeball/cypress-cucumber-preprocessor");
+
+When('The population is edited', () => {
+    cy.fixture('studyPopulation').then((study_population) => {
+        cy.clickButton('edit-content')
+        cy.selectMultipleSelect('Therapeutic area', study_population.therapeutic_area)
+        cy.selectMultipleSelect('Study disease, condition or indication', study_population.study_disease_condition_or_indication)
+        cy.setDuratinField('stable-disease-min-duration', study_population.stable_disease_min_duration_value, study_population.stable_disease_min_duration_unit)
+        cy.selectMultipleSelect('Diagnosis group', study_population.diagnosis_group)
+        cy.fillInput('Relapse criteria', study_population.relapse_criteria)
+        cy.selectRadio('Healthy subject indicator', study_population.healthy_subject_indicator)
+        cy.selectRadio('Rare disease indicator', study_population.rare_disease_indicator)
+        cy.selectAutoComplete('Sex of study participants', study_population.sex_of_study_participants)
+        cy.setDuratinField('planned-minimum-age', study_population.planned_minimum_age_of_study_participants_value, study_population.planned_minimum_age_of_study_participants_unit)
+        cy.setDuratinField('planned-maximum-age', study_population.planned_maximum_age_of_study_participants_value, study_population.planned_maximum_age_of_study_participants_unit)
+        cy.selectRadio('Paediatric study indicator', study_population.paediatric_study_indicator)
+        cy.selectRadio('Paediatric investigation plan indicator', study_population.paediatric_investigation_plan_indicator)
+        cy.selectRadio('Paediatric post-market study indicator', study_population.paediatric_post_market_study_indicator)
+        cy.clickButton('save-button')
+        cy.waitForFormSave()
+    })
+})
+
+Then('The population data is reflected in the table', () => {
+    cy.fixture('studyPopulation').then((study_population) => {
+        cy.tableContains(study_population.therapeutic_area)
+        cy.tableContains(study_population.study_disease_condition_or_indication)
+        cy.tableContains(study_population.stable_disease_min_duration_value + ' ' + study_population.stable_disease_min_duration_unit)
+        cy.tableContains(study_population.healthy_subject_indicator)
+        cy.tableContains(study_population.diagnosis_group)
+        cy.tableContains(study_population.relapse_criteria)
+        cy.tableContains(study_population.rare_disease_indicator)
+        cy.tableContains(study_population.sex_of_study_participants)
+        cy.tableContains(study_population.planned_minimum_age_of_study_participants_value + ' ' + study_population.planned_minimum_age_of_study_participants_unit)
+        cy.tableContains(study_population.planned_maximum_age_of_study_participants_value + ' ' + study_population.planned_maximum_age_of_study_participants_unit)
+        cy.tableContains(study_population.paediatric_study_indicator)
+        cy.tableContains(study_population.paediatric_investigation_plan_indicator)
+        cy.tableContains(study_population.paediatric_post_market_study_indicator)
+    })
+})

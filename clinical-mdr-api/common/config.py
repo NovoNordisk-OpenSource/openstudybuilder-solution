@@ -96,7 +96,6 @@ STUDY_SOA_PREFERENCES_FIELDS = (
     STUDY_FIELD_SOA_BASELINE_AS_TIME_ZERO,
 )
 
-STUDY_VISIT_SUBLABEL = "Visit Sub Label"
 STUDY_VISIT_CONTACT_MODE_NAME = "Visit Contact Mode"
 STUDY_VISIT_EPOCH_ALLOCATION_NAME = "Epoch Allocation"
 DATE_TIME_FORMAT = "%Y-%m-%dT%H:%M:%S.%f%z"
@@ -127,6 +126,9 @@ OPENAPI_SCHEMA_API_ROOT_PATH = environ.get("UVICORN_ROOT_PATH") or "/"
 TRACING_DISABLED = environ.get("TRACING_DISABLED", "").upper().strip() not in (
     _UPPERCASE_FALSE_STRINGS
 )
+TRACING_METRICS_HEADER = environ.get("TRACING_METRICS_HEADER", "").upper().strip() in (
+    _UPPERCASE_TRUE_STRINGS
+)
 
 TRACE_REQUEST_BODY = environ.get("TRACE_REQUEST_BODY", "").upper().strip() in (
     _UPPERCASE_TRUE_STRINGS
@@ -137,6 +139,8 @@ TRACE_REQUEST_BODY_MIN_STATUS_CODE = int(
 TRACE_REQUEST_BODY_TRUNCATE_BYTES = int(
     environ.get("TRACE_REQUEST_BODY_TRUNCATE_BYTES", "2048")
 )
+TRACE_QUERY_MAX_LEN = int(environ.get("TRACE_QUERY_MAX_LEN", "4000"))
+
 
 # Absolute path of application root directory
 APP_ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../"))

@@ -6,7 +6,6 @@ from neomodel import (
     ZeroOrOne,
 )
 
-from clinical_mdr_api.domain_repositories.models.concepts import UnitDefinitionRoot
 from clinical_mdr_api.domain_repositories.models.controlled_terminology import (
     CTTermRoot,
 )
@@ -31,12 +30,6 @@ class StudyEpoch(StudySelection):
     )
     has_epoch_type = RelationshipTo(
         CTTermRoot, "HAS_EPOCH_TYPE", model=ClinicalMdrRel, cardinality=ZeroOrOne
-    )
-    has_duration_unit = RelationshipTo(
-        UnitDefinitionRoot,
-        "HAS_DURATION_UNIT",
-        model=ClinicalMdrRel,
-        cardinality=ZeroOrMore,
     )
     name = StringProperty()
     short_name = StringProperty()

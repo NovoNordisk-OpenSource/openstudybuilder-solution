@@ -45,7 +45,7 @@
 | opencensus-ext-azure           | 1.1.13               |
 | packaging                      | 24.2                 |
 | pathspec                       | 0.12.1               |
-| pip                            | 24.3.1               |
+| pip                            | 25.0.1               |
 | platformdirs                   | 4.3.6                |
 | pluggy                         | 1.5.0                |
 | portalocker                    | 2.10.1               |

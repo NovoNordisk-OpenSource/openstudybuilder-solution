@@ -38,7 +38,6 @@ STUDY_VISITS = [
         time_reference_uid="CTTerm_000122",
         time_value=-14,
         time_unit_uid="UnitDefinition_000364",
-        visit_sublabel_codelist_uid=None,
         visit_sublabel_reference=None,
         consecutive_visit_group=None,
         show_visit=True,
@@ -58,6 +57,7 @@ STUDY_VISITS = [
         study_uid="Study_000002",
         study_epoch_name="Screening",
         study_epoch={
+            "term_uid": "C48262_SCREENING",
             "sponsor_preferred_name": "Screening",
             "sponsor_preferred_name_sentence_case": "screening",
         },
@@ -65,6 +65,7 @@ STUDY_VISITS = [
         order=1,
         visit_type_name="Screening",
         visit_type={
+            "term_uid": "CTTerm_000182",
             "sponsor_preferred_name": "Screening",
             "sponsor_preferred_name_sentence_case": "screening",
         },
@@ -72,6 +73,7 @@ STUDY_VISITS = [
         time_unit_name="days",
         visit_contact_mode_name="On Site Visit",
         visit_contact_mode={
+            "term_uid": "CTTerm_000081",
             "sponsor_preferred_name": "On Site Visit",
             "sponsor_preferred_name_sentence_case": "screening",
         },
@@ -91,7 +93,6 @@ STUDY_VISITS = [
         visit_subnumber=0,
         unique_visit_number=100,
         visit_subname="Visit 1",
-        visit_sublabel=None,
         visit_name="Visit 1",
         visit_short_name="V1",
         visit_window_unit_name="days",
@@ -111,7 +112,6 @@ STUDY_VISITS = [
         time_reference_uid="CTTerm_000122",
         time_value=-3,
         time_unit_uid="UnitDefinition_000364",
-        visit_sublabel_codelist_uid=None,
         visit_sublabel_reference=None,
         consecutive_visit_group=None,
         show_visit=True,
@@ -131,6 +131,7 @@ STUDY_VISITS = [
         study_uid="Study_000002",
         study_epoch_name="Run-in",
         study_epoch={
+            "term_uid": "C98779_RUN-IN",
             "sponsor_preferred_name": "Run-in",
             "sponsor_preferred_name_sentence_case": "screening",
         },
@@ -138,6 +139,7 @@ STUDY_VISITS = [
         order=2,
         visit_type_name="Start of run-in",
         visit_type={
+            "term_uid": "CTTerm_000184",
             "sponsor_preferred_name": "Start of run-in",
             "sponsor_preferred_name_sentence_case": "screening",
         },
@@ -145,6 +147,7 @@ STUDY_VISITS = [
         time_unit_name="days",
         visit_contact_mode_name="On Site Visit",
         visit_contact_mode={
+            "term_uid": "CTTerm_000081",
             "sponsor_preferred_name": "On Site Visit",
             "sponsor_preferred_name_sentence_case": "screening",
         },
@@ -164,7 +167,6 @@ STUDY_VISITS = [
         visit_subnumber=0,
         unique_visit_number=200,
         visit_subname="Visit 2",
-        visit_sublabel=None,
         visit_name="Visit 2",
         visit_short_name="V2",
         visit_window_unit_name="days",
@@ -184,7 +186,6 @@ STUDY_VISITS = [
         time_reference_uid="CTTerm_000122",
         time_value=-2,
         time_unit_uid="UnitDefinition_000364",
-        visit_sublabel_codelist_uid=None,
         visit_sublabel_reference=None,
         consecutive_visit_group=None,
         show_visit=False,
@@ -204,6 +205,7 @@ STUDY_VISITS = [
         study_uid="Study_000002",
         study_epoch_name="Run-in",
         study_epoch={
+            "term_uid": "C98779_RUN-IN",
             "sponsor_preferred_name": "Run-in",
             "sponsor_preferred_name_sentence_case": "screening",
         },
@@ -211,6 +213,7 @@ STUDY_VISITS = [
         order=3,
         visit_type_name="Pre-treatment",
         visit_type={
+            "term_uid": "CTTerm_000177",
             "sponsor_preferred_name": "Pre-treatment",
             "sponsor_preferred_name_sentence_case": "screening",
         },
@@ -218,6 +221,7 @@ STUDY_VISITS = [
         time_unit_name="days",
         visit_contact_mode_name="On Site Visit",
         visit_contact_mode={
+            "term_uid": "CTTerm_000081",
             "sponsor_preferred_name": "On Site Visit",
             "sponsor_preferred_name_sentence_case": "screening",
         },
@@ -237,7 +241,6 @@ STUDY_VISITS = [
         visit_subnumber=0,
         unique_visit_number=300,
         visit_subname="Visit 3",
-        visit_sublabel=None,
         visit_name="Visit 3",
         visit_short_name="V3",
         visit_window_unit_name="days",
@@ -257,7 +260,6 @@ STUDY_VISITS = [
         time_reference_uid="CTTerm_000122",
         time_value=-1,
         time_unit_uid="UnitDefinition_000364",
-        visit_sublabel_codelist_uid=None,
         visit_sublabel_reference=None,
         consecutive_visit_group=None,
         show_visit=True,
@@ -277,6 +279,7 @@ STUDY_VISITS = [
         study_uid="Study_000002",
         study_epoch_name="Run-in",
         study_epoch={
+            "term_uid": "C98779_RUN-IN",
             "sponsor_preferred_name": "Run-in",
             "sponsor_preferred_name_sentence_case": "screening",
         },
@@ -284,6 +287,7 @@ STUDY_VISITS = [
         order=4,
         visit_type_name="Pre-treatment",
         visit_type={
+            "term_uid": "CTTerm_000177",
             "sponsor_preferred_name": "Pre-treatment",
             "sponsor_preferred_name_sentence_case": "screening",
         },
@@ -291,6 +295,7 @@ STUDY_VISITS = [
         time_unit_name="days",
         visit_contact_mode_name="On Site Visit",
         visit_contact_mode={
+            "term_uid": "CTTerm_000081",
             "sponsor_preferred_name": "On Site Visit",
             "sponsor_preferred_name_sentence_case": "screening",
         },
@@ -310,7 +315,6 @@ STUDY_VISITS = [
         visit_subnumber=0,
         unique_visit_number=400,
         visit_subname="Visit 4",
-        visit_sublabel=None,
         visit_name="Visit 4",
         visit_short_name="V4",
         visit_window_unit_name="days",
@@ -330,7 +334,6 @@ STUDY_VISITS = [
         time_reference_uid="CTTerm_000122",
         time_value=0,
         time_unit_uid="UnitDefinition_000364",
-        visit_sublabel_codelist_uid=None,
         visit_sublabel_reference=None,
         consecutive_visit_group="V5-V7",
         show_visit=True,
@@ -350,6 +353,7 @@ STUDY_VISITS = [
         study_uid="Study_000002",
         study_epoch_name="Treatment 1",
         study_epoch={
+            "term_uid": "CTTerm_001163",
             "sponsor_preferred_name": "Treatment 1",
             "sponsor_preferred_name_sentence_case": "screening",
         },
@@ -357,6 +361,7 @@ STUDY_VISITS = [
         order=5,
         visit_type_name="Treatment",
         visit_type={
+            "term_uid": "CTTerm_000187",
             "sponsor_preferred_name": "Treatment",
             "sponsor_preferred_name_sentence_case": "screening",
         },
@@ -364,6 +369,7 @@ STUDY_VISITS = [
         time_unit_name="days",
         visit_contact_mode_name="On Site Visit",
         visit_contact_mode={
+            "term_uid": "CTTerm_000081",
             "sponsor_preferred_name": "On Site Visit",
             "sponsor_preferred_name_sentence_case": "screening",
         },
@@ -383,7 +389,6 @@ STUDY_VISITS = [
         visit_subnumber=0,
         unique_visit_number=500,
         visit_subname="Visit 5",
-        visit_sublabel=None,
         visit_name="Visit 5",
         visit_short_name="V5",
         visit_window_unit_name="days",
@@ -403,7 +408,6 @@ STUDY_VISITS = [
         time_reference_uid="CTTerm_000122",
         time_value=2,
         time_unit_uid="UnitDefinition_000364",
-        visit_sublabel_codelist_uid=None,
         visit_sublabel_reference=None,
         consecutive_visit_group="V5-V7",
         show_visit=True,
@@ -423,6 +427,7 @@ STUDY_VISITS = [
         study_uid="Study_000002",
         study_epoch_name="Treatment 1",
         study_epoch={
+            "term_uid": "CTTerm_001163",
             "sponsor_preferred_name": "Treatment 1",
             "sponsor_preferred_name_sentence_case": "screening",
         },
@@ -430,6 +435,7 @@ STUDY_VISITS = [
         order=6,
         visit_type_name="Treatment",
         visit_type={
+            "term_uid": "CTTerm_000187",
             "sponsor_preferred_name": "Treatment",
             "sponsor_preferred_name_sentence_case": "screening",
         },
@@ -437,6 +443,7 @@ STUDY_VISITS = [
         time_unit_name="days",
         visit_contact_mode_name="On Site Visit",
         visit_contact_mode={
+            "term_uid": "CTTerm_000081",
             "sponsor_preferred_name": "On Site Visit",
             "sponsor_preferred_name_sentence_case": "screening",
         },
@@ -456,7 +463,6 @@ STUDY_VISITS = [
         visit_subnumber=0,
         unique_visit_number=600,
         visit_subname="Visit 6",
-        visit_sublabel=None,
         visit_name="Visit 6",
         visit_short_name="V6",
         visit_window_unit_name="days",
@@ -476,7 +482,6 @@ STUDY_VISITS = [
         time_reference_uid="CTTerm_000122",
         time_value=4,
         time_unit_uid="UnitDefinition_000364",
-        visit_sublabel_codelist_uid=None,
         visit_sublabel_reference=None,
         consecutive_visit_group="V5-V7",
         show_visit=True,
@@ -496,6 +501,7 @@ STUDY_VISITS = [
         study_uid="Study_000002",
         study_epoch_name="Treatment 1",
         study_epoch={
+            "term_uid": "CTTerm_001163",
             "sponsor_preferred_name": "Treatment 1",
             "sponsor_preferred_name_sentence_case": "screening",
         },
@@ -503,6 +509,7 @@ STUDY_VISITS = [
         order=7,
         visit_type_name="Treatment",
         visit_type={
+            "term_uid": "CTTerm_000187",
             "sponsor_preferred_name": "Treatment",
             "sponsor_preferred_name_sentence_case": "screening",
         },
@@ -510,6 +517,7 @@ STUDY_VISITS = [
         time_unit_name="days",
         visit_contact_mode_name="On Site Visit",
         visit_contact_mode={
+            "term_uid": "CTTerm_000081",
             "sponsor_preferred_name": "On Site Visit",
             "sponsor_preferred_name_sentence_case": "screening",
         },
@@ -529,7 +537,6 @@ STUDY_VISITS = [
         visit_subnumber=0,
         unique_visit_number=700,
         visit_subname="Visit 7",
-        visit_sublabel=None,
         visit_name="Visit 7",
         visit_short_name="V7",
         visit_window_unit_name="days",
@@ -549,7 +556,6 @@ STUDY_VISITS = [
         time_reference_uid="CTTerm_000122",
         time_value=14,
         time_unit_uid="UnitDefinition_000364",
-        visit_sublabel_codelist_uid=None,
         visit_sublabel_reference=None,
         consecutive_visit_group=None,
         show_visit=True,
@@ -569,6 +575,7 @@ STUDY_VISITS = [
         study_uid="Study_000002",
         study_epoch_name="Treatment 2",
         study_epoch={
+            "term_uid": "CTTerm_001162",
             "sponsor_preferred_name": "Treatment 2",
             "sponsor_preferred_name_sentence_case": "screening",
         },
@@ -576,6 +583,7 @@ STUDY_VISITS = [
         order=8,
         visit_type_name="Treatment",
         visit_type={
+            "term_uid": "CTTerm_000187",
             "sponsor_preferred_name": "Treatment",
             "sponsor_preferred_name_sentence_case": "screening",
         },
@@ -583,6 +591,7 @@ STUDY_VISITS = [
         time_unit_name="days",
         visit_contact_mode_name="On Site Visit",
         visit_contact_mode={
+            "term_uid": "CTTerm_000081",
             "sponsor_preferred_name": "On Site Visit",
             "sponsor_preferred_name_sentence_case": "screening",
         },
@@ -602,7 +611,6 @@ STUDY_VISITS = [
         visit_subnumber=0,
         unique_visit_number=800,
         visit_subname="Visit 8",
-        visit_sublabel=None,
         visit_name="Visit 8",
         visit_short_name="V8",
         visit_window_unit_name="days",
@@ -622,7 +630,6 @@ STUDY_VISITS = [
         time_reference_uid="CTTerm_000122",
         time_value=16,
         time_unit_uid="UnitDefinition_000364",
-        visit_sublabel_codelist_uid=None,
         visit_sublabel_reference=None,
         consecutive_visit_group=None,
         show_visit=True,
@@ -642,6 +649,7 @@ STUDY_VISITS = [
         study_uid="Study_000002",
         study_epoch_name="Treatment 2",
         study_epoch={
+            "term_uid": "CTTerm_001162",
             "sponsor_preferred_name": "Treatment 2",
             "sponsor_preferred_name_sentence_case": "screening",
         },
@@ -649,6 +657,7 @@ STUDY_VISITS = [
         order=9,
         visit_type_name="Treatment",
         visit_type={
+            "term_uid": "CTTerm_000187",
             "sponsor_preferred_name": "Treatment",
             "sponsor_preferred_name_sentence_case": "screening",
         },
@@ -656,6 +665,7 @@ STUDY_VISITS = [
         time_unit_name="days",
         visit_contact_mode_name="On Site Visit",
         visit_contact_mode={
+            "term_uid": "CTTerm_000081",
             "sponsor_preferred_name": "On Site Visit",
             "sponsor_preferred_name_sentence_case": "screening",
         },
@@ -675,7 +685,6 @@ STUDY_VISITS = [
         visit_subnumber=0,
         unique_visit_number=900,
         visit_subname="Visit 9",
-        visit_sublabel=None,
         visit_name="Visit 9",
         visit_short_name="V9",
         visit_window_unit_name="days",
@@ -695,7 +704,6 @@ STUDY_VISITS = [
         time_reference_uid="CTTerm_000122",
         time_value=18,
         time_unit_uid="UnitDefinition_000364",
-        visit_sublabel_codelist_uid=None,
         visit_sublabel_reference=None,
         consecutive_visit_group=None,
         show_visit=True,
@@ -715,6 +723,7 @@ STUDY_VISITS = [
         study_uid="Study_000002",
         study_epoch_name="Treatment 2",
         study_epoch={
+            "term_uid": "CTTerm_001162",
             "sponsor_preferred_name": "Treatment 2",
             "sponsor_preferred_name_sentence_case": "screening",
         },
@@ -722,6 +731,7 @@ STUDY_VISITS = [
         order=10,
         visit_type_name="Treatment",
         visit_type={
+            "term_uid": "CTTerm_000187",
             "sponsor_preferred_name": "Treatment",
             "sponsor_preferred_name_sentence_case": "screening",
         },
@@ -729,6 +739,7 @@ STUDY_VISITS = [
         time_unit_name="days",
         visit_contact_mode_name="On Site Visit",
         visit_contact_mode={
+            "term_uid": "CTTerm_000081",
             "sponsor_preferred_name": "On Site Visit",
             "sponsor_preferred_name_sentence_case": "screening",
         },
@@ -748,7 +759,6 @@ STUDY_VISITS = [
         visit_subnumber=0,
         unique_visit_number=1000,
         visit_subname="Visit 10",
-        visit_sublabel=None,
         visit_name="Visit 10",
         visit_short_name="V10",
         visit_window_unit_name="days",
@@ -768,7 +778,6 @@ STUDY_VISITS = [
         time_reference_uid="CTTerm_000122",
         time_value=21,
         time_unit_uid="UnitDefinition_000364",
-        visit_sublabel_codelist_uid=None,
         visit_sublabel_reference=None,
         consecutive_visit_group=None,
         show_visit=True,
@@ -788,6 +797,7 @@ STUDY_VISITS = [
         study_uid="Study_000002",
         study_epoch_name="Follow-up",
         study_epoch={
+            "term_uid": "C99158_FOLLOW-UP",
             "sponsor_preferred_name": "Follow-up",
             "sponsor_preferred_name_sentence_case": "screening",
         },
@@ -795,6 +805,7 @@ STUDY_VISITS = [
         order=11,
         visit_type_name="Follow-up",
         visit_type={
+            "term_uid": "CTTerm_000175",
             "sponsor_preferred_name": "Follow-up",
             "sponsor_preferred_name_sentence_case": "screening",
         },
@@ -802,6 +813,7 @@ STUDY_VISITS = [
         time_unit_name="days",
         visit_contact_mode_name="On Site Visit",
         visit_contact_mode={
+            "term_uid": "CTTerm_000081",
             "sponsor_preferred_name": "On Site Visit",
             "sponsor_preferred_name_sentence_case": "screening",
         },
@@ -821,7 +833,6 @@ STUDY_VISITS = [
         visit_subnumber=0,
         unique_visit_number=1100,
         visit_subname="Visit 11",
-        visit_sublabel=None,
         visit_name="Visit 11",
         visit_short_name="V11",
         visit_window_unit_name="days",
@@ -841,7 +852,6 @@ STUDY_VISITS = [
         time_reference_uid=None,
         time_value=None,
         time_unit_uid=None,
-        visit_sublabel_codelist_uid=None,
         visit_sublabel_reference=None,
         consecutive_visit_group=None,
         show_visit=True,
@@ -861,6 +871,7 @@ STUDY_VISITS = [
         study_uid="Study_000002",
         study_epoch_name="Basic",
         study_epoch={
+            "term_uid": "CTTerm_000009",
             "sponsor_preferred_name": "Basic",
             "sponsor_preferred_name_sentence_case": "screening",
         },
@@ -868,6 +879,7 @@ STUDY_VISITS = [
         order=config.UNSCHEDULED_VISIT_NUMBER,
         visit_type_name="Unscheduled",
         visit_type={
+            "term_uid": "CTTerm_000192",
             "sponsor_preferred_name": "Unscheduled",
             "sponsor_preferred_name_sentence_case": "screening",
         },
@@ -875,6 +887,7 @@ STUDY_VISITS = [
         time_unit_name=None,
         visit_contact_mode_name="Virtual Visit",
         visit_contact_mode={
+            "term_uid": "CTTerm_000079",
             "sponsor_preferred_name": "Virtual Visit",
             "sponsor_preferred_name_sentence_case": "screening",
         },
@@ -892,7 +905,6 @@ STUDY_VISITS = [
         visit_subnumber=0,
         unique_visit_number=config.UNSCHEDULED_VISIT_NUMBER,
         visit_subname=f"Visit {config.UNSCHEDULED_VISIT_NUMBER}",
-        visit_sublabel=None,
         visit_name=f"Visit {config.UNSCHEDULED_VISIT_NUMBER}",
         visit_short_name=f"{config.UNSCHEDULED_VISIT_NUMBER}",
         visit_window_unit_name="days",
@@ -912,7 +924,6 @@ STUDY_VISITS = [
         time_reference_uid=None,
         time_value=None,
         time_unit_uid=None,
-        visit_sublabel_codelist_uid=None,
         visit_sublabel_reference=None,
         consecutive_visit_group=None,
         show_visit=True,
@@ -932,6 +943,7 @@ STUDY_VISITS = [
         study_uid="Study_000002",
         study_epoch_name="Basic",
         study_epoch={
+            "term_uid": "CTTerm_000009",
             "sponsor_preferred_name": "Basic",
             "sponsor_preferred_name_sentence_case": "screening",
         },
@@ -939,6 +951,7 @@ STUDY_VISITS = [
         order=config.NON_VISIT_NUMBER,
         visit_type_name="Non-visit",
         visit_type={
+            "term_uid": "CTTerm_000190",
             "sponsor_preferred_name": "Non-visit",
             "sponsor_preferred_name_sentence_case": "screening",
         },
@@ -946,6 +959,7 @@ STUDY_VISITS = [
         time_unit_name=None,
         visit_contact_mode_name="Virtual Visit",
         visit_contact_mode={
+            "term_uid": "CTTerm_000079",
             "sponsor_preferred_name": "Virtual Visit",
             "sponsor_preferred_name_sentence_case": "screening",
         },
@@ -963,7 +977,6 @@ STUDY_VISITS = [
         visit_subnumber=0,
         unique_visit_number=config.NON_VISIT_NUMBER,
         visit_subname=f"Visit {config.NON_VISIT_NUMBER}",
-        visit_sublabel=None,
         visit_name=f"Visit {config.NON_VISIT_NUMBER}",
         visit_short_name=f"{config.NON_VISIT_NUMBER}",
         visit_window_unit_name="days",

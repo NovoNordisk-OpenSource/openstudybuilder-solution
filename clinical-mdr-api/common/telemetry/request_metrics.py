@@ -1,4 +1,5 @@
 import contextlib
+import json
 import logging
 import time
 from functools import wraps
@@ -7,6 +8,9 @@ from typing import Annotated, Mapping
 import neomodel
 import opencensus.trace
 from pydantic import BaseModel, Field
+from starlette.datastructures import MutableHeaders
+from starlette.responses import Response
+from starlette.types import Message
 from starlette_context import context
 
 from common import config
@@ -14,39 +18,41 @@ from common.telemetry import trace_block
 
 log = logging.getLogger(__name__)
 
+REQUEST_METRICS_HEADER_NAME = "X-Metrics"
+
 
 class RequestMetrics(BaseModel):
     """Per-request metrics"""
 
     cypher_count: Annotated[
-        int, Field(alias="cypher.count", title="Number of cypher.query events")
+        int, Field(alias="cypher.count", title="Number of Cypher queries executed")
     ] = 0
     cypher_times: Annotated[
         float,
         Field(
             alias="cypher.times",
-            title="Cumulative walltime (in seconds) cypher.query events took",
+            title="Cumulative walltime (in seconds) of Cypher queries",
         ),
     ] = 0
     cypher_slowest_time: Annotated[
         float,
         Field(
             alias="cypher.slowest.time",
-            title="Walltime (in seconds) the slowest cypher.query events took",
+            title="Walltime (in seconds) of the slowest Cypher query",
         ),
     ] = 0
     cypher_slowest_query: Annotated[
         str | None,
         Field(
             alias="cypher.slowest.query",
-            title="Slowest (by walltime) cypher.query string",
+            title="The slowest Cypher query (by walltime, truncated to 1000 chars) ",
         ),
     ] = None
     cypher_slowest_query_params: Annotated[
         dict | None,
         Field(
             alias="cypher.slowest.query.params",
-            title="Parameters of the slowest cypher query",
+            title="Parameters of the slowest Cypher query",
         ),
     ] = None
 
@@ -75,7 +81,33 @@ def get_request_metrics() -> RequestMetrics | None:
     return None
 
 
+def add_request_metrics_header(
+    response: Response | Message,
+    expose_header: bool = False,
+) -> None:
+    """Adds custom response header with request metrics"""
+
+    metrics = get_request_metrics()
+    metrics = metrics.dict(
+        by_alias=True, include={"cypher_count", "cypher_times", "cypher_slowest_time"}
+    )
+    metrics = {
+        k: (round(v, 4) if isinstance(v, float) else v) for k, v in metrics.items()
+    }
+    value = json.dumps(metrics)
+
+    if isinstance(response, Response):
+        headers = response.headers
+    else:
+        headers = MutableHeaders(scope=response)
+
+    headers.append(REQUEST_METRICS_HEADER_NAME, value)
+    if expose_header:
+        headers.setdefault("Access-Control-Expose-Headers", REQUEST_METRICS_HEADER_NAME)
+
+
 @contextlib.contextmanager
+# pylint: disable=unused-argument
 def cypher_tracing(query: str, params: Mapping):
     """cypher query tracing and metrics to Opencensus"""
     # update request metrics
@@ -84,8 +116,8 @@ def cypher_tracing(query: str, params: Mapping):
         start_time = time.time()
 
     with trace_block("neomodel.query") as span:
-        span.add_attribute("cypher.query", query)
-        span.add_attribute("cypher.params", params)
+        span.add_attribute("cypher.query", query[: config.TRACE_QUERY_MAX_LEN])
+        # span.add_attribute("cypher.params", params)
 
         # run the query (or any wrapped code) as a distinct operation (logical tracing block == Span)
         yield
@@ -102,8 +134,8 @@ def cypher_tracing(query: str, params: Mapping):
 
             # also record query text and parameters if slower than the threshold
             if delta_time > config.SLOW_QUERY_TIME_SECS:
-                metrics.cypher_slowest_query = query
-                metrics.cypher_slowest_query_params = params
+                metrics.cypher_slowest_query = query[: config.TRACE_QUERY_MAX_LEN]
+                # metrics.cypher_slowest_query_params = params
 
 
 def patch_neomodel_database():

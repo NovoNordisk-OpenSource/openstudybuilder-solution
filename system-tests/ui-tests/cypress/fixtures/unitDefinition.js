@@ -1,0 +1,18 @@
+unit_definition = {
+  library: "Sponsor",
+  convertible_unit: 'Yes',
+  display_unit: 'Yes',
+  master_unit: 'No',
+  si_unit: 'Yes',
+  us_conventional_unit: 'Yes',
+  name: `Name${Date.now()}`,
+  ct_units: '%',
+  ct_units_symbol: '%',
+  unit_subsets: 'Dose Unit',
+  ucum: '0/00',
+  unit_dimension: 'Degrees',
+  legacy_code: `LegacyCode${Date.now()}`,
+  use_molecular_weight: 'false', 
+  use_complex_unit_conversion: 'false',
+  conversion_factor_to_master: '1',
+}

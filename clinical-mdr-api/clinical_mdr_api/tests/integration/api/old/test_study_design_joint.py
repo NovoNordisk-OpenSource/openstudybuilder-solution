@@ -1195,107 +1195,27 @@ def test_the_studyepoch_delete_functionality_actually_deletes_the_studyepoch(
     assert res["items"][0]["epoch"] == "EpochSubType_0001"
     assert res["items"][0]["epoch_subtype_name"] == "Epoch Subtype"
     assert res["items"][0]["epoch_type_name"] == "Epoch Type"
+
     assert res["items"][0]["epoch_ctterm"]["term_uid"] == "EpochSubType_0001"
-    assert res["items"][0]["epoch_ctterm"]["catalogue_name"] == "catalogue"
-    assert res["items"][0]["epoch_ctterm"]["codelists"] == [
-        {"codelist_uid": "C99079", "library_name": "Sponsor", "order": 999999},
-        {"codelist_uid": "CTCodelist_00003", "library_name": "Sponsor", "order": 1},
-    ]
     assert res["items"][0]["epoch_ctterm"]["sponsor_preferred_name"] == "Epoch Subtype"
-    assert (
-        res["items"][0]["epoch_ctterm"]["sponsor_preferred_name_sentence_case"]
-        == "Epoch subtype"
-    )
-    assert res["items"][0]["epoch_ctterm"]["library_name"] == "Sponsor"
-    assert res["items"][0]["epoch_ctterm"]["start_date"]
-    assert res["items"][0]["epoch_ctterm"]["end_date"] is None
-    assert res["items"][0]["epoch_ctterm"]["status"] == "Final"
-    assert res["items"][0]["epoch_ctterm"]["version"] == "1.0"
-    assert res["items"][0]["epoch_ctterm"]["change_description"] == "Approved version"
-    assert (
-        res["items"][0]["epoch_ctterm"]["author_username"] == "unknown-user@example.com"
-    )
     assert res["items"][0]["epoch_ctterm"]["queried_effective_date"]
     assert res["items"][0]["epoch_ctterm"]["date_conflict"] is False
-    assert res["items"][0]["epoch_ctterm"]["possible_actions"] == [
-        "inactivate",
-        "new_version",
-    ]
+
     assert res["items"][0]["epoch_subtype_ctterm"]["term_uid"] == "EpochSubType_0001"
-    assert res["items"][0]["epoch_subtype_ctterm"]["catalogue_name"] == "catalogue"
-    assert res["items"][0]["epoch_subtype_ctterm"]["codelists"] == [
-        {
-            "codelist_uid": "C99079",
-            "library_name": "Sponsor",
-            "order": 999999,
-        },
-        {
-            "codelist_uid": "CTCodelist_00003",
-            "library_name": "Sponsor",
-            "order": 1,
-        },
-    ]
     assert (
         res["items"][0]["epoch_subtype_ctterm"]["sponsor_preferred_name"]
         == "Epoch Subtype"
     )
-    assert (
-        res["items"][0]["epoch_subtype_ctterm"]["sponsor_preferred_name_sentence_case"]
-        == "Epoch subtype"
-    )
-    assert res["items"][0]["epoch_subtype_ctterm"]["library_name"] == "Sponsor"
-    assert res["items"][0]["epoch_subtype_ctterm"]["start_date"]
-    assert res["items"][0]["epoch_subtype_ctterm"]["end_date"] is None
-    assert res["items"][0]["epoch_subtype_ctterm"]["status"] == "Final"
-    assert res["items"][0]["epoch_subtype_ctterm"]["version"] == "1.0"
-    assert (
-        res["items"][0]["epoch_subtype_ctterm"]["change_description"]
-        == "Approved version"
-    )
-    assert (
-        res["items"][0]["epoch_subtype_ctterm"]["author_username"]
-        == "unknown-user@example.com"
-    )
     assert res["items"][0]["epoch_subtype_ctterm"]["queried_effective_date"]
     assert res["items"][0]["epoch_subtype_ctterm"]["date_conflict"] is False
-    assert res["items"][0]["epoch_subtype_ctterm"]["possible_actions"] == [
-        "inactivate",
-        "new_version",
-    ]
+
     assert res["items"][0]["epoch_type_ctterm"]["term_uid"] == "EpochType_0001"
-    assert res["items"][0]["epoch_type_ctterm"]["catalogue_name"] == "catalogue"
-    assert res["items"][0]["epoch_type_ctterm"]["codelists"] == [
-        {
-            "codelist_uid": "CTCodelist_00002",
-            "library_name": "Sponsor",
-            "order": 1,
-        },
-    ]
     assert (
         res["items"][0]["epoch_type_ctterm"]["sponsor_preferred_name"] == "Epoch Type"
     )
-    assert (
-        res["items"][0]["epoch_type_ctterm"]["sponsor_preferred_name_sentence_case"]
-        == "Epoch type"
-    )
-    assert res["items"][0]["epoch_type_ctterm"]["library_name"] == "Sponsor"
-    assert res["items"][0]["epoch_type_ctterm"]["start_date"]
-    assert res["items"][0]["epoch_type_ctterm"]["end_date"] is None
-    assert res["items"][0]["epoch_type_ctterm"]["status"] == "Final"
-    assert res["items"][0]["epoch_type_ctterm"]["version"] == "1.0"
-    assert (
-        res["items"][0]["epoch_type_ctterm"]["change_description"] == "Approved version"
-    )
-    assert (
-        res["items"][0]["epoch_type_ctterm"]["author_username"]
-        == "unknown-user@example.com"
-    )
     assert res["items"][0]["epoch_type_ctterm"]["queried_effective_date"]
     assert res["items"][0]["epoch_type_ctterm"]["date_conflict"] is False
-    assert res["items"][0]["epoch_type_ctterm"]["possible_actions"] == [
-        "inactivate",
-        "new_version",
-    ]
+
     assert res["items"][0]["start_day"] is None
     assert res["items"][0]["end_day"] is None
     assert res["items"][0]["start_week"] is None

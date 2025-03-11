@@ -3269,7 +3269,8 @@
         "request_radio_text": "Request and submit for approval",
         "placeholder_radio_title": "Create a placeholder activity",
         "placeholder_radio_text": "Create a placeholder activity without submitting for approval",
-        "soa_group_required_info": "Every selected Activity needs SoA Group"
+        "soa_group_required_info": "Every selected Activity needs SoA Group",
+        "use_the_same_group": "Use the same SoA group for all"
     },
     "StudyActivityEditForm": {
         "title": "Edit study activity",

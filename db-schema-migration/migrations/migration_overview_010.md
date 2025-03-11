@@ -72,3 +72,13 @@
 #### Nodes Affected
 - `:UnitDefinitionValue`
 
+
+### 7. Merge duplicated StudySoAGroup/StudyActivityGroup/StudyActivitySubGroup nodes that are having different visibility flags set
+-------------------------------------
+#### Change Description
+- Merge duplicated nodes for `StudySoAGroup`, `StudyActivityGroup` and `StudyActivitySubGroup`.
+
+- [Related PR](https://dev.azure.com/novonordiskit/Clinical-MDR/_git/clinical-mdr-api/pullrequest/203233).
+
+#### Nodes Affected
+- `StudySoAGroup`, `StudyActivityGroup` and `StudyActivitySubGroup`

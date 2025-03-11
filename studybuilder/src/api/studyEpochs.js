@@ -125,10 +125,10 @@ export default {
     )
   },
   getStudyVisitsVersions(studyUid) {
-    return repository.get(`${resource}/${studyUid}/study-visit/audit-trail`)
+    return repository.get(`${resource}/${studyUid}/study-visits/audit-trail`)
   },
   getStudyEpochsVersions(studyUid) {
-    return repository.get(`${resource}/${studyUid}/study-epoch/audit-trail`)
+    return repository.get(`${resource}/${studyUid}/study-epochs/audit-trail`)
   },
   createCollapsibleVisitGroup(studyUid, visitUids, visitTemplateUid) {
     const data = {

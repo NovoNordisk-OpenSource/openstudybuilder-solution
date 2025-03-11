@@ -197,6 +197,42 @@ def get_distinct_values_for_header(
 
 
 @router.get(
+    "/studies/{study_uid}/study-epochs/audit-trail",
+    dependencies=[rbac.STUDY_READ],
+    summary="List audit trail related to all study epochs within the specified study-uid",
+    description="""
+State before:
+ - Study and study epoch must exist.
+
+Business logic:
+ - List all study epoch audit trail within the specified study-uid.
+ - If the released or a locked version of the study is selected then only entries up to the time of the study release or lock is included.
+
+State after:
+ - no change.
+ 
+Possible errors:
+ - Invalid study-uid.
+     """,
+    response_model=list[study_epoch.StudyEpochVersion],
+    response_model_exclude_unset=True,
+    status_code=200,
+    responses={
+        404: {
+            "model": ErrorResponse,
+            "description": "Not Found - there exist no selection of the provided study.",
+        },
+        500: _generic_descriptions.ERROR_500,
+    },
+)
+def get_study_epochs_all_audit_trail(
+    study_uid: Annotated[str, studyUID],
+) -> list[study_epoch.StudyEpochVersion]:
+    service = StudyEpochService(study_uid=study_uid)
+    return service.audit_trail_all_epochs(study_uid)
+
+
+@router.get(
     "/studies/{study_uid}/study-epochs/{study_epoch_uid}",
     dependencies=[rbac.STUDY_READ],
     summary="List all definitions for a specific study epoch",
@@ -283,42 +319,6 @@ def get_study_epoch_audit_trail(
 ) -> list[study_epoch.StudyEpochVersion]:
     service = StudyEpochService(study_uid=study_uid)
     return service.audit_trail(study_uid=study_uid, epoch_uid=study_epoch_uid)
-
-
-@router.get(
-    "/studies/{study_uid}/study-epoch/audit-trail",
-    dependencies=[rbac.STUDY_READ],
-    summary="List audit trail related to all study epochs within the specified study-uid",
-    description="""
-State before:
- - Study and study epoch must exist.
-
-Business logic:
- - List all study epoch audit trail within the specified study-uid.
- - If the released or a locked version of the study is selected then only entries up to the time of the study release or lock is included.
-
-State after:
- - no change.
- 
-Possible errors:
- - Invalid study-uid.
-     """,
-    response_model=list[study_epoch.StudyEpochVersion],
-    response_model_exclude_unset=True,
-    status_code=200,
-    responses={
-        404: {
-            "model": ErrorResponse,
-            "description": "Not Found - there exist no selection of the provided study.",
-        },
-        500: _generic_descriptions.ERROR_500,
-    },
-)
-def get_study_epochs_all_audit_trail(
-    study_uid: Annotated[str, studyUID],
-) -> list[study_epoch.StudyEpochVersion]:
-    service = StudyEpochService(study_uid=study_uid)
-    return service.audit_trail_all_epochs(study_uid)
 
 
 @router.post(

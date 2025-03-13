@@ -26,7 +26,7 @@ module.exports = defineConfig({
     mochaFile: 'results/junit/[suiteName].xml',
   },
 
-    baseUrl: 'https://studybuilder.clinicalmdr-dev.corp.azure.novonordisk.com',
+    baseUrl: 'https://openstudybuilder.com',
     specPattern: 'cypress/e2e/**/*.feature',
     experimentalStudio: true
     },

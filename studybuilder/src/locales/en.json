@@ -419,7 +419,7 @@
             "select_template": "To create an instantiation of a Time Frame, select from the relevant library and it's listed templates."
         },
         "StudyForm": {
-            "project_id": "Select the project number from the drop-down list. For details on project see <a href='https://novonordisk.sharepoint.com/sites/ProjectToolbox' target='_blank'>[Project Toolbox]<a> ",
+            "project_id": "Select the project number from the drop-down list. For details on project see <a href='https://openstudybuilder.com' target='_blank'>[Project Toolbox]<a> ",
             "project_name": "Auto-populated based on selected project",
             "brand_name": "Auto-populated based on selected project (only populated if brand name exists)",
             "study_id": "ID that will be generated for this study",

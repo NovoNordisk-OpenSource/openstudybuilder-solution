@@ -270,20 +270,6 @@ def _query_ad_users_based_on_user_initials(db_driver, log) -> dict:
         user_info_from_ad = asyncio.run(_get_user_from_ad(x))
         user_infos[x] = user_info_from_ad
 
-    # Final user_infos should look like this:
-    # user_infos = {
-    #     "fd909732-bc9e-492b-a1ed-6e27757a4f00": {
-    #         "id": "fd909732-bc9e-492b-a1ed-6e27757a4f00",
-    #         "email": "sb-import",
-    #         "username": "sb-import",
-    #     },
-    #     "abzo": {
-    #         "id": "f2ea6e1e-8b4b-415b-b714-b7860a523728",
-    #         "email": "abzo@novonordisk.com",
-    #         "username": "abzo@novonordisk.com",
-    #     },
-    # }
-
     log.info("All user infos: %s", user_infos)
     return user_infos
 
@@ -390,7 +376,7 @@ def _update_author_id_based_on_ad_user_info(db_driver, log, user_infos: dict) ->
 
 
 async def _get_user_from_ad(user_initials: str) -> dict:
-    email = f"{user_initials}@novonordisk.com".lower()
+    email = f"{user_initials}@openstudybuilder.com".lower()
     logger.info("Fetching user from MS Graph: %s", email)
     user: GraphUser = await msgraph.service.get_user_by_email(email)
     logger.info("Got user: %s", user)

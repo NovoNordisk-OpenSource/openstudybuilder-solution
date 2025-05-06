@@ -9,9 +9,9 @@ tags:
 
 # Objective Templates
 
-> Feature: [Library of Sponsor Defined Objectives and Endpoints #169075](https://novonordiskit.visualstudio.com/Clinical-MDR/_workitems/edit/169075)<br/>
-> User Story: [Create and Manage Objective Template #203159](https://novonordiskit.visualstudio.com/Clinical-MDR/_workitems/edit/203159)<br/>
-> Enable: [API Endpoints/Objectives-templates #203153](https://novonordiskit.visualstudio.com/Clinical-MDR/_workitems/edit/203153)<br/>
+> Feature: [Library of Sponsor Defined Objectives and Endpoints #169075](https://orgremoved.visualstudio.com/Clinical-MDR/_workitems/edit/169075)<br/>
+> User Story: [Create and Manage Objective Template #203159](https://orgremoved.visualstudio.com/Clinical-MDR/_workitems/edit/203159)<br/>
+> Enable: [API Endpoints/Objectives-templates #203153](https://orgremoved.visualstudio.com/Clinical-MDR/_workitems/edit/203153)<br/>
 > API Specification: [Objective Templates Endpoints]
 
 This page is dedicated to the management of the *Objective Templates*. It will allow a **Standard Developer** to create and manage the *Objective Templates* needed to define the Objectives using Template Parameters (see the [Shared / objectives](./library/shared/objectives.md) submenu).
@@ -117,4 +117,6 @@ And the popup will be closed. An alert message will inform the user that the *Ob
 | ![Search](~@source/images/bt_search_blue.png) | Click on the **'Search'** field. This will search in the *Objectives Templates* table based on the term of the seach.<br/><br/>In the search field, enter some words and automatically the table will be filtered based on it. You can filter also on status (look for Draft or Final), on version or on library. |
 | ![Rows per page](~@source/images/bt_rows_blue.png) | You can also filter the number of record to be displayed in the table by changing the number of row per page (Select 5, 10, 15 or All).<br/><br/>This action will modify the pagination of the table. |
 | ![Pagination buttons](~@source/images/bt_pagination_blue.png) | Based on the number of record displayed, the pagination of the table will display multiple pages. Click on the "<" or the ">" to navigate between pages.<br/><br/>We you are on the first or the last page then the symbol "<" or ">" will not be clickable anymore. | 
+
+
 

@@ -106,8 +106,8 @@ def test_create_notification(api_client):
         "title": "Title",
         "notification_type": "warning",
         "description": "Description",
-        "started_at": "2024-02-20T00:00:00+00:00",
-        "ended_at": "2028-02-20T00:00:00+00:00",
+        "started_at": "2024-02-20T00:00:00Z",
+        "ended_at": "2028-02-20T00:00:00Z",
         "published": True,
     }
     response = api_client.post("/notifications", json=data)

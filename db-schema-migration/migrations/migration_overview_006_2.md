@@ -4,13 +4,13 @@
 ## 1. Indexes and Constraints
 -------------------------------------
 ### Change Description
-- Re-create all db indexes and constraints according to [db schema definition](https://novonordiskit.visualstudio.com/Clinical-MDR/_git/neo4j-mdr-db?path=/db_schema.py&version=GBmain&_a=contents).
+- Re-create all db indexes and constraints according to [db schema definition](https://orgremoved.visualstudio.com/Clinical-MDR/_git/neo4j-mdr-db?path=/db_schema.py&version=GBmain&_a=contents).
 
 
 ## 2. CT Config Values (Study Fields Configuration)
 -------------------------------------  
 ### Change Description
-- Re-create all `CTConfigValue` nodes according to values defined in [this file](https://novonordiskit.visualstudio.com/Clinical-MDR/_git/studybuilder-import?path=/datafiles/configuration/study_fields_configuration.csv).
+- Re-create all `CTConfigValue` nodes according to values defined in [this file](https://orgremoved.visualstudio.com/Clinical-MDR/_git/studybuilder-import?path=/datafiles/configuration/study_fields_configuration.csv).
 
 ### Nodes Affected
 - CTConfigValue
@@ -25,8 +25,8 @@
 - The issue was that when editing a SoAGroup of a given StudyActivity, the StudyActivity wasn't reassigned with a new SoAGroup but the old (shared) SoAGroup node was patched.
 - That caused the other StudyActivities that were referencing same SoAGroup (before it was edited) to reference the old-outdated version of the SoAGroup.
 
-- [Related PR](https://dev.azure.com/novonordiskit/Clinical-MDR/_git/clinical-mdr-api/pullrequest/151426).
-- [Related PR](https://dev.azure.com/novonordiskit/Clinical-MDR/_git/clinical-mdr-api/pullrequest/152425).
+- [Related PR](https://dev.azure.com/orgremoved/Clinical-MDR/_git/clinical-mdr-api/pullrequest/151426).
+- [Related PR](https://dev.azure.com/orgremoved/Clinical-MDR/_git/clinical-mdr-api/pullrequest/152425).
 
 ### Nodes Affected
   - `StudyActivity`
@@ -39,7 +39,7 @@
 - Because of the issue described in the point (3) some of the SoAGroup nodes, StudyActivityGroups, StudyActivitySubGroups were created in the not shared way,
 - meaning that we have for instance two StudySoAGroup nodes in scope of a single Study for the `Efficacy` term.
 
-- [Related PR](https://dev.azure.com/novonordiskit/Clinical-MDR/_git/clinical-mdr-api/pullrequest/107866).
+- [Related PR](https://dev.azure.com/orgremoved/Clinical-MDR/_git/clinical-mdr-api/pullrequest/107866).
 
 ### Nodes Affected
   - `StudyActivity`
@@ -68,7 +68,7 @@
 ### Change Description
 - Because of the API issue mentioned in the Related PR, some of the StudyActivities were linking to the Deleted StudySoAGroup node.
 
-- [Related PR](https://dev.azure.com/novonordiskit/Clinical-MDR/_git/clinical-mdr-api/pullrequest/152581).
+- [Related PR](https://dev.azure.com/orgremoved/Clinical-MDR/_git/clinical-mdr-api/pullrequest/152581).
 
 ### Nodes Affected
   - `StudyActivity`
@@ -84,3 +84,5 @@
 ### Nodes Affected
   - `StudyActivity`
   - `StudySoAGroup`
+
+

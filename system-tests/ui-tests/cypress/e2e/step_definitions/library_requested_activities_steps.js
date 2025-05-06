@@ -1,6 +1,7 @@
 const { Given, When, Then } = require("@badeball/cypress-cucumber-preprocessor");
 
-let activityName 
+
+let activityName, apiRequestedActivityName
 let rationaleforrequest = "RFR", abbreviation = "ABB", definition = "DEF"
 
 When('The Add activity request button is clicked', () => cy.clickButton('add-activity'))
@@ -30,30 +31,27 @@ Then('The user is not able to save the acitivity request', () => {
     cy.get('span.dialog-title').should('be.visible').should('contain', 'Add activity request'); 
 })
 
-Then('The message is displayed as {string} in mandatory fields', (message) => {
-    checkVisibilityOfWarningMessage('[data-cy="requestedform-activity-group-class"]', message)
-    checkVisibilityOfWarningMessage('[data-cy="requestedform-activity-name-class"]', message) 
-    checkVisibilityOfWarningMessage('[data-cy="requestedform-rationale-for-request-class"]', message)
-})
+Then('The validation message appears for requested activity group', () => cy.checkIfValidationAppears('requestedform-activity-group-class'))
 
-Then('The message is not displayed as {string} in optional fields', (message) => {
-    checkVisibilityOfWarningMessage('[data-cy="sentence-case-name-field"]', message, false)
-    checkVisibilityOfWarningMessage('[data-cy="requestedform-abbreviation-field"]', message, false) 
-    checkVisibilityOfWarningMessage('[data-cy="requestedform-definition-field', message, false)
-})
+Then('The validation message appears for requested activity name', () => cy.checkIfValidationAppears('requestedform-activity-name-class'))
 
-Then('The message is displayed as {string} in empty Sentance case name field', (message) => {
-    checkVisibilityOfWarningMessage('[data-cy="sentence-case-name-field"]', message)
-})
+Then('The validation message appears for requested activity rationale', () => cy.checkIfValidationAppears('requestedform-rationale-for-request-class'))
+
+Then('The validation message appears for sentance case name', () => cy.checkIfValidationAppears('sentence-case-name-field'))
+
+Then('The validation message appears for requested activity subgroup', () => cy.checkIfValidationAppears('requestedform-activity-subgroup-class'))
+
+Then('The validation message does not appear for sentance case name', () => cy.checkIfValidationNotPresent('sentence-case-name-field'))
+
+Then('The validation message does not appear for requested activity abbreviation', () => cy.checkIfValidationNotPresent('requestedform-abbreviation-field'))
+
+Then('The validation message does not appear for requested activity definition', () => cy.checkIfValidationNotPresent('requestedform-definition-field'))
+
 
 When('Input a value for Activity group field, but not for Activity subgroup field', () => {
     cy.clickButton('add-activity')
     cy.selectFirstVSelect('requestedform-activity-group-dropdown')
     cy.clickButton('save-button')
-})
-
-Then('The message is displayed as {string} in the subgroup field', (message) => {
-    checkVisibilityOfWarningMessage('[data-cy="requestedform-activity-subgroup-class"]', message)
 })
 
 When('The user input a value for Activity name {string}', (name) => cy.fillInput('requestedform-activity-name-field', name))
@@ -66,38 +64,30 @@ When('The value for Sentence case name independent of case is not identical to t
     cy.clickButton('save-button')
 })
 
-Given('The test activity request exists with a status as Draft', () => createDraftActivity())
-
-Given('The test activity request exists with a status as Final', () => createActivityAndApprove())
-
-Given('The test activity request exists with a status as Retired', () => {      
-    createActivityAndApprove()
-    cy.performActionOnSearchedItem('Inactivate')
-    cy.checkStatusAndVersion('Retired', '1.0')
-})
-
-Given('First activity request for search test is created', () => addActivity(true, 'SearchTest'))
-
-Given('Second activity request for search test is created', () => addActivity(true, 'SearchTest'))
-
-Then('The requested activity has status {string} and version {string}', (status, version) => cy.checkStatusAndVersion(status, version))
-
 When('The activity request is edited', () => editActivity())
 
-Then('The requested activity is no longer available', () => cy.confirmItemNotAvailable(activityName))
+Then('The requested activity is no longer available', () => cy.confirmItemNotAvailable(apiRequestedActivityName))
 
 Then('The requested activity is not created', () => {
     cy.waitForTable()
     cy.confirmItemNotAvailable(activityName)
 })
 
-Then('The requested activity is not edited', () => {
-    cy.searchAndCheckResults(activityName)
-    cy.performActionOnSearchedItem('Edit')
-    cy.get('[data-cy="requestedform-rationale-for-request-field"] textarea').should('have.value', rationaleforrequest)
-})
+Then('The requested activity is not edited', () => cy.confirmItemNotAvailable(activityName))
 
-Then('One activity request is found after performing full name search', () => cy.searchAndCheckResults(activityName))
+Then('One activity request is found after performing full name search', () => cy.searchAndCheckResults(apiRequestedActivityName))
+
+Then('Requested activity is found', () => cy.searchFor(apiRequestedActivityName, false))
+
+When('[API] Requested activity in status Draft exists', () => createRequestedActivityViaApi())
+
+When('[API] Requested activity is approved', () => cy.approveRequestedActivity())
+
+When('[API] Requested activity is inactivated', () => cy.inactivateRequestedActivity())
+
+Given('[API] First requested activity for search test is created', () => createRequestedActivityViaApi(`SearchTest${Date.now()}`))
+
+Given('[API] Second requested activity for search test is created', () => cy.createRequestedActivity(`SearchTest${Date.now()}`))
 
 function addActivity(save = true, namePrefix ='Requested') {
     activityName = `${namePrefix}${Date.now()}`
@@ -116,25 +106,18 @@ function addActivity(save = true, namePrefix ='Requested') {
     }
 }
 
-function createDraftActivity() {
-    addActivity()
-    cy.searchAndCheckResults(activityName)
-    cy.checkStatusAndVersion('Draft', '0.1')
-}
-
-function createActivityAndApprove() {
-    createDraftActivity()
-    cy.performActionOnSearchedItem('Approve')
-    cy.checkStatusAndVersion('Final', '1.0')
-}
-
 function editActivity(save = true) {
-    cy.fillInput('requestedform-rationale-for-request-field', `Update ${rationaleforrequest}`)
+    activityName = `Update${apiRequestedActivityName}`
+    cy.fillInput('requestedform-activity-name-field', activityName)
     cy.fillInput('requestedform-change-description-field', "e2e test")
     if (save) cy.clickButton('save-button')
 }
 
-function checkVisibilityOfWarningMessage(fieldLocator, message, shouldBeVisible = true) {
-    let condition = shouldBeVisible ? 'be.visible' : 'not.exist'
-    cy.get(fieldLocator).contains('.v-messages__message', message).should(condition); 
+function createRequestedActivityViaApi(customName = '') {
+    cy.intercept('/api/concepts/activities/activities?page_number=1&*').as('getData')
+    cy.getFinalGroupUid()
+    cy.getFinalSubGroupUid()
+    cy.createRequestedActivity(customName)
+    cy.getRequestedActivityNameByUid().then(name => apiRequestedActivityName = name)
+    cy.wait('@getData', {timeout: 20000})
 }

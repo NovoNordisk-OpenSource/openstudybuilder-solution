@@ -26,8 +26,9 @@ Given('The CRF Form with linked Activity Group exists', () => {
 })
 
 Given('The CRF Form in draft status with sub 1 version exists', () => {
-    cy.createCrfForm('formForDelete')
-    cy.getRowIndexByText('0.1').then(index => rowIndex = index)
+    oidValue = 'formForDelete'
+    cy.createCrfForm(oidValue)
+    cy.searchFor(oidValue)
 })
 
 When('The Form definition container is filled with data and saved', () => {
@@ -77,7 +78,4 @@ Then('The Form status is changed to {string} and version is rounded up to full n
     cy.checkRowByIndex(rowIndex, 'Version', Math.ceil(newVersion))
 })
 
-Then('The CRF Form is no longer available', () => {
-    cy.wait(3000)
-    cy.get('tbody').should('not.contain', oidValue)
-})
+Then('The CRF Form is no longer available', () => cy.confirmItemNotAvailable(oidValue))

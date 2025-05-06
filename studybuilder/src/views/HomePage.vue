@@ -1,6 +1,18 @@
 <template>
   <div class="text-center mt-16">
-    <h1 class="text-h3" v-html="$t('HomeView.title', appEnv ? { env: `<strong style='color: rgb(var(--v-theme-nnSeaBlue400)); font-size: 64px;'>${appEnv}</strong> <strong>environment</strong>` } : '')"></h1>
+    <h1
+      class="text-h3"
+      v-html="
+        $t(
+          'HomeView.title',
+          appEnv
+            ? {
+                env: `<strong style='color: rgb(var(--v-theme-nnSeaBlue400)); font-size: 64px;'>${appEnv}</strong> <strong>environment</strong>`,
+              }
+            : ''
+        )
+      "
+    ></h1>
     <h2 class="text-h4 mt-2">
       {{ $t('HomeView.subtitle') }}
     </h2>

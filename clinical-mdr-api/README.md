@@ -295,3 +295,5 @@ https://www.atlassian.com/de/git/tutorials/comparing-workflows/gitflow-workflow)
 
 See [Domain Driven Design developer's guide](./doc/ddd_developers_guide/ddd-developers-guide.md) for clinical_mdr_api.
 
+
+

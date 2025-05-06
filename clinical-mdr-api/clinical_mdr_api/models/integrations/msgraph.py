@@ -9,7 +9,11 @@ class GraphGroup(BaseModel):
         str, Field(alias="displayName", title="Display name for the group")
     ]
     description: Annotated[
-        str | None, Field(title="An optional description for the group", nullable=True)
+        str | None,
+        Field(
+            title="An optional description for the group",
+            json_schema_extra={"nullable": True},
+        ),
     ]
 
 
@@ -20,16 +24,26 @@ class GraphUser(BaseModel):
         Field(
             alias="displayName",
             title="Name displayed in the address book for the user",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
     given_name: Annotated[
         str | None,
-        Field(alias="givenName", title="First name of the user", nullable=True),
+        Field(
+            alias="givenName",
+            title="First name of the user",
+            json_schema_extra={"nullable": True},
+        ),
     ] = None
     email: Annotated[
-        str | None, Field(alias="mail", title="User's email address", nullable=True)
+        str | None,
+        Field(
+            alias="mail",
+            title="User's email address",
+            json_schema_extra={"nullable": True},
+        ),
     ] = None
     surname: Annotated[
-        str | None, Field(title="Last name of the user", nullable=True)
+        str | None,
+        Field(title="Last name of the user", json_schema_extra={"nullable": True}),
     ] = None

@@ -175,6 +175,7 @@ ENV NEO4J_AUTH=neo4j/changeme1234 \
     NEO4J_apoc_trigger_enabled="true" \
     NEO4J_apoc_import_file_enabled="true" \
     NEO4J_apoc_export_file_enabled="true" \
+    NEO4J_dbms_security_procedures_unrestricted="apoc.*" \
     NEO4J_dbms_databases_seed__from__uri__providers="URLConnectionSeedProvider" \
     NEO4J_apoc_initializer_system_1="CREATE DATABASE mdrdb OPTIONS {existingData: 'use', seedURI:'file:///data/backup/mdrdockerdb.backup'} WAIT 60 SECONDS"
 

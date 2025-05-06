@@ -51,8 +51,8 @@ Possible errors:
     response_model=CustomPage[Compound],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.allow_exports(
@@ -147,8 +147,8 @@ Possible errors:
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.allow_exports(
@@ -233,8 +233,8 @@ Possible errors:
     response_model=CustomPage[SimpleCompound],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_compounds_simple(
@@ -291,11 +291,11 @@ def get_compounds_simple(
     response_model=list[Any],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - Invalid field name specified",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_distinct_values_for_header(
@@ -353,8 +353,8 @@ Possible errors:
     response_model=Compound,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_compound(
@@ -385,11 +385,11 @@ Possible errors:
     response_model=list[Compound],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - The compound with the specified 'compound_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_versions(
@@ -425,6 +425,7 @@ Possible errors:
     response_model=Compound,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {"description": "Created - The compound was successfully created."},
         400: {
             "model": ErrorResponse,
@@ -432,7 +433,6 @@ Possible errors:
             "- The library doesn't exist.\n"
             "- The library doesn't allow to add new items.\n",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def create(compound_create_input: Annotated[CompoundCreateInput, Body()]):
@@ -465,6 +465,7 @@ Possible errors:
     response_model=Compound,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -477,7 +478,6 @@ Possible errors:
             "model": ErrorResponse,
             "description": "Not Found - The compound with the specified 'compound_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def edit(
@@ -514,6 +514,7 @@ Possible errors:
     response_model=Compound,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -525,7 +526,6 @@ Possible errors:
             "model": ErrorResponse,
             "description": "Not Found - The compound with the specified 'compound_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def approve(
@@ -556,6 +556,7 @@ Possible errors:
     response_model=Compound,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -568,7 +569,6 @@ Possible errors:
             "- The compound is not in final status.\n"
             "- The compound with the specified 'compound_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def create_new_version(
@@ -602,6 +602,7 @@ Possible errors:
     response_model=Compound,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -612,7 +613,6 @@ Possible errors:
             "model": ErrorResponse,
             "description": "Not Found - The compound with the specified 'compound_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def inactivate(
@@ -646,6 +646,7 @@ Possible errors:
     response_model=Compound,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -656,7 +657,6 @@ Possible errors:
             "model": ErrorResponse,
             "description": "Not Found - The compound with the specified 'compound_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def reactivate(
@@ -688,6 +688,7 @@ Possible errors:
     response_model=None,
     status_code=204,
     responses={
+        403: _generic_descriptions.ERROR_403,
         204: {"description": "No Content - The compound was successfully deleted."},
         400: {
             "model": ErrorResponse,
@@ -700,7 +701,6 @@ Possible errors:
             "model": ErrorResponse,
             "description": "Not Found - An compound with the specified 'compound_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def delete(

@@ -20,7 +20,11 @@ class EndpointUnitItem(BaseModel):
     uid: Annotated[str, Field(description="uid of the endpoint unit")]
 
     name: Annotated[
-        str | None, Field(description="name of the endpoint unit", nullable=True)
+        str | None,
+        Field(
+            description="name of the endpoint unit",
+            json_schema_extra={"nullable": True},
+        ),
     ] = None
 
 
@@ -29,7 +33,7 @@ class EndpointUnits(BaseModel):
         tuple[EndpointUnitItem, ...] | None,
         Field(
             description="list of endpoint units selected for the study endpoint",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ]
 
@@ -37,7 +41,7 @@ class EndpointUnits(BaseModel):
         str | None,
         Field(
             description="separator, if more than one endpoint units were selected for the study endpoint",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
 

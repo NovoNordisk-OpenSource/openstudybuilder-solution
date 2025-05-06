@@ -1735,7 +1735,7 @@ def test_visit_window_unit_must_be_same_for_all_visits(api_client):
         f"/studies/{_study.uid}/study-visits",
         json=datadict,
     )
-    assert response.status_code == 201
+    assert_response_status_code(response, 201)
     res = response.json()
     assert res["visit_window_unit_uid"] == DAYUID
 
@@ -1745,7 +1745,7 @@ def test_visit_window_unit_must_be_same_for_all_visits(api_client):
         f"/studies/{_study.uid}/study-visits",
         json=datadict,
     )
-    assert response.status_code == 400
+    assert_response_status_code(response, 400)
     res = response.json()
     assert (
         res["message"]
@@ -1777,7 +1777,7 @@ def test_study_visit_circular_time_reference_cant_be_created(api_client):
         f"/studies/{_study.uid}/study-visits",
         json=datadict,
     )
-    assert response.status_code == 201
+    assert_response_status_code(response, 201)
 
     visit_input = {
         "study_epoch_uid": study_epoch.uid,
@@ -1796,7 +1796,7 @@ def test_study_visit_circular_time_reference_cant_be_created(api_client):
         f"/studies/{_study.uid}/study-visits",
         json=datadict,
     )
-    assert response.status_code == 201
+    assert_response_status_code(response, 201)
 
     visit_input = {
         "study_epoch_uid": study_epoch.uid,
@@ -1815,7 +1815,7 @@ def test_study_visit_circular_time_reference_cant_be_created(api_client):
         f"/studies/{_study.uid}/study-visits",
         json=datadict,
     )
-    assert response.status_code == 400
+    assert_response_status_code(response, 400)
     res = response.json()
     assert (
         res["message"]
@@ -1829,7 +1829,7 @@ def test_study_visit_circular_time_reference_cant_be_created(api_client):
         f"/studies/{_study.uid}/study-visits",
         json=datadict,
     )
-    assert response.status_code == 201
+    assert_response_status_code(response, 201)
     res = response.json()
     visit_uid = res["uid"]
 
@@ -1844,7 +1844,7 @@ def test_study_visit_circular_time_reference_cant_be_created(api_client):
         f"/studies/{_study.uid}/study-visits/{visit_uid}",
         json=datadict,
     )
-    assert response.status_code == 400
+    assert_response_status_code(response, 400)
     res = response.json()
     assert (
         res["message"]
@@ -1873,7 +1873,7 @@ def test_global_anchor_visit_time_reference(api_client):
         f"/studies/{_study.uid}/study-visits",
         json=datadict,
     )
-    assert response.status_code == 400
+    assert_response_status_code(response, 400)
     res = response.json()
     assert (
         res["message"]
@@ -1886,7 +1886,7 @@ def test_global_anchor_visit_time_reference(api_client):
         f"/studies/{_study.uid}/study-visits",
         json=datadict,
     )
-    assert response.status_code == 201
+    assert_response_status_code(response, 201)
     visit_uid = response.json()["uid"]
 
     datadict.update({"time_reference_uid": "VisitSubType_0002"})
@@ -1894,9 +1894,236 @@ def test_global_anchor_visit_time_reference(api_client):
         f"/studies/{_study.uid}/study-visits/{visit_uid}",
         json=datadict,
     )
-    assert response.status_code == 400
+    assert_response_status_code(response, 400)
     res = response.json()
     assert (
         res["message"]
         == "The global anchor visit must take place at day 0 and time reference has to be set to 'Global anchor Visit' or be an Information Visit"
     )
+
+
+def test_study_visit_editing_study_epoch(api_client):
+    _study = TestUtils.create_study()
+    study_epoch_1 = create_study_epoch("EpochSubType_0001", study_uid=_study.uid)
+    study_epoch_2 = create_study_epoch("EpochSubType_0002", study_uid=_study.uid)
+    study_epoch_3 = create_study_epoch("EpochSubType_0003", study_uid=_study.uid)
+
+    # Global Anchor Visit
+    visit_input = {
+        "study_epoch_uid": study_epoch_1.uid,
+        "visit_type_uid": "VisitType_0001",
+        "show_visit": True,
+        "time_reference_uid": "VisitSubType_0005",
+        "time_value": 0,
+        "time_unit_uid": DAYUID,
+        "visit_class": "SINGLE_VISIT",
+        "visit_subclass": "SINGLE_VISIT",
+        "is_global_anchor_visit": True,
+    }
+    datadict = visits_basic_data
+    datadict.update(visit_input)
+    response = api_client.post(
+        f"/studies/{_study.uid}/study-visits",
+        json=datadict,
+    )
+    assert_response_status_code(response, 201)
+
+    for idx in range(1, 10):
+        visit_input = {
+            "visit_type_uid": "VisitType_0001",
+            "show_visit": True,
+            "time_reference_uid": "VisitSubType_0005",
+            "time_value": idx,
+            "time_unit_uid": DAYUID,
+            "visit_class": "SINGLE_VISIT",
+            "visit_subclass": "SINGLE_VISIT",
+            "is_global_anchor_visit": False,
+        }
+        if idx < 3:
+            visit_input["study_epoch_uid"] = study_epoch_1.uid
+        elif 3 <= idx < 7:
+            visit_input["study_epoch_uid"] = study_epoch_2.uid
+        elif idx >= 7:
+            visit_input["study_epoch_uid"] = study_epoch_3.uid
+        datadict = visits_basic_data
+        datadict.update(visit_input)
+        response = api_client.post(
+            f"/studies/{_study.uid}/study-visits",
+            json=datadict,
+        )
+        assert_response_status_code(response, 201)
+
+    response = api_client.get(
+        f"/studies/{_study.uid}/study-visits",
+    )
+    assert_response_status_code(response, 200)
+    study_visits = response.json()["items"]
+    assert len(study_visits) == 10
+
+    datadict.update(
+        {
+            "study_epoch_uid": study_epoch_2.uid,
+            "uid": study_visits[-1]["uid"],
+            "study_uid": _study.uid,
+        }
+    )
+    response = api_client.patch(
+        f"/studies/{_study.uid}/study-visits/{study_visits[-1]['uid']}",
+        json=datadict,
+    )
+    assert_response_status_code(response, 400)
+    res = response.json()
+    assert (
+        res["message"]
+        == f"The following visit can't be created as the next Epoch Name '{study_epoch_3.epoch_name}' starts at the '{study_visits[7]['study_day_number']}' Study Day"
+    )
+
+    datadict.update(
+        {
+            "study_epoch_uid": study_epoch_3.uid,
+            "uid": study_visits[5]["uid"],
+            "study_uid": _study.uid,
+            "time_value": 5,
+        }
+    )
+    response = api_client.patch(
+        f"/studies/{_study.uid}/study-visits/{study_visits[5]['uid']}",
+        json=datadict,
+    )
+    assert_response_status_code(response, 400)
+    res = response.json()
+    assert (
+        res["message"]
+        == f"The following visit can't be created as previous Epoch Name '{study_epoch_2.epoch_name}' ends at the '{study_visits[6]['study_day_number']}' Study Day"
+    )
+
+    datadict.update(
+        {
+            "study_epoch_uid": study_epoch_2.uid,
+            "uid": study_visits[1]["uid"],
+            "study_uid": _study.uid,
+            "time_value": 1,
+        }
+    )
+    response = api_client.patch(
+        f"/studies/{_study.uid}/study-visits/{study_visits[1]['uid']}",
+        json=datadict,
+    )
+    assert_response_status_code(response, 400)
+    res = response.json()
+
+    assert (
+        res["message"]
+        == f"The following visit can't be created as previous Epoch Name '{study_epoch_1.epoch_name}' ends at the '{study_visits[2]['study_day_number']}' Study Day"
+    )
+
+    assert study_visits[2]["study_epoch_uid"] == study_epoch_1.uid
+    datadict.update(
+        {
+            "study_epoch_uid": study_epoch_2.uid,
+            "uid": study_visits[2]["uid"],
+            "study_uid": _study.uid,
+            "time_value": 2,
+        }
+    )
+    response = api_client.patch(
+        f"/studies/{_study.uid}/study-visits/{study_visits[2]['uid']}",
+        json=datadict,
+    )
+    assert_response_status_code(response, 200)
+    res = response.json()
+    assert res["study_epoch_uid"] == study_epoch_2.uid
+
+    response = api_client.get(
+        f"/studies/{_study.uid}/study-visits/{study_visits[2]['uid']}",
+    )
+    assert_response_status_code(response, 200)
+    res = response.json()
+    assert res["study_epoch_uid"] == study_epoch_2.uid
+
+
+def test_editing_special_visit(api_client):
+    study = TestUtils.create_study(project_number=project.project_number)
+    study_epoch = create_study_epoch("EpochSubType_0001", study_uid=study.uid)
+
+    # Global Anchor Visit
+    inputs = {
+        "study_epoch_uid": study_epoch.uid,
+        "visit_type_uid": "VisitType_0002",
+        "time_reference_uid": "VisitSubType_0005",
+        "time_value": 0,
+        "time_unit_uid": DAYUID,
+        "visit_class": "SINGLE_VISIT",
+        "visit_subclass": "SINGLE_VISIT",
+        "is_global_anchor_visit": True,
+    }
+    datadict = visits_basic_data
+    datadict.update(inputs)
+    response = api_client.post(
+        f"/studies/{study.uid}/study-visits",
+        json=datadict,
+    )
+    assert_response_status_code(response, 201)
+
+    # Visit Day 10
+    inputs = {
+        "study_epoch_uid": study_epoch.uid,
+        "visit_type_uid": "VisitType_0002",
+        "time_reference_uid": "VisitSubType_0005",
+        "time_value": 10,
+        "time_unit_uid": DAYUID,
+        "visit_class": "SINGLE_VISIT",
+        "visit_subclass": "SINGLE_VISIT",
+        "is_global_anchor_visit": False,
+    }
+    datadict = visits_basic_data
+    datadict.update(inputs)
+    response = api_client.post(
+        f"/studies/{study.uid}/study-visits",
+        json=datadict,
+    )
+    assert_response_status_code(response, 201)
+    visit_day_10 = response.json()["uid"]
+
+    # Special Visit
+    special_visit_input = {
+        "visit_sublabel_reference": visit_day_10,
+        "study_epoch_uid": study_epoch.uid,
+        "visit_type_uid": "VisitType_0002",
+        "time_reference_uid": "VisitSubType_0005",
+        "time_unit_uid": DAYUID,
+        "visit_class": "SPECIAL_VISIT",
+        "visit_subclass": "SINGLE_VISIT",
+        "is_global_anchor_visit": False,
+    }
+    datadict = visits_basic_data
+    datadict.update(special_visit_input)
+    response = api_client.post(
+        f"/studies/{study.uid}/study-visits",
+        json=datadict,
+    )
+    assert_response_status_code(response, 201)
+    special_visit_uid = response.json()["uid"]
+
+    # edit SpecialVisit
+    special_visit_input = {
+        "uid": special_visit_uid,
+        "visit_sublabel_reference": visit_day_10,
+        "study_epoch_uid": study_epoch.uid,
+        "visit_type_uid": "VisitType_0002",
+        "time_reference_uid": "VisitSubType_0005",
+        "time_unit_uid": DAYUID,
+        "visit_class": "SPECIAL_VISIT",
+        "visit_subclass": "SINGLE_VISIT",
+        "is_global_anchor_visit": False,
+        "show_visit": False,
+    }
+    datadict = visits_basic_data
+    datadict.update(special_visit_input)
+    response = api_client.patch(
+        f"/studies/{study.uid}/study-visits/{special_visit_uid}",
+        json=datadict,
+    )
+    assert_response_status_code(response, 200)
+    special_visit_after_update = response.json()
+    assert special_visit_after_update["show_visit"] is False

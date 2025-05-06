@@ -25,7 +25,7 @@ const ITEMS_PER_PAGE_OPIONS = [
     title: '100',
   },
   {
-    value: 0,
+    value: -1,
     title: i18n.t('_global.all'),
   },
 ]

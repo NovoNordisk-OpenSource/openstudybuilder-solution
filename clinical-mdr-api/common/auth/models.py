@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from authlib.jose import JWTClaims
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, field_validator
 
 from common.exceptions import ForbiddenException
 
@@ -29,14 +29,14 @@ class JWTTokenClaims(BaseModel):
     sub: str
     aud: list[str]
     exp: int
-    nbf: int | None
+    nbf: int | None = None
     iat: int
-    jti: str | None
+    jti: str | None = None
 
     # RFC-8693 #4.2 common for both id and access token
     scp: list[str] | None = None
 
-    @validator("aud", "scp", pre=True)
+    @field_validator("aud", "scp", mode="before")
     # pylint: disable=no-self-argument
     def split_str(cls, elm):
         """Splits claim space-separated-string into a list of str elements"""
@@ -61,7 +61,7 @@ class AccessTokenClaims(JWTTokenClaims):
     oid: str | None = None
     tid: str | None = None
 
-    azp: str | None
+    azp: str | None = None
 
 
 @dataclass(init=False)

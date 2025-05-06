@@ -33,7 +33,7 @@ Service = CommentsService
     response_model=CustomPage[CommentTopic],
     status_code=200,
     responses={
-        500: _generic_descriptions.ERROR_500,
+        403: _generic_descriptions.ERROR_403,
     },
 )
 # pylint: disable=redefined-outer-name
@@ -82,7 +82,7 @@ def get_comment_topics(
     response_model=CustomPage[CommentThread],
     status_code=200,
     responses={
-        500: _generic_descriptions.ERROR_500,
+        403: _generic_descriptions.ERROR_403,
     },
 )
 # pylint: disable=redefined-outer-name
@@ -138,8 +138,8 @@ def get_comment_threads(
     response_model=CommentThread,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_comment_thread(
@@ -155,8 +155,8 @@ def get_comment_thread(
     response_model=CommentThread,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {"description": "Comment thread was successfully created"},
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def create_comment_thread(
@@ -175,9 +175,9 @@ def create_comment_thread(
     response_model=CommentThread,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "Comment thread was successfully edited"},
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def edit_comment_thread(
@@ -197,8 +197,8 @@ def edit_comment_thread(
     response_model=None,
     status_code=204,
     responses={
+        403: _generic_descriptions.ERROR_403,
         204: {"description": "No Content - The item was successfully deleted."},
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def delete_comment_thread(
@@ -215,9 +215,9 @@ def delete_comment_thread(
     response_model=CommentReply,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {"description": "Reply was successfully created"},
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def create_comment_reply(
@@ -236,8 +236,8 @@ def create_comment_reply(
     response_model=list[CommentReply],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_comment_thread_replies(
@@ -253,8 +253,8 @@ def get_comment_thread_replies(
     response_model=CommentReply,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 # pylint: disable=unused-argument
@@ -272,9 +272,9 @@ def get_comment_thread_reply(
     response_model=CommentReply,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "Comment reply was successfully edited"},
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 # pylint: disable=unused-argument
@@ -295,8 +295,8 @@ def edit_comment_thread_reply(
     response_model=None,
     status_code=204,
     responses={
+        403: _generic_descriptions.ERROR_403,
         204: {"description": "No Content - The item was successfully deleted."},
-        500: _generic_descriptions.ERROR_500,
     },
 )
 # pylint: disable=unused-argument

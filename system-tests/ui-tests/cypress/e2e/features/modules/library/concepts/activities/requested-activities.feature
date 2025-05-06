@@ -54,17 +54,21 @@ Feature: Library - Requested Activities
         When The Add activity request button is clicked
         And The Activity group, Activity name, Sentence case name and Rationale for activity request fields are not filled with data
         Then The user is not able to save the acitivity request
-        And The message is displayed as 'This field is required' in mandatory fields
-        And The message is not displayed as 'This field is required' in optional fields
+        And The validation message appears for requested activity group
+        And The validation message appears for requested activity name
+        And The validation message appears for requested activity rationale
+        And The validation message does not appear for sentance case name
+        And The validation message does not appear for requested activity abbreviation
+        And The validation message does not appear for requested activity definition
         When Input a value for Activity group field, but not for Activity subgroup field
-        Then The message is displayed as 'This field is required' in the subgroup field
+        Then The validation message appears for requested activity subgroup
 
     Scenario: System must ensure value of 'Sentence case name' is mandatory
         Given The '/library/activities/requested-activities' page is opened
         And The Add activity request button is clicked
         When The user input a value for Activity name 'TEST'
         And The user clear default value from Sentance case name
-        Then The message is displayed as 'This field is required' in empty Sentance case name field
+        Then The validation message appears for sentance case name
 
     Scenario: System must default value for 'Sentence case name' to lower case value of 'Activity name'
         Given The '/library/activities/requested-activities' page is opened
@@ -77,53 +81,65 @@ Feature: Library - Requested Activities
         And The Add activity request button is clicked
         When The value for Sentence case name independent of case is not identical to the value of Activity name
         Then The user is not able to save the acitivity request
-        And The message is displayed as 'Sentence case name value must be identical to name value' in the Sentence case name field
+        And The validation message appears for sentance case name that it is not identical to name
 
     Scenario: User must be able to add a new version for the approved activity request
         Given The '/library/activities/requested-activities' page is opened
-        And The test activity request exists with a status as Final
+        And [API] Requested activity in status Draft exists
+        And [API] Requested activity is approved
+        And Requested activity is found
         When The 'New version' option is clicked from the three dot menu list
-        Then The requested activity has status 'Draft' and version '1.1'
+        Then The item has status 'Draft' and version '1.1'
 
     Scenario: User must be able to inactivate the approved version of the activity request
         Given The '/library/activities/requested-activities' page is opened
-        And The test activity request exists with a status as Final
+        And [API] Requested activity in status Draft exists
+        And [API] Requested activity is approved
+        And Requested activity is found
         When The 'Inactivate' option is clicked from the three dot menu list
-        Then The requested activity has status 'Retired' and version '1.0'
+        Then The item has status 'Retired' and version '1.0'
 
     Scenario: User must be able to reactivate the inactivated version of the activity request
         Given The '/library/activities/requested-activities' page is opened
-        And The test activity request exists with a status as Retired
+        And [API] Requested activity in status Draft exists
+        And [API] Requested activity is approved
+        And [API] Requested activity is inactivated
+        And Requested activity is found
         When The 'Reactivate' option is clicked from the three dot menu list
-        Then The requested activity has status 'Final' and version '1.0'
+        Then The item has status 'Final' and version '1.0'
 
     Scenario: User must be able to edit the drafted version of the activity request
         Given The '/library/activities/requested-activities' page is opened
-        And The test activity request exists with a status as Draft
+        And [API] Requested activity in status Draft exists
+        And Requested activity is found
         When The 'Edit' option is clicked from the three dot menu list
         Then The activity request is edited
-        And The requested activity has status 'Draft' and version '0.2'
+        And The item has status 'Draft' and version '0.2'
 
     Scenario: User must be able to edit and approve new version of requested activity
         Given The '/library/activities/requested-activities' page is opened
-        And The test activity request exists with a status as Final
+        And [API] Requested activity in status Draft exists
+        And [API] Requested activity is approved
+        And Requested activity is found
         When The 'New version' option is clicked from the three dot menu list
-        Then The requested activity has status 'Draft' and version '1.1'
+        Then The item has status 'Draft' and version '1.1'
         When The 'Edit' option is clicked from the three dot menu list
         And The activity request is edited
-        Then The requested activity has status 'Draft' and version '1.2'
+        Then The item has status 'Draft' and version '1.2'
         When The 'Approve' option is clicked from the three dot menu list
-        Then The requested activity has status 'Final' and version '2.0'
+        Then The item has status 'Final' and version '2.0'
 
     Scenario: User must be able to Approve the drafted version of the activity request
         Given The '/library/activities/requested-activities' page is opened
-        And The test activity request exists with a status as Draft
+        And [API] Requested activity in status Draft exists
+        And Requested activity is found
         When The 'Approve' option is clicked from the three dot menu list
-        Then The requested activity has status 'Final' and version '1.0'
+        Then The item has status 'Final' and version '1.0'
 
     Scenario: User must be able to Delete the intial created version of the activity request
         Given The '/library/activities/requested-activities' page is opened
-        And The test activity request exists with a status as Draft
+        And [API] Requested activity in status Draft exists
+        And Requested activity is found
         When The 'Delete' option is clicked from the three dot menu list
         Then The requested activity is no longer available
 
@@ -136,7 +152,8 @@ Feature: Library - Requested Activities
 
     Scenario: User must be able to Cancel edition of the activity request
         Given The '/library/activities/requested-activities' page is opened
-        And The test activity request exists with a status as Draft
+        And [API] Requested activity in status Draft exists
+        And Requested activity is found
         When The 'Edit' option is clicked from the three dot menu list
         When The requested activity edition form is filled with data
         And Modal window form is closed by clicking cancel button
@@ -164,32 +181,40 @@ Feature: Library - Requested Activities
 
     Scenario: User must only have access to aprove, edit, delete, history actions for Drafted version of the requested activity
         Given The '/library/activities/requested-activities' page is opened
-        When The test activity request exists with a status as Draft
+        And [API] Requested activity in status Draft exists
+        And Requested activity is found
         And The item actions button is clicked
         Then Only actions that should be avaiable for the Draft item are displayed
 
     Scenario: User must only have access to new version, inactivate, history actions for Final version of the requested activity
         Given The '/library/activities/requested-activities' page is opened
-        When The test activity request exists with a status as Final
+        And [API] Requested activity in status Draft exists
+        And [API] Requested activity is approved
+        And Requested activity is found
         And The item actions button is clicked
         Then Only actions that should be avaiable for the Final item are displayed
 
     Scenario: User must only have access to reactivate, history actions for Retired version of the requested activity
         Given The '/library/activities/requested-activities' page is opened
-        When The test activity request exists with a status as Retired
+        And [API] Requested activity in status Draft exists
+        And [API] Requested activity is approved
+        And [API] Requested activity is inactivated
+        And Requested activity is found
         And The item actions button is clicked
         Then Only actions that should be avaiable for the Retired item are displayed
 
     Scenario: User must have access to Handle placeholder request action for Final version of the requested activity
         Given The '/library/activities/requested-activities' page is opened
-        When The test activity request exists with a status as Final
+        And [API] Requested activity in status Draft exists
+        And [API] Requested activity is approved
+        And Requested activity is found
         And The item actions button is clicked
         Then 'Handle placeholder request' action is available
 
     Scenario: User must be able to search created activity request
         Given The '/library/activities/requested-activities' page is opened
-        When First activity request for search test is created
-        And Second activity request for search test is created
+        When [API] First requested activity for search test is created
+        And [API] Second requested activity for search test is created
         Then One activity request is found after performing full name search
         And More than one item is found after performing partial name search 
 
@@ -206,13 +231,18 @@ Feature: Library - Requested Activities
         And The user changes status filter value to 'Draft'
         Then More than one item is found after performing partial name search
 
+    Scenario: User must be able to search item ignoring case sensitivity
+        Given The '/library/activities/requested-activities' page is opened
+        When The existing item in search by lowercased name
+        And More than one result is found
+
     Scenario Outline: User must be able to filter the table by text fields
         Given The '/library/activities/requested-activities' page is opened
         When The user filters field '<name>'
         Then The table is filtered correctly
 
         Examples:
-        | name                  |
+        | name                           |
         | Activity group                 |
         | Activity subgroup              |
         | Activity                       |

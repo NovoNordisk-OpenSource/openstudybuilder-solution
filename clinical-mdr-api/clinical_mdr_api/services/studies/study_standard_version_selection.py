@@ -273,7 +273,7 @@ class StudyStandardVersionService:
             uid=study_standard_version_uid, study_uid=study_uid
         )
         versions = [
-            self._transform_all_to_response_history_model(_).dict()
+            self._transform_all_to_response_history_model(_).model_dump()
             for _ in all_versions
         ]
         data = calculate_diffs(versions, StudyStandardVersionVersion)

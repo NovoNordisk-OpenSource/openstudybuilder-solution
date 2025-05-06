@@ -41,8 +41,8 @@ Possible errors:
     response_model=CustomPage[TextValue],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_text_values(
@@ -99,11 +99,11 @@ def get_text_values(
     response_model=list[Any],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - Invalid field name specified",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_distinct_values_for_header(
@@ -156,8 +156,8 @@ Possible errors:
     response_model=TextValue,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_text_value(text_value_uid: Annotated[str, TextValueUID]):
@@ -182,6 +182,7 @@ Possible errors:
     response_model=TextValue,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {"description": "Created - The text value was successfully created."},
         400: {
             "model": ErrorResponse,
@@ -189,7 +190,6 @@ Possible errors:
             "- The library doesn't exist.\n"
             "- The library doesn't allow to add new items.\n",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def create(text_value_create_input: Annotated[TextValuePostInput, Body()]):

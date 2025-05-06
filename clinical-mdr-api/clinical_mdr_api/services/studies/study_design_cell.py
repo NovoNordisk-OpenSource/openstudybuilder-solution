@@ -154,7 +154,7 @@ class StudyDesignCellService(StudySelectionMixin):
         exceptions.NotFoundException.raise_if(
             sdc_node is None or len(sdc_node) == 0, "Study Design Cell", design_cell_uid
         )
-        return StudyDesignCell.from_orm(sdc_node[0])
+        return StudyDesignCell.model_validate(sdc_node[0])
 
     def _from_input_values(
         self, study_uid: str, design_cell_input: StudyDesignCellCreateInput
@@ -317,7 +317,9 @@ class StudyDesignCellService(StudySelectionMixin):
                         ith_selection_history.append(selection)
                 # get the versions and compare
                 versions = [
-                    self._transform_each_history_to_response_model(_, study_uid).dict()
+                    self._transform_each_history_to_response_model(
+                        _, study_uid
+                    ).model_dump()
                     for _ in ith_selection_history
                 ]
                 if not data:
@@ -344,7 +346,9 @@ class StudyDesignCellService(StudySelectionMixin):
                 raise exceptions.NotFoundException(msg=value_error.args[0])
 
             versions = [
-                self._transform_each_history_to_response_model(_, study_uid).dict()
+                self._transform_each_history_to_response_model(
+                    _, study_uid
+                ).model_dump()
                 for _ in selection_history
             ]
             data = calculate_diffs(versions, StudyDesignCellVersion)
@@ -374,11 +378,11 @@ class StudyDesignCellService(StudySelectionMixin):
                     raise exceptions.MethodNotAllowedException(method=operation.method)
                 result["response_code"] = response_code
                 if item:
-                    result["content"] = item.dict()
+                    result["content"] = item.model_dump()
                 results.append(StudyDesignCellBatchOutput(**result))
             except exceptions.MDRApiBaseException as error:
                 results.append(
-                    StudyDesignCellBatchOutput.construct(
+                    StudyDesignCellBatchOutput.model_construct(
                         response_code=error.status_code,
                         content=BatchErrorResponse(message=str(error)),
                     )

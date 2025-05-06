@@ -1,10 +1,16 @@
-const { When, Then } = require("@badeball/cypress-cucumber-preprocessor");
+const {Given, When, Then } = require("@badeball/cypress-cucumber-preprocessor");
+const { closeSync } = require("fs");
 
 let current_activity
 let new_activity_name
-
+let first_in_order
+let last_in_order
 When('At least {string} activites are present in {string} study', (number_of_activities, study_id) => {
     prepareActivites(number_of_activities, study_id)
+})
+
+Given('At least {string} activities are present in {string} in the same {string} flowchart subgroup and {string} group', (number_of_activities, study_id, group, subgroup) => {
+    prepareActivitesInSameGroup(number_of_activities, subgroup, study_id, group)
 })
 
 When('The user click on {string} action for an Activity', (action) => {
@@ -31,8 +37,8 @@ When('The user goes through selection from library form', () => {
 Then('The newly selected activity replaces previous activity in study', () => {
     cy.reload()
     cy.contains('.v-selection-control', 'Expand table').click()
-    cy.contains('table tbody tr.bg-white', new RegExp(current_activity, "g")).should('not.exist')
-    cy.contains('table tbody tr.bg-white', new RegExp(new_activity_name, "g")).should('exist')
+    cy.contains('table tbody tr.bg-white', new RegExp(`^(${current_activity})$`, "g")).should('not.exist')
+    cy.contains('table tbody tr.bg-white', new RegExp(`^(${new_activity_name})$`, "g")).should('exist')
 })
 
 Then('The newly created activity is present in SoA', () => {
@@ -97,7 +103,6 @@ When('The user edits activities in bulk without selecting Activity Group and Vis
 
 Then('The validation appears for Activity Group field in bulk edit form', () => {
     cy.get('[data-cy="form-body"]').within(()=> {
-        cy.get('.v-input').eq(1).should('contain', 'This field is required')
         cy.get('.v-input').eq(2).should('contain', 'This field is required')
     })
 })
@@ -114,6 +119,39 @@ Then('The activities are removed from the study', () => {
 
 })
 
+When('The user enables the Reorder Activities function for acitivities in the same {string} flowchart subgroup and {string} group', (subgroup, group) => {
+    cy.get('[aria-label="Expand table"]').click()
+            cy.contains('tr[class="bg-white"]', subgroup).within(() => {
+                cy.clickButton('table-item-action-button')
+            })
+    cy.clickButton('Reorder')
+
+})
+
+When('The user updates the order of activities', () => {
+    cy.intercept('**/order').as('orderRequest')
+    cy.wait(1500)
+    cy.get('.mdi-sort').first().parentsUntil('td').invoke('text').then((text) => {last_in_order = text})
+    cy.get('.mdi-sort').last().parentsUntil('td').invoke('text').then((text) => {first_in_order = text})
+
+    cy.get('.mdi-sort').last().parentsUntil('td').drag('.sticky-column > .d-flex', {
+        source: { x: 100, y: 100 }, // applies to the element being dragged
+        target: { position: 'left' }, // applies to the drop target
+        force: true, // applied to both the source and target element)
+        })
+    cy.contains('.v-btn', 'Finish reordering').click()
+    
+})
+Then('The new order of activites is visible', () => {
+    cy.get('[aria-label="Expand table"]').click()
+    cy.contains('tr[class="bg-white"]', 'Acute Kidney Injury').within(() => {
+        cy.clickButton('table-item-action-button')
+    })
+    cy.clickButton('Reorder')
+    cy.get('.mdi-sort').first().parentsUntil('td').should('contain', first_in_order)
+    
+})
+
 
 function bulkAction(action) {
     cy.request('api/studies/Study_000001/study-activities?total_count=true').then((req) => {
@@ -127,6 +165,7 @@ function bulkAction(action) {
     cy.get('[title="Bulk actions"]').click()
     cy.contains('.v-list-item', action).click()
 }
+
 function prepareActivites(number_of_activities, study_id) {
     cy.request('api/studies/' + study_id + '/study-activities?total_count=true').then((req) => {
         if (req.body.total < parseInt(number_of_activities)) {
@@ -140,7 +179,61 @@ function prepareActivites(number_of_activities, study_id) {
             cy.clickFormActionButton('save')
             prepareActivites(number_of_activities, study_id)
         } else {
-            cy.log('Activity exists')
+            cy.log('Skipping activity creation')
+        }
+    })
+}
+function countGroupsAndSubgroupsInStudy(data, subgroup, group) {
+    let group_subgroup_count = 0
+
+    data.body.items.forEach(element => {
+
+        if (element.study_activity_subgroup.activity_subgroup_name === subgroup && element.study_soa_group.soa_group_term_name === group) {
+            group_subgroup_count++
+        }
+    });
+    return group_subgroup_count
+
+}
+function prepareActivitesInSameGroup(number_of_activities, subgroup, study_id, group) {
+    cy.request('api/studies/' + study_id + '/study-activities?total_count=true').then((req) => {
+        cy.log(`found: ${countGroupsAndSubgroupsInStudy(req, group, subgroup)}`)
+        if ( countGroupsAndSubgroupsInStudy(req, group, subgroup) < parseInt(number_of_activities)) {
+            cy.visit('studies/' + study_id + '/activities/list')
+            cy.clickButton('add-study-activity')
+            cy.clickFormActionButton('continue')
+            cy.contains('Use the same SoA group for all').click()
+            cy.get('.v-card-title > .v-autocomplete > .v-input__control > .v-field').first().click()
+            cy.contains('.v-list-item__content', 'BIOMARKERS').click()
+            cy.get('[data-cy="form-body"]').within(() => {
+                selectFirstNRowsContainingValue(subgroup, number_of_activities)
+
+            })
+            cy.clickFormActionButton('save')
+            prepareActivites(number_of_activities, study_id, subgroup)
+        } else {
+            cy.log('Skipping activity creation')
+        }
+    })
+}
+
+function selectFirstNRowsContainingValue(value, numberOfRows) {
+    let selectedCount = 0
+
+    cy.get('tbody.v-data-table__tbody tr').each(($row) => {
+        if (selectedCount < numberOfRows) {
+            cy.wrap($row).find(':nth-child(5)').each(($cell) => {
+                cy.wrap($cell).invoke('text').then((cellText) => {
+                    if (selectedCount < numberOfRows) {
+                    if (cellText.includes(value)) {
+                        cy.wrap($row).find('input[type="checkbox"]').check(); // Checking the checkbox
+                        selectedCount++
+                    }
+                }
+                })
+            })
+        } else {
+            return false
         }
     })
 }

@@ -45,6 +45,7 @@ ObjectiveUID = Path(description="The unique id of the objective.")
     response_model=CustomPage[Objective],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {
             "content": {
                 "text/csv": {
@@ -56,7 +57,6 @@ ObjectiveUID = Path(description="The unique id of the objective.")
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {},
             }
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.allow_exports(
@@ -138,11 +138,11 @@ def get_all(
     response_model=list[Any],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - Invalid field name specified",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_distinct_values_for_header(
@@ -193,8 +193,8 @@ def get_distinct_values_for_header(
     response_model=CustomPage[Objective],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def retrieve_audit_trail(
@@ -246,11 +246,11 @@ def retrieve_audit_trail(
     response_model=Objective | None,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - The objective with the specified 'objective_uid' (and the specified date/time and/or status) wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get(
@@ -288,11 +288,11 @@ def get(
     response_model=list[ObjectiveVersion],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - The objective with the specified 'objective_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_versions(objective_uid: Annotated[str, ObjectiveUID]):
@@ -305,11 +305,11 @@ def get_versions(objective_uid: Annotated[str, ObjectiveUID]):
     response_model=list[Study],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - The objective with the specified 'objective_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_studies(
@@ -348,6 +348,7 @@ If the request succeeds:
     response_model=Objective,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {"description": "Created - The objective was successfully created."},
         400: {
             "model": ErrorResponse,
@@ -362,7 +363,6 @@ If the request succeeds:
             "- The library with the specified 'library_name' could not be found.\n"
             "- The objective template with the specified 'template_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def create(
@@ -389,6 +389,7 @@ If the request succeeds:
     response_model=Objective,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "Success - The objective is able to be created."},
         400: {
             "model": ErrorResponse,
@@ -403,7 +404,6 @@ If the request succeeds:
             "- The library with the specified 'library_name' could not be found.\n"
             "- The objective template with the specified 'template_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def preview(
@@ -432,6 +432,7 @@ If the request succeeds:
     response_model=Objective,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -446,7 +447,6 @@ If the request succeeds:
             "model": ErrorResponse,
             "description": "Not Found - The objective with the specified 'objective_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def edit(
@@ -477,6 +477,7 @@ If the request succeeds:
     response_model=Objective,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -488,7 +489,6 @@ If the request succeeds:
             "model": ErrorResponse,
             "description": "Not Found - The objective with the specified 'objective_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def approve(objective_uid: Annotated[str, ObjectiveUID]):
@@ -510,6 +510,7 @@ If the request succeeds:
     response_model=Objective,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -520,7 +521,6 @@ If the request succeeds:
             "model": ErrorResponse,
             "description": "Not Found - The objective with the specified 'objective_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def inactivate(objective_uid: Annotated[str, ObjectiveUID]):
@@ -542,6 +542,7 @@ If the request succeeds:
     response_model=Objective,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -552,7 +553,6 @@ If the request succeeds:
             "model": ErrorResponse,
             "description": "Not Found - The objective with the specified 'objective_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def reactivate(objective_uid: Annotated[str, ObjectiveUID]):
@@ -570,6 +570,7 @@ def reactivate(objective_uid: Annotated[str, ObjectiveUID]):
     response_model=None,
     status_code=204,
     responses={
+        403: _generic_descriptions.ERROR_403,
         204: {"description": "No Content - The objective was successfully deleted."},
         400: {
             "model": ErrorResponse,
@@ -581,7 +582,6 @@ def reactivate(objective_uid: Annotated[str, ObjectiveUID]):
             "model": ErrorResponse,
             "description": "Not Found - An objective with the specified uid could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def delete(objective_uid: Annotated[str, ObjectiveUID]):
@@ -599,8 +599,8 @@ def delete(objective_uid: Annotated[str, ObjectiveUID]):
     response_model=list[TemplateParameter],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_parameters(

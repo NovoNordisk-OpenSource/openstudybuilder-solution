@@ -9,6 +9,7 @@ Tests for /studies/{study_uid}/study-design-cells endpoints
 # pytest fixture functions have other fixture functions as arguments,
 # which pylint interprets as unused arguments
 
+import copy
 import logging
 from unittest import mock
 
@@ -24,6 +25,8 @@ from clinical_mdr_api.models.study_selections.study_selection import (
     StudySelectionArm,
     StudySelectionBranchArm,
 )
+
+# from clinical_mdr_api.routers.studies.study import PROJECT_NUMBER
 from clinical_mdr_api.tests.integration.utils.api import (
     inject_and_clear_db,
     inject_base_data,
@@ -41,7 +44,7 @@ from clinical_mdr_api.tests.integration.utils.method_library import (
     create_study_epoch_codelists_ret_cat_and_lib,
     get_catalogue_name_library_name,
 )
-from clinical_mdr_api.tests.integration.utils.utils import TestUtils
+from clinical_mdr_api.tests.integration.utils.utils import PROJECT_NUMBER, TestUtils
 from clinical_mdr_api.tests.utils.checks import assert_response_status_code
 
 log = logging.getLogger(__name__)
@@ -243,6 +246,7 @@ def test_design_cell_modify_actions_on_locked_study(api_client):
     assert response.json()["message"] == f"Study with UID '{study.uid}' is locked."
 
 
+# pylint: disable=too-many-statements
 def test_study_design_cell_with_study_epoch_relationship(api_client):
     """
     HAVING:
@@ -443,3 +447,140 @@ def test_study_design_cell_with_study_epoch_relationship(api_client):
             f"/studies/{study.uid}/study-design-cells/study-epochs/{epoch_uid}?study_value_version=2"
         ).json()
     )
+
+    study_cloned = api_client.post(
+        f"/studies/{study.uid}/clone",
+        json={
+            "study_number": "6675",
+            "study_acronym": "6675",
+            "project_number": PROJECT_NUMBER,
+            "description": "6675",
+            "copy_study_arm": True,
+            "copy_study_branch_arm": True,
+            "copy_study_cohort": True,
+            "copy_study_element": True,
+            "copy_study_visit": True,
+            "copy_study_epoch": True,
+            "copy_study_footnote": True,
+            "copy_study_design_matrix": True,
+        },
+    ).json()
+    # get all
+    cloned_arms = api_client.get(f"/studies/{study_cloned['uid']}/study-arms").json()
+    cloned_arms_any = copy.deepcopy(cloned_arms)
+    for i, _ in enumerate(cloned_arms_any["items"]):
+        cloned_arms_any["items"][i]["study_version"] = mock.ANY
+        cloned_arms_any["items"][i]["study_uid"] = mock.ANY
+        cloned_arms_any["items"][i]["arm_uid"] = mock.ANY
+        cloned_arms_any["items"][i]["arm_connected_branch_arms"] = mock.ANY
+        cloned_arms_any["items"][i]["start_date"] = mock.ANY
+        cloned_arms_any["items"][i]["arm_type"]["queried_effective_date"] = mock.ANY
+    final_arms = api_client.get(f"/studies/{study.uid}/study-arms").json()
+    for i, _ in enumerate(final_arms["items"]):
+        final_arms["items"][i]["study_version"] = mock.ANY
+        final_arms["items"][i]["study_uid"] = mock.ANY
+        final_arms["items"][i]["arm_uid"] = mock.ANY
+        final_arms["items"][i]["arm_connected_branch_arms"] = mock.ANY
+        final_arms["items"][i]["start_date"] = mock.ANY
+        final_arms["items"][i]["arm_type"]["queried_effective_date"] = mock.ANY
+    assert cloned_arms_any == final_arms
+
+    cloned_branch_arms = api_client.get(
+        f"/studies/{study_cloned['uid']}/study-branch-arms"
+    ).json()
+    cloned_branch_arms_any = copy.deepcopy(cloned_branch_arms)
+    for i, _ in enumerate(cloned_branch_arms_any):
+        cloned_branch_arms_any[i]["study_version"] = mock.ANY
+        cloned_branch_arms_any[i]["study_uid"] = mock.ANY
+        cloned_branch_arms_any[i]["branch_arm_uid"] = mock.ANY
+        cloned_branch_arms_any[i]["start_date"] = mock.ANY
+        cloned_branch_arms_any[i]["arm_root"] = mock.ANY
+    final_branch_arms = api_client.get(f"/studies/{study.uid}/study-branch-arms").json()
+    for i, _ in enumerate(final_branch_arms):
+        final_branch_arms[i]["study_version"] = mock.ANY
+        final_branch_arms[i]["study_uid"] = mock.ANY
+        final_branch_arms[i]["branch_arm_uid"] = mock.ANY
+        final_branch_arms[i]["start_date"] = mock.ANY
+        final_branch_arms[i]["arm_root"] = mock.ANY
+    assert cloned_branch_arms_any == final_branch_arms
+
+    cloned_elements = api_client.get(
+        f"/studies/{study_cloned['uid']}/study-elements"
+    ).json()
+    assert len(cloned_elements["items"]) > 0
+    cloned_epochs = api_client.get(
+        f"/studies/{study_cloned['uid']}/study-epochs"
+    ).json()
+    assert len(cloned_epochs["items"]) > 0
+
+    cloned_design_cell_by_branch_arm = api_client.get(
+        f"/studies/{study_cloned['uid']}/study-design-cells/branch-arm/{cloned_branch_arms[0]['branch_arm_uid']}"
+    ).json()
+    cloned_design_cell_by_branch_arm_any = copy.deepcopy(
+        cloned_design_cell_by_branch_arm
+    )
+    for i, _ in enumerate(cloned_design_cell_by_branch_arm_any):
+        cloned_design_cell_by_branch_arm_any[i]["study_version"] = mock.ANY
+        cloned_design_cell_by_branch_arm_any[i]["study_uid"] = mock.ANY
+        cloned_design_cell_by_branch_arm_any[i]["design_cell_uid"] = mock.ANY
+        cloned_design_cell_by_branch_arm_any[i]["study_branch_arm_uid"] = mock.ANY
+        cloned_design_cell_by_branch_arm_any[i]["study_arm_uid"] = mock.ANY
+        cloned_design_cell_by_branch_arm_any[i]["study_epoch_uid"] = mock.ANY
+        cloned_design_cell_by_branch_arm_any[i]["study_element_uid"] = mock.ANY
+        cloned_design_cell_by_branch_arm_any[i]["start_date"] = mock.ANY
+    final_design_cell_by_branch_arm = api_client.get(
+        f"/studies/{study.uid}/study-design-cells/branch-arm/{study_branch_arm.branch_arm_uid}"
+    ).json()
+    for i, _ in enumerate(final_design_cell_by_branch_arm):
+        final_design_cell_by_branch_arm[i]["study_version"] = mock.ANY
+        final_design_cell_by_branch_arm[i]["study_uid"] = mock.ANY
+        final_design_cell_by_branch_arm[i]["design_cell_uid"] = mock.ANY
+        final_design_cell_by_branch_arm[i]["study_branch_arm_uid"] = mock.ANY
+        final_design_cell_by_branch_arm[i]["study_arm_uid"] = mock.ANY
+        final_design_cell_by_branch_arm[i]["study_epoch_uid"] = mock.ANY
+        final_design_cell_by_branch_arm[i]["study_element_uid"] = mock.ANY
+        final_design_cell_by_branch_arm[i]["start_date"] = mock.ANY
+    assert cloned_design_cell_by_branch_arm_any == final_design_cell_by_branch_arm
+
+    response = api_client.post(
+        f"/studies/{study.uid}/clone",
+        json={
+            "study_number": "6676",
+            "study_acronym": "6676",
+            "project_number": PROJECT_NUMBER,
+            "description": "6676",
+            "copy_study_arm": False,
+            "copy_study_branch_arm": False,
+            "copy_study_cohort": False,
+            "copy_study_element": False,
+            "copy_study_visit": False,
+            "copy_study_epoch": False,
+            "copy_study_footnote": False,
+            "copy_study_design_matrix": False,
+        },
+    )
+    response.json()
+    assert_response_status_code(response, 400)
+    res = response.json()
+    assert res["message"] == "At least one item should be selected"
+
+    response = api_client.post(
+        f"/studies/{study.uid}/clone",
+        json={
+            "study_number": "6677",
+            "study_acronym": "6677",
+            "project_number": PROJECT_NUMBER,
+            "description": "6677",
+            "copy_study_arm": True,
+            "copy_study_branch_arm": False,
+            "copy_study_cohort": True,
+            "copy_study_element": False,
+            "copy_study_visit": False,
+            "copy_study_epoch": False,
+            "copy_study_footnote": False,
+            "copy_study_design_matrix": False,
+        },
+    )
+    assert_response_status_code(response, 400)
+    res = response.json()
+    assert res["message"] == "Study Branch should be also included"

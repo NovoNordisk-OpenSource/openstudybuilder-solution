@@ -32,8 +32,8 @@ OdmFormalExpressionUID = Path(description="The unique id of the ODM Formal Expre
     response_model=CustomPage[OdmFormalExpression],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_all_odm_formal_expressions(
@@ -90,11 +90,11 @@ def get_all_odm_formal_expressions(
     response_model=list[Any],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - Invalid field name specified",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_distinct_values_for_header(
@@ -137,8 +137,8 @@ def get_distinct_values_for_header(
     response_model=OdmFormalExpression,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_odm_formal_expression(
@@ -155,8 +155,8 @@ def get_odm_formal_expression(
     response_model=dict,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_active_relationships(
@@ -189,11 +189,11 @@ Possible errors:
     response_model=list[OdmFormalExpression],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - The ODM Formal Expression with the specified 'odm_formal_expression_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_odm_formal_expression_versions(
@@ -212,6 +212,7 @@ def get_odm_formal_expression_versions(
     response_model=OdmFormalExpression,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {
             "description": "Created - The ODM Formal Expression was successfully created."
         },
@@ -222,7 +223,6 @@ def get_odm_formal_expression_versions(
             "- The library doesn't allow to add new items.\n",
         },
         409: _generic_descriptions.ERROR_409,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def create_odm_formal_expression(
@@ -241,6 +241,7 @@ def create_odm_formal_expression(
     response_model=OdmFormalExpression,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -253,7 +254,6 @@ def create_odm_formal_expression(
             "model": ErrorResponse,
             "description": "Not Found - The ODM Formal Expression with the specified 'odm_formal_expression_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def edit_odm_formal_expression(
@@ -288,6 +288,7 @@ Possible errors:
     response_model=OdmFormalExpression,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -300,7 +301,6 @@ Possible errors:
             "- The ODM Formal Expression is not in final status.\n"
             "- The ODM Formal Expression with the specified 'odm_formal_expression_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def create_odm_formal_expression_version(
@@ -319,6 +319,7 @@ def create_odm_formal_expression_version(
     response_model=OdmFormalExpression,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -330,7 +331,6 @@ def create_odm_formal_expression_version(
             "model": ErrorResponse,
             "description": "Not Found - The ODM Formal Expression with the specified 'odm_formal_expression_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def approve_odm_formal_expression(
@@ -347,6 +347,7 @@ def approve_odm_formal_expression(
     response_model=OdmFormalExpression,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -357,7 +358,6 @@ def approve_odm_formal_expression(
             "model": ErrorResponse,
             "description": "Not Found - The ODM Formal Expression with the specified 'odm_formal_expression_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def inactivate_odm_formal_expression(
@@ -374,6 +374,7 @@ def inactivate_odm_formal_expression(
     response_model=OdmFormalExpression,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -384,7 +385,6 @@ def inactivate_odm_formal_expression(
             "model": ErrorResponse,
             "description": "Not Found - The ODM Formal Expression with the specified 'odm_formal_expression_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def reactivate_odm_formal_expression(
@@ -403,6 +403,7 @@ def reactivate_odm_formal_expression(
     response_model=None,
     status_code=204,
     responses={
+        403: _generic_descriptions.ERROR_403,
         204: {
             "description": "No Content - The ODM Formal Expression was successfully deleted."
         },
@@ -417,7 +418,6 @@ def reactivate_odm_formal_expression(
             "model": ErrorResponse,
             "description": "Not Found - An ODM Formal Expression with the specified 'odm_formal_expression_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def delete_odm_formal_expression(

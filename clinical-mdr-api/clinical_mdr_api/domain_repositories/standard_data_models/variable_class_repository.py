@@ -26,7 +26,7 @@ class VariableClassRepository(StandardDataModelRepository):
         if uid:
             uid_filter = f"{{uid: '{uid}'}}"
         return f"""MATCH (standard_root:{standard_data_model_label} {uid_filter})-[:HAS_INSTANCE]->
-                (standard_value:{standard_data_model_value_label})<-[has_class_variable_rel:HAS_VARIABLE_CLASS]-
+                (standard_value:{standard_data_model_value_label})<-[has_variable_class_rel:HAS_VARIABLE_CLASS]-
                 (dataset_class_value:DatasetClassInstance)<-[:HAS_DATASET_CLASS]-(data_model_value:DataModelValue)
                 <-[:HAS_VERSION]-(data_model_root:DataModelRoot)"""
 
@@ -61,10 +61,10 @@ class VariableClassRepository(StandardDataModelRepository):
         )
         filter_parameters.append(filter_by_data_model_version)
 
-        filter_by_has_class_variable_version = (
-            "has_class_variable_rel.version_number = $data_model_version"
+        filter_by_has_variable_class_version = (
+            "has_variable_class_rel.version_number = $data_model_version"
         )
-        filter_parameters.append(filter_by_has_class_variable_version)
+        filter_parameters.append(filter_by_has_variable_class_version)
 
         filter_query_parameters["data_model_name"] = data_model_name
         filter_query_parameters["data_model_version"] = data_model_version
@@ -107,7 +107,7 @@ class VariableClassRepository(StandardDataModelRepository):
             standard_value.examples AS examples,
             head([(standard_value)-[:QUALIFIES_VARIABLE {catalogue:$data_model_name, version_number:$data_model_version}]->(qualified_variable:VariableClassInstance)<-[:HAS_INSTANCE]-(qualified_variable_root) | {
                 uid:qualified_variable_root.uid, name:qualified_variable.label }]) AS qualifies_variable,
-            {dataset_class_name:dataset_class_value.label, ordinal:toInteger(has_class_variable_rel.ordinal)} AS dataset_class,
+            {dataset_class_name:dataset_class_value.label, ordinal:has_variable_class_rel.ordinal} AS dataset_class,
             head([(standard_value)<-[:IMPLEMENTS_VARIABLE]-(dataset_variable_value:DatasetVariableInstance) | 
                 dataset_variable_value.label]) AS dataset_variable_name,
             apoc.coll.toSet([(standard_value)<-[:HAS_VARIABLE_CLASS]-

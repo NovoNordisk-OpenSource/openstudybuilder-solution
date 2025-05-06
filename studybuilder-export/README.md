@@ -41,17 +41,18 @@ Study epochs for study with uid "Study_000004":
 A pipeline definition is included. This can export from any of the cloud environments, and publishes the results as pipeline artifacts.
 
 #  Authentication
-## Fetching an access token
+## Fetching an access token using a client secret
 This supports [OAuth 2.0 client credentials flow with shared secret](https://docs.microsoft.com/en-us/azure/active-directory/develop/v2-oauth2-client-creds-grant-flow#first-case-access-token-request-with-a-shared-secret).
 Credentials can be configured by setting all the following environment variables.
 If *CLIENT_ID* is set, the authentication routine is activated.
 ```shell
-CLIENT_ID="96f1754c-95f9-4b54-86e8-e83c4ba3ff49"
+CLIENT_ID="aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
 CLIENT_SECRET="...FILL-ME..."
-TOKEN_ENDPOINT="https://login.microsoftonline.com/e4ffd031-c99f-4ec5-ae85-3382c76137a1/oauth2/v2.0/token"
-SCOPE="api://d3e62185-f259-4d5b-8a8c-a9134fd34d47/.default"
+TOKEN_ENDPOINT="https://login.microsoftonline.com/aabbccdd-aabb-aabb-aabb-aabbccddeeff/oauth2/v2.0/token"
+SCOPE="api://abcdef01-abcd-abcd-abcd-abcdef012345/.default"
 ```
-- **TOKEN_ENDPOINT** is the endpoint where to post the authentication request.
+
+- **TOKEN_ENDPOINT** is the OAuth 2.0 token endpoint to fetch the access token from.
   Can be found in the OpenID Connect metadata document, or Azure Active Directory -> App registrations -> Endpoints.
 - **SCOPE** is the scope to request at the authentication flow, and in case of the Microsoft Identity Platform,
   that is the application ID (in URI format) of the API and *.default*
@@ -61,10 +62,25 @@ SCOPE="api://d3e62185-f259-4d5b-8a8c-a9134fd34d47/.default"
 Authentication is done once per migration script session, fetching an access token which is then included in each
 request as the *Authorization* header.
 
-## Using an existing access token
-It is possible to use an existing API access token. Provide this in the `STUDYBUILDER_API_TOKEN` environment variable.
+## Using interactive authentication
+To enable single sign on, use the following environment variables:
+```shell
+CLIENT_ID="aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+AUTH_ENDPOINT="https://login.microsoftonline.com/aabbccdd-aabb-aabb-aabb-aabbccddeeff/oauth2/v2.0/authorize"
+TOKEN_ENDPOINT="https://login.microsoftonline.com/aabbccdd-aabb-aabb-aabb-aabbccddeeff/oauth2/v2.0/token"
+SCOPE="api://abcdef01-abcd-abcd-abcd-abcdef012345/.default"
+```
+- **AUTH_ENDPOINT** is the OAuth 2.0 authorization endpoint to redirecting the user's browser to initiate the authorization code flow.
+  Can be found in the OpenID Connect metadata document, or Azure Active Directory -> App registrations -> Endpoints.
+
+The other parameters have the same meaning as
+when using a [client secret](#fetching-an-access-token-using-a-client-secret)
+
+When calling the first api endpoint, a browser window will open prompting the user to log in.
 
 # TODO
 - Add whatever parts that are missing in the exported data. 
 - Move the pipeline to `build-tools`? 
+
+
 

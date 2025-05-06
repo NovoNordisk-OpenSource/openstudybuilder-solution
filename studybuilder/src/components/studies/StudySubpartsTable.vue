@@ -2,7 +2,7 @@
   <NNTable
     :headers="headers"
     :items="items"
-    column-data-resource="studies"
+    :column-data-resource="!sortMode ? 'studies' : undefined"
     :items-length="total"
     item-value="uid"
     :initial-sort-by="[
@@ -26,8 +26,55 @@
     :history-data-fetcher="fetchStudyHistory"
     :history-title="$t('StudySubparts.subparts_history_title')"
     :history-external-headers="historyHeaders"
+    :disable-filtering="sortMode"
+    :hide-default-body="sortMode && items.length > 0"
     @filter="fetchStudySubparts"
   >
+    <template #afterSwitches>
+      <div :title="$t('NNTableTooltips.reorder_content')">
+        <v-switch
+          v-model="sortMode"
+          :label="$t('NNTable.reorder_content')"
+          hide-details
+          class="mr-6"
+          color="primary"
+          :disabled="!accessGuard.checkPermission($roles.STUDY_WRITE)"
+        />
+      </div>
+    </template>
+    <template #tbody>
+      <tbody v-show="sortMode" ref="parent">
+        <tr v-for="item in items" :key="item.uid">
+          <td>
+            <v-icon size="small"> mdi-sort </v-icon>
+          </td>
+          <td>{{ item.study_parent_part.study_id }}</td>
+          <td>
+            {{ item.current_metadata.identification_metadata.study_acronym }}
+          </td>
+          <td>
+            {{ item.current_metadata.identification_metadata.subpart_id }}
+          </td>
+          <td>
+            {{
+              item.current_metadata.identification_metadata
+                .study_subpart_acronym
+            }}
+          </td>
+          <td>
+            {{ item.current_metadata.identification_metadata.description }}
+          </td>
+          <td>
+            {{
+              $filters.date(
+                item.current_metadata.version_metadata.version_timestamp
+              )
+            }}
+          </td>
+          <td>{{ item.current_metadata.version_metadata.version_author }}</td>
+        </tr>
+      </tbody>
+    </template>
     <template #actions="">
       <v-btn
         class="ml-2"
@@ -68,20 +115,6 @@
     :edited-subpart="selectedSubpart"
     @close="closeForms()"
   />
-  <SelectionOrderUpdateForm
-    v-if="selectedSubpart"
-    ref="orderForm"
-    :initial-value="
-      selectedSubpart.current_metadata
-        ? selectedSubpart.current_metadata.identification_metadata.subpart_id.charCodeAt(
-            0
-          ) - 96
-        : 0
-    "
-    :open="showOrderForm"
-    @close="closeOrderForm"
-    @submit="submitOrder"
-  />
   <v-dialog
     v-model="showSubpartHistory"
     persistent
@@ -110,8 +143,8 @@ import StudySubpartEditForm from '@/components/studies/StudySubpartEditForm.vue'
 import ActionsMenu from '@/components/tools/ActionsMenu.vue'
 import { useAccessGuard } from '@/composables/accessGuard'
 import { useStudiesGeneralStore } from '@/stores/studies-general'
-import SelectionOrderUpdateForm from '@/components/studies/SelectionOrderUpdateForm.vue'
 import HistoryTable from '@/components/tools/HistoryTable.vue'
+import { useDragAndDrop } from '@formkit/drag-and-drop/vue'
 
 const { t } = useI18n()
 const eventBusEmit = inject('eventBusEmit')
@@ -119,7 +152,19 @@ const roles = inject('roles')
 const accessGuard = useAccessGuard()
 const studiesGeneralStore = useStudiesGeneralStore()
 
-const items = ref([])
+const [parent, items] = useDragAndDrop([], {
+  onDragend: (event) => {
+    const newOrder =
+      (event.draggedNode.data.value.current_metadata
+        ? event.draggedNode.data.value.current_metadata.identification_metadata.subpart_id.charCodeAt(
+            0
+          ) - 96
+        : 0) -
+      (event.state.initialIndex - event.state.targetIndex)
+    changeOrder(event.draggedNode.data.value.uid, newOrder)
+  },
+})
+
 const total = ref(0)
 const headers = [
   { title: '', key: 'actions', width: '1%' },
@@ -165,14 +210,6 @@ const actions = [
     click: editSubpart,
   },
   {
-    label: t('_global.change_order'),
-    icon: 'mdi-pencil-outline',
-    iconColor: 'primary',
-    condition: () => !studiesGeneralStore.selectedStudyVersion,
-    click: changeOrder,
-    accessRole: roles.STUDY_WRITE,
-  },
-  {
     label: t('_global.remove'),
     icon: 'mdi-delete-outline',
     iconColor: 'error',
@@ -189,11 +226,11 @@ const actions = [
 const form = ref(false)
 const editForm = ref(false)
 const selectedSubpart = ref(null)
-const showOrderForm = ref(false)
 const loading = ref(false)
 const subpartHistoryItems = ref([])
 const subpartHistoryItemsTotal = ref(0)
 const showSubpartHistory = ref(false)
+const sortMode = ref(false)
 
 const studySubpartHistoryTitle = computed(() => {
   if (selectedSubpart.value) {
@@ -251,27 +288,19 @@ function removeSubpart(subpart) {
   })
 }
 
-function submitOrder(value) {
+function changeOrder(uid, newOrder) {
   loading.value = true
   const data = {
-    uid: selectedSubpart.value.uid,
+    uid: uid,
     subpart_id: String.fromCharCode(
-      Math.floor(value) + 'a'.charCodeAt(0) - 1
+      Math.floor(newOrder) + 'a'.charCodeAt(0) - 1
     ).toLowerCase(),
   }
   studies
     .reorderStudySubpart(studiesGeneralStore.selectedStudy.uid, data)
     .then(() => {
       fetchStudySubparts()
-      closeOrderForm()
     })
-}
-function changeOrder(subpart) {
-  selectedSubpart.value = subpart
-  showOrderForm.value = true
-}
-function closeOrderForm() {
-  showOrderForm.value = false
 }
 async function fetchStudyHistory(options) {
   let params = filteringParameters.prepareParameters(options)
@@ -315,3 +344,11 @@ function closeSubpartHistory() {
   showSubpartHistory.value = false
 }
 </script>
+<style scoped>
+tbody tr td {
+  border-left-style: outset;
+  border-bottom-style: outset;
+  border-width: 1px !important;
+  border-color: rgb(var(--v-theme-nnFadedBlue200)) !important;
+}
+</style>

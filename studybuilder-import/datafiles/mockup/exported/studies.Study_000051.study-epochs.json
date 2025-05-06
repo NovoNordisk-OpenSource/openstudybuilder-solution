@@ -1,0 +1,146 @@
+[
+  {
+    "author_username": "study.setup@b2bfv7zbjhkehgyw.onmicrosoft.com",
+    "change_description": "Initial Version",
+    "color_hash": "#CFD8DCFF",
+    "description": "Screening epoch to start",
+    "duration": 15,
+    "duration_unit": null,
+    "end_day": 1,
+    "end_rule": "ICF signed",
+    "end_week": 1,
+    "epoch": "C202487_SCREENING",
+    "epoch_ctterm": {
+      "date_conflict": false,
+      "queried_effective_date": null,
+      "sponsor_preferred_name": "Screening",
+      "term_uid": "C202487_SCREENING"
+    },
+    "epoch_name": "Screening",
+    "epoch_subtype_ctterm": {
+      "date_conflict": false,
+      "queried_effective_date": null,
+      "sponsor_preferred_name": "Screening",
+      "term_uid": "C202487_SCREENING"
+    },
+    "epoch_subtype_name": "Screening",
+    "epoch_type_ctterm": {
+      "date_conflict": false,
+      "queried_effective_date": null,
+      "sponsor_preferred_name": "Pre Treatment",
+      "term_uid": "CTTerm_000003"
+    },
+    "epoch_type_name": "Pre Treatment",
+    "order": 1,
+    "possible_actions": [
+      "edit",
+      "delete",
+      "lock"
+    ],
+    "start_date": "2025-03-27T11:51:54.571653000+0000",
+    "start_day": -14,
+    "start_rule": "ICF submitted",
+    "start_week": -2,
+    "status": "DRAFT",
+    "study_uid": "Study_000051",
+    "study_version": "LATEST on 2025-03-27T13:38:23.918945+00:00",
+    "study_visit_count": 2,
+    "uid": "StudyEpoch_000067"
+  },
+  {
+    "author_username": "study.setup@b2bfv7zbjhkehgyw.onmicrosoft.com",
+    "change_description": "Initial Version",
+    "color_hash": "#80DEEAFF",
+    "description": "Treatment epoch without dosing escalation",
+    "duration": 212,
+    "duration_unit": null,
+    "end_day": 213,
+    "end_rule": "Dosing complete",
+    "end_week": 31,
+    "epoch": "C101526_TREATMENT",
+    "epoch_ctterm": {
+      "date_conflict": false,
+      "queried_effective_date": null,
+      "sponsor_preferred_name": "Treatment",
+      "term_uid": "C101526_TREATMENT"
+    },
+    "epoch_name": "Treatment",
+    "epoch_subtype_ctterm": {
+      "date_conflict": false,
+      "queried_effective_date": null,
+      "sponsor_preferred_name": "Treatment",
+      "term_uid": "C101526_TREATMENT"
+    },
+    "epoch_subtype_name": "Treatment",
+    "epoch_type_ctterm": {
+      "date_conflict": false,
+      "queried_effective_date": null,
+      "sponsor_preferred_name": "Treatment",
+      "term_uid": "C101526_TREATMENT"
+    },
+    "epoch_type_name": "Treatment",
+    "order": 2,
+    "possible_actions": [
+      "edit",
+      "delete",
+      "lock"
+    ],
+    "start_date": "2025-03-27T11:51:54.571653000+0000",
+    "start_day": 1,
+    "start_rule": "RDM ok",
+    "start_week": 1,
+    "status": "DRAFT",
+    "study_uid": "Study_000051",
+    "study_version": "LATEST on 2025-03-27T13:38:23.919064+00:00",
+    "study_visit_count": 18,
+    "uid": "StudyEpoch_000066"
+  },
+  {
+    "author_username": "study.setup@b2bfv7zbjhkehgyw.onmicrosoft.com",
+    "change_description": "Initial Version",
+    "color_hash": "#81C784FF",
+    "description": "Follow-up epoch to follow the subject",
+    "duration": 7,
+    "duration_unit": null,
+    "end_day": 220,
+    "end_rule": "Last follow-up ok",
+    "end_week": 32,
+    "epoch": "C202578_FOLLOW-UP",
+    "epoch_ctterm": {
+      "date_conflict": false,
+      "queried_effective_date": null,
+      "sponsor_preferred_name": "Follow-up",
+      "term_uid": "C202578_FOLLOW-UP"
+    },
+    "epoch_name": "Follow-up",
+    "epoch_subtype_ctterm": {
+      "date_conflict": false,
+      "queried_effective_date": null,
+      "sponsor_preferred_name": "Follow-up",
+      "term_uid": "C202578_FOLLOW-UP"
+    },
+    "epoch_subtype_name": "Follow-up",
+    "epoch_type_ctterm": {
+      "date_conflict": false,
+      "queried_effective_date": null,
+      "sponsor_preferred_name": "Post Treatment",
+      "term_uid": "CTTerm_000002"
+    },
+    "epoch_type_name": "Post Treatment",
+    "order": 3,
+    "possible_actions": [
+      "edit",
+      "delete",
+      "lock"
+    ],
+    "start_date": "2025-03-27T11:51:54.571653000+0000",
+    "start_day": 213,
+    "start_rule": "Treatment ok",
+    "start_week": 31,
+    "status": "DRAFT",
+    "study_uid": "Study_000051",
+    "study_version": "LATEST on 2025-03-27T13:38:23.919103+00:00",
+    "study_visit_count": 2,
+    "uid": "StudyEpoch_000065"
+  }
+]

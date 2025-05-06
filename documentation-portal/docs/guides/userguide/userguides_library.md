@@ -98,3 +98,5 @@ The audit trail looks different, depending on the library section. The general c
 ![Audit Trail Example](~@source/images/library/standards/library-standards-template-objective-history.png "Fig 5: Audit Trail Syntax Templates example page")
 
 
+
+

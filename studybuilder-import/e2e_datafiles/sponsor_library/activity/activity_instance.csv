@@ -671,3 +671,8 @@ CDISC Submission Value: WBC
 CDISC Synonym(s): Leukocytes; White Blood Cells
 CDISC Definition: A measurement of the leukocytes in a biological specimen.
 NCI Preferred Term: Leukocyte Count",CATEGORIC FINDING,FINDINGS,LBTESTCD,WBC,LBTEST,Leukocytes,,,,,,,58805-2,STICK,Laboratory Assessments,Urinalysis - Urine Dipstick
+VersioningCheckActivityTopic,AE REQUIRING ADDITIONAL DATA,ACUTE KIDNEY INJURY CONDITIONS,AKICONDI,FA,VersioningCheckActivity,TestInstance,,,,,Test,CATEGORIC FINDING,FINDINGS,FATESTCD,AKICONDI,FATEST,AKI-Conditions,,,,,,,,YESNO,AE Requiring Additional Data,Acute Kidney Injury
+VersioningCheckInstanceTopic,AE REQUIRING ADDITIONAL DATA,ACUTE KIDNEY INJURY CONDITIONS,AKICONDI,FA,Acute Kidney Injury Conditions,VersioningCheckInstance,,,,,Test,CATEGORIC FINDING,FINDINGS,FATESTCD,AKICONDI,FATEST,AKI-Conditions,,,,,,,,YESNO,AE Requiring Additional Data,Acute Kidney Injury
+VersioningCheckGroupTopic,AE REQUIRING ADDITIONAL DATA,ACUTE KIDNEY INJURY CONDITIONS,AKICONDI,FA,Activity for group check,Instance for group check,,,,,Test,CATEGORIC FINDING,FINDINGS,FATESTCD,AKICONDI,FATEST,AKI-Conditions,,,,,,,,YESNO,VersioningCheckGroup,Testsubgroup
+VersioningCheckSubgroupTopic,AE REQUIRING ADDITIONAL DATA,ACUTE KIDNEY INJURY CONDITIONS,AKICONDI,FA,Activity for subgroup check,Instance for subgroup check,,,,,Test,CATEGORIC FINDING,FINDINGS,FATESTCD,AKICONDI,FATEST,AKI-Conditions,,,,,,,,YESNO,AE Requiring Additional Data,VersioningCheckSubGroup
+DisplayCheckTopic,AE REQUIRING ADDITIONAL DATA,ACUTE KIDNEY INJURY CONDITIONS,AKICONDI,FA,DisplayActivity,DisplayInstance,,,,,Test,CATEGORIC FINDING,FINDINGS,FATESTCD,AKICONDI,FATEST,AKI-Conditions,,,,,,,,YESNO,DisplayGroup,DisplaySubGroup

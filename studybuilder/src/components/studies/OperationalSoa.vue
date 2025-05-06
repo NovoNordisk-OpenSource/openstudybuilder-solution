@@ -188,7 +188,6 @@ import study from '@/api/study'
 import { useAccessGuard } from '@/composables/accessGuard'
 import { useStudiesGeneralStore } from '@/stores/studies-general'
 import { useSoaContentLoadingStore } from '@/stores/soa-content-loading'
-import exportLoader from '@/utils/exportLoader'
 import soaDownloads from '@/utils/soaDownloads'
 
 export default {
@@ -350,7 +349,7 @@ export default {
       this.soaContentLoadingStore.changeLoadingState()
       const resp = await study.getStudyProtocolFlowchart(
         this.selectedStudy.uid,
-        { operational: true }
+        { layout: 'operational' }
       )
       let currentSoaGroup
       let currentGroup

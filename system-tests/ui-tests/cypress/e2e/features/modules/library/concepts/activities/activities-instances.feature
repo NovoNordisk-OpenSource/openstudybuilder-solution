@@ -4,6 +4,9 @@ Feature: Library - Activities Instances
     As a user, I want to manage every Activity Instances in the Concepts Library
     Background: User must be logged in
         Given The user is logged in
+        When The '/administration' page is opened
+        And The 'Feature flags' button is clicked
+        Then Activity instance wizard feature flag is turned off
 
     Scenario: User must be able to navigate to the Activities Instances page
         Given The '/library' page is opened
@@ -61,7 +64,7 @@ Feature: Library - Activities Instances
         When The Add Activity Instance button is clicked
         And Activity selection is not made
         Then The user is not able to continue
-        And The message is displayed as 'This field is required' in the Activity field
+        And The validation message appears for Activity field
         When Activity selected but Activity group does not select
         Then The user is not able to continue
         And The pop up displays 'You need to choose at least one Activity Grouping'
@@ -71,7 +74,7 @@ Feature: Library - Activities Instances
         When The Add Activity Instance button is clicked
         And The Activity instance class does not select any data
         Then The user is not able to continue
-        And The message is displayed as 'This field is required' in the class field
+        And The validation message appears for class field
 
     Scenario: User must not be able to save the fom of new activity instance without mandatory fields of 'Activity instance name', 'Sentence case name', 'Definition' and 'Topic code'
         Given The '/library/activities/activity-instances' page is opened
@@ -82,105 +85,156 @@ Feature: Library - Activities Instances
 
     Scenario: System must default value for 'Sentence case name' to lower case value of 'Activity instance name'
         Given The '/library/activities/activity-instances' page is opened
-        When The user is editing an activity instance
+        When The user fills group and class instance data
         And The user enters a value for Activity instance name
         Then The field for Sentence case name will be defaulted to the lower case value of the Activity instance name
 
     Scenario: System must ensure value of 'Sentence case name' independent of case is identical to the value of 'Activity instance name'
         Given The '/library/activities/activity-instances' page is opened
-        When The user is editing an activity instance
+        When The user fills group and class instance data
         And The user define a value for Sentence case name and it is not identical to the value of Activity instance name
         Then The user is not able to save
-        And The message is displayed as 'Sentence case name value must be identical to name value' in the Sentence case name field
+        And The validation message appears for sentance case name that it is not identical to name
 
     Scenario: User must be able to add a new version for the approved Activity Instance
         Given The '/library/activities/activity-instances' page is opened
-        And The test Activity Instance item exists with a status as Final
+        And [API] Activity Instance in status Draft exists
+        And [API] Activity Instance is approved
+        And Activity Instance is found
         When The 'New version' option is clicked from the three dot menu list
-        Then The activity instance has status 'Draft' and version '1.1'
+        Then The item has status 'Draft' and version '1.1'
 
     Scenario: User must be able to inactivate the approved version of the Activity Instance
         Given The '/library/activities/activity-instances' page is opened
-        And The test Activity Instance item exists with a status as Final
+         And [API] Activity Instance in status Draft exists
+        And [API] Activity Instance is approved
+        And Activity Instance is found
         When The 'Inactivate' option is clicked from the three dot menu list
-        Then The activity instance has status 'Retired' and version '1.0'
+        Then The item has status 'Retired' and version '1.0'
 
     Scenario: User must be able to reactivate the inactivated version of the Activity Instance
         Given The '/library/activities/activity-instances' page is opened
-        And The test Activity Instance item exists with a status as Retired
+        And [API] Activity Instance in status Draft exists
+        And [API] Activity Instance is approved
+        And [API] Activity Instance is inactivated
+        And Activity Instance is found
         When The 'Reactivate' option is clicked from the three dot menu list
-        Then The activity instance has status 'Final' and version '1.0'
+        Then The item has status 'Final' and version '1.0'
 
     Scenario: User must be able to edit the drafted version of the Activity Instance
         Given The '/library/activities/activity-instances' page is opened
-        And The test Activity Instance item exists with a status as Draft
+        And [API] Activity Instance in status Draft exists
+        And Activity Instance is found
         When The 'Edit' option is clicked from the three dot menu list
         Then The activity instance is edited
-        And The activity instance has status 'Draft' and version '0.2'
+        And The item has status 'Draft' and version '0.2'
 
     Scenario: User must be able to edit and approve new version of Activity Instance
         Given The '/library/activities/activity-instances' page is opened
-        And The test Activity Instance item exists with a status as Final
+        And [API] Activity Instance in status Draft exists
+        And [API] Activity Instance is approved
+        And Activity Instance is found
         When The 'New version' option is clicked from the three dot menu list
-        Then The activity instance has status 'Draft' and version '1.1'
+        Then The item has status 'Draft' and version '1.1'
         When The 'Edit' option is clicked from the three dot menu list
         And The activity instance is edited
-        Then The activity instance has status 'Draft' and version '1.2'
+        Then The item has status 'Draft' and version '1.2'
         When The 'Approve' option is clicked from the three dot menu list
-        Then The activity instance has status 'Final' and version '2.0'
+        Then The item has status 'Final' and version '2.0'
 
     Scenario: User must be able to Approve the drafted version of the Activity Instance
         Given The '/library/activities/activity-instances' page is opened
-        And The test Activity Instance item exists with a status as Draft
+        And [API] Activity Instance in status Draft exists
+        And Activity Instance is found
         When The 'Approve' option is clicked from the three dot menu list
-        Then The activity instance has status 'Final' and version '1.0'
+        Then The item has status 'Final' and version '1.0'
 
     Scenario: User must be able to Delete the intial created version of the activity Instance
         Given The '/library/activities/activity-instances' page is opened
-        And The test Activity Instance item exists with a status as Draft
+        And [API] Activity Instance in status Draft exists
+        And Activity Instance is found
         When The 'Delete' option is clicked from the three dot menu list
         Then The activity instance is no longer available
+
+    Scenario: User must not be able to create activity instance linked to Draft activity until it is approved
+        Given The '/library/activities/activity-instances' page is opened
+        And [API] Study Activity is created
+        And Activity name created through API is found
+        And The Add Activity Instance button is clicked
+        And The Activity created through API is selected
+        And The validation error for activity in not allowed state is displayed
+        When Fullscreen wizard is closed by clicking cancel button
+        And Action is confirmed by clicking continue
+        And [API] Activity is approved
+        Then The activity instance data with custom activity is filled in and saved
+
+    Scenario: User must not be able to create activity instance linked to Retired activity until it is approved
+        Given The '/library/activities/activity-instances' page is opened
+        And [API] Study Activity is created
+        And [API] Activity is approved
+        And [API] Activity is inactivated
+        And Activity name created through API is found
+        And The Add Activity Instance button is clicked
+        And The Activity created through API is selected
+        And The validation error for activity in not allowed state is displayed
+        When Fullscreen wizard is closed by clicking cancel button
+        And Action is confirmed by clicking continue
+        And [API] Activity is reactivated
+        Then The activity instance data with custom activity is filled in and saved
 
     Scenario: User must be able to Cancel creation of the activity instance
         Given The '/library/activities/activity-instances' page is opened
         And The activity instance form is filled with data
         When Fullscreen wizard is closed by clicking cancel button
-        And Cancelation is confirmed by clicking continue
+        And Action is confirmed by clicking continue
         Then The form is no longer available
         And The activity instance is not created
 
     Scenario: User must be able to Cancel edition of the activity instance
         Given The '/library/activities/activity-instances' page is opened
-        And The test Activity Instance item exists with a status as Draft
+        And [API] Activity Instance in status Draft exists
+        And Activity Instance is found
         When The 'Edit' option is clicked from the three dot menu list
         When The activity instance edition form is filled with data
         And Fullscreen wizard is closed by clicking cancel button
-        And Cancelation is confirmed by clicking continue
+        And Action is confirmed by clicking continue
         Then The form is no longer available
         And The activity instance is not edited
 
     Scenario: User must only have access to aprove, edit, delete, history actions for Drafted version of the activity instance
         Given The '/library/activities/activity-instances' page is opened
-        And The test Activity Instance item exists with a status as Draft
+        And [API] Activity Instance in status Draft exists
+        And Activity Instance is found
         Then The item actions button is clicked
         Then Only actions that should be avaiable for the Draft item are displayed
 
     Scenario: User must only have access to new version, inactivate, history actions for Final version of the activity instance
         Given The '/library/activities/activity-instances' page is opened
-        And The test Activity Instance item exists with a status as Final
+        And [API] Activity Instance in status Draft exists
+        And [API] Activity Instance is approved
+        And Activity Instance is found
         Then The item actions button is clicked
         Then Only actions that should be avaiable for the Final item are displayed
 
     Scenario: User must only have access to reactivate, history actions for Retired version of the activity instance
         Given The '/library/activities/activity-instances' page is opened
-        And The test Activity Instance item exists with a status as Retired
+        And [API] Activity Instance in status Draft exists
+        And [API] Activity Instance is approved
+        And [API] Activity Instance is inactivated
+        And Activity Instance is found
         Then The item actions button is clicked
         Then Only actions that should be avaiable for the Retired item are displayed
 
+    Scenario: User must not be able to create two activities instances with the same topic codes
+        Given The '/library/activities/activity-instances' page is opened
+        And [API] Activity Instance in status Draft exists
+        And Second activity instance data is created with the same topic code
+        Then Activity instance cannot be saved
+
     Scenario: User must be able to search created activity instance
         Given The '/library/activities/activity-instances' page is opened
-        When First activity instance for search test is created
-        And Second activity instance for search test is created
+        When [API] First activity instance for search test is created
+        And [API] Second activity instance for search test is created
         Then One activity instance is found after performing full name search
         And More than one item is found after performing partial name search 
 
@@ -196,6 +250,11 @@ Feature: Library - Activities Instances
         And The item is not found and table is correctly filtered
         And The user changes status filter value to 'Draft'
         Then More than one item is found after performing partial name search
+
+    Scenario: User must be able to search item ignoring case sensitivity
+        Given The '/library/activities/activity-instances' page is opened
+        When The existing item in search by lowercased name
+        And More than one result is found
 
     Scenario Outline: User must be able to filter the table by text fields
         Given The '/library/activities/activity-instances' page is opened

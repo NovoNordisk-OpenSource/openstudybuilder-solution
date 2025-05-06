@@ -99,3 +99,5 @@ On the activity instance level, the Topic Code and ADaM Parameter Code are visua
 *<p style="text-align: left;">Figure 2 Operational SoA table</p>*
 
 
+
+

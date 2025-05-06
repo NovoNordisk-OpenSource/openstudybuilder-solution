@@ -604,8 +604,10 @@ export default {
         (item) => item.footnote.uid === studyFootnote.footnote.uid
       )
       if (!selected && this.currentStudyFootnotes.length) {
-        selected = this.currentStudyFootnotes.find(
-          (item) => item.footnote ? item.footnote.uid === studyFootnote.uid : item.template.uid === studyFootnote.uid
+        selected = this.currentStudyFootnotes.find((item) =>
+          item.footnote
+            ? item.footnote.uid === studyFootnote.uid
+            : item.template.uid === studyFootnote.uid
         )
       }
       return selected !== undefined

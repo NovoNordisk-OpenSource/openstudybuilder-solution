@@ -17,4 +17,5 @@ MERGE (VariableValue:ConceptValue:SdtmVariableValue {oid: row.column, name: row.
 MERGE (DomainRoot)-[r2:LATEST_DRAFT {change_description:'Initial version', start_date:datetime(), status:'Draft', author_id:'ndsj', version:'0.1'}]->(VariableRoot)
 MERGE (VariableRoot)-[r3:LATEST]->(DomainValue);
 
-https://dev.azure.com/novonordiskit/Clinical-MDR/_git/studybuilder?version=GB835659-crf-form-page
+https://dev.azure.com/orgremoved/Clinical-MDR/_git/studybuilder?version=GB835659-crf-form-page
+

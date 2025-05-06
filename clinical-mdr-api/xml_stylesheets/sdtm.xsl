@@ -494,7 +494,7 @@
         <xsl:choose>
           <xsl:when test="./osb:SdtmMetadata/osb:Sdtm">
             <xsl:for-each select="./osb:SdtmMetadata/osb:Sdtm">
-              <h4><span class="badge" style="background-color:{@DomainColor} border: 1px solid #000;"><b><xsl:value-of select="./@SdtmDomain" /></b></span>&#160;</h4>
+              <h4><span class="badge" style="background-color:{@DomainColor} !important; border: 1px solid #000;"><b><xsl:value-of select="./@SdtmDomain" /></b></span>&#160;</h4>
             </xsl:for-each>
           </xsl:when>
           <xsl:when test="./Alias/@Context = 'CDASH/SDTM'">
@@ -646,7 +646,7 @@
               </span><br />
             </xsl:when>
             <xsl:otherwise>
-              <span class="badge-ig" style="background-color:{$itemBg} border: 1px solid #000; color:black;">
+              <span class="badge-ig" style="background-color:{$itemBg} !important! border: 1px solid #000; color:black;">
                 <xsl:value-of select = "normalize-space(concat(substring-before(substring-before($remaining-string,$pattern),':'),' (', substring-after(substring-before($remaining-string,$pattern),':'),')'))"/>
               </span><br />
             </xsl:otherwise>
@@ -672,7 +672,7 @@
               </span><br />
             </xsl:when>
             <xsl:when test="$remaining-string != ''">
-              <span class="badge-ig" style="background-color:{$itemBg} border: 1px solid #000; color:black;">
+              <span class="badge-ig" style="background-color:{$itemBg} !important; border: 1px solid #000; color:black;">
                 <xsl:value-of select = "normalize-space(concat(substring-before($remaining-string,':'),' (', substring-after($remaining-string,':'),')'))" />
               </span><br />
             </xsl:when>
@@ -718,12 +718,12 @@
         <split-item>
           <xsl:choose>
             <xsl:when test="contains($remaining-string,'Note')">
-              <span class="badge" style="background-color:{$itemBg} border: 1px dotted #000; color:black;">
+              <span class="badge" style="background-color:{$itemBg} !important; border: 1px dotted #000; color:black;">
                 <xsl:value-of select = "normalize-space(substring-before($remainingstrg,$pattern))"/>
               </span>&#160;
             </xsl:when>
             <xsl:otherwise>
-              <span class="badge" style="background-color:{$itemBg} border: 1px solid #000; color:black;">
+              <span class="badge" style="background-color:{$itemBg}! important; border: 1px solid #000; color:black;">
                 <xsl:value-of select = "normalize-space(substring-before($remainingstrg,$pattern))"/>
               </span>&#160;
             </xsl:otherwise>
@@ -739,7 +739,7 @@
         <split-item>
           <xsl:choose>
             <xsl:when test="contains($remaining-string,'Note')">
-              <span class="badge" style="background-color:{$itemBg} border: 1px dotted #000; color:black;">
+              <span class="badge" style="background-color:{$itemBg} !important; border: 1px dotted #000; color:black;">
                 <xsl:value-of select = "normalize-space($remainingstrg)"/>
               </span>&#160;
             </xsl:when>
@@ -749,7 +749,7 @@
               </span>&#160;
             </xsl:when>
             <xsl:otherwise>
-              <span class="badge" style="background-color:{$itemBg} border: 1px solid #000; color:black;">
+              <span class="badge" style="background-color:{$itemBg} !important; border: 1px solid #000; color:black;">
                 <xsl:value-of select = "normalize-space($remainingstrg)"/>
               </span>&#160;
             </xsl:otherwise>

@@ -114,9 +114,7 @@
               item-value="uid"
               density="compact"
               clearable
-              :disabled="
-                group ? false : true
-              "
+              :disabled="group ? false : true"
               :rules="[formRules.required]"
               return-object
             />
@@ -387,9 +385,7 @@ export default {
       }
       this.filteredSubGroups = this.subGroups.filter(
         (el) =>
-          el.activity_groups.find(
-            (o) => o.uid === this.group.uid
-          ) !== undefined
+          el.activity_groups.find((o) => o.uid === this.group.uid) !== undefined
       )
     },
     getObserver(step) {
@@ -402,12 +398,11 @@ export default {
     },
     async submit() {
       this.form.library_name = libConstants.LIBRARY_SPONSOR
-      this.form.name_sentence_case =
-        this.form.name.charAt(0).toUpperCase() + this.form.name.slice(1)
       this.form.activity_request_uid = this.editedActivity.uid
       if (this.subgroup) {
         this.form.activity_subgroup = this.subgroup.uid
-        this.form.activity_groupings[0].activity_subgroup_uid = this.subgroup.uid
+        this.form.activity_groupings[0].activity_subgroup_uid =
+          this.subgroup.uid
       }
       if (this.group) {
         this.form.activity_group = this.group.uid
@@ -440,25 +435,26 @@ export default {
       await activities.get({ page_size: 0 }, 'activity-groups').then((resp) => {
         this.groups = resp.data.items
       })
-      await activities.get({ page_size: 0 }, 'activity-sub-groups').then((resp) => {
-        this.subGroups = resp.data.items
-        this.subgroup = this.subGroups.find(
-          (sg) =>
-            sg.uid === this.activity.activity_groupings[0].activity_subgroup_uid
-        )
-      })
+      await activities
+        .get({ page_size: 0 }, 'activity-sub-groups')
+        .then((resp) => {
+          this.subGroups = resp.data.items
+          this.subgroup = this.subGroups.find(
+            (sg) =>
+              sg.uid ===
+              this.activity.activity_groupings[0].activity_subgroup_uid
+          )
+        })
       if (this.subGroups.length > 0) {
         this.group = this.groups.find(
           (sg) =>
-            sg.uid ===
-            this.activity.activity_groupings[0].activity_group_uid
+            sg.uid === this.activity.activity_groupings[0].activity_group_uid
         )
 
         this.filterSubGroups()
         this.subgroup = this.subGroups.find(
           (sg) =>
-            sg.uid ===
-            this.activity.activity_groupings[0].activity_subgroup_uid
+            sg.uid === this.activity.activity_groupings[0].activity_subgroup_uid
         )
       }
     },

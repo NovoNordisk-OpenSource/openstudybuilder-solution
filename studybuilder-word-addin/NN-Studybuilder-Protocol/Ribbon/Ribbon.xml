@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<customUI xmlns="http://schemas.microsoft.com/office/2009/07/customui" onLoad="Ribbon_Load">
+  <ribbon>
+    <tabs>
+      <tab id="studybuilder" label="StudyBuilder" keytip="NNP" insertAfterMso="TabView">
+        <group id="StudyBuilderGrp" label="StudyBuilder">
+          <button id="BtnNavigator" label="Select Study &amp;&amp; Version" onAction="BtnNavigator_Click" imageMso="TableOfContentsDialog" size="large" getEnabled="BtnNavigator_Enabled" getScreentip="BtnNavigator_Screentip" />
+          <button id="btnUpdate" label="Get Data" onAction="BtnUpdate_Click" imageMso="DocumentTemplate" size="large" getEnabled="BtnUpdate_Enabled" getScreentip="BtnUpdate_Screentip"  />
+          <toggleButton id="BtnToggleContentControlStartEndTag2" label="Start/End tags visible" getSupertip="BtnToggleContentControlStartEndTag_Supertip" getScreentip="BtnToggleContentControlStartEndTag_Screentip" onAction="BtnToggleContentControlStartEndTag_Click" imageMso="ZoomPageWidth" size="large" getPressed="BtnToggleContentControlStartEndTag_GetPressed" />
+          <button id="BtnRemoveContentControls" label="Remove SB Content Controls" onAction="BtnRemoveContentControls_Click" imageMso="CatalogMergeExcludeSelectedRecord" size="large" getScreentip="BtnRemoveContentControls_Screentip"  />
+          <button id="BtnAboutStudyBuilder" label="About" screentip="See version info for StudyBuilder" onAction="BtnAboutStudyBuilder_Click" imageMso="Help" size="large" />
+        </group>
+      </tab>
+    </tabs>
+  </ribbon>
+</customUI>

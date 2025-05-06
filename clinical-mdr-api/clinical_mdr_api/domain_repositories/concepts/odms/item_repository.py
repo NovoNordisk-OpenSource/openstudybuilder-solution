@@ -38,7 +38,7 @@ from clinical_mdr_api.domains.versioned_object_aggregate import (
 )
 from clinical_mdr_api.models.concepts.odms.odm_item import OdmItem
 from common.exceptions import NotFoundException
-from common.utils import convert_to_datetime
+from common.utils import convert_to_datetime, version_string_to_tuple
 
 
 class ItemRepository(OdmGenericRepository[OdmItemAR]):
@@ -150,7 +150,7 @@ class ItemRepository(OdmGenericRepository[OdmItemAR]):
         return odm_item_ar
 
     def specific_alias_clause(
-        self, only_specific_status: str = ObjectStatus.LATEST.name
+        self, only_specific_status: str = ObjectStatus.LATEST.name, **kwargs
     ) -> str:
         return f"""
 WITH *,
@@ -314,7 +314,7 @@ apoc.coll.toSet([vendor_element_attribute in vendor_element_attributes | vendor_
         rels = [rel for rel in all_rels if rel.status == status.value]
         if len(rels) == 0:
             raise RuntimeError(f"No HAS_VERSION was found with status {status}")
-        latest = max(rels, key=lambda r: float(r.version))
+        latest = max(rels, key=lambda r: version_string_to_tuple(r.version))
         return latest
 
     def find_term_with_item_relation_by_item_uid(self, uid: str, term_uid: str):

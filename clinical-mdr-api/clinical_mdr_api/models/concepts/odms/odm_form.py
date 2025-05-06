@@ -2,6 +2,7 @@ from typing import Annotated, Callable, Self
 
 from pydantic import Field
 
+from clinical_mdr_api.descriptions.general import CHANGES_FIELD_DESC
 from clinical_mdr_api.domains.concepts.activities.activity_group import ActivityGroupAR
 from clinical_mdr_api.domains.concepts.odms.alias import OdmAliasAR
 from clinical_mdr_api.domains.concepts.odms.description import OdmDescriptionAR
@@ -53,12 +54,17 @@ from common.utils import booltostr
 
 
 class OdmForm(ConceptModel):
-    oid: Annotated[str | None, Field(nullable=True)] = None
-    repeating: Annotated[str | None, Field(nullable=True)] = None
-    sdtm_version: Annotated[str | None, Field(nullable=True)] = None
-    scope: Annotated[SimpleCTTermAttributes | None, Field(nullable=True)] = None
+    oid: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    repeating: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    sdtm_version: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
+    scope: Annotated[
+        SimpleCTTermAttributes | None, Field(json_schema_extra={"nullable": True})
+    ] = None
     descriptions: Annotated[
-        list[OdmDescriptionSimpleModel] | None, Field(nullable=True)
+        list[OdmDescriptionSimpleModel] | None,
+        Field(json_schema_extra={"nullable": True}),
     ] = None
     aliases: list[OdmAliasSimpleModel]
     activity_groups: list[ActivityHierarchySimpleModel]
@@ -227,18 +233,20 @@ class OdmFormRefModel(BaseModel):
         return odm_form_ref_model
 
     uid: Annotated[str, Field()]
-    name: Annotated[str | None, Field(nullable=True)] = None
-    order_number: Annotated[int | None, Field(nullable=True)] = None
-    mandatory: Annotated[str | None, Field(nullable=True)] = None
-    locked: Annotated[str | None, Field(nullable=True)] = None
-    collection_exception_condition_oid: Annotated[str | None, Field(nullable=True)] = (
+    name: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    order_number: Annotated[int | None, Field(json_schema_extra={"nullable": True})] = (
         None
     )
+    mandatory: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    locked: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    collection_exception_condition_oid: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
 
 
 class OdmFormPostInput(ConceptPostInput):
-    oid: str | None
-    sdtm_version: str | None
+    oid: Annotated[str | None, Field(min_length=1)] = None
+    sdtm_version: str | None = None
     repeating: Annotated[str, Field(min_length=1)]
     scope_uid: str | None = None
     descriptions: list[OdmDescriptionPostInput | str]
@@ -246,7 +254,7 @@ class OdmFormPostInput(ConceptPostInput):
 
 
 class OdmFormPatchInput(ConceptPatchInput):
-    oid: str | None
+    oid: Annotated[str | None, Field(min_length=1)]
     sdtm_version: str | None
     repeating: str | None
     scope_uid: str | None
@@ -256,9 +264,9 @@ class OdmFormPatchInput(ConceptPatchInput):
 
 class OdmFormItemGroupPostInput(PostInputModel):
     uid: Annotated[str, Field(min_length=1)]
-    order_number: Annotated[int, Field(gt=0, lt=config.MAX_INT_NEO4J)]
+    order_number: Annotated[int, Field(lt=config.MAX_INT_NEO4J)]
     mandatory: Annotated[str, Field(min_length=1)]
-    collection_exception_condition_oid: str | None
+    collection_exception_condition_oid: str | None = None
     vendor: OdmRefVendorPostInput
 
 
@@ -272,12 +280,8 @@ class OdmFormVersion(OdmForm):
     """
 
     changes: Annotated[
-        dict[str, bool] | None,
+        list[str],
         Field(
-            description=(
-                "Denotes whether or not there was a change in a specific field/property compared to the previous version. "
-                "The field names in this object here refer to the field names of the objective (e.g. name, start_date, ..)."
-            ),
-            nullable=True,
+            description=CHANGES_FIELD_DESC,
         ),
-    ] = None
+    ] = []

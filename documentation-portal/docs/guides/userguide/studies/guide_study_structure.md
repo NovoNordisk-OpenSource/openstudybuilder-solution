@@ -138,3 +138,5 @@ In the section below Study Structure, the section **View Specification** is avai
 ![Screenshot - SDTM Trial Summary View](~@source/images/user_guides/guide_sstruct_09.png)
 
 Figure 9: SDTM Trial Summary View
+
+

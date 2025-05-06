@@ -14,3 +14,4 @@ As an example see below diagram for Objectives Templates data domain – sub par
 A detailed description of the domain data model by each API endpoint, or data domain, is available here:
 
 [![Diagram: Domain Model Objective Templates](~@source/images/model/domain_data_model/domain-model.png)](../../images/model/domain_data_model/domain-model.png)
+

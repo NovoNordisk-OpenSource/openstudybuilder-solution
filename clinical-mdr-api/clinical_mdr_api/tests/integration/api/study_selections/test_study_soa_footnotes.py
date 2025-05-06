@@ -2,6 +2,7 @@
 Tests for /studies/{study_uid}/study-soa-footnotes endpoints
 """
 
+import copy
 import json
 import logging
 from functools import reduce
@@ -48,7 +49,7 @@ from clinical_mdr_api.tests.integration.utils.factory_visit import (
     create_study_visit_codelists,
     generate_default_input_data_for_visit,
 )
-from clinical_mdr_api.tests.integration.utils.utils import TestUtils
+from clinical_mdr_api.tests.integration.utils.utils import PROJECT_NUMBER, TestUtils
 from clinical_mdr_api.tests.utils.checks import assert_response_status_code
 
 # pylint: disable=unused-argument
@@ -1003,9 +1004,11 @@ def test_audit_trail_specific_soa_footnote(api_client):
     res = response.json()
 
     assert len(res) == 3
-    assert res[0]["changes"]["order"] is True
-    assert res[1]["changes"]["referenced_items"] is True
-    assert res[-1]["changes"] == {}
+    assert set(res[0]["changes"]) == set(["order", "start_date", "end_date"])
+    assert set(res[1]["changes"]) == set(
+        ["referenced_items", "change_type", "start_date", "end_date"]
+    )
+    assert res[-1]["changes"] == []
 
 
 def test_add_footnotes_to_subgroup_and_group(api_client):
@@ -1378,3 +1381,164 @@ def test_update_footnote_library_items_of_relationship_to_value_nodes(api_client
     assert_response_status_code(response, 200)
     res = response.json()
     assert len(res) == counting_before_sync + 1
+
+    study_cloned = api_client.post(
+        f"/studies/{study.uid}/clone",
+        json={
+            "study_number": "6675",
+            "study_acronym": "6675",
+            "project_number": PROJECT_NUMBER,
+            "description": "6675",
+            "copy_study_arm": True,
+            "copy_study_branch_arm": True,
+            "copy_study_cohort": True,
+            "copy_study_element": True,
+            "copy_study_visit": False,
+            "copy_study_epoch": True,
+            "copy_study_visits_study_footnote": False,
+            "copy_study_epochs_study_footnote": True,
+            "copy_study_design_matrix": True,
+        },
+    ).json()
+    # get all
+    cloned_footnotes = api_client.get(
+        f"/studies/{study_cloned['uid']}/study-soa-footnotes"
+    ).json()
+    cloned_footnotes_any = copy.deepcopy(cloned_footnotes)
+    for i, _ in enumerate(cloned_footnotes_any["items"]):
+        cloned_footnotes_any["items"][i]["study_version"] = mock.ANY
+        cloned_footnotes_any["items"][i]["study_uid"] = mock.ANY
+        cloned_footnotes_any["items"][i]["modified"] = mock.ANY
+        cloned_footnotes_any["items"][i]["uid"] = mock.ANY
+        for j, __ in enumerate(cloned_footnotes_any["items"][i]["referenced_items"]):
+            cloned_footnotes_any["items"][i]["referenced_items"][j][
+                "item_uid"
+            ] = mock.ANY
+    # Fetch footnotes for the original study
+    final_footnotes = api_client.get(f"/studies/{study.uid}/study-soa-footnotes").json()
+
+    # Standardize original footnotes and filter unwanted items
+    normalized_footnotes = []
+    for footnote in final_footnotes["items"]:
+        if footnote["uid"] == "StudySoAFootnote_000003":
+            continue  # Skip specific footnote
+        if [
+            True
+            for item in footnote["referenced_items"]
+            if item["item_type"] in {"StudyActivityGroup", "StudyVisit"}
+        ]:
+            continue
+        footnote.update(
+            {
+                "study_version": mock.ANY,
+                "study_uid": mock.ANY,
+                "modified": mock.ANY,
+                "uid": mock.ANY,
+            }
+        )
+
+        footnote["referenced_items"] = [
+            {**item, "item_uid": mock.ANY}
+            for item in footnote["referenced_items"]
+            if item["item_type"] not in {"StudyActivityGroup", "StudyVisit"}
+        ]
+
+        normalized_footnotes.append(footnote)
+
+    # Assign filtered list back to final_footnotes
+    final_footnotes["items"] = normalized_footnotes
+
+    # Validate that the cloned study matches the original after processing
+    assert cloned_footnotes_any == final_footnotes
+
+    study_cloned = api_client.post(
+        f"/studies/{study.uid}/clone",
+        json={
+            "study_number": "6676",
+            "study_acronym": "6676",
+            "project_number": PROJECT_NUMBER,
+            "description": "6676",
+            "copy_study_arm": True,
+            "copy_study_branch_arm": True,
+            "copy_study_cohort": True,
+            "copy_study_element": True,
+            "copy_study_visit": False,
+            "copy_study_epoch": False,
+            "copy_study_visits_study_footnote": False,
+            "copy_study_epochs_study_footnote": False,
+            "copy_study_design_matrix": False,
+        },
+    ).json()
+    # get all
+    cloned_footnotes = api_client.get(
+        f"/studies/{study_cloned['uid']}/study-soa-footnotes"
+    ).json()
+    assert cloned_footnotes["items"] == []
+
+    study_cloned = api_client.post(
+        f"/studies/{study.uid}/clone",
+        json={
+            "study_number": "6677",
+            "study_acronym": "6677",
+            "project_number": PROJECT_NUMBER,
+            "description": "6677",
+            "copy_study_arm": True,
+            "copy_study_branch_arm": True,
+            "copy_study_cohort": True,
+            "copy_study_element": True,
+            "copy_study_visit": True,
+            "copy_study_epoch": True,
+            "copy_study_visits_study_footnote": True,
+            "copy_study_epochs_study_footnote": True,
+            "copy_study_design_matrix": True,
+        },
+    ).json()
+    # get all
+    cloned_footnotes = api_client.get(
+        f"/studies/{study_cloned['uid']}/study-soa-footnotes"
+    ).json()
+    cloned_footnotes_any = copy.deepcopy(cloned_footnotes)
+    for i, _ in enumerate(cloned_footnotes_any["items"]):
+        cloned_footnotes_any["items"][i]["study_version"] = mock.ANY
+        cloned_footnotes_any["items"][i]["study_uid"] = mock.ANY
+        cloned_footnotes_any["items"][i]["modified"] = mock.ANY
+        cloned_footnotes_any["items"][i]["uid"] = mock.ANY
+        for j, __ in enumerate(cloned_footnotes_any["items"][i]["referenced_items"]):
+            cloned_footnotes_any["items"][i]["referenced_items"][j][
+                "item_uid"
+            ] = mock.ANY
+    # Fetch footnotes for the original study
+    final_footnotes = api_client.get(f"/studies/{study.uid}/study-soa-footnotes").json()
+
+    # Standardize original footnotes and filter unwanted items
+    normalized_footnotes = []
+    for footnote in final_footnotes["items"]:
+        if footnote["uid"] == "StudySoAFootnote_000003":
+            continue  # Skip specific footnote
+        if [
+            True
+            for item in footnote["referenced_items"]
+            if item["item_type"] in {"StudyActivityGroup"}
+        ]:
+            continue
+        footnote.update(
+            {
+                "study_version": mock.ANY,
+                "study_uid": mock.ANY,
+                "modified": mock.ANY,
+                "uid": mock.ANY,
+            }
+        )
+
+        footnote["referenced_items"] = [
+            {**item, "item_uid": mock.ANY}
+            for item in footnote["referenced_items"]
+            if item["item_type"] not in {"StudyActivityGroup"}
+        ]
+
+        normalized_footnotes.append(footnote)
+
+    # Assign filtered list back to final_footnotes
+    final_footnotes["items"] = normalized_footnotes
+    # Validate that the cloned study matches the original after processing
+    assert cloned_footnotes_any == final_footnotes

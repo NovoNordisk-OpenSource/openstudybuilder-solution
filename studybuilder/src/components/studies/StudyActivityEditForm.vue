@@ -123,8 +123,6 @@ const form = ref({})
 const working = ref(false)
 const observer = ref()
 
-const helpItems = []
-
 const library = computed(() => {
   return props.studyActivity && props.studyActivity.activity
     ? props.studyActivity.activity.library_name
@@ -136,12 +134,32 @@ const activity = computed(() => {
 })
 
 const groups = computed(() => {
-  return props.studyActivity.activity.activity_groupings.map(grouping => ({ activity_group_name: grouping.activity_group_name, activity_group_uid: grouping.activity_group_uid }))
+  let groups = props.studyActivity.activity.activity_groupings.map(
+    (grouping) => ({
+      activity_group_name: grouping.activity_group_name,
+      activity_group_uid: grouping.activity_group_uid,
+    })
+  )
+  //Removing duplicates
+  groups = groups.filter(
+    (group1, i, arr) =>
+      arr.findIndex(
+        (group2) => group2.activity_group_uid === group1.activity_group_uid
+      ) === i
+  )
+  return groups
 })
 
 const subgroups = computed(() => {
-  const groupings = props.studyActivity.activity.activity_groupings.filter(grouping => grouping.activity_group_uid === form.value.activity_group.activity_group_uid)
-  return groupings.map(grouping => ({ activity_subgroup_name: grouping.activity_subgroup_name, activity_subgroup_uid: grouping.activity_subgroup_uid }))
+  const groupings = props.studyActivity.activity.activity_groupings.filter(
+    (grouping) =>
+      grouping.activity_group_uid ===
+      form.value.activity_group.activity_group_uid
+  )
+  return groupings.map((grouping) => ({
+    activity_subgroup_name: grouping.activity_subgroup_name,
+    activity_subgroup_uid: grouping.activity_subgroup_uid,
+  }))
 })
 
 watch(

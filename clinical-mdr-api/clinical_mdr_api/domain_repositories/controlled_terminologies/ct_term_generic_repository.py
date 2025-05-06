@@ -376,6 +376,7 @@ class CTTermGenericRepository(LibraryItemRepositoryImplBase[_AggregateRootType],
         at_specific_date: datetime | None = None,
         for_update: bool = False,
         codelist_name: str | None = None,
+        include_retired_versions: bool = False,
     ):
         """
         Returns a hash key that will be used for mapping objects stored in cache,
@@ -393,6 +394,7 @@ class CTTermGenericRepository(LibraryItemRepositoryImplBase[_AggregateRootType],
             at_specific_date,
             for_update,
             codelist_name,
+            include_retired_versions,
         )
 
     @cached(
@@ -408,6 +410,7 @@ class CTTermGenericRepository(LibraryItemRepositoryImplBase[_AggregateRootType],
         at_specific_date: datetime | None = None,
         for_update: bool = False,
         codelist_name: str | None = None,
+        include_retired_versions: bool = False,
     ) -> _AggregateRootType | None:
         if not codelist_name:
             ct_term_root: CTTermRoot = CTTermRoot.nodes.get_or_none(uid=term_uid)
@@ -428,6 +431,7 @@ class CTTermGenericRepository(LibraryItemRepositoryImplBase[_AggregateRootType],
                 status=status,
                 for_update=for_update,
                 at_specific_date=at_specific_date,
+                include_retired_versions=include_retired_versions,
             )
         else:
             term_ar = self.find_by_uid_2(
@@ -445,6 +449,7 @@ class CTTermGenericRepository(LibraryItemRepositoryImplBase[_AggregateRootType],
         term_uids: list,
         status: LibraryItemStatus | None = None,
         at_specific_date: datetime | None = None,
+        include_retired_versions: bool = False,
     ) -> list[_AggregateRootType] | None:
         if not term_uids:
             return []
@@ -464,6 +469,7 @@ class CTTermGenericRepository(LibraryItemRepositoryImplBase[_AggregateRootType],
             at_specific_date=at_specific_date,
             filter_by=element_id_filter,
             filter_operator=FilterOperator.OR,
+            include_retired_versions=include_retired_versions,
         )
 
         return term_ars

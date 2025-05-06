@@ -2,16 +2,10 @@ import re
 
 from fastapi import FastAPI
 from fastapi.routing import APIRoute
-from neomodel.sync_.core import db
 
 # Helpers
 from starlette.routing import Mount
 
-# Models
-from clinical_mdr_api.domain_repositories.models.controlled_terminology import (
-    CTCatalogue,
-    Library,
-)
 from clinical_mdr_api.domains.versioned_object_aggregate import LibraryItemStatus
 from clinical_mdr_api.models.study_selections.study import Study
 from clinical_mdr_api.services._meta_repository import MetaRepository
@@ -3486,9 +3480,7 @@ def _create_paths(app: FastAPI, path_prefix="") -> list[dict[str, any]]:
     return paths
 
 
-def inject_base_data(
-    inject_unit_subset: bool = True, inject_more_catalogues: bool = True
-) -> Study:
+def inject_base_data(inject_unit_subset: bool = True) -> Study:
     """
     The data included as generic base data is the following
     - names specified below
@@ -3501,6 +3493,7 @@ def inject_base_data(
         * SNOMED - editable
     * Catalogues :
         * SDTM CT
+        * ADAM CT
     # Codelists
         * Those defined in CT_CODELIST_NAMES/CT_CODELIST_UIDS constants
 
@@ -3524,14 +3517,12 @@ def inject_base_data(
     TestUtils.create_library("Sponsor", True)
     TestUtils.create_library("SNOMED", True)
     TestUtils.create_library(name=config.REQUESTED_LIBRARY_NAME, is_editable=True)
-    with db.write_transaction:
-        sdtm = CTCatalogue(name=config.SDTM_CT_CATALOGUE_NAME).save()
-        cdisc = Library.nodes.get(name=config.CDISC_LIBRARY_NAME)
-        sdtm.contains_catalogue.connect(cdisc)
-        if inject_more_catalogues:
-            sdtm = CTCatalogue(name=config.ADAM_CT_CATALOGUE_NAME).save()
-            cdisc = Library.nodes.get(name=config.CDISC_LIBRARY_NAME)
-            sdtm.contains_catalogue.connect(cdisc)
+    TestUtils.create_ct_catalogue(
+        library=config.CDISC_LIBRARY_NAME, catalogue_name=config.SDTM_CT_CATALOGUE_NAME
+    )
+    TestUtils.create_ct_catalogue(
+        library=config.CDISC_LIBRARY_NAME, catalogue_name=config.ADAM_CT_CATALOGUE_NAME
+    )
     unit_subsets = []
     if inject_unit_subset:
         unit_subset_codelist = TestUtils.create_ct_codelist(

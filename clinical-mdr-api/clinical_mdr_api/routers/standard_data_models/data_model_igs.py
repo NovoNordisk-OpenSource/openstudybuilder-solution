@@ -41,8 +41,8 @@ State after:
     response_model=CustomPage[DataModelIG],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.allow_exports(
@@ -110,11 +110,11 @@ def get_data_model_igs(
     response_model=list[Any],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - Invalid field name specified",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_distinct_values_for_header(
@@ -167,8 +167,8 @@ Possible errors:
     response_model=DataModelIG,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_data_model(data_model_ig_uid: Annotated[str, DataModelIGUID]):

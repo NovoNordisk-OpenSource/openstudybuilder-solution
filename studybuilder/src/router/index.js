@@ -234,6 +234,24 @@ const routes = [
         },
       },
       {
+        path: 'activities/activity-sub-groups/:id/overview/:version?',
+        name: 'SubgroupOverview',
+        component: () => import('../views/library/SubgroupOverview.vue'),
+        meta: { authRequired: true },
+      },
+      {
+        path: 'activities/activity-groups/:id/overview/:version?',
+        name: 'GroupOverview',
+        component: () => import('../views/library/GroupOverview.vue'),
+        meta: { authRequired: true },
+      },
+      {
+        path: 'activities/activities/:id/overview/:version?',
+        name: 'ActivityOverview',
+        component: () => import('../views/library/ActivityOverview.vue'),
+        meta: { authRequired: true },
+      },
+      {
         path: 'activities/:tab?',
         name: 'Activities',
         component: () => import('../views/library/ActivitiesPage.vue'),

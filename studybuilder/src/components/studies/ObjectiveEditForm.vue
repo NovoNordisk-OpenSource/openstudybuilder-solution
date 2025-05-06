@@ -82,8 +82,8 @@ export default {
     },
     library() {
       return {
-            name: constants.LIBRARY_USER_DEFINED,
-          }
+        name: constants.LIBRARY_USER_DEFINED,
+      }
     },
   },
   watch: {

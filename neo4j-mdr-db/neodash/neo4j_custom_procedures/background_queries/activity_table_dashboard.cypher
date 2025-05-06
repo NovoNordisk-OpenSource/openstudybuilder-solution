@@ -758,3 +758,84 @@ with asgrp, ai,vars, aiclass,conceptId, parentConceptId, conceptDefinition, conc
                     ['dataElementConcepts', vars]
                     ]) as activity
 return distinct activity
+
+//Activities used in Studies
+MATCH(act:ActivityValue)<-[r1:HAS_SELECTED_ACTIVITY]-(sa:StudyActivity)<-[r2:HAS_STUDY_ACTIVITY]-(s:StudyValue),
+(sa)-[:STUDY_ACTIVITY_HAS_SCHEDULE]->(sch:StudyActivitySchedule)<-[:STUDY_VISIT_HAS_SCHEDULE]-(vis:StudyVisit)
+where act.name in $neodash_study_activity
+return act.name as Activity, CASE WHEN s.subpart_id is not null THEN s.study_id_prefix+'-'+s.study_number+'-'+s.subpart_id ELSE s.study_id_prefix+'-'+s.study_number END as TrialId, s.study_acronym as `Study Acronym`, vis.short_visit_label as Visit order by Activity, `Study Acronym`, vis.visit_number
+
+//New-Activities used in Studies
+
+call apoc.case([$neodash_operator='OR',
+"MATCH(act:ActivityValue)<-[r1:HAS_SELECTED_ACTIVITY]-(sa:StudyActivity)<-[r2:HAS_STUDY_ACTIVITY]-(s:StudyValue) where act.name in $a
+with distinct s, collect(distinct act.name) as Activities
+return  
+CASE WHEN s.subpart_id is not null THEN s.study_id_prefix+'-'+s.study_number+'-'+s.subpart_id ELSE s.study_id_prefix+'-'+s.study_number END as `Trial ID`, 
+s.study_acronym as `Study Acronym`, Activities
+order by `Trial ID`",
+$neodash_operator='AND',
+"MATCH(act:ActivityValue)<-[r1:HAS_SELECTED_ACTIVITY]-(sa:StudyActivity)<-[r2:HAS_STUDY_ACTIVITY]-(s:StudyValue)
+with s, collect(distinct act.name) as all_activities
+with s, $a as Activities, all_activities where apoc.coll.containsAll(all_activities,$a) 
+return  
+CASE WHEN s.subpart_id is not null THEN s.study_id_prefix+'-'+s.study_number+'-'+s.subpart_id ELSE s.study_id_prefix+'-'+s.study_number END as `Trial ID`, 
+s.study_acronym as `Study Acronym`, Activities
+order by `Trial ID`"], "return null",{a:$neodash_study_activity}) YIELD value
+return value.`Trial ID` as `Trial ID`,
+value.`Study Acronym` as `Study Acronym`,
+value.Activities as Activities
+//version 2
+call apoc.case([$neodash_operator='OR',
+"MATCH(act:ActivityValue)<-[r1:HAS_SELECTED_ACTIVITY]-(sa:StudyActivity)<-[r2:HAS_STUDY_ACTIVITY]-(s:StudyValue) where act.name in $a
+match(sr:StudyRoot)-[r0:HAS_VERSION]->(s:StudyValue)
+with r0, s,collect(distinct act.name) as Activities, CASE WHEN s.subpart_id is not null THEN s.study_id_prefix+'-'+s.study_number+'-'+s.subpart_id ELSE s.study_id_prefix+'-'+s.study_number END as trialid
+with s, Activities,trialid 
+match (sr:StudyRoot)-[r0:HAS_VERSION]->(s)
+OPTIONAL MATCH (sr)-[r1:LATEST]->(s)
+optional match(s)<-[r:AFTER]-(sact:StudyAction)
+with distinct s,Activities,trialid,sr.uid as StudyRoot, collect(r0.status) as statuses ,collect(r0.version) as versions, type(r1) as Latest,sact.date as date order by StudyRoot, sact.date
+with s,Activities,StudyRoot, s.study_acronym as acronym, trialid, split(apoc.temporal.format(date, 'iso_local_date_time'),'.')[0] as Date, case when 'LOCKED' in statuses then 'LOCKED' else 'DRAFT' END as Status,
+apoc.text.join(apoc.coll.toSet(versions),'') as Version,Latest 
+return StudyRoot, trialid, acronym, Date, Version, Latest,Status, Activities, id(s) as sid
+order by trialid",
+$neodash_operator='AND',
+"MATCH(act:ActivityValue)<-[r1:HAS_SELECTED_ACTIVITY]-(sa:StudyActivity)<-[r2:HAS_STUDY_ACTIVITY]-(s:StudyValue)
+with s, collect(distinct act.name) as all_activities
+with s, $a as Activities, all_activities where apoc.coll.containsAll(all_activities,$a) 
+match(sr:StudyRoot)-[r0:HAS_VERSION]->(s:StudyValue)
+with r0, s, Activities, CASE WHEN s.subpart_id is not null THEN s.study_id_prefix+'-'+s.study_number+'-'+s.subpart_id ELSE s.study_id_prefix+'-'+s.study_number END as trialid
+with s, Activities,trialid 
+match (sr:StudyRoot)-[r0:HAS_VERSION]->(s)
+OPTIONAL MATCH (sr)-[r1:LATEST]->(s)
+optional match(s)<-[r:AFTER]-(sact:StudyAction)
+with distinct s,Activities,trialid,sr.uid as StudyRoot, collect(r0.status) as statuses ,collect(r0.version) as versions, type(r1) as Latest,sact.date as date order by StudyRoot, sact.date
+with s,Activities,StudyRoot, s.study_acronym as acronym, trialid, split(apoc.temporal.format(date, 'iso_local_date_time'),'.')[0] as Date, case when 'LOCKED' in statuses then 'LOCKED' else 'DRAFT' END as Status,
+apoc.text.join(apoc.coll.toSet(versions),'') as Version,Latest 
+return StudyRoot, trialid, acronym, Date, Version, Latest,Status, Activities, id(s) as sid
+order by trialid"], "return null",{a:$neodash_study_activity}) YIELD value
+return value.StudyRoot as StudyRoot, 
+value.trialid as `Trial ID`, 
+value.acronym as Acronym, 
+value.Date as Date, 
+value.Version as Version, 
+value.Latest as Latest,
+value.Status as Status, 
+value.Activities as Activities, 
+value.sid as __sid
+
+//SoA
+match(s:StudyValue) where id(s) = toInteger($neodash_study_act_select )
+optional match(s)-[:HAS_STUDY_VISIT]->(vis:StudyVisit)
+optional match(vis)-[:HAS_VISIT_NAME]->(vis_name_root)-[:HAS_VERSION]->(vis_name:VisitNameValue)
+optional match(vis)-[:STUDY_VISIT_HAS_SCHEDULE]->(schedule:StudyActivitySchedule)
+optional match (s)-[:HAS_STUDY_ACTIVITY_SCHEDULE]->(schedule),
+(schedule)<-[:STUDY_ACTIVITY_HAS_SCHEDULE]-(act:StudyActivity),
+(act)-[:HAS_SELECTED_ACTIVITY]->(act_val:ActivityValue),(act)-[:STUDY_ACTIVITY_HAS_STUDY_ACTIVITY_INSTANCE]->(ai_s:StudyActivityInstance)-[:HAS_SELECTED_ACTIVITY_INSTANCE]-(ai:ActivityInstanceValue),
+(ai)-[r1]->(g)<-[r2]-(act_val)
+with distinct schedule,vis.visit_number as `Visit ID`,vis.short_visit_label as `Visit Short Label`, act_val.name as Activity
+where Activity is not null
+return Activity, `Visit ID`, `Visit Short Label` order by schedule.uid
+
+
+

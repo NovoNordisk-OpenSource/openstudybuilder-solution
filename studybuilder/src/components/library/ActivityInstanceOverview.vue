@@ -206,8 +206,32 @@
                   v-for="grouping in itemOverview.activity_groupings"
                   :key="grouping.activity_subgroup_name"
                 >
-                  <td>{{ grouping.activity_group.name }}</td>
-                  <td>{{ grouping.activity_subgroup.name }}</td>
+                  <td>
+                    <router-link
+                      :to="{
+                        name: 'GroupOverview',
+                        params: {
+                          id: grouping.activity_group.uid,
+                          version: grouping.activity_group.version || '1.0',
+                        },
+                      }"
+                    >
+                      {{ grouping.activity_group.name }}
+                    </router-link>
+                  </td>
+                  <td>
+                    <router-link
+                      :to="{
+                        name: 'SubgroupOverview',
+                        params: {
+                          id: grouping.activity_subgroup.uid,
+                          version: grouping.activity_subgroup.version || '1.0',
+                        },
+                      }"
+                    >
+                      {{ grouping.activity_subgroup.name }}
+                    </router-link>
+                  </td>
                 </tr>
               </tbody>
             </v-table>

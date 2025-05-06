@@ -36,6 +36,9 @@ export default {
       params,
     })
   },
+  cloneStudy(studyUid, data) {
+    return repository.post(`${resource}/${studyUid}/clone`, data)
+  },
   deleteStudy(studyUid) {
     return repository.delete(`${resource}/${studyUid}`)
   },
@@ -426,6 +429,13 @@ export default {
       data
     )
   },
+  reorderSoa(studyUid, studySoaGroupUid, order, type) {
+    const data = { new_order: order }
+    return repository.patch(
+      `studies/${studyUid}/${type}/${studySoaGroupUid}/order`,
+      data
+    )
+  },
   async updateStudySoaGroup(studyUid, studySoaGroupUid, data) {
     return repository.patch(
       `studies/${studyUid}/study-soa-groups/${studySoaGroupUid}`,
@@ -477,10 +487,7 @@ export default {
     )
   },
   studyActivitySoaEditsBatchOperations(studyUid, data) {
-    return repository.post(
-      `studies/${studyUid}/soa-edits/batch`,
-      data
-    )
+    return repository.post(`studies/${studyUid}/soa-edits/batch`, data)
   },
   getAllStudyCriteria(params) {
     return repository.get('study-criteria', { params })
@@ -903,5 +910,8 @@ export default {
   },
   getStructureOverview(params) {
     return repository.get(`${resource}/structure-overview`, { params })
+  },
+  getStructureStatistics(studyUid) {
+    return repository.get(`${resource}/${studyUid}/structure-statistics`)
   },
 }

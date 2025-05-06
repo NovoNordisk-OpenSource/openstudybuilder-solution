@@ -35,7 +35,7 @@ class TestCreate(TestCase):
         self.assertEqual(result.name, template_data["name"])
         self.assertEqual(result.status, "Draft")
         self.assertEqual(result.version, "0.1")
-        self.objective_template = result.dict()
+        self.objective_template = result.model_dump()
 
 
 class TestDraftEdit(TestCase):
@@ -50,7 +50,7 @@ class TestDraftEdit(TestCase):
             objective_template
         )
         if isinstance(cls.objective_template, BaseModel):
-            cls.objective_template = cls.objective_template.dict()
+            cls.objective_template = cls.objective_template.model_dump()
 
     def test_edit(self):
         data = {
@@ -62,7 +62,7 @@ class TestDraftEdit(TestCase):
             self.objective_template["uid"], objective_template
         )
         if isinstance(result, BaseModel):
-            result = result.dict()
+            result = result.model_dump()
         self.assertEqual(result["version"], "0.2")
         self.assertEqual(result["status"], "Draft")
         self.assertEqual(result["name"], data["name"])
@@ -76,7 +76,7 @@ class TestDraftEdit(TestCase):
             self.objective_template["uid"], objective_template
         )
         if isinstance(result, BaseModel):
-            result = result.dict()
+            result = result.model_dump()
         self.assertEqual(result["version"], "0.3")
         self.assertEqual(result["status"], "Draft")
         self.assertEqual(result["name"], data["name"])
@@ -94,7 +94,7 @@ class TestApprove(TestCase):
             objective_template
         )
         if isinstance(cls.objective_template, BaseModel):
-            cls.objective_template = cls.objective_template.dict()
+            cls.objective_template = cls.objective_template.model_dump()
 
     def test_approve(self):
         result = service.ObjectiveTemplateService().approve(
@@ -120,7 +120,7 @@ class TestActivation(TestCase):
             objective_template.uid
         )
         if isinstance(cls.objective_template, BaseModel):
-            cls.objective_template = cls.objective_template.dict()
+            cls.objective_template = cls.objective_template.model_dump()
 
     def test_activation(self):
         result = service.ObjectiveTemplateService().inactivate_final(
@@ -158,7 +158,7 @@ class TestSoftDelete(TestCase):
             objective_template
         )
         if isinstance(cls.objective_template, BaseModel):
-            cls.objective_template = cls.objective_template.dict()
+            cls.objective_template = cls.objective_template.model_dump()
 
     def test_softdelete(self):
         service.ObjectiveTemplateService().soft_delete(self.objective_template["uid"])

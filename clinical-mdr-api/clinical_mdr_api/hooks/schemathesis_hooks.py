@@ -11,6 +11,10 @@ EXCLUDED_PATHS = [
     "/listings/libraries/all/gcmd/cdisc-ct-val/headers",
     "/listings/libraries/all/gcmd/topic-cd-def",
     "/epochs/allowed-configs",
+    "/standards/sponsor-models/datasets",
+    "/standards/sponsor-models/datasets/headers",
+    "/standards/sponsor-models/dataset-variables",
+    "/standards/sponsor-models/dataset-variables/headers",
 ]
 
 

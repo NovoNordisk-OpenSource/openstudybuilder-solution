@@ -127,7 +127,7 @@ export default {
         payload.push({
           uid: el.uid ? el.uid : el,
           order_number: index + 1,
-          mandatory: el.mandatory ? el.mandatory : false,
+          mandatory: el.mandatory ? el.mandatory : 'No',
           data_entry_required: el.data_entry_required
             ? el.data_entry_required
             : 'No',

@@ -1,8 +1,9 @@
 from datetime import datetime
 from typing import Annotated, Callable, Self
 
-from pydantic import Field
+from pydantic import ConfigDict, Field
 
+from clinical_mdr_api.descriptions.general import CHANGES_FIELD_DESC
 from clinical_mdr_api.domains.concepts.activities.activity import ActivityAR
 from clinical_mdr_api.domains.concepts.activities.activity_group import ActivityGroupAR
 from clinical_mdr_api.domains.concepts.activities.activity_instance import (
@@ -30,6 +31,7 @@ from clinical_mdr_api.models.concepts.activities.activity_item import (
     ActivityItemCreateInput,
     CompactActivityItemClass,
     CompactCTTerm,
+    CompactOdmItem,
     CompactUnitDefinition,
 )
 from clinical_mdr_api.models.concepts.concept import (
@@ -52,8 +54,13 @@ class ActivityInstanceGrouping(ActivityGrouping):
 
 
 class ActivityInstance(ActivityBase):
-    nci_concept_id: Annotated[str | None, Field(nullable=True)] = None
-    nci_concept_name: Annotated[str | None, Field(nullable=True)] = None
+    name: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    nci_concept_id: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    nci_concept_name: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
 
     @classmethod
     def from_activity_ar(
@@ -67,14 +74,25 @@ class ActivityInstance(ActivityBase):
         for activity_item in activity_ar.concept_vo.activity_items:
             ct_terms = []
             unit_definitions = []
+            odm_items = []
             for unit in activity_item.unit_definitions:
                 unit_definitions.append(
                     CompactUnitDefinition(
                         uid=unit.uid, name=unit.name, dimension_name=unit.dimension_name
                     )
                 )
+            unit_definitions.sort(key=lambda x: x.uid)
             for term in activity_item.ct_terms:
                 ct_terms.append(CompactCTTerm(uid=term.uid, name=term.name))
+            ct_terms.sort(key=lambda x: x.uid)
+            for odm_item in activity_item.odm_items:
+                odm_items.append(
+                    CompactOdmItem(
+                        uid=odm_item.uid, oid=odm_item.oid, name=odm_item.name
+                    )
+                )
+            odm_items.sort(key=lambda x: x.uid)
+
             activity_items.append(
                 ActivityItem(
                     activity_item_class=CompactActivityItemClass(
@@ -83,6 +101,8 @@ class ActivityInstance(ActivityBase):
                     ),
                     ct_terms=ct_terms,
                     unit_definitions=unit_definitions,
+                    is_adam_param_specific=activity_item.is_adam_param_specific,
+                    odm_items=odm_items,
                 )
             )
 
@@ -154,12 +174,22 @@ class ActivityInstance(ActivityBase):
         for activity_item in activity_instance_ar.concept_vo.activity_items:
             ct_terms = []
             unit_definitions = []
+            odm_items = []
             for unit in activity_item.unit_definitions:
                 unit_definitions.append(
                     CompactUnitDefinition(uid=unit.uid, name=unit.name)
                 )
+            unit_definitions.sort(key=lambda x: x.uid)
             for term in activity_item.ct_terms:
                 ct_terms.append(CompactCTTerm(uid=term.uid, name=term.name))
+            ct_terms.sort(key=lambda x: x.uid)
+            for odm_item in activity_item.odm_items:
+                odm_items.append(
+                    CompactOdmItem(
+                        uid=odm_item.uid, oid=odm_item.oid, name=odm_item.name
+                    )
+                )
+            odm_items.sort(key=lambda x: x.uid)
             activity_items.append(
                 ActivityItem(
                     activity_item_class=CompactActivityItemClass(
@@ -168,6 +198,8 @@ class ActivityInstance(ActivityBase):
                     ),
                     ct_terms=ct_terms,
                     unit_definitions=unit_definitions,
+                    is_adam_param_specific=activity_item.is_adam_param_specific,
+                    odm_items=odm_items,
                 )
             )
         activity_instance_groupings = []
@@ -243,23 +275,31 @@ class ActivityInstance(ActivityBase):
             ),
         )
 
-    topic_code: Annotated[str | None, Field(nullable=True)] = None
-    adam_param_code: Annotated[str | None, Field(nullable=True)] = None
+    topic_code: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
+    adam_param_code: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
     is_research_lab: Annotated[bool, Field()] = False
-    molecular_weight: Annotated[float | None, Field(nullable=True)] = None
+    molecular_weight: Annotated[
+        float | None, Field(json_schema_extra={"nullable": True})
+    ] = None
     is_required_for_activity: Annotated[bool, Field()] = False
     is_default_selected_for_activity: Annotated[bool, Field()] = False
     is_data_sharing: Annotated[bool, Field()] = False
     is_legacy_usage: Annotated[bool, Field()] = False
     is_derived: Annotated[bool, Field()] = False
-    legacy_description: Annotated[str | None, Field(nullable=True)] = None
+    legacy_description: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
     activity_groupings: Annotated[list[ActivityInstanceHierarchySimpleModel], Field()]
-    activity_name: Annotated[str | None, Field(nullable=True)] = None
+    activity_name: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
     activity_instance_class: Annotated[
         CompactActivityInstanceClass,
-        Field(
-            description="The uid and the name of the linked activity instance class",
-        ),
+        Field(description="The uid and the name of the linked activity instance class"),
     ]
     activity_items: Annotated[
         list[ActivityItem],
@@ -268,14 +308,16 @@ class ActivityInstance(ActivityBase):
         ),
     ]
     start_date: datetime
-    end_date: Annotated[datetime | None, Field(nullable=True)] = None
+    end_date: Annotated[
+        datetime | None, Field(json_schema_extra={"nullable": True})
+    ] = None
     status: str
     version: str
     change_description: str
     author_username: Annotated[
         str | None,
         Field(
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
     possible_actions: Annotated[
@@ -292,14 +334,6 @@ class ActivityInstance(ActivityBase):
 class ActivityInstanceCreateInput(ExtendedConceptPostInput):
     nci_concept_id: Annotated[str | None, Field(min_length=1)] = None
     nci_concept_name: Annotated[str | None, Field(min_length=1)] = None
-    name: Annotated[
-        str,
-        Field(
-            description="The name or the actual value. E.g. 'Systolic Blood Pressure', 'Body Temperature', 'Metformin', ...",
-            min_length=1,
-        ),
-    ]
-    name_sentence_case: Annotated[str | None, Field(min_length=1)] = None
     topic_code: Annotated[str | None, Field(min_length=1)] = None
     is_research_lab: bool = False
     molecular_weight: float | None = None
@@ -316,16 +350,19 @@ class ActivityInstanceCreateInput(ExtendedConceptPostInput):
     library_name: Annotated[str, Field(min_length=1)]
 
 
-class ActivityInstanceEditInput(ExtendedConceptPatchInput):
-    nci_concept_id: Annotated[str | None, Field(min_length=1)] = None
-    nci_concept_name: Annotated[str | None, Field(min_length=1)] = None
+class ActivityInstancePreviewInput(ActivityInstanceCreateInput):
     name: Annotated[
         str | None,
         Field(
             description="The name or the actual value. E.g. 'Systolic Blood Pressure', 'Body Temperature', 'Metformin', ...",
+            min_length=1,
         ),
     ] = None
-    name_sentence_case: Annotated[str | None, Field(min_length=1)] = None
+
+
+class ActivityInstanceEditInput(ExtendedConceptPatchInput):
+    nci_concept_id: Annotated[str | None, Field(min_length=1)] = None
+    nci_concept_name: Annotated[str | None, Field(min_length=1)] = None
     topic_code: Annotated[str | None, Field(min_length=1)] = None
     is_research_lab: bool | None = None
     molecular_weight: float | None = None
@@ -348,58 +385,60 @@ class ActivityInstanceVersion(ActivityInstance):
     """
 
     changes: Annotated[
-        dict[str, bool] | None,
+        list[str],
         Field(
-            description=(
-                "Denotes whether or not there was a change in a specific field/property compared to the previous version. "
-                "The field names in this object here refer to the field names of the objective (e.g. name, start_date, ..)."
-            ),
-            nullable=True,
+            description=CHANGES_FIELD_DESC,
         ),
-    ] = None
+    ] = []
 
 
 class SimpleActivity(BaseModel):
     uid: Annotated[str, Field()]
-    nci_concept_id: Annotated[str | None, Field(nullable=True)] = None
-    nci_concept_name: Annotated[str | None, Field(nullable=True)] = None
-    name: Annotated[str | None, Field(nullable=True)] = None
-    definition: Annotated[str | None, Field(nullable=True)] = None
+    nci_concept_id: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    nci_concept_name: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    name: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    definition: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
     synonyms: Annotated[list[str], Field()]
     is_data_collected: Annotated[
         bool,
         Field(
             description="Boolean flag indicating whether data is collected for this activity",
-            nullable=False,
         ),
     ] = False
     is_multiple_selection_allowed: Annotated[
         bool,
         Field(
             description="Boolean flag indicating whether multiple selections are allowed for this activity",
-            nullable=False,
         ),
     ] = True
-    library_name: Annotated[str | None, Field(nullable=True)] = None
-    version: Annotated[str | None, Field(nullable=True)] = None
-    status: Annotated[str | None, Field(nullable=True)] = None
+    library_name: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
+    version: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    status: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
 
 
 class SimpleActivityItemClass(BaseModel):
     name: Annotated[str, Field()]
     order: Annotated[int, Field()]
-    mandatory: Annotated[bool, Field()]
     role_name: Annotated[str, Field()]
     data_type_name: Annotated[str, Field()]
 
 
 class SimplifiedActivityItem(BaseModel):
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
     ct_terms: Annotated[list[LibraryItem], Field()] = []
     unit_definitions: Annotated[list[CompactUnitDefinition], Field()] = []
     activity_item_class: Annotated[SimpleActivityItemClass, Field()]
+    is_adam_param_specific: bool
+    odm_items: Annotated[list[CompactOdmItem], Field()] = []
 
 
 class SimpleActivityInstanceGrouping(SimpleActivityGrouping):
@@ -416,32 +455,50 @@ class ActivityInstanceOverview(BaseModel):
     def from_repository_input(cls, overview: dict):
         activity_items = []
         for activity_item in overview.get("activity_items"):
-            units = [
-                CompactUnitDefinition(
-                    name=unit.get("name"),
-                    uid=unit.get("uid"),
-                    dimension_name=unit.get("dimension_name"),
-                )
-                for unit in activity_item.get("unit_definitions", {})
-            ]
-            terms = [
-                LibraryItem(name=term.get("name"), uid=term.get("uid"))
-                for term in activity_item.get("ct_terms", {})
-            ]
+            units = sorted(
+                [
+                    CompactUnitDefinition(
+                        name=unit.get("name"),
+                        uid=unit.get("uid"),
+                        dimension_name=unit.get("dimension_name"),
+                    )
+                    for unit in activity_item.get("unit_definitions", {})
+                ],
+                key=lambda x: x.uid,
+            )
+            terms = sorted(
+                [
+                    LibraryItem(name=term.get("name"), uid=term.get("uid"))
+                    for term in activity_item.get("ct_terms", {})
+                ],
+                key=lambda x: x.uid,
+            )
+            odm_items = sorted(
+                [
+                    CompactOdmItem(
+                        uid=odm_item.get("uid"),
+                        oid=odm_item.get("oid"),
+                        name=odm_item.get("name"),
+                    )
+                    for odm_item in activity_item.get("odm_items", {})
+                ],
+                key=lambda x: x.uid,
+            )
             activity_items.append(
                 SimplifiedActivityItem(
                     ct_terms=terms,
                     unit_definitions=units,
+                    odm_items=odm_items,
                     activity_item_class=SimpleActivityItemClass(
                         name=activity_item.get("activity_item_class").get("name"),
                         order=activity_item.get("activity_item_class").get("order"),
-                        mandatory=activity_item.get("activity_item_class").get(
-                            "mandatory"
-                        ),
                         role_name=activity_item.get("activity_item_class_role"),
                         data_type_name=activity_item.get(
                             "activity_item_class_data_type"
                         ),
+                    ),
+                    is_adam_param_specific=activity_item.get(
+                        "is_adam_param_specific", False
                     ),
                 )
             )
@@ -475,12 +532,14 @@ class ActivityInstanceOverview(BaseModel):
                         status=activity_grouping.get("version", {}).get("status"),
                     ),
                     activity_group=SimpleActivityGroup(
+                        uid=activity_grouping.get("activity_group_uid"),
                         name=activity_grouping.get("activity_group_value").get("name"),
                         definition=activity_grouping.get("activity_group_value").get(
                             "definition"
                         ),
                     ),
                     activity_subgroup=SimpleActivitySubGroup(
+                        uid=activity_grouping.get("activity_subgroup_uid"),
                         name=activity_grouping.get("activity_subgroup_value").get(
                             "name"
                         ),

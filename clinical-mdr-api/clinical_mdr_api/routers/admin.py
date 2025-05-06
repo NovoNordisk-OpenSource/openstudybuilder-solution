@@ -25,8 +25,8 @@ CACHE_STORE_NAMES = [
     summary="Returns all cache stores",
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_caches(show_items: Annotated[bool | None, Query()] = False) -> list[dict]:
@@ -40,8 +40,8 @@ def get_caches(show_items: Annotated[bool | None, Query()] = False) -> list[dict
     summary="Clears all cache stores",
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def clear_caches() -> list[dict]:
@@ -61,8 +61,8 @@ def clear_caches() -> list[dict]:
     summary="Returns all users",
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_users() -> list[UserInfo]:
@@ -77,8 +77,8 @@ def get_users() -> list[UserInfo]:
     description="Set the username and/or email of a user",
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def patch_user(user_id: str, payload: UserInfoPatchInput) -> UserInfo:

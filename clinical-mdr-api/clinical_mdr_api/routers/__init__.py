@@ -155,17 +155,11 @@ from clinical_mdr_api.routers.standard_data_models.dataset_variables import (
 from clinical_mdr_api.routers.standard_data_models.datasets import (
     router as datasets_router,
 )
-from clinical_mdr_api.routers.standard_data_models.sponsor_model_dataset_classes import (
-    router as sponsor_model_dataset_classes_router,
-)
 from clinical_mdr_api.routers.standard_data_models.sponsor_model_dataset_variables import (
     router as sponsor_model_dataset_variables_router,
 )
 from clinical_mdr_api.routers.standard_data_models.sponsor_model_datasets import (
     router as sponsor_model_datasets_router,
-)
-from clinical_mdr_api.routers.standard_data_models.sponsor_model_variable_classes import (
-    router as sponsor_model_variable_classes_router,
 )
 from clinical_mdr_api.routers.standard_data_models.sponsor_models import (
     router as sponsor_models_router,
@@ -367,8 +361,6 @@ __all__ = [
     "data_models_router",
     "data_model_igs_router",
     "sponsor_models_router",
-    "sponsor_model_dataset_classes_router",
-    "sponsor_model_variable_classes_router",
     "sponsor_model_datasets_router",
     "sponsor_model_dataset_variables_router",
     "datasets_router",

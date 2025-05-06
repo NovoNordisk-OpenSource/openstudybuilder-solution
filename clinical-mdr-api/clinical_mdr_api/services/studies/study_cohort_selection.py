@@ -214,7 +214,9 @@ class StudyCohortSelectionService(StudySelectionMixin):
                         ith_selection_history.append(selection)
                 # get the versions and compare
                 versions = [
-                    self._transform_each_history_to_response_model(_, study_uid).dict()
+                    self._transform_each_history_to_response_model(
+                        _, study_uid
+                    ).model_dump()
                     for _ in ith_selection_history
                 ]
                 if not data:
@@ -235,7 +237,9 @@ class StudyCohortSelectionService(StudySelectionMixin):
                 study_uid, study_selection_uid
             )
             versions = [
-                self._transform_each_history_to_response_model(_, study_uid).dict()
+                self._transform_each_history_to_response_model(
+                    _, study_uid
+                ).model_dump()
                 for _ in selection_history
             ]
             data = calculate_diffs(versions, StudySelectionCohortVersion)

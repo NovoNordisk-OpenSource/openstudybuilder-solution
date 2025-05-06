@@ -27,11 +27,11 @@ from common.models.error import ErrorResponse
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - there is no study with the given uid.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_all_selected_activities(
@@ -62,6 +62,7 @@ def get_all_selected_activities(
     response_model_exclude_unset=True,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         400: {
             "model": ErrorResponse,
             "description": "Forbidden - A study activity schedule already exists for selected study activity and visit",
@@ -70,7 +71,6 @@ def get_all_selected_activities(
             "model": ErrorResponse,
             "description": "Not Found - Study, study activity or study visit is not found with the passed 'study_uid'.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def post_new_activity_schedule_create(
@@ -91,12 +91,12 @@ def post_new_activity_schedule_create(
     response_model=None,
     status_code=204,
     responses={
+        403: _generic_descriptions.ERROR_403,
         204: {"description": "No Content - The selection was successfully deleted."},
         404: {
             "model": ErrorResponse,
             "description": "Not Found - there exist no selection of the activity schedule and the study provided.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def delete_activity_schedule(
@@ -124,8 +124,8 @@ The following values should be returned for all study activities:
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_all_schedules_audit_trail(
@@ -142,8 +142,8 @@ def get_all_schedules_audit_trail(
     response_model=list[StudyActivityScheduleBatchOutput],
     status_code=207,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def activity_schedule_batch_operations(

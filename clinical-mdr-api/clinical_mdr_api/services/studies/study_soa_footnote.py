@@ -675,11 +675,11 @@ class StudySoAFootnoteService:
                 response_code = status.HTTP_200_OK
                 result["response_code"] = response_code
                 if item:
-                    result["content"] = item.dict()
+                    result["content"] = item.model_dump()
                 results.append(StudySoAFootnoteBatchOutput(**result))
             except MDRApiBaseException as error:
                 results.append(
-                    StudySoAFootnoteBatchOutput.construct(
+                    StudySoAFootnoteBatchOutput.model_construct(
                         response_code=error.status_code,
                         content=BatchErrorResponse(message=str(error)),
                     )
@@ -728,7 +728,8 @@ class StudySoAFootnoteService:
             uid=study_soa_footnote_uid, study_uid=study_uid
         )
         versions = [
-            self._transform_vo_to_pydantic_history_model(_).dict() for _ in all_versions
+            self._transform_vo_to_pydantic_history_model(_).model_dump()
+            for _ in all_versions
         ]
         data = calculate_diffs(versions, StudySoAFootnoteVersion)
         return data

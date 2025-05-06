@@ -3,6 +3,7 @@ from typing import Annotated, Self
 
 from pydantic import Field
 
+from clinical_mdr_api.descriptions.general import CHANGES_FIELD_DESC
 from clinical_mdr_api.domains.syntax_pre_instances.objective_pre_instance import (
     ObjectivePreInstanceAR,
 )
@@ -28,17 +29,29 @@ IS_CONFIRMATORY_TESTING_DESC = (
 
 class ObjectivePreInstance(BaseModel):
     uid: str
-    sequence_id: Annotated[str | None, Field(nullable=True)] = None
+    sequence_id: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
     template_uid: str
     template_name: str
-    name: Annotated[str | None, Field(nullable=True)] = None
-    name_plain: Annotated[str | None, Field(nullable=True)] = None
-    start_date: Annotated[datetime | None, Field(nullable=True)] = None
-    end_date: Annotated[datetime | None, Field(nullable=True)] = None
-    status: Annotated[str | None, Field(nullable=True)] = None
-    version: Annotated[str | None, Field(nullable=True)] = None
-    change_description: Annotated[str | None, Field(nullable=True)] = None
-    author_username: Annotated[str | None, Field(nullable=True)] = None
+    name: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    name_plain: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
+    start_date: Annotated[
+        datetime | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    end_date: Annotated[
+        datetime | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    status: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    version: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    change_description: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    author_username: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
     is_confirmatory_testing: Annotated[
         bool, Field(description=IS_CONFIRMATORY_TESTING_DESC)
     ] = False
@@ -58,7 +71,9 @@ class ObjectivePreInstance(BaseModel):
         list[SimpleCTTermNameAndAttributes],
         Field(description="A list of categories the pre-instance belongs to."),
     ] = []
-    library: Annotated[Library | None, Field(nullable=True)] = None
+    library: Annotated[Library | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
     possible_actions: list[str] = []
 
     @classmethod
@@ -155,12 +170,8 @@ class ObjectivePreInstanceVersion(ObjectivePreInstance):
     """
 
     changes: Annotated[
-        dict[str, bool] | None,
+        list[str],
         Field(
-            description=(
-                "Denotes whether or not there was a change in a specific field/property compared to the previous version. "
-                "The field names in this object here refer to the field names of the objective (e.g. name, start_date, ..)."
-            ),
-            nullable=True,
+            description=CHANGES_FIELD_DESC,
         ),
-    ] = None
+    ] = []

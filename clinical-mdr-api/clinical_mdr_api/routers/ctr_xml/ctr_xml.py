@@ -23,9 +23,9 @@ class XMLResponse(Response):
     summary="Returns study disclosure document in CTR ODM XML format",
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"content": {"text/xml": {"schema": {"type": "string"}}}},
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_odm_xml(

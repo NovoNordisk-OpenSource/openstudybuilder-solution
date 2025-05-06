@@ -18,9 +18,11 @@ from clinical_mdr_api.models.concepts.activities.activity_instance import (
     ActivityInstanceCreateInput,
     ActivityInstanceEditInput,
     ActivityInstanceOverview,
+    ActivityInstancePreviewInput,
     ActivityInstanceVersion,
 )
 from clinical_mdr_api.models.concepts.activities.activity_item import (
+    CompactOdmItem,
     CompactUnitDefinition,
 )
 from clinical_mdr_api.services.concepts import constants
@@ -29,6 +31,7 @@ from clinical_mdr_api.services.concepts.concept_generic_service import (
     _AggregateRootType,
 )
 from common.exceptions import NotFoundException
+from common.utils import get_edit_input_or_previous_value
 
 
 class ActivityInstanceService(ConceptGenericService[ActivityInstanceAR]):
@@ -46,6 +49,13 @@ class ActivityInstanceService(ConceptGenericService[ActivityInstanceAR]):
             find_activity_group_by_uid=self._repos.activity_group_repository.find_by_uid_2,
         )
 
+    def create(
+        self,
+        concept_input: ActivityInstanceCreateInput | ActivityInstancePreviewInput,
+        preview: bool = False,
+    ) -> ActivityInstance:
+        return self.non_transactional_create(concept_input, preview=preview)
+
     def _create_aggregate_root(
         self,
         concept_input: ActivityInstanceCreateInput,
@@ -53,7 +63,10 @@ class ActivityInstanceService(ConceptGenericService[ActivityInstanceAR]):
         preview: bool = False,
     ) -> _AggregateRootType:
         activity_items = []
-        if concept_input.activity_items is not None:
+        if (
+            getattr(concept_input, "activity_items", None)
+            and concept_input.activity_items is not None
+        ):
             for item in concept_input.activity_items:
                 unit_definitions = [
                     CompactUnitDefinition(uid=unit_uid, name=None, dimension_name=None)
@@ -63,12 +76,18 @@ class ActivityInstanceService(ConceptGenericService[ActivityInstanceAR]):
                     LibraryItem(uid=term_uid, name=None)
                     for term_uid in item.ct_term_uids
                 ]
+                odm_items = [
+                    CompactOdmItem(uid=odm_item_uid, oid=None, name=None)
+                    for odm_item_uid in item.odm_item_uids
+                ]
                 activity_items.append(
                     ActivityItemVO.from_repository_values(
+                        is_adam_param_specific=item.is_adam_param_specific,
                         activity_item_class_uid=item.activity_item_class_uid,
                         activity_item_class_name=None,
                         ct_terms=ct_terms,
                         unit_definitions=unit_definitions,
+                        odm_items=odm_items,
                     )
                 )
 
@@ -113,14 +132,17 @@ class ActivityInstanceService(ConceptGenericService[ActivityInstanceAR]):
                 if not preview
                 else lambda: "PreviewTemporalUid"
             ),
-            concept_exists_by_library_and_name_callback=self._repos.activity_instance_repository.latest_concept_in_library_exists_by_name,
-            activity_instance_class_exists_by_uid_callback=self._repos.activity_instance_class_repository.check_exists_final_version,
-            activity_item_class_exists_by_uid_callback=self._repos.activity_item_class_repository.check_exists_final_version,
+            concept_exists_by_library_and_property_value_callback=self._repos.activity_instance_repository.latest_concept_in_library_exists_by_property_value,
             ct_term_exists_by_uid_callback=self._repos.ct_term_name_repository.term_exists,
             unit_definition_exists_by_uid_callback=self._repos.unit_definition_repository.final_concept_exists,
+            odm_item_exists_by_uid_callback=self._repos.odm_item_repository.final_concept_exists,
             get_final_activity_value_by_uid_callback=self._repos.activity_repository.final_concept_value,
             activity_group_exists=self._repos.activity_group_repository.final_concept_exists,
             activity_subgroup_exists=self._repos.activity_subgroup_repository.final_concept_exists,
+            find_activity_item_class_by_uid_callback=self._repos.activity_item_class_repository.find_by_uid_2,
+            find_activity_instance_class_by_uid_callback=self._repos.activity_instance_class_repository.find_by_uid_2,
+            preview=preview,
+            get_dimension_names_by_unit_definition_uids=self._repos.unit_definition_repository.get_dimension_names_by_unit_definition_uids,
         )
 
     def non_transactional_edit(
@@ -138,44 +160,60 @@ class ActivityInstanceService(ConceptGenericService[ActivityInstanceAR]):
     def _edit_aggregate(
         self, item: ActivityInstanceAR, concept_edit_input: ActivityInstanceEditInput
     ) -> ActivityInstanceAR:
-        if concept_edit_input.activity_groupings:
-            activity_groupings = [
-                ActivityInstanceGroupingVO(
-                    activity_uid=activity_grouping.activity_uid,
-                    activity_group_uid=activity_grouping.activity_group_uid,
-                    activity_subgroup_uid=activity_grouping.activity_subgroup_uid,
-                )
-                for activity_grouping in concept_edit_input.activity_groupings
-            ]
-        else:
-            activity_groupings = [
-                ActivityInstanceGroupingVO(
-                    activity_uid=activity_grouping.activity_uid,
-                    activity_group_uid=activity_grouping.activity_group_uid,
-                    activity_subgroup_uid=activity_grouping.activity_subgroup_uid,
-                )
-                for activity_grouping in item.concept_vo.activity_groupings
-            ]
-
-        if concept_edit_input.activity_items:
-            activity_items = []
-            for activity_item in concept_edit_input.activity_items:
-                unit_definitions = [
-                    CompactUnitDefinition(uid=unit_uid, name=None, dimension_name=None)
-                    for unit_uid in activity_item.unit_definition_uids
-                ]
-                ct_terms = [
-                    LibraryItem(uid=term_uid, name=None)
-                    for term_uid in activity_item.ct_term_uids
-                ]
-                activity_items.append(
-                    ActivityItemVO.from_repository_values(
-                        activity_item_class_uid=activity_item.activity_item_class_uid,
-                        activity_item_class_name=None,
-                        ct_terms=ct_terms,
-                        unit_definitions=unit_definitions,
+        fields_set = concept_edit_input.model_fields_set
+        if "activity_groupings" in fields_set:
+            if concept_edit_input.activity_groupings:
+                activity_groupings = [
+                    ActivityInstanceGroupingVO(
+                        activity_uid=activity_grouping.activity_uid,
+                        activity_group_uid=activity_grouping.activity_group_uid,
+                        activity_subgroup_uid=activity_grouping.activity_subgroup_uid,
                     )
-                )
+                    for activity_grouping in concept_edit_input.activity_groupings
+                ]
+            else:
+                activity_groupings = []
+        else:
+            if item.concept_vo.activity_groupings:
+                activity_groupings = [
+                    ActivityInstanceGroupingVO(
+                        activity_uid=activity_grouping.activity_uid,
+                        activity_group_uid=activity_grouping.activity_group_uid,
+                        activity_subgroup_uid=activity_grouping.activity_subgroup_uid,
+                    )
+                    for activity_grouping in item.concept_vo.activity_groupings
+                ]
+            else:
+                activity_groupings = []
+
+        if "activity_items" in fields_set:
+            activity_items = []
+            if concept_edit_input.activity_items is not None:
+                for activity_item in concept_edit_input.activity_items:
+                    unit_definitions = [
+                        CompactUnitDefinition(
+                            uid=unit_uid, name=None, dimension_name=None
+                        )
+                        for unit_uid in activity_item.unit_definition_uids
+                    ]
+                    ct_terms = [
+                        LibraryItem(uid=term_uid, name=None)
+                        for term_uid in activity_item.ct_term_uids
+                    ]
+                    odm_items = [
+                        CompactOdmItem(uid=odm_item_uid, oid=None, name=None)
+                        for odm_item_uid in activity_item.odm_item_uids
+                    ]
+                    activity_items.append(
+                        ActivityItemVO.from_repository_values(
+                            is_adam_param_specific=activity_item.is_adam_param_specific,
+                            activity_item_class_uid=activity_item.activity_item_class_uid,
+                            activity_item_class_name=None,
+                            ct_terms=ct_terms,
+                            unit_definitions=unit_definitions,
+                            odm_items=odm_items,
+                        )
+                    )
         else:
             activity_items = item.concept_vo.activity_items
 
@@ -183,8 +221,16 @@ class ActivityInstanceService(ConceptGenericService[ActivityInstanceAR]):
             author_id=self.author_id,
             change_description=concept_edit_input.change_description,
             concept_vo=ActivityInstanceVO.from_repository_values(
-                nci_concept_id=concept_edit_input.nci_concept_id,
-                nci_concept_name=concept_edit_input.nci_concept_name,
+                nci_concept_id=get_edit_input_or_previous_value(
+                    concept_edit_input,
+                    item.concept_vo,
+                    "nci_concept_id",
+                ),
+                nci_concept_name=get_edit_input_or_previous_value(
+                    concept_edit_input,
+                    item.concept_vo,
+                    "nci_concept_name",
+                ),
                 name=concept_edit_input.name or item.name,
                 name_sentence_case=concept_edit_input.name_sentence_case
                 or item.concept_vo.name_sentence_case,
@@ -196,11 +242,15 @@ class ActivityInstanceService(ConceptGenericService[ActivityInstanceAR]):
                     if concept_edit_input.is_research_lab is not None
                     else item.concept_vo.is_research_lab
                 ),
-                molecular_weight=concept_edit_input.molecular_weight
-                or item.concept_vo.molecular_weight,
-                topic_code=concept_edit_input.topic_code or item.concept_vo.topic_code,
-                adam_param_code=concept_edit_input.adam_param_code
-                or item.concept_vo.adam_param_code,
+                molecular_weight=get_edit_input_or_previous_value(
+                    concept_edit_input, item.concept_vo, "molecular_weight"
+                ),
+                topic_code=get_edit_input_or_previous_value(
+                    concept_edit_input, item.concept_vo, "topic_code"
+                ),
+                adam_param_code=get_edit_input_or_previous_value(
+                    concept_edit_input, item.concept_vo, "adam_param_code"
+                ),
                 is_required_for_activity=(
                     concept_edit_input.is_required_for_activity
                     if concept_edit_input.is_required_for_activity is not None
@@ -222,22 +272,25 @@ class ActivityInstanceService(ConceptGenericService[ActivityInstanceAR]):
                     else item.concept_vo.is_legacy_usage
                 ),
                 is_derived=concept_edit_input.is_derived or item.concept_vo.is_derived,
-                legacy_description=concept_edit_input.legacy_description
-                or item.concept_vo.legacy_description,
+                legacy_description=get_edit_input_or_previous_value(
+                    concept_edit_input, item.concept_vo, "legacy_description"
+                ),
                 activity_groupings=activity_groupings,
                 activity_instance_class_uid=concept_edit_input.activity_instance_class_uid
                 or item.concept_vo.activity_instance_class_uid,
                 activity_instance_class_name=None,
                 activity_items=activity_items,
             ),
-            concept_exists_by_library_and_name_callback=self._repos.activity_instance_repository.latest_concept_in_library_exists_by_name,
-            activity_instance_class_exists_by_uid_callback=self._repos.activity_instance_class_repository.check_exists_final_version,
-            activity_item_class_exists_by_uid_callback=self._repos.activity_item_class_repository.check_exists_final_version,
+            concept_exists_by_library_and_property_value_callback=self._repos.activity_instance_repository.latest_concept_in_library_exists_by_property_value,
             ct_term_exists_by_uid_callback=self._repos.ct_term_name_repository.term_exists,
             unit_definition_exists_by_uid_callback=self._repos.unit_definition_repository.final_concept_exists,
+            odm_item_exists_by_uid_callback=self._repos.odm_item_repository.final_concept_exists,
             get_final_activity_value_by_uid_callback=self._repos.activity_repository.final_concept_value,
             activity_group_exists=self._repos.activity_group_repository.final_concept_exists,
             activity_subgroup_exists=self._repos.activity_subgroup_repository.final_concept_exists,
+            find_activity_item_class_by_uid_callback=self._repos.activity_item_class_repository.find_by_uid_2,
+            find_activity_instance_class_by_uid_callback=self._repos.activity_instance_class_repository.find_by_uid_2,
+            get_dimension_names_by_unit_definition_uids=self._repos.unit_definition_repository.get_dimension_names_by_unit_definition_uids,
         )
         return item
 

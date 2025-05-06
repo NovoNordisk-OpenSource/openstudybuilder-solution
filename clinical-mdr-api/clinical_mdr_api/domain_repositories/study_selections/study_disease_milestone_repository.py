@@ -100,7 +100,8 @@ class StudyDiseaseMilestoneRepository:
             .resolve_subgraph()
         ).distinct()
         all_activities = [
-            StudyDiseaseMilestoneOGM.from_orm(activity_node) for activity_node in nodes
+            StudyDiseaseMilestoneOGM.model_validate(activity_node)
+            for activity_node in nodes
         ]
         if total_count:
             len_query = StudyDiseaseMilestone.nodes.filter(*q_filters)
@@ -132,7 +133,7 @@ class StudyDiseaseMilestoneRepository:
         self, study_uid: str
     ) -> _StandardsReturnType | None:
         all_disease_milestones = [
-            StudyDiseaseMilestoneOGM.from_orm(sas_node)
+            StudyDiseaseMilestoneOGM.model_validate(sas_node)
             for sas_node in ListDistinct(
                 StudyDiseaseMilestone.nodes.fetch_relations(
                     "has_after__audit_trail",
@@ -167,12 +168,12 @@ class StudyDiseaseMilestoneRepository:
             msg=f"Study Disease Milestone with UID '{uid}' doesn't exist.",
         )
 
-        return StudyDiseaseMilestoneOGM.from_orm(disease_milestone_node[0])
+        return StudyDiseaseMilestoneOGM.model_validate(disease_milestone_node[0])
 
     def get_all_versions(self, uid: str, study_uid):
         return sorted(
             [
-                StudyDiseaseMilestoneOGMVer.from_orm(se_node)
+                StudyDiseaseMilestoneOGMVer.model_validate(se_node)
                 for se_node in ListDistinct(
                     StudyDiseaseMilestone.nodes.fetch_relations(
                         "has_after__audit_trail",
@@ -191,7 +192,7 @@ class StudyDiseaseMilestoneRepository:
     def get_all_disease_milestone_versions(self, study_uid: str):
         return sorted(
             [
-                StudyDiseaseMilestoneOGMVer.from_orm(se_node)
+                StudyDiseaseMilestoneOGMVer.model_validate(se_node)
                 for se_node in (
                     StudyDiseaseMilestone.nodes.fetch_relations(
                         "has_after__audit_trail",

@@ -3,6 +3,7 @@ from typing import Annotated, Self
 
 from pydantic import Field
 
+from clinical_mdr_api.descriptions.general import CHANGES_FIELD_DESC
 from clinical_mdr_api.domains.controlled_terminologies.ct_term_name import CTTermNameAR
 from clinical_mdr_api.models.controlled_terminologies.ct_term_codelist import (
     CTTermCodelist,
@@ -69,9 +70,11 @@ class CTTermName(BaseModel):
             date_conflict=ct_term_name_ar.ct_term_vo.date_conflict,
         )
 
-    term_uid: Annotated[str | None, Field(nullable=True)] = None
+    term_uid: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
 
-    catalogue_name: Annotated[str | None, Field(nullable=True)] = None
+    catalogue_name: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
 
     codelists: Annotated[list[CTTermCodelist], Field()] = []
 
@@ -79,17 +82,27 @@ class CTTermName(BaseModel):
 
     sponsor_preferred_name_sentence_case: Annotated[str, Field()]
 
-    library_name: Annotated[str | None, Field(nullable=True)] = None
-    start_date: Annotated[datetime | None, Field(nullable=True)] = None
-    end_date: Annotated[datetime | None, Field(nullable=True)] = None
-    status: Annotated[str | None, Field(nullable=True)] = None
-    version: Annotated[str | None, Field(nullable=True)] = None
-    change_description: Annotated[str | None, Field(nullable=True)] = None
-    author_username: Annotated[str | None, Field(nullable=True)] = None
+    library_name: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
+    start_date: Annotated[
+        datetime | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    end_date: Annotated[
+        datetime | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    status: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    version: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    change_description: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    author_username: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
     queried_effective_date: Annotated[
         datetime | None,
         Field(
-            nullable=True,
+            json_schema_extra={"nullable": True},
             description="Indicates the actual date at which the term was queried.",
         ),
     ] = None
@@ -112,7 +125,6 @@ class CTTermName(BaseModel):
 
 class CTTermNameSimple(BaseModel):
     term_uid: Annotated[str, Field()]
-
     sponsor_preferred_name: Annotated[str, Field()]
 
 
@@ -122,15 +134,11 @@ class CTTermNameVersion(CTTermName):
     """
 
     changes: Annotated[
-        dict[str, bool] | None,
+        list[str],
         Field(
-            description=(
-                "Denotes whether or not there was a change in a specific field/property compared to the previous version. "
-                "The field names in this object here refer to the field names of the objective (e.g. name, start_date, ..)."
-            ),
-            nullable=True,
+            description=CHANGES_FIELD_DESC,
         ),
-    ] = None
+    ] = []
 
 
 class CTTermNameEditInput(PatchInputModel):

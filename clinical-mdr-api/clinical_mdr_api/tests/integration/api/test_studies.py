@@ -348,13 +348,13 @@ def test_get_snapshot_history(api_client):
     res = res["items"]
     assert len(res) == 2
     assert res[0]["current_metadata"]["version_metadata"]["study_status"] == "LOCKED"
-    assert res[0]["current_metadata"]["version_metadata"]["version_number"] == 1
+    assert res[0]["current_metadata"]["version_metadata"]["version_number"] == "1"
     assert (
         res[0]["current_metadata"]["version_metadata"]["version_description"]
         == "Lock 1"
     )
     assert res[1]["current_metadata"]["version_metadata"]["study_status"] == "RELEASED"
-    assert res[1]["current_metadata"]["version_metadata"]["version_number"] == 1
+    assert res[1]["current_metadata"]["version_metadata"]["version_number"] == "1"
     assert (
         res[1]["current_metadata"]["version_metadata"]["version_description"]
         == "Lock 1"
@@ -387,8 +387,8 @@ def test_get_snapshot_history(api_client):
     res = res["items"]
     assert len(res) == 3
     assert res[0]["current_metadata"]["version_metadata"]["study_status"] == "DRAFT"
-    assert res[1]["current_metadata"]["version_metadata"]["version_number"] == 1
-    assert res[2]["current_metadata"]["version_metadata"]["version_number"] == 1
+    assert res[1]["current_metadata"]["version_metadata"]["version_number"] == "1"
+    assert res[2]["current_metadata"]["version_metadata"]["version_number"] == "1"
 
     # Release
     response = api_client.post(
@@ -409,8 +409,8 @@ def test_get_snapshot_history(api_client):
         res[1]["current_metadata"]["version_metadata"]["version_description"]
         == "Explicit release"
     )
-    assert res[1]["current_metadata"]["version_metadata"]["version_number"] == 1.1
-    assert res[2]["current_metadata"]["version_metadata"]["version_number"] == 1
+    assert res[1]["current_metadata"]["version_metadata"]["version_number"] == "1.1"
+    assert res[2]["current_metadata"]["version_metadata"]["version_number"] == "1"
     assert (
         res[2]["current_metadata"]["version_metadata"]["version_description"]
         == "Lock 1"
@@ -434,9 +434,9 @@ def test_get_snapshot_history(api_client):
         res[1]["current_metadata"]["version_metadata"]["version_description"]
         == "Explicit second release"
     )
-    assert res[1]["current_metadata"]["version_metadata"]["version_number"] == 1.2
+    assert res[1]["current_metadata"]["version_metadata"]["version_number"] == "1.2"
     assert res[2]["current_metadata"]["version_metadata"]["study_status"] == "RELEASED"
-    assert res[2]["current_metadata"]["version_metadata"]["version_number"] == 1.1
+    assert res[2]["current_metadata"]["version_metadata"]["version_number"] == "1.1"
     assert (
         res[2]["current_metadata"]["version_metadata"]["version_description"]
         == "Explicit release"
@@ -456,13 +456,13 @@ def test_get_snapshot_history(api_client):
     res = res["items"]
     assert len(res) == 6
     assert res[0]["current_metadata"]["version_metadata"]["study_status"] == "LOCKED"
-    assert res[0]["current_metadata"]["version_metadata"]["version_number"] == 2
+    assert res[0]["current_metadata"]["version_metadata"]["version_number"] == "2"
     assert (
         res[0]["current_metadata"]["version_metadata"]["version_description"]
         == "Lock 2"
     )
     assert res[1]["current_metadata"]["version_metadata"]["study_status"] == "RELEASED"
-    assert res[1]["current_metadata"]["version_metadata"]["version_number"] == 2
+    assert res[1]["current_metadata"]["version_metadata"]["version_number"] == "2"
     assert (
         res[1]["current_metadata"]["version_metadata"]["version_description"]
         == "Lock 2"
@@ -2258,17 +2258,17 @@ def test_study_metadata_version_selecting_ct_package(api_client):
 
     new_named_study_payload = payload_creation(_study, new_named_ctterm)
     response = api_client.patch(
-        f"/studies/{_study.uid}", json=new_named_study_payload.dict()
+        f"/studies/{_study.uid}", json=new_named_study_payload.model_dump()
     )
     assert_response_status_code(response, 200)
     res = response.json()
     assert (
         res["current_metadata"]["identification_metadata"]
-        == new_named_study_payload_to_compare.current_metadata.identification_metadata.dict()
+        == new_named_study_payload_to_compare.current_metadata.identification_metadata.model_dump()
     )
     assert (
-        new_named_study_payload_to_compare.current_metadata.identification_metadata.dict()
-        != old_named_study_payload_to_compare.current_metadata.identification_metadata.dict()
+        new_named_study_payload_to_compare.current_metadata.identification_metadata.model_dump()
+        != old_named_study_payload_to_compare.current_metadata.identification_metadata.model_dump()
     )
 
     TestUtils.set_study_standard_version(
@@ -2285,11 +2285,11 @@ def test_study_metadata_version_selecting_ct_package(api_client):
     res = response.json()
     assert (
         res["current_metadata"]["identification_metadata"]
-        == old_named_study_payload_to_compare.current_metadata.identification_metadata.dict()
+        == old_named_study_payload_to_compare.current_metadata.identification_metadata.model_dump()
     )
     assert (
-        old_named_study_payload_to_compare.current_metadata.identification_metadata.dict()
-        != new_named_study_payload_to_compare.current_metadata.identification_metadata.dict()
+        old_named_study_payload_to_compare.current_metadata.identification_metadata.model_dump()
+        != new_named_study_payload_to_compare.current_metadata.identification_metadata.model_dump()
     )
 
 
@@ -2646,7 +2646,7 @@ def test_verify_study_duration_fields(
     response = api_client.post(
         f"/concepts/unit-definitions/{days_unit_definition.uid}/versions",
     )
-    assert response.status_code == 201
+    assert_response_status_code(response, 201)
     response = api_client.patch(
         f"/concepts/unit-definitions/{days_unit_definition.uid}",
         json={
@@ -2654,11 +2654,11 @@ def test_verify_study_duration_fields(
             "change_description": "Adding to StudyTime unit subset",
         },
     )
-    assert response.status_code == 200
+    assert_response_status_code(response, 200)
     response = api_client.post(
         f"/concepts/unit-definitions/{days_unit_definition.uid}/approvals",
     )
-    assert response.status_code == 201
+    assert_response_status_code(response, 201)
 
     duration_value = 1
     duration_unit = day_unit_definition
@@ -2831,3 +2831,20 @@ def test_filtering_wildcard(
             assert row[expected_matched_field] == expected_result_prefix
     else:
         assert len(res["items"]) == 0
+
+
+def test_study_structure_statistics(
+    api_client, tst_study, study_epochs, study_arms, study_elements
+):
+    response = api_client.get("studies/123000/structure-statistics")
+    assert_response_status_code(response, 404)
+    response = api_client.get(f"studies/{tst_study.uid}/structure-statistics")
+    content = response.json()
+    assert content["epoch_count"] == len(study_epochs)
+    assert content["arm_count"] == len(study_arms)
+    assert content["element_count"] == len(study_elements)
+    assert content["visit_count"] == 0
+    assert content["cohort_count"] == 0
+    assert content["branch_count"] == 0
+    assert content["epoch_footnote_count"] == 0
+    assert content["visit_footnote_count"] == 0

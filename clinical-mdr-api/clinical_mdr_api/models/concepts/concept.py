@@ -2,7 +2,7 @@ from abc import ABC
 from datetime import datetime
 from typing import Annotated, Callable, Self
 
-from pydantic import Field
+from pydantic import ConfigDict, Field
 
 from clinical_mdr_api.domains.concepts.simple_concepts.lag_time import LagTimeAR
 from clinical_mdr_api.domains.concepts.simple_concepts.numeric_value import (
@@ -27,15 +27,14 @@ class NoLibraryConceptModelNoName(BaseModel, ABC):
         datetime,
         Field(
             description=_generic_descriptions.START_DATE,
-            source="latest_version|start_date",
+            json_schema_extra={"source": "latest_version|start_date"},
         ),
     ]
     end_date: Annotated[
         datetime | None,
         Field(
             description=_generic_descriptions.END_DATE,
-            source="latest_version|end_date",
-            nullable=True,
+            json_schema_extra={"source": "latest_version|end_date", "nullable": True},
         ),
     ] = None
     status: str
@@ -43,7 +42,7 @@ class NoLibraryConceptModelNoName(BaseModel, ABC):
     author_username: Annotated[
         str | None,
         Field(
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
     change_description: str
@@ -76,82 +75,89 @@ class VersionProperties(BaseModel):
         datetime | None,
         Field(
             description=_generic_descriptions.START_DATE,
-            source="latest_version|start_date",
-            nullable=True,
+            json_schema_extra={"source": "latest_version|start_date", "nullable": True},
         ),
     ] = None
     end_date: Annotated[
         datetime | None,
         Field(
             description=_generic_descriptions.END_DATE,
-            source="latest_version|end_date",
-            nullable=True,
+            json_schema_extra={"source": "latest_version|end_date", "nullable": True},
         ),
     ] = None
     status: Annotated[
         str | None,
         Field(
-            source="latest_version|status",
-            nullable=True,
+            json_schema_extra={"source": "latest_version|status", "nullable": True},
         ),
     ] = None
     version: Annotated[
         str | None,
         Field(
-            source="latest_version|version",
-            nullable=True,
+            json_schema_extra={"source": "latest_version|version", "nullable": True},
         ),
     ] = None
     change_description: Annotated[
         str | None,
         Field(
-            source="latest_version|change_description",
-            nullable=True,
+            json_schema_extra={
+                "source": "latest_version|change_description",
+                "nullable": True,
+            },
         ),
     ] = None
     author_username: Annotated[
         str | None,
         Field(
-            source="latest_version|author_id",  # utils.from_orm() method will lookup author's username using `latest_version|author_id` value as User.user_id
-            nullable=True,
+            json_schema_extra={
+                "source": "latest_version|author_id",  # utils.model_validate() method will lookup author's username using `latest_version|author_id` value as User.user_id
+                "nullable": True,
+            }
         ),
     ] = None
 
 
 class Concept(VersionProperties):
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
     uid: str
     name: Annotated[
         str,
         Field(
             description="The name or the actual value. E.g. 'Systolic Blood Pressure', 'Body Temperature', 'Metformin', ...",
-            source="has_latest_value.name",
+            json_schema_extra={"source": "has_latest_value.name"},
         ),
     ]
     name_sentence_case: Annotated[
         str | None,
         Field(
-            source="has_latest_value.name_sentence_case",
-            nullable=True,
+            json_schema_extra={
+                "source": "has_latest_value.name_sentence_case",
+                "nullable": True,
+            },
         ),
     ] = None
     definition: Annotated[
         str | None,
         Field(
-            source="has_latest_value.definition",
-            nullable=True,
+            json_schema_extra={
+                "source": "has_latest_value.definition",
+                "nullable": True,
+            },
         ),
     ] = None
     abbreviation: Annotated[
         str | None,
         Field(
-            source="has_latest_value.abbreviation",
-            nullable=True,
+            json_schema_extra={
+                "source": "has_latest_value.abbreviation",
+                "nullable": True,
+            },
         ),
     ] = None
-    library_name: Annotated[str, Field(source="has_library.name")]
+    library_name: Annotated[
+        str, Field(json_schema_extra={"source": "has_library.name"})
+    ]
 
 
 class ExtendedConceptPostInput(PostInputModel):

@@ -30,6 +30,11 @@ Feature: Library - CT Packages
 		When The first column is selected from Select Columns option for table with actions
 		Then The table contain only selected column and actions column
 
+    Scenario: User must be able to use table pagination
+        Given The '/library/ct_packages' page is opened
+        When The user switches pages of the table
+        Then The table page presents correct data
+
 	# Scenario Outline: User must be able to filter the table by text fields
 	# 	Given The '/library/ct_packages' page is opened
 	# 	And CT Package data is loaded
@@ -64,7 +69,7 @@ Feature: Library - CT Packages
 		When The 'SEND CT' tab is selected
 		And The last available item from timeline is clicked
 		And The 'Show terms' action is clicked for first available item in table
-		Then The URL should contain '2014-09-26' date selected and 'C111113' ID
+		Then The URL should contain '2014-09-26' date selected and 'C106482' ID
 
 	Scenario: User must be able to view the Codelist summary for given Codelist in CT Package
 		Given The '/library/ct_packages/SEND CT/SEND CT 2014-09-26/C66729/terms' page is opened
@@ -74,7 +79,7 @@ Feature: Library - CT Packages
 			| Concept ID         | C66729                                                                                                                               |
 			| Name               | Route of Administration Response                                                                                                     |
 			| Label              | Route of Administration                                                                                                              |
-			| Definition         | A terminology codelist relevant to the course by which a substance is administered in order to reach the site of action in the body. |
+			| Definition         | A terminology codelist relevant to the pathway by which a substance is administered in order to reach the site of action in the body. |
 			| Library            | CDISC                                                                                                                                |
 			| Template parameter | Yes                                                                                                                                  |
 			| Extensible         | Yes                                                                                                                                  |

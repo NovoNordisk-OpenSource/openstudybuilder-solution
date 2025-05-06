@@ -28,19 +28,14 @@ from clinical_mdr_api.domains.versioned_object_aggregate import (
 from clinical_mdr_api.models.concepts.activities.activity import Activity
 from common.config import REQUESTED_LIBRARY_NAME
 from common.exceptions import BusinessLogicException
-from common.utils import convert_to_datetime
-
-
-def _version_to_number(version: str) -> float:
-    major, minor = version.split(".")
-    return 1000 * float(major) + float(minor)
+from common.utils import convert_to_datetime, version_string_to_tuple
 
 
 def _get_display_version(versions: list[dict]) -> dict | None:
     if len(versions) == 1:
         return versions[0]
     sorted_versions = sorted(
-        versions, key=lambda x: _version_to_number(x["version"]), reverse=True
+        versions, key=lambda x: version_string_to_tuple(x["version"]), reverse=True
     )
     for status in [
         LibraryItemStatus.FINAL,
@@ -99,6 +94,7 @@ class ActivityRepository(ConceptGenericRepository[ActivityAR]):
                     )
                     for activity_grouping in input_dict.get("activity_groupings")
                 ],
+                activity_instances=input_dict.get("activity_instances"),
                 request_rationale=input_dict.get("request_rationale"),
                 is_request_final=input_dict.get("is_request_final"),
                 requester_study_id=input_dict.get("requester_study_id"),
@@ -170,6 +166,7 @@ class ActivityRepository(ConceptGenericRepository[ActivityAR]):
                 definition=value.definition,
                 abbreviation=value.abbreviation,
                 activity_groupings=activity_groupings,
+                activity_instances=activity_root["activity_instances"],
                 request_rationale=value.request_rationale,
                 is_request_final=(
                     value.is_request_final if value.is_request_final else False
@@ -212,10 +209,22 @@ class ActivityRepository(ConceptGenericRepository[ActivityAR]):
         activity_groupings_nodes = value.has_grouping.all()
         activity_groupings = []
         activity_instances_legacy_codes = {}
+        activity_instances = []
+        _activity_instance_uids = set()
         for activity_grouping in activity_groupings_nodes:
             for activity_instance_value in activity_grouping.has_activity.all():
                 has_version = activity_instance_value.has_version
                 for activity_instance_root in has_version.all():
+                    if activity_instance_root.uid in _activity_instance_uids:
+                        continue
+                    _activity_instance_uids.add(activity_instance_root.uid)
+                    activity_instances.append(
+                        {
+                            "uid": activity_instance_root.uid,
+                            "name": activity_instance_value.name,
+                        }
+                    )
+
                     has_version_props = has_version.relationship(activity_instance_root)
                     if (
                         activity_instance_root
@@ -236,7 +245,9 @@ class ActivityRepository(ConceptGenericRepository[ActivityAR]):
                 all_group_rels = activity_group_value.has_version.all_relationships(
                     activity_group_root
                 )
-                latest_group = max(all_group_rels, key=lambda r: float(r.version))
+                latest_group = max(
+                    all_group_rels, key=lambda r: version_string_to_tuple(r.version)
+                )
                 # ActivitySubGroup
                 activity_subgroup_value = activity_valid_group.has_group.get()
                 activity_subgroup_root = activity_subgroup_value.has_version.single()
@@ -245,7 +256,9 @@ class ActivityRepository(ConceptGenericRepository[ActivityAR]):
                         activity_subgroup_root
                     )
                 )
-                latest_subgroup = max(all_subgroup_rels, key=lambda r: float(r.version))
+                latest_subgroup = max(
+                    all_subgroup_rels, key=lambda r: version_string_to_tuple(r.version)
+                )
 
                 activity_groupings.append(
                     ActivityGroupingVO(
@@ -276,6 +289,7 @@ class ActivityRepository(ConceptGenericRepository[ActivityAR]):
                 definition=value.definition,
                 abbreviation=value.abbreviation,
                 activity_groupings=activity_groupings,
+                activity_instances=activity_instances,
                 request_rationale=value.request_rationale,
                 is_request_final=(
                     value.is_request_final if value.is_request_final else False
@@ -319,16 +333,38 @@ class ActivityRepository(ConceptGenericRepository[ActivityAR]):
             filter_query_parameters,
         ) = super().create_query_filter_statement(library=library)
         filter_parameters = []
-        if (activity_subgroup_uid := kwargs.get("activity_subgroup_uid")) is not None:
-            filter_by_activity_subgroup_uid = """
-            $activity_subgroup_uid IN [(concept_value)-[:HAS_GROUPING]->(:ActivityGrouping)-[:IN_SUBGROUP]->
+        activity_subgroup_uid = kwargs.get("activity_subgroup_uid")
+        activity_group_uid = kwargs.get("activity_group_uid")
+        if kwargs.get("group_by_groupings") is False:
+            activity_grouping_query_text = "activity_grouping"
+        else:
+            activity_grouping_query_text = (
+                "concept_value)-[:HAS_GROUPING]->(:ActivityGrouping"
+            )
+        if activity_subgroup_uid and activity_group_uid:
+            filter_by_subgroup_and_group_uid = f"""
+            {{activity_subgroup_uid: $activity_subgroup_uid, activity_group_uid: $activity_group_uid}} IN
+            [({activity_grouping_query_text})-[:IN_SUBGROUP]->(activity_valid_group:ActivityValidGroup) |
+            {{
+                activity_subgroup_uid: head([(activity_valid_group)<-[:HAS_GROUP]-(activity_subgroup_value:ActivitySubGroupValue)
+                                            <-[:HAS_VERSION]-(activity_subgroup_root:ActivitySubGroupRoot) | activity_subgroup_root.uid]),
+                activity_group_uid: head([(activity_valid_group)-[:IN_GROUP]->(activity_group_value:ActivityGroupValue)
+                                            <-[:HAS_VERSION]-(activity_group_root:ActivityGroupRoot) | activity_group_root.uid])
+            }}
+            ]"""
+            filter_parameters.append(filter_by_subgroup_and_group_uid)
+            filter_query_parameters["activity_subgroup_uid"] = activity_subgroup_uid
+            filter_query_parameters["activity_group_uid"] = activity_group_uid
+        if activity_subgroup_uid is not None and activity_group_uid is None:
+            filter_by_activity_subgroup_uid = f"""
+            $activity_subgroup_uid IN [({activity_grouping_query_text})-[:IN_SUBGROUP]->
             (:ActivityValidGroup)<-[:HAS_GROUP]-(activity_subgroup_value:ActivitySubGroupValue)
             <-[:HAS_VERSION]-(activity_subgroup_root:ActivitySubGroupRoot) | activity_subgroup_root.uid]"""
             filter_parameters.append(filter_by_activity_subgroup_uid)
             filter_query_parameters["activity_subgroup_uid"] = activity_subgroup_uid
-        if (activity_group_uid := kwargs.get("activity_group_uid")) is not None:
-            filter_by_activity_group_uid = """
-            $activity_group_uid IN [(concept_value)-[:HAS_GROUPING]->(:ActivityGrouping)-[:IN_SUBGROUP]->
+        if activity_group_uid is not None and activity_subgroup_uid is None:
+            filter_by_activity_group_uid = f"""
+            $activity_group_uid IN [({activity_grouping_query_text})-[:IN_SUBGROUP]->
             (:ActivityValidGroup)-[:IN_GROUP]->(activity_group_value:ActivityGroupValue)
             <-[:HAS_VERSION]-(activity_group_root:ActivityGroupRoot) | activity_group_root.uid]"""
             filter_parameters.append(filter_by_activity_group_uid)
@@ -340,15 +376,15 @@ class ActivityRepository(ConceptGenericRepository[ActivityAR]):
             filter_query_parameters["activity_names"] = activity_names
         if kwargs.get("activity_subgroup_names") is not None:
             activity_subgroup_names = kwargs.get("activity_subgroup_names")
-            filter_by_activity_subgroup_names = """
-            size([(concept_value)-[:HAS_GROUPING]->(:ActivityGrouping)-[:IN_SUBGROUP]->
+            filter_by_activity_subgroup_names = f"""
+            size([({activity_grouping_query_text})-[:IN_SUBGROUP]->
             (:ActivityValidGroup)<-[:HAS_GROUP]-(asgv:ActivitySubGroupValue) WHERE asgv.name IN $activity_subgroup_names | asgv.name]) > 0"""
             filter_parameters.append(filter_by_activity_subgroup_names)
             filter_query_parameters["activity_subgroup_names"] = activity_subgroup_names
         if kwargs.get("activity_group_names") is not None:
             activity_group_names = kwargs.get("activity_group_names")
-            filter_by_activity_group_names = """
-            size([(concept_value)-[:HAS_GROUPING]->(:ActivityGrouping)-[:IN_SUBGROUP]->
+            filter_by_activity_group_names = f"""
+            size([({activity_grouping_query_text})-[:IN_SUBGROUP]->
             (:ActivityValidGroup)-[:IN_GROUP]->(agv:ActivityGroupValue) WHERE agv.name IN $activity_group_names | agv.name]) > 0"""
             filter_parameters.append(filter_by_activity_group_names)
             filter_query_parameters["activity_group_names"] = activity_group_names
@@ -510,7 +546,7 @@ class ActivityRepository(ConceptGenericRepository[ActivityAR]):
         return key
 
     def specific_alias_clause(
-        self, only_specific_status: str = ObjectStatus.LATEST.name
+        self, only_specific_status: str = ObjectStatus.LATEST.name, **kwargs
     ) -> str:
         # concept_value property comes from the main part of the query
         # which is specified in the concept_generic_repository
@@ -518,6 +554,13 @@ class ActivityRepository(ConceptGenericRepository[ActivityAR]):
             "activity_subgroup_names"
         )
         activity_group_names = self.filter_query_parameters.get("activity_group_names")
+
+        if kwargs.get("group_by_groupings") is False:
+            activity_grouping_query_text = "activity_grouping"
+        else:
+            activity_grouping_query_text = (
+                "concept_value)-[:HAS_GROUPING]->(:ActivityGrouping"
+            )
         return f"""
         WITH *,
             concept_value.synonyms AS synonyms,
@@ -534,7 +577,7 @@ class ActivityRepository(ConceptGenericRepository[ActivityAR]):
             END AS requester_study_id,
             coalesce(concept_value.is_data_collected, False) AS is_data_collected,
             coalesce(concept_value.is_multiple_selection_allowed, True) AS is_multiple_selection_allowed,
-            apoc.coll.toSet([(concept_value)-[:HAS_GROUPING]->(:ActivityGrouping)-[:IN_SUBGROUP]->(activity_valid_group:ActivityValidGroup)
+            apoc.coll.toSet([({activity_grouping_query_text})-[:IN_SUBGROUP]->(activity_valid_group:ActivityValidGroup)
             {'WHERE size([(activity_valid_group)<-[:HAS_GROUP]-(activity_subgroup_value) WHERE activity_subgroup_value.name in $activity_subgroup_names | activity_subgroup_value.name]) > 0 '
         if activity_subgroup_names
         else ''}
@@ -552,39 +595,41 @@ class ActivityRepository(ConceptGenericRepository[ActivityAR]):
                         minor_version: toInteger(split(has_version.version,'.')[1]),
                         name:activity_subgroup_value.name
                     }}], ['major_version', 'minor_version'])),
-                 activity_group: head(apoc.coll.sortMulti([(activity_valid_group)-[:IN_GROUP]-(activity_group_value:ActivityGroupValue)
-                 <-[has_version:HAS_VERSION]-(activity_group_root:ActivityGroupRoot)
+                    activity_group: head(apoc.coll.sortMulti([(activity_valid_group)-[:IN_GROUP]-(activity_group_value:ActivityGroupValue)
+                    <-[has_version:HAS_VERSION]-(activity_group_root:ActivityGroupRoot)
                     | {{
                         uid:activity_group_root.uid,
                         major_version: toInteger(split(has_version.version,'.')[0]),
                         minor_version: toInteger(split(has_version.version,'.')[1]),
                         name:activity_group_value.name
                     }}], ['major_version', 'minor_version']))
-             }}]) AS activity_groupings,
-            head([(concept_value)-[:REPLACED_BY_ACTIVITY]->(replacing_activity_root:ActivityRoot) | replacing_activity_root.uid]) AS replaced_by_activity,
-            apoc.coll.sortMulti([(concept_value)-[:HAS_GROUPING]->(:ActivityGrouping)<-[:HAS_ACTIVITY]-(activity_instance_value:ActivityInstanceValue)
-                <-[instance_version:HAS_VERSION WHERE instance_version.status='Final' and instance_version.end_date IS NULL]-(activity_instance_root) |
-                {{
-                    uid:activity_instance_root.uid,
-                    legacy_code:activity_instance_value.is_legacy_usage,
-                    major_version: toInteger(split(instance_version.version,'.')[0]),
-                    minor_version: toInteger(split(instance_version.version,'.')[1])
-                }}], ['^uid', 'major_version', 'minor_version']) AS all_legacy_codes
-            WITH *,
-                // Sort by uid and instance_version in descending order and leave only latest version of same ActivityInstances
-                [
-                    i in range(0, size(all_legacy_codes) -1)
-                    WHERE i=0 OR all_legacy_codes[i].uid <> all_legacy_codes[i-1].uid | all_legacy_codes[i].legacy_code ] as all_legacy_codes
-            WITH *,
-                CASE
-                WHEN NOT is_request_rejected and replaced_by_activity IS NULL THEN false
-                ELSE true
-                END as is_finalized,
-                CASE WHEN size(all_legacy_codes) > 0
-                    THEN all(is_legacy_usage IN all_legacy_codes where is_legacy_usage=true and is_legacy_usage IS NOT NULL)
-                    ELSE false
-                END as is_used_by_legacy_instances
-        """
+                }}]) AS activity_groupings,
+                apoc.coll.toSet([({activity_grouping_query_text})<-[:HAS_ACTIVITY]-(activity_instance_value:ActivityInstanceValue)
+                <-[has_version:HAS_VERSION]-(activity_instance_root:ActivityInstanceRoot) | {{uid: activity_instance_root.uid, name: activity_instance_value.name}}]) AS activity_instances,
+                head([(concept_value)-[:REPLACED_BY_ACTIVITY]->(replacing_activity_root:ActivityRoot) | replacing_activity_root.uid]) AS replaced_by_activity,
+                apoc.coll.sortMulti([({activity_grouping_query_text})<-[:HAS_ACTIVITY]-(activity_instance_value:ActivityInstanceValue)
+                    <-[instance_version:HAS_VERSION WHERE instance_version.status='Final' and instance_version.end_date IS NULL]-(activity_instance_root) |
+                    {{
+                        uid:activity_instance_root.uid,
+                        legacy_code:activity_instance_value.is_legacy_usage,
+                        major_version: toInteger(split(instance_version.version,'.')[0]),
+                        minor_version: toInteger(split(instance_version.version,'.')[1])
+                    }}], ['^uid', 'major_version', 'minor_version']) AS all_legacy_codes
+                WITH *,
+                    // Sort by uid and instance_version in descending order and leave only latest version of same ActivityInstances
+                    [
+                        i in range(0, size(all_legacy_codes) -1)
+                        WHERE i=0 OR all_legacy_codes[i].uid <> all_legacy_codes[i-1].uid | all_legacy_codes[i].legacy_code ] as all_legacy_codes
+                WITH *,
+                    CASE
+                    WHEN NOT is_request_rejected and replaced_by_activity IS NULL THEN false
+                    ELSE true
+                    END as is_finalized,
+                    CASE WHEN size(all_legacy_codes) > 0
+                        THEN all(is_legacy_usage IN all_legacy_codes where is_legacy_usage=true and is_legacy_usage IS NOT NULL)
+                        ELSE false
+                    END as is_used_by_legacy_instances
+            """
 
     def replace_request_with_sponsor_activity(
         self, activity_request_uid: str, sponsor_activity_uid: str
@@ -655,7 +700,6 @@ class ActivityRepository(ConceptGenericRepository[ActivityAR]):
                         RETURN last(hvs) as has_version
                     }
                     """
-
         query = (
             match
             + """
@@ -687,22 +731,35 @@ class ActivityRepository(ConceptGenericRepository[ActivityAR]):
                 topic_code:activity_instance_value.topic_code,
                 activity_instance_class: head([(activity_instance_value)-[:ACTIVITY_INSTANCE_CLASS]->(activity_instance_class_root:ActivityInstanceClassRoot)
                     -[:LATEST]->(activity_instance_class_value:ActivityInstanceClassValue) | activity_instance_class_value])
-            }], ['^uid', 'version.major_version', 'version.minor_version']) AS activity_instances,
-            [(activity_value)-[:HAS_GROUPING]->(:ActivityGrouping)-[:IN_SUBGROUP]->(activity_valid_group:ActivityValidGroup)
-                <-[:HAS_GROUP]-(activity_subgroup_value:ActivitySubGroupValue) | {
-                    activity_subgroup_value: activity_subgroup_value, 
-                    activity_group_value: head([(activity_valid_group)-[:IN_GROUP]->(activity_group_value) | activity_group_value])
-                }
-            ] AS hierarchy
-        RETURN
-            hierarchy,
-            activity_root,
-            activity_value,
-            activity_library_name,
-            apoc.coll.sortMaps(activity_instances, '^name') as activity_instances,
-            has_version,
-            apoc.coll.dropDuplicateNeighbors(apoc.coll.sort(all_versions)) AS all_versions
-        """
+                }], ['^uid', 'version.major_version', 'version.minor_version']) AS activity_instances,
+                apoc.coll.toSet([(activity_value)-[:HAS_GROUPING]->(:ActivityGrouping)-[:IN_SUBGROUP]->(activity_valid_group:ActivityValidGroup)
+                    <-[:HAS_GROUP]-(activity_subgroup_value:ActivitySubGroupValue)<-[:HAS_VERSION]-(activity_subgroup_root:ActivitySubGroupRoot)
+                    | {
+                        activity_subgroup_value: activity_subgroup_value,
+                        activity_subgroup_uid: activity_subgroup_root.uid,
+                        activity_group_value: head([(activity_valid_group)-[:IN_GROUP]->(activity_group_value:ActivityGroupValue)
+                            <-[:HAS_VERSION]-(activity_group_root:ActivityGroupRoot) | activity_group_value]),
+                        activity_group_uid: head([(activity_valid_group)-[:IN_GROUP]->(activity_group_value:ActivityGroupValue)
+                            <-[:HAS_VERSION]-(activity_group_root:ActivityGroupRoot) | activity_group_root.uid])
+                    }]) AS hierarchy
+            RETURN
+                hierarchy,
+                activity_root,
+                activity_value,
+                activity_library_name,
+                apoc.coll.sortMaps(activity_instances, '^name') as activity_instances,
+                has_version,
+                apoc.coll.dropDuplicateNeighbors(
+                  [v in apoc.coll.sortMulti(
+                    [v in all_versions | {
+                      version: v,
+                      major: toInteger(split(v, '.')[0]),
+                      minor: toInteger(split(v, '.')[1])
+                    }],
+                    ['major', 'minor']
+                  ) | v.version]
+                ) AS all_versions
+            """
         )
         result_array, attribute_names = db.cypher_query(query=query, params=params)
         BusinessLogicException.raise_if(
@@ -771,6 +828,64 @@ class ActivityRepository(ConceptGenericRepository[ActivityAR]):
             attribute_name: result_array[0][index]
             for index, attribute_name in enumerate(attribute_names)
         }
+
+    def generic_match_clause(
+        self,
+        only_specific_status: str = ObjectStatus.LATEST.name,
+        **kwargs,
+    ):
+        concept_label = self.root_class.__label__
+        concept_value_label = self.value_class.__label__
+        query = f"""CYPHER runtime=slotted MATCH (concept_root:{concept_label})-[:{only_specific_status}]->(concept_value:{concept_value_label})
+        """
+        if kwargs.get("group_by_groupings") is False:
+            query += "OPTIONAL MATCH (concept_value)-[:HAS_GROUPING]->(activity_grouping:ActivityGrouping)"
+        return query
+
+    def generic_alias_clause(self, **kwargs):
+        return f"""
+            DISTINCT concept_root, concept_value, {"" if kwargs.get("group_by_groupings") else "activity_grouping,"}
+            head([(library)-[:CONTAINS_CONCEPT]->(concept_root) | library]) AS library
+            CALL {{
+                WITH concept_root, concept_value
+                MATCH (concept_root)-[hv:HAS_VERSION]-(concept_value)
+                WITH hv
+                ORDER BY
+                    toInteger(split(hv.version, '.')[0]) ASC,
+                    toInteger(split(hv.version, '.')[1]) ASC,
+                    hv.start_date ASC
+                WITH collect(hv) as hvs
+                RETURN last(hvs) AS version_rel
+            }}
+            CALL {{
+                WITH version_rel
+                OPTIONAL MATCH (author: User)
+                WHERE author.user_id = version_rel.author_id
+                RETURN author
+            }}
+            WITH
+                {"" if kwargs.get("group_by_groupings") else "activity_grouping,"}
+                concept_root.uid AS uid,
+                concept_root,
+                concept_value.nci_concept_id AS nci_concept_id,
+                concept_value.nci_concept_name AS nci_concept_name,
+                concept_value.name AS name,
+                concept_value.name_sentence_case AS name_sentence_case,
+                concept_value.external_id AS external_id,
+                concept_value.definition AS definition,
+                concept_value.abbreviation AS abbreviation,
+                CASE WHEN concept_value:TemplateParameterTermValue THEN true ELSE false END AS template_parameter,
+                library.name AS library_name,
+                library.is_editable AS is_library_editable,
+                version_rel.start_date AS start_date,
+                version_rel.end_date AS end_date,
+                version_rel.status AS status,
+                version_rel.version AS version,
+                version_rel.change_description AS change_description,
+                version_rel.author_id AS author_id,
+                coalesce(author.username, version_rel.author_id) AS author_username,
+                concept_value
+        """
 
     def generic_match_clause_all_versions(self):
         return """

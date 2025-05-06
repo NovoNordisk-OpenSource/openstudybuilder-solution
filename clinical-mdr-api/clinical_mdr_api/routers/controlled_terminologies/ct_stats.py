@@ -23,8 +23,8 @@ router = APIRouter()
     response_model=CTStats,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_stats(

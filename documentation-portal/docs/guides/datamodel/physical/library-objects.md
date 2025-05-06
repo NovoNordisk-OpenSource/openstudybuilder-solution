@@ -406,3 +406,4 @@ The following relationship types are part of the library objects data model:
 - Cardinality: `(0..*)`
 - Start nodes: `ObjectiveValue`, `EndpointValue`, `TimeframeValue`
 - End nodes: `Conjunction`
+

@@ -8,8 +8,8 @@ from typing import Annotated, Any, Callable
 from dateutil.parser import isoparse
 from neo4j.exceptions import CypherSyntaxError
 from neomodel import Q, db
-from pydantic import BaseModel, Field, validator
-from pydantic.types import T, conlist
+from pydantic import BaseModel, Field, field_validator
+from pydantic.types import T
 
 from clinical_mdr_api.models.concepts.activities.activity import (
     ActivityGroupingHierarchySimpleModel,
@@ -18,7 +18,7 @@ from clinical_mdr_api.models.concepts.concept import VersionProperties
 from clinical_mdr_api.models.controlled_terminologies.ct_term import SimpleTermModel
 from clinical_mdr_api.models.standard_data_models.sponsor_model import SponsorModelBase
 from common.exceptions import ValidationException
-from common.utils import validate_max_skip_clause
+from common.utils import get_field_type, get_sub_fields, validate_max_skip_clause
 
 # Re-used regex
 nested_regex = re.compile(r"\.")
@@ -105,18 +105,23 @@ def get_wildcard_filter(filter_elem, model: BaseModel):
     """
 
     wildcard_filter = []
-    for name, field in model.__fields__.items():
+    for name, field in model.model_fields.items():
         field_source = get_field_path(prop=name, field=field)
         model_sources = get_version_properties_sources()
+        jse = field.json_schema_extra or {}
         if not (
             field_source in model_sources
-            and field.type_ is str
+            and get_field_type(field.annotation) is str
             and not issubclass(model, SponsorModelBase)
-        ) and not field.field_info.extra.get("remove_from_wildcard", False):
-            if issubclass(field.type_, BaseModel):
-                q_obj = get_wildcard_filter(filter_elem=filter_elem, model=field.type_)
+        ) and not jse.get("remove_from_wildcard", False):
+            if issubclass(get_field_type(field.annotation), BaseModel):
+                q_obj = get_wildcard_filter(
+                    filter_elem=filter_elem, model=get_field_type(field.annotation)
+                )
                 wildcard_filter.append(q_obj)
-            elif field.type_ is str and name not in ["possible_actions"]:
+            elif get_field_type(field.annotation) is str and name not in [
+                "possible_actions"
+            ]:
                 q_obj = Q(**{f"{field_source}__icontains": filter_elem.v[0]})
                 wildcard_filter.append(q_obj)
     return functools.reduce(lambda filter1, filter2: filter1 | filter2, wildcard_filter)
@@ -138,7 +143,7 @@ def get_embedded_field(fields: list[Any], model: BaseModel):
         ValidationException: If the supplied value for 'field_name' is not valid.
     """
     if len(fields) == 1:
-        return model.__fields__.get(fields[0])
+        return model.model_fields.get(fields[0])
     for field in fields:
         ValidationException.raise_if(
             len(field.strip()) == 0,
@@ -146,7 +151,7 @@ def get_embedded_field(fields: list[Any], model: BaseModel):
         )
 
     try:
-        field_model = model.__fields__.get(fields[0]).type_
+        field_model = get_field_type(model.model_fields.get(fields[0]).annotation)
         return get_embedded_field(fields[1:], model=field_model)
     except AttributeError as _ex:
         raise ValidationException(
@@ -160,7 +165,7 @@ def get_field(prop, model):
     if "." in prop:
         field = get_embedded_field(fields=prop.split("."), model=model)
     else:
-        field = model.__fields__.get(prop)
+        field = model.model_fields.get(prop)
 
     ValidationException.raise_if_not(field, msg=f"Field '{prop}' is not supported")
 
@@ -168,7 +173,8 @@ def get_field(prop, model):
 
 
 def get_field_path(prop, field):
-    source = field.field_info.extra.get("source")
+    jse = field.json_schema_extra or {}
+    source = jse.get("source")
     if source is not None:
         if "." in source:
             field_name = source.replace(".", "__")
@@ -211,21 +217,37 @@ def get_versioning_q_filter(filter_elem, field, q_filters: list[Any]):
 
 def get_version_properties_sources() -> list[Any]:
     return [
-        field.field_info.extra.get("source")
-        for field in VersionProperties.__fields__.values()
+        field.json_schema_extra.get("source") if field.json_schema_extra else None
+        for field in VersionProperties.model_fields.values()
     ]
+
+
+def validate_sort_by_is_dict(sort_by: dict | None):
+    # Accept an empty string as an empty dictionary
+    if sort_by == "":
+        sort_by = {}
+    ValidationException.raise_if(
+        sort_by is not None and not isinstance(sort_by, dict),
+        msg=f"Invalid sort_by object provided: '{sort_by}', it must be a dict",
+    )
+    return sort_by
+
+
+def validate_filter_by_is_dict(filter_by: dict | None):
+    # Accept an empty string as an empty dictionary
+    if filter_by == "":
+        filter_by = {}
+    ValidationException.raise_if(
+        filter_by is not None and not isinstance(filter_by, dict),
+        msg=f"Invalid filter_by object provided: '{filter_by}', it must be a dict",
+    )
+    return filter_by
 
 
 def validate_filters_and_add_search_string(
     search_string: str, field_name: str, filter_by: dict | None
 ):
-    # Accept an empty string as an empty filters dict
-    if filter_by == "":
-        filter_by = {}
-    ValidationException.raise_if(
-        filter_by is not None and not isinstance(filter_by, dict),
-        msg="Filter object must be a dict",
-    )
+    filter_by = validate_filter_by_is_dict(filter_by)
     if search_string != "":
         if filter_by is None:
             filter_by = {}
@@ -254,17 +276,19 @@ def transform_filters_into_neomodel(filter_by: dict | None, model: BaseModel):
                     continue
 
                 # get the list of possible filters for a given field type
-                possible_filters = data_type_filters.get(field.type_)
+                possible_filters = data_type_filters.get(
+                    get_field_type(field.annotation)
+                )
 
                 # if possible filter list is None it means that data type of the filter field is not listed
                 # in the data_type_filters configuration
                 if possible_filters is None:
                     raise AttributeError(
-                        f"Passed not supported data type {field.type_}"
+                        f"Passed not supported data type {get_field_type(field.annotation)}"
                     )
                 if filter_elem.op not in possible_filters:
                     raise AttributeError(
-                        f"The following filtering type {filter_elem.op.name} is not supported for the following data type {field.type_}."
+                        f"The following filtering type {filter_elem.op.name} is not supported for the following data type {get_field_type(field.annotation)}."
                     )
                 if len(filter_elem.v) == 1:
                     neomodel_filter = comparison_operator_to_neomodel.get(
@@ -356,7 +380,7 @@ class FilterOperator(Enum):
 
 class FilterDictElement(BaseModel):
     v: Annotated[
-        conlist(item_type=T),
+        list[T],
         Field(
             title="search values",
             description="list of values to use as search values. Can be of any type.",
@@ -370,8 +394,8 @@ class FilterDictElement(BaseModel):
         ),
     ] = ComparisonOperator.EQUALS
 
-    @validator("op", pre=True)
-    # pylint: disable=no-self-argument
+    @field_validator("op", mode="before")
+    @classmethod
     def _is_op_supported(cls, val):
         try:
             return ComparisonOperator(val)
@@ -391,8 +415,8 @@ class FilterDict(BaseModel):
         ),
     ]
 
-    @validator("elements", pre=True)
-    # pylint: disable=no-self-argument
+    @field_validator("elements", mode="before")
+    @classmethod
     def _none_as_empty_dict(cls, val):
         if val is None:
             return {}
@@ -491,19 +515,16 @@ class CypherQueryBuilder:
 
         # Auto-generate internal clauses
         if filter_by is not None:
-            ValidationException.raise_if_not(
-                isinstance(filter_by.elements, dict),
-                msg="filter_by elements must be a dict",
+            filter_by.elements = validate_filter_by_is_dict(
+                filter_by=filter_by.elements
             )
+
         if filter_by and len(self.filter_by.elements) > 0:
             self.build_filter_clause()
         if self.page_size > 0:
             self.build_pagination_clause()
         if self.sort_by:
-            ValidationException.raise_if_not(
-                isinstance(self.sort_by, dict), msg="sort_by must be a dict"
-            )
-
+            self.sort_by = validate_sort_by_is_dict(sort_by=self.sort_by)
             self.build_sort_clause()
 
         # Auto-generate final queries
@@ -515,16 +536,18 @@ class CypherQueryBuilder:
     ):
         if "." in _alias:
             nested_path = _alias.split(".")
-            attr_desc = self.return_model.__fields__.get(nested_path[0])
+            attr_desc = self.return_model.model_fields.get(nested_path[0])
             path = nested_path[0]
             _alias = nested_path[-1]
             nested_path = nested_path[1:-1]
             # Each returned row has a field that starts with the specified filter value
             for traversal in nested_path:
-                attr_desc = attr_desc.type_.__fields__.get(traversal)
+                attr_desc = get_field_type(attr_desc.annotation).model_fields.get(
+                    traversal
+                )
                 path = traversal
 
-            if attr_desc.sub_fields is None:
+            if get_sub_fields(attr_desc) is None:
                 # if field is just SimpleTermModel compare wildcard filter
                 # with name property of SimpleTermModel
                 _predicates.append(
@@ -537,9 +560,9 @@ class CypherQueryBuilder:
                 )
             self.parameters[f"{_query_param_name}"] = elm.lower()
         else:
-            attr_desc = self.return_model.__fields__.get(_alias)
+            attr_desc = self.return_model.model_fields.get(_alias)
             # name=$name_0 with name_0 defined in parameter objects
-            if attr_desc.sub_fields is None:
+            if get_sub_fields(attr_desc) is None:
                 # if field is just SimpleTermModel compare wildcard filter
                 # with name property of SimpleTermModel
                 _predicates.append(
@@ -657,12 +680,12 @@ class CypherQueryBuilder:
                                 for (
                                     attribute,
                                     attr_desc,
-                                ) in self.return_model.__fields__.items():
+                                ) in self.return_model.model_fields.items():
                                     # Wildcard filtering only searches in properties of type string
                                     if (
-                                        attr_desc.type_ is str
+                                        get_field_type(attr_desc.annotation) is str
                                         # and field is not a list [str]
-                                        and attr_desc.sub_fields is None
+                                        and get_sub_fields(attr_desc) is None
                                     ):
                                         # name=$name_0 with name_0 defined in parameter objects
                                         if self.format_filter_sort_keys:
@@ -674,21 +697,24 @@ class CypherQueryBuilder:
                                         )
                                     # if field is list [str]
                                     elif (
-                                        attr_desc.sub_fields is not None
-                                        and attr_desc.type_ is str
+                                        get_sub_fields(attr_desc) is not None
+                                        and get_field_type(attr_desc.annotation) is str
                                         and attribute not in ["possible_actions"]
                                     ):
                                         _predicates.append(
                                             f"$wildcard_{index} IN {attribute}"
                                         )
                                     # Wildcard filtering for SimpleTermModel
-                                    elif attr_desc.type_ is SimpleTermModel:
+                                    elif (
+                                        get_field_type(attr_desc.annotation)
+                                        is SimpleTermModel
+                                    ):
                                         # name=$name_0 with name_0 defined in parameter objects
                                         if self.format_filter_sort_keys:
                                             attribute = self.format_filter_sort_keys(
                                                 attribute
                                             )
-                                        if attr_desc.sub_fields is None:
+                                        if get_sub_fields(attr_desc) is None:
                                             # if field is just SimpleTermModel compare wildcard filter
                                             # with name property of SimpleTermModel
                                             _predicates.append(
@@ -700,7 +726,7 @@ class CypherQueryBuilder:
                                                 f"$wildcard_{index} IN [attr in {attribute} | toLower(attr.name)]"
                                             )
                                     elif (
-                                        attr_desc.type_
+                                        get_field_type(attr_desc.annotation)
                                         is ActivityGroupingHierarchySimpleModel
                                     ):
                                         _predicates.append(
@@ -723,12 +749,26 @@ class CypherQueryBuilder:
                                 real_alias = _alias.split(".")[0]
                             else:
                                 real_alias = _alias
+                            jse = (
+                                self.return_model.model_fields.get(
+                                    _alias
+                                ).json_schema_extra
+                                or {}
+                                if self.return_model
+                                and hasattr(self.return_model, "model_fields")
+                                and self.return_model.model_fields.get(_alias)
+                                else {}
+                            )
                             if (
                                 self.return_model
                                 and issubclass(self.return_model, BaseModel)
-                                and self.return_model.__fields__.get(real_alias)
+                                and self.return_model.model_fields.get(real_alias)
                                 and issubclass(
-                                    self.return_model.__fields__.get(real_alias).type_,
+                                    get_field_type(
+                                        self.return_model.model_fields.get(
+                                            real_alias
+                                        ).annotation
+                                    ),
                                     BaseModel,
                                 )
                             ):
@@ -743,14 +783,18 @@ class CypherQueryBuilder:
                                 # pylint: disable=too-many-boolean-expressions
                                 self.return_model
                                 and issubclass(self.return_model, BaseModel)
-                                and self.return_model.__fields__.get(_alias)
-                                and self.return_model.__fields__.get(_alias).sub_fields
+                                and self.return_model.model_fields.get(_alias)
+                                and get_sub_fields(
+                                    self.return_model.model_fields.get(_alias)
+                                )
                                 is not None
-                                and self.return_model.__fields__.get(_alias).type_
+                                and get_field_type(
+                                    self.return_model.model_fields.get(
+                                        _alias
+                                    ).annotation
+                                )
                                 is str
-                                and not self.return_model.__fields__.get(
-                                    _alias
-                                ).field_info.extra.get("is_json", False)
+                                and not jse.get("is_json", False)
                             ):
                                 _predicates.append(f"${_query_param_name} IN {_alias}")
                                 self.parameters[_query_param_name] = elm
@@ -813,12 +857,12 @@ class CypherQueryBuilder:
             if self.format_filter_sort_keys:
                 key = self.format_filter_sort_keys(key)
             if self.return_model and issubclass(self.return_model, BaseModel):
-                attr_desc = self.return_model.__fields__.get(key)
+                attr_desc = self.return_model.model_fields.get(key)
                 # if property is of string type we should apply toLower() to sort
                 if (
                     attr_desc
-                    and attr_desc.type_ is str
-                    and attr_desc.sub_fields is None
+                    and get_field_type(attr_desc.annotation) is str
+                    and get_sub_fields(attr_desc) is None
                 ):
                     key = f"toLower({key})"
             sort_by_statements.append(key + sort_order)
@@ -934,16 +978,20 @@ class CypherQueryBuilder:
             )
             paths = split[1:-1]
             if self.return_model:
-                attr_desc = self.return_model.__fields__.get(first_property)
+                attr_desc = self.return_model.model_fields.get(first_property)
+                attr_desc_name = first_property
                 for path in paths:
-                    attr_desc = attr_desc.type_.__fields__.get(path)
+                    attr_desc = get_field_type(attr_desc.annotation).model_fields.get(
+                        path
+                    )
+                    attr_desc_name = path
 
                 ValidationException.raise_if_not(
                     attr_desc, msg=f"Invalid field name: {header_alias}"
                 )
 
-                if attr_desc.sub_fields is not None:
-                    alias_clause = f"[attr in {attr_desc.name} | attr.{last_property}]"
+                if get_sub_fields(attr_desc) is not None:
+                    alias_clause = f"[attr in {attr_desc_name} | attr.{last_property}]"
 
         if not alias_clause:
             alias_clause = header_alias

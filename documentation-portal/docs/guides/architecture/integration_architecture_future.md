@@ -13,3 +13,5 @@ The system will have the following integrations.
 | Word add-in <br> (Internal target data) | Scripting (?) programs within the Microsoft Word connecting to the internal StudyBuilder MDR API | The NN Microsoft Word authoring tool is used for our Common Protocol Template (CPT), this NN CPT will include content controls and importing functionality from the Clinical MDR API populating the structured protocol content defined within the StudyBuilder system. |
 | UNIX SCE <br> (Internal target data) | StudyBuilder internal restful API to the Clinical MDR using a system account access token (as UNIX SCE not is on NN Corp Active Directory).<br> Executed from SAS on UNIX SCE using the SAS HTTP procedure.<br> This is used to transfer terminology and data exchange standards as well as study specification metadata into the SCE environment to be used for CDISC SDTM and ADaM generation as well as other data standards related deliverables. | Currently only a few sample listings are made to test connection readning data from the Clinical MDR API into the UNIX SCE system |
 
+
+

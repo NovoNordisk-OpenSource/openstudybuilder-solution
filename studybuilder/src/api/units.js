@@ -44,5 +44,5 @@ export default {
   },
   getUnitHistory(uid) {
     return repository.get(`${resource}/${uid}/versions`)
-  }
+  },
 }

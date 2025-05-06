@@ -1,6 +1,9 @@
 from dataclasses import dataclass
 from typing import AbstractSet, Callable, Self
 
+from clinical_mdr_api.domains.biomedical_concepts.activity_item_class import (
+    ActivityInstanceClassActivityItemClassRelVO,
+)
 from clinical_mdr_api.domains.versioned_object_aggregate import (
     LibraryItemAggregateRootBase,
     LibraryItemMetadataVO,
@@ -8,6 +11,7 @@ from clinical_mdr_api.domains.versioned_object_aggregate import (
     LibraryVO,
     ObjectAction,
 )
+from clinical_mdr_api.models.standard_data_models.dataset_class import DatasetClass
 from common.exceptions import AlreadyExistsException, BusinessLogicException
 
 
@@ -22,7 +26,10 @@ class ActivityInstanceClassVO:
     order: int | None
     definition: str | None
     is_domain_specific: bool | None
-    dataset_class_uids: list[str] | None
+    level: int | None
+    dataset_class_uid: str | None
+    activity_item_classes: list[ActivityInstanceClassActivityItemClassRelVO]
+    data_domain_uids: list[str]
 
     @classmethod
     def from_repository_values(
@@ -31,16 +38,22 @@ class ActivityInstanceClassVO:
         order: int | None,
         definition: str | None,
         is_domain_specific: bool | None,
+        level: int | None,
         parent_uid: str | None,
-        dataset_class_uids: list[str] | None = None,
+        dataset_class_uid: str | None,
+        activity_item_classes: list[ActivityInstanceClassActivityItemClassRelVO],
+        data_domain_uids: list[str],
     ) -> Self:
         activity_instance_class_vo = cls(
             name=name,
             order=order,
             definition=definition,
             is_domain_specific=is_domain_specific,
+            level=level,
             parent_uid=parent_uid,
-            dataset_class_uids=dataset_class_uids,
+            dataset_class_uid=dataset_class_uid,
+            activity_item_classes=activity_item_classes,
+            data_domain_uids=data_domain_uids,
         )
 
         return activity_instance_class_vo
@@ -49,6 +62,8 @@ class ActivityInstanceClassVO:
         self,
         activity_instance_class_exists_by_name_callback: Callable[[str], bool],
         activity_instance_class_parent_exists: Callable[[str], bool],
+        dataset_class_exists_by_uid: Callable[[str], DatasetClass],
+        ct_term_exists_by_uid_callback: Callable[[str], bool],
         previous_name: str | None = None,
     ) -> None:
         AlreadyExistsException.raise_if(
@@ -63,6 +78,16 @@ class ActivityInstanceClassVO:
             and not activity_instance_class_parent_exists(self.parent_uid),
             msg=f"Activity Instance Class tried to connect to non-existent or non-final Activity Instance Class with UID '{self.parent_uid}'.",
         )
+        BusinessLogicException.raise_if(
+            self.dataset_class_uid
+            and not dataset_class_exists_by_uid(self.dataset_class_uid),
+            msg=f"Activity Instance Class tried to connect to non-existent Dataset Class with UID '{self.dataset_class_uid}'.",
+        )
+        for data_domain_uid in self.data_domain_uids or []:
+            BusinessLogicException.raise_if_not(
+                ct_term_exists_by_uid_callback(data_domain_uid),
+                msg=f"Activity Instance Class tried to connect to non-existent CT Term with UID '{data_domain_uid}'.",
+            )
 
 
 @dataclass
@@ -112,6 +137,8 @@ class ActivityInstanceClassAR(LibraryItemAggregateRootBase):
         library: LibraryVO,
         activity_instance_class_parent_exists: Callable[[str], bool],
         activity_instance_class_exists_by_name_callback: Callable[[str], bool],
+        dataset_class_exists_by_uid: Callable[[str], DatasetClass],
+        ct_term_exists_by_uid_callback: Callable[[str], bool],
         generate_uid_callback: Callable[[], str | None] = (lambda: None),
     ) -> Self:
         item_metadata = LibraryItemMetadataVO.get_initial_item_metadata(
@@ -124,6 +151,8 @@ class ActivityInstanceClassAR(LibraryItemAggregateRootBase):
         activity_instance_class_vo.validate(
             activity_instance_class_parent_exists=activity_instance_class_parent_exists,
             activity_instance_class_exists_by_name_callback=activity_instance_class_exists_by_name_callback,
+            dataset_class_exists_by_uid=dataset_class_exists_by_uid,
+            ct_term_exists_by_uid_callback=ct_term_exists_by_uid_callback,
         )
         activity_instance_class_ar = cls(
             _uid=generate_uid_callback(),
@@ -140,6 +169,8 @@ class ActivityInstanceClassAR(LibraryItemAggregateRootBase):
         activity_instance_class_vo: ActivityInstanceClassVO,
         activity_instance_class_parent_exists: Callable[[str], bool],
         activity_instance_class_exists_by_name_callback: Callable[[str], bool],
+        dataset_class_exists_by_uid: Callable[[str], DatasetClass],
+        ct_term_exists_by_uid_callback: Callable[[str], bool],
     ) -> None:
         """
         Creates a new draft version for the object.
@@ -147,6 +178,8 @@ class ActivityInstanceClassAR(LibraryItemAggregateRootBase):
 
         activity_instance_class_vo.validate(
             activity_instance_class_parent_exists=activity_instance_class_parent_exists,
+            dataset_class_exists_by_uid=dataset_class_exists_by_uid,
+            ct_term_exists_by_uid_callback=ct_term_exists_by_uid_callback,
             activity_instance_class_exists_by_name_callback=activity_instance_class_exists_by_name_callback,
             previous_name=self.name,
         )

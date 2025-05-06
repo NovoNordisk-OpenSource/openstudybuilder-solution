@@ -22,13 +22,15 @@
           variant="outlined"
           color="nnBaseBlue"
           rounded="lg"
-          :rules="[formRules.required]"
         />
         <v-autocomplete
           v-model="selectedVisitsGrouped"
           :items="Object.values(studyVisitsGrouped)"
           :label="$t('StudyActivityScheduleBatchEditForm.studyVisits')"
-          :item-title="(visits) => visits[0].consecutive_visit_group ?? visits[0].visit_short_name"
+          :item-title="
+            (visits) =>
+              visits[0].consecutive_visit_group ?? visits[0].visit_short_name
+          "
           return-object
           multiple
           clearable
@@ -139,7 +141,7 @@ export default {
             for (const uid of uids) {
               data.push({
                 method: 'DELETE',
-                object: "StudyActivitySchedule",
+                object: 'StudyActivitySchedule',
                 content: { uid },
               })
             }
@@ -150,7 +152,7 @@ export default {
           for (const visit of visits) {
             data.push({
               method: 'POST',
-              object: "StudyActivitySchedule",
+              object: 'StudyActivitySchedule',
               content: {
                 study_activity_uid: item.study_activity_uid,
                 study_visit_uid: visit.uid,
@@ -159,12 +161,12 @@ export default {
           }
         }
         data.push({
-          method: "PATCH",
-          object: "StudyActivity",
+          method: 'PATCH',
+          object: 'StudyActivity',
           content: {
             study_activity_uid: item.study_activity_uid,
             content: {
-              soa_group_term_uid: this.selectedFlowchartGroup.term_uid,
+              soa_group_term_uid: this.selectedFlowchartGroup?.term_uid,
             },
           },
         })
@@ -175,7 +177,9 @@ export default {
           () => {
             this.eventBusEmit('notification', {
               type: 'success',
-              msg: this.$t('DetailedFlowchart.batch_update_success', { number: this.selection.length }),
+              msg: this.$t('DetailedFlowchart.batch_update_success', {
+                number: this.selection.length,
+              }),
             })
             this.$emit('updated')
             this.close()

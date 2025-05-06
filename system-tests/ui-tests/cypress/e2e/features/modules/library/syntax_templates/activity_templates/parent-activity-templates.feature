@@ -63,7 +63,7 @@ Feature: Library - Activity Templates
     Scenario: User must not be able to create a new Parent Activity template without Template Text populated
         Given The 'library/activity_instruction_templates/parent' page is opened
         When The new Activity template is added without template text
-        Then The validation appears for Template Text field
+        Then The validation appears for Template name
         And The form is not closed
 
     Scenario: User must not be able to create a new Parent Activity template with not unique Template Text
@@ -200,6 +200,11 @@ Feature: Library - Activity Templates
         When The user clicks on History for particular element
         Then The user is presented with history of changes for that element
         And The history contains timestamps and usernames
+
+    Scenario: User must be able to use table pagination
+        Given The '/library/activity_instruction_templates/parent' page is opened
+        When The user switches pages of the table
+        Then The table page presents correct data
 
     Scenario Outline: User must be able to filter the table by text fields
         Given The 'library/activity_instruction_templates/parent' page is opened

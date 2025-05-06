@@ -391,7 +391,7 @@ class Mockdata(BaseImporter):
                 )
                 continue
             objective_name = row[headers.index("objective")]
-            objective = self.api.find_object_by_name(objective_name, "/objectives")
+            objective = self.api.find_object_by_key(objective_name, "/objectives")
             if objective is None:
                 objective_uid = ""
             else:
@@ -425,11 +425,11 @@ class Mockdata(BaseImporter):
                 )
                 continue
             endpoint_name = row[headers.index("endpoint")]
-            endpoint = self.api.find_object_by_name(endpoint_name, "/endpoints")
+            endpoint = self.api.find_object_by_key(endpoint_name, "/endpoints")
             if endpoint is not None:
                 body["endpoint_uid"] = endpoint["uid"]
             timeframe_name = row[headers.index("timeframe")]
-            timeframe = self.api.find_object_by_name(timeframe_name, "/timeframes")
+            timeframe = self.api.find_object_by_key(timeframe_name, "/timeframes")
             if timeframe is not None:
                 body["timeframe_uid"] = timeframe["uid"]
             units = row[headers.index("units")].split("+")

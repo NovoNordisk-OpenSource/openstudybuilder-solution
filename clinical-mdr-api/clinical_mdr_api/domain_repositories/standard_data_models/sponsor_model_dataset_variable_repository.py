@@ -1,4 +1,5 @@
-from neomodel import NodeSet
+from neomodel import NodeSet, db
+from neomodel.sync_.match import Optional
 
 from clinical_mdr_api.domain_repositories.library_item_repository import (
     LibraryItemRepositoryImplBase,
@@ -8,6 +9,7 @@ from clinical_mdr_api.domain_repositories.models.generic import (
     VersionRelationship,
 )
 from clinical_mdr_api.domain_repositories.models.standard_data_model import (
+    DataModelCatalogue,
     Dataset,
     DatasetVariable,
     SponsorModelDatasetInstance,
@@ -42,6 +44,12 @@ class SponsorModelDatasetVariableRepository(
         return DatasetVariable.nodes.fetch_relations(
             "has_sponsor_model_instance__has_variable",
             "has_dataset_variable__has_library",
+            Optional(
+                "has_sponsor_model_instance__implements_variable_class__is_instance_of"
+            ),
+            Optional(
+                "has_sponsor_model_instance__implements_variable_class__has_variable_class__is_instance_of"
+            ),
         )
 
     def _has_data_changed(
@@ -62,10 +70,13 @@ class SponsorModelDatasetVariableRepository(
             != value.xml_codelist_multi
             or ar.sponsor_model_dataset_variable_vo.core != value.core
             or ar.sponsor_model_dataset_variable_vo.origin != value.origin
+            or ar.sponsor_model_dataset_variable_vo.origin_type != value.origin_type
+            or ar.sponsor_model_dataset_variable_vo.origin_source != value.origin_source
             or ar.sponsor_model_dataset_variable_vo.role != value.role
             or ar.sponsor_model_dataset_variable_vo.term != value.term
             or ar.sponsor_model_dataset_variable_vo.algorithm != value.algorithm
             or ar.sponsor_model_dataset_variable_vo.qualifiers != value.qualifiers
+            or ar.sponsor_model_dataset_variable_vo.is_cdisc_std != value.is_cdisc_std
             or ar.sponsor_model_dataset_variable_vo.comment != value.comment
             or ar.sponsor_model_dataset_variable_vo.ig_comment != value.ig_comment
             or ar.sponsor_model_dataset_variable_vo.class_table != value.class_table
@@ -98,8 +109,14 @@ class SponsorModelDatasetVariableRepository(
         """
         root = DatasetVariable.nodes.get_or_none(uid=item.uid)
 
-        if root is None:
+        if not root:
+            # Create a new "root" node with uid
             root = DatasetVariable(uid=item.uid).save()
+            # Link it with the DataModelCatalogue node
+            catalogue = DataModelCatalogue.nodes.get_or_none(
+                name=item.sponsor_model_dataset_variable_vo.target_data_model_catalogue
+            )
+            root.has_dataset_variable.connect(catalogue)
 
         instance = self._get_or_create_instance(root=root, ar=item)
 
@@ -110,7 +127,7 @@ class SponsorModelDatasetVariableRepository(
         ).resolve_subgraph()
         BusinessLogicException.raise_if_not(
             parent_dataset_instance,
-            msg=f"Dataset with UID '{item.sponsor_model_dataset_variable_vo.dataset_uid}' isn't instantiated in this version of the sponsor model.",
+            msg=f"Dataset with UID '{item.sponsor_model_dataset_variable_vo.dataset_uid}' is not instantiated in this version of the sponsor model.",
         )
         instance.has_variable.connect(
             parent_dataset_instance[0],
@@ -140,10 +157,13 @@ class SponsorModelDatasetVariableRepository(
             xml_codelist_multi=ar.sponsor_model_dataset_variable_vo.xml_codelist_multi,
             core=ar.sponsor_model_dataset_variable_vo.core,
             origin=ar.sponsor_model_dataset_variable_vo.origin,
+            origin_type=ar.sponsor_model_dataset_variable_vo.origin_type,
+            origin_source=ar.sponsor_model_dataset_variable_vo.origin_source,
             role=ar.sponsor_model_dataset_variable_vo.role,
             term=ar.sponsor_model_dataset_variable_vo.term,
             algorithm=ar.sponsor_model_dataset_variable_vo.algorithm,
             qualifiers=ar.sponsor_model_dataset_variable_vo.qualifiers,
+            is_cdisc_std=ar.sponsor_model_dataset_variable_vo.is_cdisc_std,
             comment=ar.sponsor_model_dataset_variable_vo.comment,
             ig_comment=ar.sponsor_model_dataset_variable_vo.ig_comment,
             class_table=ar.sponsor_model_dataset_variable_vo.class_table,
@@ -164,6 +184,48 @@ class SponsorModelDatasetVariableRepository(
 
         # Connect with root
         root.has_sponsor_model_instance.connect(new_instance)
+
+        # Connect with implemented variable class - if provided
+        # Note : This is done through Cypher because the neomodel version with
+        # chained traversal-based filters was creating a bad query
+        if ar.sponsor_model_dataset_variable_vo.implemented_variable_class:
+            results, _ = db.cypher_query(
+                """
+                    MATCH (vc:VariableClass)-[:`HAS_INSTANCE`]->(vci:VariableClassInstance)<-[:`HAS_VARIABLE_CLASS`]-(dci:DatasetClassInstance)
+                    <-[:`HAS_DATASET_CLASS`]-(:DataModelValue)
+                    <-[:`IMPLEMENTS`]-(ig:DataModelIGValue)<-[:`EXTENDS_VERSION`]-(smv:SponsorModelValue) 
+                    MATCH (dci)<-[:`HAS_INSTANCE`]-(dc:DatasetClass)
+                    WHERE 
+                        smv.name = $smv_name 
+                        AND dc.uid = $dc_uid
+                        AND vc.uid = $vc_uid
+                    RETURN vci
+                """,
+                params={
+                    "smv_name": ar.sponsor_model_dataset_variable_vo.sponsor_model_name,
+                    "dc_uid": ar.sponsor_model_dataset_variable_vo.implemented_parent_dataset_class,
+                    "vc_uid": ar.sponsor_model_dataset_variable_vo.implemented_variable_class,
+                },
+                resolve_objects=True,
+            )
+
+            if results:
+                implemented_variable_class_instance = results[0][0]
+                new_instance.implements_variable_class.connect(
+                    implemented_variable_class_instance
+                )
+            else:
+                # If the target variable class is not found
+                # Either because it does not exist or exists but not in the target parent dataset class
+                # Do not raise an exception, but store information about the inconsistency on the node
+                new_instance.implemented_variable_class_inconsistency = True
+                new_instance.implemented_variable_class_uid = (
+                    ar.sponsor_model_dataset_variable_vo.implemented_variable_class
+                )
+                new_instance.implemented_parent_dataset_class_uid = (
+                    ar.sponsor_model_dataset_variable_vo.implemented_parent_dataset_class
+                )
+                self._db_save_node(new_instance)
 
         return new_instance
 
@@ -206,6 +268,8 @@ class SponsorModelDatasetVariableRepository(
                 sponsor_model_name=sponsor_model_name,
                 sponsor_model_version_number=sponsor_model_version,
                 is_basic_std=value.is_basic_std,
+                implemented_parent_dataset_class=value.implemented_parent_dataset_class,
+                implemented_variable_class=value.implemented_variable_class,
                 label=value.label,
                 order=ordinal,
                 variable_type=value.variable_type,
@@ -216,10 +280,13 @@ class SponsorModelDatasetVariableRepository(
                 xml_codelist_multi=value.xml_codelist_multi,
                 core=value.core,
                 origin=value.origin,
+                origin_type=value.origin_type,
+                origin_source=value.origin_source,
                 role=value.role,
                 term=value.term,
                 algorithm=value.algorithm,
                 qualifiers=value.qualifiers,
+                is_cdisc_std=value.is_cdisc_std,
                 comment=value.comment,
                 ig_comment=value.ig_comment,
                 class_table=value.class_table,

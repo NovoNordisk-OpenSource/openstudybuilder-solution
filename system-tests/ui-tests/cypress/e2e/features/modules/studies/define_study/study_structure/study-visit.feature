@@ -129,6 +129,26 @@ Feature: Studies - Study Visit
         When The user opens edit form for the study epoch for chosen study visit
         Then The study epoch field is enabled for editing
 
+    Scenario: User must be able to export the data in CSV format
+        Given The '/studies/Study_000001/study_structure/visits' page is opened
+        And The user exports the data in 'CSV' format
+        Then The study specific 'StudyVisits' file is downloaded in 'csv' format
+
+    Scenario: User must be able to export the data in JSON format
+        Given The '/studies/Study_000001/study_structure/visits' page is opened
+        And The user exports the data in 'JSON' format
+        Then The study specific 'StudyVisits' file is downloaded in 'json' format
+
+    Scenario: User must be able to export the data in XML format
+        Given The '/studies/Study_000001/study_structure/visits' page is opened
+        And The user exports the data in 'XML' format
+        Then The study specific 'StudyVisits' file is downloaded in 'xml' format
+
+    Scenario: User must be able to export the data in EXCEL format
+        Given The '/studies/Study_000001/study_structure/visits' page is opened
+        And The user exports the data in 'EXCEL' format
+        Then The study specific 'StudyVisits' file is downloaded in 'xlsx' format
+
     @pending_implementation
     Scenario: User must not be able to update study epoch without updating the timing to correct chronological order
         Given The '/studies/Study_000002/study_structure/visits' page is opened

@@ -5,18 +5,14 @@
     :style="{ zIndex: options.zIndex }"
     @keydown.esc="cancel"
   >
-    <v-card
-      :border="cardClasses"
-      class="pa-1"
-      style="border-radius: 20px"
-    >
-    <v-card-title v-if="options.title" class="dialogText">
-      {{ options.title }}
-    </v-card-title>
-      <v-card-text v-if="message" class="pt-2 dialogText">
+    <v-card :border="cardClasses" class="pa-1" style="border-radius: 20px">
+      <v-card-title v-if="options.title" class="dialogText">
+        {{ options.title }}
+      </v-card-title>
+      <v-card-text v-if="savedMessage" class="pt-2 dialogText">
         <v-row no-gutters class="align-center pa-2">
           <v-col cols="12">
-            <div class="text-body-1 mt-1" v-html="message" />
+            <div class="text-body-1 mt-1" v-html="savedMessage" />
           </v-col>
         </v-row>
         <v-divider class="pa-2" />
@@ -59,66 +55,67 @@
   </v-dialog>
 </template>
 
-<script>
-export default {
-  data() {
-    return {
-      dialog: false,
-      resolve: null,
-      reject: null,
-      message: null,
-      type: null,
-      options: {
-        title: null,
-        type: 'success',
-        width: 450,
-        zIndex: 3000,
-        noCancel: false,
-        agreeLabel: this.$t('_global.continue'),
-        cancelLabel: this.$t('_global.cancel'),
-        cancelIsPrimaryAction: false,
-        redirect: null,
-      },
-    }
-  },
-  computed: {
-    cardClasses() {
-      return this.btnClasses + ' lg opacity-100'
-    },  
-    btnClasses() {
-      if (this.options.type === 'warning') {
-        return 'warning'
-      } else if (this.options.type === 'info') {
-        return 'info'
-      } else {
-        return 'success'
-      }
-    },
-  },
-  methods: {
-    open(message, options) {
-      this.dialog = true
-      this.message = message
-      this.options = Object.assign(this.options, options)
-      return new Promise((resolve, reject) => {
-        this.resolve = resolve
-        this.reject = reject
-      })
-    },
-    agree() {
-      this.resolve(true)
-      this.dialog = false
-    },
-    agreeAndRedirect() {
-      this.dialog = false
-      this.$router.push(this.options.redirect)
-    },
-    cancel() {
-      this.resolve(false)
-      this.dialog = false
-    },
-  },
+<script setup>
+import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { useRouter } from 'vue-router'
+
+const { t } = useI18n()
+const router = useRouter()
+
+const dialog = ref(false)
+let savedResolve = null
+const savedMessage = ref(null)
+const options = ref({
+  title: null,
+  type: 'success',
+  width: 450,
+  zIndex: 3000,
+  noCancel: false,
+  agreeLabel: t('_global.continue'),
+  cancelLabel: t('_global.cancel'),
+  cancelIsPrimaryAction: false,
+  redirect: null,
+})
+
+const cardClasses = computed(() => {
+  return btnClasses.value + ' lg opacity-100'
+})
+const btnClasses = computed(() => {
+  if (options.value.type === 'warning') {
+    return 'warning'
+  } else if (options.value.type === 'info') {
+    return 'info'
+  } else {
+    return 'success'
+  }
+})
+
+const open = (message, extraOptions) => {
+  dialog.value = true
+  savedMessage.value = message
+  options.value = Object.assign(options.value, extraOptions)
+  return new Promise((resolve) => {
+    savedResolve = resolve
+  })
 }
+const agree = () => {
+  savedResolve(true)
+  dialog.value = false
+}
+const agreeAndRedirect = () => {
+  dialog.value = false
+  router.push(options.value.redirect)
+}
+const cancel = () => {
+  savedResolve(false)
+  dialog.value = false
+}
+
+defineExpose({
+  open,
+  cancel,
+})
 </script>
 <style>
 .dialogText {

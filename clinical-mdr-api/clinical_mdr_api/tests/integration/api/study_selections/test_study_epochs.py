@@ -456,7 +456,7 @@ def test_study_epoch_order_when_epoch_get_deleted_or_modified(api_client):
     )
     assert_response_status_code(response, 200)
     res = response.json()
-    assert res["order"] == 3
+    assert res["order"] == 2
 
     response = api_client.get(
         f"/studies/{study_for_tests.uid}/study-epochs",
@@ -466,9 +466,9 @@ def test_study_epoch_order_when_epoch_get_deleted_or_modified(api_client):
     assert len(all_epochs) == 3
     assert all_epochs[0]["uid"] == epoch_subtype_2_2["uid"]
     assert all_epochs[0]["order"] == 1
-    assert all_epochs[1]["uid"] == epoch_subtype_2_3["uid"]
+    assert all_epochs[1]["uid"] == epoch_subtype_2_1["uid"]
     assert all_epochs[1]["order"] == 2
-    assert all_epochs[2]["uid"] == epoch_subtype_2_1["uid"]
+    assert all_epochs[2]["uid"] == epoch_subtype_2_3["uid"]
     assert all_epochs[2]["order"] == 3
 
 

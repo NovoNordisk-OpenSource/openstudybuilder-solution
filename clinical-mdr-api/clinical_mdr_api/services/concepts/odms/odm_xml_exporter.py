@@ -60,7 +60,7 @@ class OdmXmlExporterService:
     xml_document: Document
     odm: ODM
     used_vendor_namespaces: dict[str, dict]
-    allowed_namespaces: list[str]
+    allowed_namespaces: list[str] | None
     pdf: bool | None
     stylesheet: str | None
 
@@ -111,13 +111,13 @@ class OdmXmlExporterService:
         self.pdf = pdf
         self.stylesheet = stylesheet
 
-        for uid, ext in self.odm_data_extractor.odm_vendor_namespaces.items():
-            if not self.allowed_namespaces:
-                self.used_vendor_namespaces[uid] = ext
-            else:
-                for allowed in self.allowed_namespaces:
-                    if allowed == ext["prefix"]:
-                        self.used_vendor_namespaces[uid] = ext
+        if self.allowed_namespaces:
+            for uid, ext in self.odm_data_extractor.odm_vendor_namespaces.items():
+                if (
+                    "*" in self.allowed_namespaces
+                    or ext["prefix"] in self.allowed_namespaces
+                ):
+                    self.used_vendor_namespaces[uid] = ext
 
         self.odm = self._create_odm_object()
         self.xml_document = Document()
@@ -234,7 +234,7 @@ class OdmXmlExporterService:
         rs = {}
         for name, elm in elements.items():
             prefix, _ = elm.name.split(":")
-            if not self.allowed_namespaces or prefix in self.allowed_namespaces:
+            if "*" in self.allowed_namespaces or prefix in self.allowed_namespaces:
                 rs[name] = elm
         return rs
 
@@ -260,7 +260,7 @@ class OdmXmlExporterService:
                 continue
 
             prefix, _ = elm._custom_element_name.split(":")
-            if not self.allowed_namespaces or prefix in self.allowed_namespaces:
+            if "*" in self.allowed_namespaces or prefix in self.allowed_namespaces:
                 rs.append(elm)
         return rs
 
@@ -284,7 +284,7 @@ class OdmXmlExporterService:
             odm_vendor_namespace = self.odm_data_extractor.odm_vendor_namespaces[
                 vendor_attribute.vendor_namespace_uid
             ]
-            if not self.allowed_namespaces or (
+            if "*" in self.allowed_namespaces or (
                 odm_vendor_namespace["prefix"] in self.allowed_namespaces
             ):
                 attributes[vendor_attribute.name] = Attribute(
@@ -314,7 +314,7 @@ class OdmXmlExporterService:
             odm_vendor_element = self.odm_data_extractor.odm_vendor_elements[
                 vendor_element.uid
             ]["vendor_namespace"]
-            if not self.allowed_namespaces or (
+            if "*" in self.allowed_namespaces or (
                 odm_vendor_element["prefix"] in self.allowed_namespaces
             ):
                 elements[vendor_element.name] = Element(
@@ -982,7 +982,7 @@ class OdmXmlExporterService:
                     used_vendor_namespace["url"],
                 )
                 for used_vendor_namespace in self.used_vendor_namespaces.values()
-                if not self.allowed_namespaces
+                if "*" in self.allowed_namespaces
                 or used_vendor_namespace["prefix"] in self.allowed_namespaces
             },
         )

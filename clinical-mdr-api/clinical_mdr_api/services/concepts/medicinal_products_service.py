@@ -116,7 +116,7 @@ class MedicinalProductService(ConceptGenericService[MedicinalProductAR]):
             "pharmaceutical_product_uids",
             "compound_uid",
         ]:
-            if field not in concept_edit_input.__fields_set__:
+            if field not in concept_edit_input.model_fields_set:
                 setattr(
                     concept_edit_input,
                     field,

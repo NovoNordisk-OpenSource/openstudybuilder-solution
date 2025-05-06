@@ -3,6 +3,7 @@ from typing import Annotated, Any, Callable, Self
 
 from pydantic.fields import Field
 
+from clinical_mdr_api.descriptions.general import CHANGES_FIELD_DESC
 from clinical_mdr_api.domain_repositories.models.syntax import FootnoteTemplateRoot
 from clinical_mdr_api.domains.syntax_instances.footnote import FootnoteAR
 from clinical_mdr_api.models.controlled_terminologies.ct_term import (
@@ -23,19 +24,31 @@ from clinical_mdr_api.models.utils import BaseModel, PatchInputModel, PostInputM
 
 
 class FootnoteTemplateWithType(FootnoteTemplateNameUidLibrary):
-    type: Annotated[CTTermNameAndAttributes | None, Field(nullable=True)] = None
+    type: Annotated[
+        CTTermNameAndAttributes | None, Field(json_schema_extra={"nullable": True})
+    ] = None
 
 
 class Footnote(BaseModel):
     uid: str
-    name: Annotated[str | None, Field(nullable=True)] = None
-    name_plain: Annotated[str | None, Field(nullable=True)] = None
-    start_date: Annotated[datetime | None, Field(nullable=True)] = None
-    end_date: Annotated[datetime | None, Field(nullable=True)] = None
-    status: Annotated[str | None, Field(nullable=True)] = None
-    version: Annotated[str | None, Field(nullable=True)] = None
-    change_description: Annotated[str | None, Field(nullable=True)] = None
-    author_username: Annotated[str | None, Field(nullable=True)] = None
+    name: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    name_plain: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
+    start_date: Annotated[
+        datetime | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    end_date: Annotated[
+        datetime | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    status: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    version: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    change_description: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    author_username: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
     possible_actions: Annotated[
         list[str] | None,
         Field(
@@ -43,17 +56,19 @@ class Footnote(BaseModel):
                 "Holds those actions that can be performed on the footnote. "
                 "Actions are: None"
             ),
-            remove_from_wildcard=True,
-            exclude_from_orm=True,
-            nullable=True,
+            json_schema_extra={
+                "nullable": True,
+                "remove_from_wildcard": True,
+                "exclude_from_model_validate": True,
+            },
         ),
     ] = None
-    template: FootnoteTemplateWithType | None
+    template: FootnoteTemplateWithType | None = None
     parameter_terms: Annotated[
         list[MultiTemplateParameterTerm] | None,
         Field(
             description="Holds the parameter terms that are used within the footnote. The terms are ordered as they occur in the footnote name.",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
     library: Library | None = None
@@ -177,15 +192,11 @@ class FootnoteVersion(FootnoteWithType):
     """
 
     changes: Annotated[
-        dict[str, bool] | None,
+        list[str],
         Field(
-            description=(
-                "Denotes whether or not there was a change in a specific field/property compared to the previous version. "
-                "The field names in this object here refer to the field names of the footnote (e.g. name, start_date, ..)."
-            ),
-            nullable=True,
+            description=CHANGES_FIELD_DESC,
         ),
-    ] = None
+    ] = []
 
 
 class FootnoteEditInput(PatchInputModel):

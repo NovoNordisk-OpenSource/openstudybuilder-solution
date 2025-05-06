@@ -62,3 +62,4 @@ The csv item group is collecting the following information:
 | language      | Provide by default the ENG value here. To have more translation, please add new row with the same OID but with additional language like FRA for French |
 | description   | Please provide here the description of the Item. For multilingual, please provide additional lines |
 | instruction   | Please provide here also every instruction that could help the end user in filling this Item |
+

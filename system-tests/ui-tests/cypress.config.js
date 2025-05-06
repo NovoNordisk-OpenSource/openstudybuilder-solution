@@ -16,6 +16,8 @@ async function setupNodeEvents(on, config) {
 module.exports = defineConfig({
   video: false,
   screenshotOnRunFailure: true,
+  // numtestskeptinmemory: 1,
+  // experimentalMemoryManagement: true,
   defaultCommandTimeout: 10000,
   viewportWidth: 1920,
   viewportHeight: 1080,
@@ -26,7 +28,7 @@ module.exports = defineConfig({
     mochaFile: 'results/junit/[suiteName].xml',
   },
 
-    baseUrl: 'https://openstudybuilder.com',
+    baseUrl: 'https://studybuilder.clinicalmdr-dev.corp.azure.novonordisk.com',
     specPattern: 'cypress/e2e/**/*.feature',
     experimentalStudio: true
     },

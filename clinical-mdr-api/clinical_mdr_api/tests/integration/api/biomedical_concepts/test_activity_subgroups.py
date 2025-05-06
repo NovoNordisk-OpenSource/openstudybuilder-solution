@@ -335,7 +335,7 @@ def test_update_subgroup_to_new_group(api_client):
         f"/concepts/activities/activity-groups/{group.uid}/versions",
         json={},
     )
-    assert response.status_code == 201
+    assert_response_status_code(response, 201)
 
     # Patch the group
     response = api_client.patch(
@@ -346,7 +346,7 @@ def test_update_subgroup_to_new_group(api_client):
             "change_description": "patch group",
         },
     )
-    assert response.status_code == 200
+    assert_response_status_code(response, 200)
 
     # Approve the group
     response = api_client.post(
@@ -356,7 +356,7 @@ def test_update_subgroup_to_new_group(api_client):
     # === Assert that the group was updated as expected ===
     response = api_client.get(f"/concepts/activities/activity-groups/{group.uid}")
 
-    assert response.status_code == 200
+    assert_response_status_code(response, 200)
     res = response.json()
 
     assert res["name"] == edited_group_name
@@ -370,7 +370,7 @@ def test_update_subgroup_to_new_group(api_client):
         f"/concepts/activities/activity-sub-groups/{subgroup.uid}/versions",
         json={},
     )
-    assert response.status_code == 201
+    assert_response_status_code(response, 201)
 
     # Patch the subgroup, no changes
     response = api_client.patch(
@@ -379,19 +379,19 @@ def test_update_subgroup_to_new_group(api_client):
             "change_description": "patch subgroup",
         },
     )
-    assert response.status_code == 200
+    assert_response_status_code(response, 200)
 
     # Approve the subgroup
     response = api_client.post(
         f"/concepts/activities/activity-sub-groups/{subgroup.uid}/approvals"
     )
-    assert response.status_code == 201
+    assert_response_status_code(response, 201)
 
     # Get the activity by uid and assert that it was updated to the new group version
     response = api_client.get(
         f"/concepts/activities/activity-sub-groups/{subgroup.uid}"
     )
-    assert response.status_code == 200
+    assert_response_status_code(response, 200)
     res = response.json()
 
     assert res["version"] == "2.0"

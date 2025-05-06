@@ -2,7 +2,7 @@ import re
 from datetime import datetime
 from typing import Annotated, Callable, Iterable, NamedTuple, Self
 
-from pydantic import Field, root_validator
+from pydantic import ConfigDict, Field, model_validator
 
 from clinical_mdr_api.domain_repositories.study_selections.study_activity_instance_repository import (
     SelectionHistory as StudyActivityInstanceSelectionHistory,
@@ -148,6 +148,7 @@ from clinical_mdr_api.models.utils import (
 from clinical_mdr_api.services.user_info import UserInfoService
 from common import config as settings
 from common.exceptions import BusinessLogicException
+from common.utils import version_string_to_tuple
 
 STUDY_UID_DESC = "The uid of the study"
 STUDY_ACTIVITY_UID_DESC = "uid for the study activity"
@@ -171,27 +172,35 @@ AUTHOR_FIELD_DESC = "Version author"
 AFTER_DATE_QUALIFIER = "has_after.date"
 AFTER_USER_QUALIFIER = "has_after.author_id"
 
-STUDY_UID_FIELD = Field(description=STUDY_UID_DESC, source="has_after.audit_trail.uid")
+STUDY_UID_FIELD = Field(
+    description=STUDY_UID_DESC,
+    json_schema_extra={"source": "has_after.audit_trail.uid"},
+)
 STUDY_OBJECTIVE_UID_FIELD = Field(
     description="uid for a study objective to connect with"
 )
-END_DATE_FIELD = Field(description="End date for the version", nullable=True)
-STATUS_FIELD = Field(description="Change status", nullable=True)
+END_DATE_FIELD = Field(
+    description="End date for the version", json_schema_extra={"nullable": True}
+)
+STATUS_FIELD = Field(description="Change status", json_schema_extra={"nullable": True})
 RESPONSE_CODE_FIELD = Field(
     description="The HTTP response code related to input operation",
 )
 METHOD_FIELD = Field(
     description="HTTP method corresponding to operation type",
-    regex="^(PATCH|POST|DELETE)$",
+    pattern="^(PATCH|POST|DELETE)$",
 )
 CHANGE_TYPE_FIELD = Field(
-    description="Type of last change for the version", nullable=True
+    description="Type of last change for the version",
+    json_schema_extra={"nullable": True},
 )
 SHOW_ACTIVITY_SUBGROUP_IN_PROTOCOL_FLOWCHART_FIELD = Field(
-    description="show activity subgroup in protocol flow chart", nullable=True
+    description="show activity subgroup in protocol flow chart",
+    json_schema_extra={"nullable": True},
 )
 SHOW_ACTIVITY_GROUP_IN_PROTOCOL_FLOWCHART_FIELD = Field(
-    description="show activity group in protocol flow chart", nullable=True
+    description="show activity group in protocol flow chart",
+    json_schema_extra={"nullable": True},
 )
 SHOW_SOA_GROUP_IN_PROTOCOL_FLOWCHART_FIELD = Field(
     description="show soa group in protocol flow chart",
@@ -202,14 +211,17 @@ SHOW_ACTIVITY_INSTANCE_IN_PROTOCOL_FLOWCHART_FIELD = Field(
 
 
 class StudySelection(BaseModel):
-    study_uid: Annotated[str | None, Field(description=STUDY_UID_DESC, nullable=True)]
+    study_uid: Annotated[
+        str | None,
+        Field(description=STUDY_UID_DESC, json_schema_extra={"nullable": True}),
+    ]
 
     study_version: Annotated[
         str | None,
         Field(
             title="study version or date information",
             description="Study version number, if specified, otherwise None.",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
 
@@ -219,7 +231,7 @@ class StudySelection(BaseModel):
         str | None,
         Field(
             description="Number property of the project that the study belongs to",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
 
@@ -227,7 +239,7 @@ class StudySelection(BaseModel):
         str | None,
         Field(
             description="Name property of the project that the study belongs to",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
 
@@ -260,32 +272,45 @@ class StudySelection(BaseModel):
 
 class StudySelectionObjectiveCore(StudySelection):
     study_objective_uid: Annotated[
-        str | None, Field(description="uid for the study objective", nullable=True)
+        str | None,
+        Field(
+            description="uid for the study objective",
+            json_schema_extra={"nullable": True},
+        ),
     ]
 
     objective_level: Annotated[
         CTTermName | None,
-        Field(description=OBJECTIVE_LEVEL_DESC, nullable=True),
+        Field(description=OBJECTIVE_LEVEL_DESC, json_schema_extra={"nullable": True}),
     ] = None
 
     objective: Annotated[
         Objective | None,
-        Field(description="the objective selected for the study", nullable=True),
+        Field(
+            description="the objective selected for the study",
+            json_schema_extra={"nullable": True},
+        ),
     ] = None
 
     template: Annotated[
         ObjectiveTemplate | None,
         Field(
-            description="the objective template selected for the study", nullable=True
+            description="the objective template selected for the study",
+            json_schema_extra={"nullable": True},
         ),
     ] = None
     start_date: Annotated[
-        datetime | None, Field(description=START_DATE_DESC, nullable=True)
+        datetime | None,
+        Field(description=START_DATE_DESC, json_schema_extra={"nullable": True}),
     ]
 
     author_username: Annotated[
         str | None,
-        Field(title="author_username", description=AUTHOR_FIELD_DESC, nullable=True),
+        Field(
+            title="author_username",
+            description=AUTHOR_FIELD_DESC,
+            json_schema_extra={"nullable": True},
+        ),
     ] = None
 
     end_date: Annotated[datetime | None, END_DATE_FIELD] = None
@@ -334,14 +359,15 @@ class StudySelectionObjective(StudySelectionObjectiveCore):
         int | None,
         Field(
             description="Number of study endpoints related to given study objective.",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
 
     latest_objective: Annotated[
         Objective | None,
         Field(
-            description="Latest version of objective selected for study.", nullable=True
+            description="Latest version of objective selected for study.",
+            json_schema_extra={"nullable": True},
         ),
     ] = None
     accepted_version: Annotated[
@@ -349,7 +375,7 @@ class StudySelectionObjective(StudySelectionObjectiveCore):
         Field(
             title=ACCEPTED_VERSION_DESC,
             description="Denotes if user accepted obsolete objective versions",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
 
@@ -561,7 +587,7 @@ class EndpointUnitsInput(InputModel):
         str | None,
         Field(
             description="separator if more than one endpoint units selected for the study endpoint",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
 
@@ -576,42 +602,54 @@ class StudySelectionEndpoint(StudySelection):
         StudySelectionObjective | None,
         Field(
             description="uid for the study objective which the study endpoints connects to",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
 
     endpoint_level: Annotated[
         CTTermName | None,
-        Field(description="level defining the endpoint", nullable=True),
+        Field(
+            description="level defining the endpoint",
+            json_schema_extra={"nullable": True},
+        ),
     ] = None
 
     endpoint_sublevel: Annotated[
         CTTermName | None,
-        Field(description="sub level defining the endpoint", nullable=True),
+        Field(
+            description="sub level defining the endpoint",
+            json_schema_extra={"nullable": True},
+        ),
     ] = None
     endpoint_units: Annotated[
         EndpointUnits | None,
         Field(
             description="the endpoint units selected for the study endpoint",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
 
     endpoint: Annotated[
         Endpoint | None,
-        Field(description="the endpoint selected for the study", nullable=True),
+        Field(
+            description="the endpoint selected for the study",
+            json_schema_extra={"nullable": True},
+        ),
     ] = None
 
     timeframe: Annotated[
         Timeframe | None,
-        Field(description="the timeframe selected for the study", nullable=True),
+        Field(
+            description="the timeframe selected for the study",
+            json_schema_extra={"nullable": True},
+        ),
     ] = None
 
     latest_endpoint: Annotated[
         Endpoint | None,
         Field(
             description="Latest version of the endpoint selected for the study (if available else none)",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
 
@@ -619,28 +657,38 @@ class StudySelectionEndpoint(StudySelection):
         Timeframe | None,
         Field(
             description="Latest version of the timeframe selected for the study (if available else none)",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
     template: Annotated[
         EndpointTemplate | None,
         Field(
-            description="the endpoint template selected for the study", nullable=True
+            description="the endpoint template selected for the study",
+            json_schema_extra={"nullable": True},
         ),
     ] = None
 
     start_date: Annotated[
-        datetime | None, Field(description=START_DATE_DESC, nullable=True)
+        datetime | None,
+        Field(description=START_DATE_DESC, json_schema_extra={"nullable": True}),
     ]
 
     author_username: Annotated[
         str | None,
-        Field(title="author_username", description=AUTHOR_FIELD_DESC, nullable=True),
+        Field(
+            title="author_username",
+            description=AUTHOR_FIELD_DESC,
+            json_schema_extra={"nullable": True},
+        ),
     ] = None
 
     author_username: Annotated[
         str | None,
-        Field(title="author_username", description=AUTHOR_FIELD_DESC, nullable=True),
+        Field(
+            title="author_username",
+            description=AUTHOR_FIELD_DESC,
+            json_schema_extra={"nullable": True},
+        ),
     ] = None
 
     end_date: Annotated[datetime | None, END_DATE_FIELD] = None
@@ -653,7 +701,7 @@ class StudySelectionEndpoint(StudySelection):
         Field(
             title=ACCEPTED_VERSION_DESC,
             description="Denotes if user accepted obsolete endpoint versions",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
 
@@ -1064,26 +1112,36 @@ class StudySelectionCompound(StudySelection):
             study_compound_dosing_count=selection.study_compound_dosing_count,
         )
 
-    study_compound_uid: Annotated[str, Field(source="uid")]
+    study_compound_uid: Annotated[str, Field(json_schema_extra={"source": "uid"})]
 
     compound: Annotated[
         Compound | None,
-        Field(description="the connected compound model", nullable=True),
+        Field(
+            description="the connected compound model",
+            json_schema_extra={"nullable": True},
+        ),
     ] = None
 
     compound_alias: Annotated[
         CompoundAlias | None,
-        Field(description="the connected compound alias", nullable=True),
+        Field(
+            description="the connected compound alias",
+            json_schema_extra={"nullable": True},
+        ),
     ] = None
     medicinal_product: Annotated[
         MedicinalProduct | None,
-        Field(description="the connected medicinal product", nullable=True),
+        Field(
+            description="the connected medicinal product",
+            json_schema_extra={"nullable": True},
+        ),
     ]
 
     type_of_treatment: Annotated[
         SimpleTermModel | None,
         Field(
-            description="type of treatment uid defined for the selection", nullable=True
+            description="type of treatment uid defined for the selection",
+            json_schema_extra={"nullable": True},
         ),
     ] = None
 
@@ -1091,21 +1149,23 @@ class StudySelectionCompound(StudySelection):
         SimpleTermModel | None,
         Field(
             description="route of administration defined for the study selection",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
 
     dose_frequency: Annotated[
         SimpleTermModel | None,
         Field(
-            description="dose frequency defined for the study selection", nullable=True
+            description="dose frequency defined for the study selection",
+            json_schema_extra={"nullable": True},
         ),
     ] = None
 
     dispensed_in: Annotated[
         SimpleTermModel | None,
         Field(
-            description="dispense method defined for the study selection", nullable=True
+            description="dispense method defined for the study selection",
+            json_schema_extra={"nullable": True},
         ),
     ] = None
 
@@ -1113,7 +1173,7 @@ class StudySelectionCompound(StudySelection):
         SimpleTermModel | None,
         Field(
             description="delivery device used for the compound in the study selection",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
 
@@ -1121,7 +1181,7 @@ class StudySelectionCompound(StudySelection):
         str | None,
         Field(
             description="any other information logged regarding the study compound",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
 
@@ -1129,7 +1189,7 @@ class StudySelectionCompound(StudySelection):
         SimpleTermModel | None,
         Field(
             description="Reason why no compound is used in the study selection, e.g. exploratory study",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
 
@@ -1137,17 +1197,22 @@ class StudySelectionCompound(StudySelection):
         int | None,
         Field(
             description="Number of compound dosing linked to Study Compound",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
 
     start_date: Annotated[
-        datetime | None, Field(description=START_DATE_DESC, nullable=True)
+        datetime | None,
+        Field(description=START_DATE_DESC, json_schema_extra={"nullable": True}),
     ]
 
     author_username: Annotated[
         str | None,
-        Field(title="author_username", description=AUTHOR_FIELD_DESC, nullable=True),
+        Field(
+            title="author_username",
+            description=AUTHOR_FIELD_DESC,
+            json_schema_extra={"nullable": True},
+        ),
     ] = None
 
     end_date: Annotated[datetime | None, END_DATE_FIELD] = None
@@ -1300,35 +1365,54 @@ class StudySelectionCompoundNewOrder(PatchInputModel):
 
 class StudySelectionCriteriaCore(StudySelection):
     study_criteria_uid: Annotated[
-        str | None, Field(description="uid for the study criteria", nullable=True)
+        str | None,
+        Field(
+            description="uid for the study criteria",
+            json_schema_extra={"nullable": True},
+        ),
     ]
 
-    criteria_type: Annotated[CTTermName | None, Field(nullable=True)] = None
+    criteria_type: Annotated[
+        CTTermName | None, Field(json_schema_extra={"nullable": True})
+    ] = None
 
     criteria: Annotated[
         Criteria | None,
-        Field(description="the criteria selected for the study", nullable=True),
+        Field(
+            description="the criteria selected for the study",
+            json_schema_extra={"nullable": True},
+        ),
     ] = None
 
     template: Annotated[
         CriteriaTemplate | None,
         Field(
-            description="the criteria template selected for the study", nullable=True
+            description="the criteria template selected for the study",
+            json_schema_extra={"nullable": True},
         ),
     ] = None
 
     start_date: Annotated[
-        datetime | None, Field(description=START_DATE_DESC, nullable=True)
+        datetime | None,
+        Field(description=START_DATE_DESC, json_schema_extra={"nullable": True}),
     ]
 
     author_username: Annotated[
         str | None,
-        Field(title="author_username", description=AUTHOR_FIELD_DESC, nullable=True),
+        Field(
+            title="author_username",
+            description=AUTHOR_FIELD_DESC,
+            json_schema_extra={"nullable": True},
+        ),
     ] = None
 
     author_username: Annotated[
         str | None,
-        Field(title="author_username", description=AUTHOR_FIELD_DESC, nullable=True),
+        Field(
+            title="author_username",
+            description=AUTHOR_FIELD_DESC,
+            json_schema_extra={"nullable": True},
+        ),
     ] = None
 
     end_date: Annotated[datetime | None, END_DATE_FIELD] = None
@@ -1336,7 +1420,9 @@ class StudySelectionCriteriaCore(StudySelection):
     status: Annotated[str | None, STATUS_FIELD] = None
 
     change_type: Annotated[str | None, CHANGE_TYPE_FIELD] = None
-    key_criteria: Annotated[bool | None, Field(nullable=True)] = False
+    key_criteria: Annotated[
+        bool | None, Field(json_schema_extra={"nullable": True})
+    ] = False
 
     @classmethod
     def from_study_selection_template_history(
@@ -1395,21 +1481,21 @@ class StudySelectionCriteria(StudySelectionCriteriaCore):
     latest_criteria: Annotated[
         Criteria | None,
         Field(
-            nullable=True,
+            json_schema_extra={"nullable": True},
             description="Latest version of criteria selected for study.",
         ),
     ] = None
     latest_template: Annotated[
         CriteriaTemplate | None,
         Field(
-            nullable=True,
+            json_schema_extra={"nullable": True},
             description="Latest version of criteria template selected for study.",
         ),
     ] = None
     accepted_version: Annotated[
         bool | None,
         Field(
-            nullable=True,
+            json_schema_extra={"nullable": True},
             title=ACCEPTED_VERSION_DESC,
             description="Denotes if user accepted obsolete criteria versions",
         ),
@@ -1755,7 +1841,11 @@ class DetailedSoAHistory(BaseModel):
     action: str = CHANGE_TYPE_FIELD
     author_username: Annotated[
         str | None,
-        Field(title="author_username", description=AUTHOR_FIELD_DESC, nullable=True),
+        Field(
+            title="author_username",
+            description=AUTHOR_FIELD_DESC,
+            json_schema_extra={"nullable": True},
+        ),
     ] = None
     start_date: Annotated[
         datetime,
@@ -1779,30 +1869,45 @@ class DetailedSoAHistory(BaseModel):
 
 
 class SimpleStudyActivitySubGroup(BaseModel):
-    study_activity_subgroup_uid: Annotated[str | None, Field(nullable=True)] = None
-    activity_subgroup_uid: Annotated[str | None, Field(nullable=True)] = None
-    activity_subgroup_name: Annotated[str | None, Field(nullable=True)] = None
-    order: Annotated[int | None, Field(nullable=True)]
+    study_activity_subgroup_uid: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    activity_subgroup_uid: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    activity_subgroup_name: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    order: Annotated[int | None, Field(json_schema_extra={"nullable": True})] = None
 
 
 class SimpleStudyActivityGroup(BaseModel):
-    study_activity_group_uid: Annotated[str | None, Field(nullable=True)] = None
-    activity_group_uid: Annotated[str | None, Field(nullable=True)] = None
-    activity_group_name: Annotated[str | None, Field(nullable=True)] = None
-    order: Annotated[int | None, Field(nullable=True)] = None
+    study_activity_group_uid: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    activity_group_uid: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    activity_group_name: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    order: Annotated[int | None, Field(json_schema_extra={"nullable": True})] = None
 
 
 class SimpleStudySoAGroup(BaseModel):
     study_soa_group_uid: Annotated[str, Field()]
     soa_group_term_uid: Annotated[str, Field()]
     soa_group_term_name: Annotated[str, Field()]
-    order: Annotated[int | None, Field(nullable=True)] = None
+    order: Annotated[int | None, Field(json_schema_extra={"nullable": True})] = None
 
 
 class StudySelectionActivityCore(StudySelection):
     show_activity_in_protocol_flowchart: Annotated[
         bool | None,
-        Field(description="show activity in protocol flow chart", nullable=True),
+        Field(
+            description="show activity in protocol flow chart",
+            json_schema_extra={"nullable": True},
+        ),
     ] = None
     show_activity_subgroup_in_protocol_flowchart: Annotated[
         bool | None, SHOW_ACTIVITY_SUBGROUP_IN_PROTOCOL_FLOWCHART_FIELD
@@ -1815,26 +1920,34 @@ class StudySelectionActivityCore(StudySelection):
     ] = False
     study_activity_uid: Annotated[
         str | None,
-        Field(description=STUDY_ACTIVITY_UID_DESC, source="uid", nullable=True),
+        Field(
+            description=STUDY_ACTIVITY_UID_DESC,
+            json_schema_extra={"source": "uid", "nullable": True},
+        ),
     ]
     study_activity_subgroup: SimpleStudyActivitySubGroup | None
     study_activity_group: SimpleStudyActivityGroup | None
     study_soa_group: SimpleStudySoAGroup
     activity: Annotated[
         ActivityForStudyActivity | None,
-        Field(description="the activity selected for the study", nullable=True),
+        Field(
+            description="the activity selected for the study",
+            json_schema_extra={"nullable": True},
+        ),
     ]
     start_date: Annotated[
         datetime | None,
-        Field(description=START_DATE_DESC, source=AFTER_DATE_QUALIFIER, nullable=True),
+        Field(
+            description=START_DATE_DESC,
+            json_schema_extra={"source": AFTER_DATE_QUALIFIER, "nullable": True},
+        ),
     ]
     author_username: Annotated[
         str | None,
         Field(
             title="author_username",
             description=AUTHOR_FIELD_DESC,
-            source=AFTER_USER_QUALIFIER,
-            nullable=True,
+            json_schema_extra={"source": AFTER_USER_QUALIFIER, "nullable": True},
         ),
     ] = None
     end_date: Annotated[datetime | None, END_DATE_FIELD] = None
@@ -1897,7 +2010,7 @@ class StudySelectionActivityCore(StudySelection):
                 soa_group_term_name=flowchart_group.sponsor_preferred_name,
                 order=study_selection_history.study_soa_group_order,
             ),
-            order=study_selection_history.activity_order,
+            order=study_selection_history.order,
             show_activity_group_in_protocol_flowchart=study_selection_history.show_activity_group_in_protocol_flowchart,
             show_activity_subgroup_in_protocol_flowchart=study_selection_history.show_activity_subgroup_in_protocol_flowchart,
             show_activity_in_protocol_flowchart=study_selection_history.show_activity_in_protocol_flowchart,
@@ -1913,13 +2026,13 @@ class StudySelectionActivityCore(StudySelection):
 
 
 class StudySelectionActivity(StudySelectionActivityCore):
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
     latest_activity: Annotated[
         ActivityForStudyActivity | None,
         Field(
-            description="Latest version of activity selected for study.", nullable=True
+            description="Latest version of activity selected for study.",
+            json_schema_extra={"nullable": True},
         ),
     ] = None
     accepted_version: Annotated[
@@ -1927,7 +2040,7 @@ class StudySelectionActivity(StudySelectionActivityCore):
         Field(
             title=ACCEPTED_VERSION_DESC,
             description="Denotes if user accepted obsolete activity versions",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
 
@@ -1936,7 +2049,6 @@ class StudySelectionActivity(StudySelectionActivityCore):
         cls,
         study_uid: str,
         specific_selection: StudySelectionActivityVO,
-        activity_order: int,
         get_activity_by_uid_callback: Callable[[str], ActivityForStudyActivity],
         get_activity_by_uid_version_callback: Callable[[str], ActivityForStudyActivity],
         get_ct_term_flowchart_group: Callable[[str], CTTermName],
@@ -1954,6 +2066,7 @@ class StudySelectionActivity(StudySelectionActivityCore):
             get_ct_term_flowchart_group(
                 single_study_selection.soa_group_term_uid,
                 at_specific_date=terms_at_specific_datetime,
+                include_retired_versions=True,
             )
             if not soa_groups
             else next(
@@ -1974,20 +2087,15 @@ class StudySelectionActivity(StudySelectionActivityCore):
         assert activity_uid is not None
         latest_activity = None
         if activity_for_study_activities:
-            latest_activity_version = max(
-                i_activity.version
-                for i_activity in activity_for_study_activities
-                if i_activity.uid == single_study_selection.activity_uid
-            )
-            latest_activity = next(
+            latest_activity = max(
                 (
-                    activity
-                    for activity in activity_for_study_activities
-                    if activity.uid == single_study_selection.activity_uid
-                    and activity.version == latest_activity_version
+                    i_activity
+                    for i_activity in activity_for_study_activities
+                    if i_activity.uid == single_study_selection.activity_uid
                 ),
-                None,
+                key=lambda a: version_string_to_tuple(a.version),
             )
+
             BusinessLogicException.raise_if_not(
                 latest_activity,
                 msg="All Preloaded Activities Versions should exist.",
@@ -2048,7 +2156,7 @@ class StudySelectionActivity(StudySelectionActivityCore):
             ),
             activity=selected_activity,
             latest_activity=latest_activity,
-            order=activity_order,
+            order=single_study_selection.order,
             show_activity_group_in_protocol_flowchart=single_study_selection.show_activity_group_in_protocol_flowchart,
             show_activity_subgroup_in_protocol_flowchart=single_study_selection.show_activity_subgroup_in_protocol_flowchart,
             show_activity_in_protocol_flowchart=single_study_selection.show_activity_in_protocol_flowchart,
@@ -2079,7 +2187,10 @@ class StudySelectionActivityInSoACreateInput(PatchInputModel):
     activity_subgroup_uid: str | None = None
     activity_group_uid: str | None = None
     activity_instance_uid: str | None = None
-    order: Annotated[int, Field(nullable=True, gt=0, lt=settings.MAX_INT_NEO4J)]
+    order: Annotated[
+        int,
+        Field(json_schema_extra={"nullable": True}, gt=0, lt=settings.MAX_INT_NEO4J),
+    ]
 
 
 class StudyActivitySubGroupEditInput(PatchInputModel):
@@ -2092,15 +2203,25 @@ class StudyActivitySubGroup(BaseModel):
     show_activity_subgroup_in_protocol_flowchart: bool | None = (
         SHOW_ACTIVITY_SUBGROUP_IN_PROTOCOL_FLOWCHART_FIELD
     )
-    study_uid: Annotated[str | None, Field(description=STUDY_UID_DESC, nullable=True)]
+    study_uid: Annotated[
+        str | None,
+        Field(description=STUDY_UID_DESC, json_schema_extra={"nullable": True}),
+    ]
     study_activity_subgroup_uid: Annotated[
         str,
-        Field(source="uid"),
+        Field(json_schema_extra={"source": "uid"}),
     ]
     activity_subgroup_uid: Annotated[str, Field()]
-    activity_subgroup_name: Annotated[str | None, Field(nullable=True)] = None
-    study_activity_group_uid: Annotated[str | None, Field(nullable=True)] = None
-    order: Annotated[int | None, Field(nullable=True)] = None
+    activity_subgroup_name: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    study_activity_group_uid: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    study_activity_uids: Annotated[
+        list[str] | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    order: Annotated[int | None, Field(json_schema_extra={"nullable": True})] = None
 
     @classmethod
     def from_study_selection_activity_vo(
@@ -2117,6 +2238,7 @@ class StudyActivitySubGroup(BaseModel):
             activity_subgroup_name=single_study_selection.activity_subgroup_name,
             show_activity_subgroup_in_protocol_flowchart=single_study_selection.show_activity_subgroup_in_protocol_flowchart,
             study_activity_group_uid=single_study_selection.study_activity_group_uid,
+            study_activity_uids=single_study_selection.study_activity_uids,
             study_uid=study_uid,
             order=single_study_selection.order,
         )
@@ -2132,26 +2254,40 @@ class StudyActivityGroup(BaseModel):
     show_activity_group_in_protocol_flowchart: Annotated[
         bool | None, SHOW_ACTIVITY_GROUP_IN_PROTOCOL_FLOWCHART_FIELD
     ] = None
-    study_uid: Annotated[str | None, Field(description=STUDY_UID_DESC, nullable=True)]
-    study_soa_group_uid: Annotated[str | None, Field(nullable=True)] = None
-    study_activity_subgroup_uids: Annotated[list[str] | None, Field(nullable=True)] = (
-        None
-    )
-    study_activity_group_uid: Annotated[str, Field(source="uid")]
+    study_uid: Annotated[
+        str | None,
+        Field(description=STUDY_UID_DESC, json_schema_extra={"nullable": True}),
+    ]
+    study_soa_group_uid: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    study_activity_subgroup_uids: Annotated[
+        list[str] | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    study_activity_group_uid: Annotated[str, Field(json_schema_extra={"source": "uid"})]
     activity_group_uid: Annotated[str, Field()]
-    activity_group_name: Annotated[str | None, Field(nullable=True)] = None
-    study_uid: Annotated[str | None, Field(description=STUDY_UID_DESC, nullable=True)]
-    study_soa_group_uid: Annotated[str | None, Field(nullable=True)] = None
-    study_activity_subgroup_uids: Annotated[list[str] | None, Field(nullable=True)] = (
-        None
-    )
+    activity_group_name: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    study_uid: Annotated[
+        str | None,
+        Field(description=STUDY_UID_DESC, json_schema_extra={"nullable": True}),
+    ]
+    study_soa_group_uid: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    study_activity_subgroup_uids: Annotated[
+        list[str] | None, Field(json_schema_extra={"nullable": True})
+    ] = None
     study_activity_group_uid: Annotated[
         str,
-        Field(source="uid"),
+        Field(json_schema_extra={"source": "uid"}),
     ]
     activity_group_uid: Annotated[str, Field()]
-    activity_group_name: Annotated[str | None, Field(nullable=True)] = None
-    order: Annotated[int | None, Field(nullable=True)] = None
+    activity_group_name: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    order: Annotated[int | None, Field(json_schema_extra={"nullable": True})] = None
 
     @classmethod
     def from_study_selection_activity_vo(
@@ -2184,20 +2320,30 @@ class StudySoAGroup(BaseModel):
     show_soa_group_in_protocol_flowchart: Annotated[
         bool, SHOW_SOA_GROUP_IN_PROTOCOL_FLOWCHART_FIELD
     ] = False
-    study_uid: Annotated[str | None, Field(description=STUDY_UID_DESC, nullable=True)]
-    study_soa_group_uid: Annotated[str, Field(source="uid")]
-    soa_group_term_uid: Annotated[str, Field()]
-    soa_group_term_name: Annotated[str | None, Field(nullable=True)] = None
     study_uid: Annotated[
-        str | None, Field(description=STUDY_UID_DESC, nullable=True)
-    ] = None
-    study_soa_group_uid: Annotated[str | None, Field(source="uid", nullable=True)] = (
-        None
-    )
+        str | None,
+        Field(description=STUDY_UID_DESC, json_schema_extra={"nullable": True}),
+    ]
+    study_soa_group_uid: Annotated[str, Field(json_schema_extra={"source": "uid"})]
     soa_group_term_uid: Annotated[str, Field()]
-    soa_group_term_name: Annotated[str | None, Field(nullable=True)] = None
-    study_activity_group_uids: Annotated[list[str] | None, Field(nullable=True)] = None
-    order: Annotated[int | None, Field(nullable=True)] = None
+    soa_group_term_name: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    study_uid: Annotated[
+        str | None,
+        Field(description=STUDY_UID_DESC, json_schema_extra={"nullable": True}),
+    ] = None
+    study_soa_group_uid: Annotated[
+        str | None, Field(json_schema_extra={"source": "uid", "nullable": True})
+    ] = None
+    soa_group_term_uid: Annotated[str, Field()]
+    soa_group_term_name: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    study_activity_group_uids: Annotated[
+        list[str] | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    order: Annotated[int | None, Field(json_schema_extra={"nullable": True})] = None
 
     @classmethod
     def from_study_selection_activity_vo(
@@ -2223,9 +2369,9 @@ class StudySelectionActivityInput(PatchInputModel):
     show_activity_in_protocol_flowchart: Annotated[bool | None, Field()] = None
     soa_group_term_uid: Annotated[
         str | None, Field(description="flowchart CT term uid")
-    ]
-    activity_group_uid: Annotated[str | None, Field()]
-    activity_subgroup_uid: Annotated[str | None, Field()]
+    ] = None
+    activity_group_uid: Annotated[str | None, Field()] = None
+    activity_subgroup_uid: Annotated[str | None, Field()] = None
 
 
 class StudyActivityReplaceActivityInput(StudySelectionActivityInput):
@@ -2293,34 +2439,51 @@ class StudySelectionActivityBatchOutput(BaseModel):
 # Study Activity Instance
 #
 class StudySelectionActivityInstance(BaseModel):
-    study_uid: Annotated[str | None, Field(description=STUDY_UID_DESC, nullable=True)]
+    study_uid: Annotated[
+        str | None,
+        Field(description=STUDY_UID_DESC, json_schema_extra={"nullable": True}),
+    ]
 
     show_activity_instance_in_protocol_flowchart: bool = (
         SHOW_ACTIVITY_INSTANCE_IN_PROTOCOL_FLOWCHART_FIELD
     )
     study_activity_instance_uid: Annotated[
-        str | None, Field(description=STUDY_ACTIVITY_INSTANCE_UID_DESC, nullable=True)
+        str | None,
+        Field(
+            description=STUDY_ACTIVITY_INSTANCE_UID_DESC,
+            json_schema_extra={"nullable": True},
+        ),
     ]
     study_activity_uid: Annotated[
-        str | None, Field(description=STUDY_ACTIVITY_UID_DESC, nullable=True)
+        str | None,
+        Field(
+            description=STUDY_ACTIVITY_UID_DESC, json_schema_extra={"nullable": True}
+        ),
     ]
     study_version: Annotated[
         str | None,
         Field(
             title="study version or date information",
             description="Study version number, if specified, otherwise None.",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
     activity: Activity
-    activity_instance: Annotated[ActivityInstance | None, Field(nullable=True)] = None
+    activity_instance: Annotated[
+        ActivityInstance | None, Field(json_schema_extra={"nullable": True})
+    ] = None
     start_date: Annotated[
-        datetime | None, Field(description=START_DATE_DESC, nullable=True)
+        datetime | None,
+        Field(description=START_DATE_DESC, json_schema_extra={"nullable": True}),
     ]
 
     author_username: Annotated[
         str | None,
-        Field(title="author_username", description=AUTHOR_FIELD_DESC, nullable=True),
+        Field(
+            title="author_username",
+            description=AUTHOR_FIELD_DESC,
+            json_schema_extra={"nullable": True},
+        ),
     ] = None
     end_date: Annotated[datetime | None, END_DATE_FIELD] = None
     status: Annotated[str | None, STATUS_FIELD] = None
@@ -2328,20 +2491,22 @@ class StudySelectionActivityInstance(BaseModel):
     latest_activity: Annotated[
         Activity | None,
         Field(
-            description="Latest version of activity selected for study.", nullable=True
+            description="Latest version of activity selected for study.",
+            json_schema_extra={"nullable": True},
         ),
     ] = None
     latest_activity_instance: Annotated[
         ActivityInstance | None,
         Field(
             description="Latest version of activity instace selected for study.",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
     state: StudyActivityInstanceState
-    study_activity_subgroup: SimpleStudyActivitySubGroup | None
-    study_activity_group: SimpleStudyActivityGroup | None
-    study_soa_group: SimpleStudySoAGroup | None
+    study_activity_subgroup: SimpleStudyActivitySubGroup | None = None
+    study_activity_group: SimpleStudyActivityGroup | None = None
+    study_soa_group: SimpleStudySoAGroup | None = None
+    order: int | None = None
 
     @classmethod
     def _get_state_out_of_activity_and_activity_instance(
@@ -2420,19 +2585,13 @@ class StudySelectionActivityInstance(BaseModel):
 
         assert activity_uid is not None
         if activity_for_study_activity_instances:
-            latest_activity_version = max(
-                i_activity.version
-                for i_activity in activity_for_study_activity_instances
-                if i_activity.uid == single_study_selection.activity_uid
-            )
-            latest_activity = next(
+            latest_activity = max(
                 (
-                    activity
-                    for activity in activity_for_study_activity_instances
-                    if activity.uid == single_study_selection.activity_uid
-                    and activity.version == latest_activity_version
+                    i_activity
+                    for i_activity in activity_for_study_activity_instances
+                    if i_activity.uid == single_study_selection.activity_uid
                 ),
-                None,
+                key=lambda a: version_string_to_tuple(a.version),
             )
             BusinessLogicException.raise_if_not(
                 latest_activity,
@@ -2472,19 +2631,13 @@ class StudySelectionActivityInstance(BaseModel):
 
         if activity_instance_uid:
             if activity_instances_for_study_activity_instances:
-                latest_activity_instance_version = max(
-                    i_activity.version
-                    for i_activity in activity_instances_for_study_activity_instances
-                    if i_activity.uid == activity_instance_uid
-                )
-                latest_activity_instance = next(
+                latest_activity_instance = max(
                     (
-                        activity
-                        for activity in activity_instances_for_study_activity_instances
-                        if activity.uid == activity_instance_uid
-                        and activity.version == latest_activity_instance_version
+                        i_activity
+                        for i_activity in activity_instances_for_study_activity_instances
+                        if i_activity.uid == activity_instance_uid
                     ),
-                    None,
+                    key=lambda a: version_string_to_tuple(a.version),
                 )
                 BusinessLogicException.raise_if_not(
                     latest_activity_instance,
@@ -2583,7 +2736,7 @@ class StudySelectionActivityInstanceCreateInput(PostInputModel):
 
 class StudySelectionActivityInstanceEditInput(PatchInputModel):
     activity_instance_uid: Annotated[str | None, Field()] = None
-    study_activity_uid: Annotated[str | None, Field()]
+    study_activity_uid: Annotated[str | None, Field()] = None
     show_activity_instance_in_protocol_flowchart: Annotated[
         bool, SHOW_ACTIVITY_INSTANCE_IN_PROTOCOL_FLOWCHART_FIELD
     ] = False
@@ -2606,8 +2759,7 @@ class StudySelectionActivityInstanceBatchOutput(BaseModel):
 # Study Activity Schedule
 #
 class StudyActivitySchedule(BaseModel):
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
     study_uid: Annotated[str, STUDY_UID_FIELD]
 
@@ -2616,16 +2768,15 @@ class StudyActivitySchedule(BaseModel):
         Field(
             title="study version or date information",
             description="Study version number, if specified, otherwise None",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
-    ]
+    ] = None
 
     study_activity_schedule_uid: Annotated[
         str | None,
         Field(
             description="uid for the study activity schedule",
-            source="uid",
-            nullable=True,
+            json_schema_extra={"source": "uid", "nullable": True},
         ),
     ]
 
@@ -2633,27 +2784,32 @@ class StudyActivitySchedule(BaseModel):
         str,
         Field(
             description="The related study activity UID",
-            source="study_activity.uid",
+            json_schema_extra={"source": "study_activity.uid"},
         ),
     ]
     study_activity_instance_uid: Annotated[
         str | None,
         Field(
             description="The related study activity instance UID",
-            source="study_activity.study_activity_has_study_activity_instance.uid",
-            nullable=True,
+            json_schema_extra={
+                "source": "study_activity.study_activity_has_study_activity_instance.uid",
+                "nullable": True,
+            },
         ),
     ] = None
     study_visit_uid: Annotated[
         str,
         Field(
             description="The related study visit UID",
-            source="study_visit.uid",
+            json_schema_extra={"source": "study_visit.uid"},
         ),
     ]
     start_date: Annotated[
         datetime | None,
-        Field(description=START_DATE_DESC, source=AFTER_DATE_QUALIFIER, nullable=True),
+        Field(
+            description=START_DATE_DESC,
+            json_schema_extra={"source": AFTER_DATE_QUALIFIER, "nullable": True},
+        ),
     ]
 
     author_username: Annotated[
@@ -2661,8 +2817,7 @@ class StudyActivitySchedule(BaseModel):
         Field(
             title="author_username",
             description=AUTHOR_FIELD_DESC,
-            source=AFTER_USER_QUALIFIER,
-            nullable=True,
+            json_schema_extra={"source": AFTER_USER_QUALIFIER, "nullable": True},
         ),
     ] = None
 
@@ -2698,12 +2853,20 @@ class StudyActivityScheduleHistory(BaseModel):
     ]
     study_activity_uid: Annotated[str, Field(description=STUDY_ACTIVITY_UID_DESC)]
     study_activity_instance_uid: Annotated[
-        str | None, Field(description=STUDY_ACTIVITY_INSTANCE_UID_DESC, nullable=True)
+        str | None,
+        Field(
+            description=STUDY_ACTIVITY_INSTANCE_UID_DESC,
+            json_schema_extra={"nullable": True},
+        ),
     ] = None
     study_visit_uid: Annotated[str, Field(description="uid for the study visit")]
 
     modified: Annotated[
-        datetime | None, Field(description="Date of last modification", nullable=True)
+        datetime | None,
+        Field(
+            description="Date of last modification",
+            json_schema_extra={"nullable": True},
+        ),
     ] = None
 
 
@@ -2729,7 +2892,7 @@ class StudyActivityScheduleBatchInput(BatchInputModel):
 
 class StudyActivityScheduleBatchOutput(BaseModel):
     response_code: Annotated[int, RESPONSE_CODE_FIELD]
-    content: StudyActivitySchedule | None | BatchErrorResponse
+    content: StudyActivitySchedule | None | BatchErrorResponse = None
 
 
 class StudySoAEditBatchInput(BatchInputModel):
@@ -2738,7 +2901,7 @@ class StudySoAEditBatchInput(BatchInputModel):
         str,
         Field(
             description="Type of the object to edit, it can be either StudyActivity or StudyActivitySchedule",
-            regex="^(StudyActivity|StudyActivitySchedule)$",
+            pattern="^(StudyActivity|StudyActivitySchedule)$",
         ),
     ]
     content: (
@@ -2759,8 +2922,7 @@ class StudySoAEditBatchOutput(BaseModel):
 
 
 class StudyDesignCell(BaseModel):
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
     study_uid: Annotated[str, STUDY_UID_FIELD]
 
@@ -2769,26 +2931,31 @@ class StudyDesignCell(BaseModel):
         Field(
             title="study version or date information",
             description="Study version number, if specified, otherwise None",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
 
     design_cell_uid: Annotated[
         str | None,
-        Field(description="uid for the study cell", source="uid", nullable=True),
+        Field(
+            description="uid for the study cell",
+            json_schema_extra={"source": "uid", "nullable": True},
+        ),
     ] = None
 
     study_arm_uid: Annotated[
         str | None,
-        Field(description=STUDY_ARM_UID_DESC, source="study_arm.uid", nullable=True),
+        Field(
+            description=STUDY_ARM_UID_DESC,
+            json_schema_extra={"source": "study_arm.uid", "nullable": True},
+        ),
     ] = None
 
     study_arm_name: Annotated[
         str | None,
         Field(
             description="the name of the related study arm",
-            source="study_arm.name",
-            nullable=True,
+            json_schema_extra={"source": "study_arm.name", "nullable": True},
         ),
     ] = None
 
@@ -2796,8 +2963,7 @@ class StudyDesignCell(BaseModel):
         str | None,
         Field(
             description=STUDY_BRANCH_ARM_UID_DESC,
-            source="study_branch_arm.uid",
-            nullable=True,
+            json_schema_extra={"source": "study_branch_arm.uid", "nullable": True},
         ),
     ] = None
 
@@ -2805,8 +2971,7 @@ class StudyDesignCell(BaseModel):
         str | None,
         Field(
             description="the name of the related study branch arm",
-            source="study_branch_arm.name",
-            nullable=True,
+            json_schema_extra={"source": "study_branch_arm.name", "nullable": True},
         ),
     ] = None
 
@@ -2814,7 +2979,7 @@ class StudyDesignCell(BaseModel):
         str,
         Field(
             description=STUDY_EPOCH_UID_DESC,
-            source="study_epoch.uid",
+            json_schema_extra={"source": "study_epoch.uid"},
         ),
     ]
 
@@ -2822,7 +2987,9 @@ class StudyDesignCell(BaseModel):
         str,
         Field(
             description="the name of the related study epoch",
-            source="study_epoch.has_epoch.has_name_root.has_latest_value.name",
+            json_schema_extra={
+                "source": "study_epoch.has_epoch.has_name_root.has_latest_value.name"
+            },
         ),
     ]
 
@@ -2830,7 +2997,7 @@ class StudyDesignCell(BaseModel):
         str,
         Field(
             description=STUDY_ELEMENT_UID_DESC,
-            source="study_element.uid",
+            json_schema_extra={"source": "study_element.uid"},
         ),
     ]
 
@@ -2838,18 +3005,21 @@ class StudyDesignCell(BaseModel):
         str,
         Field(
             description="the name of the related study element",
-            source="study_element.name",
+            json_schema_extra={"source": "study_element.name"},
         ),
     ]
 
     transition_rule: Annotated[
         str | None,
-        Field(description=TRANSITION_RULE_DESC, nullable=True),
+        Field(description=TRANSITION_RULE_DESC, json_schema_extra={"nullable": True}),
     ] = None
 
     start_date: Annotated[
         datetime | None,
-        Field(description=START_DATE_DESC, source=AFTER_DATE_QUALIFIER, nullable=True),
+        Field(
+            description=START_DATE_DESC,
+            json_schema_extra={"source": AFTER_DATE_QUALIFIER, "nullable": True},
+        ),
     ]
 
     author_username: Annotated[
@@ -2857,14 +3027,15 @@ class StudyDesignCell(BaseModel):
         Field(
             title="author_username",
             description=AUTHOR_FIELD_DESC,
-            source=AFTER_USER_QUALIFIER,
-            nullable=True,
+            json_schema_extra={"source": AFTER_USER_QUALIFIER, "nullable": True},
         ),
     ] = None
 
     end_date: Annotated[datetime | None, END_DATE_FIELD] = None
 
-    order: Annotated[int | None, Field(description=ORDER_DESC, nullable=True)]
+    order: Annotated[
+        int | None, Field(description=ORDER_DESC, json_schema_extra={"nullable": True})
+    ]
 
     @classmethod
     def from_vo(
@@ -2906,34 +3077,46 @@ class StudyDesignCellHistory(BaseModel):
     ]
 
     study_arm_uid: Annotated[
-        str | None, Field(description=STUDY_ARM_UID_DESC, nullable=True)
+        str | None,
+        Field(description=STUDY_ARM_UID_DESC, json_schema_extra={"nullable": True}),
     ] = None
 
     study_branch_arm_uid: Annotated[
-        str | None, Field(description=STUDY_BRANCH_ARM_UID_DESC, nullable=True)
+        str | None,
+        Field(
+            description=STUDY_BRANCH_ARM_UID_DESC, json_schema_extra={"nullable": True}
+        ),
     ] = None
 
     study_epoch_uid: Annotated[str, Field(description=STUDY_EPOCH_UID_DESC)]
 
     study_element_uid: Annotated[
-        str | None, Field(description=STUDY_ELEMENT_UID_DESC, nullable=True)
+        str | None,
+        Field(description=STUDY_ELEMENT_UID_DESC, json_schema_extra={"nullable": True}),
     ] = None
 
     transition_rule: Annotated[
-        str | None, Field(description=TRANSITION_RULE_DESC, nullable=True)
+        str | None,
+        Field(description=TRANSITION_RULE_DESC, json_schema_extra={"nullable": True}),
     ] = None
 
     change_type: Annotated[str | None, CHANGE_TYPE_FIELD] = None
 
     modified: Annotated[
-        datetime | None, Field(description="Date of last modification", nullable=True)
+        datetime | None,
+        Field(
+            description="Date of last modification",
+            json_schema_extra={"nullable": True},
+        ),
     ] = None
 
-    order: Annotated[int | None, Field(nullable=True, description=ORDER_DESC)] = None
+    order: Annotated[
+        int | None, Field(json_schema_extra={"nullable": True}, description=ORDER_DESC)
+    ] = None
 
 
 class StudyDesignCellVersion(StudyDesignCellHistory):
-    changes: dict
+    changes: list[str]
 
 
 class StudyDesignCellCreateInput(PostInputModel):
@@ -2977,14 +3160,14 @@ class StudyDesignCellEditInput(PatchInputModel):
     order: Annotated[
         int | None,
         Field(
-            nullable=True,
+            json_schema_extra={"nullable": True},
             description=ORDER_DESC,
         ),
     ] = None
     transition_rule: Annotated[
         str | None,
         Field(
-            nullable=True,
+            json_schema_extra={"nullable": True},
             description=TRANSITION_RULE_DESC,
         ),
     ] = None
@@ -3005,7 +3188,7 @@ class StudyDesignCellBatchInput(BatchInputModel):
 
 class StudyDesignCellBatchOutput(BaseModel):
     response_code: Annotated[int, RESPONSE_CODE_FIELD]
-    content: StudyDesignCell | None | BatchErrorResponse
+    content: StudyDesignCell | None | BatchErrorResponse = None
 
 
 # Study brancharms without ArmRoot
@@ -3014,7 +3197,10 @@ class StudyDesignCellBatchOutput(BaseModel):
 class StudySelectionBranchArmWithoutStudyArm(StudySelection):
     branch_arm_uid: Annotated[
         str | None,
-        Field(description="uid for the study BranchArm", nullable=True),
+        Field(
+            description="uid for the study BranchArm",
+            json_schema_extra={"nullable": True},
+        ),
     ]
 
     name: Annotated[str, Field(description="name for the study Brancharm")]
@@ -3022,41 +3208,66 @@ class StudySelectionBranchArmWithoutStudyArm(StudySelection):
     short_name: Annotated[str, Field(description="short name for the study Brancharm")]
 
     code: Annotated[
-        str | None, Field(description="code for the study Brancharm", nullable=True)
+        str | None,
+        Field(
+            description="code for the study Brancharm",
+            json_schema_extra={"nullable": True},
+        ),
     ] = None
 
     description: Annotated[
         str | None,
-        Field(description="description for the study Brancharm", nullable=True),
+        Field(
+            description="description for the study Brancharm",
+            json_schema_extra={"nullable": True},
+        ),
     ] = None
 
     colour_code: Annotated[
         str | None,
-        Field(description="colour_code for the study Brancharm", nullable=True),
+        Field(
+            description="colour_code for the study Brancharm",
+            json_schema_extra={"nullable": True},
+        ),
     ] = None
 
     randomization_group: Annotated[
         str | None,
-        Field(description="randomization group for the study Brancharm", nullable=True),
+        Field(
+            description="randomization group for the study Brancharm",
+            json_schema_extra={"nullable": True},
+        ),
     ] = None
 
     number_of_subjects: Annotated[
         int | None,
-        Field(description="number of subjects for the study Brancharm", nullable=True),
+        Field(
+            description="number of subjects for the study Brancharm",
+            json_schema_extra={"nullable": True},
+        ),
     ] = None
 
     start_date: Annotated[
-        datetime | None, Field(description=START_DATE_DESC, nullable=True)
+        datetime | None,
+        Field(description=START_DATE_DESC, json_schema_extra={"nullable": True}),
     ]
 
     author_username: Annotated[
         str | None,
-        Field(title="author_username", description=AUTHOR_FIELD_DESC, nullable=True),
+        Field(
+            title="author_username",
+            description=AUTHOR_FIELD_DESC,
+            json_schema_extra={"nullable": True},
+        ),
     ] = None
 
     author_username: Annotated[
         str | None,
-        Field(title="author_username", description=AUTHOR_FIELD_DESC, nullable=True),
+        Field(
+            title="author_username",
+            description=AUTHOR_FIELD_DESC,
+            json_schema_extra={"nullable": True},
+        ),
     ] = None
 
     end_date: Annotated[datetime | None, END_DATE_FIELD] = None
@@ -3070,7 +3281,7 @@ class StudySelectionBranchArmWithoutStudyArm(StudySelection):
         Field(
             title=ACCEPTED_VERSION_DESC,
             description="Denotes if user accepted obsolete branch arm versions",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
 
@@ -3105,7 +3316,10 @@ class StudySelectionBranchArmWithoutStudyArm(StudySelection):
 
 
 class StudySelectionArm(StudySelection):
-    arm_uid: Annotated[str | None, Field(description=ARM_UID_DESC, nullable=True)]
+    arm_uid: Annotated[
+        str | None,
+        Field(description=ARM_UID_DESC, json_schema_extra={"nullable": True}),
+    ]
 
     name: Annotated[str, Field(description="name for the study arm")]
 
@@ -3116,44 +3330,70 @@ class StudySelectionArm(StudySelection):
 
     code: Annotated[
         str | None,
-        Field(description="code for the study arm", nullable=True),
+        Field(
+            description="code for the study arm", json_schema_extra={"nullable": True}
+        ),
     ] = None
 
     description: Annotated[
-        str | None, Field(description="description for the study arm", nullable=True)
+        str | None,
+        Field(
+            description="description for the study arm",
+            json_schema_extra={"nullable": True},
+        ),
     ] = None
 
     arm_colour: Annotated[
-        str | None, Field(description="colour for the study arm", nullable=True)
+        str | None,
+        Field(
+            description="colour for the study arm", json_schema_extra={"nullable": True}
+        ),
     ] = None
 
     randomization_group: Annotated[
         str | None,
-        Field(description="randomization group for the study arm", nullable=True),
+        Field(
+            description="randomization group for the study arm",
+            json_schema_extra={"nullable": True},
+        ),
     ] = None
 
     number_of_subjects: Annotated[
         int | None,
-        Field(description="number of subjects for the study arm", nullable=True),
+        Field(
+            description="number of subjects for the study arm",
+            json_schema_extra={"nullable": True},
+        ),
     ] = None
 
     arm_type: Annotated[
         CTTermName | None,
-        Field(description="type for the study arm", nullable=True),
+        Field(
+            description="type for the study arm", json_schema_extra={"nullable": True}
+        ),
     ] = None
 
     start_date: Annotated[
-        datetime | None, Field(description=START_DATE_DESC, nullable=True)
+        datetime | None,
+        Field(description=START_DATE_DESC, json_schema_extra={"nullable": True}),
     ]
 
     author_username: Annotated[
         str | None,
-        Field(title="author_username", description=AUTHOR_FIELD_DESC, nullable=True),
+        Field(
+            title="author_username",
+            description=AUTHOR_FIELD_DESC,
+            json_schema_extra={"nullable": True},
+        ),
     ] = None
 
     author_username: Annotated[
         str | None,
-        Field(title="author_username", description=AUTHOR_FIELD_DESC, nullable=True),
+        Field(
+            title="author_username",
+            description=AUTHOR_FIELD_DESC,
+            json_schema_extra={"nullable": True},
+        ),
     ] = None
 
     end_date: Annotated[datetime | None, END_DATE_FIELD] = None
@@ -3167,7 +3407,7 @@ class StudySelectionArm(StudySelection):
         Field(
             title=ACCEPTED_VERSION_DESC,
             description="Denotes if user accepted obsolete arm versions",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
 
@@ -3251,7 +3491,10 @@ class StudySelectionArm(StudySelection):
 class StudySelectionArmWithConnectedBranchArms(StudySelectionArm):
     arm_connected_branch_arms: Annotated[
         list[StudySelectionBranchArmWithoutStudyArm] | None,
-        Field(description="list of study branch arms connected to arm", nullable=True),
+        Field(
+            description="list of study branch arms connected to arm",
+            json_schema_extra={"nullable": True},
+        ),
     ] = None
 
     @classmethod
@@ -3386,22 +3629,20 @@ class StudySelectionArmNewOrder(PatchInputModel):
 
 
 class StudySelectionArmVersion(StudySelectionArm):
-    changes: dict
+    changes: list[str]
 
 
 # Study Activity Instructions
 
 
 class StudyActivityInstruction(BaseModel):
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
     study_activity_instruction_uid: Annotated[
         str | None,
         Field(
             description="uid for the study activity instruction",
-            source="uid",
-            nullable=True,
+            json_schema_extra={"source": "uid", "nullable": True},
         ),
     ]
 
@@ -3412,7 +3653,7 @@ class StudyActivityInstruction(BaseModel):
         Field(
             title="study version or date information",
             description="Study version number, if specified, otherwise None",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
     study_version: Annotated[
@@ -3420,15 +3661,14 @@ class StudyActivityInstruction(BaseModel):
         Field(
             title="study version or date information",
             description="Study version number, if specified, otherwise None.",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
     study_activity_uid: Annotated[
         str | None,
         Field(
             description=STUDY_ACTIVITY_UID_DESC,
-            source="study_activity.uid",
-            nullable=True,
+            json_schema_extra={"source": "study_activity.uid", "nullable": True},
         ),
     ]
 
@@ -3436,7 +3676,9 @@ class StudyActivityInstruction(BaseModel):
         str,
         Field(
             description="The related activity instruction UID",
-            source="activity_instruction_value.activity_instruction_root.uid",
+            json_schema_extra={
+                "source": "activity_instruction_value.activity_instruction_root.uid"
+            },
         ),
     ]
 
@@ -3444,13 +3686,16 @@ class StudyActivityInstruction(BaseModel):
         str,
         Field(
             description="The related activity instruction name",
-            source="activity_instruction_value.name",
+            json_schema_extra={"source": "activity_instruction_value.name"},
         ),
     ]
 
     start_date: Annotated[
         datetime | None,
-        Field(description=START_DATE_DESC, source=AFTER_DATE_QUALIFIER, nullable=True),
+        Field(
+            description=START_DATE_DESC,
+            json_schema_extra={"source": AFTER_DATE_QUALIFIER, "nullable": True},
+        ),
     ]
 
     author_username: Annotated[
@@ -3458,8 +3703,7 @@ class StudyActivityInstruction(BaseModel):
         Field(
             title="author_username",
             description=AUTHOR_FIELD_DESC,
-            source=AFTER_USER_QUALIFIER,
-            nullable=True,
+            json_schema_extra={"source": AFTER_USER_QUALIFIER, "nullable": True},
         ),
     ] = None
 
@@ -3504,17 +3748,13 @@ class StudyActivityInstructionCreateInput(PostInputModel):
 
     study_activity_uid: Annotated[str, Field(description=STUDY_ACTIVITY_UID_DESC)]
 
-    @root_validator(pre=False)
-    @classmethod
-    def check_required_fields(cls, values):
-        data, uid = values.get("activity_instruction_data"), values.get(
-            "activity_instruction_uid"
-        )
-        if not data and not uid:
+    @model_validator(mode="after")
+    def check_required_fields(self):
+        if not self.activity_instruction_data and not self.activity_instruction_uid:
             raise ValueError(
                 "You must provide activity_instruction_data or activity_instruction_uid"
             )
-        return values
+        return self
 
 
 class StudyActivityInstructionDeleteInput(InputModel):
@@ -3522,7 +3762,7 @@ class StudyActivityInstructionDeleteInput(InputModel):
         str,
         Field(
             description="uid for the study activity instruction",
-            source="uid",
+            json_schema_extra={"source": "uid"},
         ),
     ]
 
@@ -3534,7 +3774,7 @@ class StudyActivityInstructionBatchInput(BatchInputModel):
 
 class StudyActivityInstructionBatchOutput(BaseModel):
     response_code: Annotated[int, RESPONSE_CODE_FIELD]
-    content: StudyActivityInstruction | None | BatchErrorResponse
+    content: StudyActivityInstruction | None | BatchErrorResponse = None
 
 
 # Study elements
@@ -3542,67 +3782,110 @@ class StudyActivityInstructionBatchOutput(BaseModel):
 
 class StudySelectionElement(StudySelection):
     element_uid: Annotated[
-        str | None, Field(description=ELEMENT_UID_DESC, nullable=True)
+        str | None,
+        Field(description=ELEMENT_UID_DESC, json_schema_extra={"nullable": True}),
     ]
 
     name: Annotated[
-        str | None, Field(description="name for the study element", nullable=True)
+        str | None,
+        Field(
+            description="name for the study element",
+            json_schema_extra={"nullable": True},
+        ),
     ]
 
     short_name: Annotated[
-        str | None, Field(description="short name for the study element", nullable=True)
+        str | None,
+        Field(
+            description="short name for the study element",
+            json_schema_extra={"nullable": True},
+        ),
     ]
 
     code: Annotated[
-        str | None, Field(description="code for the study element", nullable=True)
+        str | None,
+        Field(
+            description="code for the study element",
+            json_schema_extra={"nullable": True},
+        ),
     ]
 
     description: Annotated[
         str | None,
-        Field(description="description for the study element", nullable=True),
+        Field(
+            description="description for the study element",
+            json_schema_extra={"nullable": True},
+        ),
     ]
 
     planned_duration: Annotated[
         DurationJsonModel | None,
-        Field(description="planned_duration for the study element", nullable=True),
+        Field(
+            description="planned_duration for the study element",
+            json_schema_extra={"nullable": True},
+        ),
     ] = None
 
     start_rule: Annotated[
-        str | None, Field(description="start_rule for the study element", nullable=True)
+        str | None,
+        Field(
+            description="start_rule for the study element",
+            json_schema_extra={"nullable": True},
+        ),
     ] = None
 
     end_rule: Annotated[
-        str | None, Field(description="end_rule for the study element", nullable=True)
+        str | None,
+        Field(
+            description="end_rule for the study element",
+            json_schema_extra={"nullable": True},
+        ),
     ] = None
 
     element_colour: Annotated[
         str | None,
-        Field(description="element_colour for the study element", nullable=True),
+        Field(
+            description="element_colour for the study element",
+            json_schema_extra={"nullable": True},
+        ),
     ] = None
 
     element_subtype: Annotated[
         CTTermName | None,
-        Field(description="subtype for the study element", nullable=True),
+        Field(
+            description="subtype for the study element",
+            json_schema_extra={"nullable": True},
+        ),
     ] = None
 
     element_type: Annotated[
         CTTermName | None,
-        Field(description="type for the study element", nullable=True),
+        Field(
+            description="type for the study element",
+            json_schema_extra={"nullable": True},
+        ),
     ] = None
 
     study_compound_dosing_count: Annotated[
         int | None,
         Field(
             description="Number of compound dosing linked to Study Element",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
 
-    start_date: Annotated[datetime, Field(description=START_DATE_DESC, nullable=True)]
+    start_date: Annotated[
+        datetime,
+        Field(description=START_DATE_DESC, json_schema_extra={"nullable": True}),
+    ]
 
     author_username: Annotated[
         str | None,
-        Field(title="author_username", description=AUTHOR_FIELD_DESC, nullable=True),
+        Field(
+            title="author_username",
+            description=AUTHOR_FIELD_DESC,
+            json_schema_extra={"nullable": True},
+        ),
     ] = None
 
     end_date: Annotated[datetime | None, END_DATE_FIELD] = None
@@ -3616,9 +3899,9 @@ class StudySelectionElement(StudySelection):
         Field(
             title=ACCEPTED_VERSION_DESC,
             description="Denotes if user accepted obsolete element versions",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
-    ]
+    ] = None
 
     @classmethod
     def from_study_selection_element_ar_and_order(
@@ -3885,7 +4168,7 @@ class StudySelectionElementNewOrder(PatchInputModel):
 
 
 class StudySelectionElementVersion(StudySelectionElement):
-    changes: dict
+    changes: list[str]
 
 
 # Study brancharms adding Arm Root parameter
@@ -4117,7 +4400,7 @@ class StudySelectionBranchArmNewOrder(PatchInputModel):
 
 
 class StudySelectionBranchArmVersion(StudySelectionBranchArmHistory):
-    changes: dict
+    changes: list[str]
 
 
 # Study cohorts
@@ -4125,41 +4408,66 @@ class StudySelectionBranchArmVersion(StudySelectionBranchArmHistory):
 
 class StudySelectionCohortWithoutArmBranArmRoots(StudySelection):
     cohort_uid: Annotated[
-        str | None, Field(description="uid for the study Cohort", nullable=True)
+        str | None,
+        Field(
+            description="uid for the study Cohort", json_schema_extra={"nullable": True}
+        ),
     ]
 
     name: Annotated[str, Field(description="name for the study Cohort")]
 
     short_name: Annotated[
         str,
-        Field(description="short name for the study Cohort", nullable=True),
+        Field(
+            description="short name for the study Cohort",
+            json_schema_extra={"nullable": True},
+        ),
     ]
 
     code: Annotated[
         str | None,
-        Field(description="code for the study Cohort", nullable=True),
+        Field(
+            description="code for the study Cohort",
+            json_schema_extra={"nullable": True},
+        ),
     ] = None
 
     description: Annotated[
-        str | None, Field(description="description for the study Cohort", nullable=True)
+        str | None,
+        Field(
+            description="description for the study Cohort",
+            json_schema_extra={"nullable": True},
+        ),
     ]
 
     colour_code: Annotated[
-        str | None, Field(description="colour code for the study Cohort", nullable=True)
+        str | None,
+        Field(
+            description="colour code for the study Cohort",
+            json_schema_extra={"nullable": True},
+        ),
     ]
 
     number_of_subjects: Annotated[
         int | None,
-        Field(description="number of subjects for the study Cohort", nullable=True),
+        Field(
+            description="number of subjects for the study Cohort",
+            json_schema_extra={"nullable": True},
+        ),
     ]
 
     start_date: Annotated[
-        datetime | None, Field(description=START_DATE_DESC, nullable=True)
+        datetime | None,
+        Field(description=START_DATE_DESC, json_schema_extra={"nullable": True}),
     ]
 
     author_username: Annotated[
         str | None,
-        Field(title="author_username", description=AUTHOR_FIELD_DESC, nullable=True),
+        Field(
+            title="author_username",
+            description=AUTHOR_FIELD_DESC,
+            json_schema_extra={"nullable": True},
+        ),
     ] = None
 
     end_date: Annotated[datetime | None, END_DATE_FIELD] = None
@@ -4173,7 +4481,7 @@ class StudySelectionCohortWithoutArmBranArmRoots(StudySelection):
         Field(
             title=ACCEPTED_VERSION_DESC,
             description="Denotes if user accepted obsolete cohort versions",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
 
@@ -4181,12 +4489,18 @@ class StudySelectionCohortWithoutArmBranArmRoots(StudySelection):
 class StudySelectionCohort(StudySelectionCohortWithoutArmBranArmRoots):
     branch_arm_roots: Annotated[
         list[StudySelectionBranchArm] | None,
-        Field(description="Branch Arm Roots for the study Cohort", nullable=True),
+        Field(
+            description="Branch Arm Roots for the study Cohort",
+            json_schema_extra={"nullable": True},
+        ),
     ] = None
 
     arm_roots: Annotated[
         list[StudySelectionArm] | None,
-        Field(description="ArmRoots for the study Cohort", nullable=True),
+        Field(
+            description="ArmRoots for the study Cohort",
+            json_schema_extra={"nullable": True},
+        ),
     ] = None
 
     @classmethod
@@ -4265,12 +4579,18 @@ class StudySelectionCohort(StudySelectionCohortWithoutArmBranArmRoots):
 class StudySelectionCohortHistory(StudySelectionCohortWithoutArmBranArmRoots):
     branch_arm_roots_uids: Annotated[
         list[str] | None,
-        Field(description="Branch Arm Roots Uids for the study Cohort", nullable=True),
+        Field(
+            description="Branch Arm Roots Uids for the study Cohort",
+            json_schema_extra={"nullable": True},
+        ),
     ] = None
 
     arm_roots_uids: Annotated[
         list[str] | None,
-        Field(description="ArmRoots Uids for the study Cohort", nullable=True),
+        Field(
+            description="ArmRoots Uids for the study Cohort",
+            json_schema_extra={"nullable": True},
+        ),
     ] = None
 
     @classmethod
@@ -4388,7 +4708,7 @@ class StudySelectionCohortNewOrder(PatchInputModel):
 
 
 class StudySelectionCohortVersion(StudySelectionCohortHistory):
-    changes: dict
+    changes: list[str]
 
 
 #
@@ -4399,7 +4719,10 @@ class StudySelectionCohortVersion(StudySelectionCohortHistory):
 class StudyCompoundDosing(StudySelection):
     study_compound_dosing_uid: Annotated[
         str | None,
-        Field(description="uid for the study compound dosing", nullable=True),
+        Field(
+            description="uid for the study compound dosing",
+            json_schema_extra={"nullable": True},
+        ),
     ]
 
     study_compound: Annotated[
@@ -4413,17 +4736,23 @@ class StudyCompoundDosing(StudySelection):
     dose_value: Annotated[
         SimpleNumericValueWithUnit | None,
         Field(
-            description="compound dose defined for the study selection", nullable=True
+            description="compound dose defined for the study selection",
+            json_schema_extra={"nullable": True},
         ),
     ]
 
     start_date: Annotated[
-        datetime | None, Field(description=START_DATE_DESC, nullable=True)
+        datetime | None,
+        Field(description=START_DATE_DESC, json_schema_extra={"nullable": True}),
     ]
 
     author_username: Annotated[
         str | None,
-        Field(title="author_username", description=AUTHOR_FIELD_DESC, nullable=True),
+        Field(
+            title="author_username",
+            description=AUTHOR_FIELD_DESC,
+            json_schema_extra={"nullable": True},
+        ),
     ] = None
 
     end_date: Annotated[datetime | None, END_DATE_FIELD] = None
@@ -4513,14 +4842,15 @@ class StudyCompoundDosingInput(InputModel):
     dose_value_uid: Annotated[
         str | None,
         Field(
-            description="compound dose defined for the study selection", nullable=True
+            description="compound dose defined for the study selection",
+            json_schema_extra={"nullable": True},
         ),
     ] = None
 
 
 class ReferencedItem(BaseModel):
     item_uid: Annotated[str, Field()]
-    item_name: Annotated[str | None, Field(nullable=True)] = None
+    item_name: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
     item_type: Annotated[SoAItemType, Field()]
 
 
@@ -4538,7 +4868,7 @@ class SoACellReference(BaseModel):
     order: Annotated[int, Field()] = 0
     referenced_item: Annotated[ReferencedItem, Field()]
     footnote_references: Annotated[
-        list[SoAFootnoteReference] | None, Field(nullable=True)
+        list[SoAFootnoteReference] | None, Field(json_schema_extra={"nullable": True})
     ] = None
 
 

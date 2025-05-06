@@ -387,7 +387,7 @@ class StudyVisitService(StudySelectionMixin):
             visit_subname=visit.visit_subname,
             visit_sublabel_reference=visit.visit_sublabel_reference,
             visit_name=visit.visit_name,
-            visit_short_name=visit.visit_short_name,
+            visit_short_name=str(visit.visit_short_name),
             consecutive_visit_group=visit.consecutive_visit_group,
             show_visit=visit.show_visit,
             min_visit_window_value=visit.visit_window_min,
@@ -424,6 +424,11 @@ class StudyVisitService(StudySelectionMixin):
             if visit.end_date
             else None
         )
+        # Assign properties directly from database values
+        # We should not derive properies based on Visit order in the schedule
+        # as we can't represent schedule for old versions of Visits
+        study_visit.unique_visit_number = visit.vis_unique_number
+
         return study_visit
 
     def _get_all_visits(
@@ -467,7 +472,7 @@ class StudyVisitService(StudySelectionMixin):
             msg=f"Global anchor visit for Study with UID '{study_uid}' doesn't exist.",
         )
 
-        return SimpleStudyVisit.from_orm(global_anchor_visit[0])
+        return SimpleStudyVisit.model_validate(global_anchor_visit[0])
 
     def get_anchor_visits_in_a_group_of_subvisits(
         self, study_uid: str
@@ -484,7 +489,7 @@ class StudyVisitService(StudySelectionMixin):
             .resolve_subgraph()
         )
         return [
-            SimpleStudyVisit.from_orm(anchor_visit)
+            SimpleStudyVisit.model_validate(anchor_visit)
             for anchor_visit in anchor_visits_in_a_group_of_subv
         ]
 
@@ -507,7 +512,7 @@ class StudyVisitService(StudySelectionMixin):
         )
         return sorted(
             [
-                SimpleStudyVisit.from_orm(anchor_visit)
+                SimpleStudyVisit.model_validate(anchor_visit)
                 for anchor_visit in anchor_visits_for_special_visit
             ],
             key=lambda visit: int(visit.visit_name.split()[1]),
@@ -924,7 +929,7 @@ class StudyVisitService(StudySelectionMixin):
                 ordered_visits = timeline.ordered_study_visits
                 for index, visit in enumerate(ordered_visits):
                     if (
-                        visit.visit_class != VisitClass.SPECIAL_VISIT
+                        visit_vo.visit_class != VisitClass.SPECIAL_VISIT
                         and visit.get_absolute_duration()
                         == visit_vo.get_absolute_duration()
                         and visit.uid != visit_vo.uid
@@ -1217,30 +1222,6 @@ class StudyVisitService(StudySelectionMixin):
             study_visit_vo.timepoint = self._create_timepoint_simple_concept(
                 study_visit_input=create_input
             )
-            study_visit_vo.study_day = self._create_numeric_value_simple_concept(
-                value=study_visit_vo.derive_study_day_number(),
-                numeric_value_type=NumericValueType.STUDY_DAY,
-            )
-            study_visit_vo.study_duration_days = (
-                self._create_numeric_value_simple_concept(
-                    value=study_visit_vo.derive_study_duration_days_number(),
-                    numeric_value_type=NumericValueType.STUDY_DURATION_DAYS,
-                )
-            )
-            study_visit_vo.study_week = self._create_numeric_value_simple_concept(
-                value=study_visit_vo.derive_study_week_number(),
-                numeric_value_type=NumericValueType.STUDY_WEEK,
-            )
-            study_visit_vo.study_duration_weeks = (
-                self._create_numeric_value_simple_concept(
-                    value=study_visit_vo.derive_study_duration_weeks_number(),
-                    numeric_value_type=NumericValueType.STUDY_DURATION_WEEKS,
-                )
-            )
-            study_visit_vo.week_in_study = self._create_numeric_value_simple_concept(
-                value=study_visit_vo.derive_week_in_study_number(),
-                numeric_value_type=NumericValueType.WEEK_IN_STUDY,
-            )
 
             if study_visit_vo.visit_class == visit_class.MANUALLY_DEFINED_VISIT:
                 study_visit_vo.visit_number = create_input.visit_number
@@ -1293,6 +1274,43 @@ class StudyVisitService(StudySelectionMixin):
             visit_name=study_visit.derive_visit_name()
         )
 
+    def assign_props_derived_from_visit_absolute_timing(
+        self, study_visit_vo: StudyVisitVO
+    ):
+        """
+        Assigns some properties of StudyVisitVO that are derived by the absolute timing of a given StudyVisit.
+        The absolute timing can be known after Visits are set in the schedule and we assign Anchor Visits if given Visit anchors the other one.
+        """
+        if study_visit_vo.visit_class not in [
+            VisitClass.NON_VISIT,
+            VisitClass.UNSCHEDULED_VISIT,
+            VisitClass.SPECIAL_VISIT,
+        ]:
+            study_visit_vo.study_day = self._create_numeric_value_simple_concept(
+                value=study_visit_vo.derive_study_day_number(),
+                numeric_value_type=NumericValueType.STUDY_DAY,
+            )
+            study_visit_vo.study_duration_days = (
+                self._create_numeric_value_simple_concept(
+                    value=study_visit_vo.derive_study_duration_days_number(),
+                    numeric_value_type=NumericValueType.STUDY_DURATION_DAYS,
+                )
+            )
+            study_visit_vo.study_week = self._create_numeric_value_simple_concept(
+                value=study_visit_vo.derive_study_week_number(),
+                numeric_value_type=NumericValueType.STUDY_WEEK,
+            )
+            study_visit_vo.study_duration_weeks = (
+                self._create_numeric_value_simple_concept(
+                    value=study_visit_vo.derive_study_duration_weeks_number(),
+                    numeric_value_type=NumericValueType.STUDY_DURATION_WEEKS,
+                )
+            )
+            study_visit_vo.week_in_study = self._create_numeric_value_simple_concept(
+                value=study_visit_vo.derive_week_in_study_number(),
+                numeric_value_type=NumericValueType.WEEK_IN_STUDY,
+            )
+
     @db.transaction
     def create(self, study_uid: str, study_visit_input: StudyVisitCreateInput):
         study_visits = self.repo.find_all_visits_by_study_uid(study_uid)
@@ -1310,6 +1328,7 @@ class StudyVisitService(StudySelectionMixin):
             study_visits=study_visits,
         )
         self.assign_props_derived_from_visit_number(study_visit=study_visit)
+        self.assign_props_derived_from_visit_absolute_timing(study_visit_vo=study_visit)
         added_item = self.repo.save(study_visit, create=True)
 
         timeline.add_visit(added_item)
@@ -1338,7 +1357,7 @@ class StudyVisitService(StudySelectionMixin):
 
         study_visit.uid = "preview"
         timeline.add_visit(study_visit)
-
+        self.assign_props_derived_from_visit_absolute_timing(study_visit_vo=study_visit)
         return self._transform_all_to_response_model(study_visit)
 
     @db.transaction
@@ -1392,6 +1411,9 @@ class StudyVisitService(StudySelectionMixin):
                 ordered_visits=ordered_visits,
                 start_index_to_synchronize=start_index_to_sync,
             )
+        self.assign_props_derived_from_visit_absolute_timing(
+            study_visit_vo=new_study_visit
+        )
         self.assign_props_derived_from_visit_number(study_visit=new_study_visit)
 
         self.repo.save(new_study_visit)
@@ -1490,7 +1512,7 @@ class StudyVisitService(StudySelectionMixin):
             selection_history.append(
                 self._transform_all_to_response_history_model(
                     study_visit_version
-                ).dict()
+                ).model_dump()
             )
 
         data = calculate_diffs(selection_history, StudyVisitVersion)
@@ -1530,7 +1552,7 @@ class StudyVisitService(StudySelectionMixin):
                 selection_history.append(
                     self._transform_all_to_response_history_model(
                         study_visit_version
-                    ).dict()
+                    ).model_dump()
                 )
             if not data:
                 data = calculate_diffs(selection_history, StudyVisitVersion)

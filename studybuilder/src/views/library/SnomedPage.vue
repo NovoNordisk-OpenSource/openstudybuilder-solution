@@ -1,7 +1,10 @@
 <template>
   <div class="px-4">
     <div class="page-title d-flex align-center">
-      <HelpButton :help-text="$t('_help.SnomedTable.general')" :page-title="$t('DictionaryTermTable.snomed_title')"/>
+      <HelpButton
+        :help-text="$t('_help.SnomedTable.general')"
+        :page-title="$t('DictionaryTermTable.snomed_title')"
+      />
     </div>
     <DictionaryTermTable
       :codelist-uid="codelistUid"

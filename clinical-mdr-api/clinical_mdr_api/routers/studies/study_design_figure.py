@@ -31,9 +31,9 @@ class SVGResponse(Response):
     summary="Builds and returns a Study Design visualization image in SVG format",
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"content": {"image/svg+xml": {"schema": {"type": "string"}}}},
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_study_flowchart_html(

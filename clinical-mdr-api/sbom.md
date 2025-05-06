@@ -1,74 +1,75 @@
-ï»¿
+
 ## Installed packages
 
 |            Package             |       Version        |
 |--------------------------------|----------------------|
 | annotated-types                | 0.6.0                |
-| anyio                          | 4.7.0                |
+| anyio                          | 4.9.0                |
 | asyncache                      | 0.3.1                |
-| attrs                          | 24.3.0               |
+| attrs                          | 25.3.0               |
 | Authlib                        | 1.3.2                |
 | azure-core                     | 1.32.0               |
-| azure-identity                 | 1.19.0               |
+| azure-identity                 | 1.21.0               |
 | beautifulsoup4                 | 4.12.3               |
 | Brotli                         | 1.1.0                |
 | bs4                            | 0.0.2                |
-| cachetools                     | 5.5.0                |
-| certifi                        | 2024.12.14           |
+| cachetools                     | 5.5.2                |
+| certifi                        | 2025.1.31            |
 | cffi                           | 1.17.1               |
-| charset-normalizer             | 3.4.0                |
-| click                          | 8.1.7                |
+| charset-normalizer             | 3.4.1                |
+| click                          | 8.1.8                |
 | colour                         | 0.1.5                |
-| cryptography                   | 44.0.0               |
-| cssselect2                     | 0.7.0                |
+| cryptography                   | 44.0.2               |
+| cssselect2                     | 0.8.0                |
 | deepdiff                       | 8.0.1                |
 | dict2xml                       | 1.7.6                |
-| dnspython                      | 2.7.0                |
 | docraptor                      | 3.1.0                |
-| email_validator                | 2.2.0                |
 | et_xmlfile                     | 2.0.0                |
-| fastapi                        | 0.115.6              |
-| fhir.resources                 | 7.0.2                |
-| fonttools                      | 4.55.3               |
-| google-api-core                | 2.24.0               |
-| google-auth                    | 2.37.0               |
-| googleapis-common-protos       | 1.66.0               |
+| fastapi                        | 0.115.12             |
+| fhir-core                      | 1.0.1                |
+| fhir.resources                 | 8.0.0                |
+| fonttools                      | 4.56.0               |
+| google-api-core                | 2.24.2               |
+| google-auth                    | 2.38.0               |
+| googleapis-common-protos       | 1.69.2               |
 | h11                            | 0.14.0               |
 | httpcore                       | 1.0.7                |
 | httpx                          | 0.27.2               |
 | hypothesis                     | 6.115.6              |
 | idna                           | 3.10                 |
-| Jinja2                         | 3.1.4                |
-| lxml                           | 5.3.0                |
+| Jinja2                         | 3.1.6                |
+| lxml                           | 5.3.1                |
 | MarkupSafe                     | 3.0.2                |
-| msal                           | 1.31.1               |
-| msal-extensions                | 1.2.0                |
-| neo4j                          | 5.27.0               |
-| neomodel                       | 5.4.2                |
-| numpy                          | 2.2.0                |
+| msal                           | 1.32.0               |
+| msal-extensions                | 1.3.1                |
+| neo4j                          | 5.28.1               |
+| neomodel                       | 5.4.5                |
+| numpy                          | 2.2.4                |
 | opencensus                     | 0.11.4               |
 | opencensus-context             | 0.1.3                |
-| opencensus-ext-azure           | 1.1.13               |
+| opencensus-ext-azure           | 1.1.14               |
 | openpyxl                       | 3.1.5                |
 | orderly-set                    | 5.2.2                |
 | pandas                         | 2.2.3                |
-| pillow                         | 11.0.0               |
+| pillow                         | 11.1.0               |
 | pip                            | 25.0.1               |
-| portalocker                    | 2.10.1               |
-| proto-plus                     | 1.25.0               |
-| protobuf                       | 5.29.2               |
-| psutil                         | 6.1.1                |
+| proto-plus                     | 1.26.1               |
+| protobuf                       | 6.30.1               |
+| psutil                         | 7.0.0                |
 | pyasn1                         | 0.6.1                |
 | pyasn1_modules                 | 0.4.1                |
 | pycparser                      | 2.22                 |
-| pydantic                       | 1.10.19              |
+| pydantic                       | 2.10.6               |
+| pydantic_core                  | 2.27.2               |
+| pydantic-settings              | 2.7.1                |
 | pydyf                          | 0.11.0               |
 | PyJWT                          | 2.10.1               |
-| pyphen                         | 0.17.0               |
+| pyphen                         | 0.17.2               |
 | python-dateutil                | 2.9.0.post0          |
 | python-docx                    | 1.1.2                |
+| python-dotenv                  | 1.1.0                |
 | python-multipart               | 0.0.20               |
-| pytz                           | 2024.2               |
+| pytz                           | 2025.2               |
 | PyYAML                         | 6.0.2                |
 | requests                       | 2.32.3               |
 | rsa                            | 4.9                  |
@@ -76,15 +77,15 @@
 | sniffio                        | 1.3.1                |
 | sortedcontainers               | 2.4.0                |
 | soupsieve                      | 2.6                  |
-| starlette                      | 0.41.3               |
+| starlette                      | 0.46.1               |
 | starlette-context              | 0.3.6                |
 | stringcase                     | 1.2.0                |
 | tinycss2                       | 1.4.0                |
 | tinyhtml5                      | 2.0.0                |
 | typing_extensions              | 4.12.2               |
-| tzdata                         | 2024.2               |
-| urllib3                        | 2.2.3                |
-| usdm                           | 0.53.0               |
+| tzdata                         | 2025.2               |
+| urllib3                        | 2.3.0                |
+| usdm                           | 0.59.0               |
 | uvicorn                        | 0.32.1               |
 | weasyprint                     | 63.1                 |
 | webencodings                   | 0.5.1                |
@@ -291,6 +292,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
+
 ---
 
 ### License for 3rd party library beautifulsoup4
@@ -359,15 +361,15 @@ Krumins, Kent Johnson, Marek Kapolka, Andreas Kostyrka, Roel Kramer,
 Ben Last, Robert Leftwich, Stefaan Lippens, "liquider", Staffan
 Malmgren, Ksenia Marasanova, JP Moins, Adam Monsen, John Nagle, "Jon",
 Ed Oskiewicz, Martijn Peters, Greg Phillips, Giles Radford, Stefano
-Revera, Arthur Rudolph, Marko Samastur, James Salter, Jouni Seppänen,
-Alexander Schmolck, Tim Shirley, Geoffrey Sneddon, Ville Skyttä,
+Revera, Arthur Rudolph, Marko Samastur, James Salter, Jouni Seppï¿½nen,
+Alexander Schmolck, Tim Shirley, Geoffrey Sneddon, Ville Skyttï¿½,
 "Vikas", Jens Svalgaard, Andy Theyers, Eric Weiser, Glyn Webster, John
 Wiseman, Paul Wright, Danny Yoo
 
 An incomplete list of people who made suggestions or found bugs or
 found ways to break Beautiful Soup:
 
- Hanno Böck, Matteo Bertini, Chris Curvey, Simon Cusack, Bruce Eckel,
+ Hanno Bï¿½ck, Matteo Bertini, Chris Curvey, Simon Cusack, Bruce Eckel,
  Matt Ernst, Michael Foord, Tom Harris, Bill de hOra, Donald Howes,
  Matt Patterson, Scott Roberts, Steve Strassmann, Mike Williams,
  warchild at redho dot com, Sami Kuisma, Carlos Rocha, Bob Hutchison,
@@ -408,7 +410,7 @@ THE SOFTWARE.
 
 The MIT License (MIT)
 
-Copyright (c) 2014-2024 Thomas Kemmer
+Copyright (c) 2014-2025 Thomas Kemmer
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in
@@ -492,7 +494,7 @@ documentation is licensed as follows:
 
 MIT License
 
-Copyright (c) 2019 TAHRI Ahmed R.
+Copyright (c) 2025 TAHRI Ahmed R.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -511,6 +513,7 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
 
 ---
 
@@ -907,47 +910,6 @@ THE SOFTWARE.
 
 ---
 
-### License for 3rd party library dnspython
-
-ISC License
-
-Copyright (C) Dnspython Contributors
-
-Permission to use, copy, modify, and/or distribute this software for
-any purpose with or without fee is hereby granted, provided that the
-above copyright notice and this permission notice appear in all
-copies.
-
-THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL
-WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED
-WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE
-AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL
-DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR
-PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
-TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
-PERFORMANCE OF THIS SOFTWARE.
-
-
-
-Copyright (C) 2001-2017 Nominum, Inc.
-Copyright (C) Google Inc.
-
-Permission to use, copy, modify, and distribute this software and its
-documentation for any purpose with or without fee is hereby granted,
-provided that the above copyright notice and this permission notice
-appear in all copies.
-
-THE SOFTWARE IS PROVIDED "AS IS" AND NOMINUM DISCLAIMS ALL WARRANTIES
-WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL NOMINUM BE LIABLE FOR
-ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT
-OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-
-
----
-
 ### License for 3rd party library docraptor
 
 Copyright (c) 2010- Expected Behavior, LLC (http://expectedbehavior.com)
@@ -963,39 +925,6 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-
-
----
-
-### License for 3rd party library email_validator
-
-This is free and unencumbered software released into the public
-domain.
-
-Anyone is free to copy, modify, publish, use, compile, sell, or
-distribute this software, either in source code form or as a
-compiled binary, for any purpose, commercial or non-commercial,
-and by any means.
-
-In jurisdictions that recognize copyright laws, the author or
-authors of this software dedicate any and all copyright
-interest in the software to the public domain. We make this
-dedication for the benefit of the public at large and to the
-detriment of our heirs and successors. We intend this
-dedication to be an overt act of relinquishment in perpetuity
-of all present and future rights to this software under
-copyright law.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
-OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS BE LIABLE FOR
-ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
-CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
-
-For more information, please refer to <https://unlicense.org/>
 
 
 ---
@@ -3000,6 +2929,121 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ### License for 3rd party library numpy
 
+* Copyright (c) 2006, University of Georgia and Pierre G.F. Gerard-Marchant
+* All rights reserved.
+* Redistribution and use in source and binary forms, with or without
+* modification, are permitted provided that the following conditions are met:
+*
+*     * Redistributions of source code must retain the above copyright
+*       notice, this list of conditions and the following disclaimer.
+*     * Redistributions in binary form must reproduce the above copyright
+*       notice, this list of conditions and the following disclaimer in the
+*       documentation and/or other materials provided with the distribution.
+*     * Neither the name of the University of Georgia nor the
+*       names of its contributors may be used to endorse or promote products
+*       derived from this software without specific prior written permission.
+*
+* THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND ANY
+* EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+* WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+* DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE FOR ANY
+* DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+* (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+* LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+* ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+* (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.**This software is dual-licensed under the The University of Illinois/NCSA
+Open Source License (NCSA) and The 3-Clause BSD License**
+
+# NCSA Open Source License
+**Copyright (c) 2019 Kevin Sheppard. All rights reserved.**
+
+Developed by: Kevin Sheppard (<kevin.sheppard@economics.ox.ac.uk>,
+<kevin.k.sheppard@gmail.com>)
+[http://www.kevinsheppard.com](http://www.kevinsheppard.com)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal with
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+of the Software, and to permit persons to whom the Software is furnished to do
+so, subject to the following conditions:
+
+Redistributions of source code must retain the above copyright notice, this
+list of conditions and the following disclaimers.
+
+Redistributions in binary form must reproduce the above copyright notice, this
+list of conditions and the following disclaimers in the documentation and/or
+other materials provided with the distribution.
+
+Neither the names of Kevin Sheppard, nor the names of any contributors may be
+used to endorse or promote products derived from this Software without specific
+prior written permission.
+
+**THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+CONTRIBUTORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS WITH
+THE SOFTWARE.**
+
+
+# 3-Clause BSD License
+**Copyright (c) 2019 Kevin Sheppard. All rights reserved.**
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice,
+   this list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright notice,
+   this list of conditions and the following disclaimer in the documentation
+   and/or other materials provided with the distribution.
+
+3. Neither the name of the copyright holder nor the names of its contributors
+   may be used to endorse or promote products derived from this software
+   without specific prior written permission.
+
+**THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+THE POSSIBILITY OF SUCH DAMAGE.**
+
+# Components
+
+Many parts of this module have been derived from original sources, 
+often the algorithm's designer. Component licenses are located with 
+the component code.
+  zlib License
+  ------------
+
+  Copyright (C) 2010 - 2019 ridiculous_fish, <libdivide@ridiculousfish.com>
+  Copyright (C) 2016 - 2019 Kim Walisch, <kim.walisch@gmail.com>
+
+  This software is provided 'as-is', without any express or implied
+  warranty.  In no event will the authors be held liable for any damages
+  arising from the use of this software.
+
+  Permission is granted to anyone to use this software for any purpose,
+  including commercial applications, and to alter it and redistribute it
+  freely, subject to the following restrictions:
+
+  1. The origin of this software must not be misrepresented; you must not
+     claim that you wrote the original software. If you use this software
+     in a product, an acknowledgment in the product documentation would be
+     appreciated but is not required.
+  2. Altered source versions must be plainly marked as such, and must not be
+     misrepresented as being the original software.
+  3. This notice may not be removed or altered from any source distribution.
 Copyright (c) 2005-2024, NumPy Developers.
 All rights reserved.
 
@@ -3971,121 +4015,6 @@ License: LGPL-2.1-or-later
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
     Lesser General Public License for more details.
     https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html
-* Copyright (c) 2006, University of Georgia and Pierre G.F. Gerard-Marchant
-* All rights reserved.
-* Redistribution and use in source and binary forms, with or without
-* modification, are permitted provided that the following conditions are met:
-*
-*     * Redistributions of source code must retain the above copyright
-*       notice, this list of conditions and the following disclaimer.
-*     * Redistributions in binary form must reproduce the above copyright
-*       notice, this list of conditions and the following disclaimer in the
-*       documentation and/or other materials provided with the distribution.
-*     * Neither the name of the University of Georgia nor the
-*       names of its contributors may be used to endorse or promote products
-*       derived from this software without specific prior written permission.
-*
-* THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND ANY
-* EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-* WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-* DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE FOR ANY
-* DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-* (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-* LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-* ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-* (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.**This software is dual-licensed under the The University of Illinois/NCSA
-Open Source License (NCSA) and The 3-Clause BSD License**
-
-# NCSA Open Source License
-**Copyright (c) 2019 Kevin Sheppard. All rights reserved.**
-
-Developed by: Kevin Sheppard (<kevin.sheppard@economics.ox.ac.uk>,
-<kevin.k.sheppard@gmail.com>)
-[http://www.kevinsheppard.com](http://www.kevinsheppard.com)
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of
-this software and associated documentation files (the "Software"), to deal with
-the Software without restriction, including without limitation the rights to
-use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
-of the Software, and to permit persons to whom the Software is furnished to do
-so, subject to the following conditions:
-
-Redistributions of source code must retain the above copyright notice, this
-list of conditions and the following disclaimers.
-
-Redistributions in binary form must reproduce the above copyright notice, this
-list of conditions and the following disclaimers in the documentation and/or
-other materials provided with the distribution.
-
-Neither the names of Kevin Sheppard, nor the names of any contributors may be
-used to endorse or promote products derived from this Software without specific
-prior written permission.
-
-**THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-CONTRIBUTORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS WITH
-THE SOFTWARE.**
-
-
-# 3-Clause BSD License
-**Copyright (c) 2019 Kevin Sheppard. All rights reserved.**
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
-
-1. Redistributions of source code must retain the above copyright notice,
-   this list of conditions and the following disclaimer.
-
-2. Redistributions in binary form must reproduce the above copyright notice,
-   this list of conditions and the following disclaimer in the documentation
-   and/or other materials provided with the distribution.
-
-3. Neither the name of the copyright holder nor the names of its contributors
-   may be used to endorse or promote products derived from this software
-   without specific prior written permission.
-
-**THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
-THE POSSIBILITY OF SUCH DAMAGE.**
-
-# Components
-
-Many parts of this module have been derived from original sources, 
-often the algorithm's designer. Component licenses are located with 
-the component code.
-  zlib License
-  ------------
-
-  Copyright (C) 2010 - 2019 ridiculous_fish, <libdivide@ridiculousfish.com>
-  Copyright (C) 2016 - 2019 Kim Walisch, <kim.walisch@gmail.com>
-
-  This software is provided 'as-is', without any express or implied
-  warranty.  In no event will the authors be held liable for any damages
-  arising from the use of this software.
-
-  Permission is granted to anyone to use this software for any purpose,
-  including commercial applications, and to alter it and redistribute it
-  freely, subject to the following restrictions:
-
-  1. The origin of this software must not be misrepresented; you must not
-     claim that you wrote the original software. If you use this software
-     in a product, an acknowledgment in the product documentation would be
-     appreciated but is not required.
-  2. Altered source versions must be plainly marked as such, and must not be
-     misrepresented as being the original software.
-  3. This notice may not be removed or altered from any source distribution.
 
 
 ---
@@ -5612,9 +5541,9 @@ The Python Imaging Library (PIL) is
 
 Pillow is the friendly PIL fork. It is
 
-    Copyright Â© 2010-2024 by Jeffrey A. Clark and contributors
+    Copyright Â© 2010 by Jeffrey A. Clark and contributors
 
-Like PIL, Pillow is licensed under the open source HPND License:
+Like PIL, Pillow is licensed under the open source MIT-CMU License:
 
 By obtaining, using, and/or copying this software and/or its associated
 documentation, you agree that you have read, understood, and will comply
@@ -6978,23 +6907,6 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ---
 
-### License for 3rd party library portalocker
-
-Copyright 2022 Rick van Hattem
-
-Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
-
-1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
-
-2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
-
-3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-
----
-
 ### License for 3rd party library proto-plus
 
 
@@ -7373,7 +7285,61 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 The MIT License (MIT)
 
-Copyright (c) 2017, 2018, 2019, 2020, 2021 Samuel Colvin and other contributors
+Copyright (c) 2017 to present Pydantic Services Inc. and individual contributors.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+
+---
+
+### License for 3rd party library pydantic_core
+
+The MIT License (MIT)
+
+Copyright (c) 2022 Samuel Colvin
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+
+---
+
+### License for 3rd party library pydantic-settings
+
+The MIT License (MIT)
+
+Copyright (c) 2022 Samuel Colvin and other contributors
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -8879,6 +8845,39 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
+
+
+---
+
+### License for 3rd party library python-dotenv
+
+Copyright (c) 2014, Saurabh Kumar (python-dotenv), 2013, Ted Tieken (django-dotenv-rw), 2013, Jacob Kaplan-Moss (django-dotenv)
+
+Redistribution and use in source and binary forms, with or without modification,
+are permitted provided that the following conditions are met:
+
+- Redistributions of source code must retain the above copyright notice,
+  this list of conditions and the following disclaimer.
+
+- Redistributions in binary form must reproduce the above copyright notice,
+  this list of conditions and the following disclaimer in the documentation
+  and/or other materials provided with the distribution.
+
+- Neither the name of django-dotenv nor the names of its contributors
+  may be used to endorse or promote products derived from this software
+  without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 ---
@@ -11176,13 +11175,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
    See the License for the specific language governing permissions and
    limitations under the License.
 
-### Referenced License for 3rd party library bs4 (pypi information)
+### License for 3rd party library bs4 (pypi information)
 ```
 License - MIT
 ```
 
 
-### Referenced License for 3rd party library orderly-set (MIT-LICENSE)
+### License for 3rd party library orderly-set (MIT-LICENSE)
 ```
 Copyright (c) 2012-2022 Elia Robyn Lake, 2023 Idan Miara, 2024 Sep Dehpour
 
@@ -11205,7 +11204,7 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 ```
 
-### Referenced License for 3rd party library jinja2 (BSD 3-Clause)
+### License for 3rd party library jinja2 (BSD 3-Clause)
 ```
 Copyright 2007 Pallets
 
@@ -11236,3 +11235,41 @@ LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ```
+
+### License for 3rd party library fhir-core (BSD)
+
+```
+BSD License
+
+Copyright (c) 2019, Md Nazrul Islam
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without modification,
+are permitted provided that the following conditions are met:
+
+* Redistributions of source code must retain the above copyright notice, this
+  list of conditions and the following disclaimer.
+
+* Redistributions in binary form must reproduce the above copyright notice, this
+  list of conditions and the following disclaimer in the documentation and/or
+  other materials provided with the distribution.
+
+* Neither the name of the copyright holder nor the names of its
+  contributors may be used to endorse or promote products derived from this
+  software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
+OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
+OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
+OF THE POSSIBILITY OF SUCH DAMAGE.
+```
+
+
+
+

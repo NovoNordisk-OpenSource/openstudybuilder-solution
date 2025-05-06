@@ -1,0 +1,18 @@
+﻿<?xml version='1.0' encoding='utf-8'?>
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="NN_Studybuilder_Protocol.Properties" GeneratedClassName="Settings">
+  <Profiles />
+  <Settings>
+    <Setting Name="Studybuilder_ClientId" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">6d7f11d8-d150-4487-b5ef-77423b1ae513</Value>
+    </Setting>
+    <Setting Name="Studybuilder_TenantId" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">54e85725-ed2a-49a4-a19e-11c8d29f9a0f</Value>
+    </Setting>
+    <Setting Name="Studybuilder_Scopes" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">api://6d7f11d8-d150-4487-b5ef-77423b1ae513/API.Call, openid, profile, email, offline_access</Value>
+    </Setting>
+    <Setting Name="ApiUrl" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">https://openstudybuilder.northeurope.cloudapp.azure.com/api</Value>
+    </Setting>
+  </Settings>
+</SettingsFile>

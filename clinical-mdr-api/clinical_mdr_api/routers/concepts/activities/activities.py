@@ -54,8 +54,8 @@ Possible errors:
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.allow_exports(
@@ -119,6 +119,13 @@ def get_activities(
             alias="activity_group_names[]",
         ),
     ] = None,
+    group_by_groupings: Annotated[
+        bool | None,
+        Query(
+            description="A boolean property to specify if the activities will be grouped by sub group and group or not,"
+            " so we won't loose the information about which activity instances has each group"
+        ),
+    ] = True,
     sort_by: Annotated[
         Json | None, Query(description=_generic_descriptions.SORT_BY)
     ] = None,
@@ -161,6 +168,7 @@ def get_activities(
         activity_names=activity_names,
         activity_subgroup_names=activity_subgroup_names,
         activity_group_names=activity_group_names,
+        group_by_groupings=group_by_groupings,
     )
     return CustomPage.create(
         items=results.items, total=results.total, page=page_number, size=page_size
@@ -191,8 +199,8 @@ Possible errors:
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.allow_exports(
@@ -246,6 +254,13 @@ def get_activities_versions(
             alias="activity_group_names[]",
         ),
     ] = None,
+    group_by_groupings: Annotated[
+        bool | None,
+        Query(
+            description="A boolean property to specify if the activities will be grouped by sub group and group or not,"
+            " so we won't loose the information about which activity instances has each group"
+        ),
+    ] = True,
     page_number: Annotated[
         int | None, Query(ge=1, description=_generic_descriptions.PAGE_NUMBER)
     ] = config.DEFAULT_PAGE_NUMBER,
@@ -284,6 +299,7 @@ def get_activities_versions(
         activity_names=activity_names,
         activity_subgroup_names=activity_subgroup_names,
         activity_group_names=activity_group_names,
+        group_by_groupings=group_by_groupings,
     )
     return CustomPage.create(
         items=results.items, total=results.total, page=page_number, size=page_size
@@ -299,11 +315,11 @@ def get_activities_versions(
     response_model=list[Any],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - Invalid field name specified",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_distinct_values_for_header(
@@ -360,6 +376,7 @@ def get_distinct_values_for_header(
         activity_names=activity_names,
         activity_subgroup_names=activity_subgroup_names,
         activity_group_names=activity_group_names,
+        group_by_groupings=False,
     )
 
 
@@ -386,8 +403,8 @@ Possible errors:
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_activity(activity_uid: Annotated[str, ActivityUID]):
@@ -419,8 +436,8 @@ Possible errors:
     response_model=ActivityOverview,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.allow_exports(
@@ -473,9 +490,9 @@ Possible errors:
  - Invalid uid.
  """,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"content": {"application/x-yaml": {}}},
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 # pylint: disable=unused-argument
@@ -511,11 +528,11 @@ Possible errors:
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - The activity with the specified 'activity_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_versions(activity_uid: Annotated[str, ActivityUID]):
@@ -551,6 +568,7 @@ Possible errors:
     response_model_exclude_unset=True,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {"description": "Created - The activity was successfully created."},
         400: {
             "model": ErrorResponse,
@@ -559,7 +577,6 @@ Possible errors:
             "- The library doesn't allow to add new items.\n",
         },
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def create(
@@ -597,6 +614,7 @@ Possible errors:
     response_model_exclude_unset=True,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {"description": "Created - The activity was successfully created."},
         400: {
             "model": ErrorResponse,
@@ -605,7 +623,6 @@ Possible errors:
             "- The library doesn't allow to add new items.\n",
         },
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def create_sponsor_activity_from_activity_request(
@@ -639,6 +656,7 @@ Possible errors:
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "Created - The activity was successfully edited."},
         400: {
             "model": ErrorResponse,
@@ -647,7 +665,6 @@ Possible errors:
             "- The activity is not in final state.\n",
         },
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def reject_activity_request(
@@ -687,6 +704,7 @@ Possible errors:
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -699,7 +717,6 @@ Possible errors:
             "model": ErrorResponse,
             "description": "Not Found - The activity with the specified 'activity_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def edit(
@@ -734,6 +751,7 @@ Possible errors:
     response_model_exclude_unset=True,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -746,7 +764,6 @@ Possible errors:
             "- The activity is not in final status.\n"
             "- The activity with the specified 'activity_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def new_version(activity_uid: Annotated[str, ActivityUID]):
@@ -781,6 +798,7 @@ Possible errors:
     response_model_exclude_unset=True,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -792,7 +810,6 @@ Possible errors:
             "model": ErrorResponse,
             "description": "Not Found - The activity with the specified 'activity_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def approve(
@@ -832,6 +849,7 @@ Possible errors:
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -842,7 +860,6 @@ Possible errors:
             "model": ErrorResponse,
             "description": "Not Found - The activity with the specified 'activity_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def inactivate(activity_uid: Annotated[str, ActivityUID]):
@@ -875,6 +892,7 @@ Possible errors:
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -885,7 +903,6 @@ Possible errors:
             "model": ErrorResponse,
             "description": "Not Found - The activity with the specified 'activity_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def reactivate(activity_uid: Annotated[str, ActivityUID]):
@@ -915,6 +932,7 @@ Possible errors:
     response_model=None,
     status_code=204,
     responses={
+        403: _generic_descriptions.ERROR_403,
         204: {"description": "No Content - The activity was successfully deleted."},
         400: {
             "model": ErrorResponse,
@@ -927,7 +945,6 @@ Possible errors:
             "model": ErrorResponse,
             "description": "Not Found - An activity with the specified 'activity_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def delete_activity(activity_uid: Annotated[str, ActivityUID]):

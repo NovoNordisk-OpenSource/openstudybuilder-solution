@@ -63,53 +63,65 @@ Feature: Library - Activity Groups
         When The add activity group button is clicked
         And The user define a value for Sentence case name and it is not identical to the value of Activity group name
         Then The user is not able to save the acitivity group
-        And The message is displayed as 'Sentence case name value must be identical to name value' in the Sentence case name field
+        And The validation message appears for sentance case name that it is not identical to name
 
     Scenario: User must be able to add a new version for the approved activity group
         Given The '/library/activities/activity-groups' page is opened
-        And The activity group exists with the status as Final
+        And [API] Activity group in status Draft exists
+        And [API] Activity group is approved
+        And Activity group is found
         When The 'New version' option is clicked from the three dot menu list
-        Then The activity group has status 'Draft' and version '1.1'
+        Then The item has status 'Draft' and version '1.1'
 
     Scenario: User must be able to edit and approve new version of activity group
         Given The '/library/activities/activity-groups' page is opened
-        And The activity group exists with the status as Final
+        And [API] Activity group in status Draft exists
+        And [API] Activity group is approved
+        And Activity group is found
         When The 'New version' option is clicked from the three dot menu list
-        Then The activity group has status 'Draft' and version '1.1'
+        Then The item has status 'Draft' and version '1.1'
         When The 'Edit' option is clicked from the three dot menu list
         And The activity group is edited
-        Then The activity group has status 'Draft' and version '1.2'
+        Then The item has status 'Draft' and version '1.2'
         When The 'Approve' option is clicked from the three dot menu list
-        Then The activity group has status 'Final' and version '2.0'
+        Then The item has status 'Final' and version '2.0'
 
     Scenario: User must be able to inactivate the approved version of the activity group
         Given The '/library/activities/activity-groups' page is opened
-        And The activity group exists with the status as Final
+        And [API] Activity group in status Draft exists
+        And [API] Activity group is approved
+        And Activity group is found
         When The 'Inactivate' option is clicked from the three dot menu list
-        Then The activity group has status 'Retired' and version '1.0'
+        Then The item has status 'Retired' and version '1.0'
 
     Scenario: User must be able to reactivate the inactivated version of the activity group
         Given The '/library/activities/activity-groups' page is opened
-        And The activity group exists with the status as Retired
+        And [API] Activity group in status Draft exists
+        And [API] Activity group is approved
+        And [API] Activity group is inactivated
+        And Activity group is found
         When The 'Reactivate' option is clicked from the three dot menu list
-        Then The activity group has status 'Final' and version '1.0'
+        Then The item has status 'Final' and version '1.0'
 
     Scenario: User must be able to edit the drafted version of the activity group
         Given The '/library/activities/activity-groups' page is opened
-        And The activity group exists with the status as Draft
+        And [API] Activity group in status Draft exists
+        And Activity group is found
         When The 'Edit' option is clicked from the three dot menu list
         And The activity group is edited
-        Then The activity group has status 'Draft' and version '0.2'
+        Then The item has status 'Draft' and version '0.2'
         
     Scenario: User must be able to approve the drafted version of the activity group
         Given The '/library/activities/activity-groups' page is opened
-        And The activity group exists with the status as Draft
+        And [API] Activity group in status Draft exists
+        And Activity group is found
         When The 'Approve' option is clicked from the three dot menu list
-        Then The activity group has status 'Final' and version '1.0'
+        Then The item has status 'Final' and version '1.0'
 
     Scenario: User must be able to Delete the intial created version of the activity group
         Given The '/library/activities/activity-groups' page is opened
-        And The activity group exists with the status as Draft
+        And [API] Activity group in status Draft exists
+        And Activity group is found
         When The 'Delete' option is clicked from the three dot menu list
         Then The activity group is no longer available
 
@@ -122,7 +134,8 @@ Feature: Library - Activity Groups
 
     Scenario: User must be able to Cancel edition of the activity group
         Given The '/library/activities/activity-groups' page is opened
-        And The activity group exists with the status as Draft
+        And [API] Activity group in status Draft exists
+        And Activity group is found
         When The 'Edit' option is clicked from the three dot menu list
         When The activity group edition form is filled with data
         And Modal window form is closed by clicking cancel button
@@ -131,26 +144,32 @@ Feature: Library - Activity Groups
 
     Scenario: User must only have access to aprove, edit, delete, history actions for Drafted version of the activity group
         Given The '/library/activities/activity-groups' page is opened
-        And The activity group exists with the status as Draft
+        And [API] Activity group in status Draft exists
+        And Activity group is found
         Then The item actions button is clicked
         Then Only actions that should be avaiable for the Draft item are displayed
 
     Scenario: User must only have access to new version, inactivate, history actions for Final version of the activity group
         Given The '/library/activities/activity-groups' page is opened
-        And The activity group exists with the status as Final
+        And [API] Activity group in status Draft exists
+        And [API] Activity group is approved
+        And Activity group is found
         Then The item actions button is clicked
         Then Only actions that should be avaiable for the Final item are displayed
 
     Scenario: User must only have access to reactivate, history actions for Retired version of the activity group
         Given The '/library/activities/activity-groups' page is opened
-        And The activity group exists with the status as Retired
+        And [API] Activity group in status Draft exists
+        And [API] Activity group is approved
+        And [API] Activity group is inactivated
+        And Activity group is found
         Then The item actions button is clicked
         Then Only actions that should be avaiable for the Retired item are displayed
 
     Scenario: User must be able to search created group
         Given The '/library/activities/activity-groups' page is opened
-        When First activity group for search test is created
-        And Second activity group for search test is created
+        When [API] First activity group for search test is created
+        And [API] Second activity group for search test is created
         Then One activity group is found after performing full name search
         And More than one item is found after performing partial name search 
 
@@ -166,6 +185,21 @@ Feature: Library - Activity Groups
         And The item is not found and table is correctly filtered
         And The user changes status filter value to 'Draft'
         Then More than one item is found after performing partial name search
+
+    Scenario: User must be able to find new version of approved group by setting status filter
+        Given The '/library/activities/activity-groups' page is opened
+        And [API] Activity group in status Draft exists
+        And [API] Activity group is approved
+        When The user filters table by status 'Final'
+        And The group can be find in table
+        And [API] Activity group gets new version
+        And The user changes status filter value to 'Draft'
+        And The group can be find in table
+
+    Scenario: User must be able to search item ignoring case sensitivity
+        Given The '/library/activities/activity-groups' page is opened
+        When The existing item in search by lowercased name
+        And More than one result is found
 
     Scenario Outline: User must be able to filter the table by text fields
         Given The '/library/activities/activity-groups' page is opened

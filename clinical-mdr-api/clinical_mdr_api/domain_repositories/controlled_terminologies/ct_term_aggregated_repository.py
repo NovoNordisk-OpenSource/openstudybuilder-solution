@@ -68,15 +68,17 @@ class CTTermAggregatedRepository:
                 change_description: rel_data_name.change_description,
                 author_id: rel_data_name.author_id,
                 author_username: coalesce(name_author.username, rel_data_name.author_id)
-            } AS rel_data_name
+            } AS rel_data_name,
+            ct_codelist_attributes_value.submission_value AS codelist_submission_value
     """
     generic_alias_clause = f"""
-        DISTINCT term_root, term_attributes_root, term_attributes_value, term_name_root, term_name_value, codelist_root, rel_term
+        DISTINCT term_root, term_attributes_root, term_attributes_value, term_name_root, term_name_value, codelist_root, rel_term, ct_codelist_attributes_value
         ORDER BY rel_term.order, term_name_value.name
         WITH DISTINCT term_root, term_attributes_root, term_attributes_value, term_name_root, term_name_value, 
         codelist_root, rel_term,
         head([(catalogue:CTCatalogue)-[:HAS_CODELIST]->(codelist_root) | catalogue]) AS catalogue,
-        head([(lib)-[:CONTAINS_TERM]->(term_root) | lib]) AS library
+        head([(lib)-[:CONTAINS_TERM]->(term_root) | lib]) AS library,
+        ct_codelist_attributes_value
         MATCH (codelist_root)<-[:CONTAINS_CODELIST]-(codelist_library:Library)
         CALL {{
                 WITH term_attributes_root, term_attributes_value
@@ -105,13 +107,14 @@ class CTTermAggregatedRepository:
         {generic_final_alias_clause}
     """
     sponsor_alias_clause = f"""
-        DISTINCT term_root, term_attributes_root, term_attributes_value, term_name_root, term_name_value, attr_v_rel, name_v_rel, codelist_root, rel_term
+        DISTINCT term_root, term_attributes_root, term_attributes_value, term_name_root, term_name_value, attr_v_rel, name_v_rel, codelist_root, rel_term, ct_codelist_attributes_value
         ORDER BY rel_term.order, term_name_value.name
         WITH DISTINCT term_root, term_attributes_root, term_attributes_value, term_name_root, term_name_value, 
         codelist_root, rel_term,
         attr_v_rel AS rel_data_attributes, name_v_rel AS rel_data_name,
         head([(catalogue:CTCatalogue)-[:HAS_CODELIST]->(codelist_root) | catalogue]) AS catalogue,
-        head([(lib)-[:CONTAINS_TERM]->(term_root) | lib]) AS library
+        head([(lib)-[:CONTAINS_TERM]->(term_root) | lib]) AS library,
+        ct_codelist_attributes_value
         MATCH (codelist_root)<-[:CONTAINS_CODELIST]-(codelist_library:Library)
         {generic_final_alias_clause}
     """
@@ -144,6 +147,7 @@ class CTTermAggregatedRepository:
         library: str | None = None,
         package: str | None = None,
         is_sponsor: bool = False,
+        include_removed_terms: bool = False,
         sort_by: dict | None = None,
         page_number: int = 1,
         page_size: int = 0,
@@ -178,6 +182,7 @@ class CTTermAggregatedRepository:
             library_name=library,
             package=package,
             is_sponsor=is_sponsor,
+            include_removed_terms=include_removed_terms,
         )
 
         # Build alias_clause
@@ -301,6 +306,7 @@ class CTTermAggregatedRepository:
         library_name: str | None = None,
         package: str | None = None,
         is_sponsor: bool = False,
+        include_removed_terms: bool = False,
     ) -> tuple[str, dict]:
         match_clause = ""
         if is_sponsor:
@@ -384,12 +390,15 @@ class CTTermAggregatedRepository:
             match_clause += filter_statements
 
         if not package:
-            match_clause += " OPTIONAL MATCH (codelist_root:CTCodelistRoot)-[rel_term:HAS_TERM]->(term_root) WITH * "
+            match_clause += f""" OPTIONAL MATCH (ct_codelist_attributes_value:CTCodelistAttributesValue)<-[:LATEST]-(ct_codelist_attributes_root:CTCodelistAttributesRoot)
+            <-[:HAS_ATTRIBUTES_ROOT]-(codelist_root:CTCodelistRoot)-[rel_term:HAS_TERM{"" if not include_removed_terms else "|HAD_TERM"}]->(term_root)
+            WITH * """
         else:
             # We are listing terms for a specific package, we need to include HAD_TERM relationships also.
             # If not, we would only get terms that are also in the latest version of the package,
             # not those that were in the past.
-            match_clause += " MATCH (codelist_root:CTCodelistRoot)-[rel_term:HAS_TERM|HAD_TERM]->(term_root) "
+            match_clause += """ MATCH (ct_codelist_attributes_value:CTCodelistAttributesValue)<-[:LATEST]-(ct_codelist_attributes_root:CTCodelistAttributesRoot)
+            <-[:HAS_ATTRIBUTES_ROOT]-(codelist_root:CTCodelistRoot)-[rel_term:HAS_TERM|HAD_TERM]->(term_root) """
 
         if codelist_uid or codelist_name:
             # Build specific filtering for codelist

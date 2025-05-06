@@ -235,7 +235,6 @@ An environment variable with empty string value is considered unset by clinical-
 `OAUTH_ENABLED=false`
 : Authorization is required, unless this variable is set to a false value like  value is `false`, `0` or `off` 
   (case-insensitive).
-  When authorization is disabled, the calling user can be faked with the `X-Test-User-Id` HTTP request header. 
 
 `OAUTH_RBAC_ENABLED=false`
 : Role-based Access Control can be disabled with a false value like value is `false`, `0` or `off` (case-insensitive).
@@ -347,3 +346,5 @@ The roles claimed in the access token can be verified in the UI by clicking on t
 (top-right corner).
 
 UI elements can be hidden/disabled based on the roles granted to the user.
+
+

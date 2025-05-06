@@ -3,6 +3,7 @@ from typing import Annotated, Self
 
 from pydantic import Field
 
+from clinical_mdr_api.descriptions.general import CHANGES_FIELD_DESC
 from clinical_mdr_api.domains.controlled_terminologies.ct_term_attributes import (
     CTTermAttributesAR,
 )
@@ -65,29 +66,49 @@ class CTTermAttributes(BaseModel):
             author_username=ct_term_attributes_ar.item_metadata.author_username,
         )
 
-    term_uid: Annotated[str | None, Field(nullable=True)] = None
+    term_uid: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
 
-    catalogue_name: Annotated[str | None, Field(nullable=True)] = None
+    catalogue_name: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
 
     codelists: Annotated[list[CTTermCodelist], Field()] = []
 
-    concept_id: Annotated[str | None, Field(nullable=True)] = None
+    concept_id: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
 
-    code_submission_value: Annotated[str | None, Field(nullable=True)] = None
+    code_submission_value: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
 
-    name_submission_value: Annotated[str | None, Field(nullable=True)] = None
+    name_submission_value: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
 
-    nci_preferred_name: Annotated[str, Field()]
+    nci_preferred_name: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
 
-    definition: Annotated[str, Field(remove_from_wildcard=True)]
+    definition: Annotated[str, Field(json_schema_extra={"remove_from_wildcard": True})]
 
-    library_name: Annotated[str | None, Field(nullable=True)] = None
-    start_date: Annotated[datetime | None, Field(nullable=True)] = None
-    end_date: Annotated[datetime | None, Field(nullable=True)] = None
-    status: Annotated[str | None, Field(nullable=True)] = None
-    version: Annotated[str | None, Field(nullable=True)] = None
-    change_description: Annotated[str | None, Field(nullable=True)] = None
-    author_username: Annotated[str | None, Field(nullable=True)] = None
+    library_name: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
+    start_date: Annotated[
+        datetime | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    end_date: Annotated[
+        datetime | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    status: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    version: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    change_description: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    author_username: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
     possible_actions: Annotated[
         list[str],
         Field(
@@ -105,15 +126,11 @@ class CTTermAttributesVersion(CTTermAttributes):
     """
 
     changes: Annotated[
-        dict[str, bool] | None,
+        list[str],
         Field(
-            description=(
-                "Denotes whether or not there was a change in a specific field/property compared to the previous version. "
-                "The field names in this object here refer to the field names of the objective (e.g. name, start_date, ..)."
-            ),
-            nullable=True,
+            description=CHANGES_FIELD_DESC,
         ),
-    ] = None
+    ] = []
 
 
 class CTTermAttributesEditInput(PatchInputModel):

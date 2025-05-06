@@ -17,6 +17,7 @@ from clinical_mdr_api.models.study_selections.study import (
     CompactStudy,
     StatusChangeDescription,
     Study,
+    StudyCloneInput,
     StudyCreateInput,
     StudyFieldAuditTrailEntry,
     StudyPatchRequestJsonModel,
@@ -26,6 +27,7 @@ from clinical_mdr_api.models.study_selections.study import (
     StudySoaPreferences,
     StudySoaPreferencesInput,
     StudyStructureOverview,
+    StudyStructureStatistics,
     StudySubpartAuditTrail,
     StudySubpartCreateInput,
     StudySubpartReorderingInput,
@@ -64,8 +66,8 @@ Allowed parameters include : filter on fields, sort by field name with sort dire
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.allow_exports(
@@ -230,8 +232,8 @@ Allowed parameters include : filter on fields, sort by field name with sort dire
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.allow_exports(
@@ -309,11 +311,11 @@ def get_study_structure_overview(
     response_model=list[Any],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - Invalid field name specified",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_study_structure_overview_header(
@@ -356,11 +358,11 @@ def get_study_structure_overview_header(
     response_model=list[Any],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - Invalid field name specified",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_distinct_values_for_header(
@@ -405,6 +407,7 @@ def get_distinct_values_for_header(
     response_model=Study,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         400: {
             "model": ErrorResponse,
             "description": "ValidationException - The business rules were not met",
@@ -413,7 +416,6 @@ def get_distinct_values_for_header(
             "model": ErrorResponse,
             "description": "Not Found - The study with the specified 'study_uid'.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def lock(
@@ -438,6 +440,7 @@ def lock(
     response_model=Study,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         400: {
             "model": ErrorResponse,
             "description": "ValidationException - The business rules were not met",
@@ -446,7 +449,6 @@ def lock(
             "model": ErrorResponse,
             "description": "Not Found - The study with the specified 'study_uid'.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def unlock(
@@ -466,6 +468,7 @@ def unlock(
     response_model=Study,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         400: {
             "model": ErrorResponse,
             "description": "ValidationException - The business rules were not met",
@@ -474,7 +477,6 @@ def unlock(
             "model": ErrorResponse,
             "description": "Not Found - The study with the specified 'study_uid'.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def release(
@@ -511,6 +513,7 @@ Possible errors:
     response_model=None,
     status_code=204,
     responses={
+        403: _generic_descriptions.ERROR_403,
         204: {"description": "No Content - The Study was successfully deleted."},
         400: {
             "model": ErrorResponse,
@@ -520,7 +523,6 @@ Possible errors:
             "model": ErrorResponse,
             "description": "Not Found - The study with the specified 'study_uid'.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def delete_activity(study_uid: Annotated[str, StudyUID]):
@@ -539,12 +541,12 @@ def delete_activity(study_uid: Annotated[str, StudyUID]):
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - The study with the specified 'study_uid'"
             " (and the specified date/time and/or status) wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get(
@@ -581,6 +583,28 @@ def get(
 
 
 @router.get(
+    "/{study_uid}/structure-statistics",
+    dependencies=[rbac.STUDY_READ],
+    summary="Returns various statistics about the structure of the study identified by 'study_uid'.",
+    response_model=StudyStructureStatistics,
+    response_model_exclude_unset=True,
+    status_code=200,
+    responses={
+        403: _generic_descriptions.ERROR_403,
+        404: {
+            "model": ErrorResponse,
+            "description": "Not Found - The study with the specified 'study_uid'.",
+        },
+    },
+)
+def get_structure_statistics(
+    study_uid: Annotated[str, StudyUID],
+):
+    study_service = StudyService()
+    return study_service.get_study_structure_statistics(study_uid)
+
+
+@router.get(
     "/{study_uid}/pharma-cm",
     dependencies=[rbac.STUDY_READ],
     summary="Returns the pharma-cm represention of study identified by 'study_uid'.",
@@ -588,12 +612,12 @@ def get(
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - The study with the specified 'study_uid'"
             " (and the specified date/time and/or status) wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_pharma_cm_representation(
@@ -620,9 +644,9 @@ def get_pharma_cm_representation(
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"content": {"text/xml": {}}},
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_pharma_cm_xml_representation(
@@ -675,6 +699,7 @@ def get_pharma_cm_xml_representation(
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         400: {
             "model": ErrorResponse,
             "description": "Some application/business rules forbid to process the request. Expect more detailed"
@@ -684,7 +709,6 @@ def get_pharma_cm_xml_representation(
             "model": ErrorResponse,
             "description": "Not Found - The study with the specified 'study_uid'.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def patch(
@@ -724,12 +748,12 @@ def patch(
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - The study with the specified 'study_uid'"
             " (and the specified date/time and/or status) wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_snapshot_history(
@@ -789,12 +813,12 @@ def get_snapshot_history(
     response_model=list[StudyFieldAuditTrailEntry],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - The study with the specified 'study_uid'"
             " wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_fields_audit_trail(
@@ -825,12 +849,12 @@ def get_fields_audit_trail(
     response_model=list[StudySubpartAuditTrail],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - The study with the specified 'study_uid'"
             " wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_study_subpart_audit_trail(
@@ -858,13 +882,13 @@ request body with new unique uid generated and returned in response body.
     response_model_exclude_unset=True,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {"description": "Created - The study was successfully created."},
         400: {
             "model": ErrorResponse,
             "description": "Some application/business rules forbid to process the request. Expect more detailed"
             " information in response body.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def create(
@@ -875,6 +899,38 @@ def create(
 ) -> Study:
     study_service = StudyService()
     return study_service.create(study_create_input)
+
+
+@router.post(
+    "/{study_uid}/clone",
+    dependencies=[rbac.STUDY_WRITE],
+    summary="Creates a cloned Study Definition with selective copying.",
+    description="""
+Creates a new DRAFT Study Definition by cloning an existing study. 
+The client can specify which parts of the study should be copied using the request body.
+""",
+    response_model=Study,
+    response_model_exclude_unset=True,
+    status_code=201,
+    responses={
+        403: _generic_descriptions.ERROR_403,
+        201: {"description": "Created - The study was successfully cloned."},
+        400: {
+            "model": ErrorResponse,
+            "description": "Some application/business rules forbid processing the request.",
+        },
+    },
+)
+def clone_study(
+    study_uid: str,
+    clone_input: StudyCloneInput,
+) -> Study:
+    study_service = StudyService()
+    new_study = study_service.clone_study(
+        study_src_uid=study_uid,
+        study_clone_input=clone_input,
+    )
+    return new_study
 
 
 @router.get(
@@ -895,12 +951,12 @@ State after:
     response_model=StudyProtocolTitle,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - The study with the specified 'study_uid'"
             " wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_protocol_title(
@@ -934,12 +990,12 @@ State after:
     response_model=Study,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - The study with the specified 'study_uid'"
             " wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def copy_simple_form_from_another_study(
@@ -975,12 +1031,12 @@ def copy_simple_form_from_another_study(
     response_model=StudyPreferredTimeUnit,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - The study or unit definition with the specified 'study_uid'"
             " wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_preferred_time_unit(
@@ -1010,12 +1066,12 @@ def get_preferred_time_unit(
     response_model=StudyPreferredTimeUnit,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - The study or unit definition with the specified 'study_uid'"
             " wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def patch_preferred_time_unit(
@@ -1046,12 +1102,12 @@ def patch_preferred_time_unit(
     response_model=list[Study],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - The study with the specified 'study_uid'"
             " wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def reorder_study_subparts(
@@ -1079,11 +1135,11 @@ def reorder_study_subparts(
     response_model=StudySoaPreferences,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - study with the specified 'study_uid' doesn't exist or has no SoA preferences set",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_soa_preferences(
@@ -1107,11 +1163,11 @@ def get_soa_preferences(
     response_model_by_alias=False,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - study with the specified 'study_uid' doesn't exist",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def patch_soa_preferences(

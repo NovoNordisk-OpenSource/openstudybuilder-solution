@@ -22,3 +22,5 @@ The system is composed by the following components.
 
 > - GPLv3: GPLv3 license is a GNU General Public License. The GPL series are all copyleft licenses, which means that any derivative work must be distributed under the same or equivalent license terms.<br>For more info see: https://opensource.org/licenses/GPL-3.0 and https://www.gnu.org/licenses/quick-guide-gplv3.html
 
+
+

@@ -10,7 +10,10 @@ from common import config
 class BatchErrorResponse(BaseModel):
     message: Annotated[
         str | None,
-        Field(description="More information about the error.", nullable=True),
+        Field(
+            description="More information about the error.",
+            json_schema_extra={"nullable": True},
+        ),
     ] = None
     time: Annotated[
         str, Field(description="The point in time when the error occurred.")

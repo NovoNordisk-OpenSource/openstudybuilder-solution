@@ -1,10 +1,14 @@
 import datetime
 from typing import Annotated, Callable, Self
 
-from pydantic import Field, validator
+from pydantic import ConfigDict, Field, ValidationInfo, field_validator
 
+from clinical_mdr_api.descriptions.general import CHANGES_FIELD_DESC
 from clinical_mdr_api.domains.concepts.activities.activity import ActivityAR
 from clinical_mdr_api.domains.concepts.activities.activity_group import ActivityGroupAR
+from clinical_mdr_api.domains.concepts.activities.activity_instance import (
+    ActivityInstanceAR,
+)
 from clinical_mdr_api.domains.concepts.activities.activity_sub_group import (
     ActivitySubGroupAR,
 )
@@ -27,7 +31,7 @@ from common.utils import convert_to_datetime
 class ActivityHierarchySimpleModel(BaseModel):
 
     uid: Annotated[str, Field()]
-    name: Annotated[str | None, Field(nullable=True)] = None
+    name: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
 
     @classmethod
     def from_activity_uid(
@@ -53,35 +57,42 @@ class ActivityHierarchySimpleModel(BaseModel):
         return cls(uid=activity_ar.uid, name=activity_ar.name)
 
     uid: Annotated[str, Field()]
-    name: Annotated[str | None, Field(nullable=True)] = None
+    name: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
 
 
 class ActivityGroupingHierarchySimpleModel(BaseModel):
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
     activity_group_uid: Annotated[
         str,
         Field(
-            source="has_latest_value.has_grouping.in_subgroup.in_group.has_version.uid",
+            json_schema_extra={
+                "source": "has_latest_value.has_grouping.in_subgroup.in_group.has_version.uid"
+            }
         ),
     ]
     activity_group_name: Annotated[
         str,
         Field(
-            source="has_latest_value.has_grouping.in_subgroup.in_group.name",
+            json_schema_extra={
+                "source": "has_latest_value.has_grouping.in_subgroup.in_group.name"
+            }
         ),
     ]
     activity_subgroup_uid: Annotated[
         str,
         Field(
-            source="has_latest_value.has_grouping.in_subgroup.has_group.has_version.uid",
+            json_schema_extra={
+                "source": "has_latest_value.has_grouping.in_subgroup.has_group.has_version.uid"
+            }
         ),
     ]
     activity_subgroup_name: Annotated[
         str,
         Field(
-            source="has_latest_value.has_grouping.in_subgroup.has_group.name",
+            json_schema_extra={
+                "source": "has_latest_value.has_grouping.in_subgroup.has_group.name"
+            }
         ),
     ]
 
@@ -90,6 +101,7 @@ class ActivityBase(Concept):
     possible_actions: Annotated[
         list[str],
         Field(
+            validate_default=True,
             description=(
                 "Holds those actions that can be performed on the ActivityInstances. "
                 "Actions are: 'approve', 'edit', 'new_version'."
@@ -97,10 +109,10 @@ class ActivityBase(Concept):
         ),
     ]
 
-    @validator("possible_actions", pre=True, always=True)
-    # pylint: disable=no-self-argument,unused-argument
-    def validate_possible_actions(cls, value, values):
-        if values["status"] == LibraryItemStatus.DRAFT.value and values[
+    @field_validator("possible_actions", mode="before")
+    @classmethod
+    def validate_possible_actions(cls, _, info: ValidationInfo):
+        if info.data["status"] == LibraryItemStatus.DRAFT.value and info.data[
             "version"
         ].startswith("0"):
             return [
@@ -108,21 +120,25 @@ class ActivityBase(Concept):
                 ObjectAction.DELETE.value,
                 ObjectAction.EDIT.value,
             ]
-        if values["status"] == LibraryItemStatus.DRAFT.value:
+        if info.data["status"] == LibraryItemStatus.DRAFT.value:
             return [ObjectAction.APPROVE.value, ObjectAction.EDIT.value]
-        if values["status"] == LibraryItemStatus.FINAL.value:
+        if info.data["status"] == LibraryItemStatus.FINAL.value:
             return [
                 ObjectAction.INACTIVATE.value,
                 ObjectAction.NEWVERSION.value,
             ]
-        if values["status"] == LibraryItemStatus.RETIRED.value:
+        if info.data["status"] == LibraryItemStatus.RETIRED.value:
             return [ObjectAction.REACTIVATE.value]
         return []
 
 
 class Activity(ActivityBase):
-    nci_concept_id: Annotated[str | None, Field(nullable=True)] = None
-    nci_concept_name: Annotated[str | None, Field(nullable=True)] = None
+    nci_concept_id: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    nci_concept_name: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
 
     @classmethod
     def from_activity_ar(cls, activity_ar: ActivityAR) -> Self:
@@ -139,6 +155,14 @@ class Activity(ActivityBase):
         activity_groupings.sort(
             key=lambda item: (item.activity_subgroup_name, item.activity_group_name)
         )
+
+        activity_instances = []
+        for activity_instance in activity_ar.concept_vo.activity_instances:
+            activity_instances.append(
+                ActivityHierarchySimpleModel(
+                    uid=activity_instance["uid"], name=activity_instance["name"]
+                )
+            )
 
         return cls(
             uid=activity_ar.uid,
@@ -161,6 +185,9 @@ class Activity(ActivityBase):
                 [_.value for _ in activity_ar.get_possible_actions()]
             ),
             request_rationale=activity_ar.concept_vo.request_rationale,
+            activity_instances=sorted(
+                activity_instances, key=lambda item: (item.name, item.uid)
+            ),
             is_request_final=activity_ar.concept_vo.is_request_final,
             is_request_rejected=activity_ar.concept_vo.is_request_rejected,
             reason_for_rejecting=activity_ar.concept_vo.reason_for_rejecting,
@@ -187,7 +214,19 @@ class Activity(ActivityBase):
         activity_ar: ActivityAR,
         activity_subgroup_ars: list[ActivitySubGroupAR],
         activity_group_ars: list[ActivitySubGroupAR],
+        activity_instance_ars: list[ActivityInstanceAR] | None = None,
     ) -> Self:
+        if activity_instance_ars is None:
+            activity_instance_ars = []
+
+        activity_instances = []
+        for activity_instance_ar in activity_instance_ars:
+            activity_instances.append(
+                ActivityHierarchySimpleModel.from_activity_ar_object(
+                    activity_ar=activity_instance_ar
+                )
+            )
+
         activity_groupings = []
         for activity_grouping in activity_ar.concept_vo.activity_groupings:
             activity_subgroup, activity_group = None, None
@@ -235,6 +274,9 @@ class Activity(ActivityBase):
                     item.activity_group_name,
                 ),
             ),
+            activity_instances=sorted(
+                activity_instances, key=lambda item: (item.name, item.uid)
+            ),
             library_name=Library.from_library_vo(activity_ar.library).name,
             start_date=activity_ar.item_metadata.start_date,
             end_date=activity_ar.item_metadata.end_date,
@@ -269,75 +311,69 @@ class Activity(ActivityBase):
     activity_groupings: Annotated[
         list[ActivityGroupingHierarchySimpleModel], Field()
     ] = []
-    synonyms: Annotated[list[str], Field(remove_from_wildcard=True)]
+    activity_instances: list[ActivityHierarchySimpleModel] = []
+    synonyms: Annotated[
+        list[str], Field(json_schema_extra={"remove_from_wildcard": True})
+    ]
     request_rationale: Annotated[
         str | None,
         Field(
             description="The rationale of the activity request",
-            nullable=True,
-            remove_from_wildcard=True,
+            json_schema_extra={"nullable": True, "remove_from_wildcard": True},
         ),
     ] = None
     is_request_final: Annotated[
         bool,
         Field(
             description="The flag indicating if activity request is finalized",
-            nullable=False,
-            remove_from_wildcard=True,
+            json_schema_extra={"remove_from_wildcard": True},
         ),
     ] = False
     is_request_rejected: Annotated[
         bool,
         Field(
             description="The flag indicating if activity request is rejected",
-            nullable=False,
-            remove_from_wildcard=True,
+            json_schema_extra={"remove_from_wildcard": True},
         ),
     ] = False
     contact_person: Annotated[
         str | None,
         Field(
             description="The person to contact with about rejection",
-            nullable=True,
-            remove_from_wildcard=True,
+            json_schema_extra={"nullable": True, "remove_from_wildcard": True},
         ),
     ] = None
     reason_for_rejecting: Annotated[
         str | None,
         Field(
             description="The reason why request was rejected",
-            nullable=True,
-            remove_from_wildcard=True,
+            json_schema_extra={"nullable": True, "remove_from_wildcard": True},
         ),
     ] = None
     requester_study_id: Annotated[
         str | None,
         Field(
             description="The study_id of the Study which requested an Activity request",
-            nullable=True,
-            remove_from_wildcard=True,
+            json_schema_extra={"nullable": True, "remove_from_wildcard": True},
         ),
     ] = None
     replaced_by_activity: Annotated[
         str | None,
         Field(
             description="The uid of the replacing Activity",
-            nullable=True,
-            remove_from_wildcard=True,
+            json_schema_extra={"nullable": True, "remove_from_wildcard": True},
         ),
     ] = None
     is_data_collected: Annotated[
         bool,
         Field(
             description="Boolean flag indicating whether data is collected for this activity",
-            nullable=False,
         ),
     ] = False
     is_multiple_selection_allowed: Annotated[
         bool,
         Field(
             description="Boolean flag indicating whether multiple selections are allowed for this activity",
-            nullable=False,
         ),
     ] = True
     is_finalized: Annotated[
@@ -345,21 +381,20 @@ class Activity(ActivityBase):
         Field(
             title="Computed boolean value based on is_request_rejected and replaced_by_activity",
             description="Evaluates to false, if is_request_rejected is false and replaced_by_activity is null else true",
-            nullable=False,
         ),
     ] = False
     is_used_by_legacy_instances: Annotated[
         bool,
         Field(
             title="True if all instances linked to given Activity are legacy_used.",
-            nullable=False,
         ),
     ] = False
 
 
 class ActivityForStudyActivity(Activity):
     activity_groupings: Annotated[
-        list[ActivityGroupingHierarchySimpleModel], Field(remove_from_wildcard=True)
+        list[ActivityGroupingHierarchySimpleModel],
+        Field(json_schema_extra={"remove_from_wildcard": True}),
     ]
 
 
@@ -410,59 +445,72 @@ class ActivityVersion(Activity):
     """
 
     changes: Annotated[
-        dict[str, bool] | None,
+        list[str],
         Field(
-            description=(
-                "Denotes whether or not there was a change in a specific field/property compared to the previous version. "
-                "The field names in this object here refer to the field names of the objective (e.g. name, start_date, ..)."
-            ),
-            nullable=True,
+            description=CHANGES_FIELD_DESC,
         ),
-    ] = None
+    ] = []
 
 
 class SimpleActivity(BaseModel):
+    uid: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
     nci_concept_id: Annotated[
         str | None,
         Field(
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
-    nci_concept_name: Annotated[str | None, Field(nullable=True)] = None
+    nci_concept_name: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
     name: Annotated[str | None, Field()] = None
     name_sentence_case: Annotated[str | None, Field()] = None
     synonyms: Annotated[list[str], Field()]
-    definition: Annotated[str | None, Field(nullable=True)] = None
-    abbreviation: Annotated[str | None, Field(nullable=True)] = None
+    definition: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
+    abbreviation: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
     is_data_collected: Annotated[
         bool,
         Field(
             description="Boolean flag indicating whether data is collected for this activity",
-            nullable=False,
         ),
     ] = False
     is_multiple_selection_allowed: Annotated[
         bool,
         Field(
             description="Boolean flag indicating whether multiple selections are allowed for this activity",
-            nullable=False,
         ),
     ] = True
-    library_name: Annotated[str | None, Field(nullable=True)] = None
-    version: Annotated[str | None, Field(nullable=True)] = None
-    status: Annotated[str | None, Field(nullable=True)] = None
-    start_date: Annotated[datetime.datetime | None, Field(nullable=True)] = None
-    end_date: Annotated[datetime.datetime | None, Field(nullable=True)] = None
+    library_name: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
+    version: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    status: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    start_date: Annotated[
+        datetime.datetime | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    end_date: Annotated[
+        datetime.datetime | None, Field(json_schema_extra={"nullable": True})
+    ] = None
 
 
 class SimpleActivitySubGroup(BaseModel):
-    name: Annotated[str | None, Field(nullable=True)] = None
-    definition: Annotated[str | None, Field(nullable=True)] = None
+    uid: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    name: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    definition: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
 
 
 class SimpleActivityGroup(BaseModel):
-    name: Annotated[str | None, Field(nullable=True)] = None
-    definition: Annotated[str | None, Field(nullable=True)] = None
+    uid: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    name: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    definition: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
 
 
 class SimpleActivityGrouping(BaseModel):
@@ -476,27 +524,45 @@ class SimpleActivityInstanceClass(BaseModel):
 
 class SimpleActivityInstance(BaseModel):
     uid: str
-    nci_concept_id: Annotated[str | None, Field(nullable=True)] = None
-    nci_concept_name: Annotated[str | None, Field(nullable=True)] = None
+    nci_concept_id: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    nci_concept_name: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
     name: Annotated[str, Field()]
     name_sentence_case: Annotated[str | None, Field()] = None
-    abbreviation: Annotated[str | None, Field(nullable=True)] = None
-    definition: Annotated[str | None, Field(nullable=True)] = None
-    adam_param_code: Annotated[str | None, Field(nullable=True)] = None
+    abbreviation: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
+    definition: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
+    adam_param_code: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
     is_required_for_activity: Annotated[bool, Field()] = False
     is_default_selected_for_activity: Annotated[bool, Field()] = False
     is_data_sharing: Annotated[bool, Field()] = False
     is_legacy_usage: Annotated[bool, Field()] = False
     is_derived: Annotated[bool, Field()] = False
-    topic_code: Annotated[str | None, Field(nullable=True)] = None
+    topic_code: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
     is_research_lab: Annotated[bool, Field()] = False
-    molecular_weight: Annotated[float | None, Field(nullable=True)] = None
+    molecular_weight: Annotated[
+        float | None, Field(json_schema_extra={"nullable": True})
+    ] = None
     library_name: Annotated[str, Field()]
     activity_instance_class: Annotated[SimpleActivityInstanceClass, Field()]
-    version: Annotated[str | None, Field(nullable=True)] = None
-    status: Annotated[str | None, Field(nullable=True)] = None
-    start_date: Annotated[datetime.datetime | None, Field(nullable=True)] = None
-    end_date: Annotated[datetime.datetime | None, Field(nullable=True)] = None
+    version: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    status: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    start_date: Annotated[
+        datetime.datetime | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    end_date: Annotated[
+        datetime.datetime | None, Field(json_schema_extra={"nullable": True})
+    ] = None
 
 
 class ActivityOverview(BaseModel):
@@ -507,8 +573,10 @@ class ActivityOverview(BaseModel):
 
     @classmethod
     def from_repository_input(cls, overview: dict):
+
         return cls(
             activity=SimpleActivity(
+                uid=overview.get("activity_value").get("uid"),
                 nci_concept_id=overview.get("activity_value").get("nci_concept_id"),
                 nci_concept_name=overview.get("activity_value").get("nci_concept_name"),
                 name=overview.get("activity_value").get("name"),
@@ -537,12 +605,14 @@ class ActivityOverview(BaseModel):
             activity_groupings=[
                 SimpleActivityGrouping(
                     activity_group=SimpleActivityGroup(
+                        uid=activity_grouping.get("activity_group_uid"),
                         name=activity_grouping.get("activity_group_value").get("name"),
                         definition=activity_grouping.get("activity_group_value").get(
                             "definition"
                         ),
                     ),
                     activity_subgroup=SimpleActivitySubGroup(
+                        uid=activity_grouping.get("activity_subgroup_uid"),
                         name=activity_grouping.get("activity_subgroup_value").get(
                             "name"
                         ),

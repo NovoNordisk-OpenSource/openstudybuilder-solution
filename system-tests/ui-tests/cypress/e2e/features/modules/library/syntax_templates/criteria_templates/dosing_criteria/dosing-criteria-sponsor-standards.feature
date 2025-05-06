@@ -48,7 +48,7 @@ Feature: Library - Dosing Criteria - Parent Templates
   Scenario: User must not be able to create a new Dosing Criteria template without Template Text populated
     Given The 'library/criteria_templates/Dosing/parent' page is opened
     When The new Criteria template is added without template text
-    Then The validation appears for Template Text field
+    Then The validation appears for Template name
     And The form is not closed
 
   Scenario: User must not be able to create a new Dosing Criteria template without Indication or Disorder populated

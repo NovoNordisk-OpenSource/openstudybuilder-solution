@@ -22,8 +22,8 @@ Service = BrandService
     response_model=list[Brand],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_brands() -> list[Brand]:
@@ -37,8 +37,8 @@ def get_brands() -> list[Brand]:
     response_model=Brand,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_brand(
@@ -54,13 +54,13 @@ def get_brand(
     response_model=Brand,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {"description": "Created - The brand was successfully created."},
         400: {
             "model": ErrorResponse,
             "description": "Some application/business rules forbid to process the request. Expect more detailed"
             " information in response body.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def create(
@@ -79,8 +79,8 @@ def create(
     response_model=None,
     status_code=204,
     responses={
+        403: _generic_descriptions.ERROR_403,
         204: {"description": "No Content - The item was successfully deleted."},
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def delete(brand_uid: Annotated[str, BrandUID]) -> Response:

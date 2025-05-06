@@ -277,6 +277,7 @@ class StudySelectionMixin:
         codelist_name: str | None = None,
         status: LibraryItemStatus | None = LibraryItemStatus.FINAL,
         at_specific_date: datetime | None = None,
+        include_retired_versions: bool = False,
     ) -> CTTermName:
         item = self._repos.ct_term_name_repository.find_by_uid(
             term_uid=term_uid,
@@ -285,6 +286,7 @@ class StudySelectionMixin:
             status=status,
             for_update=False,
             codelist_name=codelist_name,
+            include_retired_versions=include_retired_versions,
         )
 
         exceptions.NotFoundException.raise_if(
@@ -300,11 +302,13 @@ class StudySelectionMixin:
         status: LibraryItemStatus | None = LibraryItemStatus.FINAL,
         at_specific_date: datetime | None = None,
         return_simple_object: bool = False,
+        include_retired_versions: bool = False,
     ) -> list[CTTermName] | list[SimpleCTTermNameWithConflictFlag]:
         items = self._repos.ct_term_name_repository.find_by_uids(
             at_specific_date=at_specific_date,
             term_uids=term_uids,
             status=status,
+            include_retired_versions=include_retired_versions,
         )
         if return_simple_object:
             return [

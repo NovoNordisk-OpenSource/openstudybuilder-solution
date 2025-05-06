@@ -88,7 +88,7 @@ class StudyActivityScheduleService(StudySelectionMixin):
                 }
             )
         return [
-            StudyActivitySchedule.from_orm(sas_node)
+            StudyActivitySchedule.model_validate(sas_node)
             for sas_node in ListDistinct(
                 StudyActivityScheduleNeoModel.nodes.fetch_relations(*relations_to_fetch)
                 .filter(**filters)
@@ -101,7 +101,7 @@ class StudyActivityScheduleService(StudySelectionMixin):
         self, study_uid: str, study_activity_uid: str
     ) -> list[StudyActivitySchedule]:
         return [
-            StudyActivitySchedule.from_orm(sas_node)
+            StudyActivitySchedule.model_validate(sas_node)
             for sas_node in ListDistinct(
                 StudyActivityScheduleNeoModel.nodes.fetch_relations(
                     "has_after__audit_trail",
@@ -246,11 +246,11 @@ class StudyActivityScheduleService(StudySelectionMixin):
                     raise exceptions.MethodNotAllowedException(method=operation.method)
                 result["response_code"] = response_code
                 if item:
-                    result["content"] = item.dict()
+                    result["content"] = item.model_dump()
                 results.append(StudyActivityScheduleBatchOutput(**result))
             except exceptions.MDRApiBaseException as error:
                 results.append(
-                    StudyActivityScheduleBatchOutput.construct(
+                    StudyActivityScheduleBatchOutput.model_construct(
                         response_code=error.status_code,
                         content=BatchErrorResponse(message=str(error)),
                     )

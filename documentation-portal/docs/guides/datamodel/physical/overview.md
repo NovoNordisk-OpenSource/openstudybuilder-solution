@@ -40,5 +40,6 @@ For each of the six parts, a page is available in the documentation. Each page w
 3. The business logic performed on the part of the model.
 4. Details on how the part of the model is connected to other parts of the global physical data model.
 
-To view the physical data model in its entirity, open the [master model file](https://novonordiskit.visualstudio.com/Clinical-MDR/_git/neo4j-mdr-db?path=%2Fmodel%2Fphysical_data_model%2Fneo4j-model.graphml) using a graphml editor.
+To view the physical data model in its entirity, open the [master model file](https://orgremoved.visualstudio.com/Clinical-MDR/_git/neo4j-mdr-db?path=%2Fmodel%2Fphysical_data_model%2Fneo4j-model.graphml) using a graphml editor.
 (Recommended: the [yWorks YED Graph Editor](https://www.yworks.com/products/yed))
+

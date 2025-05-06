@@ -182,6 +182,7 @@ STUDY_VALUE_VERSION_QUERY = Query(
 )
 
 ERROR_400 = {"model": ErrorResponse, "description": "Error"}
+ERROR_403 = {"model": ErrorResponse, "description": "Forbidden"}
 ERROR_404 = {"model": ErrorResponse, "description": "Entity not found"}
 ERROR_409 = {
     "model": ErrorResponse,
@@ -189,7 +190,6 @@ ERROR_409 = {
     "This typically occurs when attempting to create or modify a resource that already exists or violates a uniqueness constraint.",
 }
 ERROR_422 = {"model": ErrorResponse, "description": "Unprocessable Content"}
-ERROR_500 = {"model": ErrorResponse, "description": "Internal Server Error"}
 
 
 SYNTAX_FILTERS = (

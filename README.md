@@ -215,3 +215,5 @@ docker rmi $(docker images --filter=reference="*_sonarqube" -q) -f
 docker volume prune # (Will delete all volumes not used, only needed if -v was not used on docker-compose down command)
 docker builder prune --all # (Will clean all docker cache files)
 ```
+
+

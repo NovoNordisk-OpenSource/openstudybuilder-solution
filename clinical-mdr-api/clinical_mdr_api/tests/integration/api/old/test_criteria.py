@@ -48,7 +48,7 @@ def test_data():
     criteria_template = ct_models.CriteriaTemplateCreateInput(**templatedata)
     criteria_template = CriteriaTemplateService().create(criteria_template)
     if isinstance(criteria_template, BaseModel):
-        criteria_template = criteria_template.dict()
+        criteria_template = criteria_template.model_dump()
     CriteriaTemplateService().approve(criteria_template["uid"])
 
     yield
@@ -362,14 +362,16 @@ def test_get_versions(api_client):
     assert res[0]["parameter_terms"] == []
     assert res[0]["library"] == {"name": "Test library", "is_editable": True}
     assert res[0]["study_count"] == 1
-    assert res[0]["changes"] == {
-        "start_date": True,
-        "end_date": True,
-        "status": True,
-        "version": True,
-        "change_description": True,
-        "possible_actions": True,
-    }
+    assert set(res[0]["changes"]) == set(
+        [
+            "start_date",
+            "end_date",
+            "status",
+            "version",
+            "change_description",
+            "possible_actions",
+        ]
+    )
     assert res[1]["uid"] == "Criteria_000001"
     assert res[1]["name"] == "Test_Name_Template"
     assert res[1]["name_plain"] == "Test_Name_Template"
@@ -401,7 +403,7 @@ def test_get_versions(api_client):
     assert res[1]["parameter_terms"] == []
     assert res[1]["library"] == {"name": "Test library", "is_editable": True}
     assert res[1]["study_count"] == 1
-    assert res[1]["changes"] == {}
+    assert res[1]["changes"] == []
 
 
 def test_get_studies(api_client):

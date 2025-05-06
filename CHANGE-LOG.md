@@ -1,5 +1,148 @@
 # OpenStudyBuilder Commits changelog
 
+## V 0.15
+
+New Features and Enhancements
+============
+
+### Fixes and Enhancements
+
+- Added support for Sponsor Controlled Terminology terms through USDM Code instances fetching data from database. Updated USDM Intervention model, Study phase, Trial phase, Study type code, Arms type, Epoch type, Objective level, Endpoint level, Visit type, Visit contact modes, Therapeutic area codes, Trial types, Trial intent types. Reintegrated previously remove Study intervention export mapping.
+- Added functionality to change the epoch if it was selected incorrectly for a newly added visit. Previously, the only option in such situations was to delete the visit and then add it again with the correct epoch. Now, a visit with the wrong epoch can be edited, the epoch can be corrected, and the visit can be saved.
+- Various code improvements for better performance in the history pages of study structure. 
+- Various quality improvements in the API for easier maintenance and better stability.  
+- Improved logic for ODM descriptions in the API. It is now possible to select SoA groups for many activities at once when adding study activities.
+- UI improvements to Schedule of Activities to accommodate smaller screens.
+- Bulk edit feature has been updated to make the 'SoA group' field not required. This allows users to leave the field blank when completing the bulk edit of multible activities.
+
+### New Features
+- New compontent was added: The StudyBuilder Word Add-In can be build and installed on Microsoft Word as an Add-In to connect to an OpenStudyBuilder instance enabling live updates in a Protocol Word document.
+- Drag-and-drop reordering of the SoA.  Rows in the detailed SoA can now be reordered using drag-and-drop. To enable, click the 3 dots to the left of a row title, select 'Reorder' in the menu and then you can reorder rows using your mouse.
+- A first version of a new guided flow (wizard stepper) for creating Activity Instances has been included in the application.  This first version covers the creation of the numerical findings activity instance class and will later be extended to cover more activity instance classes as well as adding editing functionality.
+- In the Library, overview pages have been added for Activity Groups and Activity Subgroups similar to the existing overview pages for Activities and Activity Instances. This will provide a better overview of the hierarchy of activities and their groupings.
+- When creating a new study it is now possible to copy the study design from an existing structure. This will make it easier to set up sister trials as once the first trial has been setup it can be replicated with almost no effort.
+- Study Audit Trail Version Filtering:  A new "Study Audit Trail" tab has been introduced, allowing users to select a Study UID and filter changes between two specific versions. This enhancement provides greater traceability by enabling users to view only the changes that occurred between selected study versions, improving audit clarity and version comparison.
+- A new option, Allowed Extensions, has been added for including and excluding specific vendor extensions when generating the CRF View.
+
+# End-to-End Automated test enhancements
+- Various code improvements to ensure easier maintenance and overall tests stability.
+- Implemented tests for table search.
+- Implemented tests for table pagination.
+- Implemented tests for exporting data in different formats.
+- Studies > Study Structure > Study Vistis: Added test for epoch edition.
+- Library > Concepts > Activities: Added tests for overview page (version 1.0).
+- Library > Concepts > Activity > Activity Instances: Added tests for New wizard stepper (version 1.0).
+- Library > Concepts > Units: Added tests for optional conversion factor.
+- Library > Concepts > Activities: Moved test data creation to API calls.
+- Library > Concepts > Units: Moved test data creation to API Calls.
+- Library > Syntax Templates > Objectives & Endpoints: Moved test data creation to API calls.
+
+Solved Bugs
+============
+
+### Library
+
+ **Code Lists -> CT Packages** 
+
+- Filtering CT Catalogues and others by date picker is not sending the requests
+
+ **Concepts -> Activities** 
+
+- Error in counting of rows in the view in Concept Library
+- It should be impossible to use a newly drafted Activity Group in a study
+
+ **Concepts -> Activities -> Activities** 
+
+- Not able to save edited item from the existing activities
+
+ **Concepts -> Activities -> Activities by Grouping** 
+
+- Activities by Grouping showing wrong Group/Subgroup combinations
+
+ **Concepts -> Activities -> Activity Subgroups** 
+
+- Group name not shown in activity subgroup history table
+
+ **Concepts -> Activities -> Activity instances** 
+
+- PATCHing to remove optional values doesn't work
+
+ **Concepts -> CRFs -> CRF Tree** 
+
+- When adding a new Form to a Template, then the tree is not reloaded
+
+ **Concepts -> CRFs -> CRF View** 
+
+- The SDTM annotation are badly colorised versus the ItemGroup Domain color
+
+### Reports
+
+ **NeoDash** 
+
+- NeoDash Study Compare report fail study visit comparison in some cases
+
+ **NeoDash** 
+
+- Download of CSV from Neodash report is blocked
+
+### Studies
+
+ **About Studies - > View Listings** 
+
+- Analysis Study Metadata (New) is visible on Studies Summary page when feature flag is turned off
+
+ **Define Study -> Data Specifications** 
+
+- Downloaded file of Study Activity Instances does not have STUDY ID
+
+ **Define Study -> Study Activities** 
+
+- Exclamation mark doesn't disappear when updating the activity version
+- Issue with selecting activity from other studies
+
+ **Define Study -> Study Activities ->  Study Activities** 
+
+- Not able to edit the data collection flag for a requested activity
+- User is unable to create activity from another study
+
+ **Define Study -> Study Activities -> Schedule of Activities -> Detailed** 
+
+- Detailed SoA table misalignment in user interface (UI) view
+- Performance issue in detailed soa with hiding and/or unhiding activities groups and/or subgroups
+- issue with selecting or deselecting checkboxes next to activities
+
+ **Define Study -> Study Activities -> Study Activities** 
+
+- Retiring a SoA group results in error in study SoA
+
+ **Define Study -> Study Structure** 
+
+- API performance issue on Study Structure version history
+
+ **Define Study -> Study Structure -> Study Visits** 
+
+- Save button is not responding when user is editing non-visit, unscheduled visit and special visit
+- Special visit and the issue with editing it in edit mode
+- Unique visit number is editable for non-visit and unscheduled visit
+
+ **Define Study -> Study Title** 
+
+- When editing study title results in error due to study has subparts
+
+ **Study List** 
+
+- Problem with mouse-over in Study List on the column list
+
+ **View Specifications -> ICH M11** 
+
+- ICH M11 page error with no further response
+
+ **View Specifications -> USDM** 
+
+- USDM page results in error
+
+
+
 ## V 0.14.2
 
 New Features and Enhancements
@@ -104,7 +247,7 @@ Solved Bugs
 
  **Define Study -> Data Specifications  -> Study Activity Instances** 
 
-- Red-bell alert is not disappearing even after Dispensing visit instance changing into new version for Trail ID NN9833-8242 and NN9833-8243
+- Red-bell alert is not disappearing even after Dispensing visit instance changing into new version for some of trial IDs
 
  **Define Study -> Study Activities** 
 
@@ -130,7 +273,7 @@ Solved Bugs
 
  **Define Study -> Study Activities -> Schedule of Activities -> Protocol** 
 
-- Trial ID ends with 7770 having issue with displaying the protocol SoA table, throwing XML token error
+- Some Trials having issue with displaying the protocol SoA table, throwing XML token error
 
  **Define Study -> Study Activities -> Schedule of Activities ->Detailed** 
 
@@ -505,7 +648,7 @@ Solved Bugs
  **Define Study -> Study Activities -> Schedule of Activities > Detailed** 
 
 - Only the first 10 footnotes are visible in the protocol SoA
-- visit number 29999 and 29500 appears in the batch edit activities in detailed SoA
+- visit numbers appears in the batch edit activities in detailed SoA
 
  **Define Study -> Study Activities -> Study Activities** 
 
@@ -639,7 +782,7 @@ Solved Bugs
 #### Define Study -> Study Structure -> Study Visits
 
 - Duplicating study visits reverts table length to 10 items
-- Fields visit number 1 and visit name visit 1 are not unique of the study as a manually defined value exists for study 7751
+- Fields visit number 1 and visit name visit 1 are not unique of the study as a manually defined value exists for some trials
 
 #### Define Study-> Study Criteria-> Inclusion Criteria
 
@@ -648,7 +791,7 @@ Solved Bugs
 
 #### General
 
-- Study set-up user cannot save endpoints, error message is appearing for Study ends with 8182
+- Study set-up user cannot save endpoints, error message is appearing for some trials
 
 #### Manage Study -> Study ->  Study Core Attributes
 
@@ -1174,3 +1317,4 @@ Upgrade to Python version 3.11.
 ## V 0.1 (24-OCT-2022)
 
 Initial commit to Public Gitlab.
+

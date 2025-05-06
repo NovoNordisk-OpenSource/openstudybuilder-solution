@@ -3,6 +3,7 @@ from typing import Annotated, Self
 
 from pydantic import Field
 
+from clinical_mdr_api.descriptions.general import CHANGES_FIELD_DESC
 from clinical_mdr_api.domains.syntax_instances.endpoint import EndpointAR
 from clinical_mdr_api.models.libraries.library import Library
 from clinical_mdr_api.models.syntax_templates.endpoint_template import (
@@ -20,15 +21,25 @@ from clinical_mdr_api.models.utils import BaseModel, PatchInputModel, PostInputM
 
 class Endpoint(BaseModel):
     uid: str
-    name: Annotated[str | None, Field(nullable=True)] = None
-    name_plain: Annotated[str | None, Field(nullable=True)] = None
+    name: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    name_plain: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
 
-    start_date: Annotated[datetime | None, Field(nullable=True)] = None
-    end_date: Annotated[datetime | None, Field(nullable=True)] = None
-    status: Annotated[str | None, Field(nullable=True)] = None
-    version: Annotated[str | None, Field(nullable=True)] = None
-    change_description: Annotated[str | None, Field(nullable=True)] = None
-    author_username: Annotated[str | None, Field(nullable=True)] = None
+    start_date: Annotated[
+        datetime | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    end_date: Annotated[
+        datetime | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    status: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    version: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    change_description: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    author_username: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
     possible_actions: Annotated[
         list[str] | None,
         Field(
@@ -36,20 +47,22 @@ class Endpoint(BaseModel):
                 "Holds those actions that can be performed on the endpoint. "
                 "Actions are: 'approve', 'edit', 'inactivate', 'reactivate' and 'delete'."
             ),
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
 
-    template: EndpointTemplateNameUidLibrary | None
+    template: EndpointTemplateNameUidLibrary | None = None
     parameter_terms: Annotated[
         list[MultiTemplateParameterTerm] | None,
         Field(
             description="Holds the parameter terms that are used within the endpoint. The terms are ordered as they occur in the endpoint name.",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
     # objective: Objective | None= None
-    library: Annotated[Library | None, Field(nullable=True)] = None
+    library: Annotated[Library | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
 
     study_count: Annotated[
         int, Field(description="Count of studies referencing endpoint")
@@ -103,15 +116,11 @@ class Endpoint(BaseModel):
 
 class EndpointVersion(Endpoint):
     changes: Annotated[
-        dict[str, bool] | None,
+        list[str],
         Field(
-            description=(
-                "Denotes whether or not there was a change in a specific field/property compared to the previous version. "
-                "The field names in this object here refer to the field names of the endpoint (e.g. name, start_date, ..)."
-            ),
-            nullable=True,
+            description=CHANGES_FIELD_DESC,
         ),
-    ] = None
+    ] = []
 
 
 class EndpointEditInput(PatchInputModel):

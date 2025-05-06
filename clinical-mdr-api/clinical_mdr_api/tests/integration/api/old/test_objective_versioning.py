@@ -34,7 +34,7 @@ def test_data():
     objective_template = ct_models.ObjectiveTemplateCreateInput(**template_data)
     objective_template = ObjectiveTemplateService().create(objective_template)
     if isinstance(objective_template, BaseModel):
-        objective_template = objective_template.dict()
+        objective_template = objective_template.model_dump()
     ObjectiveTemplateService().approve(objective_template["uid"])
 
     yield
@@ -155,14 +155,16 @@ def test_version_display(api_client):
     res = response.json()
 
     assert res[0]["change_description"] == "Approved version"
-    assert res[0]["changes"] == {
-        "change_description": True,
-        "end_date": True,
-        "possible_actions": True,
-        "start_date": True,
-        "status": True,
-        "version": True,
-    }
+    assert set(res[0]["changes"]) == set(
+        [
+            "change_description",
+            "end_date",
+            "possible_actions",
+            "start_date",
+            "status",
+            "version",
+        ]
+    )
     assert res[0]["end_date"] is None
     assert res[0]["library"] == {"is_editable": True, "name": "Test library"}
     assert res[0]["name"] == "Test_Name_Template"
@@ -183,7 +185,7 @@ def test_version_display(api_client):
     assert res[0]["author_username"] == "unknown-user@example.com"
     assert res[0]["version"] == "1.0"
     assert res[1]["change_description"] == "Initial version"
-    assert res[1]["changes"] == {}
+    assert res[1]["changes"] == []
     assert res[1]["end_date"]
     assert res[1]["library"] == {"is_editable": True, "name": "Test library"}
     assert res[1]["name"] == "Test_Name_Template"
@@ -215,9 +217,10 @@ def test_patching_aproved_objective_with_missing_field(api_client):
 
     assert res["detail"] == [
         {
+            "type": "missing",
             "loc": ["body", "change_description"],
-            "msg": "field required",
-            "type": "value_error.missing",
+            "msg": "Field required",
+            "input": {"name": "test{test-uid}", "parameter_terms": []},
         }
     ]
 

@@ -43,7 +43,9 @@ Possible errors:
 """,
     response_model=CustomPage[SponsorModel],
     status_code=200,
-    responses={500: {"model": ErrorResponse, "description": "Internal Server Error"}},
+    responses={
+        403: _generic_descriptions.ERROR_403,
+    },
 )
 @decorators.allow_exports(
     {
@@ -110,11 +112,11 @@ def get_sponsor_models(
     response_model=list[Any],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - Invalid field name specified",
         },
-        500: {"model": ErrorResponse, "description": "Internal Server Error"},
     },
 )
 def get_distinct_values_for_header(
@@ -172,6 +174,7 @@ Possible errors:
     response_model_exclude_unset=True,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {
             "description": "Created - a new version of the sponsor model was successfully created."
         },
@@ -181,7 +184,6 @@ Possible errors:
             "- The target Implementation Guide *ig_uid* doesn't exist.\n"
             "- The target version *ig_version_number* for the Implementation Guide with UID *ig_uid* doesn't exist.\n",
         },
-        500: {"model": ErrorResponse, "description": "Internal Server Error"},
     },
 )
 # pylint: disable=unused-argument

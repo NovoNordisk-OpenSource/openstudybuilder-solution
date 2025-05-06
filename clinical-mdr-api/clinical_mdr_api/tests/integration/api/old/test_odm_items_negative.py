@@ -123,7 +123,11 @@ def test_create_a_new_odm_item(api_client):
             "name": "name1",
             "mandatory": False,
             "order": 1,
-            "ucum": {"term_uid": "term_root1_uid", "name": "name1"},
+            "ucum": {
+                "term_uid": "term_root1_uid",
+                "name": "name1",
+                "dictionary_id": "dictionary_id1",
+            },
             "ct_units": [{"term_uid": "C25532_name1", "name": "name1"}],
         }
     ]
@@ -286,7 +290,11 @@ def test_add_odm_vendor_element_to_an_odm_item(api_client):
             "name": "name1",
             "mandatory": False,
             "order": 1,
-            "ucum": {"term_uid": "term_root1_uid", "name": "name1"},
+            "ucum": {
+                "term_uid": "term_root1_uid",
+                "name": "name1",
+                "dictionary_id": "dictionary_id1",
+            },
             "ct_units": [{"term_uid": "C25532_name1", "name": "name1"}],
         }
     ]
@@ -371,7 +379,11 @@ def test_add_odm_vendor_element_attribute_to_an_odm_item(api_client):
             "name": "name1",
             "mandatory": False,
             "order": 1,
-            "ucum": {"term_uid": "term_root1_uid", "name": "name1"},
+            "ucum": {
+                "term_uid": "term_root1_uid",
+                "name": "name1",
+                "dictionary_id": "dictionary_id1",
+            },
             "ct_units": [{"term_uid": "C25532_name1", "name": "name1"}],
         }
     ]
@@ -726,7 +738,11 @@ def test_approve_odm_item(api_client):
             "name": "name1",
             "mandatory": False,
             "order": 1,
-            "ucum": {"term_uid": "term_root1_uid", "name": "name1"},
+            "ucum": {
+                "term_uid": "term_root1_uid",
+                "name": "name1",
+                "dictionary_id": "dictionary_id1",
+            },
             "ct_units": [{"term_uid": "C25532_name1", "name": "name1"}],
         }
     ]
@@ -817,7 +833,11 @@ def test_inactivate_odm_item(api_client):
             "name": "name1",
             "mandatory": False,
             "order": 1,
-            "ucum": {"term_uid": "term_root1_uid", "name": "name1"},
+            "ucum": {
+                "term_uid": "term_root1_uid",
+                "name": "name1",
+                "dictionary_id": "dictionary_id1",
+            },
             "ct_units": [{"term_uid": "C25532_name1", "name": "name1"}],
         }
     ]

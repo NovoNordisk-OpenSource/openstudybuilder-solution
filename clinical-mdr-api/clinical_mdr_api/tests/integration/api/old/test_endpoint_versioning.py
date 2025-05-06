@@ -226,9 +226,26 @@ def test_patching_aproved_endpoint_with_missing_field(api_client):
 
     assert res["detail"] == [
         {
+            "type": "missing",
             "loc": ["body", "change_description"],
-            "msg": "field required",
-            "type": "value_error.missing",
+            "msg": "Field required",
+            "input": {
+                "name": "test{test-uid}",
+                "parameter_terms": [
+                    {
+                        "conjunction": ",",
+                        "position": 1,
+                        "terms": [
+                            {
+                                "index": 1,
+                                "type": "Indication",
+                                "uid": "Indication-99991",
+                                "name": "type 2 diabetes",
+                            }
+                        ],
+                    }
+                ],
+            },
         }
     ]
 

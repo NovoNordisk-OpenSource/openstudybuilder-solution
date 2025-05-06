@@ -64,56 +64,92 @@ Feature: Library - Activity Subgroups
         When The Add activity subgroup button is clicked
         And The user define a value for Sentence case name and it is not identical to the value of Activity subgroup name
         Then The user is not able to save the acitivity subgroup
-        And The message is displayed as 'Sentence case name value must be identical to name value' in the Sentence case name field
+        And The validation message appears for sentance case name that it is not identical to name
 
     Scenario: User must be able to add a new version for the approved activity subgroup
         Given The '/library/activities/activity-subgroups' page is opened
-        And The activity subgroup exists with status as Final
+        And [API] Activity subgroup in status Draft exists
+        And [API] Activity subgroup is approved
+        And Activity subgroup is found
         When The 'New version' option is clicked from the three dot menu list
-        Then The activity subgroup has status 'Draft' and version '1.1'
+        Then The item has status 'Draft' and version '1.1'
 
     Scenario: User must be able to edit and approve new version of activity subgroup
         Given The '/library/activities/activity-subgroups' page is opened
-        And The activity subgroup exists with status as Final
+        And [API] Activity subgroup in status Draft exists
+        And [API] Activity subgroup is approved
+        And Activity subgroup is found
         When The 'New version' option is clicked from the three dot menu list
-        Then The activity subgroup has status 'Draft' and version '1.1'
+        Then The item has status 'Draft' and version '1.1'
         When The 'Edit' option is clicked from the three dot menu list
         And The activity subgroup is edited
-        Then The activity subgroup has status 'Draft' and version '1.2'
+        Then The item has status 'Draft' and version '1.2'
         When The 'Approve' option is clicked from the three dot menu list
-        Then The activity subgroup has status 'Final' and version '2.0'
+        Then The item has status 'Final' and version '2.0'
 
     Scenario: User must be able to inactivate the approved version of the activity subgroup
         Given The '/library/activities/activity-subgroups' page is opened
-        And The activity subgroup exists with status as Final
+        And [API] Activity subgroup in status Draft exists
+        And [API] Activity subgroup is approved
+        And Activity subgroup is found
         When The 'Inactivate' option is clicked from the three dot menu list
-        Then The activity subgroup has status 'Retired' and version '1.0'
+        Then The item has status 'Retired' and version '1.0'
 
     Scenario: User must be able to reactivate the inactivated version of the activity subgroup
         Given The '/library/activities/activity-subgroups' page is opened
-        And The activity subgroup exists with status as Retired
+        And [API] Activity subgroup in status Draft exists
+        And [API] Activity subgroup is approved
+        And [API] Activity subgroup is inactivated
+        And Activity subgroup is found
         When The 'Reactivate' option is clicked from the three dot menu list
-        Then The activity subgroup has status 'Final' and version '1.0'
+        Then The item has status 'Final' and version '1.0'
 
     Scenario: User must be able to edit the drafted version of the activity subgroup
         Given The '/library/activities/activity-subgroups' page is opened
-        And The activity subgroup exists with status as Draft
+        And [API] Activity subgroup in status Draft exists
+        And Activity subgroup is found
         When The 'Edit' option is clicked from the three dot menu list
         Then The activity subgroup is edited
-        And The activity subgroup has status 'Draft' and version '0.2'
+        And The item has status 'Draft' and version '0.2'
 
     Scenario: User must be able to approve the drafted version of the activity subgroup
         Given The '/library/activities/activity-subgroups' page is opened
-        And The activity subgroup exists with status as Draft
+        And [API] Activity subgroup in status Draft exists
+        And Activity subgroup is found
         When The 'Approve' option is clicked from the three dot menu list
-        Then The activity subgroup has status 'Final' and version '1.0'
+        Then The item has status 'Final' and version '1.0'
 
     Scenario: User must be able to Delete the intial created version of the activity subgroup
         Given The '/library/activities/activity-subgroups' page is opened
-        And The activity subgroup exists with status as Draft
+        And [API] Activity subgroup in status Draft exists
+        And Activity subgroup is found
         When The 'Delete' option is clicked from the three dot menu list
         Then The activity subgroup is no longer available
 
+    Scenario: User must not be able to create subgroup linked to Drafted group until it is approved
+        Given The '/library/activities/activity-subgroups' page is opened
+        And [API] Activity group in status Draft exists
+        And Group name created through API is found
+        When The Add activity subgroup button is clicked
+        Then Drafted or Retired group is not available during subgroup creation
+        And Modal window form is closed by clicking cancel button
+        Then [API] Activity group is approved
+        And Approved Group can be linked to subgroup
+        And The newly added activity subgroup is visible in the the table
+
+    Scenario: User must not be able to create subgroup linked to Retired group until it is approved
+        Given The '/library/activities/activity-subgroups' page is opened
+        And [API] Activity group in status Draft exists
+        And [API] Activity group is approved
+        And [API] Activity group is inactivated
+        And Group name created through API is found
+        When The Add activity subgroup button is clicked
+        Then Drafted or Retired group is not available during subgroup creation
+        And Modal window form is closed by clicking cancel button
+        Then [API] Activity group is reactivated
+        And Approved Group can be linked to subgroup
+        And The newly added activity subgroup is visible in the the table
+    
     Scenario: User must be able to Cancel creation of the activity subgroup
         Given The '/library/activities/activity-subgroups' page is opened
         And The test activity subgroup container is filled with data
@@ -123,7 +159,8 @@ Feature: Library - Activity Subgroups
 
     Scenario: User must be able to Cancel edition of the activity subgroup
         Given The '/library/activities/activity-subgroups' page is opened
-        And The activity subgroup exists with status as Draft
+        And [API] Activity subgroup in status Draft exists
+        And Activity subgroup is found
         When The 'Edit' option is clicked from the three dot menu list
         When The activity subgroup edition form is filled with data
         And Modal window form is closed by clicking cancel button
@@ -132,26 +169,32 @@ Feature: Library - Activity Subgroups
     
     Scenario: User must only have access to aprove, edit, delete, history actions for Drafted version of the activity subgroup
         Given The '/library/activities/activity-subgroups' page is opened
-        When The activity subgroup exists with status as Draft
+        When [API] Activity subgroup in status Draft exists
+        And Activity subgroup is found
         And The item actions button is clicked
         Then Only actions that should be avaiable for the Draft item are displayed
 
     Scenario: User must only have access to new version, inactivate, history actions for Final version of the activity subgroup
         Given The '/library/activities/activity-subgroups' page is opened
-        When The activity subgroup exists with status as Final
+        When [API] Activity subgroup in status Draft exists
+        And [API] Activity subgroup is approved
+        And Activity subgroup is found
         And The item actions button is clicked
         Then Only actions that should be avaiable for the Final item are displayed
 
     Scenario: User must only have access to reactivate, history actions for Retired version of the activity subgroup
         Given The '/library/activities/activity-subgroups' page is opened
-        When The activity subgroup exists with status as Retired
+        When [API] Activity subgroup in status Draft exists
+        And [API] Activity subgroup is approved
+        And [API] Activity subgroup is inactivated
+        And Activity subgroup is found
         And The item actions button is clicked
         Then Only actions that should be avaiable for the Retired item are displayed
 
     Scenario: User must be able to search created subgroup
         Given The '/library/activities/activity-subgroups' page is opened
-        When First activity subgroup for search test is created
-        And Second activity subgroup for search test is created
+        When [API] First activity subgroup for search test is created
+        And [API] Second activity subgroup for search test is created
         Then One activity subgroup is found after performing full name search
         And More than one item is found after performing partial name search 
 
@@ -167,6 +210,21 @@ Feature: Library - Activity Subgroups
         And The item is not found and table is correctly filtered
         And The user changes status filter value to 'Draft'
         Then More than one item is found after performing partial name search
+
+    Scenario: User must be able to find new version of approved subgroup by setting status filter
+        Given The '/library/activities/activity-subgroups' page is opened
+        And [API] Activity subgroup in status Draft exists
+        And [API] Activity subgroup is approved
+        When The user filters table by status 'Final'
+        And The subgroup can be find in table
+        And [API] Activity subgroup gets new version
+        And The user changes status filter value to 'Draft'
+        And The subgroup can be find in table
+
+    Scenario: User must be able to search item ignoring case sensitivity
+        Given The '/library/activities/activity-subgroups' page is opened
+        When The existing item in search by lowercased name
+        And More than one result is found
 
     Scenario Outline: User must be able to filter the table by text fields
         Given The '/library/activities/activity-subgroups' page is opened

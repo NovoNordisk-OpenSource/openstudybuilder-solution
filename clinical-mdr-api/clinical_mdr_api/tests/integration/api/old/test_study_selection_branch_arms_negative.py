@@ -311,15 +311,17 @@ def test_all_history_of_specific_selection4(api_client):
     assert res[0]["change_type"] == "Edit"
     assert res[0]["accepted_version"] is False
     assert res[0]["arm_root_uid"] == "StudyArm_000001"
-    assert res[0]["changes"] == {
-        "name": True,
-        "short_name": True,
-        "code": True,
-        "randomization_group": True,
-        "start_date": True,
-        "end_date": True,
-        "change_type": True,
-    }
+    assert set(res[0]["changes"]) == set(
+        [
+            "name",
+            "short_name",
+            "code",
+            "randomization_group",
+            "start_date",
+            "end_date",
+            "change_type",
+        ]
+    )
     assert res[1]["study_uid"] == "study_root"
     assert res[1]["order"] == 1
     assert res[1]["project_number"] is None
@@ -339,7 +341,7 @@ def test_all_history_of_specific_selection4(api_client):
     assert res[1]["change_type"] == "Create"
     assert res[1]["accepted_version"] is False
     assert res[1]["arm_root_uid"] == "StudyArm_000001"
-    assert res[1]["changes"] == {}
+    assert res[1]["changes"] == []
 
 
 def test_patch_specific_patch_a_randomization_group_name_that_is_in_history_not_actual(

@@ -142,8 +142,10 @@ def test_crud(test_data, study_objective_service, objective_template_service):
     )
 
     expected_study_endpoint_name = f"{study_endpoint.endpoint.name} {f' {unit_separator} '.join([u.name for u in unit_definitions])} {timeframe.name}"
-    expected_return_parameter_term_dict = copy.deepcopy(parameter_term_dict)
-    expected_return_parameter_term_dict["name"] = expected_study_endpoint_name
+    expected_return_parameter_term_dict = IndexedTemplateParameterTerm(
+        **copy.deepcopy(parameter_term_dict)
+    )
+    expected_return_parameter_term_dict.name = expected_study_endpoint_name
     assert (
         study_objective.objective.name
         == f"Test objective template with [{expected_study_endpoint_name}] parameter"

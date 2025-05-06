@@ -173,3 +173,8 @@ Feature: Library - Time frame templates - Sponsor standards
       # | Modified        |
       | Status          |
       | Version         |
+
+  Scenario: User must be able to use table pagination
+      Given The '/library/timeframe_templates/parent' page is opened
+      When The user switches pages of the table
+      Then The table page presents correct data

@@ -1,13 +1,3 @@
-//Probably redundant after the fixes - 29-02 will be the week worked on.
-Cypress.Commands.add('checkStudyExists', () => {
-  cy.request(Cypress.env('API') + '/studies').then((response) => {
-    if (response.body.items == '') {
-      cy.log('Studies not exisitng - critical error')
-    } else {
-      cy.log('Study - found')
-    }
-  })
-})
 
 Cypress.Commands.add('nullRegistryIdentifiersForStudy', () => {
   cy.request({
@@ -79,17 +69,6 @@ Cypress.Commands.add('createAndOpenCodelist', () => {
     cy.visit('/library/ct_catalogues/All/' + created_response.body.codelist_uid)
     cy.wait(3000)
   })
-})
-
-Cypress.Commands.add('approveCodelist', (codelist_uid, name_status, attributes_status) => {
-  if (name_status == 'Draft') {
-    cy.log('Codelist - names approved')
-    cy.request('POST', Cypress.env('API') + '/ct/codelists/' + codelist_uid + '/names/approvals')
-  }
-  if (attributes_status == 'Draft') {
-    cy.log('Codelist - attributes approved')
-    cy.request('POST', Cypress.env('API') + '/ct/codelists/' + codelist_uid + '/attributes/approvals')
-  }
 })
 
 Cypress.Commands.add('createAndOpenTerm', () => {

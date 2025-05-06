@@ -21,11 +21,14 @@ class SponsorModelDatasetVO:
     dataset_uid: str
 
     is_basic_std: bool
+    implemented_dataset_class: str | None
     xml_path: str
     xml_title: str
     structure: str
     purpose: str
+    is_cdisc_std: bool
     source_ig: str
+    standard_ref: str
     comment: str
     ig_comment: str
     map_domain_flag: bool
@@ -39,6 +42,8 @@ class SponsorModelDatasetVO:
     state: str
     extended_domain: str
 
+    target_data_model_catalogue: str | None = None
+
     @classmethod
     def from_repository_values(
         cls,
@@ -46,13 +51,16 @@ class SponsorModelDatasetVO:
         sponsor_model_version_number: int,
         dataset_uid: str,
         is_basic_std: bool,
+        implemented_dataset_class: str,
         xml_path: str,
         xml_title: str,
         structure: str,
         purpose: str,
         keys: list[str] | None,
         sort_keys: list[str] | None,
+        is_cdisc_std: bool,
         source_ig: str,
+        standard_ref: str,
         comment: str,
         ig_comment: str,
         map_domain_flag: bool,
@@ -63,19 +71,23 @@ class SponsorModelDatasetVO:
         label: str,
         state: str,
         extended_domain: str,
+        target_data_model_catalogue: str | None = None,
     ) -> Self:
         sponsor_model_dataset_vo = cls(
             sponsor_model_name=sponsor_model_name,
             sponsor_model_version_number=sponsor_model_version_number,
             dataset_uid=dataset_uid,
             is_basic_std=is_basic_std,
+            implemented_dataset_class=implemented_dataset_class,
             xml_path=xml_path,
             xml_title=xml_title,
             structure=structure,
             purpose=purpose,
             keys=keys,
             sort_keys=sort_keys,
+            is_cdisc_std=is_cdisc_std,
             source_ig=source_ig,
+            standard_ref=standard_ref,
             comment=comment,
             ig_comment=ig_comment,
             map_domain_flag=map_domain_flag,
@@ -86,6 +98,7 @@ class SponsorModelDatasetVO:
             label=label,
             state=state,
             extended_domain=extended_domain,
+            target_data_model_catalogue=target_data_model_catalogue,
         )
 
         return sponsor_model_dataset_vo

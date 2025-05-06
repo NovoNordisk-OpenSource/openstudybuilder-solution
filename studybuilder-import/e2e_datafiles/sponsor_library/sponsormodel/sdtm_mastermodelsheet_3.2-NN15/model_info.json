@@ -2,5 +2,6 @@
     "ig_uid": "SDTMIG",
     "ig_version_number": "3.2",
     "sponsor_model_version_number": "15",
-    "sponsor_model_name": "sdtmig_mastermodel_3.2_NN15"
+    "sponsor_model_name": "sdtmig_mastermodel_3.2_NN15",
+    "exclude": false
 }

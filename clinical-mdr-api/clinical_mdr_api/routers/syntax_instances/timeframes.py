@@ -45,6 +45,7 @@ TimeframeUID = Path(description="The unique id of the timeframe.")
     response_model=CustomPage[Timeframe],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {
             "content": {
                 "text/csv": {
@@ -56,7 +57,6 @@ TimeframeUID = Path(description="The unique id of the timeframe.")
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {},
             }
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.allow_exports(
@@ -147,11 +147,11 @@ def get_all(
     response_model=list[Any],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - Invalid field name specified",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_distinct_values_for_header(
@@ -202,8 +202,8 @@ def get_distinct_values_for_header(
     response_model=CustomPage[Timeframe],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def retrieve_audit_trail(
@@ -255,11 +255,11 @@ def retrieve_audit_trail(
     response_model=Timeframe | None,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - The timeframe with the specified 'timeframe_uid' (and the specified date/time and/or status) wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get(
@@ -297,11 +297,11 @@ def get(
     response_model=list[TimeframeVersion],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - The timeframe with the specified 'timeframe_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_versions(timeframe_uid: Annotated[str, TimeframeUID]):
@@ -325,6 +325,7 @@ If the request succeeds:
     response_model=Timeframe,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {"description": "Created - The timeframe was successfully created."},
         400: {
             "model": ErrorResponse,
@@ -339,7 +340,6 @@ If the request succeeds:
             "- The library with the specified 'library_name' could not be found.\n"
             "- The timeframe template with the specified 'timeframe_template_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def create(
@@ -366,6 +366,7 @@ If the request succeeds:
     response_model=Timeframe,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "Success - The timeframe is able to be created."},
         400: {
             "model": ErrorResponse,
@@ -380,7 +381,6 @@ If the request succeeds:
             "- The library with the specified 'library_name' could not be found.\n"
             "- The timeframe template with the specified 'timeframe_template_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def preview(
@@ -409,6 +409,7 @@ If the request succeeds:
     response_model=Timeframe,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -423,7 +424,6 @@ If the request succeeds:
             "model": ErrorResponse,
             "description": "Not Found - The timeframe with the specified 'timeframe_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def edit(
@@ -454,6 +454,7 @@ If the request succeeds:
     response_model=Timeframe,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -465,7 +466,6 @@ If the request succeeds:
             "model": ErrorResponse,
             "description": "Not Found - The timeframe with the specified 'timeframe_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def approve(timeframe_uid: Annotated[str, TimeframeUID]):
@@ -487,6 +487,7 @@ If the request succeeds:
     response_model=Timeframe,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -497,7 +498,6 @@ If the request succeeds:
             "model": ErrorResponse,
             "description": "Not Found - The timeframe with the specified 'timeframe_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def inactivate(timeframe_uid: Annotated[str, TimeframeUID]):
@@ -520,6 +520,7 @@ If the request succeeds:
     response_model=Timeframe,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -530,7 +531,6 @@ If the request succeeds:
             "model": ErrorResponse,
             "description": "Not Found - The timeframe with the specified 'timeframe_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def reactivate(timeframe_uid: Annotated[str, TimeframeUID]):
@@ -548,6 +548,7 @@ def reactivate(timeframe_uid: Annotated[str, TimeframeUID]):
     response_model=None,
     status_code=204,
     responses={
+        403: _generic_descriptions.ERROR_403,
         204: {"description": "No Content - The timeframe was successfully deleted."},
         400: {
             "model": ErrorResponse,
@@ -559,7 +560,6 @@ def reactivate(timeframe_uid: Annotated[str, TimeframeUID]):
             "model": ErrorResponse,
             "description": "Not Found - An timeframe with the specified uid could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def delete(timeframe_uid: Annotated[str, TimeframeUID]):
@@ -573,11 +573,11 @@ def delete(timeframe_uid: Annotated[str, TimeframeUID]):
     response_model=list[Study],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - The timeframe with the specified 'timeframe_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_studies(
@@ -609,8 +609,8 @@ def get_studies(
     response_model=list[ComplexTemplateParameter],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_parameters(

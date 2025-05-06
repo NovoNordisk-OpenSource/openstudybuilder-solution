@@ -5,15 +5,9 @@ import { useStudiesGeneralStore } from '@/stores/studies-general'
 const studiesGeneralStore = useStudiesGeneralStore()
 
 async function docxDownload(layout) {
-  const params = {
-    detailed:
-      layout === 'detailed' ? true : layout === 'operational' ? null : false,
-    operational: layout === 'operational' ? true : null,
-  }
-
   const response = await study.getStudyProtocolFlowchartDocx(
     studiesGeneralStore.selectedStudy.uid,
-    params
+    { layout }
   )
 
   download(response, ` ${layout} SoA.docx`)

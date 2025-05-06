@@ -60,8 +60,8 @@ Possible errors:
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.allow_exports(
@@ -175,11 +175,11 @@ def get_all(
     response_model=list[Any],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - Invalid field name specified",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_distinct_values_for_header(
@@ -228,8 +228,8 @@ def get_distinct_values_for_header(
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_all_references(
@@ -300,6 +300,7 @@ Possible errors:
     response_model_exclude_unset=True,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         400: {
             "model": ErrorResponse,
             "description": "Forbidden - The settings for visit are invalid",
@@ -308,7 +309,6 @@ Possible errors:
             "model": ErrorResponse,
             "description": "Not Found - Study or visit is not found with the passed 'study_uid'.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
@@ -331,11 +331,11 @@ def post_new_visit_create(
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - Study is not found with the passed 'study_uid'.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
@@ -358,8 +358,8 @@ def post_preview_visit(
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_allowed_time_references_for_given_study(
@@ -391,11 +391,11 @@ Possible errors:
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - There exist no study or visit.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
@@ -439,12 +439,12 @@ Possible errors:
     response_model=None,
     status_code=204,
     responses={
+        403: _generic_descriptions.ERROR_403,
         204: {"description": "No Content - The selection was successfully deleted."},
         404: {
             "model": ErrorResponse,
             "description": "Not Found - there exist no selection of the visit and the study provided.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
@@ -479,11 +479,11 @@ Possible errors:
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - there exist no selection of the study visit for the study provided.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 # pylint: disable=unused-argument
@@ -517,11 +517,11 @@ Possible errors:
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - there exist no selection of the study visit for the study provided.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_study_visits_all_audit_trail(
@@ -557,11 +557,11 @@ Possible errors:
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - there exist no visit for the study provided.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 # pylint: disable=unused-argument
@@ -604,8 +604,8 @@ Possible errors:
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_amount_of_visits_in_given_epoch(
@@ -641,8 +641,8 @@ Possible errors:
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_global_anchor_visit(
@@ -673,8 +673,8 @@ Possible errors:
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_anchor_visits_in_group_of_subvisits(
@@ -706,8 +706,8 @@ Possible errors:
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_anchor_visits_for_special_visit(
@@ -743,8 +743,8 @@ Possible errors:
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
@@ -785,8 +785,8 @@ Possible errors:
     response_model=None,
     status_code=204,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")

@@ -55,8 +55,8 @@ Possible errors:
     response_model=CustomPage[DictionaryCodelist],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.allow_exports(
@@ -135,11 +135,11 @@ def get_codelists(
     response_model=list[Any],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - Invalid field name specified",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_distinct_values_for_header(
@@ -186,6 +186,7 @@ def get_distinct_values_for_header(
     response_model=DictionaryCodelist,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {
             "description": "Created - The dictionary codelist was successfully created."
         },
@@ -195,7 +196,6 @@ def get_distinct_values_for_header(
             "- The library doesn't exist.\n"
             "- The library doesn't allow to add new items.\n",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def create(
@@ -224,8 +224,8 @@ State after:
     response_model=DictionaryCodelist,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_codelist(
@@ -267,11 +267,11 @@ Possible errors:
     response_model=list[DictionaryCodelistVersion],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - The dictionary codelist with the specified 'dictionary_codelist_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_versions(
@@ -305,6 +305,7 @@ Possible errors:
     response_model=DictionaryCodelist,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -317,7 +318,6 @@ Possible errors:
             "model": ErrorResponse,
             "description": "Not Found - The codelist with the specified 'codelist_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def edit(
@@ -360,6 +360,7 @@ Possible errors:
     response_model=DictionaryCodelist,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {
             "description": "Created - The dictionary codelist was successfully created."
         },
@@ -374,7 +375,6 @@ Possible errors:
             "- The dictionary codelist is not in final status.\n"
             "- The dictionary codelist with the specified 'dictionary_codelist_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def create_new_version(
@@ -410,6 +410,7 @@ Possible errors:
     response_model=DictionaryCodelist,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -421,7 +422,6 @@ Possible errors:
             "model": ErrorResponse,
             "description": "Not Found - The codelist with the specified 'codelist_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def approve(
@@ -450,6 +450,7 @@ Possible errors:
     response_model=DictionaryCodelist,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {
             "description": "The HAS_TERM relationship was successfully created.\n"
             "The TemplateParameter labels and HAS_PARAMETER_TERM relationship were successfully added "
@@ -463,7 +464,6 @@ Possible errors:
             "- The dictionary codelist already has passed term.\n",
         },
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def add_term(
@@ -501,6 +501,7 @@ Possible errors:
     response_model=DictionaryCodelist,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {
             "description": "The HAS_TERM relationship was successfully deleted and "
             "HAD_TERM relationship was successfully created.\n"
@@ -515,7 +516,6 @@ Possible errors:
             "- The codelist doesn't have passed term.\n",
         },
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def remove_term(

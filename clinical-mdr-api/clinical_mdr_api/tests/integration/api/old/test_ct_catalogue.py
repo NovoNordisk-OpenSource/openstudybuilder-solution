@@ -45,7 +45,7 @@ def test_get_catalogue_changes_returned_valid_data(api_client):
         {
             "value_node": {"name": "new_name", "definition": "codelist_added"},
             "uid": "added_codelist_uid",
-            "change_date": "2020-06-26T00:00:00+00:00",
+            "change_date": "2020-06-26T00:00:00Z",
             "is_change_of_codelist": True,
         }
     ]
@@ -59,20 +59,20 @@ def test_get_catalogue_changes_returned_valid_data(api_client):
                 "right_only": {"definition": "new_definition"},
             },
             "uid": "updated_codelist_uid",
-            "change_date": "2020-06-26T00:00:00+00:00",
+            "change_date": "2020-06-26T00:00:00Z",
             "is_change_of_codelist": True,
         },
         {
             "uid": "added_codelist_uid",
             "is_change_of_codelist": False,
-            "change_date": "2020-06-26T00:00:00+00:00",
+            "change_date": "2020-06-26T00:00:00Z",
             "value_node": {"name": "new_name", "definition": "codelist_added"},
         },
     ]
     assert res["new_terms"] == [
         {
             "uid": "added_term_uid",
-            "change_date": "2020-06-26T00:00:00+00:00",
+            "change_date": "2020-06-26T00:00:00Z",
             "value_node": {
                 "preferred_term": "old_preferred_term",
                 "name_submission_value": "old_submission_value",
@@ -84,7 +84,7 @@ def test_get_catalogue_changes_returned_valid_data(api_client):
     assert res["updated_terms"] == [
         {
             "uid": "updated_term_uid",
-            "change_date": "2020-06-26T00:00:00+00:00",
+            "change_date": "2020-06-26T00:00:00Z",
             "value_node": {
                 "left_only": {"preferred_term": "old_preferred_term"},
                 "in_common": {},

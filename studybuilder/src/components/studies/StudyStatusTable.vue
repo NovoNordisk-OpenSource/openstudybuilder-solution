@@ -146,7 +146,6 @@ export default {
       ],
       loading: false,
       lockedHistory: [],
-      options: {},
       showStatusForm: false,
       statusAction: null,
       items: [],
@@ -160,11 +159,6 @@ export default {
         },
       ],
     }
-  },
-  watch: {
-    options() {
-      this.fetchItems()
-    },
   },
   methods: {
     checkIfSelectable(studyVersion) {
@@ -187,11 +181,10 @@ export default {
       this.loading = false
       this.showStatusForm = false
     },
-    fetchItems(filters, sort, filtersUpdated) {
+    fetchItems(filters, options, filtersUpdated) {
       const params = filteringParameters.prepareParameters(
-        this.options,
+        options,
         filters,
-        sort,
         filtersUpdated
       )
       api

@@ -500,11 +500,6 @@ def test_update_library_items_of_relationship_to_value_nodes(api_client):
     )
     res = response.json()
     assert_response_status_code(response, 201)
-    response = api_client.post(
-        f"/concepts/activities/activity-sub-groups/{library_activity_grouping_subgroup_uid}/versions",
-    )
-    res = response.json()
-    assert_response_status_code(response, 201)
 
     response = api_client.patch(
         f"/concepts/activities/activities/{library_activity_uid}",
@@ -517,6 +512,12 @@ def test_update_library_items_of_relationship_to_value_nodes(api_client):
     )
     res = response.json()
     assert_response_status_code(response, 200)
+
+    response = api_client.post(
+        f"/concepts/activities/activity-sub-groups/{library_activity_grouping_subgroup_uid}/versions",
+    )
+    res = response.json()
+    assert_response_status_code(response, 201)
 
     response = api_client.patch(
         f"/concepts/activities/activity-sub-groups/{library_activity_grouping_subgroup_uid}",
@@ -1616,13 +1617,13 @@ def test_detailed_soa_history_page(api_client):
     )
     assert res[3]["action"] == "Create"
     assert res[4]["object_type"] == "visibility flag"
-    assert res[4]["description"] == f"EFFICACY/{general_activity_group.name} true"
-    assert res[4]["action"] == "Create"
-    assert res[5]["object_type"] == "visibility flag"
     assert (
-        res[5]["description"]
+        res[4]["description"]
         == f"EFFICACY/{general_activity_group.name}/{randomisation_activity_subgroup.name} true"
     )
+    assert res[4]["action"] == "Create"
+    assert res[5]["object_type"] == "visibility flag"
+    assert res[5]["description"] == f"EFFICACY/{general_activity_group.name} true"
     assert res[5]["action"] == "Create"
     assert res[6]["object_type"] == "visibility flag"
     assert res[6]["description"] == "EFFICACY false"
@@ -1953,7 +1954,7 @@ def test_operational_soa_export(api_client):
         name="Randomized activity instance 2",
         activity_instance_class_uid=generic_activity_instance_class.uid,
         name_sentence_case="randomized activity instance 2",
-        topic_code="randomized activity instance topic code",
+        topic_code="randomized activity instance topic code 2",
         adam_param_code="randomized adam_param_code",
         is_required_for_activity=True,
         activities=["Activity_000001"],
@@ -2582,6 +2583,14 @@ def test_sync_study_activity_to_latest_version_of_activity(api_client):
             general_activity_group.uid,
         ],
     )
+    # StudyActivity created for different parents to validate order numbers after updating activity to newer version
+    TestUtils.create_study_activity(
+        study_uid=study.uid,
+        activity_uid=weight_activity.uid,
+        activity_group_uid=general_activity_group.uid,
+        activity_subgroup_uid=body_measurements_activity_subgroup.uid,
+        soa_group_term_uid=term_efficacy_uid,
+    )
     # create study activity
     study_activity_v1 = TestUtils.create_study_activity(
         study_uid=study.uid,
@@ -2594,10 +2603,10 @@ def test_sync_study_activity_to_latest_version_of_activity(api_client):
         f"/studies/{study.uid}/study-activities/{study_activity_v1.study_activity_uid}"
     )
     assert_response_status_code(response, 200)
-    res = response.json()
-    assert res["latest_activity"] is None
-    assert res["activity"]["uid"] == activity_to_change.uid
-    assert res["activity"]["name"] == activity_name_before_change
+    sa_before_sync = response.json()
+    assert sa_before_sync["latest_activity"] is None
+    assert sa_before_sync["activity"]["uid"] == activity_to_change.uid
+    assert sa_before_sync["activity"]["name"] == activity_name_before_change
 
     # create new draft version for activity
     response = api_client.post(
@@ -2636,10 +2645,24 @@ def test_sync_study_activity_to_latest_version_of_activity(api_client):
         f"/studies/{study.uid}/study-activities/{study_activity_v1.study_activity_uid}/sync-latest-version",
     )
     assert_response_status_code(response, 201)
-    res = response.json()
-    assert res["latest_activity"] is None
-    assert res["activity"]["uid"] == activity_to_change.uid
-    assert res["activity"]["name"] == activity_name_after_change
+    sa_after_sync = response.json()
+    assert sa_after_sync["latest_activity"] is None
+    assert sa_after_sync["activity"]["uid"] == activity_to_change.uid
+    assert sa_after_sync["activity"]["name"] == activity_name_after_change
+
+    assert sa_after_sync["order"] == sa_before_sync["order"]
+    assert (
+        sa_after_sync["study_soa_group"]["order"]
+        == sa_before_sync["study_soa_group"]["order"]
+    )
+    assert (
+        sa_after_sync["study_activity_group"]["order"]
+        == sa_before_sync["study_activity_group"]["order"]
+    )
+    assert (
+        sa_after_sync["study_activity_subgroup"]["order"]
+        == sa_before_sync["study_activity_subgroup"]["order"]
+    )
 
 
 def test_study_activity_replacement_with_different_activities(api_client):
@@ -2980,7 +3003,7 @@ def test_study_activity_create_in_soa_with_reorder(api_client):
 
     # Create StudyActivity in a specific place in SoA, reorder other StudyActivities
     response = api_client.post(
-        f"/studies/{study.uid}/study-activities",
+        f"/studies/{test_study.uid}/study-activities",
         json={
             "activity_uid": randomized_activity.uid,
             "activity_subgroup_uid": randomisation_activity_subgroup.uid,
@@ -2993,6 +3016,489 @@ def test_study_activity_create_in_soa_with_reorder(api_client):
     res = response.json()
     assert res["order"] == 1
     assert res["activity"]["uid"] == randomized_activity.uid
+
+
+def test_study_activity_reordering(api_client):
+    test_study = TestUtils.create_study(project_number=project.project_number)
+    # create study activity
+    randomized_sa = TestUtils.create_study_activity(
+        study_uid=test_study.uid,
+        activity_uid=randomized_activity.uid,
+        activity_group_uid=general_activity_group.uid,
+        activity_subgroup_uid=randomisation_activity_subgroup.uid,
+        soa_group_term_uid=term_efficacy_uid,
+    )
+    body_measurement_sa = TestUtils.create_study_activity(
+        study_uid=test_study.uid,
+        activity_uid=body_mes_activity.uid,
+        activity_group_uid=general_activity_group.uid,
+        activity_subgroup_uid=randomisation_activity_subgroup.uid,
+        soa_group_term_uid=term_efficacy_uid,
+    )
+    weight_sa1 = TestUtils.create_study_activity(
+        study_uid=test_study.uid,
+        activity_uid=weight_activity.uid,
+        activity_group_uid=general_activity_group.uid,
+        activity_subgroup_uid=body_measurements_activity_subgroup.uid,
+        soa_group_term_uid=term_efficacy_uid,
+    )
+    weight_sa2 = TestUtils.create_study_activity(
+        study_uid=test_study.uid,
+        activity_uid=weight_activity.uid,
+        activity_group_uid=general_activity_group.uid,
+        activity_subgroup_uid=randomisation_activity_subgroup.uid,
+        soa_group_term_uid=term_efficacy_uid,
+    )
+
+    response = api_client.get(f"/studies/{test_study.uid}/study-activities")
+    assert_response_status_code(response, 200)
+    study_activities = response.json()["items"]
+    assert len(study_activities) == 4
+    assert study_activities[0]["activity"]["uid"] == randomized_sa.activity.uid
+    assert study_activities[0]["study_soa_group"]["order"] == 1
+    assert study_activities[0]["study_activity_group"]["order"] == 1
+    assert study_activities[0]["study_activity_subgroup"]["order"] == 1
+    assert study_activities[0]["order"] == 1
+    assert study_activities[1]["activity"]["uid"] == body_measurement_sa.activity.uid
+    assert study_activities[1]["study_soa_group"]["order"] == 1
+    assert study_activities[1]["study_activity_group"]["order"] == 1
+    assert study_activities[1]["study_activity_subgroup"]["order"] == 1
+    assert study_activities[1]["order"] == 2
+    assert study_activities[2]["activity"]["uid"] == weight_sa2.activity.uid
+    assert study_activities[2]["study_soa_group"]["order"] == 1
+    assert study_activities[2]["study_activity_group"]["order"] == 1
+    assert study_activities[2]["study_activity_subgroup"]["order"] == 1
+    assert study_activities[2]["order"] == 3
+    assert study_activities[3]["activity"]["uid"] == weight_sa1.activity.uid
+    assert study_activities[3]["study_soa_group"]["order"] == 1
+    assert study_activities[3]["study_activity_group"]["order"] == 1
+    assert study_activities[3]["study_activity_subgroup"]["order"] == 2
+    assert study_activities[3]["order"] == 1
+
+    # Change SoA of first SA, all other should be reordered
+    response = api_client.patch(
+        f"/studies/{test_study.uid}/study-activities/{randomized_sa.study_activity_uid}",
+        json={
+            "soa_group_term_uid": informed_consent_uid,
+        },
+    )
+    assert_response_status_code(response, 200)
+    res = response.json()
+    assert res["activity"]["uid"] == randomized_sa.activity.uid
+    assert res["study_soa_group"]["order"] == 2
+    assert res["study_activity_group"]["order"] == 1
+    assert res["study_activity_subgroup"]["order"] == 1
+    assert res["order"] == 1
+
+    # Get all SA after SoA patch
+    response = api_client.get(f"/studies/{test_study.uid}/study-activities")
+    assert_response_status_code(response, 200)
+    study_activities = response.json()["items"]
+
+    assert len(study_activities) == 4
+    assert study_activities[0]["activity"]["uid"] == body_measurement_sa.activity.uid
+    assert study_activities[0]["study_soa_group"]["order"] == 1
+    assert study_activities[0]["study_activity_group"]["order"] == 1
+    assert study_activities[0]["study_activity_subgroup"]["order"] == 1
+    assert study_activities[0]["order"] == 1
+    assert study_activities[1]["activity"]["uid"] == weight_sa2.activity.uid
+    assert study_activities[1]["study_soa_group"]["order"] == 1
+    assert study_activities[1]["study_activity_group"]["order"] == 1
+    assert study_activities[1]["study_activity_subgroup"]["order"] == 1
+    assert study_activities[1]["order"] == 2
+    assert study_activities[2]["activity"]["uid"] == weight_sa1.activity.uid
+    assert study_activities[2]["study_soa_group"]["order"] == 1
+    assert study_activities[2]["study_activity_group"]["order"] == 1
+    assert study_activities[2]["study_activity_subgroup"]["order"] == 2
+    assert study_activities[2]["order"] == 1
+    assert study_activities[3]["activity"]["uid"] == randomized_sa.activity.uid
+    assert study_activities[3]["study_soa_group"]["order"] == 2
+    assert study_activities[3]["study_activity_group"]["order"] == 1
+    assert study_activities[3]["study_activity_subgroup"]["order"] == 1
+    assert study_activities[3]["order"] == 1
+
+    # Reorder first SA
+    response = api_client.patch(
+        f"/studies/{test_study.uid}/study-activities/{weight_sa2.study_activity_uid}/order",
+        json={
+            "new_order": 3,
+        },
+    )
+    assert_response_status_code(response, 400)
+    res = response.json()
+    assert (
+        res["message"]
+        == f"The maximum new order is (2) as there are 2 Study Activities in {randomisation_activity_subgroup.name} subgroup and order (3) was requested"
+    )
+
+    response = api_client.patch(
+        f"/studies/{test_study.uid}/study-activities/{weight_sa2.study_activity_uid}/order",
+        json={
+            "new_order": 2,
+        },
+    )
+    assert_response_status_code(response, 400)
+    res = response.json()
+    assert (
+        res["message"]
+        == f"The order (2) for study activity {weight_sa2.activity.name} was not changed"
+    )
+
+    response = api_client.patch(
+        f"/studies/{test_study.uid}/study-activities/{weight_sa2.study_activity_uid}/order",
+        json={
+            "new_order": 1,
+        },
+    )
+    assert_response_status_code(response, 200)
+    res = response.json()
+    assert res["activity"]["uid"] == weight_sa2.activity.uid
+    assert res["study_soa_group"]["order"] == 1
+    assert res["study_activity_group"]["order"] == 1
+    assert res["study_activity_subgroup"]["order"] == 1
+    assert res["order"] == 1
+
+    # Get all SA after SA reorder
+    response = api_client.get(f"/studies/{test_study.uid}/study-activities")
+    assert_response_status_code(response, 200)
+    study_activities = response.json()["items"]
+    assert len(study_activities) == 4
+    assert study_activities[0]["activity"]["uid"] == weight_sa2.activity.uid
+    assert study_activities[0]["study_soa_group"]["order"] == 1
+    assert study_activities[0]["study_activity_group"]["order"] == 1
+    assert study_activities[0]["study_activity_subgroup"]["order"] == 1
+    assert study_activities[0]["order"] == 1
+    assert study_activities[1]["activity"]["uid"] == body_measurement_sa.activity.uid
+    assert study_activities[1]["study_soa_group"]["order"] == 1
+    assert study_activities[1]["study_activity_group"]["order"] == 1
+    assert study_activities[1]["study_activity_subgroup"]["order"] == 1
+    assert study_activities[1]["order"] == 2
+    assert study_activities[2]["activity"]["uid"] == weight_sa1.activity.uid
+    assert study_activities[2]["study_soa_group"]["order"] == 1
+    assert study_activities[2]["study_activity_group"]["order"] == 1
+    assert study_activities[2]["study_activity_subgroup"]["order"] == 2
+    assert study_activities[2]["order"] == 1
+    assert study_activities[3]["activity"]["uid"] == randomized_sa.activity.uid
+    assert study_activities[3]["study_soa_group"]["order"] == 2
+    assert study_activities[3]["study_activity_group"]["order"] == 1
+    assert study_activities[3]["study_activity_subgroup"]["order"] == 1
+    assert study_activities[3]["order"] == 1
+
+    # Delete SA and check orders
+    response = api_client.delete(
+        f"/studies/{test_study.uid}/study-activities/{weight_sa2.study_activity_uid}"
+    )
+    assert_response_status_code(response, 204)
+
+    response = api_client.get(f"/studies/{test_study.uid}/study-activities")
+    assert_response_status_code(response, 200)
+    study_activities = response.json()["items"]
+    assert len(study_activities) == 3
+
+    assert study_activities[0]["activity"]["uid"] == body_measurement_sa.activity.uid
+    assert study_activities[0]["study_soa_group"]["order"] == 1
+    assert study_activities[0]["study_activity_group"]["order"] == 1
+    assert study_activities[0]["study_activity_subgroup"]["order"] == 1
+    assert study_activities[0]["order"] == 1
+    assert study_activities[1]["activity"]["uid"] == weight_sa1.activity.uid
+    assert study_activities[1]["study_soa_group"]["order"] == 1
+    assert study_activities[1]["study_activity_group"]["order"] == 1
+    assert study_activities[1]["study_activity_subgroup"]["order"] == 2
+    assert study_activities[1]["order"] == 1
+    assert study_activities[2]["activity"]["uid"] == randomized_sa.activity.uid
+    assert study_activities[2]["study_soa_group"]["order"] == 2
+    assert study_activities[2]["study_activity_group"]["order"] == 1
+    assert study_activities[2]["study_activity_subgroup"]["order"] == 1
+    assert study_activities[2]["order"] == 1
+
+    # Delete SA from subgroup to see if subgroup gets reordered
+    response = api_client.delete(
+        f"/studies/{test_study.uid}/study-activities/{body_measurement_sa.study_activity_uid}"
+    )
+    assert_response_status_code(response, 204)
+    response = api_client.get(f"/studies/{test_study.uid}/study-activities")
+    assert_response_status_code(response, 200)
+    study_activities = response.json()["items"]
+    assert len(study_activities) == 2
+    assert study_activities[0]["activity"]["uid"] == weight_sa1.activity.uid
+    assert study_activities[0]["study_soa_group"]["order"] == 1
+    assert study_activities[0]["study_activity_group"]["order"] == 1
+    assert study_activities[0]["study_activity_subgroup"]["order"] == 1
+    assert study_activities[0]["order"] == 1
+    assert study_activities[1]["activity"]["uid"] == randomized_sa.activity.uid
+    assert study_activities[1]["study_soa_group"]["order"] == 2
+    assert study_activities[1]["study_activity_group"]["order"] == 1
+    assert study_activities[1]["study_activity_subgroup"]["order"] == 1
+    assert study_activities[1]["order"] == 1
+
+    # Delete last SA from SoAGroup to see if SoAGroup gets reordered
+    response = api_client.delete(
+        f"/studies/{test_study.uid}/study-activities/{weight_sa1.study_activity_uid}"
+    )
+    assert_response_status_code(response, 204)
+
+    response = api_client.get(f"/studies/{test_study.uid}/study-activities")
+    assert_response_status_code(response, 200)
+    study_activities = response.json()["items"]
+    assert len(study_activities) == 1
+    assert study_activities[0]["activity"]["uid"] == randomized_sa.activity.uid
+    assert study_activities[0]["study_soa_group"]["order"] == 1
+    assert study_activities[0]["study_activity_group"]["order"] == 1
+    assert study_activities[0]["study_activity_subgroup"]["order"] == 1
+    assert study_activities[0]["order"] == 1
+
+
+# pylint: disable=too-many-statements
+def test_study_activity_placeholder_reordering(api_client):
+    test_study = TestUtils.create_study(project_number=project.project_number)
+    # create study activity
+    activity_request_1 = TestUtils.create_activity(
+        name="Activity request 1",
+        library_name=REQUESTED_LIBRARY_NAME,
+        activity_subgroups=[randomisation_activity_subgroup.uid],
+        activity_groups=[general_activity_group.uid],
+    )
+    response = api_client.post(
+        f"/studies/{test_study.uid}/study-activities",
+        json={
+            "activity_uid": activity_request_1.uid,
+            "activity_subgroup_uid": None,
+            "activity_group_uid": None,
+            "soa_group_term_uid": term_efficacy_uid,
+        },
+    )
+    assert_response_status_code(response, 201)
+    res = response.json()
+    activity_placeholder_1_uid = res["study_activity_uid"]
+
+    activity_request_2 = TestUtils.create_activity(
+        name="Activity request 2",
+        library_name=REQUESTED_LIBRARY_NAME,
+    )
+    response = api_client.post(
+        f"/studies/{test_study.uid}/study-activities",
+        json={
+            "activity_uid": activity_request_2.uid,
+            "activity_subgroup_uid": None,
+            "activity_group_uid": None,
+            "soa_group_term_uid": term_efficacy_uid,
+        },
+    )
+    assert_response_status_code(response, 201)
+    res = response.json()
+    activity_placeholder_2_uid = res["study_activity_uid"]
+
+    activity_request_3 = TestUtils.create_activity(
+        name="Activity request 3",
+        library_name=REQUESTED_LIBRARY_NAME,
+    )
+    response = api_client.post(
+        f"/studies/{test_study.uid}/study-activities",
+        json={
+            "activity_uid": activity_request_3.uid,
+            "activity_subgroup_uid": None,
+            "activity_group_uid": None,
+            "soa_group_term_uid": term_efficacy_uid,
+        },
+    )
+    assert_response_status_code(response, 201)
+    res = response.json()
+    activity_placeholder_3_uid = res["study_activity_uid"]
+
+    randomized_sa = TestUtils.create_study_activity(
+        study_uid=test_study.uid,
+        activity_uid=randomized_activity.uid,
+        activity_group_uid=general_activity_group.uid,
+        activity_subgroup_uid=randomisation_activity_subgroup.uid,
+        soa_group_term_uid=term_efficacy_uid,
+    )
+
+    response = api_client.get(f"/studies/{test_study.uid}/study-activities")
+    assert_response_status_code(response, 200)
+    study_activities = response.json()["items"]
+    assert len(study_activities) == 4
+    assert study_activities[0]["activity"]["uid"] == activity_request_1.uid
+    assert study_activities[0]["study_soa_group"]["order"] == 1
+    assert study_activities[0]["study_activity_group"]["order"] is None
+    assert study_activities[0]["study_activity_subgroup"]["order"] is None
+    assert study_activities[0]["order"] == 1
+    assert study_activities[1]["activity"]["uid"] == activity_request_2.uid
+    assert study_activities[1]["study_soa_group"]["order"] == 1
+    assert study_activities[1]["study_activity_group"]["order"] is None
+    assert study_activities[1]["study_activity_subgroup"]["order"] is None
+    assert study_activities[1]["order"] == 2
+    assert study_activities[2]["activity"]["uid"] == activity_request_3.uid
+    assert study_activities[2]["study_soa_group"]["order"] == 1
+    assert study_activities[2]["study_activity_group"]["order"] is None
+    assert study_activities[2]["study_activity_subgroup"]["order"] is None
+    assert study_activities[2]["order"] == 3
+    assert study_activities[3]["activity"]["uid"] == randomized_sa.activity.uid
+    assert study_activities[3]["study_soa_group"]["order"] == 1
+    assert study_activities[3]["study_activity_group"]["order"] == 1
+    assert study_activities[3]["study_activity_subgroup"]["order"] == 1
+    assert study_activities[3]["order"] == 1
+
+    # Change SoA of first SA, all other should be reordered
+    response = api_client.patch(
+        f"/studies/{test_study.uid}/study-activity-requests/{activity_placeholder_2_uid}",
+        json={
+            "soa_group_term_uid": informed_consent_uid,
+        },
+    )
+    assert_response_status_code(response, 200)
+    res = response.json()
+    assert res["activity"]["uid"] == activity_request_2.uid
+    assert res["study_soa_group"]["order"] == 2
+    assert res["study_activity_group"]["order"] is None
+    assert res["study_activity_subgroup"]["order"] is None
+    assert res["order"] == 1
+
+    # Get all SA after SoA patch
+    response = api_client.get(f"/studies/{test_study.uid}/study-activities")
+    assert_response_status_code(response, 200)
+    study_activities = response.json()["items"]
+
+    assert len(study_activities) == 4
+    assert study_activities[0]["activity"]["uid"] == activity_request_1.uid
+    assert study_activities[0]["study_soa_group"]["order"] == 1
+    assert study_activities[0]["study_activity_group"]["order"] is None
+    assert study_activities[0]["study_activity_subgroup"]["order"] is None
+    assert study_activities[0]["order"] == 1
+    assert study_activities[1]["activity"]["uid"] == activity_request_3.uid
+    assert study_activities[1]["study_soa_group"]["order"] == 1
+    assert study_activities[1]["study_activity_group"]["order"] is None
+    assert study_activities[1]["study_activity_subgroup"]["order"] is None
+    assert study_activities[1]["order"] == 2
+    assert study_activities[2]["activity"]["uid"] == randomized_sa.activity.uid
+    assert study_activities[2]["study_soa_group"]["order"] == 1
+    assert study_activities[2]["study_activity_group"]["order"] == 1
+    assert study_activities[2]["study_activity_subgroup"]["order"] == 1
+    assert study_activities[2]["order"] == 1
+    assert study_activities[3]["activity"]["uid"] == activity_request_2.uid
+    assert study_activities[3]["study_soa_group"]["order"] == 2
+    assert study_activities[3]["study_activity_group"]["order"] is None
+    assert study_activities[3]["study_activity_subgroup"]["order"] is None
+    assert study_activities[3]["order"] == 1
+
+    # Reorder first SA
+    response = api_client.patch(
+        f"/studies/{test_study.uid}/study-activities/{activity_placeholder_1_uid}/order",
+        json={
+            "new_order": 2,
+        },
+    )
+    assert_response_status_code(response, 200)
+    res = response.json()
+    assert res["activity"]["uid"] == activity_request_1.uid
+    assert res["study_soa_group"]["order"] == 1
+    assert res["study_activity_group"]["order"] is None
+    assert res["study_activity_subgroup"]["order"] is None
+    assert res["order"] == 2
+
+    # Get all SA after SA reorder
+    response = api_client.get(f"/studies/{test_study.uid}/study-activities")
+    assert_response_status_code(response, 200)
+    study_activities = response.json()["items"]
+    assert len(study_activities) == 4
+    assert study_activities[0]["activity"]["uid"] == activity_request_3.uid
+    assert study_activities[0]["study_soa_group"]["order"] == 1
+    assert study_activities[0]["study_activity_group"]["order"] is None
+    assert study_activities[0]["study_activity_subgroup"]["order"] is None
+    assert study_activities[0]["order"] == 1
+    assert study_activities[1]["activity"]["uid"] == activity_request_1.uid
+    assert study_activities[1]["study_soa_group"]["order"] == 1
+    assert study_activities[1]["study_activity_group"]["order"] is None
+    assert study_activities[1]["study_activity_subgroup"]["order"] is None
+    assert study_activities[1]["order"] == 2
+    assert study_activities[2]["activity"]["uid"] == randomized_sa.activity.uid
+    assert study_activities[2]["study_soa_group"]["order"] == 1
+    assert study_activities[2]["study_activity_group"]["order"] == 1
+    assert study_activities[2]["study_activity_subgroup"]["order"] == 1
+    assert study_activities[2]["order"] == 1
+    assert study_activities[3]["activity"]["uid"] == activity_request_2.uid
+    assert study_activities[3]["study_soa_group"]["order"] == 2
+    assert study_activities[3]["study_activity_group"]["order"] is None
+    assert study_activities[3]["study_activity_subgroup"]["order"] is None
+    assert study_activities[3]["order"] == 1
+
+    # Delete SA and check orders
+    response = api_client.delete(
+        f"/studies/{test_study.uid}/study-activities/{activity_placeholder_3_uid}"
+    )
+    assert_response_status_code(response, 204)
+
+    response = api_client.get(f"/studies/{test_study.uid}/study-activities")
+    assert_response_status_code(response, 200)
+    study_activities = response.json()["items"]
+    assert len(study_activities) == 3
+    assert study_activities[0]["activity"]["uid"] == activity_request_1.uid
+    assert study_activities[0]["study_soa_group"]["order"] == 1
+    assert study_activities[0]["study_activity_group"]["order"] is None
+    assert study_activities[0]["study_activity_subgroup"]["order"] is None
+    assert study_activities[0]["order"] == 1
+    assert study_activities[1]["activity"]["uid"] == randomized_sa.activity.uid
+    assert study_activities[1]["study_soa_group"]["order"] == 1
+    assert study_activities[1]["study_activity_group"]["order"] == 1
+    assert study_activities[1]["study_activity_subgroup"]["order"] == 1
+    assert study_activities[1]["order"] == 1
+    assert study_activities[2]["activity"]["uid"] == activity_request_2.uid
+    assert study_activities[2]["study_soa_group"]["order"] == 2
+    assert study_activities[2]["study_activity_group"]["order"] is None
+    assert study_activities[2]["study_activity_subgroup"]["order"] is None
+    assert study_activities[2]["order"] == 1
+
+    # Change Groupings of StudyActivity placeholder to verify the orders
+    response = api_client.patch(
+        f"/studies/{test_study.uid}/study-activity-requests/{activity_placeholder_1_uid}",
+        json={
+            "activity_subgroup_uid": randomisation_activity_subgroup.uid,
+            "activity_group_uid": general_activity_group.uid,
+        },
+    )
+    assert_response_status_code(response, 200)
+    res = response.json()
+    assert res["activity"]["uid"] == activity_request_1.uid
+    assert res["study_soa_group"]["order"] == 1
+    assert res["study_activity_group"]["order"] == 1
+    assert res["study_activity_subgroup"]["order"] == 1
+    assert res["order"] == 2
+
+    # Change Groupings of StudyActivity placeholder to verify the orders
+    response = api_client.patch(
+        f"/studies/{test_study.uid}/study-activity-requests/{activity_placeholder_2_uid}",
+        json={
+            "activity_subgroup_uid": randomisation_activity_subgroup.uid,
+            "activity_group_uid": general_activity_group.uid,
+            "soa_group_term_uid": term_efficacy_uid,
+        },
+    )
+    assert_response_status_code(response, 200)
+    res = response.json()
+    assert res["activity"]["uid"] == activity_request_2.uid
+    assert res["study_soa_group"]["order"] == 1
+    assert res["study_activity_group"]["order"] == 1
+    assert res["study_activity_subgroup"]["order"] == 1
+    assert res["order"] == 3
+
+    response = api_client.get(f"/studies/{test_study.uid}/study-activities")
+    assert_response_status_code(response, 200)
+    study_activities = response.json()["items"]
+    assert len(study_activities) == 3
+    assert study_activities[0]["activity"]["uid"] == randomized_sa.activity.uid
+    assert study_activities[0]["study_soa_group"]["order"] == 1
+    assert study_activities[0]["study_activity_group"]["order"] == 1
+    assert study_activities[0]["study_activity_subgroup"]["order"] == 1
+    assert study_activities[0]["order"] == 1
+    assert study_activities[1]["activity"]["uid"] == activity_request_1.uid
+    assert study_activities[1]["study_soa_group"]["order"] == 1
+    assert study_activities[1]["study_activity_group"]["order"] == 1
+    assert study_activities[1]["study_activity_subgroup"]["order"] == 1
+    assert study_activities[1]["order"] == 2
+    assert study_activities[2]["activity"]["uid"] == activity_request_2.uid
+    assert study_activities[2]["study_soa_group"]["order"] == 1
+    assert study_activities[2]["study_activity_group"]["order"] == 1
+    assert study_activities[2]["study_activity_subgroup"]["order"] == 1
+    assert study_activities[2]["order"] == 3
 
 
 def test_create_duplicated_study_activitiy(api_client):
@@ -3202,7 +3708,7 @@ def test_batch_operations_for_combined_study_activity_and_activity_schedules(
             },
         ],
     )
-    assert response.status_code == 207
+    assert_response_status_code(response, 207)
 
     response = api_client.get(f"/studies/{test_study.uid}/study-activities")
     assert_response_status_code(response, 200)

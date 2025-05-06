@@ -21,6 +21,8 @@ class ActivityGroupingVO:
     activity_group_name: str | None = None
     activity_subgroup_version: str | None = None
     activity_group_version: str | None = None
+    activity_instance_uid: str | None = None
+    activity_instance_version: str | None = None
 
 
 @dataclass(frozen=True)
@@ -33,6 +35,7 @@ class ActivityVO(ConceptVO):
     nci_concept_name: str | None
     synonyms: list[str]
     activity_groupings: list[ActivityGroupingVO]
+    activity_instances: list[dict]
 
     # ActivityRequest related
     request_rationale: str | None
@@ -61,6 +64,7 @@ class ActivityVO(ConceptVO):
         abbreviation: str | None,
         activity_groupings: list[ActivityGroupingVO],
         request_rationale: str | None,
+        activity_instances: list[dict],
         is_request_final: bool = False,
         replaced_by_activity: str | None = None,
         requester_study_id: str | None = None,
@@ -83,6 +87,7 @@ class ActivityVO(ConceptVO):
             is_template_parameter=True,
             activity_groupings=activity_groupings,
             request_rationale=request_rationale,
+            activity_instances=activity_instances,
             is_request_final=is_request_final,
             requester_study_id=requester_study_id,
             replaced_by_activity=replaced_by_activity,

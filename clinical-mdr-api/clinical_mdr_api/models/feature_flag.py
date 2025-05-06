@@ -9,7 +9,9 @@ class FeatureFlag(BaseModel):
     sn: int
     name: str
     enabled: bool
-    description: Annotated[str | None, Field(nullable=True)] = None
+    description: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
 
 
 class FeatureFlagInput(PostInputModel):

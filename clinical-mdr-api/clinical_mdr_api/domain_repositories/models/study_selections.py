@@ -345,19 +345,19 @@ class StudyActivity(StudySelection):
         StudySoAGroup,
         "STUDY_ACTIVITY_HAS_STUDY_SOA_GROUP",
         model=ClinicalMdrRel,
-        cardinality=One,
+        cardinality=OneOrMore,
     )
     study_activity_has_study_activity_subgroup = RelationshipTo(
         StudyActivitySubGroup,
         "STUDY_ACTIVITY_HAS_STUDY_ACTIVITY_SUBGROUP",
         model=ClinicalMdrRel,
-        cardinality=ZeroOrOne,
+        cardinality=ZeroOrMore,
     )
     study_activity_has_study_activity_group = RelationshipTo(
         StudyActivityGroup,
         "STUDY_ACTIVITY_HAS_STUDY_ACTIVITY_GROUP",
         model=ClinicalMdrRel,
-        cardinality=ZeroOrOne,
+        cardinality=ZeroOrMore,
     )
     study_activity_has_study_activity_instance = RelationshipTo(
         "StudyActivityInstance",

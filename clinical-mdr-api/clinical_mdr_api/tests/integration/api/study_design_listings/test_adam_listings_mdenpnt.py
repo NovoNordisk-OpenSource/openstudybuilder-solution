@@ -144,7 +144,7 @@ def test_adam_listing_mdendpnt(api_client):
         RACTSGRP=[],
         RACTGRP=[],
         RACTINST=[],
-    )
+    ).model_dump()
     assert res[0] == expected_output
 
     # headers endpoint testing

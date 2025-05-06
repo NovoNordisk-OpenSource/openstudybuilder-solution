@@ -10,10 +10,13 @@ export function stringToBoolean(value) {
 }
 
 export function getCurrStudyUid() {
-  let curr_study = JSON.parse(window.localStorage.getItem("selectedStudy"));
-  return curr_study.uid;
+  let current_study = JSON.parse(window.localStorage.getItem("selectedStudy"));
+  return current_study.uid;
 }
-
+export function getCurrentStudyId() {
+  let current_study = JSON.parse(window.localStorage.getItem("selectedStudy"));
+  return current_study.current_metadata.identification_metadata.study_id
+}
 export function getCurrentDateFormatted() {
   const currentDate = new Date();
 
@@ -32,8 +35,8 @@ export function getCurrentDateFormatted() {
 }
 
 export function formatDateToMMMDDYYYY() {
-  return new Date().toLocaleDateString('en-US', {
-    month: 'short',
+  return new Date().toLocaleDateString('en-CA', {
+    month: 'numeric',
     day: 'numeric',
     year: 'numeric'
   });

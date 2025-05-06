@@ -427,7 +427,8 @@ class TestStudyService(unittest.TestCase):
         # no id metadata in response
         self.assertIsNone(service_response.current_metadata.identification_metadata)
         self.assertNotIn(
-            "identification_metadata", service_response.current_metadata.__fields_set__
+            "identification_metadata",
+            service_response.current_metadata.model_fields_set,
         )
 
         # correct values of ver metadata

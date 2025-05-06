@@ -138,6 +138,15 @@ study_activity_instance_uid_path = Path(
     description="The unique id of the study activity instance."
 )
 study_activity_uid_path = Path(description="The unique id of the study activity.")
+study_soa_group_uid_path = Path(
+    description="The unique id of the study activity soa group."
+)
+study_activity_group_uid_path = Path(
+    description="The unique id of the study activity group."
+)
+study_activity_subgroup_uid_path = Path(
+    description="The unique id of the study activity subgroup."
+)
 study_arm_uid_path = Path(description="The unique id of the study arm.")
 study_element_uid_path = Path(description="The unique id of the study element.")
 study_branch_arm_uid_path = Path(description="The unique id of the study branch arm.")
@@ -163,8 +172,8 @@ PROJECT_NUMBER = Query(
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_all_selected_objectives_for_all_studies(
@@ -234,11 +243,11 @@ def get_all_selected_objectives_for_all_studies(
     response_model=list[Any],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - Invalid field name specified",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_distinct_objective_values_for_header(
@@ -285,8 +294,8 @@ def get_distinct_objective_values_for_header(
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.allow_exports(
@@ -377,11 +386,11 @@ def get_all_selected_objectives(
     response_model=list[Any],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - Invalid field name specified",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_distinct_values_for_header(
@@ -443,8 +452,8 @@ The following values should be return for all study objectives.
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_all_objectives_audit_trail(
@@ -462,11 +471,11 @@ def get_all_objectives_audit_trail(
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - there exist no selection of the objective for the study provided.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_selected_objective(
@@ -502,11 +511,11 @@ The following values should be return for selected study objective:
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - there exist no selection of the objective for the study provided.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_selected_objective_audit_trail(
@@ -527,6 +536,7 @@ def get_selected_objective_audit_trail(
     response_model_exclude_unset=True,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         400: {
             "model": ErrorResponse,
             "description": "Forbidden - There already exists a selection of the objective",
@@ -535,7 +545,6 @@ def get_selected_objective_audit_trail(
             "model": ErrorResponse,
             "description": "Not Found - Study or objective is not found with the passed 'study_uid'.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
@@ -608,6 +617,7 @@ def post_new_objective_selection_create(
     response_model_exclude_unset=True,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         400: {
             "model": ErrorResponse,
             "description": "Forbidden - There already exists a selection of the objective",
@@ -616,7 +626,6 @@ def post_new_objective_selection_create(
             "model": ErrorResponse,
             "description": "Not Found - Study or objective is not found with the passed 'study_uid'.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
@@ -643,6 +652,7 @@ def post_batch_select_objective_template(
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         400: {
             "model": ErrorResponse,
             "description": "Forbidden - There already exists a selection of the objective",
@@ -651,7 +661,6 @@ def post_batch_select_objective_template(
             "model": ErrorResponse,
             "description": "Not Found - Study or objective is not found with the passed 'study_uid'.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
@@ -677,12 +686,12 @@ def preview_new_objective_selection_create(
     response_model=None,
     status_code=204,
     responses={
+        403: _generic_descriptions.ERROR_403,
         204: {"description": "No Content - The selection was successfully deleted."},
         404: {
             "model": ErrorResponse,
             "description": "Not Found - there exist no selection of the objective and the study provided.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
@@ -705,11 +714,11 @@ def delete_selected_objective(
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - There exist no selection between the study and objective to reorder.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
@@ -737,11 +746,11 @@ def patch_new_objective_selection_order(
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - There exist no selection between the study and objective.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
@@ -769,11 +778,11 @@ def patch_update_objective_selection(
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - There exist no selection between the study and objective.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
@@ -798,8 +807,8 @@ def sync_latest_version(
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_all_selected_endpoints_for_all_studies(
@@ -869,11 +878,11 @@ def get_all_selected_endpoints_for_all_studies(
     response_model=list[Any],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - Invalid field name specified",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_distinct_endpoint_values_for_header(
@@ -938,8 +947,8 @@ State after:
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.allow_exports(
@@ -1030,11 +1039,11 @@ def get_all_selected_endpoints(
     response_model=list[Any],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - Invalid field name specified",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_distinct_study_endpoint_values_for_header(
@@ -1108,8 +1117,8 @@ Returned data:
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_all_endpoints_audit_trail(
@@ -1144,11 +1153,11 @@ State after:
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - When there exist no study endpoint with the study endpoint uid.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_selected_endpoint(
@@ -1197,11 +1206,11 @@ Returned data:
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - there exist no selection of the objective for the study provided.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_selected_endpoint_audit_trail(
@@ -1222,6 +1231,7 @@ def get_selected_endpoint_audit_trail(
     response_model_exclude_unset=True,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         400: {
             "model": ErrorResponse,
             "description": "Forbidden - There already exists a selection of the endpoint",
@@ -1230,7 +1240,6 @@ def get_selected_endpoint_audit_trail(
             "model": ErrorResponse,
             "description": "Not Found - Study or endpoint is not found with the passed 'study_uid'.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
@@ -1302,6 +1311,7 @@ def post_new_endpoint_selection_create(
     response_model_exclude_unset=True,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         400: {
             "model": ErrorResponse,
             "description": "Forbidden - There already exists a selection of the endpoint",
@@ -1310,7 +1320,6 @@ def post_new_endpoint_selection_create(
             "model": ErrorResponse,
             "description": "Not Found - Study or endpoint is not found with the passed 'study_uid'.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
@@ -1337,6 +1346,7 @@ def post_batch_select_endpoint_template(
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         400: {
             "model": ErrorResponse,
             "description": "Forbidden - There already exists a selection of the endpoint",
@@ -1345,7 +1355,6 @@ def post_batch_select_endpoint_template(
             "model": ErrorResponse,
             "description": "Not Found - Study or endpoint is not found with the passed 'study_uid'.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
@@ -1385,12 +1394,12 @@ State after:
     response_model=None,
     status_code=204,
     responses={
+        403: _generic_descriptions.ERROR_403,
         204: {"description": "No Content - The selection was successfully deleted."},
         404: {
             "model": ErrorResponse,
             "description": "Not Found - When there exist no study endpoint with the study endpoint uid.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
@@ -1426,6 +1435,7 @@ State after:
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         400: {
             "model": ErrorResponse,
             "description": "Forbidden - Order is larger than the number of selections",
@@ -1434,7 +1444,6 @@ State after:
             "model": ErrorResponse,
             "description": "Not Found - When there exist no study endpoint with the study endpoint uid.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
@@ -1477,11 +1486,11 @@ State after:
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - When there exist no study endpoint with the study endpoint uid.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
@@ -1506,13 +1515,13 @@ def patch_update_endpoint_selection(
     dependencies=[rbac.STUDY_READ],
     summary="""Returns Study Objectives and Endpoints table in standard layout DOCX document""",
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {
             "content": {
                 "application/vnd.openxmlformats-officedocument.wordprocessingml.document": {}
             }
         },
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_all_selected_objectives_and_endpoints_standard_docx(
@@ -1543,9 +1552,9 @@ def get_all_selected_objectives_and_endpoints_standard_docx(
     dependencies=[rbac.STUDY_READ],
     summary="""Returns Study Objectives and Endpoints table in standard layout HTML document""",
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"content": {"text/html": {"schema": {"type": "string"}}}},
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_all_selected_objectives_and_endpoints_standard_html(
@@ -1568,8 +1577,8 @@ def get_all_selected_objectives_and_endpoints_standard_html(
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_all_selected_compounds_for_all_studies(
@@ -1631,11 +1640,11 @@ def get_all_selected_compounds_for_all_studies(
     response_model=list[Any],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - Invalid field name specified",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_distinct_compound_values_for_header(
@@ -1700,8 +1709,8 @@ State after:
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.allow_exports(
@@ -1783,11 +1792,11 @@ def get_all_selected_compounds(
     response_model=list[Any],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - Invalid field name specified",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_distinct_compounds_values_for_header(
@@ -1861,8 +1870,8 @@ Returned data:
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_all_compounds_audit_trail(
@@ -1903,11 +1912,11 @@ Returned data:
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - there exist no selection of the objective for the study provided.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_selected_compound_audit_trail(
@@ -1944,11 +1953,11 @@ State after:
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - there exist no selection of the objective for the study provided.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_selected_compound(
@@ -1996,6 +2005,7 @@ State after:
     response_model_exclude_unset=True,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         400: {
             "model": ErrorResponse,
             "description": "Forbidden - There already exists a selection of the objective",
@@ -2004,7 +2014,6 @@ State after:
             "model": ErrorResponse,
             "description": "Not Found - Study or objective is not found with the passed 'study_uid'.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
@@ -2039,12 +2048,12 @@ State after:
     response_model=None,
     status_code=204,
     responses={
+        403: _generic_descriptions.ERROR_403,
         204: {"description": "No Content - The selection was successfully deleted."},
         404: {
             "model": ErrorResponse,
             "description": "Not Found - there exist no selection of the objective and the study provided.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
@@ -2080,11 +2089,11 @@ State after:
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - There exist no selection between the study and objective to reorder.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
@@ -2138,11 +2147,11 @@ State after:
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - There exist no selection between the study and objective.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
@@ -2184,11 +2193,11 @@ State after:
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - There exist no selection between the study and endpoint",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
@@ -2224,11 +2233,11 @@ def sync_latest_endpoint_version(
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - There exist no selection between the study and timeframe",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
@@ -2264,11 +2273,11 @@ def sync_latest_timeframe_version(
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - There exist no selection between the study and timeframe",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
@@ -2304,11 +2313,11 @@ def patch_endpoint_accept_version(
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - There exist no selection between the study and timeframe",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
@@ -2333,8 +2342,8 @@ def patch_objective_accept_version(
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_all_selected_criteria_for_all_studies(
@@ -2404,11 +2413,11 @@ def get_all_selected_criteria_for_all_studies(
     response_model=list[Any],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - Invalid field name specified",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_distinct_criteria_values_for_header(
@@ -2490,8 +2499,8 @@ List selected study with the following information:
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.allow_exports(
@@ -2587,11 +2596,11 @@ def get_all_selected_criteria(
     response_model=list[Any],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - Invalid field name specified",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_distinct_study_criteria_values_for_header(
@@ -2668,8 +2677,8 @@ def get_distinct_study_criteria_values_for_header(
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_all_criteria_audit_trail(
@@ -2729,11 +2738,11 @@ def get_all_criteria_audit_trail(
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - there exists no selection of the criteria for the study provided.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_selected_criteria(
@@ -2788,11 +2797,11 @@ def get_selected_criteria(
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - there exist no selection of the criteria for the study provided.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_selected_criteria_audit_trail(
@@ -2842,6 +2851,7 @@ def get_selected_criteria_audit_trail(
     response_model_exclude_unset=True,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         400: {
             "model": ErrorResponse,
             "description": "Forbidden - There already exists a selection of the criteria",
@@ -2850,7 +2860,6 @@ def get_selected_criteria_audit_trail(
             "model": ErrorResponse,
             "description": "Not Found - Study or criteria is not found with the passed 'study_uid'.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
@@ -2897,6 +2906,7 @@ def post_new_criteria_selection_create(
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         400: {
             "model": ErrorResponse,
             "description": "Forbidden - There already exists a selection of the criteria",
@@ -2905,7 +2915,6 @@ def post_new_criteria_selection_create(
             "model": ErrorResponse,
             "description": "Not Found - Study or criteria is not found with the passed 'study_uid'.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
@@ -2957,6 +2966,7 @@ def preview_new_criteria_selection_create(
     response_model_exclude_unset=True,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         400: {
             "model": ErrorResponse,
             "description": "Forbidden - There already exists a selection of the criteria",
@@ -2965,7 +2975,6 @@ def preview_new_criteria_selection_create(
             "model": ErrorResponse,
             "description": "Not Found - Study or criteria is not found with the passed 'study_uid'.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
@@ -3016,11 +3025,11 @@ def post_batch_select_criteria_template(
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - Study or study criteria is not found with the passed 'study_uid'.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
@@ -3068,12 +3077,12 @@ def patch_update_criteria_selection(
     response_model=None,
     status_code=204,
     responses={
+        403: _generic_descriptions.ERROR_403,
         204: {"description": "No Content - The selection was successfully deleted."},
         404: {
             "model": ErrorResponse,
             "description": "Not Found - there exist no selection of the criteria and the study provided.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
@@ -3096,11 +3105,11 @@ def delete_selected_criteria(
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - There exists no selection between the study and criteria to reorder.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
@@ -3128,11 +3137,11 @@ def patch_new_criteria_selection_order(
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - There exists no selection between the study and criteria to change.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
@@ -3162,11 +3171,11 @@ def patch_criteria_selection_key_criteria_property(
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - There exist no selection between the study and criteria.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
@@ -3192,11 +3201,11 @@ def sync_criteria_latest_version(
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - There exist no selection between the study and timeframe",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
@@ -3222,8 +3231,8 @@ def patch_criteria_accept_version(
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_all_selected_activity_instances_for_all_studies(
@@ -3317,11 +3326,11 @@ def get_all_selected_activity_instances_for_all_studies(
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - there is no study with the given uid.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.allow_exports(
@@ -3452,11 +3461,11 @@ def get_all_selected_activity_instances(
     response_model=list[Any],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - Invalid field name specified",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_distinct_study_activity_instances_values_for_header(
@@ -3503,12 +3512,12 @@ def get_distinct_study_activity_instances_values_for_header(
     response_model=None,
     status_code=204,
     responses={
+        403: _generic_descriptions.ERROR_403,
         204: {"description": "No Content - The selection was successfully deleted."},
         404: {
             "model": ErrorResponse,
             "description": "Not Found - there exist no selection of the activity instance and the study provided.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
@@ -3531,6 +3540,7 @@ def delete_study_activity_instance(
     response_model_exclude_unset=True,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         400: {
             "model": ErrorResponse,
             "description": "Forbidden - There already exists a selection of the activity",
@@ -3539,7 +3549,6 @@ def delete_study_activity_instance(
             "model": ErrorResponse,
             "description": "Not Found - Study or activity is not found with the passed 'study_uid'.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
@@ -3568,11 +3577,11 @@ State after:
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - There exist no selection between the study and activity instance.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
@@ -3610,8 +3619,8 @@ The following values should be returned for all study activity instances:
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_all_study_activity_instance_audit_trail(
@@ -3629,11 +3638,11 @@ def get_all_study_activity_instance_audit_trail(
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - there exists no selection of the activity instance for the study provided.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_selected_activity_instance(
@@ -3659,11 +3668,11 @@ def get_selected_activity_instance(
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - there exist no selection of the activity instance for the study provided.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_specific_study_activity_instance_audit_trail(
@@ -3699,11 +3708,11 @@ def get_specific_study_activity_instance_audit_trail(
     response_model_exclude_unset=True,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - There exist no selection between the study and study activity-instance",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
@@ -3724,11 +3733,11 @@ def patch_study_activity_instance_sync_to_latest_activity_instance(
     response_model=list[StudySelectionActivityInstanceBatchOutput],
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - Study, footnote or SoA item is not found with the passed 'study_uid'.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
@@ -3757,8 +3766,8 @@ def post_new_soa_footnotes_batch_select(
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_all_selected_activities_for_all_studies(
@@ -3844,11 +3853,11 @@ def get_all_selected_activities_for_all_studies(
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - there is no study with the given uid.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.allow_exports(
@@ -3856,6 +3865,7 @@ def get_all_selected_activities_for_all_studies(
         "defaults": [
             "uid=study_activity_uid",
             "order",
+            "library=activity.library_name",
             "soa_group=study_soa_group.soa_group_term_name",
             "activity_group=study_activity_group.activity_group_name",
             "activity_subgroup=study_activity_subgroup.activity_subgroup_name",
@@ -3960,11 +3970,11 @@ def get_all_selected_activities(
     response_model=list[Any],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - Invalid field name specified",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_distinct_activity_values_for_header(
@@ -4020,8 +4030,8 @@ The following values should be returned for all study activities:
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_all_activity_audit_trail(
@@ -4039,11 +4049,11 @@ def get_all_activity_audit_trail(
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - there exists no selection of the activity for the study provided.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_selected_activity(
@@ -4069,11 +4079,11 @@ def get_selected_activity(
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - there exist no selection of the activity for the study provided.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_selected_activity_audit_trail(
@@ -4094,6 +4104,7 @@ def get_selected_activity_audit_trail(
     response_model_exclude_unset=True,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         400: {
             "model": ErrorResponse,
             "description": "Forbidden - There already exists a selection of the activity",
@@ -4102,7 +4113,6 @@ def get_selected_activity_audit_trail(
             "model": ErrorResponse,
             "description": "Not Found - Study or activity is not found with the passed 'study_uid'.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
@@ -4135,11 +4145,11 @@ State after:
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - There exist no selection between the study and activity.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
@@ -4182,11 +4192,11 @@ def patch_update_activity_selection(
     response_model_exclude_unset=True,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - There exist no selection between the study and study activity",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
@@ -4208,6 +4218,7 @@ def patch_study_activity_sync_to_latest_activity(
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         400: {
             "model": ErrorResponse,
             "description": "Forbidden - There already exists a selection of the activity",
@@ -4216,7 +4227,6 @@ def patch_study_activity_sync_to_latest_activity(
             "model": ErrorResponse,
             "description": "Not Found - Study or activity is not found with the passed 'study_uid'.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
@@ -4248,11 +4258,11 @@ def replace_selected_activity_for_study_activity(
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - there is no study with the given uid.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_all_selected_activity_subgroups(
@@ -4321,19 +4331,17 @@ State after:
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - There exist no selection between the study-activity and study-activity-subgroup.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
 def patch_update_activity_subgroup_selection(
     study_uid: Annotated[str, studyUID],
-    study_activity_subgroup_uid: Annotated[
-        str, Path(description="The unique id of the study activity subgroup.")
-    ],
+    study_activity_subgroup_uid: Annotated[str, study_activity_subgroup_uid_path],
     selection: Annotated[
         StudyActivitySubGroupEditInput,
         Body(description="Related parameters of the selection that shall be updated."),
@@ -4347,6 +4355,38 @@ def patch_update_activity_subgroup_selection(
     )
 
 
+@router.patch(
+    "/studies/{study_uid}/study-activity-subgroups/{study_activity_subgroup_uid}/order",
+    dependencies=[rbac.STUDY_WRITE],
+    summary="Change the order of a study activity subgroup",
+    response_model=StudyActivitySubGroup,
+    response_model_exclude_unset=True,
+    status_code=200,
+    responses={
+        403: _generic_descriptions.ERROR_403,
+        404: {
+            "model": ErrorResponse,
+            "description": "Not Found - There exists no selection between the study and activity subgroup to reorder.",
+        },
+    },
+)
+@decorators.validate_if_study_is_not_locked("study_uid")
+def patch_activity_subgroup_new_order(
+    study_uid: Annotated[str, studyUID],
+    study_activity_subgroup_uid: Annotated[str, study_activity_subgroup_uid_path],
+    new_order_input: Annotated[
+        StudySelectionActivityNewOrder,
+        Body(description="New value to set for the order property of the selection"),
+    ],
+) -> StudyActivitySubGroup:
+    service = StudyActivitySubGroupService()
+    return service.set_new_order(
+        study_uid=study_uid,
+        study_selection_uid=study_activity_subgroup_uid,
+        new_order=new_order_input.new_order,
+    )
+
+
 # Study Activity Groups endpoints
 @router.get(
     "/studies/{study_uid}/study-activity-groups",
@@ -4357,11 +4397,11 @@ def patch_update_activity_subgroup_selection(
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - there is no study with the given uid.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_all_selected_activity_groups(
@@ -4430,19 +4470,17 @@ State after:
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - There exist no selection between the study-activity and study-activity-group.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
 def patch_update_activity_group_selection(
     study_uid: Annotated[str, studyUID],
-    study_activity_group_uid: Annotated[
-        str, Path(description="The unique id of the study activity group.")
-    ],
+    study_activity_group_uid: Annotated[str, study_activity_group_uid_path],
     selection: Annotated[
         StudyActivityGroupEditInput,
         Body(description="Related parameters of the selection that shall be updated."),
@@ -4456,6 +4494,38 @@ def patch_update_activity_group_selection(
     )
 
 
+@router.patch(
+    "/studies/{study_uid}/study-activity-groups/{study_activity_group_uid}/order",
+    dependencies=[rbac.STUDY_WRITE],
+    summary="Change the order of a study activity group",
+    response_model=StudyActivityGroup,
+    response_model_exclude_unset=True,
+    status_code=200,
+    responses={
+        403: _generic_descriptions.ERROR_403,
+        404: {
+            "model": ErrorResponse,
+            "description": "Not Found - There exists no selection between the study and activity group to reorder.",
+        },
+    },
+)
+@decorators.validate_if_study_is_not_locked("study_uid")
+def patch_activity_group_new_order(
+    study_uid: Annotated[str, studyUID],
+    study_activity_group_uid: Annotated[str, study_activity_group_uid_path],
+    new_order_input: Annotated[
+        StudySelectionActivityNewOrder,
+        Body(description="New value to set for the order property of the selection"),
+    ],
+) -> StudyActivityGroup:
+    service = StudyActivityGroupService()
+    return service.set_new_order(
+        study_uid=study_uid,
+        study_selection_uid=study_activity_group_uid,
+        new_order=new_order_input.new_order,
+    )
+
+
 # Study Activity SoAGroups endpoints
 @router.get(
     "/studies/{study_uid}/study-soa-groups",
@@ -4466,11 +4536,11 @@ def patch_update_activity_group_selection(
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - there is no study with the given uid.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_all_selected_soa_groups(
@@ -4539,19 +4609,17 @@ State after:
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - There exist no selection between the study-activity and study-soa-group.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
 def patch_update_soa_group_selection(
     study_uid: Annotated[str, studyUID],
-    study_soa_group_uid: Annotated[
-        str, Path(description="The unique id of the study soa group.")
-    ],
+    study_soa_group_uid: Annotated[str, study_soa_group_uid_path],
     selection: Annotated[
         StudySoAGroupEditInput,
         Body(description="Related parameters of the selection that shall be updated."),
@@ -4562,6 +4630,38 @@ def patch_update_soa_group_selection(
         study_uid=study_uid,
         study_selection_uid=study_soa_group_uid,
         selection_update_input=selection,
+    )
+
+
+@router.patch(
+    "/studies/{study_uid}/study-soa-groups/{study_soa_group_uid}/order",
+    dependencies=[rbac.STUDY_WRITE],
+    summary="Change the order of a study soa group",
+    response_model=StudySoAGroup,
+    response_model_exclude_unset=True,
+    status_code=200,
+    responses={
+        403: _generic_descriptions.ERROR_403,
+        404: {
+            "model": ErrorResponse,
+            "description": "Not Found - There exists no selection between the study and soa group to reorder.",
+        },
+    },
+)
+@decorators.validate_if_study_is_not_locked("study_uid")
+def patch_soa_group_new_order(
+    study_uid: Annotated[str, studyUID],
+    study_soa_group_uid: Annotated[str, study_soa_group_uid_path],
+    new_order_input: Annotated[
+        StudySelectionActivityNewOrder,
+        Body(description="New value to set for the order property of the selection"),
+    ],
+) -> StudySoAGroup:
+    service = StudySoAGroupService()
+    return service.set_new_order(
+        study_uid=study_uid,
+        study_selection_uid=study_soa_group_uid,
+        new_order=new_order_input.new_order,
     )
 
 
@@ -4579,11 +4679,11 @@ State after:
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - There exist no selection between the study and activity.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
@@ -4619,11 +4719,11 @@ State after:
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - There exist no selection between the study and activity.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
@@ -4645,12 +4745,12 @@ def update_activity_request_with_sponsor_activity(
     response_model=None,
     status_code=204,
     responses={
+        403: _generic_descriptions.ERROR_403,
         204: {"description": "No Content - The selection was successfully deleted."},
         404: {
             "model": ErrorResponse,
             "description": "Not Found - there exist no selection of the activity and the study provided.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
@@ -4672,8 +4772,8 @@ def delete_selected_activity(
     response_model=list[StudySelectionActivityBatchOutput],
     status_code=207,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
@@ -4692,8 +4792,8 @@ def activity_selection_batch_operations(
     response_model=list[StudySoAEditBatchOutput],
     status_code=207,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
@@ -4713,11 +4813,11 @@ def study_activity_and_schedule_batch_operations(
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - There exists no selection between the study and activity to reorder.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
@@ -4767,8 +4867,8 @@ Possible errors:
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.allow_exports(
@@ -4858,11 +4958,11 @@ def get_all_selected_arms(
     response_model=list[Any],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - Invalid field name specified",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_distinct_arm_values_for_header(
@@ -4906,8 +5006,8 @@ def get_distinct_arm_values_for_header(
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_all_selected_arms_for_all_studies(
@@ -4976,11 +5076,11 @@ State after:
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - There exist no selection between the study and arm.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
@@ -5008,6 +5108,7 @@ def patch_update_arm_selection(
     response_model_exclude_unset=True,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         400: {
             "model": ErrorResponse,
             "description": "Forbidden - There already exists a selection of the arm",
@@ -5016,7 +5117,6 @@ def patch_update_arm_selection(
             "model": ErrorResponse,
             "description": "Not Found - Study or arm is not found with the passed 'study_uid'.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
@@ -5039,11 +5139,11 @@ def post_new_arm_selection_create(
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - there exist no selection of the activity for the study provided.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_selected_arm_audit_trail(
@@ -5064,8 +5164,8 @@ def get_selected_arm_audit_trail(
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_all_arm_audit_trail(
@@ -5083,11 +5183,11 @@ def get_all_arm_audit_trail(
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - there exists no selection of the arm for the study provided.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_selected_arm(
@@ -5113,11 +5213,11 @@ def get_selected_arm(
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - There exists no selection between the study and arm to reorder.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
@@ -5144,12 +5244,12 @@ def patch_new_arm_selection_order(
     response_model=None,
     status_code=204,
     responses={
+        403: _generic_descriptions.ERROR_403,
         204: {"description": "No Content - The selection was successfully deleted."},
         404: {
             "model": ErrorResponse,
             "description": "Not Found - there exist no selection of the arm and the study provided.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
@@ -5173,6 +5273,7 @@ def delete_selected_arm(
     response_model_exclude_unset=True,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         400: {
             "model": ErrorResponse,
             "description": "Forbidden - There already exists a selection of the element",
@@ -5181,7 +5282,6 @@ def delete_selected_arm(
             "model": ErrorResponse,
             "description": "Not Found - Study or element is not found with the passed 'study_uid'.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
@@ -5216,8 +5316,8 @@ Possible errors:
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.allow_exports(
@@ -5308,11 +5408,11 @@ def get_all_selected_elements(
     response_model=list[Any],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - Invalid field name specified",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_distinct_element_values_for_header(
@@ -5360,11 +5460,11 @@ def get_distinct_element_values_for_header(
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - there exists no selection of the element for the study provided.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_selected_element(
@@ -5396,11 +5496,11 @@ def get_selected_element(
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - There exist no selection between the study and element.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
@@ -5428,11 +5528,11 @@ def patch_update_element_selection(
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - there exist no selection of the activity for the study provided.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_selected_element_audit_trail(
@@ -5453,8 +5553,8 @@ def get_selected_element_audit_trail(
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_all_element_audit_trail(
@@ -5471,12 +5571,12 @@ def get_all_element_audit_trail(
     response_model=None,
     status_code=204,
     responses={
+        403: _generic_descriptions.ERROR_403,
         204: {"description": "No Content - The selection was successfully deleted."},
         404: {
             "model": ErrorResponse,
             "description": "Not Found - there exist no selection of the element and the study provided.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
@@ -5497,8 +5597,8 @@ def delete_selected_element(
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_all_configs() -> list[StudyElementTypes]:
@@ -5514,11 +5614,11 @@ def get_all_configs() -> list[StudyElementTypes]:
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - There exists no selection between the study and element to reorder.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
@@ -5549,6 +5649,7 @@ def patch_new_element_selection_order(
     response_model_exclude_unset=True,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         400: {
             "model": ErrorResponse,
             "description": "Forbidden - There already exists a selection of the branch arm",
@@ -5557,7 +5658,6 @@ def patch_new_element_selection_order(
             "model": ErrorResponse,
             "description": "Not Found - Study or branch arm is not found with the passed 'study_uid'.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
@@ -5599,8 +5699,8 @@ Possible errors:
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.allow_exports(
@@ -5649,11 +5749,11 @@ def get_all_selected_branch_arms(
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - there exists no selection of the branch arm for the study provided.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_selected_branch_arm(
@@ -5685,11 +5785,11 @@ def get_selected_branch_arm(
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - There exist no selection between the study and branch arm.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
@@ -5717,11 +5817,11 @@ def patch_update_branch_arm_selection(
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - there exist no selection of the activity for the study provided.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_selected_branch_arm_audit_trail(
@@ -5742,8 +5842,8 @@ def get_selected_branch_arm_audit_trail(
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_all_branch_arm_audit_trail(
@@ -5760,12 +5860,12 @@ def get_all_branch_arm_audit_trail(
     response_model=None,
     status_code=204,
     responses={
+        403: _generic_descriptions.ERROR_403,
         204: {"description": "No Content - The selection was successfully deleted."},
         404: {
             "model": ErrorResponse,
             "description": "Not Found - there exist no selection of the branch arm and the study provided.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
@@ -5788,11 +5888,11 @@ def delete_selected_branch_arm(
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - There exists no selection between the study and branch arm to reorder.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
@@ -5837,8 +5937,8 @@ def patch_new_branch_arm_selection_order(
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_all_selected_branch_arms_within_arm(
@@ -5867,6 +5967,7 @@ def get_all_selected_branch_arms_within_arm(
     response_model_exclude_unset=True,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         400: {
             "model": ErrorResponse,
             "description": "Forbidden - There already exists a selection of the cohort",
@@ -5875,7 +5976,6 @@ def get_all_selected_branch_arms_within_arm(
             "model": ErrorResponse,
             "description": "Not Found - Study or cohort is not found with the passed 'study_uid'.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
@@ -5917,8 +6017,8 @@ Possible errors:
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.allow_exports(
@@ -6016,11 +6116,11 @@ def get_all_selected_cohorts(
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - there exists no selection of the cohort for the study provided.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_selected_cohort(
@@ -6052,11 +6152,11 @@ def get_selected_cohort(
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - There exist no selection between the study and cohort.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
@@ -6084,11 +6184,11 @@ def patch_update_cohort_selection(
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - there exist no selection of the activity for the study provided.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_selected_cohort_audit_trail(
@@ -6109,8 +6209,8 @@ def get_selected_cohort_audit_trail(
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_all_cohort_audit_trail(
@@ -6127,12 +6227,12 @@ def get_all_cohort_audit_trail(
     response_model=None,
     status_code=204,
     responses={
+        403: _generic_descriptions.ERROR_403,
         204: {"description": "No Content - The selection was successfully deleted."},
         404: {
             "model": ErrorResponse,
             "description": "Not Found - there exist no selection of the cohort and the study provided.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
@@ -6153,11 +6253,11 @@ def delete_selected_cohort(
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - There exists no selection between the study and cohort to reorder.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")

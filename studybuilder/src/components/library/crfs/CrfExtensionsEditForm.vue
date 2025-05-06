@@ -29,17 +29,24 @@
                     v-if="isExpanded(internalItem)"
                     icon="mdi-chevron-down"
                     variant="text"
+                    class="mr-n2"
                     @click="toggleExpand(internalItem)"
                   />
                   <v-btn
                     v-else-if="item.attributes"
                     icon="mdi-chevron-right"
                     variant="text"
+                    class="mr-n2"
                     @click="toggleExpand(internalItem)"
                   />
-                  <v-btn v-else icon variant="text" />
-                  <ActionsMenu :actions="actions" :item="item" />
-                  <div class="mt-3">
+                  <v-btn
+                    v-else
+                    icon
+                    variant="text" 
+                    class="mr-n2"
+                  />
+                  <ActionsMenu :actions="actions" :item="item"/>
+                  <div class="mt-3 ml-4">
                     {{
                       item.type
                         ? $t('CrfExtensions.attribute')
@@ -81,7 +88,7 @@
                       <v-row>
                         <v-btn icon variant="text" />
                         <ActionsMenu :actions="actions" :item="item" />
-                        <div class="mt-3">
+                        <div class="mt-3 ml-4">
                           {{ $t('CrfExtensions.attribute') }}
                         </div>
                       </v-row>
@@ -351,12 +358,15 @@ export default {
     async getElementsAttributes() {
       const params = {
         page_size: 0,
-        filters: { 'vendor_element.uid': {v: this.elements.map(el => el.uid)}, uid: {v: this.attributes.map(attr => attr.uid)}},
-        operator: 'or'
+        filters: {
+          'vendor_element.uid': { v: this.elements.map((el) => el.uid) },
+          uid: { v: this.attributes.map((attr) => attr.uid) },
+        },
+        operator: 'or',
       }
       await crfs.getAllAttributes(params).then((resp) => {
         this.attributes = resp.data.items
-        this.attributes.forEach(attr => attr.type = 'attr')
+        this.attributes.forEach((attr) => (attr.type = 'attr'))
       })
     },
     async getNamespaceData() {

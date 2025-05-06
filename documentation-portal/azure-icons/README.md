@@ -3,3 +3,4 @@ These icons are from Microsoft's official distribution of icons (see [github](ht
 The icons can be imported into yEd graph editor for diagrams.
 
 Make sure to familiarise yourself with terms of use and FAQ through the files, Microsoft_Terms_of_Use.pdf and Azure_Icons_FAQ.pdf.
+

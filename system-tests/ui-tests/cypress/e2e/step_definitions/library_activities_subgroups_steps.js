@@ -1,11 +1,22 @@
+import { apiGroupName } from "./api_library_steps"
 const { Given, When, Then } = require("@badeball/cypress-cucumber-preprocessor");
 
-let activitysubgroup
+let activitysubgroup, apiActivitySubGroupName
 let abbreviation = "ABB", definition = "DEF"
 
 When('The Add activity subgroup button is clicked', () => cy.clickButton('add-activity'))
 
-When('The test activity subgroup container is filled with data and saved', () => createSubGroupAndSave(false))
+When('The subgroup can be find in table', () => cy.searchAndCheckPresence(apiActivitySubGroupName, true))
+
+When('The test activity subgroup container is filled with data and saved', () => {
+    fillSubGroupData(false)
+    saveSubGroup()
+})
+
+When('Approved Group can be linked to subgroup', () => {
+    fillSubGroupData(true, apiGroupName)
+    saveSubGroup()
+})
 
 When('The test activity subgroup container is filled with data', () => fillSubGroupData())
 
@@ -51,31 +62,6 @@ When('The user define a value for Sentence case name and it is not identical to 
     cy.clickButton('save-button')
 })
 
-Given('The activity subgroup exists with status as Draft', () => {
-    createSubGroupAndSave()
-    cy.searchAndConfirmStatusAndVersion(activitysubgroup, 'Draft', '0.1')
-})
-
-Given('The activity subgroup exists with status as Final', () => {
-    createSubGroupAndSave()
-    cy.searchAndApprove(activitysubgroup)
-})
-
-Given('The activity subgroup exists with status as Retired', () => {      
-    createSubGroupAndSave()
-    cy.searchAndApprove(activitysubgroup)
-    cy.performActionOnSearchedItem("Inactivate")
-    cy.checkStatusAndVersion('Retired', '1.0')
-})
-
-Given('First activity subgroup for search test is created', () => createSubGroupAndSave(true, 'SearchTest'))
-
-Given('Second activity subgroup for search test is created', () => createSubGroupAndSave(true, 'SearchTest'))
-
-Then('The activity subgroup has status {string} and version {string}', (status, version) => {
-    cy.searchAndConfirmStatusAndVersion(activitysubgroup, status, version)
-})
-
 When('The activity subgroup is edited', () => {
     editSubGroup()
     saveSubGroup('updated')
@@ -83,7 +69,7 @@ When('The activity subgroup is edited', () => {
 
 When('The activity subgroup edition form is filled with data', () => editSubGroup())
 
-Then('The activity subgroup is no longer available', () => cy.confirmItemNotAvailable(activitysubgroup))
+Then('The activity subgroup is no longer available', () => cy.confirmItemNotAvailable(apiActivitySubGroupName))
 
 Then('The activity subgroup is not created', () => cy.confirmItemNotAvailable(activitysubgroup))
 
@@ -91,18 +77,40 @@ Then('The activity subgroup is not edited', () => cy.confirmItemNotAvailable(act
 
 Then('One activity subgroup is found after performing full name search', () => cy.searchAndCheckResults(activitysubgroup))
 
-function fillSubGroupData(clickAddButton = true, namePrefix = 'Subgroup') {
-    activitysubgroup = `${namePrefix}${Date.now()}`
+When('[API] Activity subgroup in status Draft exists', () => createSubGroupViaApi())
+
+When('[API] Activity subgroup is approved', () => cy.approveSubGroup())
+
+When('[API] Activity subgroup is inactivated', () => cy.inactivateSubGroup())
+
+When('[API] Activity subgroup is reactivated', () => cy.reactivateSubGroup())
+
+When('[API] Activity subgroup gets new version', () => cy.subGroupNewVersion())
+
+Given('[API] First activity subgroup for search test is created', () => createSubGroupViaApi(`SearchTest${Date.now()}`))
+
+Given('[API] Second activity subgroup for search test is created', () => cy.createSubGroup(`SearchTest${Date.now()}`))
+
+Given('[API] Activity subgroup is created', () => cy.createSubGroup())
+
+When('Activity subgroup is found', () => cy.searchFor(apiActivitySubGroupName))
+
+When('Drafted or Retired group is not available during subgroup creation', () => selectCustomGroup(apiGroupName))
+
+function selectCustomGroup(customGroup) {
+    cy.get('[data-cy="groupform-activity-group-dropdown"] input').type(customGroup)
+    cy.get('.v-overlay__content .v-list-item-title').should('have.text', 'No data available')
+}
+
+function fillSubGroupData(clickAddButton = true, customGroup = '') {
+    activitysubgroup = `Subgroup${Date.now()}`
     if (clickAddButton) cy.clickButton('add-activity')
+    cy.wait(1000)
+    if (customGroup) cy.get('[data-cy="groupform-activity-group-dropdown"] input').type(customGroup)
     cy.selectFirstVSelect('groupform-activity-group-dropdown')
     cy.fillInput('groupform-activity-group-field', activitysubgroup)
     cy.fillInput('groupform-abbreviation-field', abbreviation)
     cy.fillInput('groupform-definition-field', definition) 
-}
-
-function createSubGroupAndSave(clickAddButton = true, namePrefix = 'Subgroup') {
-    fillSubGroupData(clickAddButton, namePrefix)
-    saveSubGroup()
 }
 
 function editSubGroup() {
@@ -116,4 +124,13 @@ function saveSubGroup(action = 'created') {
     cy.clickButton('save-button')
     cy.get('.v-snackbar__content').contains(`Subgroup ${action}`).should('be.visible')
     cy.wait('@getData', {timeout: 20000}) 
+    cy.searchFor(activitysubgroup)
+}
+
+function createSubGroupViaApi(customName = '') {
+    cy.intercept('/api/concepts/activities/activity-sub-groups?page_number=1&*').as('getData')
+    cy.getFinalGroupUid()
+    cy.createSubGroup(customName)
+    cy.getSubGroupNameByUid().then(name => apiActivitySubGroupName = name)
+    cy.wait('@getData', {timeout: 20000})
 }

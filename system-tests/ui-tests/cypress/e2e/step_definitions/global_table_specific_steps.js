@@ -1,5 +1,7 @@
 const { When, Then } = require("@badeball/cypress-cucumber-preprocessor");
 
+Then('The item has status {string} and version {string}', (status, version) => cy.checkStatusAndVersion(status, version))
+
 Then('A table is visible with following headers', (headers) => {
     headers.rows().forEach((header) => cy.headerContains(header))
 })
@@ -67,9 +69,13 @@ When('{string} action is available', action => cy.get(`[data-cy="${action}"]`).s
 
 Then('More than one item is found after performing partial name search', () => cy.searchAndCheckResults('SearchTest', false))
 
+Then('More than one result is found', () => cy.checkSearchResults(false))
+
 Then('The not existing item is searched for', () => cy.searchFor('gregsfs'))
 
 Then('The existing item in status Draft is searched for', () => cy.searchFor('SearchTest'))
+
+Then('The existing item in search by lowercased name', () => cy.searchFor('searchtest'))
 
 Then('The item is not found and table is correctly filtered', () => cy.confirmNoResultsFound())
 
@@ -89,6 +95,17 @@ Then('Only actions that should be avaiable for the Retired item are displayed', 
     const allowedActions = ['Reactivate', 'History']
     const notAllowedActions = ['New version', 'Inactivate', 'Edit', 'Delete', 'Approve']
     checkActionsAvailability(allowedActions, notAllowedActions)
+})
+
+When('The user switches pages of the table', () => {
+    cy.waitForTable()
+    cy.intercept('**page_number=2**').as('tablePage')
+    cy.get('[data-test="v-pagination-next"]').click()
+
+})
+
+Then('The table page presents correct data', () => {
+    cy.wait('@tablePage').its('response.statusCode').should('eq', 200)
 })
 
 function checkActionsAvailability(allowedActions, notAllowedActions) {

@@ -165,9 +165,9 @@ def test_get_ct_terms(api_client):
             # 10 seconds before latest version start_date
             (add_seconds(res.json()["start_date"], -10), 0),
             # far in the future
-            ("3023-09-07T00:55:42.577989+00:00", 1),
+            ("3023-09-07T00:55:42.577989Z", 1),
             # far in the past
-            ("1023-09-07T00:55:42.577989+00:00", 0),
+            ("1023-09-07T00:55:42.577989Z", 0),
         ]
 
         verify_returned_items(api_client, url, test_scenarios)
@@ -196,9 +196,9 @@ def test_get_ct_codelists(api_client):
             # 10 seconds before latest version start_date
             (add_seconds(res.json()["start_date"], -10), 0),
             # far in the future
-            ("3023-09-07T00:55:42.577989+00:00", 1),
+            ("3023-09-07T00:55:42.577989Z", 1),
             # far in the past
-            ("1023-09-07T00:55:42.577989+00:00", 0),
+            ("1023-09-07T00:55:42.577989Z", 0),
         ]
 
         verify_returned_items(api_client, url, test_scenarios)
@@ -219,9 +219,9 @@ def test_get_unit_definitions(api_client):
         # 10 seconds before latest version start_date
         (add_seconds(res.json()["start_date"], -10), 0),
         # far in the future
-        ("3023-09-07T00:55:42.577989+00:00", 1),
+        ("3023-09-07T00:55:42.577989Z", 1),
         # far in the past
-        ("1023-09-07T00:55:42.577989+00:00", 0),
+        ("1023-09-07T00:55:42.577989Z", 0),
     ]
 
     verify_returned_items(api_client, url, test_scenarios)
@@ -244,9 +244,9 @@ def test_get_configurations(api_client):
         # 10 seconds before latest version start_date
         (add_seconds(res.json()["start_date"], -10), 0),
         # far in the future
-        ("3023-09-07T00:55:42.577989+00:00", 1),
+        ("3023-09-07T00:55:42.577989Z", 1),
         # far in the past
-        ("1023-09-07T00:55:42.577989+00:00", 0),
+        ("1023-09-07T00:55:42.577989Z", 0),
     ]
 
     verify_returned_items(api_client, url, test_scenarios)
@@ -260,9 +260,9 @@ def test_get_listings_gcmd_topic_cd_def(api_client):
 
     test_scenarios = [
         # far in the future
-        "3023-09-07T00:55:42.577989+00:00",
+        "3023-09-07T00:55:42.577989Z",
         # far in the past
-        "1023-09-07T00:55:42.577989+00:00",
+        "1023-09-07T00:55:42.577989Z",
     ]
 
     for ts in test_scenarios:
@@ -307,4 +307,4 @@ def add_seconds(date_time_str: str, seconds: int) -> str:
     except ValueError as _e:
         datetime_obj = datetime.strptime(date_time_str, "%Y-%m-%dT%H:%M:%S.%f%z")
     ret = datetime_obj + timedelta(seconds=seconds)
-    return ret.isoformat()
+    return ret.strftime("%Y-%m-%dT%H:%M:%SZ")

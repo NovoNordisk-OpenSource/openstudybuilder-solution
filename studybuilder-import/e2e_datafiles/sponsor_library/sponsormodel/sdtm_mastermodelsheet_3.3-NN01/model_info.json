@@ -3,5 +3,5 @@
     "ig_version_number": "3.3",
     "sponsor_model_version_number": "1",
     "sponsor_model_name": "sdtmig_mastermodel_3.3_NN01",
-    "exclude": true
+    "exclude": false
 }

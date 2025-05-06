@@ -1,4 +1,5 @@
-@REQ_ID:<new> @pending_development
+@REQ_ID:2866939
+@pending_development
 Feature: Studies - Study Controlled Terminology Standard Versions
 
     Background: User must be logged in

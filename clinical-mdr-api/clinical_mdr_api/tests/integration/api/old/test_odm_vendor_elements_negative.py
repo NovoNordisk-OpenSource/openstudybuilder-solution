@@ -96,10 +96,11 @@ def test_cannot_create_a_new_odm_vendor_element_without_providing_compatible_typ
 
     assert res["detail"] == [
         {
+            "type": "too_short",
             "loc": ["body", "compatible_types"],
-            "msg": "ensure this value has at least 1 items",
-            "type": "value_error.list.min_items",
-            "ctx": {"limit_value": 1},
+            "msg": "List should have at least 1 item after validation, not 0",
+            "input": [],
+            "ctx": {"field_type": "List", "min_length": 1, "actual_length": 0},
         }
     ]
 

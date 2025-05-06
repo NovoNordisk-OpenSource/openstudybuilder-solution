@@ -16,3 +16,5 @@ This section describe the conceptual architecture for StudyBuilder and Clinical-
  - **Clinical MDR** Neo4j linked graph database and data model supporting the library standards, study definitions including fine granularity of versioning, audit trail, workflows and access control.
  - **Standards Management** Integrated into the StudyBuilder App as the Library module managing concepts, dictionaries, code lists, syntax templates, project and TA standards.
 
+
+

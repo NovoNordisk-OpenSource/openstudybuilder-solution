@@ -1,7 +1,8 @@
 from typing import Annotated, Self
 
-from pydantic import Field
+from pydantic import BaseModel, Field
 
+from clinical_mdr_api.descriptions.general import CHANGES_FIELD_DESC
 from clinical_mdr_api.domains.concepts.activities.activity_group import ActivityGroupAR
 from clinical_mdr_api.models.concepts.activities.activity import ActivityBase
 from clinical_mdr_api.models.concepts.concept import (
@@ -47,12 +48,43 @@ class ActivityGroupVersion(ActivityGroup):
     """
 
     changes: Annotated[
-        dict[str, bool] | None,
+        list[str],
         Field(
-            description=(
-                "Denotes whether or not there was a change in a specific field/property compared to the previous version. "
-                "The field names in this object here refer to the field names of the objective (e.g. name, start_date, ..)."
-            ),
-            nullable=True,
+            description=CHANGES_FIELD_DESC,
         ),
-    ] = None
+    ] = []
+
+
+class ActivityGroupDetail(BaseModel):
+    """Detailed view of an Activity Group for the overview endpoint"""
+
+    name: str
+    name_sentence_case: str | None = None
+    library_name: str | None = None
+    start_date: str | None = None
+    end_date: str | None = None
+    status: str
+    version: str
+    possible_actions: list[str]
+    change_description: str | None = None
+    author_username: str
+    definition: str | None = None
+    abbreviation: str | None = None
+
+
+class SimpleSubGroup(BaseModel):
+    """Simple representation of a Subgroup for the overview listing"""
+
+    uid: str
+    name: str
+    version: str
+    status: str
+    definition: str | None = None
+
+
+class ActivityGroupOverview(BaseModel):
+    """Complete overview model for an Activity Group"""
+
+    group: ActivityGroupDetail
+    subgroups: list[SimpleSubGroup]
+    all_versions: list[str]

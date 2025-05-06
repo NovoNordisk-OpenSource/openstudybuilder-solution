@@ -1,4 +1,6 @@
-FROM python:3.13.0-slim
+ARG PYTHON_IMAGE=python:3.13.0-slim
+
+FROM $PYTHON_IMAGE
 
 ## Create non-root user (arg has to be exported to env for later build stages)
 ARG UID=1000

@@ -6,6 +6,11 @@ Cypress.Commands.add('checkSnackbarMessage', (message) => {
     cy.get('.v-snackbar__content').should('contain', message).and('be.visible')
 })
 
-Cypress.Commands.add('warningIsDisplayedForField', (fieldLocator, message) => {
-    cy.get(fieldLocator).contains('.v-messages__message', message).should('be.visible'); 
+Cypress.Commands.add('checkIfValidationAppears', (locator, message = 'This field is required') => {
+    cy.elementContain(locator, message)
 })
+
+Cypress.Commands.add('checkIfValidationNotPresent', (locator, message = 'This field is required') => {
+    cy.contains(`[data-cy="${locator}"]`, message).should('not.exist')
+})
+

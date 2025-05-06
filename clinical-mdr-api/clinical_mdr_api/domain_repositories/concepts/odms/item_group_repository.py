@@ -139,7 +139,7 @@ class ItemGroupRepository(OdmGenericRepository[OdmItemGroupAR]):
         return odm_item_group_ar
 
     def specific_alias_clause(
-        self, only_specific_status: str = ObjectStatus.LATEST.name
+        self, only_specific_status: str = ObjectStatus.LATEST.name, **kwargs
     ) -> str:
         return f"""
 WITH *,

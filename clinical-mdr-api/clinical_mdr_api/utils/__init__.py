@@ -101,7 +101,7 @@ def is_attribute_in_model(attribute: str, model: BaseModel) -> bool:
     Checks if given string is an attribute defined in a model (in the Pydantic sense).
     This works for the model's own attributes and inherited attributes.
     """
-    return attribute in model.__fields__.keys()
+    return attribute in model.model_fields.keys()
 
 
 def strip_html(html: str) -> str:

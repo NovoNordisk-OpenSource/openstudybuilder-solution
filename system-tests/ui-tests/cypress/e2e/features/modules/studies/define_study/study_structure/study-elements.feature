@@ -105,6 +105,26 @@ Feature: Studies - Study Elements
             | Element short name | 20     |
             | Element code       | 20     |
 
+    Scenario: User must be able to export the data in CSV format
+        Given The '/studies/study_structure/elements' page is opened
+        And The user exports the data in 'CSV' format
+        Then The study specific 'StudyElements' file is downloaded in 'csv' format
+
+    Scenario: User must be able to export the data in JSON format
+        Given The '/studies/study_structure/elements' page is opened
+        And The user exports the data in 'JSON' format
+        Then The study specific 'StudyElements' file is downloaded in 'json' format
+
+    Scenario: User must be able to export the data in XML format
+        Given The '/studies/study_structure/elements' page is opened
+        And The user exports the data in 'XML' format
+        Then The study specific 'StudyElements' file is downloaded in 'xml' format
+
+    Scenario: User must be able to export the data in EXCEL format
+        Given The '/studies/study_structure/elements' page is opened
+        And The user exports the data in 'EXCEL' format
+        Then The study specific 'StudyElements' file is downloaded in 'xlsx' format
+
     Scenario: User must see the warning message when deleting Study Element
         Given The '/studies/study_structure/elements' page is opened
         And The test study element is available

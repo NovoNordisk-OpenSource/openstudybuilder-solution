@@ -86,5 +86,5 @@ class ActiveSubstanceService(ConceptGenericService[ActiveSubstanceAR]):
         This method preserves values of these fields in case they are not explicitly sent in the PATCH payload:
             - unii_term_uid
         """
-        if "unii_term_uid" not in concept_edit_input.__fields_set__:
+        if "unii_term_uid" not in concept_edit_input.model_fields_set:
             concept_edit_input.unii_term_uid = current_ar.concept_vo.unii_term_uid

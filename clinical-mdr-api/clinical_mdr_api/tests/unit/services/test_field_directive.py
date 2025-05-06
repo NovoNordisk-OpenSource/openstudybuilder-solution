@@ -129,7 +129,7 @@ def test__filter_base_model_using_fields_directive__consistency_with_directive(
     if field_directive.is_field_included("child"):
         assert vars(resulting_base_model).get("child") is not None
         assert field_directive.is_field_included("child.child_field") == (
-            "child_field" in resulting_base_model.child.__fields_set__
+            "child_field" in resulting_base_model.child.model_fields_set
         )
     else:
         assert vars(resulting_base_model).get("child") is None

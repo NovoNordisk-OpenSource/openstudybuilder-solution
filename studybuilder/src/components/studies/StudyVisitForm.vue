@@ -49,9 +49,6 @@
               :rules="[formRules.required]"
               clearable
               :loading="loading"
-              :disabled="
-                props.studyVisit !== undefined && props.studyVisit !== null
-              "
               class="required"
             />
           </v-col>
@@ -350,7 +347,7 @@
                 {{ $t('StudyVisitForm.visit_window') }}
               </div>
               <v-alert
-                v-if="studyVisits.length === 0"
+                v-if="!disableWindowUnit"
                 density="compact"
                 type="warning"
                 class="text-white"
@@ -395,6 +392,7 @@
                         :items="epochsStore.studyTimeUnits"
                         item-title="name"
                         item-value="uid"
+                        style="width: 200px"
                         :rules="[formRules.required]"
                         clearable
                         class="required"
@@ -691,7 +689,9 @@ const visitNumberDisabled = computed(() => {
 const visitUniqueNumberDisabled = computed(() => {
   return (
     form.value.visit_class === visitConstants.CLASS_SINGLE_VISIT ||
-    form.value.visit_class === visitConstants.CLASS_SPECIAL_VISIT
+    form.value.visit_class === visitConstants.CLASS_SPECIAL_VISIT ||
+    form.value.visit_class === visitConstants.CLASS_NON_VISIT ||
+    form.value.visit_class === visitConstants.CLASS_UNSCHEDULED_VISIT
   )
 })
 const showTimingFields = computed(() => {
@@ -707,7 +707,25 @@ const requiredIfManuallyDefinedVisit = computed(() => {
     : []
 })
 const disableWindowUnit = computed(() => {
-  return props.studyVisit ? studyVisits.value.length > 1 : studyVisits.value.length > 0
+  if (atLeastOneNormalVisit.value) {
+    return props.studyVisit
+      ? studyVisits.value.length > 1
+      : studyVisits.value.length > 0
+  }
+  return false
+})
+const atLeastOneNormalVisit = computed(() => {
+  for (let index = studyVisits.value.length - 1; index >= 0; index--) {
+    if (
+      [
+        visitConstants.CLASS_NON_VISIT,
+        visitConstants.CLASS_UNSCHEDULED_VISIT,
+      ].indexOf(studyVisits.value[index].visit_class) === -1
+    ) {
+      return true
+    }
+  }
+  return false
 })
 
 watch(
@@ -797,7 +815,11 @@ watch(
     if (value) {
       form.value.time_value = 0
       disableTimeValue.value = true
-      form.value.time_reference_uid = timeReferences.value.find(val => val.name.sponsor_preferred_name === visitConstants.TIMEREF_GLOBAL_ANCHOR_VISIT).term_uid
+      form.value.time_reference_uid = timeReferences.value.find(
+        (val) =>
+          val.name.sponsor_preferred_name ===
+          visitConstants.TIMEREF_GLOBAL_ANCHOR_VISIT
+      ).term_uid
     } else {
       disableTimeValue.value = false
     }
@@ -934,7 +956,9 @@ async function addObject() {
 }
 async function updateObject() {
   const data = JSON.parse(JSON.stringify(form.value))
-  data.time_unit_uid = data.time_unit.uid
+  if (data.time_unit) {
+    data.time_unit_uid = data.time_unit.uid
+  }
   delete data.time_unit
   await epochsStore.updateStudyVisit({
     studyUid: selectedStudy.value.uid,
@@ -1084,18 +1108,30 @@ function callbacks() {
   }
   epochs.getStudyVisits(selectedStudy.value.uid, params).then((resp) => {
     studyVisits.value = resp.data.items
-  
+
     if (!props.studyVisit) {
-      if (studyVisits.value.length > 0) {
-        const lockedUnit = epochsStore.studyTimeUnits.find(
-          (unit) => unit.name === studyVisits.value[studyVisits.value.length - 1].visit_window_unit_name
-        )
-        form.value.time_unit = lockedUnit
+      const defaultUnit = epochsStore.studyTimeUnits.find(
+        (unit) => unit.name === 'days'
+      )
+      if (studyVisits.value.length > 0 && atLeastOneNormalVisit.value) {
+        let lockedUnit = {}
+        for (let index = studyVisits.value.length - 1; index >= 0; index--) {
+          if (
+            [
+              visitConstants.CLASS_NON_VISIT,
+              visitConstants.CLASS_UNSCHEDULED_VISIT,
+            ].indexOf(studyVisits.value[index].visit_class) === -1
+          ) {
+            lockedUnit = epochsStore.studyTimeUnits.find(
+              (unit) =>
+                unit.name === studyVisits.value[index].visit_window_unit_name
+            )
+            break
+          }
+        }
+        form.value.time_unit = defaultUnit
         form.value.visit_window_unit_uid = lockedUnit.uid
       } else {
-        const defaultUnit = epochsStore.studyTimeUnits.find(
-          (unit) => unit.name === 'days'
-        )
         form.value.time_unit = defaultUnit
         form.value.visit_window_unit_uid = defaultUnit.uid
       }

@@ -1,4 +1,3 @@
-from copy import copy
 from datetime import datetime
 from typing import Any
 
@@ -12,6 +11,9 @@ from clinical_mdr_api.domains.study_selections.study_selection_activity_group im
     StudySelectionActivityGroupAR,
     StudySelectionActivityGroupVO,
 )
+from clinical_mdr_api.domains.study_selections.study_soa_group_selection import (
+    StudySoAGroupVO,
+)
 from clinical_mdr_api.models.study_selections.study_selection import (
     StudyActivityGroup,
     StudyActivityGroupEditInput,
@@ -22,7 +24,7 @@ from clinical_mdr_api.services.studies.study_activity_selection_base import (
     StudyActivitySelectionBaseService,
     _VOType,
 )
-from common.exceptions import ValidationException
+from common.exceptions import BusinessLogicException, ValidationException
 
 
 class StudyActivityGroupService(StudyActivitySelectionBaseService):
@@ -57,7 +59,6 @@ class StudyActivityGroupService(StudyActivitySelectionBaseService):
         self,
         study_uid: str,
         specific_selection: _VOType,
-        order: int | None = None,
         terms_at_specific_datetime: datetime | None = None,
         accepted_version: bool | None = None,
     ) -> BaseModel:
@@ -70,34 +71,60 @@ class StudyActivityGroupService(StudyActivitySelectionBaseService):
     ) -> list[BaseModel]:
         pass
 
+    def _filter_ars_from_same_parent(
+        self,
+        selection_aggregate: StudySelectionActivityGroupAR,
+        selection_vo: StudySelectionActivityGroupVO,
+    ) -> StudySelectionActivityGroupAR:
+        all_selections_from_same_parent = [
+            selection
+            for selection in selection_aggregate.study_objects_selection
+            if selection.study_soa_group_uid == selection_vo.study_soa_group_uid
+        ]
+        selection_ar_from_same_parent = (
+            StudySelectionActivityGroupAR.from_repository_values(
+                study_uid=selection_aggregate.study_uid,
+                study_objects_selection=all_selections_from_same_parent,
+            )
+        )
+        selection_ar_from_same_parent.repository_closure_data = (
+            all_selections_from_same_parent
+        )
+        return selection_ar_from_same_parent
+
+    def _find_ar_and_validate_new_order(
+        self, study_uid: str, study_selection_uid: str, new_order: int
+    ) -> StudySelectionActivityGroupAR:
+        study_activity_group_to_reorder: StudySelectionActivityGroupVO
+        selection_aggregate, study_activity_group_to_reorder = self._find_ar_to_patch(
+            study_uid=study_uid, study_selection_uid=study_selection_uid
+        )
+
+        BusinessLogicException.raise_if(
+            new_order == study_activity_group_to_reorder.order,
+            msg=f"The order ({new_order}) for study activity group {study_activity_group_to_reorder.activity_group_name} was not changed",
+        )
+        study_soa_group: StudySoAGroupVO
+        _, study_soa_group, _ = self._get_specific_soa_group_selection_by_uids(
+            study_uid=study_uid,
+            study_selection_uid=study_activity_group_to_reorder.study_soa_group_uid,
+        )
+
+        soa_group_size = len(study_soa_group.study_activity_group_uids)
+        soa_group_name = study_soa_group.soa_group_term_name
+        BusinessLogicException.raise_if(
+            new_order > soa_group_size,
+            msg=f"""The maximum new order is ({soa_group_size}) as there are {soa_group_size} StudyActivityGroups in {soa_group_name} soa group and order ({new_order}) was requested""",
+        )
+
+        return selection_aggregate
+
     def update_dependent_objects(
         self,
         study_selection: StudySelectionActivityGroupVO,
         previous_study_selection: StudySelectionActivityGroupVO,
     ):
-        study_activities = self._repos.study_activity_repository.get_all_study_activities_for_study_activity_group(
-            study_activity_group_uid=study_selection.study_selection_uid
-        )
-        study_activity_aggregate = self._repos.study_activity_repository.find_by_study(
-            study_selection.study_uid,
-            for_update=True,
-        )
-        assert study_activity_aggregate is not None
-
-        for study_activity in study_activities:
-            selection, _ = study_activity_aggregate.get_specific_object_selection(
-                study_activity.uid
-            )
-            updated_selection = copy(selection)
-            study_activity_aggregate.update_selection(
-                updated_study_object_selection=updated_selection,
-                object_exist_callback=self._repos.activity_repository.final_or_replaced_retired_activity_exists,
-                ct_term_level_exist_callback=self._repos.ct_term_name_repository.term_specific_exists_by_uid,
-            )
-        # sync with DB and save the update
-        self._repos.study_activity_repository.save(
-            study_activity_aggregate, self.author
-        )
+        pass
 
     def _patch_prepare_new_value_object(
         self,
@@ -118,4 +145,5 @@ class StudyActivityGroupService(StudyActivitySelectionBaseService):
             study_selection_uid=current_object.study_selection_uid,
             show_activity_group_in_protocol_flowchart=request_object.show_activity_group_in_protocol_flowchart,
             author_id=self.author,
+            order=current_object.order,
         )

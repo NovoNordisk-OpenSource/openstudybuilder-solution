@@ -1,6 +1,5 @@
 import { objectVersion, objectName } from "../../support/front_end_commands/table_commands";
 const { Given, When, Then } = require("@badeball/cypress-cucumber-preprocessor");
-const checkIfValidationAppears = (locator) => cy.elementContain(locator, "This field is required")
 
 let defaultCriteriaName, newCriteriaNameUpdated
 let indicationSelected, criterionCatSelected, criterionSubCatSelected, parameterSelected, version
@@ -60,9 +59,9 @@ When('The new Criteria template is added without mandatory data', () => {
 })
 
 Then('The validation appears for Indication or Disorder, Criterion Category, Criterion Sub-Category', () => {
-    checkIfValidationAppears('template-indication-dropdown')
-    checkIfValidationAppears('template-criterion-category')
-    checkIfValidationAppears('template-criterion-sub-category')
+    cy.checkIfValidationAppears('template-indication-dropdown')
+    cy.checkIfValidationAppears('template-criterion-category')
+    cy.checkIfValidationAppears('template-criterion-sub-category')
 })
 
 When('The new template name is prepared with a parameters', () => {
@@ -95,7 +94,7 @@ When('The created criteria template is edited without change description provide
     cy.clickFormActionButton('save')
 })
 
-Then('The validation appears for criteria change description field', () => checkIfValidationAppears('template-change-description'))
+Then('The validation appears for criteria change description field', () => cy.checkIfValidationAppears('template-change-description'))
 
 Then('The criteria is no longer available', () => cy.confirmItemNotAvailable(defaultCriteriaName))
 

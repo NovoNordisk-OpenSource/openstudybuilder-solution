@@ -1,4 +1,5 @@
 import datetime
+from typing import Iterable
 
 from neomodel import db
 
@@ -39,6 +40,7 @@ from clinical_mdr_api.services.concepts.concept_generic_service import (
 from clinical_mdr_api.utils import normalize_string
 from common.config import REQUESTED_LIBRARY_NAME
 from common.exceptions import BusinessLogicException, NotFoundException
+from common.utils import get_edit_input_or_previous_value
 
 
 class ActivityService(ConceptGenericService[ActivityAR]):
@@ -47,71 +49,94 @@ class ActivityService(ConceptGenericService[ActivityAR]):
     repository_interface = ActivityRepository
 
     def _transform_aggregate_root_to_pydantic_model(
-        self, item_ar: ActivityAR
+        self,
+        item_ar: ActivityAR,
     ) -> Activity:
         return Activity.from_activity_ar(activity_ar=item_ar)
 
-    def _to_activity_grouping_vo(
-        self, activity_groupings: list[ActivityGrouping | ActivityGroupingVO]
-    ) -> list[ActivityGroupingVO]:
-        """Converts to a list of ActivityGroupingVOs with name property resolve from the db"""
+    def _get_activity_groups_and_subgroups_from_activity_groupings(
+        self, activity_groupings: Iterable[ActivityGrouping | ActivityGroupingVO]
+    ) -> tuple[dict[str:_AggregateRootType], dict[str:_AggregateRootType]]:
+        """Returns activity groups and subgroups from db by uids from activity groupings"""
 
-        activity_grouping_vos = []
-
-        # collect activity group and subgroup uids
         activity_group_uids = set()
         activity_subgroup_uids = set()
+
         for activity_grouping in activity_groupings:
             activity_group_uids.add(activity_grouping.activity_group_uid)
             activity_subgroup_uids.add(activity_grouping.activity_subgroup_uid)
 
-        activity_groups, _ = self._repos.activity_group_repository.get_all_optimized(
-            filter_by={"uid": {"v": list(activity_group_uids), "op": "in"}},
-        )
-        activity_groups_by_uid = {group.uid: group for group in activity_groups}
-
-        activity_subgroups, _ = (
-            self._repos.activity_subgroup_repository.get_all_optimized(
-                filter_by={"uid": {"v": list(activity_subgroup_uids), "op": "in"}},
-            )
-        )
-        activity_subgroups_by_uid = {group.uid: group for group in activity_subgroups}
-
-        # create ActivityGroupingVO-s with names
-        for activity_grouping in activity_groupings:
-            activity_grouping_vos.append(
-                ActivityGroupingVO(
-                    activity_group_uid=activity_grouping.activity_group_uid,
-                    activity_group_name=(
-                        activity_groups_by_uid[
-                            activity_grouping.activity_group_uid
-                        ].name
-                        if activity_grouping.activity_group_uid
-                        in activity_groups_by_uid
-                        else None
-                    ),
-                    activity_subgroup_uid=activity_grouping.activity_subgroup_uid,
-                    activity_subgroup_name=(
-                        activity_subgroups_by_uid[
-                            activity_grouping.activity_subgroup_uid
-                        ].name
-                        if activity_grouping.activity_subgroup_uid
-                        in activity_subgroups_by_uid
-                        else None
-                    ),
+        if activity_group_uids:
+            activity_groups_by_uid = (
+                self._repos.activity_group_repository.get_all_by_uid(
+                    activity_group_uids,
+                    get_latest_final=True,
                 )
             )
+        else:
+            activity_groups_by_uid = {}
 
-        return activity_grouping_vos
+        if activity_subgroup_uids:
+            activity_subgroups_by_uid = (
+                self._repos.activity_subgroup_repository.get_all_by_uid(
+                    activity_subgroup_uids,
+                    get_latest_final=True,
+                )
+            )
+        else:
+            activity_subgroups_by_uid = {}
+
+        return activity_groups_by_uid, activity_subgroups_by_uid
+
+    @staticmethod
+    def _to_activity_grouping_vo(
+        activity_grouping: ActivityGrouping | ActivityGroupingVO,
+        activity_groups_by_uid=tuple(),
+        activity_subgroups_by_uid=tuple(),
+    ) -> ActivityGroupingVO:
+        return ActivityGroupingVO(
+            activity_group_uid=activity_grouping.activity_group_uid,
+            activity_group_name=(
+                activity_groups_by_uid[activity_grouping.activity_group_uid].name
+                if activity_grouping.activity_group_uid in activity_groups_by_uid
+                else None
+            ),
+            activity_subgroup_uid=activity_grouping.activity_subgroup_uid,
+            activity_subgroup_name=(
+                activity_subgroups_by_uid[activity_grouping.activity_subgroup_uid].name
+                if activity_grouping.activity_subgroup_uid in activity_subgroups_by_uid
+                else None
+            ),
+        )
+
+    def _to_activity_grouping_vos(
+        self,
+        activity_groupings: Iterable[ActivityGrouping | ActivityGroupingVO],
+    ) -> list[ActivityGroupingVO]:
+        activity_groups_by_uid, activity_subgroups_by_uid = (
+            self._get_activity_groups_and_subgroups_from_activity_groupings(
+                activity_groupings
+            )
+        )
+        return [
+            self._to_activity_grouping_vo(
+                activity_grouping,
+                activity_groups_by_uid,
+                activity_subgroups_by_uid,
+            )
+            for activity_grouping in activity_groupings
+        ]
 
     def _create_aggregate_root(
-        self, concept_input: ActivityCreateInput, library
+        self, concept_input: ActivityCreateInput, library: LibraryVO
     ) -> _AggregateRootType:
+        # resolve names of activity groupings
         activity_groupings = (
-            self._to_activity_grouping_vo(concept_input.activity_groupings)
+            self._to_activity_grouping_vos(concept_input.activity_groupings)
             if concept_input.activity_groupings
             else []
         )
+
         return ActivityAR.from_input_values(
             author_id=self.author_id,
             concept_vo=ActivityVO.from_repository_values(
@@ -123,6 +148,7 @@ class ActivityService(ConceptGenericService[ActivityAR]):
                 definition=concept_input.definition,
                 abbreviation=concept_input.abbreviation,
                 activity_groupings=activity_groupings,
+                activity_instances=[],
                 request_rationale=concept_input.request_rationale,
                 is_request_final=concept_input.is_request_final,
                 is_data_collected=concept_input.is_data_collected,
@@ -139,30 +165,60 @@ class ActivityService(ConceptGenericService[ActivityAR]):
     def _edit_aggregate(
         self, item: ActivityAR, concept_edit_input: ActivityEditInput
     ) -> ActivityAR:
+        activity_groups_by_uid, activity_subgroups_by_uid = (
+            self._get_activity_groups_and_subgroups_from_activity_groupings(
+                concept_edit_input.activity_groupings
+            )
+        )
+        if "activity_groupings" in concept_edit_input.model_fields_set:
+            activity_groupings = (
+                [
+                    self._to_activity_grouping_vo(
+                        activity_grouping,
+                        activity_groups_by_uid,
+                        activity_subgroups_by_uid,
+                    )
+                    for activity_grouping in concept_edit_input.activity_groupings
+                ]
+                if concept_edit_input.activity_groupings
+                else []
+            )
+        else:
+            activity_groupings = item.concept_vo.activity_groupings
+        synonyms = get_edit_input_or_previous_value(
+            concept_edit_input, item.concept_vo, "synonyms"
+        )
+        if synonyms is None:
+            synonyms = []
         item.edit_draft(
             author_id=self.author_id,
             change_description=concept_edit_input.change_description,
             concept_vo=ActivityVO.from_repository_values(
-                nci_concept_id=concept_edit_input.nci_concept_id,
-                nci_concept_name=concept_edit_input.nci_concept_name,
+                nci_concept_id=get_edit_input_or_previous_value(
+                    concept_edit_input, item.concept_vo, "nci_concept_id"
+                ),
+                nci_concept_name=get_edit_input_or_previous_value(
+                    concept_edit_input, item.concept_vo, "nci_concept_name"
+                ),
                 name=concept_edit_input.name,
                 name_sentence_case=concept_edit_input.name_sentence_case,
-                synonyms=concept_edit_input.synonyms or [],
+                synonyms=get_edit_input_or_previous_value(
+                    concept_edit_input, item.concept_vo, "synonyms"
+                ),
                 definition=concept_edit_input.definition,
                 abbreviation=concept_edit_input.abbreviation,
-                activity_groupings=(
-                    self._to_activity_grouping_vo(concept_edit_input.activity_groupings)
-                    if concept_edit_input.activity_groupings
-                    else []
+                activity_groupings=activity_groupings,
+                activity_instances=[],
+                request_rationale=get_edit_input_or_previous_value(
+                    concept_edit_input, item.concept_vo, "request_rationale"
                 ),
-                request_rationale=concept_edit_input.request_rationale,
                 is_request_final=concept_edit_input.is_request_final,
                 is_data_collected=concept_edit_input.is_data_collected,
                 is_multiple_selection_allowed=concept_edit_input.is_multiple_selection_allowed,
             ),
             concept_exists_by_library_and_name_callback=self._repos.activity_repository.latest_concept_in_library_exists_by_name,
-            activity_subgroup_exists=self._repos.activity_subgroup_repository.final_concept_exists,
-            activity_group_exists=self._repos.activity_group_repository.final_concept_exists,
+            activity_subgroup_exists=activity_subgroups_by_uid.__contains__,
+            activity_group_exists=activity_groups_by_uid.__contains__,
             get_activity_uids_by_synonyms_callback=self._repos.activity_repository.get_activity_uids_by_synonyms,
         )
         return item
@@ -255,6 +311,7 @@ class ActivityService(ConceptGenericService[ActivityAR]):
                 definition=activity_request_ar.concept_vo.definition,
                 abbreviation=activity_request_ar.concept_vo.abbreviation,
                 activity_groupings=activity_request_ar.concept_vo.activity_groupings,
+                activity_instances=[],
                 request_rationale=activity_request_ar.concept_vo.request_rationale,
                 is_request_final=activity_request_ar.concept_vo.is_request_final,
                 is_request_rejected=True,

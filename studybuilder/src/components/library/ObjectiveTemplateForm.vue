@@ -36,15 +36,15 @@ const helpItems = ref([
 const indexingForm = ref()
 
 function loadForm(form) {
-  form.is_confirmatory_testing = this.template
-    ? this.template.is_confirmatory_testing
+  form.is_confirmatory_testing = props.template
+    ? props.template.is_confirmatory_testing
     : null
   if (
-    this.template &&
-    this.template.categories &&
-    this.template.categories.length
+    props.template &&
+    props.template.categories &&
+    props.template.categories.length
   ) {
-    form.categories = this.template.categories
+    form.categories = props.template.categories
   }
 }
 

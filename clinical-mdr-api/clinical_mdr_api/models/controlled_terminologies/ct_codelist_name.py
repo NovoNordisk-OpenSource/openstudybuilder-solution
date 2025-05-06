@@ -3,6 +3,7 @@ from typing import Annotated, Self
 
 from pydantic import Field
 
+from clinical_mdr_api.descriptions.general import CHANGES_FIELD_DESC
 from clinical_mdr_api.domains.controlled_terminologies.ct_codelist_name import (
     CTCodelistNameAR,
 )
@@ -48,20 +49,34 @@ class CTCodelistName(BaseModel):
             ),
         )
 
-    catalogue_name: Annotated[str | None, Field(nullable=True)] = None
+    catalogue_name: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
 
-    codelist_uid: Annotated[str | None, Field(nullable=True)] = None
+    codelist_uid: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
 
     name: Annotated[str, Field()]
 
     template_parameter: Annotated[bool, Field()]
-    library_name: Annotated[str | None, Field(nullable=True)] = None
-    start_date: Annotated[datetime | None, Field(nullable=True)] = None
-    end_date: Annotated[datetime | None, Field(nullable=True)] = None
-    status: Annotated[str | None, Field(nullable=True)] = None
-    version: Annotated[str | None, Field(nullable=True)] = None
-    change_description: Annotated[str | None, Field(nullable=True)] = None
-    author_username: Annotated[str | None, Field(nullable=True)] = None
+    library_name: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
+    start_date: Annotated[
+        datetime | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    end_date: Annotated[
+        datetime | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    status: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    version: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    change_description: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    author_username: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
     possible_actions: Annotated[
         list[str],
         Field(
@@ -79,15 +94,11 @@ class CTCodelistNameVersion(CTCodelistName):
     """
 
     changes: Annotated[
-        dict[str, bool] | None,
+        list[str],
         Field(
-            description=(
-                "Denotes whether or not there was a change in a specific field/property compared to the previous version. "
-                "The field names in this object here refer to the field names of the objective (e.g. name, start_date, ..)."
-            ),
-            nullable=True,
+            description=CHANGES_FIELD_DESC,
         ),
-    ] = None
+    ] = []
 
 
 class CTCodelistNameEditInput(PatchInputModel):

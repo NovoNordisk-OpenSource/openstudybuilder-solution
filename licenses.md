@@ -21,12 +21,11 @@ The OpenStudyBuilder App frontend can be released under GPLv3 License.
 
 | Package | License | Can be combined |
 |---|---|-|
-| certifi (2024.12.14) | MPL v. 2.0 | OK |
+| certifi (2025.1.31) | MPL v. 2.0 | OK |
 | hypothesis (6.115.6) | MPL v. 2.0 | OK |
-| portalocker (2.10.1) | Python License | OK |
-| pyphen (0.17.0) | GPL 2.0+/LGPL 2.1+/MPL 1.1 tri-license | OK |
+| pyphen (0.17.2) | GPL 2.0+/LGPL 2.1+/MPL 1.1 tri-license | OK |
 | typing_extensions (4.12.2) | Python License | OK |
-| usdm (0.53.0) | GPL 3.0 | OK |
+| usdm (0.59.0) | GPL 3.0 | OK |
 | yattag (1.16.1) | LGPL 3.0 | OK |
 
 As the licenses consumed within the Clinical MDR API is using MPL version 2.0 it is assessed that it poses no issue to release in combination with GPL and GPL derivatives since version 2.0 of the MPL license was rewritten to allow for combination with the GPL versions as well as derivatives of GPL.  
@@ -77,7 +76,7 @@ The Data Import can be released under GPLv3 License.
 
 | Package | License | Can be combined |
 |---|---|-|
-| certifi 2024.8.30 | MPL v. 2.0 | OK |
+| certifi 2025.1.31 | MPL v. 2.0 | OK |
 
 As the licenses is using MPL version 2.0 it is assessed that it poses no issue to release in combination with GPL and GPL derivatives since version 2.0 of the MPL license was rewritten to allow for combination with the GPL versions as well as derivatives of GPL.
 **Conclusion**  
@@ -92,6 +91,16 @@ The StudyBuilder Export can be released under GPLv3 License.
 As the licenses is using MPL version 2.0 it is assessed that it poses no issue to release in combination with GPL and GPL derivatives since version 2.0 of the MPL license was rewritten to allow for combination with the GPL versions as well as derivatives of GPL.
 **Conclusion**  
 The DB Schema Migration can be released under GPLv3 License.
+
+## System-Tests - UI-Tests
+
+| Package | License | Can be combined |
+|---|---|-|
+| cypress-drag-drop (2.3.0) | GPL 3.0 | OK |
+
+GPLv3 is compatible with GPLv3.
+**Conclusion**  
+The System-Tests - UI-Tests can be released under GPLv3 License.
 
 
 ## Overall conclusion
@@ -111,8 +120,10 @@ It is determined to be in the best interest of the project to release the above 
 | StudyBuilder Import | Python tools for data imports. | GPLv3 |
 | StudyBuilder Export | Python tools for data exports. | GPLv3 |
 | DB Schema Migration | Python tool for schema migration. | GPLv3 |
+| System-Tests - UI-Tests | Gherkin End-to-end tests | GPLv3 |
 
 The goal of the project is to ensure collaboration within the community on a set standard of defining the mapping tables between documents used in Clinical Studies within developing medicine and the project has collaborated with [COSA](https://www.cdisc.org/cosa) from [CDISC](https://www.cdisc.org/about). It is deemed to be in the best interest of Novo Nordisk, as well as the broader community doing Clinical Studies, that an alignment on data standards are in place, which is what the project hopes to achieve by the current project and which is also why it has been decided to be beneficial to Open Source the code in the hopes of a community driven approach to standardise on the mapping of data standards.  
 
 **Final remarks**  
 The above assessment has been conducted in a collaboration between an open source advisor consultancy and Novo Nordisk security/open source personnel. For any enquiry about the assessment please direct you questions to `openstudybuilder@gmail.com`.
+

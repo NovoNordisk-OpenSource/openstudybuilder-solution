@@ -16,6 +16,7 @@ from clinical_mdr_api.domain_repositories.models.generic import (
     VersionRoot,
     VersionValue,
 )
+from clinical_mdr_api.domains._utils import ObjectStatus
 from clinical_mdr_api.domains.concepts.simple_concepts.time_point import (
     TimePointAR,
     TimePointVO,
@@ -129,7 +130,9 @@ class TimePointRepository(SimpleConceptGenericRepository[TimePointAR]):
             item_metadata=self._library_item_metadata_vo_from_relation(relationship),
         )
 
-    def specific_alias_clause(self) -> str:
+    def specific_alias_clause(
+        self, only_specific_status: str = ObjectStatus.LATEST.name, **kwargs
+    ) -> str:
         return """
         WITH *,
             head([(concept_value)-[:HAS_UNIT_DEFINITION]->(unit_definition) | unit_definition.uid]) AS unit_definition_uid,

@@ -21,12 +21,14 @@ class SortByStudies(Enum):
 class Study(BaseModel):
     uid: Annotated[str, Field(description="Study UID")]
     acronym: Annotated[
-        str | None, Field(description="Study acronym", nullable=True)
+        str | None,
+        Field(description="Study acronym", json_schema_extra={"nullable": True}),
     ] = None
     id_prefix: Annotated[str, Field(description="Study ID prefix")]
-    number: Annotated[str | None, Field(description="Study number", nullable=True)] = (
-        None
-    )
+    number: Annotated[
+        str | None,
+        Field(description="Study number", json_schema_extra={"nullable": True}),
+    ] = None
 
     @classmethod
     def from_input(cls, val: dict):

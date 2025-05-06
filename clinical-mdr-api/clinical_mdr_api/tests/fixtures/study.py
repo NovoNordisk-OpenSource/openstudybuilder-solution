@@ -38,7 +38,6 @@ from clinical_mdr_api.tests.integration.utils.factory_visit import (
     create_study_visit_codelists,
     generate_default_input_data_for_visit,
 )
-from clinical_mdr_api.tests.integration.utils.method_library import create_library_data
 from clinical_mdr_api.tests.integration.utils.utils import TestUtils
 
 __all__ = [
@@ -87,13 +86,13 @@ def tst_project(request, temp_database) -> Project:
 
 
 @pytest.fixture(scope="module")
-def study_epochs(request, ct_catalogue, tst_study) -> list[StudyEpoch]:
+def study_epochs(request, tst_study) -> list[StudyEpoch]:
     """fixture creates 5 StudyEpoch"""
 
     log.info(
         "%s fixture: creating study epoch codelists and terms", request.fixturename
     )
-    create_study_epoch_codelists_ret_cat_and_lib()
+    create_study_epoch_codelists_ret_cat_and_lib(True)
 
     log.info("%s fixture: creating study epochs", request.fixturename)
     return [
@@ -112,14 +111,14 @@ def study_epochs(request, ct_catalogue, tst_study) -> list[StudyEpoch]:
 
 
 @pytest.fixture(scope="module")
-def study_arms(request, ct_catalogue, tst_study) -> list[StudySelectionArm]:
+def study_arms(request, tst_study) -> list[StudySelectionArm]:
     """fixture creates 5 study arms"""
 
     log.info(
         "%s fixture: creating study arm type codelist and terms", request.fixturename
     )
 
-    catalogue_name, library_name = get_catalogue_name_library_name()
+    catalogue_name, library_name = get_catalogue_name_library_name(True)
 
     arm_type_codelist = create_codelist(
         name="Arm Type",
@@ -149,7 +148,7 @@ def study_arms(request, ct_catalogue, tst_study) -> list[StudySelectionArm]:
 
 
 @pytest.fixture(scope="module")
-def study_elements(request, ct_catalogue, tst_study) -> list[StudySelectionElement]:
+def study_elements(request, tst_study) -> list[StudySelectionElement]:
     """fixture creates 5 study elements"""
 
     log.info(
@@ -157,7 +156,7 @@ def study_elements(request, ct_catalogue, tst_study) -> list[StudySelectionEleme
         request.fixturename,
     )
 
-    catalogue_name, library_name = get_catalogue_name_library_name()
+    catalogue_name, library_name = get_catalogue_name_library_name(True)
 
     element_type_codelist = create_codelist(
         "Element Type", "CTCodelist_ElementType", catalogue_name, library_name

@@ -14,3 +14,5 @@ The management of an Objective Template follows the versionning diagram below:
 
 ![Objective Templates Versionning](/library/libraryElementsVersion_Workflow.png "Fig 2: Version Control of an Objective Templates")
 
+
+

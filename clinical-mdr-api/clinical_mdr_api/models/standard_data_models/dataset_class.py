@@ -7,7 +7,7 @@ from clinical_mdr_api.models.utils import BaseModel
 
 class SimpleDataModel(BaseModel):
     data_model_name: Annotated[str, Field()]
-    ordinal: Annotated[str | None, Field(nullable=True)] = None
+    ordinal: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
 
 
 class SimpleDataset(BaseModel):
@@ -17,11 +17,15 @@ class SimpleDataset(BaseModel):
 
 class DatasetClass(BaseModel):
     uid: Annotated[str, Field()]
-    label: Annotated[str | None, Field(nullable=True)] = None
-    title: Annotated[str | None, Field(nullable=True)] = None
-    description: Annotated[str | None, Field(nullable=True)] = None
+    label: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    title: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    description: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
     catalogue_name: Annotated[str, Field()]
-    parent_class: Annotated[str | None, Field(nullable=True)] = None
+    parent_class: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
     data_models: Annotated[list[SimpleDataModel], Field()]
 
     @classmethod

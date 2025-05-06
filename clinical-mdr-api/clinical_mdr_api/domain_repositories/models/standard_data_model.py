@@ -38,6 +38,10 @@ class DataModelIGValue(VersionValue):
         "DataModelValue", "IMPLEMENTS", model=ClinicalMdrRel, cardinality=One
     )
 
+    extended_by = RelationshipFrom(
+        "SponsorModelValue", "EXTENDS_VERSION", model=ClinicalMdrRel
+    )
+
 
 class SponsorModelValue(VersionValue):
     name = StringProperty()
@@ -122,25 +126,6 @@ class HasDatasetRel(HasDatasetClassRel):
     pass
 
 
-class SponsorModelDatasetClassInstance(VersionValue):
-    is_basic_std = BooleanProperty()
-    xml_path = StringProperty()
-    xml_title = StringProperty()
-    structure = StringProperty()
-    purpose = StringProperty()
-    comment = StringProperty()
-    label = StringProperty()
-
-    is_instance_of = RelationshipFrom(
-        "DatasetClass", "HAS_INSTANCE", model=ClinicalMdrRel
-    )
-    has_dataset_class = RelationshipFrom(
-        SponsorModelValue,
-        "HAS_DATASET_CLASS",
-        model=HasDatasetClassRel,
-    )
-
-
 class DatasetClassInstance(VersionValue):
     description = StringProperty()
     label = StringProperty()
@@ -154,15 +139,14 @@ class DatasetClassInstance(VersionValue):
         model=CatalogueVerRel,
         cardinality=ZeroOrOne,
     )
+    is_instance_of = RelationshipFrom(
+        "DatasetClass", "HAS_INSTANCE", model=ClinicalMdrRel
+    )
 
 
 class DatasetClass(VersionRoot):
     has_instance = RelationshipTo(
         DatasetClassInstance, "HAS_INSTANCE", model=ClinicalMdrRel
-    )
-
-    has_sponsor_model_instance = RelationshipTo(
-        SponsorModelDatasetClassInstance, "HAS_INSTANCE", model=ClinicalMdrRel
     )
     has_dataset_class = RelationshipFrom(
         DataModelCatalogue, "HAS_DATASET_CLASS", model=ClinicalMdrRel, cardinality=One
@@ -194,7 +178,9 @@ class SponsorModelDatasetInstance(VersionValue):
     xml_title = StringProperty()
     structure = StringProperty()
     purpose = StringProperty()
+    is_cdisc_std = BooleanProperty()
     source_ig = StringProperty()
+    standard_ref = StringProperty()
     comment = StringProperty()
     ig_comment = StringProperty()
     map_domain_flag = BooleanProperty()
@@ -220,6 +206,12 @@ class SponsorModelDatasetInstance(VersionValue):
         "HAS_SORT_KEY",
         model=HasKeyRel,
         cardinality=OneOrMore,
+    )
+    implements_dataset_class = RelationshipTo(
+        DatasetClassInstance,
+        "IMPLEMENTS_DATASET_CLASS",
+        model=ClinicalMdrRel,
+        cardinality=One,
     )
 
 
@@ -261,36 +253,6 @@ class HasMappingTargetRel(ClinicalMdrRel):
     version_number = StringProperty()
 
 
-class SponsorModelVariableClassInstance(VersionValue):
-    is_basic_std = BooleanProperty()
-    label = StringProperty()
-    variable_type = StringProperty()
-    length = IntegerProperty()
-    display_format = StringProperty()
-    xml_datatype = StringProperty()
-    xml_codelist = StringProperty()
-    core = StringProperty()
-    origin = StringProperty()
-    role = StringProperty()
-    term = StringProperty()
-    algorithm = StringProperty()
-    qualifiers = ArrayProperty()
-    comment = StringProperty()
-    ig_comment = StringProperty()
-    map_var_flag = BooleanProperty()
-    fixed_mapping = StringProperty()
-    include_in_raw = BooleanProperty()
-    nn_internal = BooleanProperty()
-    incl_cre_domain = BooleanProperty()
-    xml_codelist_values = BooleanProperty()
-
-    has_variable_class = RelationshipFrom(
-        SponsorModelDatasetClassInstance,
-        "HAS_VARIABLE_CLASS",
-        model=HasVariableClassRel,
-    )
-
-
 class VariableClassInstance(VersionValue):
     description = StringProperty()
     implementation_notes = StringProperty()
@@ -307,7 +269,10 @@ class VariableClassInstance(VersionValue):
     notes = StringProperty()
     usage_restrictions = StringProperty()
     examples = StringProperty()
-    has_class_variable = RelationshipFrom(
+    is_instance_of = RelationshipFrom(
+        "VariableClass", "HAS_INSTANCE", model=ClinicalMdrRel
+    )
+    has_variable_class = RelationshipFrom(
         DatasetClassInstance,
         "HAS_VARIABLE_CLASS",
         model=HasVariableClassRel,
@@ -339,10 +304,6 @@ class VariableClassInstance(VersionValue):
 class VariableClass(VersionRoot):
     has_instance = RelationshipTo(
         VariableClassInstance, "HAS_INSTANCE", model=ClinicalMdrRel
-    )
-
-    has_sponsor_model_instance = RelationshipTo(
-        SponsorModelVariableClassInstance, "HAS_INSTANCE", model=ClinicalMdrRel
     )
 
     has_variable_class = RelationshipFrom(
@@ -409,15 +370,18 @@ class SponsorModelDatasetVariableInstance(VersionValue):
     xml_codelist_multi = ArrayProperty()
     core = StringProperty()
     origin = StringProperty()
+    origin_type = StringProperty()
+    origin_source = StringProperty()
     role = StringProperty()
     term = StringProperty()
     algorithm = StringProperty()
     qualifiers = ArrayProperty()
+    is_cdisc_std = BooleanProperty()
     comment = StringProperty()
     ig_comment = StringProperty()
     class_table = StringProperty()
     class_column = StringProperty()
-    map_var_flag = BooleanProperty()
+    map_var_flag = StringProperty()
     fixed_mapping = StringProperty()
     include_in_raw = BooleanProperty()
     nn_internal = BooleanProperty()
@@ -429,8 +393,22 @@ class SponsorModelDatasetVariableInstance(VersionValue):
     enrich_rule = StringProperty()
     xml_codelist_values = BooleanProperty()
 
+    implemented_variable_class_inconsistency = BooleanProperty()
+    implemented_variable_class_uid = StringProperty()
+    implemented_parent_dataset_class_uid = StringProperty()
+
     has_variable = RelationshipFrom(
         SponsorModelDatasetInstance, "HAS_DATASET_VARIABLE", model=HasDatasetVariableRel
+    )
+    implements_variable_class = RelationshipTo(
+        VariableClassInstance,
+        "IMPLEMENTS_VARIABLE_CLASS",
+        model=ClinicalMdrRel,
+        cardinality=One,
+    )
+
+    is_instance_of = RelationshipFrom(
+        "DatasetVariable", "HAS_INSTANCE", model=ClinicalMdrRel
     )
 
 

@@ -9,7 +9,6 @@ from starlette.requests import Request
 from clinical_mdr_api.models.biomedical_concepts.activity_instance_class import (
     ActivityInstanceClass,
     ActivityInstanceClassInput,
-    ActivityInstanceClassMappingInput,
 )
 from clinical_mdr_api.models.utils import CustomPage
 from clinical_mdr_api.repositories._utils import FilterOperator
@@ -52,8 +51,8 @@ Possible errors:
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.allow_exports(
@@ -121,11 +120,11 @@ def get_activity_instance_classes(
     response_model=list[Any],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - Invalid field name specified",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_distinct_values_for_header(
@@ -177,8 +176,8 @@ Possible errors:
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_activity(
@@ -210,11 +209,11 @@ Possible errors:
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - The activity with the specified 'activity_instance_class_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_versions(
@@ -252,6 +251,7 @@ Possible errors:
     response_model_exclude_unset=True,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {"description": "Created - The activity was successfully created."},
         400: {
             "model": ErrorResponse,
@@ -259,7 +259,6 @@ Possible errors:
             "- The library doesn't exist.\n"
             "- The library doesn't allow to add new items.\n",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def create(
@@ -296,6 +295,7 @@ Possible errors:
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -308,7 +308,6 @@ Possible errors:
             "model": ErrorResponse,
             "description": "Not Found - The instance class with the specified 'activity_instance_class_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def edit(
@@ -318,48 +317,6 @@ def edit(
     activity_instance_class_service = ActivityInstanceClassService()
     return activity_instance_class_service.edit_draft(
         uid=activity_instance_class_uid, item_edit_input=activity_instance_class_input
-    )
-
-
-@router.patch(
-    "/{activity_instance_class_uid}/model-mappings",
-    dependencies=[rbac.LIBRARY_WRITE],
-    summary="Edit the mappings to dataset classes",
-    description="""
-State before:
-- uid must exist
-
-Business logic:
-- Mappings to dataset classes are replaced with the provided ones
-
-Possible errors:
-- Invalid uid
-""",
-    response_model=ActivityInstanceClass,
-    response_model_exclude_unset=True,
-    status_code=200,
-    responses={
-        200: {"description": "OK."},
-        404: {
-            "model": ErrorResponse,
-            "description": "Not Found - Reasons include e.g.: \n"
-            "- The activity instance class with the specified 'activity_instance_class_uid' could not be found.",
-        },
-        500: _generic_descriptions.ERROR_500,
-    },
-)
-def patch_mappings(
-    activity_instance_class_uid: Annotated[str, ActivityInstanceClassUID],
-    mapping_input: Annotated[
-        ActivityInstanceClassMappingInput,
-        Body(
-            description="The uid of dataset classes to map activity instance class to."
-        ),
-    ],
-):
-    activity_instance_class_service = ActivityInstanceClassService()
-    return activity_instance_class_service.patch_mappings(
-        uid=activity_instance_class_uid, mapping_input=mapping_input
     )
 
 
@@ -385,6 +342,7 @@ Possible errors:
     response_model_exclude_unset=True,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -397,7 +355,6 @@ Possible errors:
             "- The activity instance class is not in final status.\n"
             "- The activity instance class with the specified 'activity_instance_class_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def new_version(
@@ -434,6 +391,7 @@ Possible errors:
     response_model_exclude_unset=True,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -445,7 +403,6 @@ Possible errors:
             "model": ErrorResponse,
             "description": "Not Found - The activity instance class with the specified 'activity_instance_class_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def approve(activity_instance_class_uid: Annotated[str, ActivityInstanceClassUID]):
@@ -478,6 +435,7 @@ Possible errors:
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -488,7 +446,6 @@ Possible errors:
             "model": ErrorResponse,
             "description": "Not Found - The activity with the specified 'activity_instance_class_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def inactivate(
@@ -525,6 +482,7 @@ Possible errors:
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -535,7 +493,6 @@ Possible errors:
             "model": ErrorResponse,
             "description": "Not Found - The activity instance class with the specified 'activity_instance_class_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def reactivate(
@@ -569,6 +526,7 @@ Possible errors:
     response_model=None,
     status_code=204,
     responses={
+        403: _generic_descriptions.ERROR_403,
         204: {
             "description": "No Content - The activity instance class was successfully deleted."
         },
@@ -583,7 +541,6 @@ Possible errors:
             "model": ErrorResponse,
             "description": "Not Found - An activity instance class with the specified 'activity_instance_class_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def delete_activity_instance_class(

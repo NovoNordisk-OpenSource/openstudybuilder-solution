@@ -3,16 +3,21 @@
     <template #activator="{ props }">
       <v-btn
         v-if="!badge"
+        :disabled="disabled"
         data-cy="table-item-action-button"
         icon="mdi-dots-vertical"
         variant="plain"
+        :size="size"
         v-bind="props"
+        style="height: auto; z-index: 100"
         class="pb-3 mr-n6 ml-n2"
       />
-      <v-badge v-else :color="badge.color" :icon="badge.icon" bordered inline >
+      <v-badge v-else :color="badge.color" :icon="badge.icon" bordered inline>
         <v-btn
+          :disabled="disabled"
           icon="mdi-dots-vertical"
           v-bind="props"
+          :size="size"
           class="pb-3 ml-n3"
           variant="text"
         />
@@ -34,11 +39,7 @@
               :color="action.iconColorFunc(item)"
               :icon="action.icon"
             />
-            <v-icon
-              v-else
-              :icon="action.icon"
-              color="nnBaseBlue"
-            />
+            <v-icon v-else :icon="action.icon" color="nnBaseBlue" />
           </template>
           <v-list-item-title :data-cy="action.label">
             {{ action.label }}
@@ -55,6 +56,10 @@ import { useAccessGuard } from '@/composables/accessGuard'
 
 const accessGuard = useAccessGuard()
 const props = defineProps({
+  disabled: {
+    type: Boolean,
+    default: false,
+  },
   actions: {
     type: Array,
     default: () => [],
@@ -75,6 +80,10 @@ const props = defineProps({
   accessRole: {
     type: String,
     default: '',
+  },
+  size: {
+    type: String,
+    default: 'default',
   },
 })
 

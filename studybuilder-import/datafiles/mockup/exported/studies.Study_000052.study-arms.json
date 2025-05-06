@@ -1,0 +1,94 @@
+[
+  {
+    "accepted_version": false,
+    "arm_colour": "#9FA8DAFF",
+    "arm_connected_branch_arms": null,
+    "arm_type": {
+      "author_username": "9247d4f6-415b-4e6e-bda7-873eaeb1156b",
+      "catalogue_name": "SDTM CT",
+      "change_description": "Approved version",
+      "codelists": [
+        {
+          "codelist_uid": "CTCodelist_000023",
+          "library_name": "Sponsor",
+          "order": 1
+        }
+      ],
+      "date_conflict": false,
+      "end_date": null,
+      "library_name": "Sponsor",
+      "possible_actions": [
+        "inactivate",
+        "new_version"
+      ],
+      "queried_effective_date": null,
+      "sponsor_preferred_name": "Investigational Arm",
+      "sponsor_preferred_name_sentence_case": "investigational arm",
+      "start_date": "2025-03-26T01:49:23.521924Z",
+      "status": "Final",
+      "term_uid": "CTTerm_000083",
+      "version": "1.0"
+    },
+    "arm_uid": "StudyArm_000064",
+    "author_username": "study.setup@b2bfv7zbjhkehgyw.onmicrosoft.com",
+    "change_type": null,
+    "code": "A",
+    "description": null,
+    "end_date": null,
+    "name": "Human Insulin",
+    "number_of_subjects": 50,
+    "order": 1,
+    "randomization_group": "A",
+    "short_name": "Human Insulin",
+    "start_date": "2025-03-27T12:02:52.116824Z",
+    "status": null,
+    "study_uid": "Study_000052",
+    "study_version": "LATEST on 2025-03-27T13:38:24.908526+00:00"
+  },
+  {
+    "accepted_version": false,
+    "arm_colour": "#81C784FF",
+    "arm_connected_branch_arms": null,
+    "arm_type": {
+      "author_username": "9247d4f6-415b-4e6e-bda7-873eaeb1156b",
+      "catalogue_name": "SDTM CT",
+      "change_description": "Approved version",
+      "codelists": [
+        {
+          "codelist_uid": "CTCodelist_000023",
+          "library_name": "Sponsor",
+          "order": 2
+        }
+      ],
+      "date_conflict": false,
+      "end_date": null,
+      "library_name": "Sponsor",
+      "possible_actions": [
+        "inactivate",
+        "new_version"
+      ],
+      "queried_effective_date": null,
+      "sponsor_preferred_name": "Comparator Arm",
+      "sponsor_preferred_name_sentence_case": "comparator arm",
+      "start_date": "2025-03-26T01:49:23.422808Z",
+      "status": "Final",
+      "term_uid": "CTTerm_000082",
+      "version": "1.0"
+    },
+    "arm_uid": "StudyArm_000063",
+    "author_username": "study.setup@b2bfv7zbjhkehgyw.onmicrosoft.com",
+    "change_type": null,
+    "code": "B",
+    "description": null,
+    "end_date": null,
+    "name": "Metformin",
+    "number_of_subjects": 50,
+    "order": 2,
+    "randomization_group": "B",
+    "short_name": "Metformin",
+    "start_date": "2025-03-27T12:02:52.116824Z",
+    "status": null,
+    "study_uid": "Study_000052",
+    "study_version": "LATEST on 2025-03-27T13:38:24.913063+00:00"
+  }
+]

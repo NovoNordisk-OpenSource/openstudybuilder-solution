@@ -34,9 +34,7 @@
         <StudyActivityTable :key="activitiesKey" />
       </v-window-item>
       <v-window-item value="soa">
-        <DetailedFlowchart
-          :update="updateFlowchart"
-        />
+        <DetailedFlowchart :update="updateFlowchart" />
       </v-window-item>
     </v-window>
     <v-dialog v-model="showSoaSettings" max-width="800px">
@@ -82,6 +80,7 @@ const helpItems = [
   'StudyActivity.study_activities',
   'StudyActivity.detailed_soa',
   'StudyActivity.detailed_soa_actions',
+  'StudyActivity.detailed_soa_reordering',
   'StudyActivity.study_footnotes',
   'StudyActivity.protocol_soa',
   'StudyActivity.instructions',

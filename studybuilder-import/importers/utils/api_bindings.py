@@ -479,6 +479,21 @@ class ApiBinding:
         result = response.json()
         return result["items"]
 
+    def get_filtered_terms(self, filters: dict):
+        filters = json.dumps(filters)
+        response = requests.get(
+            self.api_base_url + "/ct/terms/attributes",
+            params={
+                "page_number": 1,
+                "page_size": 0,
+                "filters": filters,
+            },
+            headers=self.api_headers,
+        )
+        response.raise_for_status()
+        result = response.json()
+        return result["items"]
+
     # Get terms from a catalogue that have a given concept id
     def lookup_terms_from_concept_id(
         self, concept_id: str, catalogue_name=None, code_submission_value=None
@@ -598,8 +613,8 @@ class ApiBinding:
             objective_temp_dict[res["name"]] = res
         return objective_temp_dict
 
-    def find_object_by_name(self, name, path):
-        params = {"filters": '{"name":{"v":["' + name + '"],"op":"eq"}}'}
+    def find_object_by_key(self, name, path, key="name"):
+        params = {"filters": '{"' + key + '":{"v":["' + name + '"],"op":"eq"}}'}
         response = requests.get(
             path_join(self.api_base_url, path),
             params=params,
@@ -740,7 +755,11 @@ class ApiBinding:
 
     # This gives reasonable waiting for lock on atomic incrementing of identifiers
     async def post_to_api_async(
-        self, url: str, body: dict, session: aiohttp.ClientSession
+        self,
+        url: str,
+        body: dict,
+        session: aiohttp.ClientSession,
+        logfile_name: str | None = None,
     ):
         async with self.sem:
             async with session.post(
@@ -749,6 +768,14 @@ class ApiBinding:
                 status = response.status
                 try:
                     result = await response.json()
+                    if logfile_name and status not in [200, 201]:
+                        with open(logfile_name, "a") as logfile:
+                            logfile.write(
+                                (
+                                    f"Failed to post to '{url}', status: {status}, "
+                                    f"message: {result['message'] if 'message' in result else result['detail']}, body: {body}\n"
+                                )
+                            )
                 except aiohttp.ContentTypeError:
                     textresult = await response.text()
                     result = {}

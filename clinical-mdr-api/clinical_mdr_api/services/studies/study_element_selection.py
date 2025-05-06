@@ -147,7 +147,7 @@ class StudyElementSelectionService(
                 versions = [
                     self._transform_each_history_to_response_model(
                         history, study_uid, effective_date
-                    ).dict()
+                    ).model_dump()
                     for history, effective_date in zip(
                         ith_selection_history, effective_dates
                     )
@@ -183,7 +183,7 @@ class StudyElementSelectionService(
             versions = [
                 self._transform_each_history_to_response_model(
                     history, study_uid, effective_date
-                ).dict()
+                ).model_dump()
                 for history, effective_date in zip(selection_history, effective_dates)
             ]
             data = calculate_diffs(versions, StudySelectionElementVersion)
@@ -217,7 +217,7 @@ class StudyElementSelectionService(
                             ),
                             find_duration_name_by_code=self._repos.unit_definition_repository.find_by_uid_2,
                         )
-                        if selection_create_input.planned_duration is not None
+                        if selection_create_input.planned_duration
                         else None
                     ),
                     start_rule=selection_create_input.start_rule,

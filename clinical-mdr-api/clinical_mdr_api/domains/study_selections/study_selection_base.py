@@ -38,6 +38,7 @@ class StudySelectionBaseAR:
     repository_closure_data: Any = field(
         init=False, compare=False, repr=True, default=None
     )
+    closure_from_other_ar: StudySelectionBaseVO | None = None
 
     _object_type = None
     _object_uid_field = None
@@ -94,6 +95,12 @@ class StudySelectionBaseAR:
             self._study_objects_selection = self._study_objects_selection + (
                 study_object_selection,
             )
+
+    def add_selection_to_closure_from_other_ar(
+        self,
+        study_object_selection: Type[TStudySelectionVO],
+    ) -> None:
+        self.closure_from_other_ar = study_object_selection
 
     @classmethod
     def from_repository_values(

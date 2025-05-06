@@ -34,8 +34,8 @@ OdmAliasUID = Path(description="The unique id of the ODM Alias.")
     response_model=CustomPage[OdmAlias],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.allow_exports(
@@ -114,11 +114,11 @@ def get_all_odm_aliases(
     response_model=list[Any],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - Invalid field name specified",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_distinct_values_for_header(
@@ -161,8 +161,8 @@ def get_distinct_values_for_header(
     response_model=dict,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_active_relationships(odm_alias_uid: Annotated[str, OdmAliasUID]):
@@ -191,11 +191,11 @@ Possible errors:
     response_model=list[OdmAlias],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - The ODM Alias with the specified 'odm_alias_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_odm_alias_versions(odm_alias_uid: Annotated[str, OdmAliasUID]):
@@ -210,6 +210,7 @@ def get_odm_alias_versions(odm_alias_uid: Annotated[str, OdmAliasUID]):
     response_model=OdmAlias,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {"description": "Created - The ODM Alias was successfully created."},
         400: {
             "model": ErrorResponse,
@@ -218,7 +219,6 @@ def get_odm_alias_versions(odm_alias_uid: Annotated[str, OdmAliasUID]):
             "- The library doesn't allow to add new items.\n",
         },
         409: _generic_descriptions.ERROR_409,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def create_odm_alias(odm_alias_create_input: Annotated[OdmAliasPostInput, Body()]):
@@ -233,8 +233,8 @@ def create_odm_alias(odm_alias_create_input: Annotated[OdmAliasPostInput, Body()
     response_model=list[OdmAliasBatchOutput],
     status_code=207,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def odm_alias_batch_operations(
@@ -253,6 +253,7 @@ def odm_alias_batch_operations(
     response_model=OdmAlias,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -265,7 +266,6 @@ def odm_alias_batch_operations(
             "model": ErrorResponse,
             "description": "Not Found - The ODM Alias with the specified 'odm_alias_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def edit_odm_alias(
@@ -299,6 +299,7 @@ Possible errors:
     response_model=OdmAlias,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -311,7 +312,6 @@ Possible errors:
             "- The ODM Alias is not in final status.\n"
             "- The ODM Alias with the specified 'odm_alias_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def create_odm_alias_version(odm_alias_uid: Annotated[str, OdmAliasUID]):
@@ -326,6 +326,7 @@ def create_odm_alias_version(odm_alias_uid: Annotated[str, OdmAliasUID]):
     response_model=OdmAlias,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -337,7 +338,6 @@ def create_odm_alias_version(odm_alias_uid: Annotated[str, OdmAliasUID]):
             "model": ErrorResponse,
             "description": "Not Found - The ODM Alias with the specified 'odm_alias_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def approve_odm_alias(odm_alias_uid: Annotated[str, OdmAliasUID]):
@@ -352,6 +352,7 @@ def approve_odm_alias(odm_alias_uid: Annotated[str, OdmAliasUID]):
     response_model=OdmAlias,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -362,7 +363,6 @@ def approve_odm_alias(odm_alias_uid: Annotated[str, OdmAliasUID]):
             "model": ErrorResponse,
             "description": "Not Found - The ODM Alias with the specified 'odm_alias_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def inactivate_odm_alias(odm_alias_uid: Annotated[str, OdmAliasUID]):
@@ -377,6 +377,7 @@ def inactivate_odm_alias(odm_alias_uid: Annotated[str, OdmAliasUID]):
     response_model=OdmAlias,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -387,7 +388,6 @@ def inactivate_odm_alias(odm_alias_uid: Annotated[str, OdmAliasUID]):
             "model": ErrorResponse,
             "description": "Not Found - The ODM Alias with the specified 'odm_alias_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def reactivate_odm_alias(odm_alias_uid: Annotated[str, OdmAliasUID]):
@@ -402,6 +402,7 @@ def reactivate_odm_alias(odm_alias_uid: Annotated[str, OdmAliasUID]):
     response_model=None,
     status_code=204,
     responses={
+        403: _generic_descriptions.ERROR_403,
         204: {"description": "No Content - The ODM Alias was successfully deleted."},
         400: {
             "model": ErrorResponse,
@@ -414,7 +415,6 @@ def reactivate_odm_alias(odm_alias_uid: Annotated[str, OdmAliasUID]):
             "model": ErrorResponse,
             "description": "Not Found - An ODM Alias with the specified 'odm_alias_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def delete_odm_alias(odm_alias_uid: Annotated[str, OdmAliasUID]):

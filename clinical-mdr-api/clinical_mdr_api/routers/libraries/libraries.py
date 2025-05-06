@@ -39,6 +39,7 @@ def get_libraries(
     response_model=Library,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {"description": "Created - The library was successfully created."},
         409: _generic_descriptions.ERROR_409,
     },

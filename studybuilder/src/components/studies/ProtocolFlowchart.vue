@@ -1,10 +1,9 @@
 <template>
   <div class="pa-4 bg-white">
     <v-row>
-      <v-col cols="4">
-      </v-col>
+      <v-col cols="4"> </v-col>
       <v-col cols="8" class="d-flex align-center">
-        <v-spacer/>
+        <v-spacer />
         <v-switch
           v-show="switchIsEnabled(['protocol'])"
           v-model="soaPreferences.show_epochs"
@@ -76,8 +75,8 @@ export default {
     },
     layout: {
       type: String,
-      default: 'protocol'
-    }
+      default: 'protocol',
+    },
   },
   setup() {
     const studiesGeneralStore = useStudiesGeneralStore()
@@ -135,12 +134,10 @@ export default {
     updateFlowchart() {
       this.loadingMessage = this.$t('ProtocolFlowchart.loading')
       this.soaContentLoadingStore.changeLoadingState()
-      const params = {
-        detailed: this.layout === 'detailed' ? true : null,
-        operational: this.layout === 'operational' ? true : null,
-      }
       study
-        .getStudyProtocolFlowchartHtml(this.selectedStudy.uid, params)
+        .getStudyProtocolFlowchartHtml(this.selectedStudy.uid, {
+          layout: this.layout,
+        })
         .then((resp) => {
           this.protocolFlowchart = resp.data
         })

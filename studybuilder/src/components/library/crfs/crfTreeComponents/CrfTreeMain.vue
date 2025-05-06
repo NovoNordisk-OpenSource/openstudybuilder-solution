@@ -41,7 +41,7 @@
               @click="toggleExpand(internalItem)"
             />
             <v-btn v-else variant="text" class="hide" icon />
-            <ActionsMenu :actions="actions" :item="item"/>
+            <ActionsMenu :actions="actions" :item="item" />
             <span class="ml-2">
               <v-icon color="crfTemplate"> mdi-alpha-t-circle-outline </v-icon>
               {{ item.name }}
@@ -148,8 +148,6 @@
 
 <script>
 import crfs from '@/api/crfs'
-import { useCrfsStore } from '@/stores/crfs'
-import { computed } from 'vue'
 import CrfTreeForms from '@/components/library/crfs/crfTreeComponents/CrfTreeForms.vue'
 import StatusChip from '@/components/tools/StatusChip.vue'
 import statuses from '@/constants/statuses'
@@ -170,15 +168,6 @@ export default {
     CrfTemplateForm,
     CrfExportForm,
     CrfFormForm,
-  },
-  setup() {
-    const crfsStore = useCrfsStore()
-
-    return {
-      fetchTemplates: crfsStore.fetchTemplates,
-      totalTemplates: computed(() => crfsStore.totalTemplates),
-      templates: computed(() => crfsStore.templates),
-    }
   },
   data() {
     return {
@@ -228,22 +217,26 @@ export default {
       showExportForm: false,
       showCreateForm: false,
       sortMode: false,
+      templates: [],
+      totalTemplates: 0,
     }
   },
   created() {
     this.statuses = statuses
   },
   mounted() {
-    this.fetchTemplates()
+    this.getTemplates()
   },
   methods: {
-    getTemplates(options) {
-      const params = filteringParameters.prepareParameters(
-        options,
-        null,
-        null
-      )
-      this.fetchTemplates(params)
+    async getTemplates(options) {
+      const params = filteringParameters.prepareParameters(options, null, null)
+      if (!params) {
+        params.total_count = true
+      }
+      return crfs.get('study-events', { params }).then((resp) => {
+        this.templates = resp.data.items
+        this.totalTemplates = resp.data.total
+      })
     },
     openCreateAndAddForm(item) {
       this.selectedTemplate = item
@@ -265,7 +258,7 @@ export default {
       crfs
         .addFormsToTemplate(payload, this.selectedTemplate.uid, false)
         .then(() => {
-          this.fetchTemplates().then(() => {
+          this.getTemplates().then(() => {
             this.refreshForms += 1
           })
         })
@@ -277,16 +270,16 @@ export default {
     closeDefinition() {
       this.selectedTemplate = {}
       this.showTemplateForm = false
-      this.fetchTemplates()
+      this.getTemplates()
     },
     openLinkForm(item) {
       this.selectedTemplate = item
       this.showLinkForm = true
     },
-    closeLinkForm() {
+    async closeLinkForm() {
       this.showLinkForm = false
       this.selectedTemplate = {}
-      this.$refs.table.filterTable()
+      await this.getTemplates()
       this.refreshForms += 1
     },
     async expandAll(item) {

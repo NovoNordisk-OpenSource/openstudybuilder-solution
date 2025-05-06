@@ -35,6 +35,7 @@ def create_random_activity_vo() -> ActivityVO:
             create_random_activity_grouping_vo(),
             create_random_activity_grouping_vo(),
         ],
+        activity_instances=[],
         request_rationale=random_str(),
         is_data_collected=True,
     )
@@ -195,6 +196,7 @@ class TestActivityNegative(unittest.TestCase):
                         create_random_activity_grouping_vo(),
                         create_random_activity_grouping_vo(),
                     ],
+                    activity_instances=[],
                     request_rationale=random_str(),
                     is_data_collected=True,
                 ),
@@ -235,6 +237,7 @@ class TestActivityNegative(unittest.TestCase):
                         create_random_activity_grouping_vo(),
                         create_random_activity_grouping_vo(),
                     ],
+                    activity_instances=[],
                     request_rationale=random_str(),
                     is_data_collected=True,
                 ),

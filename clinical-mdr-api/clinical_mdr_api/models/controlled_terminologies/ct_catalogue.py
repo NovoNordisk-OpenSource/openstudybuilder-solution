@@ -13,7 +13,9 @@ from clinical_mdr_api.models.utils import BaseModel
 class CTCatalogue(BaseModel):
     name: Annotated[str, Field()]
 
-    library_name: Annotated[str | None, Field(nullable=True)] = None
+    library_name: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
 
 
 class CTCatalogueChanges(BaseModel):

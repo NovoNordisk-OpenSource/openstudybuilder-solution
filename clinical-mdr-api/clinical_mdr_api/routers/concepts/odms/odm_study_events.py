@@ -35,8 +35,8 @@ OdmStudyEventUID = Path(description="The unique id of the ODM Study Event.")
     response_model=CustomPage[OdmStudyEvent],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.allow_exports(
@@ -119,11 +119,11 @@ def get_all_odm_study_events(
     response_model=list[Any],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - Invalid field name specified",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_distinct_values_for_header(
@@ -166,8 +166,8 @@ def get_distinct_values_for_header(
     response_model=OdmStudyEvent,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_odm_study_event(odm_study_event_uid: Annotated[str, OdmStudyEventUID]):
@@ -182,8 +182,8 @@ def get_odm_study_event(odm_study_event_uid: Annotated[str, OdmStudyEventUID]):
     response_model=dict,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_active_relationships(odm_study_event_uid: Annotated[str, OdmStudyEventUID]):
@@ -212,11 +212,11 @@ Possible errors:
     response_model=list[OdmStudyEvent],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - The ODM Study Event with the specified 'odm_study_event_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_odm_study_event_versions(odm_study_event_uid: Annotated[str, OdmStudyEventUID]):
@@ -231,6 +231,7 @@ def get_odm_study_event_versions(odm_study_event_uid: Annotated[str, OdmStudyEve
     response_model=OdmStudyEvent,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {"description": "Created - The ODM Study Event was successfully created."},
         400: {
             "model": ErrorResponse,
@@ -239,7 +240,6 @@ def get_odm_study_event_versions(odm_study_event_uid: Annotated[str, OdmStudyEve
             "- The library doesn't allow to add new items.\n",
         },
         409: _generic_descriptions.ERROR_409,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def create_odm_study_event(
@@ -256,6 +256,7 @@ def create_odm_study_event(
     response_model=OdmStudyEvent,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -268,7 +269,6 @@ def create_odm_study_event(
             "model": ErrorResponse,
             "description": "Not Found - The ODM Study Event with the specified 'odm_study_event_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def edit_odm_study_event(
@@ -302,6 +302,7 @@ Possible errors:
     response_model=OdmStudyEvent,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -314,7 +315,6 @@ Possible errors:
             "- The ODM Study Event is not in final status.\n"
             "- The ODM Study Event with the specified 'odm_study_event_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def create_odm_study_event_version(
@@ -331,6 +331,7 @@ def create_odm_study_event_version(
     response_model=OdmStudyEvent,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -342,7 +343,6 @@ def create_odm_study_event_version(
             "model": ErrorResponse,
             "description": "Not Found - The ODM Study Event with the specified 'odm_study_event_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def approve_odm_study_event(odm_study_event_uid: Annotated[str, OdmStudyEventUID]):
@@ -357,6 +357,7 @@ def approve_odm_study_event(odm_study_event_uid: Annotated[str, OdmStudyEventUID
     response_model=OdmStudyEvent,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -367,7 +368,6 @@ def approve_odm_study_event(odm_study_event_uid: Annotated[str, OdmStudyEventUID
             "model": ErrorResponse,
             "description": "Not Found - The ODM Study Event with the specified 'odm_study_event_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def inactivate_odm_study_event(odm_study_event_uid: Annotated[str, OdmStudyEventUID]):
@@ -382,6 +382,7 @@ def inactivate_odm_study_event(odm_study_event_uid: Annotated[str, OdmStudyEvent
     response_model=OdmStudyEvent,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -392,7 +393,6 @@ def inactivate_odm_study_event(odm_study_event_uid: Annotated[str, OdmStudyEvent
             "model": ErrorResponse,
             "description": "Not Found - The ODM Study Event with the specified 'odm_study_event_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def reactivate_odm_study_event(odm_study_event_uid: Annotated[str, OdmStudyEventUID]):
@@ -407,6 +407,7 @@ def reactivate_odm_study_event(odm_study_event_uid: Annotated[str, OdmStudyEvent
     response_model=OdmStudyEvent,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {
             "description": "Created - The forms were successfully added to the ODM Study Event."
         },
@@ -418,7 +419,6 @@ def reactivate_odm_study_event(odm_study_event_uid: Annotated[str, OdmStudyEvent
             "model": ErrorResponse,
             "description": "Not Found - The forms with the specified 'odm_study_event_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def add_forms_to_odm_study_event(
@@ -448,6 +448,7 @@ def add_forms_to_odm_study_event(
     response_model=None,
     status_code=204,
     responses={
+        403: _generic_descriptions.ERROR_403,
         204: {
             "description": "No Content - The ODM Study Event was successfully deleted."
         },
@@ -462,7 +463,6 @@ def add_forms_to_odm_study_event(
             "model": ErrorResponse,
             "description": "Not Found - An ODM Study Event with the specified 'odm_study_event_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def delete_odm_study_event(odm_study_event_uid: Annotated[str, OdmStudyEventUID]):

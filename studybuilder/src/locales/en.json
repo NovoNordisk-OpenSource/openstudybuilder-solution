@@ -151,7 +151,9 @@
         "download": "Download",
         "and_or": "And/Or",
         "select": "Select",
-        "view_all": "View All"
+        "view_all": "View All",
+        "author": "Author",
+        "multi_error_title": "One or more errors were encountered during operation"
     },
     "_errors": {
         "exclusive_select": "Field and Null Flavor can't be selected at the same time.",
@@ -290,16 +292,39 @@
             "rationale_for_request": "A written note on why the request is needed."
         },
         "ActivityOverview": {
-            "general": "An Activity is a definition of an activity performed on a subject. The Activity is the overall name of the activity used in the protocol SoA.",
-            "cosmos_yaml": "The tab displays the Activity Instance in a YAML file structure. The naming complies with the CDISC COSMoS Biomedical Concept structure.",
-            "activity_groups": "The overall group(s) that the Activity belongs to. The grouping is also used for protocol SoA display and for searching in the List of Activities.",
-            "activity_subgroups": "This is a sub-grouping within a group. The sub-grouping is also used for protocol SoA display and for searching in the List of Activities.",
-            "adam_code": "The code used as the PARAM code in the ADaM data.",
-            "topic_code": "The CDW Topic Code",
-            "class": "The class in which the Activity Instance(s) of the Activity belongs to.",
-            "instances": "The list of Activity Instances for the Activity. An Activity Instance is a detailed definition of the activity specifying e.g. unit, specimen, location etc. To view the detailed definition of Activity Instances then navigate to the Activity Instance tab.",
-            "is_data_collected": "Specifies if the Activity involves data collection.",
-            "activity_groupings": "The list of groups and sub-groups the Activity is assigned to. "
+          "general": "An Activity is a definition of an activity performed on a subject. The Activity is the overall name of the activity used in the protocol SoA.",
+          "cosmos_yaml": "The tab displays the content in a YAML file structure. The naming complies with the CDISC COSMoS Biomedical Concept structure.",
+          "osb_yaml": "OSB YAML",
+          "activity_groups": "The overall group(s) that the activity belongs to. The grouping is also used for protocol SoA display and for searching in the List of Activities.",
+          "activity_subgroups": "This is a sub-grouping within a group. The sub-grouping is also used for protocol SoA display and for searching in the List of Activities.",
+          "activity_group": "Activity group",
+          "activity_subgroup": "Activity subgroup",
+          "adam_code": "The code used as the PARAM code in the ADaM data.",
+          "topic_code": "The CDW Topic Code",
+          "is_data_collected": "Specifies if the activity involves data collection.",
+          "class": "The class in which the Activity Instance belongs to.",
+          "instances": "The list of Activity Instances. An Activity Instance is a detailed definition of the activity specifying e.g. unit, specimen, location etc.",
+          "activity_groupings": "The list of groups and sub-groups assigned.",
+          "history_title": "History for activity [{uid}]",
+          "name": "Name",
+          "sentence_case_name": "Sentence case name",
+          "version": "Version",
+          "status": "Status",
+          "start_date": "Date when this version became active",
+          "end_date": "Date when this version became inactive",
+          "library": "Library where defined",
+          "author": "User who created or last modified",
+          "definition": "Definition",
+          "activities": "List of Activities",
+          "is_required_for_activity": "Required for activity",
+          "is_default_selected_for_activity": "Default selected for activity",
+          "is_data_sharing": "Data sharing",
+          "is_legacy_usage": "Legacy usage",
+          "item_type": "Item type",
+          "items": "Items",
+          "ct_term_name": "CT term name",
+          "unit_def_name": "Unit definition",
+          "item_class": "Item class"
         },
         "ActivityInstanceOverview": {
             "general": "An Activity Instance is detailed definition of an activity, showing the relevant qualifiers/items, e.g. unit, location, specimen, dose regimen.",
@@ -419,7 +444,7 @@
             "select_template": "To create an instantiation of a Time Frame, select from the relevant library and it's listed templates."
         },
         "StudyForm": {
-            "project_id": "Select the project number from the drop-down list. For details on project see <a href='https://openstudybuilder.com' target='_blank'>[Project Toolbox]<a> ",
+            "project_id": "Select the project number from the drop-down list. For details on project see <a href='https://novonordisk.sharepoint.com/sites/ProjectToolbox' target='_blank'>[Project Toolbox]<a> ",
             "project_name": "Auto-populated based on selected project",
             "brand_name": "Auto-populated based on selected project (only populated if brand name exists)",
             "study_id": "ID that will be generated for this study",
@@ -787,6 +812,7 @@
             "study_activities": "The activities can be selected from the library, from other studies or activity placeholders can be created for requesting new activities.",
             "detailed_soa": "The Detailed SoA is where you define at what visit(s) an activity is needed. The SoA has four levels: </br> 1) SoA group </br> 2) Activity group </br> 3) Activity subgroup </br> 4) Activity </br> Click the circle to select or unselect that an activity should be done at that visit. Click the eye icon to toggle the visibility of an activity level in the Protocol SoA. If an activity level is hidden, the timings ticked will 'inherit up' a level, so you can hide the Activity and Activity subgroup level to just include the Activity group in the Protocol SoA (for example you might want to hide e.g. 'Height' and 'Weight' and just include 'Body measurements' in the Protocol SoA).",
             "detailed_soa_actions": "Use the ellipsis (three dots) to the left of an activity to access these: </br><b> Edit Activity: </b> Adjust details in an activity. </br><b> Add Activity: </b>Add an activity above the selected activity (you can change the order of activities from the 'Study Activities' tab). </br><b> Exchange Activity: </b> Replace an activity with a new activity while keeping visits and footnotes in the detailed SoA. </br><b> Remove Activity: </b> Remove the activity, any visits and references to footnotes that have been added to this activity. A removed activity can be added again under the ‘Study Activities’ tab. Footnotes will not be removed, so can be linked to again.",
+            "detailed_soa_reordering": "You can use drag-and-drop for easy reordering of rows in the detailed SoA. To enable, click the 3 dots to the left of a row title and select 'Reorder' in the menu. Now you can reorder rows using your mouse - simply drag-and-drop on the arrow-icon to the left of the row. Reordering is done within a context - so if you select 'Reorder' on a SoA group, then you can reorder only SoA groups, whereas if you select 'Reorder' on an activity, then you can reorder only within that group. When you are done, click the 'Finish reordering' button to exit the reordering mode.",
             "study_footnotes": "Select or create footnotes to be used in the  protocol SoA. Footnotes can be selected from library, other studies or created from scratch. The footnotes will automatically be ordered by occurrence in the SoA.",
             "protocol_soa": "The Protocol SoA is a preview of the settings/selections in the 'Detailed SoA' section. The view is what will be pulled into the protocol template via the Word add-in. You can also preview the SoA at the detailed and data specification operational level.",
             "instructions": "NOTE: This functionality is not in use yet. When in use, it will link selected activities from the SoA to the applicable instruction text for section 8 of the protocol 'Study assessments and procedures'"
@@ -874,6 +900,13 @@
         },
         "StudyStructuresOverview": {
             "general": "The Study Structures page is intended to assist Standards Developers by offering an overview of how existing trials have been defined. It allows users to view the study structures they can replicate, identify trends, and spot any deviations. The Study Structures page aims to increase consistency when setting up new trials. Note that studies that share the same structure are grouped together and listed in the table under the same row. The columns display numeric values indicating the number of arms/epochs/elements in the trial or Y/N to indicate if cohorts are part of the trial design."
+        },
+        "ActivityInstanceForm": {
+            "general": "An activity instance is the data collection specification of an activity to be used to link the operational SoA with data collection instruments such as CRFs and external data specifications. The activity instance carries metadata for SDTM generation and links to ADaM through PARAM and PARAMCD.",
+            "step1_description": "Search for an activity to add an instance to. If more than one grouping exists make sure to choose the relevant one. If no relevant activity is present then cancel this flow and create a new activity.",
+            "step2_description": "Select an activity instance class and a data domain. These selections will determine the required and optional metadata to be defined for SDTM",
+            "step3_description": "Specify additional details to be used for the generation of PARAM and PARAMCD. The selection of values will autogenerate a suggestion for a unique name for the activity instance, PARAMCD and topic code. Its possible to manually modify the names.",
+            "step4_description": "Specify optional activity items that are not part of PARAM/PARAMCD but will be in SDTM. These values are used to specify data that can be collected on a CRF or a external specification. Examples are methods, anatomical locations or evaluator information that will increase the value of secondary use of data."
         }
     },
     "Topbar": {
@@ -1020,7 +1053,9 @@
             "projects": "Projects",
             "administrative_definitions": "Admin Definitions",
             "overview_pages": "Overview Pages",
-            "study_structures": "Study Structures"
+            "study_structures": "Study Structures",
+            "activities_subgroups": "Activity Subgroups",
+            "activities_groups": "Activity Groups"
         },
         "study": {
             "about": "About Studies",
@@ -1474,6 +1509,36 @@
         "subpart_id": "Subpart ID",
         "sub_study_id": "Sub study ID"
     },
+    "StudyCreationForm": {
+        "title": "Add study",
+        "step1_title": "Study information",
+        "step2_title": "Select what to copy",
+        "creation_mode_title": "Create a new study from scratch or from an existing study?",
+        "create_from_scratch": "Create a new study from scratch",
+        "create_from_study": "Create a study from an existing study",
+        "copy_notice": "The following information is NOT regarding the existing study, but the properties of your new study."
+    },
+    "StudyStructureCopyForm": {
+        "title1": "Which study do you want to copy from?",
+        "title2": "What do you want to copy?",
+        "preview_of_study": "Preview of study",
+        "arms": "Arms ({count})",
+        "arms_help": "A study arm specifies a specific intervention, combination of interventions or no treatment/intervention.",
+        "branches": "Branches ({count})",
+        "branches_help": "A Branch is a subset of an Arm where patients are typically split based on indication, dosing, or another parameter.",
+        "cohorts": "Cohorts ({count})",
+        "cohorts_help": "A cohort is a group of participants, who share a common characteristic (sex, disease etc) or an intervention (specific dose, device etc) within the study",
+        "elements": "Elements ({count})",
+        "elements_help": "An Element is used to specify the intended purpose within an Arm or an Epoch.",
+        "epochs": "Epochs ({count})",
+        "epochs_help": "An Epoch describes a time period in the study such as dose escalation of the drug. An Epoch can have a footnote attached which would be visible in the Schedule of Activities.",
+        "visits": "Study visits ({count})",
+        "visits_help": "A Study visit is a single point in time during the study where an activity is happening. A Study visit can have a footnote attached which would be visible in the Schedule of Activities.",
+        "design_matrix": "Design matrix",
+        "design_matrix_help": "The design matrix combines the overall interventions (Study Elements) that a subject will undergo while participating in a study arm over time (Study Epochs).",
+        "footnotes": "Include footnotes ({count})",
+        "no_selection": "You must select something to copy"
+    },
     "StudyForm": {
         "add_title": "Add study",
         "edit_title": "Edit study",
@@ -1492,7 +1557,10 @@
         "acronym_hint": "Optional free-text field (expect if used instead of study number in the early planning phase)",
         "add_success": "Study added",
         "update_success": "Study updated",
-        "one_of_two_error_message": "Either study number or study acronym must be given."
+        "one_of_two_error_message": "Either study number or study acronym must be given.",
+        "study_activity_warning_title": "Copying Study Activities?",
+        "study_activity_warning_msg": "If you are going to copy Study Activities as well, please refrain from doing any changes to the Study Structure before copying the Study Activities.",
+        "study_activity_warning_agree": "I understand"
     },
     "StudyDefineForm": {
         "title": "Add or edit study type information",
@@ -2078,7 +2146,9 @@
         "edit_activity_request": "Edit activity request",
         "submit_request": "Submit request",
         "similar_activity_alert": "It looks like an Activity with a similar name already exist. Please do not request Activities that already exists, but instead select the existing activity below.",
-        "similar_activity_title": "Existing activities with similar name"
+        "similar_activity_title": "Existing activities with similar name",
+        "draft_activity_edit_alert": "Selected activity is in DRAFT state. Please move the activity to FINAL state before editing the Activity Instance.",
+        "draft_activity_create_alert": "Selected activity is in DRAFT state. Please move the activity to FINAL state before creating the Activity Instance."
     },
     "StudyTitleView": {
         "title": "Study Title",
@@ -2892,7 +2962,8 @@
         "title": "Select study ID or acronym",
         "study_id": "Study ID",
         "study_acronym": "Study acronym",
-        "help_message": "Select study ID (or acronym if ID is not available)"
+        "help_message": "Select study ID (or acronym if ID is not available)",
+        "and_or": "And/Or"
     },
     "DictionaryTermTable": {
         "lower_case_name": "Lower case name",
@@ -3208,6 +3279,7 @@
         "study_activities": "Study Activities",
         "detailed_soa": "Detailed SoA",
         "detailed_soa_actions": "Detailed SoA: Edit, Add, Exchange or Remove an activity ",
+        "detailed_soa_reordering": "Drag-and-drop reordering",
         "study_footnotes": "Study Footnotes",
         "protocol_soa": "Protocol SoA"
     },
@@ -3307,10 +3379,10 @@
         "show_flowchart_groups": "Show SoA groups",
         "edit_dialog_title": "Do you want to edit",
         "table_caption": "SoA table",
-        "confirm_group_deletion": "Collapsible visit group {group} will be deleted",
+        "confirm_group_deletion": "The visit group {group} will be un-collapsed",
         "soa_footnotes": "SoA footnotes",
         "activity_instructions": "Activity Instructions",
-        "batch_edit_warning": "Batch editing will overwrite existing choices. Only activities expected to have same schedule should be batch-edited together.",
+        "batch_edit_warning": "Batch editing will overwrite existing choices. Only activities expected to have same schedule should be batch-edited together. If no SoA group is selected, then the currently selected SoA groups will remain unchanged.",
         "history_object_type": "Object type",
         "history_title": "Detailed SoA history for study [{study}]",
         "detailed": "Detailed",
@@ -3327,7 +3399,12 @@
         "exchange_success": "Study Activity Exchanged",
         "add_activity": "Add activity",
         "bulk_edit": "Bulk Edit Activities",
-        "bulk_remove": "Bulk Remove Activities"
+        "bulk_remove": "Bulk Remove Activities",
+        "reordering_help_msg": "Your changes are already saved, click here to leave reordering mode.",
+        "finish_reordering_btn": "Finish reordering",
+        "reorder": "Reorder",
+        "add_footnote": "Add footnote",
+        "remove_footnote": "Remove footnote"
     },
     "StudyActivityInstructionTable": {
         "activities": "Activities",
@@ -3777,6 +3854,7 @@
     "OdmViewer": {
         "blank": "Blank",
         "sdtm": "SDTM Annotation",
+        "allowed_namespaces": "Allowed Extensions",
         "specific": "Specific",
         "provide_uri": "Provide URI",
         "stylesheet": "Stylesheet",
@@ -4002,7 +4080,17 @@
         "class": "Activity instance class",
         "instances": "Activity instances",
         "activity_groupings": "Activity groupings",
-        "history_title": "History for activity [{uid}]"
+        "history_title": "History for activity [{uid}]",
+        "name": "Name",
+        "sentence_case_name": "Sentence case name",
+        "version": "Version",
+        "status": "Status",
+        "start_date": "Start date",
+        "end_date": "End date",
+        "library": "Library",
+        "author": "Author",
+        "definition": "Definition",
+        "activities": "Activities"
     },
     "YamlViewer": {
         "search_content": "Search for content",
@@ -4067,7 +4155,7 @@
         "new_version": "New version:",
         "keep_old_version": "Keep old version",
         "use_new_version": "Use new version",
-        "not_linked_warning": "This footnote is not linked to any Activity.",
+        "not_linked_warning": "This footnote is not linked to anything.",
         "remove": "Remove Footnote",
         "keep": "Keep footnote",
         "link_unlink": "Link/Unlink Footnote"
@@ -4213,10 +4301,6 @@
         "subparts_history_title": "Study subparts history",
         "subpart_history_title": "History for study subpart [{subpartUid}]"
     },
-    "SelectionOrderUpdateForm": {
-        "title": "Change order",
-        "order": "Order"
-    },
     "SystemAnnouncementsView": {
         "title": "System announcement",
         "show_title": "Show announcement",
@@ -4311,5 +4395,58 @@
     "FeatureFlagsView": {
         "title": "Feature flags",
         "help": "Feature flags enable you to toggle features in StudyBuilder on/off, thus controlling the visibility for the users. It only has an effect on the visibility in the environment you currently are in."
+    },
+    "ActivityInstanceForm": {
+        "add_title": "Add activity instance",
+        "edit_title": "Edit activity instance",
+        "step1_title": "Select activity",
+        "step1_long_title": "Choose which activity to add an Activity Instance to",
+        "step1_help": "When you select an activity that is part of multiple groupings, be aware that you select the right grouping. Make sure that the Activity Instance you want to create is not already existing with the same Activity grouping. Alternatively, you can add a new grouping to the Activity Instance.",
+        "step2_title": "Required",
+        "step2_long_title": "Required Activity Item Classes",
+        "step3_title": "PARAM/PARAMCD",
+        "step3_long_title": "Optional Activity Item Classes for PARAM/PARAMCD",
+        "step3_second_title": "Activity Instance data",
+        "step4_title": "Data specification",
+        "step4_long_title": "Additional Activity Item Classes for data specification",
+        "step4_help": "If you only choose one value that will be the default in comparison to multiple values where there will be choices in the data collection instruments.",
+        "activity_group": "Activity group",
+        "activity_subgroup": "Activity subgroup",
+        "activity_name": "Activity",
+        "activity_instances": "Existing activity instances",
+        "activity_instance_class": "Activity instance class",
+        "data_domain": "Data domain",
+        "activity_item_class": "Activity item class",
+        "value": "Value",
+        "attributes": "Attributes",
+        "molecular_weight": "Molecular weight (optional)",
+        "add_activity_item_class": "Add Activity Item Class",
+        "data_category": "Data category (optional)",
+        "data_subcategory": "Data subcategory (optional)",
+        "required_for_activity": "Required for activity",
+        "required_for_activity_help": "This flag is used in the standards governance process. The flag is used when some or all instances under an activity is required to be selected when that activity is selected, as an example in questionnaires",
+        "data_sharing": "Data sharing",
+        "data_sharing_help": "The purpose of this flag is to enable sharing details of the instance with CDISC and other pharmaceutical companies. The flag should not be checked for activity instances which contains Novo Nordisk specific information. For e.g. but not limited to, product information or antibodies specific to products etc.",
+        "default_selected": "Default selected for activity",
+        "default_selected_help": "The purpose of the default flag is to help the user select instances under an activity faster by flagging the instance that is used the most across all studies as the default. This is only used when more than one instance exists under an activity. The user can manually change the selection based on the need of the study",
+        "data_from_research_lab": "Data from a Research lab",
+        "data_from_research_lab_help": "This flag is used to indicate that the data collection is based on a research lab where all GxP requirements are not necessarily met. This means that the data can´t be used for endpoint analysis",
+        "add_success": "Activity Instance added",
+        "refresh_title": "Revert to suggested names",
+        "general": "General",
+        "step1_description": "Choose activity to add an instance to",
+        "step2_description": "Required activity item selection",
+        "step3_description": "Activity item class selection for PARAM and PARAMCD",
+        "step4_description": "Optional activity item selection",
+        "code_submission_value": "Code submission value",
+        "name_submission_value": "Name submission value"
+    },
+    "ActivityInstancePreview": {
+        "activity_instance_name": "Activity instance name",
+        "sentence_case_name": "Sentence case name",
+        "nci_preferred_name": "NCI preferred name (optional)",
+        "topic_code": "Topic code",
+        "adam_param_code": "ADaM parameter code",
+        "nci_code": "NCI Code (optional)"
     }
 }

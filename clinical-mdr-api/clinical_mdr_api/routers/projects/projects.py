@@ -31,8 +31,8 @@ ProjectUID = Path(description="The unique id of the project.")
     response_model=GenericFilteringReturn[Project],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.allow_exports(
@@ -103,8 +103,8 @@ def get_projects(
     response_model=list[Any],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_distinct_values_for_header(
@@ -145,8 +145,8 @@ def get_distinct_values_for_header(
     response_model=Project,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get(project_uid: Annotated[str, ProjectUID]) -> Project:
@@ -161,6 +161,7 @@ def get(project_uid: Annotated[str, ProjectUID]) -> Project:
     response_model=Project,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {"description": "Created - The project was successfully created."},
         400: {
             "model": ErrorResponse,
@@ -168,7 +169,6 @@ def get(project_uid: Annotated[str, ProjectUID]) -> Project:
             " information in response body.",
         },
         409: _generic_descriptions.ERROR_409,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def create(
@@ -188,13 +188,13 @@ def create(
     response_model=Project,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         400: {
             "model": ErrorResponse,
             "description": "Some application/business rules forbid to process the request. Expect more detailed"
             " information in response body.",
         },
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def edit(
@@ -211,12 +211,12 @@ def edit(
     summary="Delete a project.",
     status_code=204,
     responses={
+        403: _generic_descriptions.ERROR_403,
         400: {
             "model": ErrorResponse,
             "description": "Some application/business rules forbid to process the request. Expect more detailed"
             " information in response body.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def delete(project_uid: Annotated[str, ProjectUID]):

@@ -62,6 +62,11 @@ body {
   font-weight: bold !important;
 }
 
+// Disabling history headers to prevent sorting due to bugged vuetify "disable-sort" prop
+.history_headers .v-data-table__th {
+  pointer-events: none !important;
+}
+
 .v-data-table__td {
   border-left-style: outset;
   border-bottom-style: outset;
@@ -208,7 +213,7 @@ thead.v-data-table-header {
 
 .page-subtitle {
   color: rgb(var(--v-theme-primary)) !important;
-  font-size: 1.0rem !important;
+  font-size: 1rem !important;
   font-weight: bold !important;
   line-height: 2.5rem;
   margin-top: 8px;
@@ -224,12 +229,14 @@ thead.v-data-table-header {
 .dialog-title {
   color: rgb(var(--v-theme-primary));
   font-size: 1.5rem !important;
+  font-weight: 700;
 }
 
 .dialog-sub-title {
   margin-top: 20px;
   padding-bottom: 4px;
   font-weight: 600 !important;
+  color: rgb(var(--v-theme-primary));
 }
 
 .theme {
@@ -261,14 +268,14 @@ label.required::after {
   color: red;
 }
 
-input[type="datetime-local"] {
-    color: rgb(var(--v-theme-darkGrey));
+input[type='datetime-local'] {
+  color: rgb(var(--v-theme-darkGrey));
 }
 
 .nn-label {
-    font-size: 0.9em;
-    margin-bottom: 5px;
-    color: rgb(var(--v-theme-primary));
+  font-size: 0.9em;
+  margin-bottom: 5px;
+  color: rgb(var(--v-theme-primary));
 }
 
 // Landing pages

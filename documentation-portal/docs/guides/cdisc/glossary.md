@@ -11,3 +11,4 @@
 | package        | Refers to a set of codelists from the *CDISC CT* at one speicific *effective date*. E.g. 'SDTM CT effective 2020-06-26', 'ADaM CT effective 2019-12-20', ... |
 | package date   | Synomym for *effective date*. |
 | release date   | Synomym for *effective date*. |
+

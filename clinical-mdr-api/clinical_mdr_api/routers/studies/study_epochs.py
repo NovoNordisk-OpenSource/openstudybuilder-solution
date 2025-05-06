@@ -55,8 +55,8 @@ Possible errors:
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.allow_exports(
@@ -150,11 +150,11 @@ def get_all(
     response_model=list[Any],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - Invalid field name specified",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_distinct_values_for_header(
@@ -218,11 +218,11 @@ Possible errors:
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - there exist no selection of the provided study.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_study_epochs_all_audit_trail(
@@ -259,11 +259,11 @@ Possible errors:
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - there exist no epoch for the study provided.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 # pylint: disable=unused-argument
@@ -306,11 +306,11 @@ Possible errors:
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - there exist no selection of the visit for the study provided.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_study_epoch_audit_trail(
@@ -344,6 +344,7 @@ Possible errors:
     response_model_exclude_unset=True,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         400: {
             "model": ErrorResponse,
             "description": "Forbidden - There already exists a selection of the epoch",
@@ -352,7 +353,6 @@ Possible errors:
             "model": ErrorResponse,
             "description": "Not Found - Study is not found with the passed 'study_uid'.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
@@ -375,11 +375,11 @@ def post_new_epoch_create(
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - Study is not found with the passed 'study_uid'.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
@@ -418,12 +418,12 @@ Possible errors:
     response_model=None,
     status_code=204,
     responses={
+        403: _generic_descriptions.ERROR_403,
         204: {"description": "No Content - The selection was successfully deleted."},
         404: {
             "model": ErrorResponse,
             "description": "Not Found - the study or epoch doesn't exist.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
@@ -471,11 +471,11 @@ Possible errors:
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - There exist no selection between the study and epoch to reorder.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
@@ -516,11 +516,11 @@ Possible errors:
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - There exist no study or epoch .",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
@@ -549,8 +549,8 @@ def patch_update_epoch(
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_all_configs(
@@ -578,8 +578,8 @@ def get_all_configs(
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_all_consecutive_groups(

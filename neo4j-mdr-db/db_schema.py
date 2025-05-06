@@ -53,6 +53,9 @@ INDEXES = [
     ("NumericValueWithUnitValue", "name"),
     ("CompoundValue", "name"),
     ("CompoundAliasValue", "name"),
+    ("MedicinalProductValue", "name"),
+    ("ActiveSubstanceValue", "analyte_number"),
+    ("ActiveSubstanceValue", "inn"),
     ("OdmVendorNamespaceValue", "name"),
     ("OdmVendorAttributeValue", "name"),
     ("OdmTemplateValue", "name"),
@@ -84,6 +87,7 @@ INDEXES = [
     ("ActivityValidGroup", "uid"),
     ("StudyActivityGroup", "uid"),
     ("StudyActivitySubGroup", "uid"),
+    ("StudyActivityInstance", "uid"),
     ("StudyCompoundDosing", "uid"),
     ("StudySoAGroup", "uid"),
     ("SyntaxIndexingInstanceRoot", "uid"),
@@ -102,6 +106,7 @@ INDEXES = [
     ("SyntaxTemplateValue", "name"),
     ("TemplateParameterValue", "name"),
     ("TextValue", "name"),
+    ("WeekInStudyValue", "name"),
 ]
 
 # array of text indexes to create [label, property]
@@ -148,6 +153,8 @@ CONSTRAINTS = [
     ("ActivityInstanceRoot", "uid", CONSTRAINT_TYPE_NODE_KEY),
     ("ActivityInstanceClassRoot", "uid", CONSTRAINT_TYPE_NODE_KEY),
     ("ActivityItemClassRoot", "uid", CONSTRAINT_TYPE_NODE_KEY),
+    ("ActivityInstructionRoot", "uid", CONSTRAINT_TYPE_NODE_KEY),
+    ("ActivityInstructionTemplateRoot", "uid", CONSTRAINT_TYPE_NODE_KEY),
     ("NumericValueRoot", "uid", CONSTRAINT_TYPE_NODE_KEY),
     ("LagTimeRoot", "uid", CONSTRAINT_TYPE_NODE_KEY),
     ("SimpleConceptRoot", "uid", CONSTRAINT_TYPE_NODE_KEY),
@@ -210,6 +217,7 @@ CONSTRAINTS = [
     ("TemplateParameterValueRoot", "uid", CONSTRAINT_TYPE_NODE_KEY),
     ("TextValueRoot", "uid", CONSTRAINT_TYPE_NODE_KEY),
     ("User", "user_id", CONSTRAINT_TYPE_NODE_KEY),
+    ("WeekInStudyRoot", "uid", CONSTRAINT_TYPE_NODE_KEY),
 ]
 
 

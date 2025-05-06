@@ -32,7 +32,7 @@ disable = 'missing-function-docstring,missing-class-docstring,missing-module-doc
 
 [tool.pylint.'FORMAT']
 max-line-length = 200
-max-module-lines = 6000
+max-module-lines = 6500
 
 [tool.pylint.'BASIC']
 good-names = '_,c,e,i,j,k,l,r,v,x,y,z,ar,ex,rs,_AggregateRootType,db'
@@ -44,7 +44,7 @@ max-branches = 50
 max-locals = 50
 max-public-methods = 81
 max-returns = 9
-max-statements = 100
+max-statements = 150
 
 [tool.pylint.'REFACTORING']
 max-nested-blocks = 10

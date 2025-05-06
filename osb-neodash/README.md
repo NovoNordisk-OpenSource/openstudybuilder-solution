@@ -7,3 +7,4 @@ These files have to replace the same files which are in the public repository of
 These steps include adding the image you want for logo, making the necessary configurations in the JSON file & applying some CSS styling.
 
 The image to be built is in the Dockerfile, where at first we pull the public repository of Neodash, replace the files in the folder "osb-neodash" with the ones that come from public repository & then proceed building the docker image.
+

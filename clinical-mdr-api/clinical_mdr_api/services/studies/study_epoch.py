@@ -656,6 +656,8 @@ class StudyEpochService(StudySelectionMixin):
         subtype: SimpleCTTermNameWithConflictFlag | None = None
         epoch_type: SimpleCTTermNameWithConflictFlag | None = None
 
+        study_epoch_to_edit.author_id = self.author
+
         # if the epoch subtype wasn't changed in the PATCH payload then we don't have to derive all epoch objects
         # and we can take the epoch, epoch subtype and epoch type from the value object that is being patched
         if (
@@ -862,6 +864,7 @@ class StudyEpochService(StudySelectionMixin):
 
     @db.transaction
     def reorder(self, study_epoch_uid: str, study_uid: str, new_order: int):
+        new_order -= 1
         epoch = self.repo.find_by_uid(uid=study_epoch_uid, study_uid=study_uid)
         study_epochs = self.repo.find_all_epochs_by_study(epoch.study_uid)
         study_visits = self._repos.study_visit_repository.find_all_visits_by_study_uid(
@@ -877,7 +880,7 @@ class StudyEpochService(StudySelectionMixin):
                 epoch = epoch_checked
 
         ValidationException.raise_if(
-            new_order < 0, msg="New order cannot be lesser than 0"
+            new_order < 0, msg="New order cannot be lesser than 1"
         )
         ValidationException.raise_if(
             new_order > len(study_epochs),
@@ -1027,7 +1030,7 @@ class StudyEpochService(StudySelectionMixin):
             selection_history.append(
                 self._transform_all_to_response_history_model(
                     study_epoch_version
-                ).dict()
+                ).model_dump()
             )
 
         data = calculate_diffs(selection_history, StudyEpochVersion)
@@ -1067,7 +1070,7 @@ class StudyEpochService(StudySelectionMixin):
                 selection_history.append(
                     self._transform_all_to_response_history_model(
                         study_epoch_version
-                    ).dict()
+                    ).model_dump()
                 )
             if not data:
                 data = calculate_diffs(selection_history, StudyEpochVersion)

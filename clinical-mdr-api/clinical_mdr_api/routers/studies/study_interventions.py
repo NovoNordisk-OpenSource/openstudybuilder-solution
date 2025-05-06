@@ -24,8 +24,8 @@ StudyUID = Path(description="The unique id of the study.")
     summary="Returns Study Protocol Interventions table",
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
     response_model=TableWithFootnotes,
 )
@@ -41,9 +41,9 @@ def get_study_interventions(
     dependencies=[rbac.STUDY_READ],
     summary="Builds and returns an HTML document of Study Protocol Interventions table",
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"content": {"text/html": {"schema": {"type": "string"}}}},
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_study_interventions_html(
@@ -58,13 +58,13 @@ def get_study_interventions_html(
     dependencies=[rbac.STUDY_READ],
     summary="Builds and returns a DOCX document of Study Protocol Interventions table",
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {
             "content": {
                 "application/vnd.openxmlformats-officedocument.wordprocessingml.document": {}
             }
         },
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_study_interventions_docx(

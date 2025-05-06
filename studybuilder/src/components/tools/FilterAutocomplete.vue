@@ -209,6 +209,9 @@ function isDate() {
 }
 
 function getColumnData(value) {
+  if (!props.resource[0]) {
+    return
+  }
   if (value === 'actions') {
     return []
   }
@@ -288,13 +291,11 @@ function getColumnData(value) {
 }
 
 function filterDate() {
-  let dateData = []
-  if (data.value.length <= 1) {
-    return
-  }
-  dateData = [
+  let dateData = [
     formatDate(data.value[0]),
-    formatDate(data.value[data.value.length - 1]),
+    formatDate(
+      data.value.length <= 1 ? data.value[0] : data.value[data.value.length - 1]
+    ),
   ]
   emit('filter', { column: props.item.key, data: dateData })
 }

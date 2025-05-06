@@ -1,8 +1,9 @@
 # Set the build target (either "dev" or "prod") with a default of "dev"
 ARG TARGET=dev
+ARG PYTHON_IMAGE=python:3.13.0-slim
 
-# Start with a slim Python 3.13.0 base image, creating a shared base stage
-FROM python:3.13.0-slim AS common-stage
+# Start with a slim default Python 3.13.0 base image, creating a shared base stage
+FROM $PYTHON_IMAGE AS common-stage
 
 # Update package lists, upgrade installed packages and install required system packages
 RUN apt-get update \
@@ -26,12 +27,17 @@ COPY ./ ./
 
 # Begin the production stage
 FROM common-stage AS prod-stage
-# Remove test directories, install only production dependencies with Pipenv and byte-code compile application
-RUN echo "Building prod-stage" 1>&2 \
-    && rm -r clinical_mdr_api/tests consumer_api/tests \
-    && pipenv sync \
-    && rm -rf ~/.cache \
+
+# Remove test directories and byte-code compile application
+RUN echo "Compile prod-stage" 1>&2 \
+    rm -r clinical_mdr_api/tests consumer_api/tests \
     && python -m compileall -f -j 0 .
+
+USER $USER
+# Install only production dependencies with Pipenv
+RUN echo "Building prod-stage" 1>&2 \
+    && pipenv sync \
+    && rm -rf ~/.cache
 
 # Begin the development stage
 FROM common-stage AS dev-stage

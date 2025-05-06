@@ -75,6 +75,7 @@ Allowed parameters include : filter on fields, sort by field name with sort dire
     response_model=CustomPage[ActivityInstructionTemplate],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {
             "content": {
                 "text/csv": {
@@ -105,7 +106,6 @@ Allowed parameters include : filter on fields, sort by field name with sort dire
             }
         },
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.allow_exports(
@@ -202,11 +202,11 @@ def get_activity_instruction_templates(
     response_model=list[Any],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - Invalid field name specified",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_distinct_values_for_header(
@@ -257,8 +257,8 @@ def get_distinct_values_for_header(
     response_model=CustomPage[ActivityInstructionTemplate],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def retrieve_audit_trail(
@@ -310,12 +310,12 @@ def retrieve_audit_trail(
     response_model=ActivityInstructionTemplateWithCount | None,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": """Not Found - The activity instruction template with the
             specified 'activity_instruction_template_uid' (and the specified date/time and/or status) wasn't found.""",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_activity_instruction_template(
@@ -336,6 +336,7 @@ The returned versions are ordered by `start_date` descending (newest entries fir
     response_model=list[ActivityInstructionTemplateVersion],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {
             "content": {
                 "text/csv": {
@@ -378,7 +379,6 @@ The returned versions are ordered by `start_date` descending (newest entries fir
             "model": ErrorResponse,
             "description": "Not Found - The activity instruction template with the specified 'activity_instruction_template_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.allow_exports(
@@ -421,11 +421,11 @@ def get_activity_instruction_template_versions(
     response_model=ActivityInstructionTemplate,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - The activity instruction template with the specified 'activity_instruction_template_uid' and 'version' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_activity_instruction_template_version(
@@ -451,11 +451,11 @@ def get_activity_instruction_template_version(
     response_model=list[ActivityInstructionTemplate],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - The activity instruction template with the specified 'activity_instruction_template_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_activity_instruction_template_releases(
@@ -484,6 +484,7 @@ If the request succeeds:
     response_model=ActivityInstructionTemplate,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {
             "description": "Created - The activity template was successfully created."
         },
@@ -498,7 +499,6 @@ If the request succeeds:
             "description": "Not Found - The library with the specified 'library_name' could not be found.",
         },
         409: _generic_descriptions.ERROR_409,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def create_activity_instruction_template(
@@ -530,6 +530,7 @@ Once the activity instruction template has been approved, only the surrounding t
     response_model=ActivityInstructionTemplate,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -543,7 +544,6 @@ Once the activity instruction template has been approved, only the surrounding t
             "model": ErrorResponse,
             "description": "Not Found - The activity instruction template with the specified 'activity_instruction_template_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def edit(
@@ -572,6 +572,7 @@ def edit(
     response_model=ActivityInstructionTemplate,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {
             "description": "No content - The indexings for this template were successfully updated."
         },
@@ -579,7 +580,6 @@ def edit(
             "model": ErrorResponse,
             "description": "Not Found - The template with the specified 'activity_instruction_template_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def patch_indexings(
@@ -615,6 +615,7 @@ Only the surrounding text (excluding the parameters) can be changed.
     response_model=ActivityInstructionTemplate,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -627,7 +628,6 @@ Only the surrounding text (excluding the parameters) can be changed.
             "model": ErrorResponse,
             "description": "Not Found - The activity instruction template with the specified 'activity_instruction_template_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def create_new_version(
@@ -660,6 +660,7 @@ If the request succeeds:
     response_model=ActivityInstructionTemplate,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -675,7 +676,6 @@ If the request succeeds:
             "model": ErrorResponse,
             "description": "Conflict - there are activity instruction created from template and cascade is false",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def approve(
@@ -706,6 +706,7 @@ If the request succeeds:
     response_model=ActivityInstructionTemplate,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -716,7 +717,6 @@ If the request succeeds:
             "model": ErrorResponse,
             "description": "Not Found - The activity instruction template with the specified 'activity_instruction_template_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def inactivate(
@@ -740,6 +740,7 @@ If the request succeeds:
     response_model=ActivityInstructionTemplate,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -750,7 +751,6 @@ If the request succeeds:
             "model": ErrorResponse,
             "description": "Not Found - The activity instruction template with the specified 'activity_instruction_template_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def reactivate(
@@ -771,6 +771,7 @@ def reactivate(
     response_model=None,
     status_code=204,
     responses={
+        403: _generic_descriptions.ERROR_403,
         204: {
             "description": "No Content - The activity instruction template was successfully deleted."
         },
@@ -785,7 +786,6 @@ def reactivate(
             "model": ErrorResponse,
             "description": "Not Found - An activity instruction template with the specified uid could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def delete_activity_instruction_template(
@@ -813,8 +813,8 @@ In that case, the same parameter (with the same terms) is included multiple time
     response_model=list[TemplateParameter],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_parameters(
@@ -835,6 +835,7 @@ with the same content will succeed.
     + PARAMETERS_NOTE,
     status_code=202,
     responses={
+        403: _generic_descriptions.ERROR_403,
         202: {
             "description": "Accepted. The content is valid and may be submitted in another request."
         },
@@ -845,7 +846,6 @@ with the same content will succeed.
             "- One of the parameters wasn't found.",
         },
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def pre_validate(
@@ -866,6 +866,7 @@ def pre_validate(
     response_model=ActivityInstructionPreInstance,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {
             "description": "Created - The activity instruction pre-instance was successfully created."
         },
@@ -880,7 +881,6 @@ def pre_validate(
             "model": ErrorResponse,
             "description": "Not Found - The activity instruction template with the specified 'activity_instruction_template_uid' could not be found.",
         },
-        500: {"model": ErrorResponse, "description": "Internal Server Error"},
     },
 )
 def create_pre_instance(

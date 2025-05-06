@@ -132,11 +132,7 @@ export default {
       attributesKeyIndex: 0,
       existingAttributes: [],
       attributesToCreate: [],
-      compatibleTypes: [
-        'FormDef',
-        'ItemGroupDef',
-        'ItemDef',
-      ],
+      compatibleTypes: ['FormDef', 'ItemGroupDef', 'ItemDef'],
     }
   },
   computed: {
@@ -210,12 +206,14 @@ export default {
         )
       } else {
         let elementUid = ''
-        await crfs.createElement(this.form).then((resp) => {
-          elementUid = resp.data.uid
-        },
-        () => {
-          this.$refs.form.working = false
-        })
+        await crfs.createElement(this.form).then(
+          (resp) => {
+            elementUid = resp.data.uid
+          },
+          () => {
+            this.$refs.form.working = false
+          }
+        )
         if (this.attributesToCreate.length > 0 && elementUid !== '') {
           for (const attr of this.attributesToCreate) {
             delete attr.compatible_types

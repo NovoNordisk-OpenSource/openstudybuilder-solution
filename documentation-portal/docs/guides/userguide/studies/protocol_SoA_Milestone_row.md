@@ -31,3 +31,4 @@ To use the Milestones in the protocol SoA <br> [![using milestones in the protoc
 
 [![SoA milestones and epochs](~@source/images/user_guides/soa_milestone_row_6.png)](../../../images/user_guides/soa_milestone_row_6.png)
 *<p style="text-align: center;">Figure 3 Protocol SoA with epochs/with milestones</p>*
+

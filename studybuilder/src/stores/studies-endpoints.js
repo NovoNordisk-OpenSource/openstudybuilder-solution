@@ -112,7 +112,12 @@ export const useStudiesEndpointsStore = defineStore('studiesEndpoints', {
       }
       return study.selectStudyEndpoint(studyUid, data)
     },
-    async updateStudyEndpoint({ studyUid, studyEndpointUid, form, library_name }) {
+    async updateStudyEndpoint({
+      studyUid,
+      studyEndpointUid,
+      form,
+      library_name,
+    }) {
       const data = {}
       if (form.endpoint_units) {
         data.endpoint_units = {

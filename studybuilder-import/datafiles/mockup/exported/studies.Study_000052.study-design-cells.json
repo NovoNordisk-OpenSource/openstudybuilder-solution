@@ -1,0 +1,36 @@
+[
+  {
+    "author_username": "study.setup@b2bfv7zbjhkehgyw.onmicrosoft.com",
+    "design_cell_uid": "StudyDesignCell_000016",
+    "order": 1,
+    "start_date": "2025-03-27T12:02:52.116824Z",
+    "study_arm_name": "Human Insulin",
+    "study_arm_uid": "StudyArm_000064",
+    "study_branch_arm_name": null,
+    "study_branch_arm_uid": null,
+    "study_element_name": "Screening",
+    "study_element_uid": "StudyElement_000229",
+    "study_epoch_name": "Screening",
+    "study_epoch_uid": "StudyEpoch_000068",
+    "study_uid": "Study_000052",
+    "study_version": "LATEST on 2025-03-27T13:38:25.678356+00:00",
+    "transition_rule": "string"
+  },
+  {
+    "author_username": "study.setup@b2bfv7zbjhkehgyw.onmicrosoft.com",
+    "design_cell_uid": "StudyDesignCell_000015",
+    "order": 2,
+    "start_date": "2025-03-27T12:02:52.116824Z",
+    "study_arm_name": "Metformin",
+    "study_arm_uid": "StudyArm_000063",
+    "study_branch_arm_name": null,
+    "study_branch_arm_uid": null,
+    "study_element_name": "Screening",
+    "study_element_uid": "StudyElement_000229",
+    "study_epoch_name": "Screening",
+    "study_epoch_uid": "StudyEpoch_000068",
+    "study_uid": "Study_000052",
+    "study_version": "LATEST on 2025-03-27T13:38:25.678420+00:00",
+    "transition_rule": "string"
+  }
+]

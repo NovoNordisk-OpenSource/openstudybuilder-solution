@@ -3,17 +3,66 @@
     ref="table"
     key="objectiveTable"
     :headers="headers"
-    :items="studiesObjectivesStore.studyObjectives"
+    :items="studyObjectives"
     item-value="study_objective_uid"
-    :column-data-resource="`studies/${studiesGeneralStore.selectedStudy.uid}/study-objectives`"
+    :column-data-resource="
+      !sortMode
+        ? `studies/${studiesGeneralStore.selectedStudy.uid}/study-objectives`
+        : undefined
+    "
     export-object-label="StudyObjectives"
     :export-data-url="exportDataUrl"
     :items-length="studiesObjectivesStore.total"
     :history-data-fetcher="fetchObjectivesHistory"
     :history-title="$t('StudyObjectivesTable.global_history_title')"
     :history-html-fields="historyHtmlFields"
+    :disable-filtering="sortMode"
+    :hide-default-body="sortMode && studyObjectives.length > 0"
     @filter="fetchObjectives"
   >
+    <template #afterSwitches>
+      <div :title="$t('NNTableTooltips.reorder_content')">
+        <v-switch
+          v-model="sortMode"
+          :label="$t('NNTable.reorder_content')"
+          hide-details
+          class="mr-6"
+          color="primary"
+          :disabled="!accessGuard.checkPermission($roles.STUDY_WRITE)"
+        />
+      </div>
+    </template>
+    <template #tbody>
+      <tbody v-show="sortMode" ref="parent">
+        <tr
+          v-for="objective in studyObjectives"
+          :key="objective.study_objective_uid"
+        >
+          <td>
+            <v-icon size="small"> mdi-sort </v-icon>
+          </td>
+          <td>{{ objective.order }}</td>
+          <td>
+            <CTTermDisplay :term="objective.objective_level" />
+          </td>
+          <td>
+            <NNParameterHighlighter
+              v-if="objective.template"
+              :name="objective.template.name"
+              default-color="orange"
+            />
+            <NNParameterHighlighter
+              v-else
+              :name="objective.objective.name"
+              :show-prefix-and-postfix="false"
+            />
+          </td>
+          <td>{{ objective.endpoint_count }}</td>
+          <td>{{ $filters.date(objective.start_date) }}</td>
+          <td>{{ objective.author_username }}</td>
+        </tr>
+      </tbody>
+    </template>
     <template #actions>
       <v-btn
         data-cy="add-study-objective"
@@ -92,14 +141,6 @@
     />
   </v-dialog>
   <ConfirmDialog ref="confirm" :text-cols="6" :action-cols="5" />
-  <SelectionOrderUpdateForm
-    v-if="selectedObjective"
-    ref="orderForm"
-    :initial-value="selectedObjective.order"
-    :open="showOrderForm"
-    @close="closeOrderForm"
-    @submit="submitOrder"
-  />
   <v-snackbar v-model="snackbar" color="error" location="top">
     <v-icon class="mr-2" icon="mdi-alert-outline" />
     {{ $t('StudyObjectivesTable.sort_help_msg') }}
@@ -117,13 +158,13 @@ import ObjectiveEditForm from '@/components/studies/ObjectiveEditForm.vue'
 import ObjectiveForm from '@/components/studies/ObjectiveForm.vue'
 import HistoryTable from '@/components/tools/HistoryTable.vue'
 import ConfirmDialog from '@/components/tools/ConfirmDialog.vue'
-import SelectionOrderUpdateForm from '@/components/studies/SelectionOrderUpdateForm.vue'
 import statuses from '@/constants/statuses'
 import filteringParameters from '@/utils/filteringParameters'
 import { useAccessGuard } from '@/composables/accessGuard'
 import { useStudiesGeneralStore } from '@/stores/studies-general'
 import { useStudiesObjectivesStore } from '@/stores/studies-objectives'
 import { computed, inject, onMounted, ref, watch } from 'vue'
+import { useDragAndDrop } from '@formkit/drag-and-drop/vue'
 
 const { t } = useI18n()
 const eventBusEmit = inject('eventBusEmit')
@@ -132,6 +173,15 @@ const emit = defineEmits(['updated'])
 const studiesGeneralStore = useStudiesGeneralStore()
 const studiesObjectivesStore = useStudiesObjectivesStore()
 const accessGuard = useAccessGuard()
+
+const [parent, studyObjectives] = useDragAndDrop([], {
+  onDragend: (event) => {
+    const newOrder =
+      event.draggedNode.data.value.order -
+      (event.state.initialIndex - event.state.targetIndex)
+    changeOrder(event.draggedNode.data.value.study_objective_uid, newOrder)
+  },
+})
 
 const actions = [
   {
@@ -157,14 +207,6 @@ const actions = [
     iconColor: 'primary',
     condition: () => !studiesGeneralStore.selectedStudyVersion,
     click: editObjective,
-    accessRole: roles.STUDY_WRITE,
-  },
-  {
-    label: t('_global.change_order'),
-    icon: 'mdi-pencil-outline',
-    iconColor: 'primary',
-    condition: () => !studiesGeneralStore.selectedStudyVersion,
-    click: changeObjectiveOrder,
     accessRole: roles.STUDY_WRITE,
   },
   {
@@ -200,12 +242,12 @@ const selectedObjective = ref(null)
 const selectedStudyObjective = ref(null)
 const showEditForm = ref(false)
 const showForm = ref(false)
-const showOrderForm = ref(false)
 const snackbar = ref(false)
 const showHistory = ref(false)
 const abortConfirm = ref(false)
 const confirm = ref()
 const table = ref()
+const sortMode = ref(false)
 
 const exportDataUrl = computed(() => {
   return `studies/${studiesGeneralStore.selectedStudy.uid}/study-objectives`
@@ -239,7 +281,9 @@ function fetchObjectives(filters, options, filtersUpdated) {
     filtersUpdated
   )
   params.studyUid = studiesGeneralStore.selectedStudy.uid
-  studiesObjectivesStore.fetchStudyObjectives(params)
+  studiesObjectivesStore.fetchStudyObjectives(params).then((resp) => {
+    studyObjectives.value = resp.data.items
+  })
 }
 
 async function fetchObjectivesHistory() {
@@ -398,26 +442,26 @@ async function openHistory(studyObjective) {
   showHistory.value = true
 }
 
-function submitOrder(value) {
+function changeOrder(obbjectiveUid, newOrder) {
   study
     .updateStudyObjectiveOrder(
-      selectedObjective.value.study_uid,
-      selectedObjective.value.study_objective_uid,
-      value
+      studiesGeneralStore.selectedStudy.uid,
+      obbjectiveUid,
+      newOrder
     )
     .then(() => {
       table.value.filterTable()
-      closeOrderForm()
-      eventBusEmit('notification', { msg: t('_global.order_updated') })
+    })
+    .catch(() => {
+      table.value.filterTable()
     })
 }
-
-function changeObjectiveOrder(objective) {
-  selectedObjective.value = objective
-  showOrderForm.value = true
-}
-
-function closeOrderForm() {
-  showOrderForm.value = false
-}
 </script>
+<style scoped>
+tbody tr td {
+  border-left-style: outset;
+  border-bottom-style: outset;
+  border-width: 1px !important;
+  border-color: rgb(var(--v-theme-nnFadedBlue200)) !important;
+}
+</style>

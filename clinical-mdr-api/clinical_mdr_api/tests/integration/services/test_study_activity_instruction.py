@@ -51,7 +51,7 @@ class StudyActivityInstructionTestCase(unittest.TestCase):
         template_input = ActivityInstructionTemplateCreateInput(**data)
         service = ActivityInstructionTemplateService()
         self.template = service.create(template_input)
-        service.approve(self.template.dict()["uid"])
+        service.approve(self.template.model_dump()["uid"])
         self._create_study_activities()
         self.service = StudyActivityInstructionService()
 

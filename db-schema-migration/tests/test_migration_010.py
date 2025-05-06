@@ -494,6 +494,7 @@ def test_migrate_study_selection_metadata_merge(migration):
                 all_subgroup_nodes += len(study_activity_subgroup_dict.keys())
         assert amount_of_study_activity_sub_group_nodes == all_subgroup_nodes
 
+
 @pytest.mark.order(after="test_migrate_study_selection_metadata_merge")
 def test_repeat_migrate_study_selection_metadata_merge(migration):
     assert not migration_010.migrate_study_selection_metadata_merge(DB_DRIVER, logger)

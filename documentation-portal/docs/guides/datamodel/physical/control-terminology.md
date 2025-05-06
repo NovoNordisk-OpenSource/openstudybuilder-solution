@@ -434,3 +434,5 @@ The following relationships are part of the control terminology model:
 - Start nodes: `CTCodelistAttributesRoot`, `CTCodelistNameRoot`, `CTTermAttributesRoot`, `CTTermNameRoot`, `CodelistConfigRoot`
 - End nodes: `CTCodelistAttributesValue`, `CTCodelistNameValue`, `CTTermAttributesValue`, `CTTermNameValue`, `CodelistConfigValue`
 
+
+

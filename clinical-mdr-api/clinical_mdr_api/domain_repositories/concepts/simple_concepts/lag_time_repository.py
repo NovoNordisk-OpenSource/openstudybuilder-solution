@@ -14,6 +14,7 @@ from clinical_mdr_api.domain_repositories.models.generic import (
     VersionRoot,
     VersionValue,
 )
+from clinical_mdr_api.domains._utils import ObjectStatus
 from clinical_mdr_api.domains.concepts.simple_concepts.lag_time import (
     LagTimeAR,
     LagTimeVO,
@@ -112,7 +113,9 @@ class LagTimeRepository(NumericValueWithUnitRepository):
             item_metadata=self._library_item_metadata_vo_from_relation(relationship),
         )
 
-    def specific_alias_clause(self) -> str:
+    def specific_alias_clause(
+        self, only_specific_status: str = ObjectStatus.LATEST.name, **kwargs
+    ) -> str:
         return """
         WITH *,
             concept_value.value as value,

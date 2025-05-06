@@ -3,6 +3,7 @@ from typing import Annotated, Callable, Self
 
 from pydantic import Field
 
+from clinical_mdr_api.descriptions.general import CHANGES_FIELD_DESC
 from clinical_mdr_api.domains.concepts.odms.form import OdmFormRefVO
 from clinical_mdr_api.domains.concepts.odms.study_event import OdmStudyEventAR
 from clinical_mdr_api.models.concepts.concept import (
@@ -16,10 +17,16 @@ from common import config
 
 
 class OdmStudyEvent(ConceptModel):
-    oid: Annotated[str | None, Field(nullable=True)] = None
-    effective_date: Annotated[date | None, Field(nullable=True)] = None
-    retired_date: Annotated[date | None, Field(nullable=True)] = None
-    description: Annotated[str | None, Field(nullable=True)] = None
+    oid: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    effective_date: Annotated[
+        date | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    retired_date: Annotated[
+        date | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    description: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
     display_in_tree: bool = True
     forms: list[OdmFormRefModel]
     possible_actions: list[str]
@@ -65,7 +72,7 @@ class OdmStudyEvent(ConceptModel):
 
 
 class OdmStudyEventPostInput(ConceptPostInput):
-    oid: Annotated[str | None, Field(min_length=1)]
+    oid: Annotated[str | None, Field(min_length=1)] = None
     effective_date: date | None = None
     retired_date: date | None = None
     description: Annotated[str | None, Field(min_length=1)] = None
@@ -76,13 +83,13 @@ class OdmStudyEventPatchInput(ConceptPatchInput):
     oid: Annotated[str | None, Field(min_length=1)]
     effective_date: date | None
     retired_date: date | None
-    description: Annotated[str | None, Field(min_length=1)]
+    description: Annotated[str | None, Field(min_length=1)] = None
     display_in_tree: bool = True
 
 
 class OdmStudyEventFormPostInput(PostInputModel):
     uid: Annotated[str, Field(min_length=1)]
-    order_number: Annotated[int, Field(gt=0, lt=config.MAX_INT_NEO4J)]
+    order_number: Annotated[int, Field(lt=config.MAX_INT_NEO4J)]
     mandatory: Annotated[str, Field(min_length=1)]
     locked: Annotated[str, Field(min_length=1)] = "No"
     collection_exception_condition_oid: Annotated[str | None, Field(min_length=1)] = (
@@ -96,12 +103,8 @@ class OdmStudyEventVersion(OdmStudyEvent):
     """
 
     changes: Annotated[
-        dict[str, bool] | None,
+        list[str],
         Field(
-            description=(
-                "Denotes whether or not there was a change in a specific field/property compared to the previous version. "
-                "The field names in this object here refer to the field names of the timeframe (e.g. name, start_date, ..)."
-            ),
-            nullable=True,
+            description=CHANGES_FIELD_DESC,
         ),
-    ] = None
+    ] = []

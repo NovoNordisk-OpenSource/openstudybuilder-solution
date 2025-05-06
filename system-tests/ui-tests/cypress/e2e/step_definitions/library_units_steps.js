@@ -1,9 +1,17 @@
-const { When, Then } = require('@badeball/cypress-cucumber-preprocessor')
+const { Given, When, Then } = require('@badeball/cypress-cucumber-preprocessor')
 
-let unitName, initialVersion, newUnitName
+let unitName
+const fillConversionFactor = (value) => cy.fillInput('unit-conversion-factor', value)
+
+When('Add unit button is clicked', () => cy.clickButton('add-unit'))
+
+Then('A form for unit creation is opened', () => cy.contains('span.dialog-title', 'Add unit').should('be.visible'))
+
+Then('A form for unit edition is opened', () => cy.contains('span.dialog-title', 'Edit unit').should('be.visible'))
+
+When('Unit mandatory data is filled in', () => fillBasicUnitData())
 
 Then('The newly added unit is visible within the Units table', () => {
-  cy.searchAndCheckResults(unitName)
   cy.fixture('unitDefinition.js').then((unit) => {
     cy.checkRowByIndex(0, 'Library', 'Sponsor')
     cy.checkRowByIndex(0, 'Name', unitName)
@@ -20,86 +28,86 @@ Then('The newly added unit is visible within the Units table', () => {
   })
 })
 
+When('The user tries to create unit without Unit Name, codelist term and library provided', () => {
+  cy.clickButton('add-unit')
+  cy.clickButton('save-button')
+})
+
 When('The new unit is added', () => {
-  cy.wait(3000)
-  fillBasicUnitData(true, true)
+  fillBasicUnitData()
   fillOptionalUnitData()
-  cy.clickButton('save-button')
-  cy.checkSnackbarMessage('Unit added')
-  cy.wait(2000)
+  saveUnit('added')
 })
 
-When('Unit in Draft status is created', () => {
-  cy.wait(3000)
-  fillBasicUnitData(true, true)
-  cy.clickButton('save-button')
-  cy.checkSnackbarMessage('Unit added')
-  cy.wait(2000)
-})
-
-When('The user tries to create unit without Unit Name provided', () => {
-  fillBasicUnitData(false, true)
-  fillOptionalUnitData()
+When('The new unit with already existing name is added', () => {
+  fillBasicUnitData(unitName)
   cy.clickButton('save-button')
 })
-
-When('The user tries to create unit without Unit codelist term provided', () => {
-  fillBasicUnitData(true, false)
-  fillOptionalUnitData()
-  cy.clickButton('save-button')
-})
-
-Then('The validation appears for Unit Name field', () => cy.get('.v-input__details').should('contain', 'This field is required'))
-
-Then('The validation appears for Unit codelist term field', () => cy.get('.v-input__details').should('contain', 'This field is required'))
 
 When('The draft unit version is edited and saved with change description', () => {
-  newUnitName = `Update ${Date.now()}`
-  cy.wait(1500)
-  cy.get('.dialog-title').should('contain', 'Edit unit')
-  cy.get('[data-cy=unit-name] input').invoke('val').should('not.be.empty')
-  cy.get('[data-cy=unit-name] input').invoke('val').should('equal', unitName.toString())
-  cy.fillInput('unit-name', newUnitName)
+  fillEditionForm()
+  saveUnit('updated')
+})
+
+When('The unit edition form is filled with data', () => fillEditionForm())
+
+Then('The validation message appears for unit library field', () => cy.checkIfValidationAppears('unit-library'))
+
+Then('The validation message appears for unit name field', () => cy.checkIfValidationAppears('unit-name'))
+
+Then('The validation message appears for codelist term field', () => cy.checkIfValidationAppears('unit-codelist-term'))
+
+Then('The validation message appears for already existing unit name', () => cy.checkSnackbarMessage(`Unit Definition with ['name: ${unitName}'] already exists.`))
+
+When('Unit is found', () => cy.searchFor(unitName, false))
+
+Then('The Use complex unit conversion toggle is set to false', () => checkComplexUnitConversion(false))
+
+Then('The Use complex unit conversion toggle is set to true', () => checkComplexUnitConversion(true))
+
+Then('Use complex unit conversion option is enabled', () => setComplexUnitConversion(true))
+
+Then('Use complex unit conversion option is disabled', () => setComplexUnitConversion(false))
+
+Then('The Conversion factor to master field is blank', () => cy.get('[data-cy="unit-conversion-factor"] input').should('have.value', ''))
+
+Then('Unit creation is saved without errors', () => saveUnit('added'))
+
+Then('Unit editon is saved without errors', () => saveUnit('updated'))
+
+Then('The unit is not saved', () => cy.searchAndCheckPresence(unitName, false))
+
+Then('The created unit is found in table', () => cy.searchAndCheckPresence(unitName, true))
+
+Then('One unit is found after performing full name search', () => cy.searchAndCheckPresence(unitName, true))
+
+When('Conversion factor to master is filled with numeric value', () => fillConversionFactor(1))
+
+When('Conversion factor to master is filled with text value', () => fillConversionFactor('Test'))
+
+When('[API] Unit in status Draft exists', () => createUnitViaApi())
+
+When('[API] Unit is approved', () => cy.approveUnit())
+
+When('[API] Unit is inactivated', () => cy.inactivateUnit())
+
+Given('[API] First unit for search test is created', () => createUnitViaApi(`SearchTest${Date.now()}`))
+
+Given('[API] Second unit for search test is created', () => cy.createUnit(`SearchTest${Date.now()}`))
+
+Then('An error message appears when I save the unit', () => {
   cy.clickButton('save-button')
-  cy.wait(3000)
+  cy.checkSnackbarMessage(`Data validation error`)
 })
 
-When('The {string} action is clicked for the Unit', (action) => {
-  cy.searchAndCheckResults(unitName)
-  cy.getCellValue(0, 'Version').then(curVersion => initialVersion = parseFloat(curVersion))
-  cy.performActionOnSearchedItem(action)
-})
-
-Then('The Unit status is kept as {string} and version is incremented by {string}', (status, increment) => {
-  searchAndCheckStatusAndVersion(newUnitName, status, (initialVersion + parseFloat(increment)).toFixed(1))
-})
-
-Then('The Unit status is changed to {string} and version remain unchanged', (status) => {
-  searchAndCheckStatusAndVersion(unitName, status, initialVersion)
-})
-
-Then('The Unit status is changed to {string} and version is incremented by {string}', (status, increment) => {
-  searchAndCheckStatusAndVersion(unitName, status,  (initialVersion + parseFloat(increment)).toFixed(1))
-})
-
-Then('The Unit status is changed to {string} and version is rounded up to full number', (status) => {
-  searchAndCheckStatusAndVersion(unitName, status, Math.ceil(initialVersion))
-})
-
-function searchAndCheckStatusAndVersion(name, status, version) {
-  cy.searchAndCheckResults(name)
-  cy.checkRowByIndex(0, 'Status', status)
-  cy.checkRowByIndex(0, 'Version', version)
-}
-
-function fillBasicUnitData(setName, setCodelistTerm) {
+function fillBasicUnitData(customName = '') {
   cy.clickButton('add-unit')
-  cy.wait(3000)
+  cy.wait(1000)
   cy.fixture('unitDefinition.js').then((unit) => {
-    unitName = Date.now()
+    unitName = customName ? customName : `Unit${Date.now()}`
     cy.selectVSelect('unit-library', unit.library)
-    if (setName) cy.fillInput('unit-name', unitName)
-    if (setCodelistTerm) cy.selectVSelect('unit-codelist-term', unit.ct_units)
+    cy.fillInput('unit-name', unitName)
+    cy.selectVSelect('unit-codelist-term', unit.ct_units)
   })
 }
 
@@ -114,4 +122,43 @@ function fillOptionalUnitData() {
     cy.fillInput('unit-legacy-code', unit.legacy_code)
     cy.fillInput('unit-conversion-factor', unit.conversion_factor_to_master)
   })
+}
+
+function createUnitViaApi(customName = '') {
+    cy.intercept('/api/concepts/unit-definitions?*').as('getData')
+    cy.getCtUnitUid()
+    cy.getUnitSubsetUid()
+    cy.createUnit(customName)
+    cy.getUnitName().then(name => unitName = name)
+    cy.wait('@getData', {timeout: 20000})
+}
+
+function saveUnit(action) {
+  const request = action == 'added' ? '/api/concepts/unit-definitions' : '/api/concepts/unit-definitions/Unit*'
+  cy.intercept(request).as('getData')
+  cy.clickButton('save-button')
+  cy.checkSnackbarMessage(`Unit ${action}`)
+  cy.wait('@getData', {timeout: 20000})
+}
+
+function setComplexUnitConversion(check) {
+  cy.wait(1000)
+  cy.get('input[aria-label="Use complex unit conversion"]').then(el => {
+    check ? cy.wrap(el).check() : cy.wrap(el).uncheck()
+    cy.wrap(el).should((check ? 'be.checked' : 'not.be.checked'))
+  })
+}
+
+function checkComplexUnitConversion(shouldBeChecked) {
+  const validation = shouldBeChecked ? 'be.checked' : 'not.be.checked'
+  cy.contains('.v-overlay .v-switch', 'Use complex unit conversion').find('input').should(validation)
+}
+
+function fillEditionForm() {
+  cy.wait(1500)
+  cy.get('.dialog-title').should('contain', 'Edit unit')
+  cy.get('[data-cy=unit-name] input').invoke('val').should('not.be.empty')
+  cy.get('[data-cy=unit-name] input').invoke('val').should('equal', unitName)
+  unitName = `Update ${unitName}`
+  cy.fillInput('unit-name', `Update ${unitName}`)
 }

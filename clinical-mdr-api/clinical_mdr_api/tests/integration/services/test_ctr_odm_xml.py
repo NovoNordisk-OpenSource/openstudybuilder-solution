@@ -10,9 +10,11 @@ from clinical_mdr_api.tests.utils.checks import (
     assert_response_content_type,
     assert_response_status_code,
 )
+from clinical_mdr_api.tests.utils.utils import get_db_name
 
 ODM_TAG = "{http://www.cdisc.org/ns/odm/v1.3}ODM"
-TEST_DB_NAME = __name__.replace("_", "-")
+TEST_DB_NAME = get_db_name(__name__)
+
 
 log = logging.getLogger(__name__)
 

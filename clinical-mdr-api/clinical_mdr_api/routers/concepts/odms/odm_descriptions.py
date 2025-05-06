@@ -1,15 +1,9 @@
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Body, Path, Query
+from fastapi import APIRouter, Path, Query
 from pydantic.types import Json
 
-from clinical_mdr_api.models.concepts.odms.odm_description import (
-    OdmDescription,
-    OdmDescriptionBatchInput,
-    OdmDescriptionBatchOutput,
-    OdmDescriptionPatchInput,
-    OdmDescriptionPostInput,
-)
+from clinical_mdr_api.models.concepts.odms.odm_description import OdmDescription
 from clinical_mdr_api.models.utils import CustomPage
 from clinical_mdr_api.repositories._utils import FilterOperator
 from clinical_mdr_api.routers import _generic_descriptions
@@ -34,8 +28,8 @@ OdmDescriptionUID = Path(description="The unique id of the ODM Description.")
     response_model=CustomPage[OdmDescription],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_all_odm_descriptions(
@@ -92,11 +86,11 @@ def get_all_odm_descriptions(
     response_model=list[Any],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - Invalid field name specified",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_distinct_values_for_header(
@@ -139,8 +133,8 @@ def get_distinct_values_for_header(
     response_model=dict,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_active_relationships(odm_description_uid: Annotated[str, OdmDescriptionUID]):
@@ -169,11 +163,11 @@ Possible errors:
     response_model=list[OdmDescription],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - The ODM Description with the specified 'odm_description_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_odm_description_versions(
@@ -183,226 +177,226 @@ def get_odm_description_versions(
     return odm_description_service.get_version_history(uid=odm_description_uid)
 
 
-@router.post(
-    "",
-    dependencies=[rbac.LIBRARY_WRITE],
-    summary="Create a new ODM Description",
-    response_model=OdmDescription,
-    status_code=201,
-    responses={
-        201: {"description": "Created - The ODM Description was successfully created."},
-        400: {
-            "model": ErrorResponse,
-            "description": "Forbidden - Reasons include e.g.: \n"
-            "- The library doesn't exist.\n"
-            "- The library doesn't allow to add new items.\n",
-        },
-        409: _generic_descriptions.ERROR_409,
-        500: _generic_descriptions.ERROR_500,
-    },
-)
-def create_odm_description(
-    odm_description_create_input: Annotated[OdmDescriptionPostInput, Body()],
-):
-    odm_description_service = OdmDescriptionService()
-    return odm_description_service.create(concept_input=odm_description_create_input)
+# @router.post(
+#     "",
+#     dependencies=[rbac.LIBRARY_WRITE],
+#     summary="Create a new ODM Description",
+#     response_model=OdmDescription,
+#     status_code=201,
+#     responses={
+#         201: {"description": "Created - The ODM Description was successfully created."},
+#         400: {
+#             "model": ErrorResponse,
+#             "description": "Forbidden - Reasons include e.g.: \n"
+#             "- The library doesn't exist.\n"
+#             "- The library doesn't allow to add new items.\n",
+#         },
+#         409: _generic_descriptions.ERROR_409,
+#
+#     },
+# )
+# def create_odm_description(
+#     odm_description_create_input: Annotated[OdmDescriptionPostInput, Body()],
+# ):
+#     odm_description_service = OdmDescriptionService()
+#     return odm_description_service.create(concept_input=odm_description_create_input)
 
 
-@router.post(
-    "/batch",
-    dependencies=[rbac.LIBRARY_WRITE],
-    summary="Batch operations (create, edit) for ODM Descriptions",
-    response_model=list[OdmDescriptionBatchOutput],
-    status_code=207,
-    responses={
-        404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
-    },
-)
-def odm_description_batch_operations(
-    operations: Annotated[
-        list[OdmDescriptionBatchInput], Body(description="List of operation to perform")
-    ]
-):
-    odm_description_service = OdmDescriptionService()
-    return odm_description_service.handle_batch_operations(operations)
+# @router.post(
+#     "/batch",
+#     dependencies=[rbac.LIBRARY_WRITE],
+#     summary="Batch operations (create, edit) for ODM Descriptions",
+#     response_model=list[OdmDescriptionBatchOutput],
+#     status_code=207,
+#     responses={
+#         404: _generic_descriptions.ERROR_404,
+#
+#     },
+# )
+# def odm_description_batch_operations(
+#     operations: Annotated[
+#         list[OdmDescriptionBatchInput], Body(description="List of operation to perform")
+#     ]
+# ):
+#     odm_description_service = OdmDescriptionService()
+#     return odm_description_service.handle_batch_operations(operations)
 
 
-@router.patch(
-    "/{odm_description_uid}",
-    dependencies=[rbac.LIBRARY_WRITE],
-    summary="Update an ODM Description",
-    response_model=OdmDescription,
-    status_code=200,
-    responses={
-        200: {"description": "OK."},
-        400: {
-            "model": ErrorResponse,
-            "description": "Forbidden - Reasons include e.g.: \n"
-            "- The ODM Description is not in draft status.\n"
-            "- The ODM Description had been in 'Final' status before.\n"
-            "- The library doesn't allow to edit draft versions.\n",
-        },
-        404: {
-            "model": ErrorResponse,
-            "description": "Not Found - The ODM Description with the specified 'odm_description_uid' wasn't found.",
-        },
-        500: _generic_descriptions.ERROR_500,
-    },
-)
-def edit_odm_description(
-    odm_description_uid: Annotated[str, OdmDescriptionUID],
-    odm_description_edit_input: Annotated[OdmDescriptionPatchInput, Body()],
-):
-    odm_description_service = OdmDescriptionService()
-    return odm_description_service.edit_draft(
-        uid=odm_description_uid, concept_edit_input=odm_description_edit_input
-    )
+# @router.patch(
+#     "/{odm_description_uid}",
+#     dependencies=[rbac.LIBRARY_WRITE],
+#     summary="Update an ODM Description",
+#     response_model=OdmDescription,
+#     status_code=200,
+#     responses={
+#         200: {"description": "OK."},
+#         400: {
+#             "model": ErrorResponse,
+#             "description": "Forbidden - Reasons include e.g.: \n"
+#             "- The ODM Description is not in draft status.\n"
+#             "- The ODM Description had been in 'Final' status before.\n"
+#             "- The library doesn't allow to edit draft versions.\n",
+#         },
+#         404: {
+#             "model": ErrorResponse,
+#             "description": "Not Found - The ODM Description with the specified 'odm_description_uid' wasn't found.",
+#         },
+#
+#     },
+# )
+# def edit_odm_description(
+#     odm_description_uid: Annotated[str, OdmDescriptionUID],
+#     odm_description_edit_input: Annotated[OdmDescriptionPatchInput, Body()],
+# ):
+#     odm_description_service = OdmDescriptionService()
+#     return odm_description_service.edit_draft(
+#         uid=odm_description_uid, concept_edit_input=odm_description_edit_input
+#     )
 
 
-@router.post(
-    "/{odm_description_uid}/versions",
-    dependencies=[rbac.LIBRARY_WRITE],
-    summary="Create a new version of an ODM Description",
-    description="""
-State before:
- - uid must exist and the ODM Description must be in status Final.
+# @router.post(
+#     "/{odm_description_uid}/versions",
+#     dependencies=[rbac.LIBRARY_WRITE],
+#     summary="Create a new version of an ODM Description",
+#     description="""
+# State before:
+#  - uid must exist and the ODM Description must be in status Final.
 
-Business logic:
-- The ODM Description is changed to a draft state.
+# Business logic:
+# - The ODM Description is changed to a draft state.
 
-State after:
- - ODM Description changed status to Draft and assigned a new minor version number.
- - Audit trail entry must be made with action of creating a new draft version.
+# State after:
+#  - ODM Description changed status to Draft and assigned a new minor version number.
+#  - Audit trail entry must be made with action of creating a new draft version.
 
-Possible errors:
- - Invalid uid or status not Final.
-""",
-    response_model=OdmDescription,
-    status_code=201,
-    responses={
-        201: {"description": "OK."},
-        400: {
-            "model": ErrorResponse,
-            "description": "Forbidden - Reasons include e.g.: \n"
-            "- The library doesn't allow to create ODM Descriptions.\n",
-        },
-        404: {
-            "model": ErrorResponse,
-            "description": "Not Found - Reasons include e.g.: \n"
-            "- The ODM Description is not in final status.\n"
-            "- The ODM Description with the specified 'odm_description_uid' could not be found.",
-        },
-        500: _generic_descriptions.ERROR_500,
-    },
-)
-def create_odm_description_version(
-    odm_description_uid: Annotated[str, OdmDescriptionUID]
-):
-    odm_description_service = OdmDescriptionService()
-    return odm_description_service.create_new_version(uid=odm_description_uid)
-
-
-@router.post(
-    "/{odm_description_uid}/approvals",
-    dependencies=[rbac.LIBRARY_WRITE],
-    summary="Approve an ODM Description",
-    response_model=OdmDescription,
-    status_code=201,
-    responses={
-        201: {"description": "OK."},
-        400: {
-            "model": ErrorResponse,
-            "description": "Forbidden - Reasons include e.g.: \n"
-            "- The ODM Description is not in draft status.\n"
-            "- The library doesn't allow to approve ODM Description.\n",
-        },
-        404: {
-            "model": ErrorResponse,
-            "description": "Not Found - The ODM Description with the specified 'odm_description_uid' wasn't found.",
-        },
-        500: _generic_descriptions.ERROR_500,
-    },
-)
-def approve_odm_description(odm_description_uid: Annotated[str, OdmDescriptionUID]):
-    odm_description_service = OdmDescriptionService()
-    return odm_description_service.approve(uid=odm_description_uid)
+# Possible errors:
+#  - Invalid uid or status not Final.
+# """,
+#     response_model=OdmDescription,
+#     status_code=201,
+#     responses={
+#         201: {"description": "OK."},
+#         400: {
+#             "model": ErrorResponse,
+#             "description": "Forbidden - Reasons include e.g.: \n"
+#             "- The library doesn't allow to create ODM Descriptions.\n",
+#         },
+#         404: {
+#             "model": ErrorResponse,
+#             "description": "Not Found - Reasons include e.g.: \n"
+#             "- The ODM Description is not in final status.\n"
+#             "- The ODM Description with the specified 'odm_description_uid' could not be found.",
+#         },
+#
+#     },
+# )
+# def create_odm_description_version(
+#     odm_description_uid: Annotated[str, OdmDescriptionUID]
+# ):
+#     odm_description_service = OdmDescriptionService()
+#     return odm_description_service.create_new_version(uid=odm_description_uid)
 
 
-@router.delete(
-    "/{odm_description_uid}/activations",
-    dependencies=[rbac.LIBRARY_WRITE],
-    summary=" Inactivate an ODM Description",
-    response_model=OdmDescription,
-    status_code=200,
-    responses={
-        200: {"description": "OK."},
-        400: {
-            "model": ErrorResponse,
-            "description": "Forbidden - Reasons include e.g.: \n"
-            "- The ODM Description is not in final status.",
-        },
-        404: {
-            "model": ErrorResponse,
-            "description": "Not Found - The ODM Description with the specified 'odm_description_uid' could not be found.",
-        },
-        500: _generic_descriptions.ERROR_500,
-    },
-)
-def inactivate_odm_description(odm_description_uid: Annotated[str, OdmDescriptionUID]):
-    odm_description_service = OdmDescriptionService()
-    return odm_description_service.inactivate_final(uid=odm_description_uid)
+# @router.post(
+#     "/{odm_description_uid}/approvals",
+#     dependencies=[rbac.LIBRARY_WRITE],
+#     summary="Approve an ODM Description",
+#     response_model=OdmDescription,
+#     status_code=201,
+#     responses={
+#         201: {"description": "OK."},
+#         400: {
+#             "model": ErrorResponse,
+#             "description": "Forbidden - Reasons include e.g.: \n"
+#             "- The ODM Description is not in draft status.\n"
+#             "- The library doesn't allow to approve ODM Description.\n",
+#         },
+#         404: {
+#             "model": ErrorResponse,
+#             "description": "Not Found - The ODM Description with the specified 'odm_description_uid' wasn't found.",
+#         },
+#
+#     },
+# )
+# def approve_odm_description(odm_description_uid: Annotated[str, OdmDescriptionUID]):
+#     odm_description_service = OdmDescriptionService()
+#     return odm_description_service.approve(uid=odm_description_uid)
 
 
-@router.post(
-    "/{odm_description_uid}/activations",
-    dependencies=[rbac.LIBRARY_WRITE],
-    summary="Reactivate an ODM Description",
-    response_model=OdmDescription,
-    status_code=200,
-    responses={
-        200: {"description": "OK."},
-        400: {
-            "model": ErrorResponse,
-            "description": "Forbidden - Reasons include e.g.: \n"
-            "- The ODM Description is not in retired status.",
-        },
-        404: {
-            "model": ErrorResponse,
-            "description": "Not Found - The ODM Description with the specified 'odm_description_uid' could not be found.",
-        },
-        500: _generic_descriptions.ERROR_500,
-    },
-)
-def reactivate_odm_description(odm_description_uid: Annotated[str, OdmDescriptionUID]):
-    odm_description_service = OdmDescriptionService()
-    return odm_description_service.reactivate_retired(uid=odm_description_uid)
+# @router.delete(
+#     "/{odm_description_uid}/activations",
+#     dependencies=[rbac.LIBRARY_WRITE],
+#     summary=" Inactivate an ODM Description",
+#     response_model=OdmDescription,
+#     status_code=200,
+#     responses={
+#         200: {"description": "OK."},
+#         400: {
+#             "model": ErrorResponse,
+#             "description": "Forbidden - Reasons include e.g.: \n"
+#             "- The ODM Description is not in final status.",
+#         },
+#         404: {
+#             "model": ErrorResponse,
+#             "description": "Not Found - The ODM Description with the specified 'odm_description_uid' could not be found.",
+#         },
+#
+#     },
+# )
+# def inactivate_odm_description(odm_description_uid: Annotated[str, OdmDescriptionUID]):
+#     odm_description_service = OdmDescriptionService()
+#     return odm_description_service.inactivate_final(uid=odm_description_uid)
 
 
-@router.delete(
-    "/{odm_description_uid}",
-    dependencies=[rbac.LIBRARY_WRITE],
-    summary="Delete draft version of ODM Description",
-    response_model=None,
-    status_code=204,
-    responses={
-        204: {
-            "description": "No Content - The ODM Description was successfully deleted."
-        },
-        400: {
-            "model": ErrorResponse,
-            "description": "Forbidden - Reasons include e.g.: \n"
-            "- The ODM Description is not in draft status.\n"
-            "- The ODM Description was already in final state or is in use.\n"
-            "- The library doesn't allow to delete ODM Description.",
-        },
-        404: {
-            "model": ErrorResponse,
-            "description": "Not Found - An ODM Description with the specified 'odm_description_uid' could not be found.",
-        },
-        500: _generic_descriptions.ERROR_500,
-    },
-)
-def delete_odm_description(odm_description_uid: Annotated[str, OdmDescriptionUID]):
-    odm_description_service = OdmDescriptionService()
-    odm_description_service.soft_delete(uid=odm_description_uid)
+# @router.post(
+#     "/{odm_description_uid}/activations",
+#     dependencies=[rbac.LIBRARY_WRITE],
+#     summary="Reactivate an ODM Description",
+#     response_model=OdmDescription,
+#     status_code=200,
+#     responses={
+#         200: {"description": "OK."},
+#         400: {
+#             "model": ErrorResponse,
+#             "description": "Forbidden - Reasons include e.g.: \n"
+#             "- The ODM Description is not in retired status.",
+#         },
+#         404: {
+#             "model": ErrorResponse,
+#             "description": "Not Found - The ODM Description with the specified 'odm_description_uid' could not be found.",
+#         },
+#
+#     },
+# )
+# def reactivate_odm_description(odm_description_uid: Annotated[str, OdmDescriptionUID]):
+#     odm_description_service = OdmDescriptionService()
+#     return odm_description_service.reactivate_retired(uid=odm_description_uid)
+
+
+# @router.delete(
+#     "/{odm_description_uid}",
+#     dependencies=[rbac.LIBRARY_WRITE],
+#     summary="Delete draft version of ODM Description",
+#     response_model=None,
+#     status_code=204,
+#     responses={
+#         204: {
+#             "description": "No Content - The ODM Description was successfully deleted."
+#         },
+#         400: {
+#             "model": ErrorResponse,
+#             "description": "Forbidden - Reasons include e.g.: \n"
+#             "- The ODM Description is not in draft status.\n"
+#             "- The ODM Description was already in final state or is in use.\n"
+#             "- The library doesn't allow to delete ODM Description.",
+#         },
+#         404: {
+#             "model": ErrorResponse,
+#             "description": "Not Found - An ODM Description with the specified 'odm_description_uid' could not be found.",
+#         },
+#
+#     },
+# )
+# def delete_odm_description(odm_description_uid: Annotated[str, OdmDescriptionUID]):
+#     odm_description_service = OdmDescriptionService()
+#     odm_description_service.soft_delete(uid=odm_description_uid)

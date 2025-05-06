@@ -15,3 +15,4 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 ## Licenses and Acknowledgements for Incorporated Software
 
 This component contains software licensed under different licenses when compiled, please refer to the sbom.md file for further information and full license texts.
+

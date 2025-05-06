@@ -851,14 +851,16 @@ def test_all_history_of_specific_selection7(api_client):
     assert res[0]["status"] is None
     assert res[0]["change_type"] == "Edit"
     assert res[0]["accepted_version"] is False
-    assert res[0]["changes"] == {
-        "name": True,
-        "planned_duration": True,
-        "element_subtype": True,
-        "start_date": True,
-        "end_date": True,
-        "change_type": True,
-    }
+    assert set(res[0]["changes"]) == set(
+        [
+            "name",
+            "planned_duration",
+            "element_subtype",
+            "start_date",
+            "end_date",
+            "change_type",
+        ]
+    )
     assert res[1]["study_uid"] == "study_root"
     assert res[1]["order"] == 2
     assert res[1]["project_number"] is None
@@ -904,7 +906,7 @@ def test_all_history_of_specific_selection7(api_client):
     assert res[1]["status"] is None
     assert res[1]["change_type"] == "Create"
     assert res[1]["accepted_version"] is False
-    assert res[1]["changes"] == {}
+    assert res[1]["changes"] == []
 
 
 def test_reorder_specific4(api_client):
@@ -1021,12 +1023,14 @@ def test_all_history_of_all_selection_study_elements(api_client):
     assert res[0]["status"] is None
     assert res[0]["change_type"] == "Edit"
     assert res[0]["accepted_version"] is False
-    assert res[0]["changes"] == {
-        "order": True,
-        "start_date": True,
-        "end_date": True,
-        "change_type": True,
-    }
+    assert set(res[0]["changes"]) == set(
+        [
+            "order",
+            "start_date",
+            "end_date",
+            "change_type",
+        ]
+    )
     assert res[1]["study_uid"] == "study_root"
     assert res[1]["order"] == 1
     assert res[1]["project_number"] is None
@@ -1079,7 +1083,7 @@ def test_all_history_of_all_selection_study_elements(api_client):
     assert res[1]["status"] is None
     assert res[1]["change_type"] == "Create"
     assert res[1]["accepted_version"] is False
-    assert res[1]["changes"] == {}
+    assert res[1]["changes"] == []
     assert res[2]["study_uid"] == "study_root"
     assert res[2]["order"] == 1
     assert res[2]["project_number"] is None
@@ -1134,11 +1138,13 @@ def test_all_history_of_all_selection_study_elements(api_client):
     assert res[2]["status"] is None
     assert res[2]["change_type"] == "Edit"
     assert res[2]["accepted_version"] is False
-    assert res[2]["changes"] == {
-        "order": True,
-        "start_date": True,
-        "end_date": True,
-    }
+    assert set(res[2]["changes"]) == set(
+        [
+            "order",
+            "start_date",
+            "end_date",
+        ]
+    )
     assert res[3]["study_uid"] == "study_root"
     assert res[3]["order"] == 2
     assert res[3]["project_number"] is None
@@ -1193,14 +1199,16 @@ def test_all_history_of_all_selection_study_elements(api_client):
     assert res[3]["status"] is None
     assert res[3]["change_type"] == "Edit"
     assert res[3]["accepted_version"] is False
-    assert res[3]["changes"] == {
-        "name": True,
-        "planned_duration": True,
-        "element_subtype": True,
-        "start_date": True,
-        "end_date": True,
-        "change_type": True,
-    }
+    assert set(res[3]["changes"]) == set(
+        [
+            "name",
+            "planned_duration",
+            "element_subtype",
+            "start_date",
+            "end_date",
+            "change_type",
+        ]
+    )
     assert res[4]["study_uid"] == "study_root"
     assert res[4]["order"] == 2
     assert res[4]["project_number"] is None
@@ -1246,7 +1254,7 @@ def test_all_history_of_all_selection_study_elements(api_client):
     assert res[4]["status"] is None
     assert res[4]["change_type"] == "Create"
     assert res[4]["accepted_version"] is False
-    assert res[4]["changes"] == {}
+    assert res[4]["changes"] == []
 
 
 def test_get_allowed_element_config(api_client):

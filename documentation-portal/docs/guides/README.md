@@ -37,3 +37,5 @@ The solution design is inspired by the CDISC 360 POC and the intention is for th
 - A **Library** part for maintenance of terminology standards (incl. CDISC controlled terminology and external dictionaries for medical terms, pharmacological classes, units, etc.) as well as syntax templates for cross-study and cross-project standardisation
 
 - An underlying **knowledge database** to enable complex queries and dashboards showing aggregated information
+
+

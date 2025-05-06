@@ -8,11 +8,12 @@
     item-value="study_activity_uid"
     export-object-label="StudyActivities"
     :export-data-url="exportDataUrl"
-    :column-data-resource="`studies/${selectedStudy.uid}/study-activities`"
+    :column-data-resource="`studies/${studiesGeneralStore.selectedStudy.uid}/study-activities`"
     :history-data-fetcher="fetchActivitiesHistory"
     :history-title="$t('StudyActivityTable.global_history_title')"
     :extra-item-class="getItemRowClass"
     :filters-modify-function="modifyFilters"
+    :initial-sort-by="[{ key: 'activity.name', order: 'asc' }]"
     @filter="getStudyActivities"
   >
     <template #[`footer.prepend`]>
@@ -31,7 +32,8 @@
         color="primary"
         :title="$t('StudyActivityTable.edit_activity_selection')"
         :disabled="
-          !checkPermission($roles.STUDY_WRITE) || selectedStudyVersion !== null
+          !accessGuard.checkPermission($roles.STUDY_WRITE) ||
+          studiesGeneralStore.selectedStudyVersion !== null
         "
         icon="mdi-pencil-box-multiple-outline"
         @click="openBatchEditForm(slot.selected)"
@@ -44,7 +46,8 @@
         data-cy="add-study-activity"
         :title="$t('StudyActivityForm.add_title')"
         :disabled="
-          !checkPermission($roles.STUDY_WRITE) || selectedStudyVersion !== null
+          !accessGuard.checkPermission($roles.STUDY_WRITE) ||
+          studiesGeneralStore.selectedStudyVersion !== null
         "
         icon="mdi-plus"
         @click.stop="showActivityForm = true"
@@ -61,7 +64,10 @@
       <router-link
         :to="{
           name: 'StudyActivityOverview',
-          params: { study_id: selectedStudy.uid, id: item.study_activity_uid },
+          params: {
+            study_id: studiesGeneralStore.selectedStudy.uid,
+            id: item.study_activity_uid,
+          },
         }"
       >
         {{ item.activity.name }}
@@ -118,18 +124,9 @@
     @close="closeBatchEditForm"
     @remove="unselectItem"
   />
-  <SelectionOrderUpdateForm
-    v-if="selectedStudyActivity"
-    ref="orderForm"
-    :initial-value="selectedStudyActivity.order"
-    :open="showOrderForm"
-    @close="closeOrderForm"
-    @submit="submitOrder"
-  />
 </template>
 
-<script>
-import { computed } from 'vue'
+<script setup>
 import study from '@/api/study'
 import ActionsMenu from '@/components/tools/ActionsMenu.vue'
 import ConfirmDialog from '@/components/tools/ConfirmDialog.vue'
@@ -140,422 +137,403 @@ import StudyActivityBatchEditForm from './StudyActivityBatchEditForm.vue'
 import StudyActivityEditForm from './StudyActivityEditForm.vue'
 import StudyDraftedActivityEditForm from './StudyDraftedActivityEditForm.vue'
 import StudyActivityForm from './StudyActivityForm.vue'
-import SelectionOrderUpdateForm from '@/components/studies/SelectionOrderUpdateForm.vue'
 import libConstants from '@/constants/libraries'
 import { useAccessGuard } from '@/composables/accessGuard'
 import { useStudiesGeneralStore } from '@/stores/studies-general'
 import { useStudyActivitiesStore } from '@/stores/studies-activities'
+import { computed, inject, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 
-export default {
-  components: {
-    ActionsMenu,
-    ConfirmDialog,
-    NNTable,
-    StudyActivityBatchEditForm,
-    StudyActivityEditForm,
-    StudyDraftedActivityEditForm,
-    StudyActivityForm,
-    HistoryTable,
-    SelectionOrderUpdateForm,
+const { t } = useI18n()
+const eventBusEmit = inject('eventBusEmit')
+const roles = inject('roles')
+const studiesGeneralStore = useStudiesGeneralStore()
+const activitiesStore = useStudyActivitiesStore()
+const accessGuard = useAccessGuard()
+const table = ref()
+const confirm = ref()
+const studyActivities = ref([])
+const actions = [
+  {
+    label: t('StudyActivityTable.remove_and_info'),
+    icon: 'mdi-delete-outline',
+    iconColor: 'error',
+    condition: (item) =>
+      !studiesGeneralStore.selectedStudyVersion && checkIfRejected(item),
+    click: showRejectingInfo,
+    accessRole: roles.STUDY_WRITE,
   },
-  inject: ['eventBusEmit'],
-  setup() {
-    const accessGuard = useAccessGuard()
-    const studiesGeneralStore = useStudiesGeneralStore()
-    const activitiesStore = useStudyActivitiesStore()
+  {
+    label: t('StudyActivityTable.update_activity_version'),
+    icon: 'mdi-update',
+    condition: (item) =>
+      item.latest_activity && !item.latest_activity.is_request_rejected,
+    click: updateToLatest,
+    accessRole: roles.STUDY_WRITE,
+  },
+  {
+    label: t('_global.edit'),
+    icon: 'mdi-pencil-outline',
+    iconColor: 'primary',
+    condition: (item) =>
+      !studiesGeneralStore.selectedStudyVersion &&
+      !checkIfRejected(item) &&
+      checkIfActivityRequestIsEditable(item),
+    click: editStudyActivity,
+    accessRole: roles.STUDY_WRITE,
+  },
+  {
+    label: t('_global.edit'),
+    icon: 'mdi-pencil-outline',
+    iconColor: 'primary',
+    condition: (item) =>
+      !studiesGeneralStore.selectedStudyVersion &&
+      !checkIfRejected(item) &&
+      !checkIfActivityRequestIsEditable(item),
+    click: editStudyDraftedActivity,
+    accessRole: roles.STUDY_WRITE,
+  },
+  {
+    label: t('StudyActivityTable.remove_activity'),
+    icon: 'mdi-delete-outline',
+    iconColor: 'error',
+    condition: () => !studiesGeneralStore.selectedStudyVersion,
+    click: deleteStudyActivity,
+    accessRole: roles.STUDY_WRITE,
+  },
+  {
+    label: t('_global.history'),
+    icon: 'mdi-history',
+    click: openHistory,
+  },
+]
+const activityHistoryItems = ref([])
+const currentSelection = ref([])
+const selectedStudyActivity = ref(null)
+const showActivityEditForm = ref(false)
+const showDraftedActivityEditForm = ref(false)
+const showActivityForm = ref(false)
+const showBatchEditForm = ref(false)
+const showHistory = ref(false)
+const headers = [
+  { title: '', key: 'actions', width: '1%' },
+  { title: t('_global.library'), key: 'activity.library_name' },
+  {
+    title: t('StudyActivity.flowchart_group'),
+    key: 'study_soa_group.soa_group_term_name',
+  },
+  {
+    title: t('StudyActivity.activity_group'),
+    key: 'study_activity_group.activity_group_name',
+    exludeFromHeader: ['activity.is_data_collected'],
+  },
+  {
+    title: t('StudyActivity.activity_sub_group'),
+    key: 'study_activity_subgroup.activity_subgroup_name',
+    exludeFromHeader: ['activity.is_data_collected'],
+  },
+  { title: t('StudyActivity.activity'), key: 'activity.name' },
+  {
+    title: t('StudyActivity.data_collection'),
+    key: 'activity.is_data_collected',
+  },
+  { title: t('_global.modified'), key: 'start_date' },
+  { title: t('_global.modified_by'), key: 'author_username' },
+]
+const total = ref(0)
 
+const exportDataUrl = computed(() => {
+  return `studies/${studiesGeneralStore.selectedStudy.uid}/study-activities`
+})
+const activityHistoryTitle = computed(() => {
+  if (selectedStudyActivity.value) {
+    return t('StudyActivityTable.study_activity_history_title', {
+      studyActivityUid: selectedStudyActivity.value.study_activity_uid,
+    })
+  }
+  return ''
+})
+
+function checkIfActivityRequestIsEditable(activity) {
+  if (activity.activity.library_name === 'Requested') {
+    return activity.activity.is_request_final
+  }
+  return true
+}
+
+function checkIfRejected(activity) {
+  if (
+    activity.latest_activity &&
+    activity.latest_activity.is_request_rejected
+  ) {
+    return true
+  }
+  return false
+}
+
+async function showRejectingInfo(item) {
+  const options = {
+    type: 'info',
+    width: 600,
+    agreeLabel: t('_global.accept'),
+  }
+  const msg = `${t('StudyActivityTable.rejected_activity_info_part_1')}
+    <p style="color:orange;"><b>${item.latest_activity.name}</b></p> ${t('StudyActivityTable.rejected_activity_info_part_2')}
+    <p style="color:orange;"><b>${item.latest_activity.reason_for_rejecting}.</b></p>${t('StudyActivityTable.rejected_activity_info_part_3')}
+    <b style="color:orange;">${item.latest_activity.contact_person.toUpperCase()}</b>${t('StudyActivityTable.rejected_activity_info_part_4')}`
+  if (await confirm.value.open(msg, options)) {
+    study
+      .deleteStudyActivity(
+        studiesGeneralStore.selectedStudy.uid,
+        item.study_activity_uid
+      )
+      .then(() => {
+        table.value.filterTable()
+        eventBusEmit('notification', {
+          type: 'success',
+          msg: t('StudyActivityTable.delete_success'),
+        })
+      })
+  }
+}
+
+function getActionsForItem(item) {
+  const result = [...actions]
+  if (item.activity.replaced_by_activity) {
+    result.unshift({
+      label: t('StudyActivityTable.update_activity_request'),
+      icon: 'mdi-bell-outline',
+      iconColor: 'red',
+      click: updateActivityRequest,
+    })
+  }
+  return result
+}
+
+function updateToLatest(item) {
+  study
+    .updateToLatestActivityVersion(
+      studiesGeneralStore.selectedStudy.uid,
+      item.study_activity_uid
+    )
+    .then(() => {
+      eventBusEmit('notification', {
+        type: 'success',
+        msg: t('StudyActivityTable.update_success'),
+      })
+      table.value.filterTable()
+    })
+}
+
+function actionsMenuBadge(item) {
+  if (item.activity.replaced_by_activity || item.latest_activity) {
     return {
-      selectedStudy: computed(() => studiesGeneralStore.selectedStudy),
-      selectedStudyVersion: computed(
-        () => studiesGeneralStore.selectedStudyVersion
-      ),
-      activitiesStore,
-      ...accessGuard,
+      color: 'error',
+      icon: 'mdi-exclamation',
     }
-  },
-  data() {
-    return {
-      libConstants: libConstants,
-      actions: [
-        {
-          label: this.$t('StudyActivityTable.remove_and_info'),
-          icon: 'mdi-delete-outline',
-          iconColor: 'error',
-          condition: (item) =>
-            !this.selectedStudyVersion && this.checkIfRejected(item),
-          click: this.showRejectingInfo,
-          accessRole: this.$roles.STUDY_WRITE,
-        },
-        {
-          label: this.$t('StudyActivityTable.update_activity_version'),
-          icon: 'mdi-update',
-          condition: (item) =>
-            item.latest_activity && !item.latest_activity.is_request_rejected,
-          click: this.updateToLatest,
-          accessRole: this.$roles.STUDY_WRITE,
-        },
-        {
-          label: this.$t('_global.edit'),
-          icon: 'mdi-pencil-outline',
-          iconColor: 'primary',
-          condition: (item) =>
-            !this.selectedStudyVersion &&
-            !this.checkIfRejected(item) &&
-            this.checkIfActivityRequestIsEditable(item),
-          click: this.editStudyActivity,
-          accessRole: this.$roles.STUDY_WRITE,
-        },
-        {
-          label: this.$t('_global.edit'),
-          icon: 'mdi-pencil-outline',
-          iconColor: 'primary',
-          condition: (item) =>
-            !this.selectedStudyVersion &&
-            !this.checkIfRejected(item) &&
-            !this.checkIfActivityRequestIsEditable(item),
-          click: this.editStudyDraftedActivity,
-          accessRole: this.$roles.STUDY_WRITE,
-        },
-        {
-          label: this.$t('_global.change_order'),
-          icon: 'mdi-pencil-outline',
-          iconColor: 'primary',
-          condition: () => !this.selectedStudyVersion,
-          click: this.changeActivityOrder,
-          accessRole: this.$roles.STUDY_WRITE,
-        },
-        {
-          label: this.$t('StudyActivityTable.remove_activity'),
-          icon: 'mdi-delete-outline',
-          iconColor: 'error',
-          condition: () => !this.selectedStudyVersion,
-          click: this.deleteStudyActivity,
-          accessRole: this.$roles.STUDY_WRITE,
-        },
-        {
-          label: this.$t('_global.history'),
-          icon: 'mdi-history',
-          click: this.openHistory,
-        },
-      ],
-      activityHistoryItems: [],
-      currentSelection: [],
-      selectedStudyActivity: null,
-      showActivityEditForm: false,
-      showDraftedActivityEditForm: false,
-      showActivityForm: false,
-      showBatchEditForm: false,
-      showHistory: false,
-      showOrderForm: false,
-      headers: [
-        { title: '', key: 'actions', width: '1%' },
-        { title: '#', key: 'order', width: '5%' },
-        { title: this.$t('_global.library'), key: 'activity.library_name' },
-        {
-          title: this.$t('StudyActivity.flowchart_group'),
-          key: 'study_soa_group.soa_group_term_name',
-        },
-        {
-          title: this.$t('StudyActivity.activity_group'),
-          key: 'study_activity_group.activity_group_name',
-          exludeFromHeader: ['activity.is_data_collected'],
-        },
-        {
-          title: this.$t('StudyActivity.activity_sub_group'),
-          key: 'study_activity_subgroup.activity_subgroup_name',
-          exludeFromHeader: ['activity.is_data_collected'],
-        },
-        { title: this.$t('StudyActivity.activity'), key: 'activity.name' },
-        {
-          title: this.$t('StudyActivity.data_collection'),
-          key: 'activity.is_data_collected',
-        },
-        { title: this.$t('_global.modified'), key: 'start_date' },
-        { title: this.$t('_global.modified_by'), key: 'author_username' },
-      ],
-      studyActivities: [],
-      total: 0,
-    }
-  },
-  computed: {
-    exportDataUrl() {
-      return `studies/${this.selectedStudy.uid}/study-activities`
-    },
-    activityHistoryTitle() {
-      if (this.selectedStudyActivity) {
-        return this.$t('StudyActivityTable.study_activity_history_title', {
-          studyActivityUid: this.selectedStudyActivity.study_activity_uid,
-        })
-      }
-      return ''
-    },
-  },
-  methods: {
-    checkIfActivityRequestIsEditable(activity) {
-      if (activity.activity.library_name === 'Requested') {
-        return activity.activity.is_request_final
-      }
-      return true
-    },
-    checkIfRejected(activity) {
-      if (
-        activity.latest_activity &&
-        activity.latest_activity.is_request_rejected
-      ) {
-        return true
-      }
-      return false
-    },
-    async showRejectingInfo(item) {
-      const options = {
-        type: 'info',
-        width: 600,
-        agreeLabel: this.$t('_global.accept'),
-      }
-      const msg = `${this.$t('StudyActivityTable.rejected_activity_info_part_1')}
-        <p style="color:orange;"><b>${item.latest_activity.name}</b></p> ${this.$t('StudyActivityTable.rejected_activity_info_part_2')}
-        <p style="color:orange;"><b>${item.latest_activity.reason_for_rejecting}.</b></p>${this.$t('StudyActivityTable.rejected_activity_info_part_3')}
-        <b style="color:orange;">${item.latest_activity.contact_person.toUpperCase()}</b>${this.$t('StudyActivityTable.rejected_activity_info_part_4')}`
-      if (await this.$refs.confirm.open(msg, options)) {
-        study
-          .deleteStudyActivity(this.selectedStudy.uid, item.study_activity_uid)
-          .then(() => {
-            this.$refs.table.filterTable()
-            this.eventBusEmit('notification', {
-              type: 'success',
-              msg: this.$t('StudyActivityTable.delete_success'),
-            })
-          })
-      }
-    },
-    getActionsForItem(item) {
-      const result = [...this.actions]
-      if (item.activity.replaced_by_activity) {
-        result.unshift({
-          label: this.$t('StudyActivityTable.update_activity_request'),
-          icon: 'mdi-bell-outline',
-          iconColor: 'red',
-          click: this.updateActivityRequest,
-        })
-      }
-      return result
-    },
-    updateToLatest(item) {
-      study.updateToLatestActivityVersion(this.selectedStudy.uid, item.study_activity_uid)
-        .then(() => {
-          this.eventBusEmit('notification', {
-            type: 'success',
-            msg: this.$t('StudyActivityTable.update_success'),
-          })
-          this.$refs.table.filterTable()
-        })
-    },
-    actionsMenuBadge(item) {
-      if (
-        item.activity.replaced_by_activity ||
-        (item.latest_activity)
-      ) {
-        return {
-          color: 'error',
-          icon: 'mdi-exclamation',
-        }
-      }
-      return undefined
-    },
-    closeForm() {
-      this.showActivityForm = false
-    },
-    closeEditForm() {
-      this.showActivityEditForm = false
-      this.showDraftedActivityEditForm = false
-      this.selectedStudyActivity = null
-    },
-    async deleteStudyActivity(sa) {
-      const options = { type: 'warning' }
-      const activity = sa.activity.name
-      const msg =
-        !sa.show_activity_group_in_protocol_flowchart ||
-        !sa.show_activity_subgroup_in_protocol_flowchart
-          ? this.$t('StudyActivityTable.confirm_delete_side_effect')
-          : this.$t('StudyActivityTable.confirm_delete', { activity })
-      if (await this.$refs.confirm.open(msg, options)) {
-        study
-          .deleteStudyActivity(this.selectedStudy.uid, sa.study_activity_uid)
-          .then(() => {
-            this.$refs.table.filterTable()
-            this.eventBusEmit('notification', {
-              type: 'success',
-              msg: this.$t('StudyActivityTable.delete_success'),
-            })
-          })
-      }
-    },
-    editStudyActivity(sa) {
-      this.selectedStudyActivity = sa
-      this.showActivityEditForm = true
-    },
-    editStudyDraftedActivity(sa) {
-      this.selectedStudyActivity = sa
-      this.showDraftedActivityEditForm = true
-    },
-    updateActivityRequest(sa) {
-      study
-        .updateToApprovedActivity(this.selectedStudy.uid, sa.study_activity_uid)
-        .then(() => {
-          this.eventBusEmit('notification', {
-            type: 'success',
-            msg: this.$t('StudyActivityTable.update_success'),
-          })
-          this.$refs.table.filterTable()
-        })
-    },
-    async openHistory(sa) {
-      this.selectedStudyActivity = sa
-      const resp = await study.getStudyActivityAuditTrail(
-        this.selectedStudy.uid,
+  }
+  return undefined
+}
+
+function closeForm() {
+  showActivityForm.value = false
+}
+
+function closeEditForm() {
+  showActivityEditForm.value = false
+  showDraftedActivityEditForm.value = false
+  selectedStudyActivity.value = null
+}
+
+async function deleteStudyActivity(sa) {
+  const options = { type: 'warning' }
+  const activity = sa.activity.name
+  const msg =
+    !sa.show_activity_group_in_protocol_flowchart ||
+    !sa.show_activity_subgroup_in_protocol_flowchart
+      ? t('StudyActivityTable.confirm_delete_side_effect')
+      : t('StudyActivityTable.confirm_delete', { activity })
+  if (await confirm.value.open(msg, options)) {
+    study
+      .deleteStudyActivity(
+        studiesGeneralStore.selectedStudy.uid,
         sa.study_activity_uid
       )
-      this.activityHistoryItems = resp.data
-      this.showHistory = true
-    },
-    closeHistory() {
-      this.selectedStudyActivity = null
-      this.showHistory = false
-    },
-    async getStudyActivities(filters, options, filtersUpdated) {
-      const params = filteringParameters.prepareParameters(
-        options,
-        filters,
-        filtersUpdated
-      )
-      if (filters && filters !== undefined && filters !== '{}') {
-        const filtersObj = JSON.parse(filters)
-        if (filtersObj['study_activity_group.activity_group_name']) {
-          params.activity_group_names = []
-          filtersObj['study_activity_group.activity_group_name'].v.forEach(
-            (value) => {
-              params.activity_group_names.push(value)
-            }
-          )
-          delete filtersObj['study_activity_group.activity_group_name']
-        }
-        if (filtersObj['study_activity_subgroup.activity_subgroup_name']) {
-          params.activity_subgroup_names = []
-          filtersObj[
-            'study_activity_subgroup.activity_subgroup_name'
-          ].v.forEach((value) => {
-            params.activity_subgroup_names.push(value)
-          })
-          delete filtersObj['study_activity_subgroup.activity_subgroup_name']
-        }
-        if (filtersObj.name) {
-          params.activity_names = []
-          filtersObj.name.v.forEach((value) => {
-            params.activity_names.push(value)
-          })
-          delete filtersObj.name
-        }
-        if (Object.keys(filtersObj).length) {
-          params.filters = JSON.stringify(filtersObj)
-        } else {
-          delete params.filters
-        }
-      }
-      params.studyUid = this.selectedStudy.uid
-      const resp = await this.activitiesStore.fetchStudyActivities(params)
-      this.studyActivities = resp.data.items
-      this.total = resp.data.total
-    },
-    modifyFilters(jsonFilter, params) {
-      if (jsonFilter['study_activity_group.activity_group_name']) {
-        params.activity_group_names = []
-        jsonFilter['study_activity_group.activity_group_name'].v.forEach(
-          (value) => {
-            params.activity_group_names.push(value)
-          }
-        )
-        delete jsonFilter['study_activity_group.activity_group_name']
-      }
-      if (jsonFilter['study_activity_subgroup.activity_subgroup_name']) {
-        params.activity_subgroup_names = []
-        jsonFilter['study_activity_subgroup.activity_subgroup_name'].v.forEach(
-          (value) => {
-            params.activity_subgroup_names.push(value)
-          }
-        )
-        delete jsonFilter['study_activity_subgroup.activity_subgroup_name']
-      }
-      if (jsonFilter['activity.name']) {
-        params.activity_names = []
-        jsonFilter['activity.name'].v.forEach((value) => {
-          params.activity_names.push(value)
+      .then(() => {
+        table.value.filterTable()
+        eventBusEmit('notification', {
+          type: 'success',
+          msg: t('StudyActivityTable.delete_success'),
         })
-        delete jsonFilter['activity.name']
-      }
-      return {
-        jsonFilter: jsonFilter,
-        params: params,
-      }
-    },
-    openBatchEditForm(selection) {
-      if (!selection.length) {
-        this.eventBusEmit('notification', {
-          type: 'warning',
-          msg: this.$t('StudyActivityTable.batch_edit_no_selection'),
-        })
-        return
-      }
-      this.currentSelection = selection
-      this.showBatchEditForm = true
-    },
-    closeBatchEditForm() {
-      this.currentSelection = []
-      this.showBatchEditForm = false
-    },
-    submitOrder(value) {
-      study
-        .updateStudyActivityOrder(
-          this.selectedStudyActivity.study_uid,
-          this.selectedStudyActivity.study_activity_uid,
-          value
-        )
-        .then(() => {
-          this.$refs.table.filterTable()
-          this.closeOrderForm()
-          this.eventBusEmit('notification', {
-            msg: this.$t('_global.order_updated'),
-          })
-        })
-    },
-    changeActivityOrder(activity) {
-      this.selectedStudyActivity = activity
-      this.showOrderForm = true
-    },
-    closeOrderForm() {
-      this.selectedStudyActivity = null
-      this.showOrderForm = false
-    },
-    onStudyActivitiesUpdated() {
-      this.$refs.table.filterTable()
-    },
-    unselectItem(item) {
-      this.currentSelection = this.currentSelection.filter(
-        (sa) => sa.study_activity_uid !== item.study_activity_uid
+      })
+  }
+}
+
+function editStudyActivity(sa) {
+  selectedStudyActivity.value = sa
+  showActivityEditForm.value = true
+}
+
+function editStudyDraftedActivity(sa) {
+  selectedStudyActivity.value = sa
+  showDraftedActivityEditForm.value = true
+}
+
+function updateActivityRequest(sa) {
+  study
+    .updateToApprovedActivity(
+      studiesGeneralStore.selectedStudy.uid,
+      sa.study_activity_uid
+    )
+    .then(() => {
+      eventBusEmit('notification', {
+        type: 'success',
+        msg: t('StudyActivityTable.update_success'),
+      })
+      table.value.filterTable()
+    })
+}
+
+async function openHistory(sa) {
+  selectedStudyActivity.value = sa
+  const resp = await study.getStudyActivityAuditTrail(
+    studiesGeneralStore.selectedStudy.uid,
+    sa.study_activity_uid
+  )
+  activityHistoryItems.value = resp.data
+  showHistory.value = true
+}
+
+function closeHistory() {
+  selectedStudyActivity.value = null
+  showHistory.value = false
+}
+
+async function getStudyActivities(filters, options, filtersUpdated) {
+  const params = filteringParameters.prepareParameters(
+    options,
+    filters,
+    filtersUpdated
+  )
+  if (filters && filters !== undefined && filters !== '{}') {
+    const filtersObj = JSON.parse(filters)
+    if (filtersObj['study_activity_group.activity_group_name']) {
+      params.activity_group_names = []
+      filtersObj['study_activity_group.activity_group_name'].v.forEach(
+        (value) => {
+          params.activity_group_names.push(value)
+        }
       )
-    },
-    async fetchActivitiesHistory() {
-      const resp = await study.getStudyActivitiesAuditTrail(
-        this.selectedStudy.uid
+      delete filtersObj['study_activity_group.activity_group_name']
+    }
+    if (filtersObj['study_activity_subgroup.activity_subgroup_name']) {
+      params.activity_subgroup_names = []
+      filtersObj['study_activity_subgroup.activity_subgroup_name'].v.forEach(
+        (value) => {
+          params.activity_subgroup_names.push(value)
+        }
       )
-      return resp.data
-    },
-    getItemRowClass(item) {
-      return item.activity.library_name === libConstants.LIBRARY_REQUESTED
-        ? item.activity.is_request_final
-          ? 'yellow'
-          : 'bg-warning'
-        : ''
-    },
-  },
+      delete filtersObj['study_activity_subgroup.activity_subgroup_name']
+    }
+    if (filtersObj.name) {
+      params.activity_names = []
+      filtersObj.name.v.forEach((value) => {
+        params.activity_names.push(value)
+      })
+      delete filtersObj.name
+    }
+    if (Object.keys(filtersObj).length) {
+      params.filters = JSON.stringify(filtersObj)
+    } else {
+      delete params.filters
+    }
+  }
+  params.studyUid = studiesGeneralStore.selectedStudy.uid
+  const resp = await activitiesStore.fetchStudyActivities(params)
+  studyActivities.value = resp.data.items
+  total.value = resp.data.total
+}
+
+function modifyFilters(jsonFilter, params) {
+  if (jsonFilter['study_activity_group.activity_group_name']) {
+    params.activity_group_names = []
+    jsonFilter['study_activity_group.activity_group_name'].v.forEach(
+      (value) => {
+        params.activity_group_names.push(value)
+      }
+    )
+    delete jsonFilter['study_activity_group.activity_group_name']
+  }
+  if (jsonFilter['study_activity_subgroup.activity_subgroup_name']) {
+    params.activity_subgroup_names = []
+    jsonFilter['study_activity_subgroup.activity_subgroup_name'].v.forEach(
+      (value) => {
+        params.activity_subgroup_names.push(value)
+      }
+    )
+    delete jsonFilter['study_activity_subgroup.activity_subgroup_name']
+  }
+  if (jsonFilter['activity.name']) {
+    params.activity_names = []
+    jsonFilter['activity.name'].v.forEach((value) => {
+      params.activity_names.push(value)
+    })
+    delete jsonFilter['activity.name']
+  }
+  return {
+    jsonFilter: jsonFilter,
+    params: params,
+  }
+}
+
+function openBatchEditForm(selection) {
+  if (!selection.length) {
+    eventBusEmit('notification', {
+      type: 'warning',
+      msg: t('StudyActivityTable.batch_edit_no_selection'),
+    })
+    return
+  }
+  currentSelection.value = selection
+  showBatchEditForm.value = true
+}
+
+function closeBatchEditForm() {
+  currentSelection.value = []
+  showBatchEditForm.value = false
+}
+
+function onStudyActivitiesUpdated() {
+  table.value.filterTable()
+}
+
+function unselectItem(item) {
+  currentSelection.value = currentSelection.value.filter(
+    (sa) => sa.study_activity_uid !== item.study_activity_uid
+  )
+}
+
+async function fetchActivitiesHistory() {
+  const resp = await study.getStudyActivitiesAuditTrail(
+    studiesGeneralStore.selectedStudy.uid
+  )
+  return resp.data
+}
+
+function getItemRowClass(item) {
+  return item.activity.library_name === libConstants.LIBRARY_REQUESTED
+    ? item.activity.is_request_final
+      ? 'yellow'
+      : 'bg-warning'
+    : ''
 }
 </script>
+
+<style scoped>
+tbody tr td {
+  border-left-style: outset;
+  border-bottom-style: outset;
+  border-width: 1px !important;
+  border-color: rgb(var(--v-theme-nnFadedBlue200)) !important;
+}
+</style>

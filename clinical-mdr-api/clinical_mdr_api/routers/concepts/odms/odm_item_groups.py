@@ -40,8 +40,8 @@ OdmItemGroupUID = Path(description="The unique id of the ODM Item Group.")
     response_model=CustomPage[OdmItemGroup],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.allow_exports(
@@ -160,11 +160,11 @@ def get_all_odm_item_groups(
     response_model=list[Any],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - Invalid field name specified",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_distinct_values_for_header(
@@ -208,8 +208,8 @@ def get_distinct_values_for_header(
     response_model=list[OdmElementWithParentUid],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.allow_exports(
@@ -252,8 +252,8 @@ def get_odm_item_group_that_belongs_to_form(
     response_model=OdmItemGroup,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_odm_item_group(odm_item_group_uid: Annotated[str, OdmItemGroupUID]):
@@ -268,8 +268,8 @@ def get_odm_item_group(odm_item_group_uid: Annotated[str, OdmItemGroupUID]):
     response_model=dict,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_active_relationships(odm_item_group_uid: Annotated[str, OdmItemGroupUID]):
@@ -298,11 +298,11 @@ Possible errors:
     response_model=list[OdmItemGroup],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - The ODM Item Group with the specified 'odm_item_group_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_odm_item_group_versions(odm_item_group_uid: Annotated[str, OdmItemGroupUID]):
@@ -317,6 +317,7 @@ def get_odm_item_group_versions(odm_item_group_uid: Annotated[str, OdmItemGroupU
     response_model=OdmItemGroup,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {"description": "Created - The ODM Item Group was successfully created."},
         400: {
             "model": ErrorResponse,
@@ -325,7 +326,6 @@ def get_odm_item_group_versions(odm_item_group_uid: Annotated[str, OdmItemGroupU
             "- The library doesn't allow to add new items.\n",
         },
         409: _generic_descriptions.ERROR_409,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def create_odm_item_group(
@@ -344,6 +344,7 @@ def create_odm_item_group(
     response_model=OdmItemGroup,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -356,7 +357,6 @@ def create_odm_item_group(
             "model": ErrorResponse,
             "description": "Not Found - The ODM Item Group with the specified 'odm_item_group_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def edit_odm_item_group(
@@ -390,6 +390,7 @@ Possible errors:
     response_model=OdmItemGroup,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -402,7 +403,6 @@ Possible errors:
             "- The ODM Item Group is not in final status.\n"
             "- The ODM Item Group with the specified 'odm_item_group_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def create_odm_item_group_version(odm_item_group_uid: Annotated[str, OdmItemGroupUID]):
@@ -419,6 +419,7 @@ def create_odm_item_group_version(odm_item_group_uid: Annotated[str, OdmItemGrou
     response_model=OdmItemGroup,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -430,7 +431,6 @@ def create_odm_item_group_version(odm_item_group_uid: Annotated[str, OdmItemGrou
             "model": ErrorResponse,
             "description": "Not Found - The ODM Item Group with the specified 'odm_item_group_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def approve_odm_item_group(odm_item_group_uid: Annotated[str, OdmItemGroupUID]):
@@ -447,6 +447,7 @@ def approve_odm_item_group(odm_item_group_uid: Annotated[str, OdmItemGroupUID]):
     response_model=OdmItemGroup,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -457,7 +458,6 @@ def approve_odm_item_group(odm_item_group_uid: Annotated[str, OdmItemGroupUID]):
             "model": ErrorResponse,
             "description": "Not Found - The ODM Item Group with the specified 'odm_item_group_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def inactivate_odm_item_group(odm_item_group_uid: Annotated[str, OdmItemGroupUID]):
@@ -474,6 +474,7 @@ def inactivate_odm_item_group(odm_item_group_uid: Annotated[str, OdmItemGroupUID
     response_model=OdmItemGroup,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -484,7 +485,6 @@ def inactivate_odm_item_group(odm_item_group_uid: Annotated[str, OdmItemGroupUID
             "model": ErrorResponse,
             "description": "Not Found - The ODM Item Group with the specified 'odm_item_group_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def reactivate_odm_item_group(odm_item_group_uid: Annotated[str, OdmItemGroupUID]):
@@ -501,6 +501,7 @@ def reactivate_odm_item_group(odm_item_group_uid: Annotated[str, OdmItemGroupUID
     response_model=OdmItemGroup,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {
             "description": "Created - The activity sub groups were successfully added to the ODM Item Group."
         },
@@ -512,7 +513,6 @@ def reactivate_odm_item_group(odm_item_group_uid: Annotated[str, OdmItemGroupUID
             "model": ErrorResponse,
             "description": "Not Found - The activity sub groups with the specified 'odm_item_group_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def add_activity_subgroups_to_odm_item_group(
@@ -542,6 +542,7 @@ def add_activity_subgroups_to_odm_item_group(
     response_model=OdmItemGroup,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {
             "description": "Created - The items were successfully added to the ODM Item Group."
         },
@@ -553,7 +554,6 @@ def add_activity_subgroups_to_odm_item_group(
             "model": ErrorResponse,
             "description": "Not Found - The items with the specified 'odm_item_group_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def add_item_to_odm_item_group(
@@ -581,6 +581,7 @@ def add_item_to_odm_item_group(
     response_model=OdmItemGroup,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {
             "description": "Created - The ODM Vendor Elements were successfully added to the ODM Item Group."
         },
@@ -592,7 +593,6 @@ def add_item_to_odm_item_group(
             "model": ErrorResponse,
             "description": "Not Found - The ODM Vendor Elements with the specified 'odm_item_group_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def add_vendor_elements_to_odm_item_group(
@@ -622,6 +622,7 @@ def add_vendor_elements_to_odm_item_group(
     response_model=OdmItemGroup,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {
             "description": "Created - The ODM Vendor Attributes were successfully added to the ODM Item Group."
         },
@@ -633,7 +634,6 @@ def add_vendor_elements_to_odm_item_group(
             "model": ErrorResponse,
             "description": "Not Found - The ODM Vendor Attributes with the specified 'odm_item_group_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def add_vendor_attributes_to_odm_item_group(
@@ -661,6 +661,7 @@ def add_vendor_attributes_to_odm_item_group(
     response_model=OdmItemGroup,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {
             "description": "Created - The ODM Vendor Element attributes were successfully added to the ODM Item Group."
         },
@@ -672,7 +673,6 @@ def add_vendor_attributes_to_odm_item_group(
             "model": ErrorResponse,
             "description": "Not Found - The ODM Vendor Element attributes with the specified 'odm_item_group_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def add_vendor_element_attributes_to_odm_item_group(
@@ -700,6 +700,7 @@ def add_vendor_element_attributes_to_odm_item_group(
     response_model=OdmItemGroup,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {
             "description": "Created - The ODM Vendors were successfully added to the ODM Item Group."
         },
@@ -711,7 +712,6 @@ def add_vendor_element_attributes_to_odm_item_group(
             "model": ErrorResponse,
             "description": "Not Found - The ODM Vendors with the specified 'odm_item_group_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def manage_vendors_of_odm_item_group(
@@ -731,6 +731,7 @@ def manage_vendors_of_odm_item_group(
     response_model=None,
     status_code=204,
     responses={
+        403: _generic_descriptions.ERROR_403,
         204: {
             "description": "No Content - The ODM Item Group was successfully deleted."
         },
@@ -745,7 +746,6 @@ def manage_vendors_of_odm_item_group(
             "model": ErrorResponse,
             "description": "Not Found - An ODM Item Group with the specified 'odm_item_group_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def delete_odm_item_group(odm_item_group_uid: Annotated[str, OdmItemGroupUID]):

@@ -7,7 +7,7 @@
   >
     <template #templateIndexFields>
       <NotApplicableField
-        :checked="template && !template.categories"
+        :checked="template && checkEmpty(template.categories)"
         :clean-function="() => (localForm.categories = null)"
       >
         <template #mainField="{ notApplicable }">
@@ -26,7 +26,7 @@
         </template>
       </NotApplicableField>
       <NotApplicableField
-        :checked="template && !template.sub_categories"
+        :checked="template && checkEmpty(template.sub_categories)"
         :clean-function="() => (localForm.sub_categories = null)"
       >
         <template #mainField="{ notApplicable }">
@@ -53,6 +53,7 @@ import MultipleSelect from '@/components/tools/MultipleSelect.vue'
 import NotApplicableField from '@/components/tools/NotApplicableField.vue'
 import TemplateIndexingForm from './TemplateIndexingForm.vue'
 import terms from '@/api/controlledTerminology/terms'
+import _isEmpty from 'lodash/isEmpty'
 
 export default {
   components: {
@@ -87,6 +88,9 @@ export default {
     })
   },
   methods: {
+    checkEmpty(value) {
+      return _isEmpty(value)
+    },
     updateForm(indications) {
       this.localForm = { ...this.localForm, ...indications }
     },

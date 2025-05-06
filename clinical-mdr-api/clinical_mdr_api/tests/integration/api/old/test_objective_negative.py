@@ -32,14 +32,14 @@ def test_data():
     objective_template = ct_models.ObjectiveTemplateCreateInput(**otdata)
     objective_template = ObjectiveTemplateService().create(objective_template)
     if isinstance(objective_template, BaseModel):
-        objective_template = objective_template.dict()
+        objective_template = objective_template.model_dump()
     ObjectiveTemplateService().approve(objective_template["uid"])
     otdt = template_data.copy()
     otdt["name"] = "Name not approved"
     objective_template = ct_models.ObjectiveTemplateCreateInput(**otdt)
     not_approved_ot = ObjectiveTemplateService().create(objective_template)
     if isinstance(not_approved_ot, BaseModel):
-        not_approved_ot = not_approved_ot.dict()
+        not_approved_ot = not_approved_ot.model_dump()
 
     yield
 

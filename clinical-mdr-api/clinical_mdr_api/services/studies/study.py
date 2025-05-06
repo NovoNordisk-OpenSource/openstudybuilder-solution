@@ -44,6 +44,7 @@ from clinical_mdr_api.models.study_selections.study import (
     HighLevelStudyDesignJsonModel,
     RegistryIdentifiersJsonModel,
     Study,
+    StudyCloneInput,
     StudyCreateInput,
     StudyDescriptionJsonModel,
     StudyFieldAuditTrailEntry,
@@ -57,6 +58,7 @@ from clinical_mdr_api.models.study_selections.study import (
     StudySoaPreferences,
     StudySoaPreferencesInput,
     StudyStructureOverview,
+    StudyStructureStatistics,
     StudySubpartAuditTrail,
     StudySubpartCreateInput,
     StudySubpartReorderingInput,
@@ -334,9 +336,6 @@ class StudyService:
 
         parsed_items = self._group_study_structure_overview_by_data(all_items[0])
 
-        if not sort_by:
-            sort_by = {"study_id": False}
-
         filtered_items = service_level_generic_filtering(
             items=parsed_items,
             filter_by=filter_by,
@@ -375,6 +374,14 @@ class StudyService:
         )
         # Return values for field_name
         return header_values
+
+    @db.transaction
+    def get_study_structure_statistics(self, uid: str) -> StudyStructureStatistics:
+        counters = (
+            self._repos.study_definition_repository.get_study_structure_statistics(uid)
+        )
+        NotFoundException.raise_if(counters is None, "Study Definition", uid)
+        return StudyStructureStatistics(**counters)
 
     def _group_study_structure_overview_by_data(self, items):
         parsed_items: dict[tuple, StudyStructureOverview] = {}
@@ -1009,6 +1016,104 @@ class StudyService:
         self, study_create_input: StudySubpartCreateInput | StudyCreateInput
     ) -> Study:
         return self.non_transactional_create(study_create_input)
+
+    @db.transaction
+    def clone_study(
+        self,
+        study_src_uid: str,
+        study_clone_input: StudyCloneInput,
+    ) -> Study:
+        study_create_input = StudyCreateInput(
+            study_number=study_clone_input.study_number,
+            study_acronym=study_clone_input.study_acronym,
+            project_number=study_clone_input.project_number,
+            description=(
+                " Copy of the Study xxxx for parts xxxxx"
+                if not study_clone_input.description
+                else study_clone_input.description
+            ),
+        )
+        study_created = self.non_transactional_create(study_create_input)
+
+        list_of_items_to_copy = []
+        if study_clone_input.copy_study_arm:
+            list_of_items_to_copy.append("StudyArm")
+        if study_clone_input.copy_study_branch_arm:
+            BusinessLogicException.raise_if(
+                study_clone_input.copy_study_arm is False,
+                msg="Study Arm should be also included",
+            )
+            list_of_items_to_copy.append("StudyBranchArm")
+        if study_clone_input.copy_study_element:
+            list_of_items_to_copy.append("StudyElement")
+        if study_clone_input.copy_study_cohort:
+            BusinessLogicException.raise_if(
+                study_clone_input.copy_study_arm is False,
+                msg="Study Arm should be also included",
+            )
+            BusinessLogicException.raise_if(
+                study_clone_input.copy_study_branch_arm is False,
+                msg="Study Branch should be also included",
+            )
+            list_of_items_to_copy.append("StudyCohort")
+        if study_clone_input.copy_study_epoch:
+            list_of_items_to_copy.append("StudyEpoch")
+        if study_clone_input.copy_study_visit:
+            BusinessLogicException.raise_if(
+                study_clone_input.copy_study_epoch is False,
+                msg="Study Epoch should be also included",
+            )
+            list_of_items_to_copy.append("StudyVisit")
+        if study_clone_input.copy_study_visits_study_footnote:
+            BusinessLogicException.raise_if(
+                study_clone_input.copy_study_visit is False,
+                msg="Study Visit should be also included",
+            )
+            list_of_items_to_copy.append("StudySoAFootnote")
+        if study_clone_input.copy_study_epochs_study_footnote:
+            BusinessLogicException.raise_if(
+                study_clone_input.copy_study_epoch is False,
+                msg="Study Epoch should be also included",
+            )
+            list_of_items_to_copy.append("StudySoAFootnote")
+        if study_clone_input.copy_study_design_matrix:
+            BusinessLogicException.raise_if(
+                study_clone_input.copy_study_arm is False,
+                msg="Study Arm should be also included",
+            )
+            BusinessLogicException.raise_if(
+                study_clone_input.copy_study_branch_arm is False,
+                msg="Study Branch Arm should be also included",
+            )
+            BusinessLogicException.raise_if(
+                study_clone_input.copy_study_epoch is False,
+                msg="Study Epoch should be also included",
+            )
+            BusinessLogicException.raise_if(
+                study_clone_input.copy_study_element is False,
+                msg="Study Element should be also included",
+            )
+            list_of_items_to_copy.append("StudyDesignCell")
+        BusinessLogicException.raise_if_not(
+            study_clone_input.copy_study_arm
+            or study_clone_input.copy_study_branch_arm
+            or study_clone_input.copy_study_element
+            or study_clone_input.copy_study_cohort
+            or study_clone_input.copy_study_epoch
+            or study_clone_input.copy_study_visit
+            or study_clone_input.copy_study_visits_study_footnote
+            or study_clone_input.copy_study_epochs_study_footnote
+            or study_clone_input.copy_study_design_matrix,
+            msg="At least one item should be selected",
+        )
+
+        self._repos.study_definition_repository.copy_study_items(
+            study_src_uid=study_src_uid,
+            study_target_uid=study_created.uid,
+            list_of_items_to_copy=list_of_items_to_copy,
+            author_id=self.author_id,
+        )
+        return study_created
 
     def non_transactional_create(
         self, study_create_input: StudySubpartCreateInput | StudyCreateInput
@@ -1826,7 +1931,6 @@ class StudyService:
                         description=subpart_ar.current_metadata.id_metadata.description,
                         registry_identifiers=RegistryIdentifiersJsonModel.from_study_registry_identifiers_vo(
                             study_definition_ar.current_metadata.id_metadata.registry_identifiers,
-                            self._repos.ct_term_name_repository.find_by_uid,
                             self._repos.ct_term_name_repository.find_by_uids,
                         ),
                     ),
@@ -1891,7 +1995,7 @@ class StudyService:
                 reference_study_component,
             )
         else:
-            for name, _ in base_study_component.__fields__.items():
+            for name, _ in base_study_component.model_fields.items():
                 if not getattr(base_study_component, name):
                     setattr(
                         base_study_component,
@@ -1983,7 +2087,7 @@ class StudyService:
         return_node = self._check_repository_output(
             nodes=nodes, study_uid=study_uid, for_protocol_soa=for_protocol_soa
         )
-        return StudyPreferredTimeUnit.from_orm(return_node)
+        return StudyPreferredTimeUnit.model_validate(return_node)
 
     @validate_if_study_is_not_locked("study_uid", 1)
     def post_study_preferred_time_unit(
@@ -1999,7 +2103,7 @@ class StudyService:
         return_node = self._check_repository_output(
             nodes=nodes, study_uid=study_uid, for_protocol_soa=for_protocol_soa
         )
-        return StudyPreferredTimeUnit.from_orm(return_node)
+        return StudyPreferredTimeUnit.model_validate(return_node)
 
     @db.transaction
     @validate_if_study_is_not_locked("study_uid", 1)
@@ -2016,7 +2120,7 @@ class StudyService:
         return_node = self._check_repository_output(
             nodes=nodes, study_uid=study_uid, for_protocol_soa=for_protocol_soa
         )
-        return StudyPreferredTimeUnit.from_orm(return_node)
+        return StudyPreferredTimeUnit.model_validate(return_node)
 
     def non_transactional_reorder_study_subparts(
         self,

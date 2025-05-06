@@ -66,11 +66,15 @@ class OdmRefVendorAttributeModel(BaseModel):
         return odm_vendor_element_ref_model
 
     uid: Annotated[str, Field()]
-    name: Annotated[str | None, Field(nullable=True)] = None
-    data_type: Annotated[str | None, Field(nullable=True)] = None
-    value_regex: Annotated[str | None, Field(nullable=True)] = None
-    value: Annotated[str | None, Field(nullable=True)] = None
-    vendor_namespace_uid: Annotated[str | None, Field(nullable=True)] = None
+    name: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    data_type: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    value_regex: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
+    value: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    vendor_namespace_uid: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
 
 
 class OdmRefVendor(BaseModel):
@@ -114,12 +118,14 @@ class OdmVendorNamespaceSimpleModel(BaseModel):
         return simple_odm_vendor_namespace_model
 
     uid: Annotated[str, Field()]
-    name: Annotated[str | None, Field(nullable=True)] = None
-    prefix: Annotated[str | None, Field(nullable=True)] = None
-    url: Annotated[str | None, Field(nullable=True)] = None
-    status: Annotated[str | None, Field(nullable=True)] = None
-    version: Annotated[str | None, Field(nullable=True)] = None
-    possible_actions: Annotated[list[str] | None, Field(nullable=True)] = None
+    name: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    prefix: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    url: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    status: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    version: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    possible_actions: Annotated[
+        list[str] | None, Field(json_schema_extra={"nullable": True})
+    ] = None
 
 
 class OdmVendorAttributeSimpleModel(BaseModel):
@@ -153,12 +159,14 @@ class OdmVendorAttributeSimpleModel(BaseModel):
         return simple_odm_vendor_attribute_model
 
     uid: Annotated[str, Field()]
-    name: Annotated[str | None, Field(nullable=True)] = None
-    data_type: Annotated[str | None, Field(nullable=True)] = None
+    name: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    data_type: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
     compatible_types: Annotated[list, Field()]
-    status: Annotated[str | None, Field(nullable=True)] = None
-    version: Annotated[str | None, Field(nullable=True)] = None
-    possible_actions: Annotated[list[str] | None, Field(nullable=True)] = None
+    status: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    version: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    possible_actions: Annotated[
+        list[str] | None, Field(json_schema_extra={"nullable": True})
+    ] = None
 
 
 class OdmVendorElementSimpleModel(BaseModel):
@@ -191,8 +199,10 @@ class OdmVendorElementSimpleModel(BaseModel):
         return simple_odm_vendor_element_model
 
     uid: Annotated[str, Field()]
-    name: Annotated[str | None, Field(nullable=True)] = None
+    name: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
     compatible_types: Annotated[list, Field()]
-    status: Annotated[str | None, Field(nullable=True)] = None
-    version: Annotated[str | None, Field(nullable=True)] = None
-    possible_actions: Annotated[list[str] | None, Field(nullable=True)] = None
+    status: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    version: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    possible_actions: Annotated[
+        list[str] | None, Field(json_schema_extra={"nullable": True})
+    ] = None

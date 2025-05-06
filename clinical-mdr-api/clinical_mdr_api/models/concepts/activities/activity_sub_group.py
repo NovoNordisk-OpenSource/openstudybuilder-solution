@@ -1,7 +1,10 @@
+from datetime import datetime
 from typing import Annotated, Callable, Self
 
 from pydantic import Field
 
+from clinical_mdr_api.descriptions.general import CHANGES_FIELD_DESC
+from clinical_mdr_api.domain_repositories.models._utils import convert_to_datetime
 from clinical_mdr_api.domains.concepts.activities.activity_sub_group import (
     ActivitySubGroupAR,
 )
@@ -9,12 +12,14 @@ from clinical_mdr_api.domains.controlled_terminologies.ct_term_name import CTTer
 from clinical_mdr_api.models.concepts.activities.activity import (
     ActivityBase,
     ActivityHierarchySimpleModel,
+    SimpleActivity,
 )
 from clinical_mdr_api.models.concepts.concept import (
     ExtendedConceptPatchInput,
     ExtendedConceptPostInput,
 )
 from clinical_mdr_api.models.libraries.library import Library
+from clinical_mdr_api.models.utils import BaseModel
 
 
 class ActivitySubGroup(ActivityBase):
@@ -69,12 +74,87 @@ class ActivitySubGroupVersion(ActivitySubGroup):
     """
 
     changes: Annotated[
-        dict[str, bool] | None,
+        list[str],
         Field(
-            description=(
-                "Denotes whether or not there was a change in a specific field/property compared to the previous version. "
-                "The field names in this object here refer to the field names of the objective (e.g. name, start_date, ..)."
-            ),
-            nullable=True,
+            description=CHANGES_FIELD_DESC,
         ),
-    ] = None
+    ] = []
+
+
+class ActivityGroup(BaseModel):
+    uid: str
+    name: str
+    version: str | None = None
+    status: str | None = None
+
+
+class ActivitySubGroupDetail(BaseModel):
+    name: str | None = None
+    name_sentence_case: str | None = None
+    library_name: str | None = None
+    definition: str | None = None
+    start_date: datetime | None = None
+    end_date: datetime | None = None
+    status: str | None = None
+    version: str | None = None
+    possible_actions: list[str] | None = None
+    change_description: str | None = None
+    author_username: str | None = None
+    activity_groups: list[ActivityGroup]
+
+
+class ActivitySubGroupOverview(BaseModel):
+    activity_subgroup: Annotated[ActivitySubGroupDetail, Field()]
+    activities: Annotated[list[SimpleActivity], Field()]
+    all_versions: Annotated[list[str], Field()]
+
+    @classmethod
+    def from_repository_input(cls, overview: dict):
+        # Extract subgroup data from correct nested structure
+        subgroup_value = overview.get("subgroup_value", {})
+        latest_version = overview.get("has_version", {})
+        library_info = overview.get("library", {})
+
+        # Get version data from correct structure
+        version_data = latest_version.get("has_version", {}) if latest_version else {}
+
+        return cls(
+            activity_subgroup=ActivitySubGroupDetail(
+                # Map basic fields from subgroup_value
+                name=subgroup_value.get("name"),
+                name_sentence_case=subgroup_value.get("name_sentence_case"),
+                definition=subgroup_value.get("definition"),
+                abbreviation=subgroup_value.get("abbreviation"),
+                # Get library name from library node
+                library_name=library_info.get("name"),
+                # Get version metadata from version node
+                start_date=convert_to_datetime(version_data.get("start_date")),
+                end_date=convert_to_datetime(version_data.get("end_date")),
+                status=version_data.get("status"),
+                version=version_data.get("version"),
+                possible_actions=version_data.get("possible_actions"),
+                change_description=version_data.get("change_description"),
+            ),
+            activities=[
+                SimpleActivity(
+                    nci_concept_id=activity.get("nci_concept_id"),
+                    nci_concept_name=activity.get("nci_concept_name"),
+                    name=activity.get("name"),
+                    name_sentence_case=activity.get("name_sentence_case"),
+                    synonyms=activity.get("synonyms", []),
+                    definition=activity.get("definition"),
+                    abbreviation=activity.get("abbreviation"),
+                    is_data_collected=activity.get("is_data_collected", False),
+                    is_multiple_selection_allowed=activity.get(
+                        "is_multiple_selection_allowed", True
+                    ),
+                    library_name=activity.get("library_name"),
+                    version=activity.get("version"),
+                    status=activity.get("status"),
+                    start_date=convert_to_datetime(activity.get("start_date")),
+                    end_date=convert_to_datetime(activity.get("end_date")),
+                )
+                for activity in overview.get("activities", [])
+            ],
+            all_versions=overview.get("all_versions", []),
+        )

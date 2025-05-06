@@ -4,7 +4,7 @@ param(
   [string] [Parameter(Mandatory = $true)] $projectName,
   [string] [Parameter(Mandatory = $true)] $repositoryName,
   $user = "",
-  $baseurl = "https://dev.azure.com/novonordiskit",
+  $baseurl = "https://dev.azure.com/orgremoved",
   $threadId = "1"
 )
 
@@ -12,7 +12,7 @@ param(
 $base64AuthInfo = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $user, $token)))
 write-host $WorkitemType
 
-$uri = "https://dev.azure.com/novonordiskit/Clinical-MDR/_apis/git/repositories?api-version=7.0"
+$uri = "https://dev.azure.com/orgremoved/Clinical-MDR/_apis/git/repositories?api-version=7.0"
 Write-Host $uri
 $result = Invoke-RestMethod -Uri $uri -Method Get -Headers @{Authorization = ("Basic {0}" -f $base64AuthInfo) }
 
@@ -45,3 +45,5 @@ $json = CreateJsonBody
 $uri = "$baseurl/$projectName/_apis/git/repositories/$repositoryId/pullRequests/$pullRequestId/threads?api-version=7.0"
 Write-Host $uri
 $result = Invoke-RestMethod -Uri $uri -Method Post -Body $json -ContentType "application/json" -Headers @{Authorization = ("Basic {0}" -f $base64AuthInfo) }
+
+

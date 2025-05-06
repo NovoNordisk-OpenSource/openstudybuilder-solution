@@ -138,10 +138,12 @@ class TestServiceUtils(unittest.TestCase):
         assert utils.camel_case_data(input_data) == expected
 
     def test_is_attribute_in_model(self):
-        model = type("model", (BaseModel,), {"z": "somehing", "x": 123})
+        class _model(BaseModel):
+            z: str = "something"
+            x: int = 123
 
-        assert utils.is_attribute_in_model("x", model)
-        assert not utils.is_attribute_in_model("y", model)
+        assert utils.is_attribute_in_model("x", _model)
+        assert not utils.is_attribute_in_model("y", _model)
 
     @parameterized.expand(
         [

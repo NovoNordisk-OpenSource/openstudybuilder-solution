@@ -6,6 +6,9 @@ from copy import deepcopy
 import pytest
 from pydantic import BaseModel
 
+from clinical_mdr_api.domain_repositories.study_selections.study_soa_repository import (
+    SoALayout,
+)
 from clinical_mdr_api.domains.study_selections.study_selection_base import SoAItemType
 from clinical_mdr_api.models.controlled_terminologies.ct_term_name import CTTermName
 from clinical_mdr_api.models.study_selections.study import StudySoaPreferencesInput
@@ -68,7 +71,7 @@ class MockStudyFlowchartService(StudyFlowchartService):
 
 def check_flowchart_table_dimensions(
     table: TableWithFootnotes,
-    operational: bool,
+    layout: SoALayout,
     soa_preferences: StudySoaPreferencesInput,
 ):
     """tests dimensions of SoA table"""
@@ -84,7 +87,7 @@ def check_flowchart_table_dimensions(
     # THEN table has the expected number of header rows
     # epochs row is always there, just hidden when not soa_preferences.show_epochs
     expected_num_headers = (
-        3 + 1 + int(soa_preferences.show_milestones and not operational)
+        3 + 1 + int(soa_preferences.show_milestones and layout != SoALayout.OPERATIONAL)
     )
     assert table.num_header_rows == expected_num_headers
 
@@ -94,26 +97,25 @@ def check_flowchart_table_dimensions(
 
 def check_flowchart_table_first_rows(
     table: TableWithFootnotes,
-    operational: bool,
+    layout: SoALayout,
     study_epochs: list[StudyEpoch | MockStudyEpoch],
     study_visits: list[StudyVisit],
     soa_preferences: StudySoaPreferencesInput,
-    hide_soa_groups: bool = None,
 ):
     """tests epoch and milestones header rows of study SoA table"""
 
     row = table.rows[0]
 
     # THEN epochs header is visible according to SoA preferences
-    assert row.hide is not (soa_preferences.show_epochs or operational)
+    assert row.hide is not (
+        soa_preferences.show_epochs or (layout == SoALayout.OPERATIONAL)
+    )
 
     # THEN first cell text is Epoch
-    if hide_soa_groups:
-        assert row.cells[0].text == _gettext("procedure_label")
-    else:
+    if layout != SoALayout.PROTOCOL or row.hide:
         assert row.cells[0].text == _gettext("study_epoch")
 
-    if operational:
+    if layout == SoALayout.OPERATIONAL:
         # THEN has operational SoA column headers
         assert row.cells[1].text == _gettext("topic_code")
         assert row.cells[2].text == _gettext("adam_param_code")
@@ -130,7 +132,7 @@ def check_flowchart_table_first_rows(
     }:
         num_visits_per_epoch[e] += 1
 
-    i = 3 if operational else 1
+    i = 3 if (layout == SoALayout.OPERATIONAL) else 1
     epoch: StudyEpoch | MockStudyEpoch
     for epoch in study_epochs:
         cell = row.cells[i]
@@ -160,7 +162,7 @@ def check_flowchart_table_first_rows(
 
         i += cell.span
 
-    if not operational and soa_preferences.show_milestones:
+    if (layout != SoALayout.OPERATIONAL) and soa_preferences.show_milestones:
         row = table.rows[1]
 
         first_visit_of_each_group: dict[str, StudyVisit] = {}
@@ -169,11 +171,12 @@ def check_flowchart_table_first_rows(
                 visit.consecutive_visit_group or visit.visit_name, visit
             )
 
-        assert row.cells[0].text == _gettext("study_milestone")
+        if not table.rows[0].hide:
+            assert row.cells[0].text == _gettext("study_milestone")
         assert row.cells[0].style == "header1"
         assert row.hide is False
 
-        i = 2 if operational else 0
+        i = 2 if (layout == SoALayout.OPERATIONAL) else 0
         prev_visit_type_uid = None
         for visit in first_visit_of_each_group.values():
             i += 1
@@ -196,6 +199,13 @@ def check_flowchart_table_first_rows(
                 # empty cell for non-milestones
                 assert row.cells[i].text == ""
                 assert row.cells[i].span == 1
+
+    # check for procedure label in Protocol SoA
+    if layout == SoALayout.PROTOCOL:
+        for row in table.rows[: table.num_header_rows]:
+            if not row.hide:
+                assert row.cells[0].text == _gettext("procedure_label")
+                break
 
 
 def check_flowchart_table_footnotes(table: dict, soa_footnotes: list[StudySoAFootnote]):
@@ -272,19 +282,22 @@ def check_flowchart_table_footnotes(table: dict, soa_footnotes: list[StudySoAFoo
 
 def check_flowchart_table_visit_rows(
     table: TableWithFootnotes,
-    operational: bool,
+    layout: SoALayout,
     time_unit: str,
     study_visits: list[StudyVisit],
     soa_preferences: StudySoaPreferencesInput,
 ):
     """test visit header rows of SoA table"""
 
+    operational = layout == SoALayout.OPERATIONAL
+
     row_idx = 1
     if soa_preferences.show_milestones and not operational:
         row_idx += 1
 
     # THEN Second row label text is
-    assert table.rows[row_idx].cells[0].text == _gettext("visit_short_name")
+    if not table.rows[0].hide:
+        assert table.rows[row_idx].cells[0].text == _gettext("visit_short_name")
 
     # THEN Third row label text is
     assert _gettext(
@@ -586,7 +599,10 @@ def test_get_header_rows(mock_study_flowchart_service, time_unit):
     grouped_visits = mock_study_flowchart_service._group_visits(visits)
 
     header_rows = mock_study_flowchart_service._get_header_rows(
-        grouped_visits, time_unit=time_unit, soa_preferences=StudySoaPreferencesInput()
+        grouped_visits,
+        time_unit=time_unit,
+        soa_preferences=StudySoaPreferencesInput(),
+        layout=SoALayout.DETAILED,
     )
 
     visits = [
@@ -632,7 +648,10 @@ def test_get_header_rows(mock_study_flowchart_service, time_unit):
 
 def test_build_flowchart_table(mock_study_flowchart_service):
     table = mock_study_flowchart_service.build_flowchart_table(
-        study_uid="", time_unit="day"
+        study_uid="",
+        study_value_version=None,
+        layout=SoALayout.DETAILED,
+        time_unit="day",
     )
 
     assert table.num_header_rows == DETAILED_SOA_TABLE.num_header_rows
@@ -640,7 +659,7 @@ def test_build_flowchart_table(mock_study_flowchart_service):
     assert table.title == DETAILED_SOA_TABLE.title
     assert table.footnotes == DETAILED_SOA_TABLE.footnotes
 
-    assert table.dict() == DETAILED_SOA_TABLE.dict()
+    assert table.dict() == DETAILED_SOA_TABLE.model_dump()
 
 
 @pytest.mark.parametrize(
@@ -657,7 +676,7 @@ def test_propagate_hidden_rows(
     StudyFlowchartService.propagate_hidden_rows(
         table.rows, propagate_refs=propagate_refs
     )
-    assert table.dict() == expected_soa.dict()
+    assert table.model_dump() == expected_soa.model_dump()
 
 
 def test_propagate_hidden_rows_2():
@@ -684,31 +703,34 @@ def test_show_hidden_rows():
 
 @pytest.mark.parametrize(
     (
-        "operational",
+        "layout",
         "time_unit",
         "show_epochs",
         "show_milestones",
         "baseline_as_time_zero",
     ),
     [
-        (False, "day", True, True, True),
-        (False, "week", False, True, True),
-        (False, "day", True, False, True),
-        (False, "week", True, True, False),
-        (False, "day", False, True, False),
-        (False, "week", False, False, True),
-        (False, "day", True, False, False),
-        (True, "week", True, True, True),
-        (True, "day", False, True, True),
-        (True, "week", True, False, True),
-        (True, "day", True, True, False),
-        (True, "week", False, True, False),
-        (True, "day", False, False, True),
-        (True, "week", True, False, False),
+        (SoALayout.PROTOCOL, "day", False, True, False),
+        (SoALayout.PROTOCOL, "day", False, False, True),
+        (SoALayout.PROTOCOL, "day", True, True, True),
+        (SoALayout.PROTOCOL, "week", False, True, True),
+        (SoALayout.PROTOCOL, "week", False, False, False),
+        (SoALayout.DETAILED, "day", True, False, True),
+        (SoALayout.PROTOCOL, "week", True, True, False),
+        (SoALayout.DETAILED, "day", False, True, False),
+        (SoALayout.DETAILED, "week", False, False, True),
+        (SoALayout.PROTOCOL, "day", True, False, False),
+        (SoALayout.OPERATIONAL, "week", True, True, True),
+        (SoALayout.OPERATIONAL, "day", False, True, True),
+        (SoALayout.OPERATIONAL, "week", True, False, True),
+        (SoALayout.OPERATIONAL, "day", True, True, False),
+        (SoALayout.OPERATIONAL, "week", False, True, False),
+        (SoALayout.OPERATIONAL, "day", False, False, True),
+        (SoALayout.OPERATIONAL, "week", True, False, False),
     ],
 )
 def test_get_header_rows_with_soa_preferences(
-    operational: bool,
+    layout: SoALayout,
     time_unit: str,
     show_epochs: bool,
     show_milestones: bool,
@@ -747,7 +769,7 @@ def test_get_header_rows_with_soa_preferences(
         grouped_visits,
         time_unit=time_unit,
         soa_preferences=soa_preferences,
-        operational=operational,
+        layout=layout,
     )
 
     table = TableWithFootnotes(
@@ -755,17 +777,13 @@ def test_get_header_rows_with_soa_preferences(
     )
 
     # Test dimensions
-    check_flowchart_table_dimensions(table, operational, soa_preferences)
+    check_flowchart_table_dimensions(table, layout, soa_preferences)
 
     # Test first header row
-    check_flowchart_table_first_rows(
-        table, operational, epochs, visits, soa_preferences
-    )
+    check_flowchart_table_first_rows(table, layout, epochs, visits, soa_preferences)
 
     # Test visit header rows
-    check_flowchart_table_visit_rows(
-        table, operational, time_unit, visits, soa_preferences
-    )
+    check_flowchart_table_visit_rows(table, layout, time_unit, visits, soa_preferences)
 
 
 @pytest.mark.parametrize(

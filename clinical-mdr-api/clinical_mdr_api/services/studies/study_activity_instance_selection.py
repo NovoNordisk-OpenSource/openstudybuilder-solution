@@ -61,8 +61,23 @@ class StudyActivityInstanceSelectionService(StudyActivitySelectionBaseService):
     ):
         pass
 
+    def _find_ar_and_validate_new_order(
+        self,
+        study_uid: str,
+        study_selection_uid: str,
+        new_order: int,
+    ) -> tuple[StudySelectionActivityInstanceAR, StudySelectionActivityInstanceVO]:
+        pass
+
+    def _filter_ars_from_same_parent(
+        self,
+        selection_aggregate: StudySelectionActivityInstanceAR,
+        selection_vo: StudySelectionActivityInstanceVO,
+    ) -> StudySelectionActivityInstanceAR:
+        return selection_aggregate
+
     _vo_to_ar_filter_map = {
-        "order": "activity_order",
+        "order": "order",
         "start_date": "start_date",
         "author_id": "author_id",
         "activity.name": "activity_name",
@@ -79,7 +94,6 @@ class StudyActivityInstanceSelectionService(StudyActivitySelectionBaseService):
         self,
         study_uid: str,
         specific_selection: StudySelectionActivityInstanceVO,
-        order: int,
         terms_at_specific_datetime: datetime | None = None,
         accepted_version: bool = False,
         activity_for_study_activity_instances: (
@@ -257,14 +271,11 @@ class StudyActivityInstanceSelectionService(StudyActivitySelectionBaseService):
                     ],
                 )
             )
-        for order, specific_selection in enumerate(
-            study_selection.study_objects_selection, start=1
-        ):
+        for specific_selection in study_selection.study_objects_selection:
             result.append(
                 self._transform_from_vo_to_response_model(
                     study_uid=study_selection.study_uid,
                     specific_selection=specific_selection,
-                    order=order,
                     activity_for_study_activity_instances=activity_for_study_activities,
                     activity_instances_for_study_activity_instances=activity_instances_for_study_activity_instances,
                 )
@@ -430,7 +441,7 @@ class StudyActivityInstanceSelectionService(StudyActivitySelectionBaseService):
             # Fetch the new selection which was just added
             (
                 specific_selection,
-                order,
+                _,
             ) = study_activity_instance_aggregate.get_specific_object_selection(
                 study_activity_instance_selection.study_selection_uid
             )
@@ -439,7 +450,6 @@ class StudyActivityInstanceSelectionService(StudyActivitySelectionBaseService):
             return self._transform_from_vo_to_response_model(
                 study_uid=study_activity_instance_aggregate.study_uid,
                 specific_selection=specific_selection,
-                order=order,
             )
         finally:
             repos.close()
@@ -525,14 +535,13 @@ class StudyActivityInstanceSelectionService(StudyActivitySelectionBaseService):
         (
             _,
             specific_selection,
-            order,
+            _,
         ) = self._get_specific_activity_instance_selection_by_uids(
             study_uid, study_selection_uid, study_value_version=study_value_version
         )
         return self._transform_from_vo_to_response_model(
             study_uid=study_uid,
             specific_selection=specific_selection,
-            order=order,
         )
 
     @db.transaction
@@ -542,7 +551,7 @@ class StudyActivityInstanceSelectionService(StudyActivitySelectionBaseService):
         (
             selection_ar,
             selection,
-            order,
+            _,
         ) = self._get_specific_activity_instance_selection_by_uids(
             study_uid=study_uid,
             study_selection_uid=study_selection_uid,
@@ -568,7 +577,6 @@ class StudyActivityInstanceSelectionService(StudyActivitySelectionBaseService):
         return self._transform_from_vo_to_response_model(
             study_uid=study_uid,
             specific_selection=new_selection,
-            order=order,
         )
 
     @ensure_transaction(db)
@@ -606,11 +614,11 @@ class StudyActivityInstanceSelectionService(StudyActivitySelectionBaseService):
                     response_code = status.HTTP_200_OK
                 result["response_code"] = response_code
                 if item:
-                    result["content"] = item.dict()
+                    result["content"] = item.model_dump()
                 results.append(StudySelectionActivityInstanceBatchOutput(**result))
             except exceptions.MDRApiBaseException as error:
                 results.append(
-                    StudySelectionActivityInstanceBatchOutput.construct(
+                    StudySelectionActivityInstanceBatchOutput.model_construct(
                         response_code=error.status_code,
                         content=BatchErrorResponse(message=str(error)),
                     )

@@ -428,7 +428,7 @@ class StudyArmSelectionService(StudySelectionMixin):
                 versions = [
                     self._transform_each_history_to_response_model(
                         history, study_uid, effective_date
-                    ).dict()
+                    ).model_dump()
                     for history, effective_date in zip(
                         ith_selection_history, effective_dates
                     )
@@ -466,7 +466,7 @@ class StudyArmSelectionService(StudySelectionMixin):
             versions = [
                 self._transform_each_history_to_response_model(
                     history, study_uid, effective_date
-                ).dict()
+                ).model_dump()
                 for history, effective_date in zip(selection_history, effective_dates)
             ]
             data = calculate_diffs(versions, StudySelectionArmVersion)

@@ -24,8 +24,15 @@ class DatasetClassRepository(StandardDataModelRepository):
         uid_filter = ""
         if uid:
             uid_filter = f"{{uid: '{uid}'}}"
-        return f"""MATCH (standard_root:{standard_data_model_label} {uid_filter})-[:HAS_INSTANCE]->
-                (standard_value:{standard_data_model_value_label})"""
+        query = f"""MATCH (standard_root_row:{standard_data_model_label} {uid_filter})-[:HAS_INSTANCE]->
+                (standard_value_row:{standard_data_model_value_label})"""
+        if standard_data_model_label == "DatasetClass":
+            query += """<-[:HAS_DATASET_CLASS]-(dmv:DataModelValue)
+            WITH standard_root_row, standard_value_row, dmv ORDER BY dmv.effective_date
+            WITH COLLECT(standard_value_row) AS standard_value_row_collected, standard_root_row as standard_root
+            WITH standard_root, HEAD(standard_value_row_collected) as standard_value
+            """
+        return query
 
     def specific_alias_clause(self) -> str:
         return """

@@ -1,8 +1,9 @@
 from datetime import datetime
 from typing import Annotated, Self
 
-from pydantic import Field, conlist
+from pydantic import Field
 
+from clinical_mdr_api.descriptions.general import CHANGES_FIELD_DESC
 from clinical_mdr_api.domains.syntax_templates.activity_instruction_template import (
     ActivityInstructionTemplateAR,
 )
@@ -36,7 +37,8 @@ class ActivityInstructionTemplateName(BaseModel):
     guidance_text: Annotated[
         str | None,
         Field(
-            description="Optional guidance text for using the template.", nullable=True
+            description="Optional guidance text for using the template.",
+            json_schema_extra={"nullable": True},
         ),
     ] = None
 
@@ -45,7 +47,9 @@ class ActivityInstructionTemplateNameUid(ActivityInstructionTemplateName):
     uid: Annotated[
         str, Field(description="The unique id of the activity instruction template.")
     ]
-    sequence_id: Annotated[str | None, Field(nullable=True)] = None
+    sequence_id: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
 
 
 class ActivityInstructionTemplateNameUidLibrary(ActivityInstructionTemplateNameUid):
@@ -59,7 +63,7 @@ class ActivityInstructionTemplate(ActivityInstructionTemplateNameUid):
             default_factory=datetime.utcnow,
             description="Part of the metadata: The point in time when the (version of the) activity instruction template was created. "
             "The format is ISO 8601 in UTC±0, e.g.: '2020-10-31T16:00:00+00:00' for October 31, 2020 at 6pm in UTC+2 timezone.",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ]
     end_date: Annotated[
@@ -69,7 +73,7 @@ class ActivityInstructionTemplate(ActivityInstructionTemplateNameUid):
             description="""Part of the metadata: The point in time when the version of
         the activity instruction template was closed (and a new one was created)]. """
             "The format is ISO 8601 in UTC±0, e.g.: '2020-10-31T16:00:00+00:00' for October 31, 2020 at 6pm in UTC+2 timezone.",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ]
     status: Annotated[
@@ -77,7 +81,7 @@ class ActivityInstructionTemplate(ActivityInstructionTemplateNameUid):
         Field(
             description="The status in which the (version of the) activity instruction template is in. "
             "Possible values are: 'Final', 'Draft' or 'Retired'.",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
     version: Annotated[
@@ -85,20 +89,20 @@ class ActivityInstructionTemplate(ActivityInstructionTemplateNameUid):
         Field(
             description="The version number of the (version of the) activity instruction template. "
             "The format is: <major>.<minor> where <major> and <minor> are digits. E.g. '0.1', '0.2', '1.0', ...",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
     change_description: Annotated[
         str | None,
         Field(
             description="A short description about what has changed compared to the previous version.",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
     author_username: Annotated[
         str | None,
         Field(
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
     possible_actions: Annotated[
@@ -120,7 +124,7 @@ class ActivityInstructionTemplate(ActivityInstructionTemplateNameUid):
         Library | None,
         Field(
             description="The library to which the activity instruction template belongs.",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
 
@@ -188,7 +192,7 @@ class ActivityInstructionTemplateWithCount(ActivityInstructionTemplate):
         ItemCounts | None,
         Field(
             description="Optional counts of activity instruction instantiations",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
 
@@ -215,15 +219,11 @@ class ActivityInstructionTemplateVersion(ActivityInstructionTemplate):
     """
 
     changes: Annotated[
-        dict[str, bool] | None,
+        list[str],
         Field(
-            description=(
-                "Denotes whether or not there was a change in a specific field/property compared to the previous version. "
-                "The field names in this object here refer to the field names of the activity instruction template (e.g. name, start_date, ..)."
-            ),
-            nullable=True,
+            description=CHANGES_FIELD_DESC,
         ),
-    ] = None
+    ] = []
 
 
 class ActivityInstructionTemplatePreValidateInput(InputModel):
@@ -239,7 +239,7 @@ class ActivityInstructionTemplatePreValidateInput(InputModel):
         Field(
             description="Optional guidance text for using the template.", min_length=1
         ),
-    ]
+    ] = None
 
 
 class ActivityInstructionTemplateCreateInput(PostInputModel):
@@ -255,7 +255,7 @@ class ActivityInstructionTemplateCreateInput(PostInputModel):
         Field(
             description="Optional guidance text for using the template.", min_length=1
         ),
-    ]
+    ] = None
     library_name: Annotated[
         str | None,
         Field(
@@ -275,14 +275,8 @@ class ActivityInstructionTemplateCreateInput(PostInputModel):
         list[str] | None,
         Field(description="A list of UID of the activities to attach the template to."),
     ] = None
-    activity_group_uids: conlist(
-        str,
-        min_items=1,
-    )
-    activity_subgroup_uids: conlist(
-        str,
-        min_items=1,
-    )
+    activity_group_uids: Annotated[list[str], Field(min_length=1)]
+    activity_subgroup_uids: Annotated[list[str], Field(min_length=1)]
 
 
 class ActivityInstructionTemplateEditInput(PatchInputModel):
@@ -298,7 +292,7 @@ class ActivityInstructionTemplateEditInput(PatchInputModel):
         Field(
             description="Optional guidance text for using the template.", min_length=1
         ),
-    ]
+    ] = None
     change_description: Annotated[
         str,
         Field(

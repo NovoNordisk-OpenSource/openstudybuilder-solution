@@ -234,7 +234,7 @@ const activeUnit = ref({})
 const historyItems = ref([])
 const showHistory = ref(false)
 const table = ref()
-  
+
 function displayList(items) {
   return items.map((item) => item.name).join(', ')
 }
@@ -301,8 +301,8 @@ async function openUnitHistory(item) {
 
 function transformItems(items) {
   for (const item of items) {
-    item.ct_units = item.ct_units.map(set => set.name).join(', ')
-    item.unit_subsets = item.unit_subsets.map(set => set.name).join(', ')
+    item.ct_units = item.ct_units.map((set) => set.name).join(', ')
+    item.unit_subsets = item.unit_subsets.map((set) => set.name).join(', ')
   }
   return items
 }

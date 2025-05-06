@@ -48,7 +48,7 @@ log = logging.getLogger(__name__)
 
 
 @pytest.fixture(scope="module")
-def api_client(test_data):
+def api_client(test_data: None):
     """Create FastAPI test client
     using the database name set in the `test_data` fixture"""
     yield TestClient(app)
@@ -260,7 +260,7 @@ def test_data():
     fix_study_preferred_time_unit(study_uid=study.uid)
 
 
-def test_ts_listing(api_client):
+def test_ts_listing(api_client: TestClient):
     response = api_client.get(
         "/listings/studies/study_root/sdtm/ts",
     )
@@ -279,7 +279,7 @@ def test_ts_listing(api_client):
             TSVALNF="",
             TSVCDREF="",
             TSVCDVER="",
-        ),
+        ).model_dump(),
         # 1
         StudySummaryListing(
             DOMAIN="TS",
@@ -291,12 +291,12 @@ def test_ts_listing(api_client):
             TSVALNF="",
             TSVCDREF="",
             TSVCDVER="",
-        ),
+        ).model_dump(),
     ]
     assert res == expected_output
 
 
-def test_ts_listing_versioning(api_client):
+def test_ts_listing_versioning(api_client: TestClient):
     # update study title to be able to lock it
     response = api_client.patch(
         f"/studies/{study_uid}",

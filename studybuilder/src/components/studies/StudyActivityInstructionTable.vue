@@ -376,7 +376,7 @@ export default {
       const uid = instruction.study_activity_instruction_uid
       const msg = this.$t('StudyActivityInstructionTable.confirm_delete', {
         instruction: instruction.activity_instruction_name,
-      }).replace(/<\/?[^>]+(>|$)/g, "")
+      }).replace(/<\/?[^>]+(>|$)/g, '')
       if (await this.$refs.confirm.open(msg, options)) {
         study
           .deleteStudyActivityInstruction(this.selectedStudy.uid, uid)

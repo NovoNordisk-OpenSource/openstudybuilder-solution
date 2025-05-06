@@ -118,3 +118,5 @@ All data definitions done for a study is related to a StudyAction node capturing
 [![Study Versioning](~@source/images/documentation/study-versioning-model.svg)](../../images//documentation/study-versioning-model.svg)
 
 For more information on the study versioning see also the [Maintain Study Status and Versioning user guide](../userguide/studies/manage_studies.md#maintain-study-status-and-versioning).
+
+

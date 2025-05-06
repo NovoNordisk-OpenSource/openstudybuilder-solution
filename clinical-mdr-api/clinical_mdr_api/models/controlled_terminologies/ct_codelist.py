@@ -54,7 +54,9 @@ class CTCodelist(BaseModel):
 
     codelist_uid: Annotated[str, Field()]
 
-    parent_codelist_uid: Annotated[str | None, Field(nullable=True)] = None
+    parent_codelist_uid: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
 
     child_codelist_uids: Annotated[list[str], Field()] = []
 
@@ -62,7 +64,9 @@ class CTCodelist(BaseModel):
 
     submission_value: Annotated[str, Field()]
 
-    nci_preferred_name: Annotated[str, Field()]
+    nci_preferred_name: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
 
     definition: Annotated[str, Field()]
 
@@ -87,7 +91,8 @@ class CTCodelist(BaseModel):
 class CTCodelistTermInput(PostInputModel):
     term_uid: Annotated[str, Field(min_length=1)]
     order: Annotated[
-        int | None, Field(nullable=True, gt=0, lt=config.MAX_INT_NEO4J)
+        int | None,
+        Field(json_schema_extra={"nullable": True}, gt=0, lt=config.MAX_INT_NEO4J),
     ] = 999999
 
 
@@ -95,12 +100,12 @@ class CTCodelistCreateInput(PostInputModel):
     catalogue_name: Annotated[str, Field(min_length=1)]
     name: Annotated[str, Field(min_length=1)]
     submission_value: Annotated[str, Field(min_length=1)]
-    nci_preferred_name: Annotated[str, Field(min_length=1)]
+    nci_preferred_name: Annotated[str | None, Field(min_length=1)] = None
     definition: Annotated[str, Field(min_length=1)]
     extensible: bool
     sponsor_preferred_name: Annotated[str, Field(min_length=1)]
     template_parameter: bool
-    parent_codelist_uid: Annotated[str | None, Field(min_length=1)]
+    parent_codelist_uid: Annotated[str | None, Field(min_length=1)] = None
     terms: list[CTCodelistTermInput]
     library_name: Annotated[str, Field(min_length=1)]
 
@@ -134,11 +139,15 @@ class CTCodelistNameAndAttributes(BaseModel):
 
     codelist_uid: Annotated[str, Field()]
 
-    parent_codelist_uid: Annotated[str | None, Field(nullable=True)]
+    parent_codelist_uid: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
 
     child_codelist_uids: Annotated[list[Any], Field()] = []
 
-    library_name: Annotated[str | None, Field(nullable=True)] = None
+    library_name: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
 
     name: Annotated[CTCodelistName, Field()]
 

@@ -34,7 +34,10 @@
       <v-list>
         <v-list-item>
           <v-expansion-panels>
-            <v-expansion-panel v-for="item in items" :key="item.key || item">
+            <v-expansion-panel
+              v-for="item in props.items"
+              :key="item.key || item"
+            >
               <v-expansion-panel-title>
                 {{ getItemLabel(item) }}
               </v-expansion-panel-title>
@@ -49,34 +52,33 @@
   </v-menu>
 </template>
 
-<script>
-export default {
-  components: {},
-  props: {
-    items: {
-      type: Array,
-      default: () => [],
-    },
+<script setup>
+import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
+
+const props = defineProps({
+  items: {
+    type: Array,
+    default: () => [],
   },
-  data() {
-    return {
-      open: false,
-    }
-  },
-  methods: {
-    getItemLabel(item) {
-      if (typeof item === 'string') {
-        return this.$t(item)
-      }
-      return this.$t(item.key)
-    },
-    getItemHelp(item) {
-      if (typeof item === 'string') {
-        return this.$t(`_help.${item}`)
-      }
-      return this.$t(`_help.${item.key}`, item.context())
-    },
-  },
+})
+
+const { t } = useI18n()
+
+const open = ref(false)
+
+function getItemLabel(item) {
+  if (typeof item === 'string') {
+    return t(item)
+  }
+  return t(item.key)
+}
+
+function getItemHelp(item) {
+  if (typeof item === 'string') {
+    return t(`_help.${item}`)
+  }
+  return t(`_help.${item.key}`, item.context())
 }
 </script>
 <style>

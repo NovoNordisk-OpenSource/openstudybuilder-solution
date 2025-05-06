@@ -26,7 +26,7 @@ from clinical_mdr_api.tests.integration.utils.api import (
 from clinical_mdr_api.tests.integration.utils.factory_activity import (
     create_study_activity,
 )
-from clinical_mdr_api.tests.integration.utils.utils import TestUtils
+from clinical_mdr_api.tests.integration.utils.utils import CT_CATALOGUE_NAME, TestUtils
 from clinical_mdr_api.tests.utils.checks import assert_response_status_code
 from common.config import REQUESTED_LIBRARY_NAME
 
@@ -63,7 +63,7 @@ def test_data():
     global study_uid
     study_uid = inject_base_data().uid
 
-    catalogue_name = TestUtils.create_ct_catalogue()
+    catalogue_name = CT_CATALOGUE_NAME
     flowchart_codelist = TestUtils.create_ct_codelist(
         sponsor_preferred_name="Flowchart Group",
         catalogue_name=catalogue_name,
@@ -162,6 +162,7 @@ ACTIVITY_REQUEST_FIELDS_ALL = [
     "definition",
     "abbreviation",
     "activity_groupings",
+    "activity_instances",
     "request_rationale",
     "is_request_final",
     "is_request_rejected",
@@ -209,6 +210,7 @@ def test_get_activity_request(api_client):
     assert res["version"] == "0.1"
     assert res["status"] == "Draft"
     assert res["activity_groupings"] == []
+    assert res["activity_instances"] == []
     assert res["possible_actions"] == ["approve", "delete", "edit"]
     assert res["request_rationale"] == "New activity request rationale"
 
@@ -403,6 +405,7 @@ def test_edit_activity_request(api_client):
     assert res["version"] == "0.2"
     assert res["status"] == "Draft"
     assert res["activity_groupings"] == []
+    assert res["activity_instances"] == []
     assert res["possible_actions"] == ["approve", "delete", "edit"]
 
 
@@ -426,6 +429,7 @@ def test_post_activity_request(api_client):
     assert res["version"] == "0.1"
     assert res["status"] == "Draft"
     assert res["activity_groupings"] == []
+    assert res["activity_instances"] == []
     assert res["possible_actions"] == ["approve", "delete", "edit"]
     assert res["request_rationale"] == "Activity request rationale"
     assert res["is_data_collected"] is True
@@ -498,6 +502,7 @@ def test_post_sponsor_activity_from_activity_request(api_client):
     assert res["activity_groupings"][0]["activity_subgroup_name"] == "activity_subgroup"
     assert res["activity_groupings"][0]["activity_group_uid"] == "ActivityGroup_000001"
     assert res["activity_groupings"][0]["activity_group_name"] == "activity_group"
+    assert res["activity_instances"] == []
     assert res["possible_actions"] == ["inactivate", "new_version"]
     assert res["request_rationale"] is None
     replaced_activity_uid = res["uid"]
@@ -515,6 +520,7 @@ def test_post_sponsor_activity_from_activity_request(api_client):
     assert res["possible_actions"] == ["reactivate"]
     assert res["request_rationale"] == "New activity request rationale"
     assert res["activity_groupings"] == []
+    assert res["activity_instances"] == []
     assert res["replaced_by_activity"] == replaced_activity_uid
     assert res["is_data_collected"] is True
 

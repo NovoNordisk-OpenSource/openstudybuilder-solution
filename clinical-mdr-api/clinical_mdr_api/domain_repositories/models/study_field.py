@@ -38,7 +38,7 @@ class StudyField(ClinicalMdrNode, AuditTrailMixin):
     def get_specific_field_currently_used_in_study(
         cls,
         field_name: str,
-        value: str | None,
+        value: any,
         study_uid: str,
         null_value_code: str | None = None,
     ):
@@ -46,11 +46,28 @@ class StudyField(ClinicalMdrNode, AuditTrailMixin):
         Checks whether the StudyField with a given value has historically already been used in this study.
         """
         if not null_value_code:
-            query = (
-                "MATCH (f:StudyField {value:$value, field_name:$field_name})<--(:StudyValue)"
-                "<-[:HAS_VERSION]-(s:StudyRoot{uid: $study_uid}) "
-                "RETURN f"
-            )
+            # StudyField value can be a scalar type (e.g. string, int, bool etc.) or a list of strings.
+            # In case of a list type, there is no guarantee that the order of items in the supplied `value` list
+            # is the same as in the corresponding`StudyField.value` DB field.
+            #
+            # Therefore, to ensure proper searching, we need to:
+            #   - Convert the supplied `value` to a list if it is not already a list.
+            #   - Convert the `StudyField.value` field in the DB to a list if it is not already a list.
+            #   - Compare the two lists after sorting them.
+
+            if not isinstance(value, list):
+                value = [value]
+
+            query = """
+                MATCH (f:StudyField {field_name:$field_name})<--(:StudyValue)<-[:HAS_VERSION]-(s:StudyRoot{uid: $study_uid}) 
+                WITH *,
+                CASE apoc.meta.cypher.isType(f.value, "LIST OF STRING")
+                    WHEN  True THEN f.value            
+                    ELSE [f.value]
+                END AS value_as_list
+                WHERE apoc.coll.sort(value_as_list) = apoc.coll.sort($value)
+                RETURN f
+                """
         else:
             query = (
                 "MATCH (term_root {uid:$null_value_code})<-[:HAS_REASON_FOR_NULL_VALUE]-"

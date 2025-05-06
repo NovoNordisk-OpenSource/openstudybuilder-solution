@@ -1,4 +1,4 @@
-@REQ_ID:NEW
+@REQ_ID:2866190
 Feature: Studies - Study Subparts
 
     Background: User must be logged in
@@ -28,6 +28,26 @@ Feature: Studies - Study Subparts
         Given The '/studies/Study_000001/study_status/subparts' page is opened
         When The first column is selected from Select Columns option for table with actions
         Then The table contain only selected column and actions column
+
+    Scenario: User must be able to export the data in CSV format
+        Given The '/studies/Study_000001/study_status/subparts' page is opened
+        And The user exports the data in 'CSV' format
+        Then The 'StudySubparts' file is downloaded in 'csv' format
+
+    Scenario: User must be able to export the data in JSON format
+        Given The '/studies/Study_000001/study_status/subparts' page is opened
+        And The user exports the data in 'JSON' format
+        Then The 'StudySubparts' file is downloaded in 'json' format
+
+    Scenario: User must be able to export the data in XML format
+        Given The '/studies/Study_000001/study_status/subparts' page is opened
+        And The user exports the data in 'XML' format
+        Then The 'StudySubparts' file is downloaded in 'xml' format
+
+    Scenario: User must be able to export the data in EXCEL format
+        Given The '/studies/Study_000001/study_status/subparts' page is opened
+        And The user exports the data in 'EXCEL' format
+        Then The 'StudySubparts' file is downloaded in 'xlsx' format
 
     @pending_implementation
     Scenario: User must be able to add an existing study as a study subpart to a parent study

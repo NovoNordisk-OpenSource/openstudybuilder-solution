@@ -53,14 +53,24 @@
       "neodash_activity": "",
       "neodash_cosmos_instance": "",
       "neodash_sdtm_version": "",
-      "neodash_study_activity": [],
-      "neodash_study_activity_display": [],
       "neodash_ai": [],
-      "neodash_ai_display": []
+      "neodash_ai_display": [],
+      "neodash_operator": "OR",
+      "neodash_operator_display": "OR",
+      "neodash_study_act_select": 1213253,
+      "neodash_study_activity": [
+        "Triglycerides"
+      ],
+      "neodash_study_activity_display": [
+        "Triglycerides"
+      ],
+      "neodash_show_latest": "Y",
+      "neodash_show_latest_display": "Y"
     },
     "resizing": "bottom-right",
     "disableRowLimiting": false,
-    "theme": "light"
+    "theme": "light",
+    "queryTimeLimit": 120
   },
   "pages": [
     {
@@ -69,7 +79,7 @@
         {
           "title": "Guide",
           "query": "**This report is for browsing Activity Concepts**\n\nIt displays the Activity Concepts (latest version) available in the StudyBuilder Library.\n\nFollow the tabs to see different views of the concepts.\n\nFor more information on activity concepts you can read this \n**[article on Biomedical Concepts/Activity Concepts](https://novo-nordisk.gitlab.io/nn-public/openstudybuilder/project-description/guide_activity_concept)**\n",
-          "width": 24,
+          "width": 20,
           "height": 3,
           "x": 0,
           "y": 0,
@@ -85,7 +95,7 @@
           "id": "7f7a7cda-2fa3-413d-bac7-40bda540d74e",
           "title": "Number of Activities and Instances by group and subgroup",
           "query": "MATCH(act:ActivityValue)-[R1:HAS_GROUPING]->(g:ActivityGrouping)-[R2:IN_SUBGROUP]->(sg:ActivityValidGroup)<-[R3:HAS_GROUP]-(asgrp:ActivitySubGroupValue),\n(sg)-[R4:IN_GROUP]->(agrp:ActivityGroupValue),(act)<-[:LATEST]-()\nMATCH(g:ActivityGrouping)<-[R5:HAS_ACTIVITY]-(ai:ActivityInstanceValue)<-[:LATEST]-()\nreturn distinct agrp.name as `Activity Group`, \nasgrp.name as `Activity Sub-group`,\ncount(distinct act.name) as `Number of Activities`,\ncount(distinct ai.name) as `Number of Activity Instances`\n\n\n\n",
-          "width": 12,
+          "width": 10,
           "height": 6,
           "x": 0,
           "y": 7,
@@ -102,9 +112,9 @@
           "id": "119873c7-f120-4db1-ac52-64d55a3bb120",
           "title": "Number of Activities and Instances by type and subtype",
           "query": "MATCH(act:ActivityValue)-[R1:HAS_GROUPING]->(g:ActivityGrouping)-[R2:IN_SUBGROUP]->(sg:ActivityValidGroup)<-[R3:HAS_GROUP]-(asgrp:ActivitySubGroupValue),\n(sg)-[R4:IN_GROUP]->(agrp:ActivityGroupValue),(act)<-[:LATEST]-()\nMATCH(g:ActivityGrouping)<-[R5:HAS_ACTIVITY]-(ai:ActivityInstanceValue)<-[:LATEST]-()\nOPTIONAL MATCH (ai)-[R42:ACTIVITY_INSTANCE_CLASS]->(aicr:ActivityInstanceClassRoot)-[R43:LATEST]->(aic:ActivityInstanceClassValue)\nOPTIONAL MATCH (aicr)-[R10:PARENT_CLASS]->(aicrp:ActivityInstanceClassRoot)-[R11:LATEST]->(aicp:ActivityInstanceClassValue)\nreturn \naicp.name as `Activity Type`,\naic.name as `Activity Sub-Type`,\ncount(distinct ai.name) as `Number of Activity Instances`,\ncount(distinct act.name) as `Number of Activities`\n\n\n\n\n\n",
-          "width": 12,
+          "width": 10,
           "height": 6,
-          "x": 12,
+          "x": 10,
           "y": 7,
           "type": "table",
           "selection": {},
@@ -120,9 +130,9 @@
           "id": "e5b87c60-b072-4f8a-955a-9cc1e778f251",
           "title": "Number of Activities and instances",
           "query": "MATCH(act:ActivityValue)-[R1:HAS_GROUPING]->(g:ActivityGrouping)<-[R5:HAS_ACTIVITY]-(ai:ActivityInstanceValue)<-[:LATEST]-(), (act)-[:LATEST]-()\nreturn count(distinct act) as `Number of Activities`,  count(distinct ai) as `Number of Activity Instances`\n\n\n\n",
-          "width": 12,
+          "width": 10,
           "height": 4,
-          "x": 12,
+          "x": 10,
           "y": 3,
           "type": "table",
           "selection": {},
@@ -138,7 +148,7 @@
           "id": "1402a2c5-8cdf-406e-858d-96bc0bf0c933",
           "title": "Groupings of Activities",
           "query": "MATCH(act:ActivityValue)-[R1:HAS_GROUPING]->(g:ActivityGrouping)-[R2:IN_SUBGROUP]->(sg:ActivityValidGroup)<-[R3:HAS_GROUP]-(asgrp:ActivitySubGroupValue),\n(sg)-[R4:IN_GROUP]->(agrp:ActivityGroupValue),(act)<-[:LATEST]-()\nMATCH(g:ActivityGrouping)<-[R5:HAS_ACTIVITY]-(ai:ActivityInstanceValue)<-[:LATEST]-(),\n(ai)-[R42:ACTIVITY_INSTANCE_CLASS]->(aicr:ActivityInstanceClassRoot)-[R43:LATEST]->(aic:ActivityInstanceClassValue)\nMATCH (aicr)-[R10:PARENT_CLASS]->(aicrp:ActivityInstanceClassRoot)-[R11:LATEST]->(aicp:ActivityInstanceClassValue)\nwith aicp.name as ActivityType,\naic.name as ActivitySubType,\nagrp.name as ActivityGroup, \nasgrp.name as ActiviySubGroup,\n[aicp.name,aic.name,agrp.name,asgrp.name] as Grouping,\ncount(distinct act.name) as N_act\nreturn Grouping, N_act as Activities\n\n\n\n\n",
-          "width": 12,
+          "width": 10,
           "height": 4,
           "x": 0,
           "y": 3,
@@ -1051,8 +1061,8 @@
               "name_sentence_case",
               "is_default_selected_for_activity",
               "is_data_sharing",
-              "is_required_for_activity",
               "legacy_description",
+              "is_required_for_activity",
               "is_legacy_usage"
             ],
             [
@@ -1117,12 +1127,22 @@
               "CTTerm",
               "preferred_term",
               "concept_id",
-              "synonyms",
               "name",
               "code_submission_value",
               "name_sentence_case",
               "definition",
-              "name_submission_value"
+              "name_submission_value",
+              "synonyms",
+              "us_conventional_unit",
+              "si_unit",
+              "display_unit",
+              "master_unit",
+              "comment",
+              "molecular_weight_conv_expon",
+              "conversion_factor_to_master",
+              "convertible_unit",
+              "order",
+              "legacy_code"
             ],
             [
               "CTCodeList",
@@ -1144,7 +1164,7 @@
           "id": "eca14906-56b8-4481-8f2b-7dd0af5ab271",
           "title": "Search activity",
           "query": "MATCH (n:`ActivityValue`) \nWHERE toLower(toString(n.`name`)) CONTAINS toLower($input) \nRETURN DISTINCT n.`name` as value,  n.`name` as display ORDER BY size(toString(value)) ASC LIMIT 50",
-          "width": 24,
+          "width": 23,
           "height": 2,
           "x": 0,
           "y": 0,
@@ -1169,7 +1189,7 @@
           "id": "e0a486e2-b652-4375-b36f-57acf318277c",
           "title": "Groups for selected activity/activities",
           "query": "MATCH(p_act:ActivityValue)-[R1:HAS_GROUPING]->(g:ActivityGrouping)-[R2:IN_SUBGROUP]->(sg:ActivityValidGroup)<-[R3:HAS_GROUP]-(p_asgrp:ActivitySubGroupValue),\n(sg)-[R4:IN_GROUP]->(p_agrp:ActivityGroupValue) where p_act.name in $neodash_activityvalue_name\nMATCH(g:ActivityGrouping)<-[R5:HAS_ACTIVITY]-(p_ai:ActivityInstanceValue)<-[:LATEST]-()\nreturn p_act.name as Activity,\np_agrp.name as Group,\np_asgrp.name as `Sub Group`,\np_ai.adam_param_code as `Activity Instance (ADAM PARAM CODE)`,\np_ai.topic_code as `Activity Instance (TOPIC CODE)`,\n'Show Detail' as Select order by Activity, Group, `Sub Group`",
-          "width": 24,
+          "width": 23,
           "height": 4,
           "x": 0,
           "y": 6,
@@ -1198,7 +1218,7 @@
           "id": "51ddc5ee-2e17-44e1-99f1-8b2f95a8ba21",
           "title": "Activity Instance Detail - $neodash_detail",
           "query": "MATCH(p_act:ActivityValue)-[R1:HAS_GROUPING]->(g:ActivityGrouping)-[R2:IN_SUBGROUP]->(sg:ActivityValidGroup)<-[R3:HAS_GROUP]-(p_asgrp:ActivitySubGroupValue),\n(sg)-[R4:IN_GROUP]->(p_agrp:ActivityGroupValue) \nMATCH(g:ActivityGrouping)<-[R5:HAS_ACTIVITY]-(p_ai:ActivityInstanceValue)-[R6:CONTAINS_ACTIVITY_ITEM]->(p_aitm1:ActivityItem),(p_ai)<-[:LATEST]-() where p_ai.adam_param_code=$neodash_detail\nMATCH (p_ai)-[R42:ACTIVITY_INSTANCE_CLASS]->(p_aicr:ActivityInstanceClassRoot)-[R43:LATEST]->(p_aic:ActivityInstanceClassValue)\nOPTIONAL MATCH(p_aitm1)<-[R8:HAS_ACTIVITY_ITEM]-(p_aitmc1r:ActivityItemClassRoot)-[R9:LATEST]->(p_aitmc1:ActivityItemClassValue)\nOPTIONAL MATCH (p_aicr)-[R10:PARENT_CLASS]->(p_aicrp:ActivityInstanceClassRoot)-[R11:LATEST]->(p_aicp:ActivityInstanceClassValue)\nOPTIONAL MATCH (p_aicrp)-[R12:PARENT_CLASS]->(p_aicrpp:ActivityInstanceClassRoot)-[R13:LATEST]->(p_aicpp:ActivityInstanceClassValue)\nOPTIONAL MATCH(p_aitmc1r)<-[R14:HAS_ITEM_CLASS]-(p_aicr)\nOPTIONAL MATCH(p_aitmc1r)<-[R15:HAS_ITEM_CLASS]-(p_aicrp)\nOPTIONAL MATCH(p_aitmc1r)<-[R16:HAS_ITEM_CLASS]-(p_aicrpp) \nOPTIONAL MATCH (p_aitm1)-[R17]->(p_ct2cd:CTTermRoot)-[R18:HAS_NAME_ROOT]->(ct2cdr:CTTermNameRoot)-[R19:LATEST]->(p_ct2_sponsor), (p_ct2cd)-[R20:HAS_ATTRIBUTES_ROOT]->(ct2att:CTTermAttributesRoot)-[R21:LATEST]->(p_ct2_cdisc)\nOPTIONAL MATCH (p_aitm1)-[:HAS_UNIT_DEFINITION]->(p_unitdefr:UnitDefinitionRoot)-[R22:LATEST]->(p_unitdef:UnitDefinitionValue)\nOPTIONAL MATCH(p_ct2cd)<-[R23:HAS_TERM]-(clr:CTCodelistRoot)-[R24:HAS_ATTRIBUTES_ROOT]->(clatt:CTCodelistAttributesRoot),(clr)-[R25:HAS_NAME_ROOT]->(clattr:CTCodelistNameRoot)-[R26:LATEST]-(p_cl_sponsor),(clatt)-[R27:LATEST]->(p_cl_cdisc:CTCodelistAttributesValue),(pc:CTPackageCodelist) where ((p_cl_cdisc)<-[:CONTAINS_ATTRIBUTES]-(pc) and pc.uid CONTAINS \"SDTM\") or NOT ((p_cl_cdisc)<-[:CONTAINS_ATTRIBUTES]-())\nOPTIONAL MATCH (p_unitdef:UnitDefinitionValue)-[R28:HAS_CT_DIMENSION]-(unit_term:CTTermRoot)<-[R29:HAS_TERM]-(cl_root)-[R30:HAS_ATTRIBUTES_ROOT]->(clattr2)-[R31:LATEST]->(unit_cld)\nOPTIONAL MATCH(p_aitmc1)-[R32:HAS_ROLE]->(p_role_r:CTTermRoot), (p_role_r)-[R33:HAS_NAME_ROOT]->(ctnr_role)-[R34:LATEST]->(p_role_val), (p_role_r)-[R35:HAS_ATTRIBUTES_ROOT]->(ctattr)-[R36:LATEST]->(p_role_attr_val)\nOPTIONAL MATCH(p_aitmc1)-[R37:HAS_DATA_TYPE]->(p_dtype_r),  (p_dtype_r)-[R38:HAS_NAME_ROOT]->(ctnr_dtype)-[R39:LATEST]->(p_dtype_val), (p_dtype_r)-[R40:HAS_ATTRIBUTES_ROOT]->(ctattr_dtype)-[R41:LATEST]->(p_dtype_attr_val)\nWITH distinct g,sg,p_agrp,p_asgrp,p_act,p_ai,p_aicr,p_aic,p_aitm1,p_aitmc1r,p_aitmc1,p_aicrp,p_aicp,p_aicrpp,p_aicpp,p_ct2cd,ct2cdr,p_ct2_sponsor,ct2att,p_ct2_cdisc,p_unitdefr,p_unitdef,clr,clatt,clattr,p_cl_sponsor,p_cl_cdisc,unit_term,cl_root,clattr2,unit_cld,p_role_r,ctattr,ctnr_role, p_role_val, p_role_attr_val,p_dtype_r,p_dtype_val, ctnr_dtype,p_dtype_attr_val,ctattr_dtype,\nCASE WHEN p_ct2cd is not null THEN apoc.map.merge(properties(p_ct2_cdisc),properties(p_ct2_sponsor)) END as ct2,\nCASE WHEN p_role_r is not null THEN apoc.map.merge(properties(p_role_val),properties(p_role_attr_val)) END as role,\nCASE WHEN p_dtype_r is not null THEN apoc.map.merge(properties(p_dtype_val),properties(p_dtype_attr_val)) END as dtype,\nCASE WHEN p_ct2cd is not null THEN apoc.map.merge(properties(p_cl_cdisc),properties(p_cl_sponsor)) END as cl\nwith p_agrp.name as ActivityGroup,\np_asgrp.name as ActivitySubGroup,\np_act.name as Activity,\np_ai.adam_param_code as `Activity Instance`,\np_aitmc1.name as `Activity Item Class`,\nCASE WHEN ct2 is not null THEN ct2.name ELSE \nCASE WHEN unit_term is not null THEN unit_term.name END END  as terms,\nCASE WHEN ct2 is not null THEN cl.name ELSE \nCASE WHEN unit_cld is not null THEN unit_cld.preferred_term END END as `Code List`,\nrole.name as Role,\ndtype.name as `Data Type`\nreturn ActivityGroup,\nActivitySubGroup,\nActivity,\n`Activity Instance`,\n`Activity Item Class`,\napoc.text.join(collect(terms), \",\") as Term,\n`Code List`,\nRole,\n`Data Type`",
-          "width": 24,
+          "width": 23,
           "height": 4,
           "x": 0,
           "y": 10,
@@ -1218,7 +1238,7 @@
           "id": "97dd35f9-9411-4b89-9bcd-9bdebdb027f0",
           "title": "Number of sub-groups for selected activity",
           "query": "MATCH(act:ActivityValue)-[R1:HAS_GROUPING]->(g:ActivityGrouping)-[R2:IN_SUBGROUP]->(sg:ActivityValidGroup)<-[R3:HAS_GROUP]-(asgrp:ActivitySubGroupValue),\n(sg)-[R4:IN_GROUP]->(agrp:ActivityGroupValue) where act.name in $neodash_activityvalue_name\nMATCH(g:ActivityGrouping)<-[R5:HAS_ACTIVITY]-(ai:ActivityInstanceValue)<-[:LATEST]-(),\n(ai)-[R42:ACTIVITY_INSTANCE_CLASS]->(aicr:ActivityInstanceClassRoot)-[R43:LATEST]->(aic:ActivityInstanceClassValue)\nMATCH (aicr)-[R10:PARENT_CLASS]->(aicrp:ActivityInstanceClassRoot)-[R11:LATEST]->(aicp:ActivityInstanceClassValue)\nwith distinct aicp.name as ActivityType,\naic.name as ActivitySubType,\nagrp.name as ActivityGroup, \nasgrp.name as ActiviySubGroup,\nact.name as activity,\n[agrp.name] as Groups,\n[asgrp.name] as SubGroups,\ncount(distinct asgrp.name) as N_subgroups,\ncount(distinct agrp.name) as N_groups\nreturn Groups,SubGroups,activity,N_groups,N_subgroups\n\n",
-          "width": 12,
+          "width": 11,
           "height": 4,
           "x": 12,
           "y": 2,
@@ -1860,7 +1880,7 @@
           "title": "Activity as COSMOS SDTM datasetspecialization -$neodash_cosmos_instance",
           "query": "                MATCH(p_act:ActivityValue)-[R1:HAS_GROUPING]->(g:ActivityGrouping)-[R2:IN_SUBGROUP]->(sg:ActivityValidGroup)<-[R3:HAS_GROUP]-(p_asgrp:ActivitySubGroupValue),\n                (sg)-[R4:IN_GROUP]->(p_agrp:ActivityGroupValue) \n                MATCH(g:ActivityGrouping)<-[R5:HAS_ACTIVITY]-(p_ai:ActivityInstanceValue)-[R6:CONTAINS_ACTIVITY_ITEM]->(p_aitm1:ActivityItem),(p_ai)<-[:LATEST]-(x) where p_ai.adam_param_code=$neodash_cosmos_instance\n                MATCH (p_ai)-[R42:ACTIVITY_INSTANCE_CLASS]->(p_aicr:ActivityInstanceClassRoot)-[R43:LATEST]->(p_aic:ActivityInstanceClassValue)\n                OPTIONAL MATCH(p_aitm1)<-[R8:HAS_ACTIVITY_ITEM]-(p_aitmc1r:ActivityItemClassRoot)-[R9:LATEST]->(p_aitmc1:ActivityItemClassValue)\n                OPTIONAL MATCH (p_aicr)-[R10:PARENT_CLASS]->(p_aicrp:ActivityInstanceClassRoot)-[R11:LATEST]->(p_aicp:ActivityInstanceClassValue)\n                OPTIONAL MATCH (p_aicrp)-[R12:PARENT_CLASS]->(p_aicrpp:ActivityInstanceClassRoot)-[R13:LATEST]->(p_aicpp:ActivityInstanceClassValue)\n                OPTIONAL MATCH(p_aitmc1r)<-[R14:HAS_ITEM_CLASS]-(p_aicr)\n                OPTIONAL MATCH(p_aitmc1r)<-[R15:HAS_ITEM_CLASS]-(p_aicrp)\n                OPTIONAL MATCH(p_aitmc1r)<-[R16:HAS_ITEM_CLASS]-(p_aicrpp) \n                OPTIONAL MATCH (p_aitm1)-[R17]->(p_ct2cd:CTTermRoot)-[R18:HAS_NAME_ROOT]->(ct2cdr:CTTermNameRoot)-[R19:LATEST]->(p_ct2_sponsor), (p_ct2cd)-[R20:HAS_ATTRIBUTES_ROOT]->(ct2att:CTTermAttributesRoot)-[R21:LATEST]->(p_ct2_cdisc)\n                OPTIONAL MATCH (p_aitm1)-[:HAS_UNIT_DEFINITION]->(p_unitdefr:UnitDefinitionRoot)-[R22:LATEST]->(p_unitdef:UnitDefinitionValue)\n                OPTIONAL MATCH(p_ct2cd)<-[R23:HAS_TERM]-(clr:CTCodelistRoot)-[R24:HAS_ATTRIBUTES_ROOT]->(clatt:CTCodelistAttributesRoot),(clr)-[R25:HAS_NAME_ROOT]->(clattr:CTCodelistNameRoot)-[R26:LATEST]-(p_cl_sponsor),(clatt)-[R27:LATEST]->(p_cl_cdisc:CTCodelistAttributesValue),(pc:CTPackageCodelist) where ((p_cl_cdisc)<-[:CONTAINS_ATTRIBUTES]-(pc) and pc.uid CONTAINS \"SDTM\") or NOT ((p_cl_cdisc)<-[:CONTAINS_ATTRIBUTES]-())\n                OPTIONAL MATCH (p_unitdef:UnitDefinitionValue)-[R28:HAS_CT_DIMENSION]-(unit_term:CTTermRoot)<-[R29:HAS_TERM]-(cl_root)-[R30:HAS_ATTRIBUTES_ROOT]->(clattr2)-[R31:LATEST]->(unit_cld)\n                OPTIONAL MATCH(p_aitmc1)-[R32:HAS_ROLE]->(p_role_r:CTTermRoot),(p_role_r)-[R33:HAS_NAME_ROOT]->(ctnr_role)-[R34:LATEST]->(p_role_val), (p_role_r)-[R35:HAS_ATTRIBUTES_ROOT]->(ctattr)-[R36:LATEST]->(p_role_attr_val)\n                OPTIONAL MATCH(p_aitmc1)-[R37:HAS_DATA_TYPE]->(p_dtype_r),(p_dtype_r)-[R38:HAS_NAME_ROOT]->(ctnr_dtype)-[R39:LATEST]->(p_dtype_val), (p_dtype_r)-[R40:HAS_ATTRIBUTES_ROOT]->(ctattr_dtype)-[R41:LATEST]->(p_dtype_attr_val)\n                WITH distinct g,sg,p_agrp,p_asgrp,p_act,p_ai,p_aicr,p_aic,p_aitm1,p_aitmc1r,p_aitmc1,p_aicrp,p_aicp,p_aicrpp,p_aicpp,p_ct2cd,ct2cdr,p_ct2_sponsor,ct2att,p_ct2_cdisc,p_unitdefr,p_unitdef,clr,clatt,clattr,p_cl_sponsor,p_cl_cdisc,unit_term,cl_root,clattr2,unit_cld,p_role_r,ctattr,ctnr_role, p_role_val, p_role_attr_val,p_dtype_r,p_dtype_val, ctnr_dtype,p_dtype_attr_val,ctattr_dtype,R1,R2, R3, R4, R5, R6, R8, R9, R10, R11, R12, R13, R14, R15, R16, R17, R18, R19, R20, R21, R22, R23, R24, R25, R26, R27, R28, R29, R30, R31, R32, R33, R34, R35, R36, R37, R38, R39, R40, R41,R42,R43\n                MATCH (p_ai:ActivityInstanceValue)-[:CONTAINS_ACTIVITY_ITEM]->(p_aitm1_dom:ActivityItem)<-[:HAS_ACTIVITY_ITEM]-(:ActivityItemClassRoot)-[:MAPS_VARIABLE_CLASS]->(:VariableClass{uid:'DOMAIN'})-[:HAS_INSTANCE]->(:VariableClassInstance)<-[:IMPLEMENTS_VARIABLE{version_number:$neodash_sdtm_version}]-(:DatasetVariableInstance)<-[:HAS_DATASET_VARIABLE{version_number:$neodash_sdtm_version}]-(:DatasetInstance)<-[:HAS_INSTANCE]-(p_ds:Dataset),(p_aitm1_dom:ActivityItem)-[x]->(y:CTTermRoot)-[:HAS_NAME_ROOT]->(:CTTermNameRoot)-[:LATEST]->(p_ct2_sponsor_dom), (y)-[:HAS_ATTRIBUTES_ROOT]->(:CTTermAttributesRoot)-[:LATEST]->(p_ct2_cdisc_dom)  where p_ds.uid=p_ct2_cdisc_dom.code_submission_value OPTIONAL MATCH(p_aitmc1r)-[R44:MAPS_VARIABLE_CLASS]->(p_varcl:VariableClass)-[R45:HAS_INSTANCE]->(p_varcli:VariableClassInstance)\n                ,(p_varcli)<-[R46:IMPLEMENTS_VARIABLE{version_number:$neodash_sdtm_version}]-(var:DatasetVariableInstance)<-[R47:HAS_DATASET_VARIABLE{version_number:$neodash_sdtm_version}]-(p_dsi:DatasetInstance)<-[R48:HAS_INSTANCE]-(p_ds:Dataset)<-[R49:HAS_DATASET]-(p_dmcat:DataModelCatalogue)-[R50:CONTAINS_VERSION]->(p_dmig:DataModelVersion),(p_dsi)<-[R51:HAS_DATASET]-(p_dmigv:DataModelIGValue)<-[R52:CONTAINS_DATA_MODEL_IG]-(p_dmig),(p_dmcat)-[:HAS_DATASET_VARIABLE]->(dsv:DatasetVariable)-[:HAS_INSTANCE]->(var) where p_dmigv.version_number=$neodash_sdtm_version \n                Optional match(s_ds)-[:HAS_DATASET_VARIABLE]->(s_sdv:SponsorModelDatasetVariableInstance)<-[:HAS_INSTANCE]-(dsv:DatasetVariable)-[:HAS_INSTANCE]->(p_dci)\n                with p_aic,p_ai,p_aitmc1,p_dmigv,p_ds, p_varcl,dsv,var,p_role_val,p_dtype_val,clr,p_cl_cdisc,p_cl_sponsor,p_ct2cd,p_ct2_cdisc, p_ct2_sponsor, p_unitdef.name as unit_ct,\n                split(split(p_unitdef.definition,'CDISC code: ')[1],'_x000D')[0] as unit_code, s_sdv where not p_aitmc1.name in ['unit_dimension','domain']\n                with p_aic,p_ai,p_aitmc1,p_dmigv, p_ds, p_varcl,dsv,var,p_role_val,p_dtype_val,clr,p_cl_cdisc,p_cl_sponsor,p_ct2cd,p_ct2_cdisc, p_ct2_sponsor,unit_ct,s_sdv,\n                CASE when p_ct2cd is not NULL THEN\n                CASE WHEN var.role='Topic' THEN\n                apoc.map.fromPairs([\n                  ['code',p_ct2cd.concept_id],\n                  ['submission_value',coalesce(p_ct2_cdisc.code_submission_value,toUpper(p_ct2_sponsor.name))],\n                  ['shortName',p_ct2_cdisc.preferred_term]\n                  ]) \n                  ELSE\n                  CASE WHEN p_varcl.uid=\"--TEST\" THEN\n                  apoc.map.fromPairs([\n                  ['code',p_ct2cd.concept_id],\n                  ['submission_value',coalesce(p_ct2_cdisc.preferred_term,toUpper(p_ct2_sponsor.name))]\n                  ]) \n                  ELSE\n                  apoc.map.fromPairs([\n                  ['code',p_ct2cd.concept_id],\n                  ['submission_value',coalesce(p_ct2_cdisc.code_submission_value,toUpper(p_ct2_sponsor.name))]\n                  ]) END\n                  END ELSE\n                  apoc.map.fromPairs([\n                  ['code',unit_code],\n                  ['submission_value',unit_ct]\n                  ])\n                  END as val_list\n                  WITH p_aic,p_ai,p_aitmc1,p_dmigv, p_ds, p_varcl,dsv,var,p_role_val,p_dtype_val,clr,p_cl_cdisc,p_cl_sponsor,s_sdv,collect(distinct val_list) as terms, \n                  { DATETIME:'datetime', FLOAT:'float', INTEGER:'integer', CTTERM:'text', TEXT:'text'} as dtype_map\n                  WITH p_aic,p_ai,p_aitmc1,p_dmigv, p_ds,p_varcl,dsv,s_sdv,var,p_role_val,[x IN ['Identifier', 'Qualifier', 'Timing', 'Topic'] WHERE var.role contains x][0] as role,p_dtype_val,dtype_map[toUpper(p_dtype_val.name)] as dtype,clr, p_cl_cdisc,p_cl_sponsor,terms,\n                  CASE WHEN var.role='Topic' THEN apoc.text.join([p_ds.uid,dsv.uid],'.') END as source,\n                      CASE WHEN clr is not NULL THEN\n                apoc.map.fromPairs([['conceptId',clr.uid],\n                                  ['href','https://ncithesaurus.nci.nih.gov/ncitbrowser/ConceptReport.jsp?dictionary=NCI_Thesaurus&ns=ncit&code='+clr.uid],                  ['submissionValue',coalesce(p_cl_cdisc.submission_value,toUpper(p_cl_sponsor.name))]\n                                  ]) END as cdlist,\n                CASE WHEN size(terms)=1 THEN\n                apoc.map.fromPairs([\n                                  ['conceptId',terms[0]['code']],\n                                  ['value',terms[0]['submission_value']]\n                                  ]) \n                END as assignedTerms,\n                CASE WHEN size(terms)>1 THEN [ v in terms | v['submission_value']] END as valueList,\n                CASE when p_aitmc1.data_collection='Yes' THEN 'Collected' ELSE 'Not Collected' END as collected\n                WITH p_aic,p_ai, p_aitmc1,p_dmigv, p_ds,p_varcl,dsv,var,role,\n                p_dtype_val,dtype, assignedTerms, valueList,cdlist,source,terms,s_sdv,\n                CASE WHEN assignedTerms is not null THEN\n                        CASE WHEN var.role='Topic' and dsv.uid=cdlist['submissionValue'] THEN\n                          apoc.map.fromPairs( [\n                                                ['name', dsv.uid],\n                                                ['isNonStandard',false],\n                                                ['role',role],\n                                                ['dataType', dtype],\n                                                ['codelist',cdlist],\n                                                ['assignedTerm',assignedTerms],\n                                                ['originType', s_sdv.origin],\n                                                ['mandatoryVariable', p_aitmc1.mandatory],\n                                                ['mandatoryValue', p_aitmc1.mandatory]\n                                                ]) \n                        ELSE\n                        CASE WHEN p_varcl.uid='--TEST' and dsv.uid=cdlist['submissionValue'] THEN\n                            apoc.map.fromPairs( [\n                                                ['name', dsv.uid],\n                                                ['isNonStandard',false],\n                                                ['role',role],\n                                                ['dataType', dtype],\n                                                ['codelist',cdlist],\n                                                ['assignedTerm',assignedTerms],\n                                                ['originType', s_sdv.origin],\n                                                ['mandatoryVariable', p_aitmc1.mandatory],\n                                                ['mandatoryValue', p_aitmc1.mandatory]\n                                                ]) \n                        ELSE  \n                            CASE WHEN not p_varcl.uid contains 'TEST'  THEN \n                              apoc.map.fromPairs( [\n                                                ['name', dsv.uid],\n                                                ['dataElementConceptId',p_aitmc1.nci_concept_id],\n                                                ['isNonStandard',false],\n                                                ['role',role],\n                                                ['dataType', dtype],\n                                                ['codelist',cdlist],\n                                                ['assignedTerm',assignedTerms],\n                                                ['originType', s_sdv.origin],\n                                                ['mandatoryVariable', p_aitmc1.mandatory],\n                                                ['mandatoryValue', p_aitmc1.mandatory]\n                                                ]) END\n                        END END\n                    ELSE\n                        CASE WHEN valueList is not null THEN \n                            apoc.map.fromPairs( [\n                            ['name', dsv.uid],\n                            ['dataElementConceptId',p_aitmc1.nci_concept_id],\n                            ['isNonStandard',false],\n                            ['codelist',cdlist],\n                            ['valueList', valueList],\n                            ['role',role],\n                            ['originType', s_sdv.origin],\n                            ['mandatoryVariable', p_aitmc1.mandatory],\n                            ['mandatoryValue', p_aitmc1.mandatory]\n                            ]) \n                        ELSE   \n                            apoc.map.fromPairs( [\n                            ['name', dsv.uid],\n                            ['dataElementConceptId',p_aitmc1.nci_concept_id],\n                            ['isNonStandard',false],\n                            ['role',role],\n                            ['dataType', dtype],\n                            ['codelist',cdlist],\n                            ['valueList', valueList],\n                            ['originType', s_sdv.origin],\n                            ['mandatoryVariable', p_aitmc1.mandatory],\n                            ['mandatoryValue', p_aitmc1.mandatory]\n                            ]) \n                END\n                    END as dataElement,\n                CASE WHEN var.role='Topic' THEN assignedTerms['conceptId'] END as biomedicalConceptId,\n                p_ai.adam_param_code as datasetSpecializationId,\n                CASE WHEN var.role='Topic' THEN [ v in terms | v['shortName']][0] END as shortName  \n                WITH p_aic,p_ai,apoc.coll.toSet(collect(shortName))[0] as shortName,p_dmigv, p_ds,apoc.coll.toSet(collect(source))[0] as source,apoc.coll.toSet(collect(biomedicalConceptId))[0] as biomedicalConceptId, apoc.coll.toSet(collect(datasetSpecializationId))[0] as datasetSpecializationId , collect(distinct dataElement) as vars\n                WITH p_aic,p_ai,shortName,p_dmigv, p_ds,source,datasetSpecializationId,biomedicalConceptId,vars, \n                apoc.map.fromPairs([ \n                                    ['packageType','sdtm'],\n                                    ['datasetSpecializationId',datasetSpecializationId],\n                                    ['domain',p_ds.uid],\n                                    ['shortName',shortName],\n                                    ['source',source],\n                                    ['sdtmigStartVersion',p_dmigv.version_number],\n                                    ['sdtmigEndVersion',\"\"],\n                                    ['biomedicalConceptId',biomedicalConceptId],\n                                    ['variables',vars]\n                                    ]) as activity\n                return  activity",
           "width": 15,
-          "height": 7,
+          "height": 10,
           "x": 9,
           "y": 10,
           "type": "json",
@@ -1947,8 +1967,8 @@
         {
           "id": "828b7787-ecf9-46d1-b5f8-3f376455f963",
           "title": "Select one or more Activities",
-          "query": "MATCH (n:`ActivityValue`)\nWHERE toLower(toString(n.`name`)) CONTAINS toLower($input) \nRETURN DISTINCT n.`name` as value,  n.`name` as display ORDER BY size(toString(value)) ASC LIMIT 5",
-          "width": 24,
+          "query": "MATCH (n:`ActivityValue`)\nWHERE toLower(toString(n.`name`)) CONTAINS toLower($input) \nRETURN DISTINCT n.`name` as value,  n.`name` as display ORDER BY size(toString(value)) ASC ",
+          "width": 8,
           "height": 2,
           "x": 0,
           "y": 0,
@@ -1960,25 +1980,148 @@
             "manualParameterSave": true,
             "manualPropertyNameSpecification": true,
             "entityType": "study_activity",
-            "parameterName": "neodash_study_activity"
+            "parameterName": "neodash_study_activity",
+            "suggestionLimit": 1000,
+            "clearParameterOnFieldClear": false,
+            "multiline": false,
+            "multiSelectLimit": 50
           },
           "schema": []
         },
         {
           "id": "4e8ce189-76c4-4e7d-847a-06db57caab1a",
-          "title": "Studies using above selected activities",
-          "query": "MATCH(act:ActivityValue)<-[r1:HAS_SELECTED_ACTIVITY]-(sa:StudyActivity)<-[r2:HAS_STUDY_ACTIVITY]-(s:StudyValue),\n(sa)-[:STUDY_ACTIVITY_HAS_SCHEDULE]->(sch:StudyActivitySchedule)<-[:STUDY_VISIT_HAS_SCHEDULE]-(vis:StudyVisit)\nwhere act.name in $neodash_study_activity\nreturn act.name as Activity, s.study_id_prefix as `Study Prefix`, s.study_acronym as `Study Acronym`, vis.short_visit_label as Visit order by Activity, `Study Acronym`, vis.visit_number\n\n\n",
-          "width": 24,
-          "height": 6,
-          "x": 0,
-          "y": 2,
+          "title": "Studies using selected activities - select study",
+          "query": "call apoc.case([$neodash_operator='OR' and size($neodash_study_activity)>0 and $neodash_show_latest='Y',\n\"MATCH(act:ActivityValue)<-[r1:HAS_SELECTED_ACTIVITY]-(sa:StudyActivity)<-[r2:HAS_STUDY_ACTIVITY]-(s:StudyValue) where act.name in $a\nmatch(sr:StudyRoot)-[r0:HAS_VERSION]->(s:StudyValue)\nwith r0, s,collect(distinct act.name) as Activities, CASE WHEN s.subpart_id is not null THEN s.study_id_prefix+'-'+s.study_number+'-'+s.subpart_id ELSE s.study_id_prefix+'-'+s.study_number END as trialid\nwith s, Activities,trialid \nmatch (sr:StudyRoot)-[r0:HAS_VERSION]->(s)\nOPTIONAL MATCH (sr)-[r1:LATEST]->(s)\noptional match(s)<-[r:AFTER]-(sact:StudyAction)\nwith distinct s,Activities,trialid,sr.uid as StudyRoot, collect(r0.status) as statuses ,collect(r0.version) as versions, type(r1) as Latest,sact.date as date order by StudyRoot, sact.date\nwith s,Activities,StudyRoot, s.study_acronym as acronym, trialid, split(apoc.temporal.format(date, 'iso_local_date_time'),'.')[0] as Date, case when 'LOCKED' in statuses then 'LOCKED' else 'DRAFT' END as Status,\napoc.text.join(apoc.coll.toSet(versions),'') as Version,Latest where Latest='LATEST'\nreturn StudyRoot, trialid, acronym, Date, Version, Latest,Status, Activities, id(s) as sid\norder by trialid\",\n$neodash_operator='AND' and size($neodash_study_activity)>0 and $neodash_show_latest='Y',\n\"MATCH(act:ActivityValue)<-[r1:HAS_SELECTED_ACTIVITY]-(sa:StudyActivity)<-[r2:HAS_STUDY_ACTIVITY]-(s:StudyValue)\nwith s, collect(distinct act.name) as all_activities\nwith s, $a as Activities, all_activities where apoc.coll.containsAll(all_activities,$a) \nmatch(sr:StudyRoot)-[r0:HAS_VERSION]->(s:StudyValue)\nwith r0, s, Activities, CASE WHEN s.subpart_id is not null THEN s.study_id_prefix+'-'+s.study_number+'-'+s.subpart_id ELSE s.study_id_prefix+'-'+s.study_number END as trialid\nwith s, Activities,trialid \nmatch (sr:StudyRoot)-[r0:HAS_VERSION]->(s)\nOPTIONAL MATCH (sr)-[r1:LATEST]->(s)\noptional match(s)<-[r:AFTER]-(sact:StudyAction)\nwith distinct s,Activities,trialid,sr.uid as StudyRoot, collect(r0.status) as statuses ,collect(r0.version) as versions, type(r1) as Latest,sact.date as date order by StudyRoot, sact.date\nwith s,Activities,StudyRoot, s.study_acronym as acronym, trialid, split(apoc.temporal.format(date, 'iso_local_date_time'),'.')[0] as Date, case when 'LOCKED' in statuses then 'LOCKED' else 'DRAFT' END as Status,\napoc.text.join(apoc.coll.toSet(versions),'') as Version,Latest where Latest='LATEST'\nreturn StudyRoot, trialid, acronym, Date, Version, Latest,Status, Activities, id(s) as sid\norder by trialid\",\n$neodash_operator='OR' and size($neodash_study_activity)>0 and $neodash_show_latest='N',\n\"MATCH(act:ActivityValue)<-[r1:HAS_SELECTED_ACTIVITY]-(sa:StudyActivity)<-[r2:HAS_STUDY_ACTIVITY]-(s:StudyValue) where act.name in $a\nmatch(sr:StudyRoot)-[r0:HAS_VERSION]->(s:StudyValue)\nwith r0, s,collect(distinct act.name) as Activities, CASE WHEN s.subpart_id is not null THEN s.study_id_prefix+'-'+s.study_number+'-'+s.subpart_id ELSE s.study_id_prefix+'-'+s.study_number END as trialid\nwith s, Activities,trialid \nmatch (sr:StudyRoot)-[r0:HAS_VERSION]->(s)\nOPTIONAL MATCH (sr)-[r1:LATEST]->(s)\noptional match(s)<-[r:AFTER]-(sact:StudyAction)\nwith distinct s,Activities,trialid,sr.uid as StudyRoot, collect(r0.status) as statuses ,collect(r0.version) as versions, type(r1) as Latest,sact.date as date order by StudyRoot, sact.date\nwith s,Activities,StudyRoot, s.study_acronym as acronym, trialid, split(apoc.temporal.format(date, 'iso_local_date_time'),'.')[0] as Date, case when 'LOCKED' in statuses then 'LOCKED' else 'DRAFT' END as Status,\napoc.text.join(apoc.coll.toSet(versions),'') as Version,Latest \nreturn StudyRoot, trialid, acronym, Date, Version, Latest,Status, Activities, id(s) as sid\norder by trialid\",\n$neodash_operator='AND' and size($neodash_study_activity)>0 and $neodash_show_latest='N',\n\"MATCH(act:ActivityValue)<-[r1:HAS_SELECTED_ACTIVITY]-(sa:StudyActivity)<-[r2:HAS_STUDY_ACTIVITY]-(s:StudyValue)\nwith s, collect(distinct act.name) as all_activities\nwith s, $a as Activities, all_activities where apoc.coll.containsAll(all_activities,$a) \nmatch(sr:StudyRoot)-[r0:HAS_VERSION]->(s:StudyValue)\nwith r0, s, Activities, CASE WHEN s.subpart_id is not null THEN s.study_id_prefix+'-'+s.study_number+'-'+s.subpart_id ELSE s.study_id_prefix+'-'+s.study_number END as trialid\nwith s, Activities,trialid \nmatch (sr:StudyRoot)-[r0:HAS_VERSION]->(s)\nOPTIONAL MATCH (sr)-[r1:LATEST]->(s)\noptional match(s)<-[r:AFTER]-(sact:StudyAction)\nwith distinct s,Activities,trialid,sr.uid as StudyRoot, collect(r0.status) as statuses ,collect(r0.version) as versions, type(r1) as Latest,sact.date as date order by StudyRoot, sact.date\nwith s,Activities,StudyRoot, s.study_acronym as acronym, trialid, split(apoc.temporal.format(date, 'iso_local_date_time'),'.')[0] as Date, case when 'LOCKED' in statuses then 'LOCKED' else 'DRAFT' END as Status,\napoc.text.join(apoc.coll.toSet(versions),'') as Version,Latest \nreturn StudyRoot, trialid, acronym, Date, Version, Latest,Status, Activities, id(s) as sid\norder by trialid\"\n], \"return null\",{a:$neodash_study_activity}) YIELD value\nreturn value.StudyRoot as StudyRoot, \nvalue.trialid as `Trial ID`, \nvalue.acronym as Acronym, \nvalue.Date as Date, \nvalue.Version as Version, \nvalue.Latest as Latest,\nvalue.Status as Status, \nvalue.Activities as Activities, \nvalue.sid as __sid\n",
+          "width": 16,
+          "height": 4,
+          "x": 8,
+          "y": 0,
           "type": "table",
           "selection": {},
           "settings": {
             "compact": true,
             "allowDownload": true,
-            "wrapContent": true
+            "wrapContent": true,
+            "refreshButtonEnabled": true,
+            "transposed": false,
+            "actionsRules": [
+              {
+                "condition": "Click",
+                "field": "Trial ID",
+                "value": "__sid",
+                "customization": "set variable",
+                "customizationValue": "study_act_select"
+              }
+            ],
+            "columnWidths": "[1,1.4,1,1,1,1,1.0]"
           }
+        },
+        {
+          "id": "172b542c-1a10-4a90-b92d-6d952d606c0a",
+          "title": "Operator",
+          "query": "WITH ['AND','OR'] as operators UNWIND operators as operator\nWITH operator WHERE toLower(operator) CONTAINS toLower($input) \nRETURN DISTINCT operator as value,  operator as display ORDER BY display DESC\n\n\n\n",
+          "width": 4,
+          "height": 2,
+          "x": 0,
+          "y": 2,
+          "type": "select",
+          "selection": {},
+          "settings": {
+            "type": "Custom Query",
+            "entityType": "Operator",
+            "parameterName": "neodash_operator",
+            "autoSelectFirstValue": true
+          },
+          "schema": []
+        },
+        {
+          "id": "7eb534ff-bee8-40b8-8838-10c9beb94de6",
+          "title": "Study selection",
+          "query": "MATCH (s:StudyValue) where id(s) = $neodash_study_act_select \nWITH s, CASE WHEN s.subpart_id is not null THEN s.study_id_prefix+'-'+s.study_number+'-'+s.subpart_id ELSE s.study_id_prefix+'-'+s.study_number END as `Trial ID`\nreturn `Trial ID`\n\n",
+          "width": 11,
+          "height": 2,
+          "x": 0,
+          "y": 4,
+          "type": "value",
+          "selection": {},
+          "settings": {
+            "fontSize": 20,
+            "backgroundColor": "lightyellow"
+          },
+          "schema": []
+        },
+        {
+          "id": "0d47cf70-f4e9-4306-bfee-5b546d5eeaed",
+          "title": "Study description",
+          "query": "match (s)-[r1]->(txt:StudyField) where txt.field_name is not null and id(s)=toInteger($neodash_study_act_select)\noptional match (txt)-[r2]->(:CTTermRoot)-[r3:HAS_NAME_ROOT]->(:CTTermNameRoot)-[r4:LATEST]->(term)\noptional match (txt)-[r5]->(x)-[:LATEST]->(term2)\nwith distinct s,term, term2, apoc.text.capitalize(apoc.text.join(split(txt.field_name,'_'),' ')) as field ,txt.value as value\nwith s, field, value, term, collect(term2.name) as term2\nwith s, field, CASE WHEN term is not null then term.name else CASE WHEN size(term2)>0 then apoc.text.join(term2,',') ELSE value END END as value\nwith s, field,value where not field contains 'null value code'\nwith distinct field,value\nreturn field as `Study Field`,\nvalue as Value",
+          "width": 13,
+          "height": 8,
+          "x": 11,
+          "y": 4,
+          "type": "table",
+          "selection": {},
+          "settings": {
+            "refreshButtonEnabled": true,
+            "fullscreenEnabled": true,
+            "compact": true,
+            "wrapContent": true,
+            "allowDownload": true
+          }
+        },
+        {
+          "id": "0c5e2df6-d65f-420b-9a35-f72c22dd2c38",
+          "title": "Objectives/Endpoints",
+          "query": "match(s:StudyValue) where id(s)=toInteger($neodash_study_act_select)\noptional match (s)-[r3]->(endp:StudyEndpoint)-[r3_1]->(endp_val:EndpointValue)\noptional match (s)-[r4]->(obj:StudyObjective)-[r4_1]->(obj_val:ObjectiveValue)\nmatch(endp)-[:STUDY_ENDPOINT_HAS_STUDY_OBJECTIVE]->(obj)\nwith s, obj, obj_val, endp, endp_val,\n'Obj '+toString(obj.order) + ' - Endp '+toString(endp.order) as Number,\nobj_val.name_plain as Objective, \nendp_val.name_plain as Endpoint\nreturn Number, Objective, Endpoint\n\n\n",
+          "width": 11,
+          "height": 6,
+          "x": 0,
+          "y": 6,
+          "type": "table",
+          "selection": {},
+          "settings": {
+            "refreshButtonEnabled": true,
+            "fullscreenEnabled": true,
+            "compact": true,
+            "wrapContent": true,
+            "allowDownload": true
+          }
+        },
+        {
+          "id": "473fee31-bf53-421f-9e1e-553063c9d8aa",
+          "title": "SoA",
+          "query": "match(s:StudyValue) where id(s) = toInteger($neodash_study_act_select )\noptional match(s)-[:HAS_STUDY_VISIT]->(v:StudyVisit)\nwith s, v order by v.visit_number, v.short_visit_label\nwith s, collect(distinct v.short_visit_label) as vis_total\noptional match(s)-[:HAS_STUDY_VISIT]->(vis:StudyVisit)\noptional match(vis)-[:HAS_VISIT_NAME]->(vis_name_root)-[:HAS_VERSION]->(vis_name:VisitNameValue)\noptional match(vis)-[:STUDY_VISIT_HAS_SCHEDULE]->(schedule:StudyActivitySchedule)\noptional match (s)-[:HAS_STUDY_ACTIVITY_SCHEDULE]->(schedule),\n(schedule)<-[:STUDY_ACTIVITY_HAS_SCHEDULE]-(s_act:StudyActivity),\n(s_act)-[:HAS_SELECTED_ACTIVITY]->(act_val:ActivityValue),(s_act)-[:STUDY_ACTIVITY_HAS_STUDY_ACTIVITY_INSTANCE]->(ai_s:StudyActivityInstance)-[:HAS_SELECTED_ACTIVITY_INSTANCE]-(ai:ActivityInstanceValue),\n(ai)-[r1]->(g)<-[r2]-(act_val) where act_val.name in $neodash_study_activity\nwith distinct  schedule, ai.topic_code as TOPIC_CODE, vis_total, vis.short_visit_label as `Visit Short Label`,vis.visit_number as `Visit ID`\nwhere TOPIC_CODE is not null \nWith schedule,TOPIC_CODE, `Visit Short Label` as Visits  order by `Visit ID`, `Visit Short Label`, schedule.uid\nwith  Visits, collect(TOPIC_CODE) as `TOPIC CODES`\nreturn Visits, `TOPIC CODES`",
+          "width": 24,
+          "height": 8,
+          "x": 0,
+          "y": 12,
+          "type": "table",
+          "selection": {},
+          "settings": {
+            "refreshButtonEnabled": true,
+            "fullscreenEnabled": true,
+            "transposed": true,
+            "compact": true,
+            "wrapContent": true,
+            "allowDownload": true
+          }
+        },
+        {
+          "id": "1a373038-0fdc-4d48-a4b8-c95bdda225c2",
+          "title": "Show only latest",
+          "query": "WITH ['Y','N'] as operators UNWIND operators as operator\nWITH operator WHERE toLower(operator) CONTAINS toLower($input) \nRETURN DISTINCT operator as value,  operator as display ORDER BY display DESC\n\n\n\n",
+          "width": 4,
+          "height": 2,
+          "x": 4,
+          "y": 2,
+          "type": "select",
+          "selection": {},
+          "settings": {
+            "type": "Custom Query",
+            "autoSelectFirstValue": true,
+            "entityType": "Show latest",
+            "parameterName": "neodash_show_latest"
+          },
+          "schema": []
         }
       ]
     },

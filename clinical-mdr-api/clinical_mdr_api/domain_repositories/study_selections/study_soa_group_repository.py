@@ -12,7 +12,6 @@ from clinical_mdr_api.domain_repositories.models.controlled_terminology import (
 from clinical_mdr_api.domain_repositories.models.study import StudyValue
 from clinical_mdr_api.domain_repositories.models.study_audit_trail import StudyAction
 from clinical_mdr_api.domain_repositories.models.study_selections import (
-    StudyActivity,
     StudySelection,
     StudySoAGroup,
 )
@@ -45,9 +44,6 @@ class SelectionHistory:
 
 class StudySoAGroupRepository(StudySelectionActivityBaseRepository[StudySoAGroupAR]):
     _aggregate_root_type = StudySoAGroupAR
-
-    def is_repository_based_on_ordered_selection(self):
-        return False
 
     def _create_value_object_from_repository(
         self, selection: dict, acv: bool
@@ -82,12 +78,13 @@ class StudySoAGroupRepository(StudySelectionActivityBaseRepository[StudySoAGroup
         """
 
     def _filter_clause(self, query_parameters: dict, **kwargs) -> str:
-        return ""
+        filter_query = "WHERE NOT (sa)<-[:BEFORE]-()"
+        return filter_query
 
     def _order_by_query(self):
         return """
             WITH DISTINCT *
-            ORDER BY study_activity.order ASC
+            ORDER BY sa.order ASC
             MATCH (sa)<-[:AFTER]-(sac:StudyAction)
         """
 
@@ -185,7 +182,8 @@ class StudySoAGroupRepository(StudySelectionActivityBaseRepository[StudySoAGroup
     ):
         # Create new activity selection
         study_soa_group_node = StudySoAGroup(
-            show_soa_group_in_protocol_flowchart=selection.show_soa_group_in_protocol_flowchart
+            show_soa_group_in_protocol_flowchart=selection.show_soa_group_in_protocol_flowchart,
+            order=order,
         )
         study_soa_group_node.uid = selection.study_selection_uid
         study_soa_group_node.accepted_version = selection.accepted_version
@@ -205,7 +203,6 @@ class StudySoAGroupRepository(StudySelectionActivityBaseRepository[StudySoAGroup
                 previous_item=last_study_selection_node,
                 study_value_node=latest_study_value_node,
                 new_item=study_soa_group_node,
-                exclude_study_selection_relationships=[StudyActivity],
             )
 
     def generate_uid(self) -> str:

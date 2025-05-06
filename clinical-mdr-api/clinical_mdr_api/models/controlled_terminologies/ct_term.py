@@ -73,15 +73,23 @@ class CTTerm(BaseModel):
 
     codelists: Annotated[list[CTTermCodelist], Field()] = []
 
-    concept_id: Annotated[str | None, Field(nullable=True)] = None
+    concept_id: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
 
-    code_submission_value: Annotated[str | None, Field(nullable=True)] = None
+    code_submission_value: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
 
-    name_submission_value: Annotated[str | None, Field(nullable=True)] = None
+    name_submission_value: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
 
-    nci_preferred_name: Annotated[str, Field()]
+    nci_preferred_name: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
 
-    definition: Annotated[str, Field(remove_from_wildcard=True)]
+    definition: Annotated[str, Field(json_schema_extra={"remove_from_wildcard": True})]
 
     sponsor_preferred_name: Annotated[str, Field()]
 
@@ -106,11 +114,11 @@ class CTTermCreateInput(PostInputModel):
 
     code_submission_value: Annotated[str, Field(min_length=1)]
 
-    name_submission_value: Annotated[str | None, Field(nullable=True, min_length=1)] = (
-        None
-    )
+    name_submission_value: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True}, min_length=1)
+    ] = None
 
-    nci_preferred_name: Annotated[str, Field(min_length=1)]
+    nci_preferred_name: Annotated[str | None, Field(min_length=1)] = None
 
     definition: Annotated[str, Field(min_length=1)]
 
@@ -118,7 +126,8 @@ class CTTermCreateInput(PostInputModel):
 
     sponsor_preferred_name_sentence_case: Annotated[str, Field(min_length=1)]
     order: Annotated[
-        int | None, Field(nullable=True, gt=0, lt=config.MAX_INT_NEO4J)
+        int | None,
+        Field(json_schema_extra={"nullable": True}, gt=0, lt=config.MAX_INT_NEO4J),
     ] = 999999
     library_name: Annotated[str, Field(min_length=1)]
 
@@ -158,7 +167,9 @@ class CTTermNameAndAttributes(BaseModel):
     catalogue_name: Annotated[str, Field()]
     codelists: Annotated[list[CTTermCodelist], Field()] = []
 
-    library_name: Annotated[str | None, Field(nullable=True)] = None
+    library_name: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
 
     name: Annotated[CTTermName, Field()]
 
@@ -193,8 +204,12 @@ class SimpleCTTermAttributes(BaseModel):
         return term_model
 
     uid: Annotated[str, Field()]
-    code_submission_value: Annotated[str | None, Field(nullable=True)] = None
-    preferred_term: Annotated[str | None, Field(nullable=True)] = None
+    code_submission_value: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    preferred_term: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
 
 
 class SimpleCTTermNameWithConflictFlag(BaseModel):
@@ -260,9 +275,32 @@ class SimpleCTTermNameWithConflictFlag(BaseModel):
         )
 
     term_uid: Annotated[str, Field()]
-    sponsor_preferred_name: Annotated[str | None, Field(nullable=True)] = None
-    queried_effective_date: Annotated[datetime | None, Field(nullable=True)] = None
-    date_conflict: Annotated[bool | None, Field(nullable=True)] = None
+    sponsor_preferred_name: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    queried_effective_date: Annotated[
+        datetime | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    date_conflict: Annotated[
+        bool | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+
+
+class TermWithCodelistMetadata(BaseModel):
+    term_uid: str
+    name: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    name_submission_value: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    code_submission_value: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    codelist_uid: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
+    codelist_submission_value: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
 
 
 class SimpleTermModel(BaseModel):
@@ -298,7 +336,7 @@ class SimpleTermModel(BaseModel):
         return simple_term_model
 
     term_uid: str
-    name: Annotated[str | None, Field(nullable=True)] = None
+    name: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
 
 
 class SimpleDictionaryTermModel(SimpleTermModel):
@@ -306,7 +344,7 @@ class SimpleDictionaryTermModel(SimpleTermModel):
         str | None,
         Field(
             description="Id if item in the external dictionary",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
 
@@ -317,8 +355,12 @@ class SimpleTermName(BaseModel):
 
 
 class SimpleTermAttributes(BaseModel):
-    code_submission_value: Annotated[str | None, Field(nullable=True)] = None
-    nci_preferred_name: Annotated[str | None, Field(nullable=True)] = None
+    code_submission_value: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    nci_preferred_name: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
 
 
 class SimpleCTTermNameAndAttributes(BaseModel):

@@ -134,9 +134,6 @@ Authentication can be turned off with `OAUTH_ENABLED=false` environment variable
 
 When authentication is turned on, all requests to API endpoints must provide a valid bearer (JWT) token inside the `Authorization` http header. 
 
-When authentication is turned off, all endpoints accept (optional) custom header `X-Test-User-Id` which 
-allows any request to specify any user id value. If the `X-Test-User-Id` header is missing, the default value of `unknown-user` is assumed.
-
 ## System information:
 
 System information is provided by a separate [System Information](./system/docs) sub-app which does not require authentication.
@@ -492,16 +489,6 @@ app.include_router(
     routers.sponsor_models_router,
     prefix="/standards/sponsor-models/models",
     tags=["Sponsor models"],
-)
-app.include_router(
-    routers.sponsor_model_dataset_classes_router,
-    prefix="/standards/sponsor-models/dataset-classes",
-    tags=["Sponsor model dataset classes"],
-)
-app.include_router(
-    routers.sponsor_model_variable_classes_router,
-    prefix="/standards/sponsor-models/variable-classes",
-    tags=["Sponsor model variable classes"],
 )
 app.include_router(
     routers.sponsor_model_datasets_router,

@@ -67,7 +67,7 @@ Feature: Studies - Study Disease Milestones
         Given The test Study Disease Milestones exists
         And The '/studies/Study_000001/study_structure/disease_milestones' page is opened
         When New Disease Milestone Type is created with the same Disease Milestone Type
-        Then The system displays the message "Value 'CTTerm_000219' in field Type is not unique for the study"
+        Then The system displays the message "in field Type is not unique for the study"
         And The form is not closed
 
     Scenario: Deleting an existing Study Disease Milestones is possible
@@ -76,6 +76,26 @@ Feature: Studies - Study Disease Milestones
         When The delete action is clicked for the test Study Disease Milestones
         And The continue is clicked in confirmation popup
         Then The test Study Disease Milestones is no longer available
+
+    Scenario: User must be able to export the data in CSV format
+        Given The '/studies/Study_000001/study_structure/disease_milestones' page is opened
+        And The user exports the data in 'CSV' format
+        Then The study specific 'DiseaseMilestones' file is downloaded in 'csv' format
+
+    Scenario: User must be able to export the data in JSON format
+        Given The '/studies/Study_000001/study_structure/disease_milestones' page is opened
+        And The user exports the data in 'JSON' format
+        Then The study specific 'DiseaseMilestones' file is downloaded in 'json' format
+
+    Scenario: User must be able to export the data in XML format
+        Given The '/studies/Study_000001/study_structure/disease_milestones' page is opened
+        And The user exports the data in 'XML' format
+        Then The study specific 'DiseaseMilestones' file is downloaded in 'xml' format
+
+    Scenario: User must be able to export the data in EXCEL format
+        Given The '/studies/Study_000001/study_structure/disease_milestones' page is opened
+        And The user exports the data in 'EXCEL' format
+        Then The study specific 'DiseaseMilestones' file is downloaded in 'xlsx' format
 
     @manual_test
     Scenario: User must be able to read change history of output

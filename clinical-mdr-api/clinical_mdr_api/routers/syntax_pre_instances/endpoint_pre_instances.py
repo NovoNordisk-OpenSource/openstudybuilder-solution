@@ -37,7 +37,7 @@ Service = EndpointPreInstanceService
     response_model=CustomPage[EndpointPreInstance],
     status_code=200,
     responses={
-        500: {"model": ErrorResponse, "description": "Internal Server Error"},
+        403: _generic_descriptions.ERROR_403,
     },
 )
 @decorators.allow_exports(
@@ -131,11 +131,11 @@ def get_endpoint_pre_instances(
     response_model=list[Any],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - Invalid field name specified",
         },
-        500: {"model": ErrorResponse, "description": "Internal Server Error"},
     },
 )
 def get_distinct_values_for_header(
@@ -184,8 +184,8 @@ def get_distinct_values_for_header(
     response_model=CustomPage[EndpointPreInstance],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def retrieve_audit_trail(
@@ -237,11 +237,11 @@ def retrieve_audit_trail(
     response_model=EndpointPreInstance | None,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - The endpoint pre-instance with the specified 'endpoint_pre_instance_uid' (and the specified date/time and/or status) wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get(
@@ -266,6 +266,7 @@ If the request succeeds:
     response_model=EndpointPreInstance,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -280,7 +281,6 @@ If the request succeeds:
             "model": ErrorResponse,
             "description": "Not Found - The Endpoint Pre-Instance with the specified 'endpoint_pre_instance_uid' wasn't found.",
         },
-        500: {"model": ErrorResponse, "description": "Internal Server Error"},
     },
 )
 def edit(
@@ -309,6 +309,7 @@ def edit(
     response_model=EndpointPreInstance,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {
             "description": "No content - The indexings for this pre-instance were successfully updated."
         },
@@ -316,7 +317,6 @@ def edit(
             "model": ErrorResponse,
             "description": "Not Found - The pre-instance with the specified 'endpoint_pre_instance_uid' could not be found.",
         },
-        500: {"model": ErrorResponse, "description": "Internal Server Error"},
     },
 )
 def patch_indexings(
@@ -343,12 +343,12 @@ The returned versions are ordered by `start_date` descending (newest entries fir
     response_model=list[EndpointPreInstanceVersion],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "OK."},
         404: {
             "model": ErrorResponse,
             "description": "Not Found - The Endpoint Pre-Instance with the specified 'endpoint_pre_instance_uid' wasn't found.",
         },
-        500: {"model": ErrorResponse, "description": "Internal Server Error"},
     },
 )
 @decorators.allow_exports(
@@ -422,6 +422,7 @@ Only the surrounding text (excluding the parameters) can be changed.
     response_model=EndpointPreInstance,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -434,7 +435,6 @@ Only the surrounding text (excluding the parameters) can be changed.
             "model": ErrorResponse,
             "description": "Not Found - The Endpoint Pre-Instance with the specified 'endpoint_pre_instance_uid' could not be found.",
         },
-        500: {"model": ErrorResponse, "description": "Internal Server Error"},
     },
 )
 def create_new_version(
@@ -458,6 +458,7 @@ If the request succeeds:
     response_model=EndpointPreInstance,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -468,7 +469,6 @@ If the request succeeds:
             "model": ErrorResponse,
             "description": "Not Found - The endpoint pre-instance with the specified 'endpoint_pre_instance_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def inactivate(
@@ -492,6 +492,7 @@ If the request succeeds:
     response_model=EndpointPreInstance,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -502,7 +503,6 @@ If the request succeeds:
             "model": ErrorResponse,
             "description": "Not Found - The endpoint pre-instance with the specified 'endpoint_pre_instance_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def reactivate(
@@ -522,6 +522,7 @@ def reactivate(
     response_model=None,
     status_code=204,
     responses={
+        403: _generic_descriptions.ERROR_403,
         204: {
             "description": "No Content - The Endpoint Pre-Instance was successfully deleted."
         },
@@ -535,7 +536,6 @@ def reactivate(
             "model": ErrorResponse,
             "description": "Not Found - An Endpoint Pre-Instance with the specified uid could not be found.",
         },
-        500: {"model": ErrorResponse, "description": "Internal Server Error"},
     },
 )
 def delete(
@@ -561,6 +561,7 @@ If the request succeeds:
     response_model=EndpointPreInstance,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -572,7 +573,6 @@ If the request succeeds:
             "model": ErrorResponse,
             "description": "Not Found - The Endpoint Pre-Instance with the specified 'endpoint_pre_instance_uid' wasn't found.",
         },
-        500: {"model": ErrorResponse, "description": "Internal Server Error"},
     },
 )
 def approve(

@@ -15,13 +15,13 @@ from clinical_mdr_api.models.utils import BaseModel, PatchInputModel, PostInputM
 class Project(BaseModel):
     uid: Annotated[str, Field(description="The unique id of the Project.")]
 
-    project_number: Annotated[str | None, Field(nullable=True)]
+    project_number: Annotated[str | None, Field(json_schema_extra={"nullable": True})]
 
     clinical_programme: Annotated[ClinicalProgramme, Field()]
 
-    name: Annotated[str | None, Field(nullable=True)]
+    name: Annotated[str | None, Field(json_schema_extra={"nullable": True})]
 
-    description: Annotated[str | None, Field(nullable=True)]
+    description: Annotated[str | None, Field(json_schema_extra={"nullable": True})]
 
     @classmethod
     def from_uid(

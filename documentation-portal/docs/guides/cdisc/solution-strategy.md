@@ -164,3 +164,5 @@ The following actions are defined and can be specified for the automatic and the
 | `catalogue-priority`     | Applies the catalogue priority according to the `CataloguePriority` node and marks the inconsistency as resolved. | `inconsistent codelist attributes`, `inconsistent term attributes`, `inconsistent term submission values` |
 | `merge-terms` | Takes over both terms, keeps the package structure and marks the inconsistency as resolved. | `inconsistent terms` |
 | `ignore` | Ignores the inconsistency and marks it as resolved. | *all* |
+
+

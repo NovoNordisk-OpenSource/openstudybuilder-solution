@@ -30,11 +30,11 @@ from common.models.error import ErrorResponse
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - there is no study with the given uid.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.allow_exports(
@@ -119,11 +119,11 @@ def get_all_selected_compound_dosings(
     response_model=list[Any],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - Invalid field name specified",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_distinct_values_for_header(
@@ -168,11 +168,11 @@ def get_distinct_values_for_header(
     response_model=list[Any],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - Invalid field name specified",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_distinct_compound_dosings_values_for_header(
@@ -236,8 +236,8 @@ Returned data:
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_all_compound_dosings_audit_trail(
@@ -278,11 +278,11 @@ Returned data:
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - there exist no selection of the compound dosing for the study provided.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_compound_dosing_audit_trail(
@@ -303,6 +303,7 @@ def get_compound_dosing_audit_trail(
     response_model_exclude_unset=True,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         400: {
             "model": ErrorResponse,
             "description": "Forbidden - A study compound dosing already exists for selected study compound and element",
@@ -311,7 +312,6 @@ def get_compound_dosing_audit_trail(
             "model": ErrorResponse,
             "description": "Not Found - Study, study compound or study element is not found with the passed 'study_uid'.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
@@ -335,12 +335,12 @@ def create_study_compound_dosing(
     response_model=None,
     status_code=204,
     responses={
+        403: _generic_descriptions.ERROR_403,
         204: {"description": "No Content - The selection was successfully deleted."},
         404: {
             "model": ErrorResponse,
             "description": "Not Found - there exist no selection of the compound dosing and the study provided.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
@@ -377,11 +377,11 @@ State after:
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - There exist no selection with the given uid.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")

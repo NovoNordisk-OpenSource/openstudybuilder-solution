@@ -4,113 +4,103 @@
       {{ $t('DataModels.sdtm') }}
       <HelpButton />
     </div>
-    <v-tabs v-model="tab" bg-color="white">
-      <v-tab v-for="item of tabs" :key="item.tab" :value="item.tab">
-        {{ item.name }}
-      </v-tab>
-    </v-tabs>
-    <v-window v-model="tab" class="bg-white">
-      <v-window-item value="models">
-        <DataExchangeStandardsModelsView
-          :key="`models-${tabKeys.models}`"
-          :headers="modelsHeaders"
-          uid="SDTM"
-          :redirect-model="redirectModel"
-          @redirect-to-guide="redirectToGuide"
-        />
-      </v-window-item>
-      <v-window-item value="SDTMIG">
-        <DataExchangeStandardsGuideView
-          :key="`SDTMIG-${tabKeys.SDTMIG}`"
-          :headers="igHeaders"
-          uid="SDTMIG"
-          :redirect-guide="redirectGuide"
-          @redirect-to-model="redirectToModel"
-          @redirect-to-model-with-variable="redirectToModelWithVariable"
-        />
-      </v-window-item>
-      <v-window-item value="SDTMIG__AP">
-        <DataExchangeStandardsGuideView
-          :key="`SDTMIG__AP-${tabKeys.SDTMIG__AP}`"
-          :headers="igHeaders"
-          uid="SDTMIG__AP"
-          :redirect-guide="redirectGuide"
-          @redirect-to-model="redirectToModel"
-          @redirect-to-model-with-variable="redirectToModelWithVariable"
-        />
-      </v-window-item>
-      <v-window-item value="SDTMIG__MD">
-        <DataExchangeStandardsGuideView
-          :key="`SDTMIG__MD-${tabKeys.SDTMIG__MD}`"
-          :headers="igHeaders"
-          uvalue="SDTMIG__MD"
-          :redirect-guide="redirectGuide"
-          @redirect-to-model="redirectToModel"
-          @redirect-to-model-with-variable="redirectToModelWithVariable"
-        />
-      </v-window-item>
-      <v-window-item value="SENDIG">
-        <DataExchangeStandardsGuideView
-          :key="`SENDIG-${tabKeys.SENDIG}`"
-          :headers="igHeaders"
-          uvalue="SENDIG"
-          :redirect-guide="redirectGuide"
-          @redirect-to-model="redirectToModel"
-          @redirect-to-model-with-variable="redirectToModelWithVariable"
-        />
-      </v-window-item>
-      <v-window-item value="SENDIG__AR">
-        <DataExchangeStandardsGuideView
-          :key="`SENDIG__AR-${tabKeys.SENDIG__AR}`"
-          :headers="igHeaders"
-          uvalue="SENDIG__AR"
-          :redirect-guide="redirectGuide"
-          @redirect-to-model="redirectToModel"
-          @redirect-to-model-with-variable="redirectToModelWithVariable"
-        />
-      </v-window-item>
-      <v-window-item value="SENDIG__DART">
-        <DataExchangeStandardsGuideView
-          :key="`SENDIG__DART-${tabKeys.SENDIG__DART}`"
-          :headers="igHeaders"
-          uvalue="SENDIG__DART"
-          :redirect-guide="redirectGuide"
-          @redirect-to-model="redirectToModel"
-          @redirect-to-model-with-variable="redirectToModelWithVariable"
-        />
-      </v-window-item>
-      <v-window-item value="SENDIG__GENETOX">
-        <DataExchangeStandardsGuideView
-          :key="`SENDIG__GENETOX-${tabKeys.SENDIG__GENETOX}`"
-          :headers="igHeaders"
-          uid="SENDIG__GENETOX"
-          :redirect-guide="redirectGuide"
-          @redirect-to-model="redirectToModel"
-          @redirect-to-model-with-variable="redirectToModelWithVariable"
-        />
-      </v-window-item>
-    </v-window>
+    <NavigationTabs ref="nvTabs" :tabs="tabs">
+      <template #default="{ tabKeys }">
+        <v-window-item value="models">
+          <DataExchangeStandardsModelsView
+            :key="`models-${tabKeys.models}`"
+            :headers="modelsHeaders"
+            uid="SDTM"
+            :redirect-model="redirectModel"
+            @redirect-to-guide="redirectToGuide"
+          />
+        </v-window-item>
+        <v-window-item value="SDTMIG">
+          <DataExchangeStandardsGuideView
+            :key="`SDTMIG-${tabKeys.SDTMIG}`"
+            :headers="igHeaders"
+            uid="SDTMIG"
+            :redirect-guide="redirectGuide"
+            @redirect-to-model="redirectToModel"
+            @redirect-to-model-with-variable="redirectToModelWithVariable"
+          />
+        </v-window-item>
+        <v-window-item value="SDTMIG__AP">
+          <DataExchangeStandardsGuideView
+            :key="`SDTMIG__AP-${tabKeys.SDTMIG__AP}`"
+            :headers="igHeaders"
+            uid="SDTMIG__AP"
+            :redirect-guide="redirectGuide"
+            @redirect-to-model="redirectToModel"
+            @redirect-to-model-with-variable="redirectToModelWithVariable"
+          />
+        </v-window-item>
+        <v-window-item value="SDTMIG__MD">
+          <DataExchangeStandardsGuideView
+            :key="`SDTMIG__MD-${tabKeys.SDTMIG__MD}`"
+            :headers="igHeaders"
+            uvalue="SDTMIG__MD"
+            :redirect-guide="redirectGuide"
+            @redirect-to-model="redirectToModel"
+            @redirect-to-model-with-variable="redirectToModelWithVariable"
+          />
+        </v-window-item>
+        <v-window-item value="SENDIG">
+          <DataExchangeStandardsGuideView
+            :key="`SENDIG-${tabKeys.SENDIG}`"
+            :headers="igHeaders"
+            uvalue="SENDIG"
+            :redirect-guide="redirectGuide"
+            @redirect-to-model="redirectToModel"
+            @redirect-to-model-with-variable="redirectToModelWithVariable"
+          />
+        </v-window-item>
+        <v-window-item value="SENDIG__AR">
+          <DataExchangeStandardsGuideView
+            :key="`SENDIG__AR-${tabKeys.SENDIG__AR}`"
+            :headers="igHeaders"
+            uvalue="SENDIG__AR"
+            :redirect-guide="redirectGuide"
+            @redirect-to-model="redirectToModel"
+            @redirect-to-model-with-variable="redirectToModelWithVariable"
+          />
+        </v-window-item>
+        <v-window-item value="SENDIG__DART">
+          <DataExchangeStandardsGuideView
+            :key="`SENDIG__DART-${tabKeys.SENDIG__DART}`"
+            :headers="igHeaders"
+            uvalue="SENDIG__DART"
+            :redirect-guide="redirectGuide"
+            @redirect-to-model="redirectToModel"
+            @redirect-to-model-with-variable="redirectToModelWithVariable"
+          />
+        </v-window-item>
+        <v-window-item value="SENDIG__GENETOX">
+          <DataExchangeStandardsGuideView
+            :key="`SENDIG__GENETOX-${tabKeys.SENDIG__GENETOX}`"
+            :headers="igHeaders"
+            uid="SENDIG__GENETOX"
+            :redirect-guide="redirectGuide"
+            @redirect-to-model="redirectToModel"
+            @redirect-to-model-with-variable="redirectToModelWithVariable"
+          />
+        </v-window-item>
+      </template>
+    </NavigationTabs>
   </div>
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRoute, useRouter } from 'vue-router'
-import { useAppStore } from '@/stores/app'
-import { useTabKeys } from '@/composables/tabKeys'
 import DataExchangeStandardsModelsView from '@/components/library/DataExchangeStandardsModelsView.vue'
 import DataExchangeStandardsGuideView from '@/components/library/DataExchangeStandardsGuideView.vue'
 import HelpButton from '@/components/tools/HelpButton.vue'
+import NavigationTabs from '@/components/tools/NavigationTabs.vue'
 
-const appStore = useAppStore()
 const { t } = useI18n()
-const router = useRouter()
-const route = useRoute()
-const { tabKeys, updateTabKey } = useTabKeys()
 
-const tab = ref(0)
-const tabs = ref([
+const tabs = [
   { tab: 'models', name: t('DataModels.sdtm_models') },
   { tab: 'SDTMIG', name: t('DataModels.sdtm_ig') },
   { tab: 'SDTMIG__AP', name: t('DataModels.sdtmig_ap') },
@@ -119,7 +109,9 @@ const tabs = ref([
   { tab: 'SENDIG__AR', name: t('DataModels.sendig_ar') },
   { tab: 'SENDIG__DART', name: t('DataModels.sendig_dart') },
   { tab: 'SENDIG__GENETOX', name: t('DataModels.sendig_genetox') },
-])
+]
+
+const nvTabs = ref()
 const redirectModel = ref({})
 const redirectGuide = ref({})
 const modelsHeaders = ref([
@@ -153,35 +145,18 @@ const igHeaders = ref([
   { title: t('_global.description'), key: 'description' },
 ])
 
-watch(tab, (newValue) => {
-  const tabName = newValue
-    ? tabs.value.find((el) => el.tab === newValue).name
-    : tabs.value[0].name
-  router.push({
-    name: 'Sdtm',
-    params: { tab: newValue },
-  })
-  updateTabKey(newValue)
-  appStore.addBreadcrumbsLevel(
-    tabName,
-    { name: 'Sdtm', params: { tab: tabName } },
-    3,
-    true
-  )
-})
-
 function redirectToGuide(item) {
   redirectGuide.value = item
-  tab.value = tabs.value.indexOf(tabs.value.find((tab) => tab.tab === item.uid))
+  nvTabs.value.tab = tabs.value.indexOf(
+    tabs.value.find((tab) => tab.tab === item.uid)
+  )
 }
 function redirectToModel(item) {
   redirectModel.value = item
-  tab.value = 'models'
+  nvTabs.value.tab = 'models'
 }
 function redirectToModelWithVariable(data) {
   redirectModel.value = data
-  tab.value = 'models'
+  nvTabs.value.tab = 'models'
 }
-
-tab.value = route.params.tab || 'models'
 </script>

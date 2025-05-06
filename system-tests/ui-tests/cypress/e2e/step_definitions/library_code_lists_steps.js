@@ -1,6 +1,18 @@
 const { Given, When, Then } = require("@badeball/cypress-cucumber-preprocessor");
 
 let codelistName, termSponsorName, termSentanceName, termName, termSubmissionValue, termNciValue, termDefinition
+let iterator = 1
+
+//To be removed once ct-catalogues tests stop crashing
+Then('Log that step was executed', () => {
+    console.log(`Step ${iterator} was executed`)
+    iterator += iterator
+})
+
+Given('CT data is loaded', () => {
+  cy.intercept('/api/ct/codelists?*').as('getData')
+  cy.wait('@getData', {timeout: 30000})
+})
 
 Then('CT Package data is loaded', () => {
     cy.intercept('/api/ct/packages').as('getPackages')
@@ -126,10 +138,11 @@ Then('The new Codelist page is opened and showing correct data', () => verifyCod
 When('The existing term is added', () => {
     cy.clickButton('add-term-button')
     cy.get('[data-cy="select-exitsing-term"] input').check({force: true})
+    cy.intercept('/api/ct/terms?*').as('getData2')
     cy.clickButton('step.creation_mode-continue-button')
-    cy.longWaitForTable()
+    cy.wait('@getData2', {timeout: 30000})
     cy.searchForInPopUp(termSponsorName)
-    cy.longWaitForTable()
+    cy.longWaitForTable(60000)
     cy.get('table tbody tr [type="checkbox"]').eq(0).check()
     cy.clickButton('step.select-continue-button')
 })
@@ -141,6 +154,7 @@ Then('The version history contain the changes of edited Codelist', () => {
 })
 
 function verifyTermSponsorName(checkSentanceName = false) {
+    cy.wait(1000)
     cy.contains('Sponsor preferred name').next().should('contain', termSponsorName)
     if (checkSentanceName) cy.contains('Sentence case name').next().should('contain', termSponsorName.toLowerCase())
 }

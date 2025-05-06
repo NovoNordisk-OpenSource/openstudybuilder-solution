@@ -29,8 +29,8 @@ from common.models.error import ErrorResponse
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_all_activity_instructions_for_all_studies(
@@ -87,11 +87,11 @@ def get_all_activity_instructions_for_all_studies(
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - there is no study with the given uid.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_all_selected_instructions(
@@ -113,12 +113,12 @@ def get_all_selected_instructions(
     response_model=None,
     status_code=204,
     responses={
+        403: _generic_descriptions.ERROR_403,
         204: {"description": "No Content - The selection was successfully deleted."},
         404: {
             "model": ErrorResponse,
             "description": "Not Found - there exist no selection of the activity instruction and the study provided.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def delete_activity_instruction(
@@ -139,8 +139,8 @@ def delete_activity_instruction(
     response_model=list[StudyActivityInstructionBatchOutput],
     status_code=207,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def activity_instruction_batch_operations(

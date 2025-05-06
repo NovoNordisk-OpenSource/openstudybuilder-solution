@@ -1,6 +1,6 @@
 <template>
   <div>
-    {{ pageTitle }}
+    {{ props.pageTitle }}
     <v-btn
       data-cy="help-button"
       icon="mdi-help-circle-outline"
@@ -10,7 +10,7 @@
     />
     <v-dialog
       v-model="showHelp"
-      :width="width"
+      :width="props.width"
       persistent
       hide-overlay
       content-class="upperRight"
@@ -19,7 +19,7 @@
     >
       <v-card>
         <v-card-title class="d-flex dialog-title align-center">
-          {{ title }}
+          {{ props.title }}
           <v-spacer />
           <v-btn
             color="secondary"
@@ -30,7 +30,7 @@
         </v-card-title>
         <v-card-text>
           <slot>
-            <div v-html="helpText"/>
+            <div v-html="props.helpText" />
           </slot>
         </v-card-text>
       </v-card>
@@ -38,32 +38,29 @@
   </div>
 </template>
 
-<script>
-export default {
-  props: {
-    pageTitle: {
-      type: String,
-      default: null,
-    },
-    helpText: {
-      type: String,
-      default: '',
-    },
-    title: {
-      type: String,
-      default: 'Online help',
-    },
-    width: {
-      type: String,
-      default: '495px',
-    },
+<script setup>
+import { ref } from 'vue'
+
+const props = defineProps({
+  pageTitle: {
+    type: String,
+    default: null,
   },
-  data() {
-    return {
-      showHelp: false,
-    }
+  helpText: {
+    type: String,
+    default: '',
   },
-}
+  title: {
+    type: String,
+    default: 'Online help',
+  },
+  width: {
+    type: String,
+    default: '495px',
+  },
+})
+
+const showHelp = ref(false)
 </script>
 <style>
 .upperRight {

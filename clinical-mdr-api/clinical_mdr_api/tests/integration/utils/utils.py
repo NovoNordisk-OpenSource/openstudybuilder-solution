@@ -29,6 +29,7 @@ from clinical_mdr_api.models.biomedical_concepts.activity_instance_class import 
     ActivityInstanceClassInput,
 )
 from clinical_mdr_api.models.biomedical_concepts.activity_item_class import (
+    ActivityInstanceClassRelInput,
     ActivityItemClass,
     ActivityItemClassCreateInput,
 )
@@ -82,6 +83,7 @@ from clinical_mdr_api.models.concepts.medicinal_product import (
     MedicinalProduct,
     MedicinalProductCreateInput,
 )
+from clinical_mdr_api.models.concepts.odms.odm_item import OdmItem, OdmItemPostInput
 from clinical_mdr_api.models.concepts.pharmaceutical_product import (
     PharmaceuticalProduct,
     PharmaceuticalProductCreateInput,
@@ -143,23 +145,11 @@ from clinical_mdr_api.models.standard_data_models.sponsor_model_dataset import (
 from clinical_mdr_api.models.standard_data_models.sponsor_model_dataset import (
     SponsorModelDatasetInput,
 )
-from clinical_mdr_api.models.standard_data_models.sponsor_model_dataset_class import (
-    SponsorModelDatasetClass as SponsorModelDatasetClassAPIModel,
-)
-from clinical_mdr_api.models.standard_data_models.sponsor_model_dataset_class import (
-    SponsorModelDatasetClassInput,
-)
 from clinical_mdr_api.models.standard_data_models.sponsor_model_dataset_variable import (
     SponsorModelDatasetVariable as SponsorModelDatasetVariableAPIModel,
 )
 from clinical_mdr_api.models.standard_data_models.sponsor_model_dataset_variable import (
     SponsorModelDatasetVariableInput,
-)
-from clinical_mdr_api.models.standard_data_models.sponsor_model_variable_class import (
-    SponsorModelVariableClass as SponsorModelVariableClassAPIModel,
-)
-from clinical_mdr_api.models.standard_data_models.sponsor_model_variable_class import (
-    SponsorModelVariableClassInput,
 )
 from clinical_mdr_api.models.standard_data_models.variable_class import (
     VariableClass as VariableClassAPIModel,
@@ -329,6 +319,7 @@ from clinical_mdr_api.services.concepts.compound_service import CompoundService
 from clinical_mdr_api.services.concepts.medicinal_products_service import (
     MedicinalProductService,
 )
+from clinical_mdr_api.services.concepts.odms.odm_items import OdmItemService
 from clinical_mdr_api.services.concepts.pharmaceutical_products_service import (
     PharmaceuticalProductService,
 )
@@ -394,14 +385,8 @@ from clinical_mdr_api.services.standard_data_models.sponsor_model import (
 from clinical_mdr_api.services.standard_data_models.sponsor_model_dataset import (
     SponsorModelDatasetService,
 )
-from clinical_mdr_api.services.standard_data_models.sponsor_model_dataset_class import (
-    SponsorModelDatasetClassService,
-)
 from clinical_mdr_api.services.standard_data_models.sponsor_model_dataset_variable import (
     SponsorModelDatasetVariableService,
-)
-from clinical_mdr_api.services.standard_data_models.sponsor_model_variable_class import (
-    SponsorModelVariableClassService,
 )
 from clinical_mdr_api.services.standard_data_models.variable_class import (
     VariableClassService,
@@ -674,6 +659,31 @@ class TestUtils:
         author_id: "unknown-user",
         version: "1.0"
     }} """
+
+    @classmethod
+    def update_entity_status(
+        cls, entity_uid: str, status: str, entity_type: str
+    ) -> None:
+        """Update the status of an entity using a direct Cypher query
+
+        Args:
+            entity_uid: The UID of the entity to update
+            status: The new status (e.g., 'Draft', 'Final')
+            entity_type: The type of entity (e.g., 'ActivityGroup', 'ActivitySubGroup')
+        """
+        # Determine the root node label based on entity type
+        root_label = f"{entity_type}Root"
+        # Find the latest relationship by matching on the root node and getting the latest version
+        # where end_date is null (the active version)
+        query = f"""
+        MATCH (root:{root_label} {{uid: $uid}})-[rel:HAS_VERSION]->(val)
+        WHERE rel.end_date IS NULL
+        SET rel.status = $status
+        RETURN rel
+        """
+
+        params = {"uid": entity_uid, "status": status}
+        db.cypher_query(query=query, params=params)
 
     @classmethod
     def create_feature_flag(
@@ -1460,8 +1470,8 @@ class TestUtils:
     @classmethod
     def create_activity_instance(
         cls,
-        name: str,
         activity_instance_class_uid: str,
+        name: str = None,
         name_sentence_case: str | None = None,
         nci_concept_name: str | None = None,
         nci_concept_id: str | None = None,
@@ -1533,7 +1543,9 @@ class TestUtils:
         order: int | None = None,
         definition: str | None = None,
         is_domain_specific: bool | None = None,
+        level: int | None = None,
         parent_uid: str | None = None,
+        data_domain_uids: list[str] | None = None,
         library_name: str | None = LIBRARY_NAME,
         approve: bool = True,
     ) -> ActivityInstanceClass:
@@ -1544,7 +1556,9 @@ class TestUtils:
                 order=order,
                 definition=definition,
                 is_domain_specific=is_domain_specific,
+                level=level,
                 parent_uid=parent_uid,
+                data_domain_uids=data_domain_uids,
                 library_name=library_name,
             )
         )
@@ -1560,10 +1574,10 @@ class TestUtils:
         cls,
         name: str,
         order: int,
-        mandatory: bool,
         role_uid: str,
         data_type_uid: str,
-        activity_instance_class_uids: list[str],
+        activity_instance_classes: list[ActivityInstanceClassRelInput],
+        codelist_uids: list[str] | None = None,
         definition: str | None = None,
         nci_concept_id: str | None = None,
         library_name: str | None = LIBRARY_NAME,
@@ -1576,10 +1590,10 @@ class TestUtils:
                 definition=definition,
                 nci_concept_id=nci_concept_id,
                 order=order,
-                mandatory=mandatory,
                 role_uid=role_uid,
                 data_type_uid=data_type_uid,
-                activity_instance_class_uids=activity_instance_class_uids,
+                activity_instance_classes=activity_instance_classes,
+                codelist_uids=codelist_uids or [],
                 library_name=library_name,
             )
         )
@@ -2090,6 +2104,62 @@ class TestUtils:
         return result
 
     @classmethod
+    def create_odm_item(
+        cls,
+        name=None,
+        library_name=LIBRARY_NAME,
+        oid=None,
+        datatype=None,
+        prompt=None,
+        length=None,
+        significant_digits=None,
+        sas_field_name=None,
+        sds_var_name=None,
+        origin=None,
+        comment=None,
+        descriptions=None,
+        alias_uids=None,
+        codelist_uid=None,
+        unit_definitions=None,
+        terms=None,
+        approve: bool = True,
+    ) -> UnitDefinitionModel:
+        if not terms:
+            terms = []
+        if not descriptions:
+            descriptions = []
+        if not unit_definitions:
+            unit_definitions = []
+        if not alias_uids:
+            alias_uids = []
+
+        service = OdmItemService()
+
+        payload: OdmItemPostInput = OdmItemPostInput(
+            library_name=library_name,
+            name=cls.random_if_none(name),
+            oid=cls.random_if_none(oid),
+            datatype=cls.random_if_none(datatype),
+            prompt=cls.random_if_none(prompt),
+            length=length,
+            significant_digits=significant_digits,
+            sas_field_name=cls.random_if_none(sas_field_name),
+            sds_var_name=cls.random_if_none(sds_var_name),
+            origin=cls.random_if_none(origin),
+            comment=cls.random_if_none(comment),
+            descriptions=descriptions,
+            alias_uids=alias_uids,
+            codelist_uid=codelist_uid,
+            unit_definitions=unit_definitions,
+            terms=terms,
+        )
+
+        result: OdmItem = service.create_with_relations(concept_input=payload)
+        if approve:
+            service.approve(result.uid)
+        return result
+
+    @classmethod
     def create_library(cls, name: str = LIBRARY_NAME, is_editable: bool = True) -> dict:
         libraries = library_service.get_libraries(is_editable)
         existing_library = next((x for x in libraries if x["name"] == name), None)
@@ -2125,7 +2195,7 @@ class TestUtils:
         if number:
             return number
         cls.sequential_study_number += 1
-        return cls.sequential_study_number
+        return str(cls.sequential_study_number)
 
     @classmethod
     def create_study(
@@ -3055,107 +3125,12 @@ class TestUtils:
         return result
 
     @classmethod
-    def create_sponsor_dataset_class(
-        cls,
-        dataset_class_uid: str,
-        sponsor_model_name: str,
-        sponsor_model_version_number: str,
-        is_basic_std: bool | None = False,
-        xml_path: str | None = "xml_path",
-        xml_title: str | None = "xml_title",
-        structure: str | None = "structure",
-        purpose: str | None = "purpose",
-        comment: str | None = "comment",
-        label: str | None = "label",
-    ) -> SponsorModelDatasetClassAPIModel:
-        service = SponsorModelDatasetClassService()
-        result: SponsorModelDatasetClassAPIModel = service.create(
-            item_input=SponsorModelDatasetClassInput(
-                dataset_class_uid=dataset_class_uid,
-                sponsor_model_name=sponsor_model_name,
-                sponsor_model_version_number=sponsor_model_version_number,
-                is_basic_std=is_basic_std,
-                xml_path=xml_path,
-                xml_title=xml_title,
-                structure=structure,
-                purpose=purpose,
-                comment=comment,
-                label=label,
-            )
-        )
-
-        return result
-
-    @classmethod
-    def create_sponsor_variable_class(
-        cls,
-        dataset_class_uid: str,
-        variable_class_uid: str,
-        sponsor_model_name: str,
-        sponsor_model_version_number: str,
-        is_basic_std: bool | None = False,
-        label: str | None = "label",
-        order: int | None = 1,
-        variable_type: str | None = "variable_type",
-        length: int | None = 12,
-        display_format: str | None = "display_format",
-        xml_datatype: str | None = "xml_datatype",
-        xml_codelist: str | None = "xml_codelist",
-        core: str | None = "core",
-        origin: str | None = "origin",
-        role: str | None = "role",
-        term: str | None = "term",
-        algorithm: str | None = "algorithm",
-        qualifiers: list[str] | None = ["qualifiers"],
-        comment: str | None = "comment",
-        ig_comment: str | None = "ig_comment",
-        map_var_flag: bool | None = False,
-        fixed_mapping: str | None = "fixed_mapping",
-        include_in_raw: bool | None = False,
-        nn_internal: bool | None = False,
-        incl_cre_domain: bool | None = False,
-        xml_codelist_values: str | None = "xml_codelist_values",
-    ) -> SponsorModelVariableClassAPIModel:
-        service = SponsorModelVariableClassService()
-        result: SponsorModelVariableClassAPIModel = service.create(
-            item_input=SponsorModelVariableClassInput(
-                dataset_class_uid=dataset_class_uid,
-                variable_class_uid=variable_class_uid,
-                sponsor_model_name=sponsor_model_name,
-                sponsor_model_version_number=sponsor_model_version_number,
-                is_basic_std=is_basic_std,
-                label=label,
-                order=order,
-                variable_type=variable_type,
-                length=length,
-                display_format=display_format,
-                xml_datatype=xml_datatype,
-                xml_codelist=xml_codelist,
-                core=core,
-                origin=origin,
-                role=role,
-                term=term,
-                algorithm=algorithm,
-                qualifiers=qualifiers,
-                comment=comment,
-                ig_comment=ig_comment,
-                map_var_flag=map_var_flag,
-                fixed_mapping=fixed_mapping,
-                include_in_raw=include_in_raw,
-                nn_internal=nn_internal,
-                incl_cre_domain=incl_cre_domain,
-                xml_codelist_values=xml_codelist_values,
-            )
-        )
-
-        return result
-
-    @classmethod
     def create_sponsor_dataset(
         cls,
         dataset_uid: str,
         sponsor_model_name: str,
         sponsor_model_version_number: str,
+        implemented_dataset_class: str,
         is_basic_std: bool | None = False,
         xml_path: str | None = "xml_path",
         xml_title: str | None = "xml_title",
@@ -3181,6 +3156,7 @@ class TestUtils:
                 dataset_uid=dataset_uid,
                 sponsor_model_name=sponsor_model_name,
                 sponsor_model_version_number=sponsor_model_version_number,
+                implemented_dataset_class=implemented_dataset_class,
                 is_basic_std=is_basic_std,
                 xml_path=xml_path,
                 xml_title=xml_title,
@@ -3230,7 +3206,7 @@ class TestUtils:
         ig_comment: str | None = "ig_comment",
         class_table: str | None = "class_table",
         class_column: str | None = "class_column",
-        map_var_flag: bool | None = False,
+        map_var_flag: str | None = "Y",
         fixed_mapping: str | None = "fixed_mapping",
         include_in_raw: bool | None = False,
         nn_internal: bool | None = False,
@@ -3352,10 +3328,10 @@ class TestUtils:
             MERGE (data_model_catalogue)-[:HAS_VARIABLE_CLASS]->(class_variable_root)
             WITH class_variable_root, class_variable_value
             MATCH (dataset_class_root:DatasetClass {uid:$dataset_class_uid})-[:HAS_INSTANCE]->(dataset_class_value)
-            MERGE (class_variable_value)<-[has_class_variable:HAS_VARIABLE_CLASS]-(dataset_class_value)
-            WITH dataset_class_value, has_class_variable
+            MERGE (class_variable_value)<-[has_variable_class:HAS_VARIABLE_CLASS]-(dataset_class_value)
+            WITH dataset_class_value, has_variable_class
             MATCH (data_model_value:DataModelValue)-[:HAS_DATASET_CLASS]->(dataset_class_value)
-            SET has_class_variable.version_number = data_model_value.version_number"""
+            SET has_variable_class.version_number = data_model_value.version_number"""
         class_variable_uid = VariableClass.get_next_free_uid_and_increment_counter()
         db.cypher_query(
             create_class_variable,

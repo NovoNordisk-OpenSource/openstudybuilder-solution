@@ -23,10 +23,10 @@ router = APIRouter()
     response_class=PrettyJSONResponse,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {
             "model": StudyMetadataListingModel,
         },
-        500: _generic_descriptions.ERROR_500,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - No study with the specified study ID.",

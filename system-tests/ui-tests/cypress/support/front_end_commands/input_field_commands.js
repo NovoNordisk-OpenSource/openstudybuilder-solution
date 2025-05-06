@@ -5,6 +5,13 @@ Cypress.Commands.add('fillInput', (inputField, value) => {
     })
 })
 
+Cypress.Commands.add('fillInputWithoutDeplay', (inputField, value) => {
+    cy.get(`[data-cy="${inputField}"]`).first().within(() => {
+        cy.get('[class="v-field__input"]').clear({ force: true }).type(value, { force: true, delay: 0 })
+        cy.wait(1000)
+    })
+})
+
 Cypress.Commands.add('fillInputNew', (inputField, value) => {
     cy.get(`[data-cy="${inputField}"] input`).clear().type(value)
     cy.wait(1000)

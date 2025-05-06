@@ -102,7 +102,7 @@ class TestTVListing(unittest.TestCase):
                 DOMAIN="TV",
                 VISITNUM=410,
                 VISIT="VISIT 4",
-                VISITDY=32,
+                VISITDY=62,
                 ARMCD=None,
                 ARM=None,
                 TVSTRL="START_RULE",

@@ -137,6 +137,25 @@ Feature: Studies - Study Cohorts
         When For the 'study-cohort-code' a '100' value is provided in Study Cohort form
         Then The message "Value must be less than 99" is displayed
 
+    Scenario: User must be able to export the data in CSV format
+        Given The '/studies/Study_000001/study_structure/cohorts' page is opened
+        And The user exports the data in 'CSV' format
+        Then The study specific 'StudyCohorts' file is downloaded in 'csv' format
+
+    Scenario: User must be able to export the data in JSON format
+        Given The '/studies/Study_000001/study_structure/cohorts' page is opened
+        And The user exports the data in 'JSON' format
+        Then The study specific 'StudyCohorts' file is downloaded in 'json' format
+
+    Scenario: User must be able to export the data in XML format
+        Given The '/studies/Study_000001/study_structure/cohorts' page is opened
+        And The user exports the data in 'XML' format
+        Then The study specific 'StudyCohorts' file is downloaded in 'xml' format
+
+    Scenario: User must be able to export the data in EXCEL format
+        Given The '/studies/Study_000001/study_structure/cohorts' page is opened
+        And The user exports the data in 'EXCEL' format
+        Then The study specific 'StudyCohorts' file is downloaded in 'xlsx' format
 
     @manual_test
     Scenario: User must be able to remove the Study Cohort

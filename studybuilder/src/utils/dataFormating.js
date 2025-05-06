@@ -71,17 +71,17 @@ function terms(value) {
   return value.map((item) => item.name.sponsor_preferred_name).join(', ')
 }
 
-function letteredOrder(value) {
+function footnoteSymbol(value) {
   if (!value) {
     return ''
   }
   const alfabet = 'abcdefghijklmnopqrstuvwxyz'
   const alfabetArray = alfabet.split('')
 
-  if (value <= 26) {
+  if (value <= 25) {
     return alfabetArray[value - 1]
   } else {
-    return `z${value - 26}`
+    return `z${value - 25}`
   }
 }
 
@@ -95,5 +95,5 @@ export default {
   names,
   terms,
   itemNames,
-  letteredOrder,
+  footnoteSymbol,
 }

@@ -37,7 +37,7 @@ Service = CriteriaPreInstanceService
     response_model=CustomPage[CriteriaPreInstance],
     status_code=200,
     responses={
-        500: {"model": ErrorResponse, "description": "Internal Server Error"},
+        403: _generic_descriptions.ERROR_403,
     },
 )
 @decorators.allow_exports(
@@ -132,11 +132,11 @@ def criteria_pre_instances(
     response_model=list[Any],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - Invalid field name specified",
         },
-        500: {"model": ErrorResponse, "description": "Internal Server Error"},
     },
 )
 def get_distinct_values_for_header(
@@ -185,8 +185,8 @@ def get_distinct_values_for_header(
     response_model=CustomPage[CriteriaPreInstance],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def retrieve_audit_trail(
@@ -238,11 +238,11 @@ def retrieve_audit_trail(
     response_model=CriteriaPreInstance | None,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - The criteria pre-instance with the specified 'criteria_pre_instance_uid' (and the specified date/time and/or status) wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get(
@@ -267,6 +267,7 @@ If the request succeeds:
     response_model=CriteriaPreInstance,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -281,7 +282,6 @@ If the request succeeds:
             "model": ErrorResponse,
             "description": "Not Found - The Criteria Pre-Instance with the specified 'criteria_pre_instance_uid' wasn't found.",
         },
-        500: {"model": ErrorResponse, "description": "Internal Server Error"},
     },
 )
 def edit(
@@ -310,6 +310,7 @@ def edit(
     response_model=CriteriaPreInstance,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {
             "description": "No content - The indexings for this Pre-Instance were successfully updated."
         },
@@ -317,7 +318,6 @@ def edit(
             "model": ErrorResponse,
             "description": "Not Found - The Pre-Instance with the specified 'criteria_pre_instance_uid' could not be found.",
         },
-        500: {"model": ErrorResponse, "description": "Internal Server Error"},
     },
 )
 def patch_indexings(
@@ -344,12 +344,12 @@ The returned versions are ordered by `start_date` descending (newest entries fir
     response_model=list[CriteriaPreInstanceVersion],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "OK."},
         404: {
             "model": ErrorResponse,
             "description": "Not Found - The Criteria Pre-Instance with the specified 'criteria_pre_instance_uid' wasn't found.",
         },
-        500: {"model": ErrorResponse, "description": "Internal Server Error"},
     },
 )
 @decorators.allow_exports(
@@ -423,6 +423,7 @@ Only the surrounding text (excluding the parameters) can be changed.
     response_model=CriteriaPreInstance,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -435,7 +436,6 @@ Only the surrounding text (excluding the parameters) can be changed.
             "model": ErrorResponse,
             "description": "Not Found - The Criteria Pre-Instance with the specified 'criteria_pre_instance_uid' could not be found.",
         },
-        500: {"model": ErrorResponse, "description": "Internal Server Error"},
     },
 )
 def create_new_version(
@@ -459,6 +459,7 @@ If the request succeeds:
     response_model=CriteriaPreInstance,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -469,7 +470,6 @@ If the request succeeds:
             "model": ErrorResponse,
             "description": "Not Found - The criteria pre-instance with the specified 'criteria_pre_instance_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def inactivate(
@@ -493,6 +493,7 @@ If the request succeeds:
     response_model=CriteriaPreInstance,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -503,7 +504,6 @@ If the request succeeds:
             "model": ErrorResponse,
             "description": "Not Found - The criteria pre-instance with the specified 'criteria_pre_instance_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def reactivate(
@@ -523,6 +523,7 @@ def reactivate(
     response_model=None,
     status_code=204,
     responses={
+        403: _generic_descriptions.ERROR_403,
         204: {
             "description": "No Content - The Criteria Pre-Instance was successfully deleted."
         },
@@ -536,7 +537,6 @@ def reactivate(
             "model": ErrorResponse,
             "description": "Not Found - A Criteria Pre-Instance with the specified uid could not be found.",
         },
-        500: {"model": ErrorResponse, "description": "Internal Server Error"},
     },
 )
 def delete(
@@ -562,6 +562,7 @@ If the request succeeds:
     response_model=CriteriaPreInstance,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -573,7 +574,6 @@ If the request succeeds:
             "model": ErrorResponse,
             "description": "Not Found - The Criteria Pre-Instance with the specified 'criteria_pre_instance_uid' wasn't found.",
         },
-        500: {"model": ErrorResponse, "description": "Internal Server Error"},
     },
 )
 def approve(

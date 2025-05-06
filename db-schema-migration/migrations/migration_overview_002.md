@@ -4,13 +4,13 @@
 ## 1. Indexes and Constraints
 -------------------------------------
 ### Change Description
-- Re-create all db indexes and constraints according to [db schema definition](https://novonordiskit.visualstudio.com/Clinical-MDR/_git/neo4j-mdr-db?path=/db_schema.py&version=GBmain&_a=contents).
+- Re-create all db indexes and constraints according to [db schema definition](https://orgremoved.visualstudio.com/Clinical-MDR/_git/neo4j-mdr-db?path=/db_schema.py&version=GBmain&_a=contents).
 
 
 ## 2. CT Config Values (Study Fields Configuration)
 -------------------------------------  
 ### Change Description
-- Re-create all `CTConfigValue` nodes according to values defined in [this file](https://novonordiskit.visualstudio.com/Clinical-MDR/_git/studybuilder-import?path=/datafiles/configuration/study_fields_configuration.csv).
+- Re-create all `CTConfigValue` nodes according to values defined in [this file](https://orgremoved.visualstudio.com/Clinical-MDR/_git/studybuilder-import?path=/datafiles/configuration/study_fields_configuration.csv).
 
 ### Nodes Affected
 - CTConfigValue
@@ -69,7 +69,7 @@
 - Renamed `OV_USES_VALUE`, `EV_USES_VALUE`, `TV_USES_VALUE`, `CT_USES_VALUE` and `AT_USES_VALUE` relationships to `USES_VALUE`
 - Renamed `OT_USES_PARAMETER`, `ET_USES_PARAMETER`, `TT_USES_PARAMETER`, `CT_USES_PARAMETER` and `AT_USES_PARAMETER` relationships to `USES_PARAMETER`
 
-- [Related PR](https://dev.azure.com/novonordiskit/Clinical-MDR/_git/clinical-mdr-api/pullrequest/77924https://dev.azure.com/novonordiskit/Clinical-MDR/_git/clinical-mdr-api/pullrequest/77924)
+- [Related PR](https://dev.azure.com/orgremoved/Clinical-MDR/_git/clinical-mdr-api/pullrequest/77924https://dev.azure.com/orgremoved/Clinical-MDR/_git/clinical-mdr-api/pullrequest/77924)
 
 
 ## 4. Default study preferred time unit
@@ -78,7 +78,7 @@
 - Added `StudyField:StudyTimeField` node connected to latest `StudyValue` node for each Study.
 - Created `StudyField` node links to `UnitDefinitionRoot` node by `HAS_UNIT_DEFINITION` relationship.
 - Added `StudyField` describes the default study preferred time unit that is currently instantiated on Study creation.
-- [Related PR](https://dev.azure.com/novonordiskit/Clinical-MDR/_git/clinical-mdr-api/pullrequest/76653).
+- [Related PR](https://dev.azure.com/orgremoved/Clinical-MDR/_git/clinical-mdr-api/pullrequest/76653).
 
 ### Nodes Affected
 - StudyValue, StudyField, UnitDefinitionRoot
@@ -90,7 +90,7 @@
 - Add missing `HAS_VERSION` for all `LATEST_DRAFT|LATEST_FINAL|LATEST_RETIRED` relationships.
 - Remove duplicated `HAS_VERSION` relationships.
 - Remove any properties from `LATEST_DRAFT|LATEST_FINAL|LATEST_RETIRED` relationships.
-- [Related PR](https://dev.azure.com/novonordiskit/Clinical-MDR/_git/clinical-mdr-api/pullrequest/79961).
+- [Related PR](https://dev.azure.com/orgremoved/Clinical-MDR/_git/clinical-mdr-api/pullrequest/79961).
 
 ### Nodes Affected
 - None, only affects relationships
@@ -102,7 +102,7 @@
 -------------------------------------  
 ### Change Description
 - Add a new property `sequence_id` to all Syntax Template Root nodes.
-- [Related PR](https://dev.azure.com/novonordiskit/Clinical-MDR/_git/clinical-mdr-api/pullrequest/79961).
+- [Related PR](https://dev.azure.com/orgremoved/Clinical-MDR/_git/clinical-mdr-api/pullrequest/79961).
 
 ### Nodes Affected
   - `ActivityInstructionRoot`
@@ -122,7 +122,7 @@
   - :EventValue:FindingValue:CategoricFindingValue:NumericFindingValue:TextualFindingValue
 - Removed extra relationships to ActivityDefinition node that was responsible for pointing other nodes like Specimen or SDTM_DOMAIN.
 
-- [Related PR](https://dev.azure.com/novonordiskit/Clinical-MDR/_git/clinical-mdr-api/pullrequest/82515).
+- [Related PR](https://dev.azure.com/orgremoved/Clinical-MDR/_git/clinical-mdr-api/pullrequest/82515).
 
 ### Nodes Affected
   - `ActivityInstanceClassRoot`
@@ -139,7 +139,7 @@
 - This migration is performed to make ActivityItemClasses functional after making Role and Data type properties required.
 - Just after this migration, the data import script should be run to patch ActivityItemClasses with real CTTerm values.
 
-- [Related PR](https://dev.azure.com/novonordiskit/Clinical-MDR/_git/clinical-mdr-api/pullrequest/89388).
+- [Related PR](https://dev.azure.com/orgremoved/Clinical-MDR/_git/clinical-mdr-api/pullrequest/89388).
 
 ### Nodes Affected
   - `ActivityItemClassValue`
@@ -166,4 +166,6 @@
   - `OdmTemplateRoot`
   - `OdmTemplateValue`
 
-- [Related PR](https://dev.azure.com/novonordiskit/Clinical-MDR/_git/clinical-mdr-api/pullrequest/91497).
+- [Related PR](https://dev.azure.com/orgremoved/Clinical-MDR/_git/clinical-mdr-api/pullrequest/91497).
+
+

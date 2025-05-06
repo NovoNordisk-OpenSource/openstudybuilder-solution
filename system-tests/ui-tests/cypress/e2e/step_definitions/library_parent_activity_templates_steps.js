@@ -1,7 +1,6 @@
 import { objectVersion, objectName } from "../../support/front_end_commands/table_commands"
 const { Given, When, Then } = require("@badeball/cypress-cucumber-preprocessor");
 
-const checkIfValidationAppears = (locator) => cy.elementContain(locator, "This field is required")
 let defaultActivityName, newActivityNameUpdated, indicationSelected, version
 
 Given("The activity template exists with a status as {string}", (status) => {
@@ -63,15 +62,15 @@ When("The new Activity template is added without Activity Subgroup", () => addTe
 
 When("The new Activity template is added without Activity field", () => addTemplateWithoutMandatoryData(true, true, true))
 
-Then("The validation appears for Indication or Disorder field", () => checkIfValidationAppears('template-indication-dropdown'))
+Then("The validation appears for Indication or Disorder field", () => cy.checkIfValidationAppears('template-indication-dropdown'))
 
-Then("The validation appears for Activity Group field", () => checkIfValidationAppears('template-activity-group'))
+Then("The validation appears for Activity Group field", () => cy.checkIfValidationAppears('template-activity-group'))
 
-Then("The validation appears for Activity Subgroup field", () => checkIfValidationAppears('template-activity-sub-group'))
+Then("The validation appears for Activity Subgroup field", () => cy.checkIfValidationAppears('template-activity-sub-group'))
 
-Then("The validation appears for Activity field", () => checkIfValidationAppears('template-activity-activity'))
+Then("The validation appears for Activity field", () => cy.checkIfValidationAppears('template-activity-activity'))
 
-Then("The validation appears for activity change description field", () => checkIfValidationAppears('template-change-description'))
+Then("The validation appears for activity change description field", () => cy.checkIfValidationAppears('template-change-description'))
 
 When("The created activity template is edited without change description provided", () => {
   fillTemplateNameAndCountinue("testDescriptionUpdate")

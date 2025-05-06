@@ -162,3 +162,4 @@ MATCH (o:OdmFormalExpressionCounter) DETACH DELETE o;
 MATCH (s:SdtmVariableRoot) DETACH DELETE s;
 MATCH (s:SdtmVariableValue) DETACH DELETE s;
 MATCH (s:SdtmVariableCounter) DETACH DELETE s;
+

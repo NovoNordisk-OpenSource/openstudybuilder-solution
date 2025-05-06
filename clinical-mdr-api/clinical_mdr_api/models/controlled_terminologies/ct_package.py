@@ -31,21 +31,25 @@ class CTPackage(BaseModel):
 
     catalogue_name: Annotated[str, Field()]
     name: Annotated[str, Field()]
-    label: Annotated[str | None, Field(nullable=True)] = None
-    description: Annotated[str | None, Field(nullable=True)]
-    href: Annotated[str | None, Field(nullable=True)] = None
-    registration_status: Annotated[str | None, Field(nullable=True)]
-    source: Annotated[str | None, Field(nullable=True)] = None
+    label: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    description: Annotated[str | None, Field(json_schema_extra={"nullable": True})]
+    href: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    registration_status: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ]
+    source: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
     extends_package: Annotated[
         str | None,
         Field(
             description="CDISC CT Package extended by this sponsor package",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ]
     import_date: Annotated[datetime, Field()]
     effective_date: Annotated[date, Field()]
-    author_username: Annotated[str | None, Field(nullable=True)] = None
+    author_username: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
 
 
 class CodelistChangeItem(BaseModel):

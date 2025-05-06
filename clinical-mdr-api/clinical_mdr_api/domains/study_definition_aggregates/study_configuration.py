@@ -115,7 +115,7 @@ def from_database():
     items = repo.find_all()
     for item in items:
         line = item
-        linedata = line.dict()
+        linedata = line.model_dump()
         data = {}
         for k, value in linedata.items():
             if k in fieldnames:

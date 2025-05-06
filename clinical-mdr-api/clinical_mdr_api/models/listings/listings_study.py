@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 from typing import Annotated, Any, Callable, Self
 
-from pydantic import Field
+from pydantic import ConfigDict, Field
 
 from clinical_mdr_api.domains.controlled_terminologies.ct_term_attributes import (
     CTTermAttributesAR,
@@ -87,7 +87,7 @@ class SimpleListingCTModel(BaseModel):
         str | None,
         Field(
             title="concept id: c code for CDISC CT, dictionary id for dictionary codes",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
 
@@ -95,7 +95,7 @@ class SimpleListingCTModel(BaseModel):
         str | None,
         Field(
             title="name: submission name for CDISC CT, name for dictionary codes",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
 
@@ -124,9 +124,10 @@ def none_to_empty_str(obj):
 
 
 class RegistryIdentifiersListingModel(BaseModel):
-    class Config:
-        title = "Registry identifiers model for listing"
-        description = "Registry identifiers model for listing supplying SDTM generation framework."
+    model_config = ConfigDict(
+        title="Registry identifiers model for listing",
+        description="Registry identifiers model for listing supplying SDTM generation framework.",
+    )
 
     ct_gov: str
     eudract: str
@@ -177,11 +178,12 @@ class RegistryIdentifiersListingModel(BaseModel):
 
 
 class StudyTypeListingModel(BaseModel):
-    class Config:
-        title = "Study type model for listing"
-        description = (
+    model_config = ConfigDict(
+        title="Study type model for listing",
+        description=(
             "Study type model for listing supplying SDTM generation framework."
-        )
+        ),
+    )
 
     stype: str
     stype_nf: str
@@ -280,11 +282,12 @@ class StudyTypeListingModel(BaseModel):
 
 
 class StudyPopulationListingModel(BaseModel):
-    class Config:
-        title = "Study population model for listing"
-        description = (
+    model_config = ConfigDict(
+        title="Study population model for listing",
+        description=(
             "Study population model for listing supplying SDTM generation framework."
-        )
+        ),
+    )
 
     therapy_area: list[SimpleListingCTModel]
     therapy_area_nf: str
@@ -325,7 +328,9 @@ class StudyPopulationListingModel(BaseModel):
     relapse_criteria: str
     relapse_criteria_nf: str
 
-    plan_no_subject: Annotated[int | None, Field(nullable=True)] = None
+    plan_no_subject: Annotated[
+        int | None, Field(json_schema_extra={"nullable": True})
+    ] = None
     plan_no_subject_nf: str
 
     @classmethod
@@ -456,11 +461,12 @@ class StudyPopulationListingModel(BaseModel):
 
 
 class StudyAttributesListingModel(BaseModel):
-    class Config:
-        title = "study attributes model for listing"
-        description = (
+    model_config = ConfigDict(
+        title="study attributes model for listing",
+        description=(
             "Study attributes model for listing supplying SDTM generation framework."
-        )
+        ),
+    )
 
     intv_type: str
     intv_type_nf: str
@@ -575,14 +581,17 @@ class StudySelctionListingModel(BaseModel):
     name: str
     short_name: str
     code: str
-    no_subject: Annotated[int | None, Field(nullable=True)] = None
+    no_subject: Annotated[int | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
     desc: str
 
 
 class StudyBranchArmListingModel(StudySelctionListingModel):
-    class Config:
-        title = "Study Branch Arm model for listing"
-        description = "Study Branch Arm model for listing."
+    model_config = ConfigDict(
+        title="Study Branch Arm model for listing",
+        description="Study Branch Arm model for listing.",
+    )
 
     order: int
     arm_uid: str
@@ -629,9 +638,9 @@ class StudyBranchArmListingModel(StudySelctionListingModel):
 
 
 class StudyArmListingModel(StudySelctionListingModel):
-    class Config:
-        title = "Study Arm model for listing"
-        description = "Study Arm model for listing."
+    model_config = ConfigDict(
+        title="Study Arm model for listing", description="Study Arm model for listing."
+    )
 
     order: int
     rand_grp: str
@@ -680,9 +689,10 @@ class StudyArmListingModel(StudySelctionListingModel):
 
 
 class StudyCohortListingModel(StudySelctionListingModel):
-    class Config:
-        title = "study attributes model for listing"
-        description = "Study attributes model for listing"
+    model_config = ConfigDict(
+        title="study attributes model for listing",
+        description="Study attributes model for listing",
+    )
 
     arm_uid: list[str]
     branch_uid: list[str]
@@ -870,9 +880,13 @@ class StudyVisitListingModel(BaseModel):
     visit_no: str
     name: str
     short_name: str
-    study_day: Annotated[int | None, Field(nullable=True)] = None
-    window_min: Annotated[int | None, Field(nullable=True)] = None
-    window_max: Annotated[int | None, Field(nullable=True)] = None
+    study_day: Annotated[int | None, Field(json_schema_extra={"nullable": True})] = None
+    window_min: Annotated[int | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
+    window_max: Annotated[int | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
     window_unit: str
     desc: str
     epoch_alloc: str
@@ -889,7 +903,7 @@ class StudyVisitListingModel(BaseModel):
             epoch_name=study_visit_vo.epoch.epoch.sponsor_preferred_name,
             visit_type=study_visit_vo.visit_type.sponsor_preferred_name,
             contact_model=study_visit_vo.visit_contact_mode.sponsor_preferred_name,
-            visit_no=study_visit_vo.unique_visit_number,
+            visit_no=str(study_visit_vo.unique_visit_number),
             name=study_visit_vo.derive_visit_name(),
             short_name=study_visit_vo.visit_short_name,
             study_day=(
@@ -1086,9 +1100,10 @@ class StudyEndpointListingModel(BaseModel):
 
 
 class StudyMetadataListingModel(BaseModel):
-    class Config:
-        title = "Study Metadata model for listing"
-        description = "Study Metadata model for listing."
+    model_config = ConfigDict(
+        title="Study Metadata model for listing",
+        description="Study Metadata model for listing.",
+    )
 
     api_ver: str
     study_id: str
@@ -1096,39 +1111,55 @@ class StudyMetadataListingModel(BaseModel):
     specified_dt: str
     request_dt: str
     title: str
-    reg_id: Annotated[RegistryIdentifiersListingModel | None, Field(nullable=True)] = (
-        None
-    )
-    study_type: Annotated[StudyTypeListingModel | None, Field(nullable=True)] = None
+    reg_id: Annotated[
+        RegistryIdentifiersListingModel | None,
+        Field(json_schema_extra={"nullable": True}),
+    ] = None
+    study_type: Annotated[
+        StudyTypeListingModel | None, Field(json_schema_extra={"nullable": True})
+    ] = None
     study_attributes: Annotated[
-        StudyAttributesListingModel | None, Field(nullable=True)
+        StudyAttributesListingModel | None, Field(json_schema_extra={"nullable": True})
     ] = None
     study_population: Annotated[
-        StudyPopulationListingModel | None, Field(nullable=True)
+        StudyPopulationListingModel | None, Field(json_schema_extra={"nullable": True})
     ] = None
-    arms: Annotated[list[StudyArmListingModel] | None, Field(nullable=True)] = None
+    arms: Annotated[
+        list[StudyArmListingModel] | None, Field(json_schema_extra={"nullable": True})
+    ] = None
     branches: Annotated[
-        list[StudyBranchArmListingModel] | None, Field(nullable=True)
+        list[StudyBranchArmListingModel] | None,
+        Field(json_schema_extra={"nullable": True}),
     ] = None
-    cohorts: Annotated[list[StudyCohortListingModel] | None, Field(nullable=True)] = (
-        None
-    )
-    epochs: Annotated[list[StudyEpochListingModel] | None, Field(nullable=True)] = None
-    elements: Annotated[list[StudyElementListingModel] | None, Field(nullable=True)] = (
-        None
-    )
+    cohorts: Annotated[
+        list[StudyCohortListingModel] | None,
+        Field(json_schema_extra={"nullable": True}),
+    ] = None
+    epochs: Annotated[
+        list[StudyEpochListingModel] | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    elements: Annotated[
+        list[StudyElementListingModel] | None,
+        Field(json_schema_extra={"nullable": True}),
+    ] = None
     design_matrix: Annotated[
-        list[StudyDesignMatrixListingModel] | None, Field(nullable=True)
+        list[StudyDesignMatrixListingModel] | None,
+        Field(json_schema_extra={"nullable": True}),
     ] = None
-    visits: Annotated[list[StudyVisitListingModel] | None, Field(nullable=True)] = None
+    visits: Annotated[
+        list[StudyVisitListingModel] | None, Field(json_schema_extra={"nullable": True})
+    ] = None
     criteria: Annotated[
-        list[StudyCriteriaListingModel] | None, Field(nullable=True)
+        list[StudyCriteriaListingModel] | None,
+        Field(json_schema_extra={"nullable": True}),
     ] = None
     objectives: Annotated[
-        list[StudyObjectiveListingModel] | None, Field(nullable=True)
+        list[StudyObjectiveListingModel] | None,
+        Field(json_schema_extra={"nullable": True}),
     ] = None
     endpoints: Annotated[
-        list[StudyEndpointListingModel] | None, Field(nullable=True)
+        list[StudyEndpointListingModel] | None,
+        Field(json_schema_extra={"nullable": True}),
     ] = None
 
     @classmethod

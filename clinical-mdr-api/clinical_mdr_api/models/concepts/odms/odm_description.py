@@ -1,7 +1,8 @@
 from typing import Annotated, Callable, Self
 
-from pydantic import Field, validator
+from pydantic import Field, field_validator
 
+from clinical_mdr_api.descriptions.general import CHANGES_FIELD_DESC
 from clinical_mdr_api.domains.concepts.concept_base import ConceptARBase
 from clinical_mdr_api.domains.concepts.odms.description import OdmDescriptionAR
 from clinical_mdr_api.models.concepts.concept import (
@@ -16,9 +17,15 @@ from clinical_mdr_api.models.validators import is_language_supported
 
 class OdmDescription(ConceptModel):
     language: str
-    description: Annotated[str | None, Field(nullable=True)] = None
-    instruction: Annotated[str | None, Field(nullable=True)] = None
-    sponsor_instruction: Annotated[str | None, Field(nullable=True)] = None
+    description: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
+    instruction: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
+    sponsor_instruction: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
     possible_actions: list[str]
 
     @classmethod
@@ -78,21 +85,27 @@ class OdmDescriptionSimpleModel(BaseModel):
         return simple_odm_description_model
 
     uid: Annotated[str, Field()]
-    name: Annotated[str | None, Field(nullable=True)] = None
-    language: Annotated[str | None, Field(nullable=True)] = None
-    description: Annotated[str | None, Field(nullable=True)] = None
-    instruction: Annotated[str | None, Field(nullable=True)] = None
-    sponsor_instruction: Annotated[str | None, Field(nullable=True)] = None
-    version: Annotated[str | None, Field(nullable=True)] = None
+    name: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    language: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    description: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
+    instruction: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
+    sponsor_instruction: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    version: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
 
 
 class OdmDescriptionPostInput(ConceptPostInput):
     language: Annotated[str, Field(min_length=1)]
-    description: Annotated[str | None, Field(min_length=1)]
-    instruction: Annotated[str | None, Field(min_length=1)]
-    sponsor_instruction: Annotated[str | None, Field(min_length=1)]
+    description: Annotated[str | None, Field(min_length=1)] = None
+    instruction: Annotated[str | None, Field(min_length=1)] = None
+    sponsor_instruction: Annotated[str | None, Field(min_length=1)] = None
 
-    _date_validator = validator("language", allow_reuse=True)(is_language_supported)
+    _date_validator = field_validator("language")(is_language_supported)
 
 
 class OdmDescriptionPatchInput(ConceptPatchInput):
@@ -101,7 +114,7 @@ class OdmDescriptionPatchInput(ConceptPatchInput):
     instruction: Annotated[str | None, Field(min_length=1)]
     sponsor_instruction: Annotated[str | None, Field(min_length=1)]
 
-    _date_validator = validator("language", allow_reuse=True)(is_language_supported)
+    _date_validator = field_validator("language")(is_language_supported)
 
 
 class OdmDescriptionBatchPatchInput(ConceptPatchInput):
@@ -133,12 +146,8 @@ class OdmDescriptionVersion(OdmDescription):
     """
 
     changes: Annotated[
-        dict[str, bool] | None,
+        list[str],
         Field(
-            description=(
-                "Denotes whether or not there was a change in a specific field/property compared to the previous version. "
-                "The field names in this object here refer to the field names of the objective (e.g. name, start_date, ..)."
-            ),
-            nullable=True,
+            description=CHANGES_FIELD_DESC,
         ),
-    ] = None
+    ] = []

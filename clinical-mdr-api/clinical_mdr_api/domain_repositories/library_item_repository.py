@@ -50,7 +50,11 @@ from common.exceptions import (
     NotFoundException,
     ValidationException,
 )
-from common.utils import convert_to_datetime, validate_max_skip_clause
+from common.utils import (
+    convert_to_datetime,
+    validate_max_skip_clause,
+    version_string_to_tuple,
+)
 
 _AggregateRootType = TypeVar("_AggregateRootType", bound=LibraryItemAggregateRootBase)
 RETRIEVED_READ_ONLY_MARK = object()
@@ -520,7 +524,7 @@ class LibraryItemRepositoryImplBase(
         all_versions = [rel.version for rel in rels]
         highest_version = max(
             all_versions,
-            key=lambda v: 1000000 * int(v.split(".")[0]) + int(v.split(".")[1]),
+            key=version_string_to_tuple,
         )
         all_latest = [rel for rel in all_rels if rel.version == highest_version]
         return self._find_latest_version_in(all_latest)
@@ -551,7 +555,7 @@ class LibraryItemRepositoryImplBase(
         all_versions = [rel.version for rel in relationships]
         highest_version = max(
             all_versions,
-            key=lambda v: 1000000 * int(v.split(".")[0]) + int(v.split(".")[1]),
+            key=version_string_to_tuple,
         )
         return highest_version
 
@@ -716,6 +720,7 @@ class LibraryItemRepositoryImplBase(
         """
         return hashkey(
             str(type(self)),
+            "library_item_by_uid",
             uid,
             version,
             status,
@@ -1151,6 +1156,7 @@ class LibraryItemRepositoryImplBase(
         return_study_count: bool | None = False,
         for_audit_trail: bool = False,
         at_specific_date: datetime | None = None,
+        include_retired_versions: bool = False,
     ):
         """
         Returns a hash key that will be used for mapping objects stored in cache,
@@ -1162,6 +1168,7 @@ class LibraryItemRepositoryImplBase(
         """
         return hashkey(
             self.make_hashable(type(self)),
+            "library_item_with_metadata_by_uid",
             uid,
             for_update,
             library_name,
@@ -1170,6 +1177,7 @@ class LibraryItemRepositoryImplBase(
             return_study_count,
             for_audit_trail,
             at_specific_date,
+            include_retired_versions,
         )
 
     @cached(
@@ -1188,6 +1196,7 @@ class LibraryItemRepositoryImplBase(
         return_study_count: bool | None = False,
         for_audit_trail: bool = False,
         at_specific_date: datetime | None = None,
+        include_retired_versions: bool = False,
     ) -> _AggregateRootType | list[_AggregateRootType]:
         if for_update and (version is not None or status is not None):
             raise NotImplementedError(
@@ -1207,6 +1216,7 @@ class LibraryItemRepositoryImplBase(
             return_study_count=return_study_count,
             uid=uid,
             for_audit_trail=for_audit_trail,
+            include_retired_versions=include_retired_versions,
         )
 
         params = {"uid": uid}
@@ -1353,7 +1363,7 @@ class LibraryItemRepositoryImplBase(
             return tuple(sorted(self.make_hashable(i) for i in object_to_hash))
         return object_to_hash
 
-    def hashkey_library_item_with_metadata_get_all(
+    def hashkey_library_items_with_metadata_get_all(
         self,
         *,
         status: LibraryItemStatus | None = None,
@@ -1369,6 +1379,7 @@ class LibraryItemRepositoryImplBase(
         version_specific_uids: dict | None = None,
         at_specific_date: datetime | None = None,
         include_retired_versions: bool = False,
+        get_latest_final: bool = False,
     ):
         """
         Returns a hash key that will be used for mapping objects stored in cache,
@@ -1380,6 +1391,7 @@ class LibraryItemRepositoryImplBase(
         """
         return hashkey(
             self.make_hashable(type(self)),
+            "library_items_with_metadata_get_all",
             status,
             library_name,
             return_study_count,
@@ -1393,11 +1405,12 @@ class LibraryItemRepositoryImplBase(
             self.make_hashable(version_specific_uids),
             at_specific_date,
             include_retired_versions,
+            get_latest_final,
         )
 
     @cached(
         cache=cache_store_item_by_uid,
-        key=hashkey_library_item_with_metadata_get_all,
+        key=hashkey_library_items_with_metadata_get_all,
         lock=lock_store_item_by_uid,
     )
     # pylint: disable=too-many-locals
@@ -1417,6 +1430,7 @@ class LibraryItemRepositoryImplBase(
         version_specific_uids: dict | None = None,
         at_specific_date: datetime | None = None,
         include_retired_versions: bool = False,
+        get_latest_final: bool = False,
     ) -> tuple[list, int]:
         validate_dict(filter_by, "filters")
         validate_dict(sort_by, "sort_by")
@@ -1429,6 +1443,7 @@ class LibraryItemRepositoryImplBase(
         )
 
         match_stmt, return_stmt = self._find_cypher_query_optimized(
+            get_latest_final=get_latest_final,
             with_status=bool(status),
             with_pagination=bool(page_size),
             with_versions_in_where=bool(version_specific_uids),
@@ -1595,6 +1610,23 @@ class LibraryItemRepositoryImplBase(
             count_result[0][0] if len(count_result) > 0 and total_count else 0
         )
         return aggregates, total_amount
+
+    def get_all_by_uid(
+        self,
+        uids: Iterable[str],
+        get_latest_final: bool = False,
+    ) -> dict[str:LibraryItemAggregateRootBase]:
+        """get all items where uid is IN a list of uids, and return them as a dictionary with item uid as key"""
+
+        if not isinstance(uids, list):
+            uids = list(uids)
+
+        aggregates, _ = self.get_all_optimized(
+            filter_by={"uid": {"v": uids, "op": "in"}},
+            get_latest_final=get_latest_final,
+        )
+
+        return {item.uid: item for item in aggregates}
 
     def get_headers_optimized(
         self,
@@ -1831,7 +1863,12 @@ class LibraryItemRepositoryImplBase(
                         )
                         params[param_variable] = value
                         fields_generic.append(
-                            f" {cypher_name} {operator} ${param_variable} "
+                            f"""
+CASE
+    WHEN apoc.meta.cypher.isType({cypher_name}, "STRING") THEN toLower(toString({cypher_name})) {operator} toLower(toString(${param_variable}))
+    ELSE {cypher_name} {operator} ${param_variable}
+END
+"""
                         )
 
                 where_stmt += "(" + " OR ".join(fields_generic) + ")"
@@ -1881,7 +1918,12 @@ class LibraryItemRepositoryImplBase(
                         )
                         params[param_variable] = value
                         fields_non_generic.append(
-                            f" {mapping[filter_name]} {operator} ${param_variable} "
+                            f"""
+CASE
+    WHEN apoc.meta.cypher.isType({mapping[filter_name]}, "STRING") THEN toLower(toString({mapping[filter_name]})) {operator} toLower(toString(${param_variable}))
+    ELSE {mapping[filter_name]} {operator} ${param_variable}
+END
+"""
                         )
 
             if not where_stmt:
@@ -2101,15 +2143,16 @@ class LibraryItemRepositoryImplBase(
 
         """
         version_where_stmt = ""
-        retire_exclusion = "WITH root as _root"
+        filter_roots = "WITH root as _root"
         if get_latest_final:
             version_where_stmt += "WHERE ver_rel.status = 'Final'"
-            retire_exclusion = """
+            filter_roots = """
             CALL {
                 WITH root
                 MATCH (root)-[ver_rel:HAS_VERSION]->()
                 WITH * ORDER BY ver_rel.start_date DESC LIMIT 1
-                WHERE ver_rel.status = "Final"
+                    WHERE 
+                        ver_rel.status = "Final" // WHEN THE LATEST VERSION IS FINAL --THEN--> PASS EVERYTHING
                 MATCH (_root)-[ver_rel]->()
                 RETURN _root
             }
@@ -2117,15 +2160,20 @@ class LibraryItemRepositoryImplBase(
         else:
             if with_status:
                 version_where_stmt += "WHERE ver_rel.status = $status"
-                retire_exclusion = """
-                CALL {
+                filter_roots = f"""
+                CALL {{
                     WITH root
                     MATCH (root)-[ver_rel:HAS_VERSION]->()
                     WITH * ORDER BY ver_rel.start_date DESC LIMIT 1
-                    WHERE $status <> "Final" OR (ver_rel.status <> "Retired" AND $status = "Final")
+                    {"""
+                        WHERE 
+                            $status <> "Final"                                      // WHEN THE USER DOESN'T ASK FOR FINAL --THEN--> PASS EVERYTHING 
+                            OR (ver_rel.status <> 'Retired' AND $status = 'Final')  // WHEN USER ASKS FOR FINAL --THEN--> THE LATEST SHOULD NOT BE RETIRED"""
+                    if not include_retired_versions
+                    else ""}
                     MATCH (_root)-[ver_rel]->()
                     RETURN _root
-                }
+                }}
                 """
             if with_version:
                 if version_where_stmt:
@@ -2146,7 +2194,9 @@ class LibraryItemRepositoryImplBase(
                 CALL{{
                     WITH _root
                     MATCH (_root)-[max_ver_rel:HAS_VERSION]->()
-                        {'WHERE max_ver_rel.status <> "Retired"' if not include_retired_versions else ''}
+                        {"WHERE max_ver_rel.status <> 'Retired' //WHEN THE LATEST VERSION IS RETIRED --THEN--> DON'T PASS IT"
+                            if not include_retired_versions
+                            else ''}
                     WITH _root, max_ver_rel ORDER BY max_ver_rel.start_date DESC LIMIT 1
                     RETURN max_ver_rel as latest_version
                 }}
@@ -2160,7 +2210,7 @@ class LibraryItemRepositoryImplBase(
         version_call = f"""
             CALL {{
                 WITH root
-                {retire_exclusion}
+                {filter_roots}
                 MATCH (_root)-[ver_rel:HAS_VERSION]->(_value)
                 {version_where_stmt}
                 {ver_rel_filtering}
@@ -2472,11 +2522,19 @@ class LibraryItemRepositoryImplBase(
                     MATCH (activity_item_unit_definition_root)-[:LATEST]->(activity_item_unit_definition_value:UnitDefinitionValue)
                     RETURN collect(DISTINCT {uid:activity_item_unit_definition_root.uid, name:activity_item_unit_definition_value.name }) as unit_definitions
                 }
+                CALL{
+                    WITH activity_item
+                    MATCH (activity_item)-[:HAS_ODM_ITEM]->(odm_item_root:OdmItemRoot)
+                    MATCH (odm_item_root)-[:LATEST]->(odm_item_value:OdmItemValue)
+                    RETURN collect(DISTINCT {uid: odm_item_root.uid, oid: odm_item_value.oid, name: odm_item_value.name}) AS odm_items
+                }
                 RETURN  COLLECT( distinct {
                     activity_item_class_uid: activity_item_class_root.uid, 
                     activity_item_class_name: activity_item_class_value.name, 
                     ct_terms:ct_terms, 
-                    unit_definitions: unit_definitions
+                    unit_definitions: unit_definitions,
+                    is_adam_param_specific: activity_item.is_adam_param_specific,
+                    odm_items: odm_items
                 }) as activity_items
             }
         """
@@ -2495,6 +2553,13 @@ class LibraryItemRepositoryImplBase(
         match_stmt = """
             MATCH (root)-[ver_rel]->(activity_value:ActivityValue)
             OPTIONAL MATCH (activity_value)-[:REPLACED_BY_ACTIVITY]->(replaced_by_activity:ActivityRoot)
+            CALL
+            {
+                WITH activity_value
+                WITH *, [(activity_value)-[:HAS_GROUPING]->(activity_grouping:ActivityGrouping)<-[:HAS_ACTIVITY]-(activity_instance_value:ActivityInstanceValue)
+                <-[:HAS_VERSION]-(activity_instance_root:ActivityInstanceRoot) | {uid: activity_instance_root.uid, name: activity_instance_value.name}] AS activity_instances
+                RETURN activity_instances
+            }
             CALL
             {
                 WITH root,activity_value,ver_rel
@@ -2526,6 +2591,7 @@ class LibraryItemRepositoryImplBase(
         activity_root_return = """,
             {
                 activity_groupings: activity_groupings,
+                activity_instances: activity_instances,
                 replaced_activity_uid: replaced_by_activity.uid,
                 requester_study_id: requester_study_id
             } as activity_root

@@ -123,7 +123,7 @@ def test_get_soa_preferences(
     data = response.json()
     assert data, "empty JSON data"
 
-    defaults = StudySoaPreferencesInput().dict()
+    defaults = StudySoaPreferencesInput().model_dump()
 
     assert data["study_uid"] == study.uid
     for key in ("show_epochs", "show_milestones"):

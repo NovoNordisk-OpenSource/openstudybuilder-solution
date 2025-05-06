@@ -3,6 +3,7 @@ from typing import Annotated, Callable, Self
 
 from pydantic import Field
 
+from clinical_mdr_api.descriptions.general import CHANGES_FIELD_DESC
 from clinical_mdr_api.domains.controlled_terminologies.ct_codelist_attributes import (
     CTCodelistAttributesAR,
 )
@@ -56,33 +57,52 @@ class CTCodelistAttributes(BaseModel):
             ),
         )
 
-    catalogue_name: Annotated[str | None, Field(nullable=True)] = None
-
-    codelist_uid: Annotated[str | None, Field(nullable=True)] = None
-
-    parent_codelist_uid: Annotated[
-        str | None, Field(remove_from_wildcard=True, nullable=True)
+    catalogue_name: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
     ] = None
 
-    child_codelist_uids: Annotated[list[str], Field(remove_from_wildcard=True)] = []
+    codelist_uid: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
+
+    parent_codelist_uid: Annotated[
+        str | None,
+        Field(json_schema_extra={"nullable": True, "remove_from_wildcard": True}),
+    ] = None
+
+    child_codelist_uids: Annotated[
+        list[str], Field(json_schema_extra={"remove_from_wildcard": True})
+    ] = []
 
     name: Annotated[str, Field()]
 
     submission_value: Annotated[str, Field()]
 
-    nci_preferred_name: Annotated[str, Field()]
+    nci_preferred_name: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
 
     definition: Annotated[str, Field()]
 
     extensible: Annotated[bool, Field()]
 
-    library_name: Annotated[str | None, Field(nullable=True)] = None
-    start_date: Annotated[datetime | None, Field(nullable=True)] = None
-    end_date: Annotated[datetime | None, Field(nullable=True)] = None
-    status: Annotated[str | None, Field(nullable=True)] = None
-    version: Annotated[str | None, Field(nullable=True)] = None
-    change_description: Annotated[str | None, Field(nullable=True)] = None
-    author_username: Annotated[str | None, Field(nullable=True)] = None
+    library_name: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
+    start_date: Annotated[
+        datetime | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    end_date: Annotated[
+        datetime | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    status: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    version: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    change_description: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    author_username: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
     possible_actions: Annotated[
         list[str],
         Field(
@@ -125,9 +145,13 @@ class CTCodelistAttributesSimpleModel(BaseModel):
         return simple_codelist_attribute_model
 
     uid: Annotated[str, Field()]
-    name: Annotated[str | None, Field(nullable=True)] = None
-    submission_value: Annotated[str | None, Field(nullable=True)] = None
-    preferred_term: Annotated[str | None, Field(nullable=True)] = None
+    name: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    submission_value: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    preferred_term: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
 
 
 class CTCodelistAttributesVersion(CTCodelistAttributes):
@@ -136,15 +160,11 @@ class CTCodelistAttributesVersion(CTCodelistAttributes):
     """
 
     changes: Annotated[
-        dict[str, bool] | None,
+        list[str],
         Field(
-            description=(
-                "Denotes whether or not there was a change in a specific field/property compared to the previous version. "
-                "The field names in this object here refer to the field names of the objective (e.g. name, start_date, ..)."
-            ),
-            nullable=True,
+            description=CHANGES_FIELD_DESC,
         ),
-    ] = None
+    ] = []
 
 
 class CTCodelistAttributesEditInput(PatchInputModel):

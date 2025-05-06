@@ -32,8 +32,8 @@ OdmVendorElementUID = Path(description="The unique id of the ODM Vendor Element.
     response_model=CustomPage[OdmVendorElement],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_all_odm_vendor_elements(
@@ -90,11 +90,11 @@ def get_all_odm_vendor_elements(
     response_model=list[Any],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - Invalid field name specified",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_distinct_values_for_header(
@@ -137,8 +137,8 @@ def get_distinct_values_for_header(
     response_model=OdmVendorElement,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_odm_vendor_element(odm_vendor_element_uid: Annotated[str, OdmVendorElementUID]):
@@ -153,8 +153,8 @@ def get_odm_vendor_element(odm_vendor_element_uid: Annotated[str, OdmVendorEleme
     response_model=dict,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_active_relationships(
@@ -187,11 +187,11 @@ Possible errors:
     response_model=list[OdmVendorElement],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - The ODM Vendor Element with the specified 'odm_vendor_element_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_odm_vendor_element_versions(
@@ -208,6 +208,7 @@ def get_odm_vendor_element_versions(
     response_model=OdmVendorElement,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {
             "description": "Created - The ODM Vendor Element was successfully created."
         },
@@ -217,7 +218,6 @@ def get_odm_vendor_element_versions(
             "- The library doesn't exist.\n"
             "- The library doesn't allow to add new items.\n",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def create_odm_vendor_element(
@@ -236,6 +236,7 @@ def create_odm_vendor_element(
     response_model=OdmVendorElement,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -248,7 +249,6 @@ def create_odm_vendor_element(
             "model": ErrorResponse,
             "description": "Not Found - The ODM Vendor Element with the specified 'odm_vendor_element_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def edit_odm_vendor_element(
@@ -282,6 +282,7 @@ Possible errors:
     response_model=OdmVendorElement,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -294,7 +295,6 @@ Possible errors:
             "- The ODM Vendor Element is not in final status.\n"
             "- The ODM Vendor Element with the specified 'odm_vendor_element_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def create_odm_vendor_element_version(
@@ -311,6 +311,7 @@ def create_odm_vendor_element_version(
     response_model=OdmVendorElement,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -322,7 +323,6 @@ def create_odm_vendor_element_version(
             "model": ErrorResponse,
             "description": "Not Found - The ODM Vendor Element with the specified 'odm_vendor_element_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def approve_odm_vendor_element(
@@ -339,6 +339,7 @@ def approve_odm_vendor_element(
     response_model=OdmVendorElement,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -349,7 +350,6 @@ def approve_odm_vendor_element(
             "model": ErrorResponse,
             "description": "Not Found - The ODM Vendor Element with the specified 'odm_vendor_element_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def inactivate_odm_vendor_element(
@@ -366,6 +366,7 @@ def inactivate_odm_vendor_element(
     response_model=OdmVendorElement,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -376,7 +377,6 @@ def inactivate_odm_vendor_element(
             "model": ErrorResponse,
             "description": "Not Found - The ODM Vendor Element with the specified 'odm_vendor_element_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def reactivate_odm_vendor_element(
@@ -393,6 +393,7 @@ def reactivate_odm_vendor_element(
     response_model=None,
     status_code=204,
     responses={
+        403: _generic_descriptions.ERROR_403,
         204: {
             "description": "No Content - The ODM Vendor Element was successfully deleted."
         },
@@ -407,7 +408,6 @@ def reactivate_odm_vendor_element(
             "model": ErrorResponse,
             "description": "Not Found - An ODM Vendor Element with the specified 'odm_vendor_element_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def delete_odm_vendor_element(

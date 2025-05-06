@@ -13,7 +13,9 @@
           table-height="300px"
         >
           <template #bottom />
-          <template #item="{ item, index, internalItem, toggleExpand, isExpanded }">
+          <template
+            #item="{ item, index, internalItem, toggleExpand, isExpanded }"
+          >
             <tr :class="item.type ? '' : 'elementBackground'">
               <td width="25%">
                 <v-row>
@@ -24,12 +26,15 @@
                     @click="toggleExpand(internalItem)"
                   />
                   <v-btn
-                    v-else-if="item.vendor_attributes && item.vendor_attributes.length > 0"
+                    v-else-if="
+                      item.vendor_attributes &&
+                      item.vendor_attributes.length > 0
+                    "
                     icon="mdi-chevron-right"
                     variant="text"
                     @click="toggleExpand(internalItem)"
                   />
-                  <v-btn v-else icon variant="text" class="hide"/>
+                  <v-btn v-else icon variant="text" class="hide" />
                   <ActionsMenu :actions="actions" :item="item" />
                   <div class="mt-3">
                     {{
@@ -89,7 +94,7 @@
                   <tr style="background-color: #d8eaf8">
                     <td width="25%">
                       <v-row>
-                        <v-btn icon variant="text" class="hide"/>
+                        <v-btn icon variant="text" class="hide" />
                         <ActionsMenu :actions="actions" :item="props.item" />
                         <div class="mt-3">
                           {{ $t('CrfExtensions.attribute') }}
@@ -99,25 +104,25 @@
                     <td width="25%">
                       {{ props.item.columns.name }}
                     </td>
-                    <td width="20%">
-                    </td>
+                    <td width="20%"></td>
                     <td width="20%">
                       {{ props.item.data_type }}
                     </td>
                     <td width="20%">
                       <v-text-field
-                        v-model="selectedExtensions[index].vendor_attributes[props.index].value"
+                        v-model="
+                          selectedExtensions[index].vendor_attributes[
+                            props.index
+                          ].value
+                        "
                         :label="$t('_global.value')"
                         density="compact"
                         :readonly="readOnly"
                       />
                     </td>
-                    <td width="20%">
-                    </td>
-                    <td width="20%">
-                    </td>
-                    <td width="20%">
-                    </td>
+                    <td width="20%"></td>
+                    <td width="20%"></td>
+                    <td width="20%"></td>
                   </tr>
                 </template>
               </v-data-table>
@@ -150,12 +155,15 @@
                     @click="toggleExpand(internalItem)"
                   />
                   <v-btn
-                    v-else-if="item.vendor_attributes && item.vendor_attributes.length > 0"
+                    v-else-if="
+                      item.vendor_attributes &&
+                      item.vendor_attributes.length > 0
+                    "
                     icon="mdi-chevron-right"
                     variant="text"
                     @click="toggleExpand(internalItem)"
                   />
-                  <v-btn v-else icon variant="text" class="hide"/>
+                  <v-btn v-else icon variant="text" class="hide" />
                   <ActionsMenu :actions="actions" :item="item" />
                   <div class="mt-3">
                     {{
@@ -205,7 +213,7 @@
                   <tr style="background-color: #d8eaf8">
                     <td width="25%">
                       <v-row>
-                        <v-btn icon variant="text" class="hide"/>
+                        <v-btn icon variant="text" class="hide" />
                         <ActionsMenu :actions="actions" :item="item" />
                         <div class="mt-3">
                           {{ $t('CrfExtensions.attribute') }}
@@ -216,13 +224,14 @@
                       {{ item.name }}
                     </td>
                     <td width="20%">
-                      {{ item.vendor_namespace ? item.vendor_namespace.name : '' }}
+                      {{
+                        item.vendor_namespace ? item.vendor_namespace.name : ''
+                      }}
                     </td>
                     <td width="20%">
                       {{ item.data_type }}
                     </td>
-                    <td width="20%">
-                    </td>
+                    <td width="20%"></td>
                   </tr>
                 </template>
               </v-data-table>
@@ -291,7 +300,7 @@ function setExtensions() {
   if (props.editExtensions) {
     selectedExtensions.value = props.editExtensions
     selectedExtensions.value.forEach((ex, index) => {
-      const extension = elements.value.find(el => el.uid === ex.uid)
+      const extension = elements.value.find((el) => el.uid === ex.uid)
       if (extension) {
         const value = selectedExtensions.value[index].value
         selectedExtensions.value[index] = extension
@@ -303,11 +312,12 @@ function setExtensions() {
     selectedExtensions.value.forEach((ex, index) => {
       if (ex.vendor_attributes) {
         selectedExtensions.value[index].vendor_attributes.forEach((attr, i) => {
-          selectedExtensions.value[index].vendor_attributes[i].value = selectedExtensions.value.find(ex => ex.uid === attr.uid).value
+          selectedExtensions.value[index].vendor_attributes[i].value =
+            selectedExtensions.value.find((ex) => ex.uid === attr.uid).value
         })
       }
     })
-    selectedExtensions.value = selectedExtensions.value.filter(ex => {
+    selectedExtensions.value = selectedExtensions.value.filter((ex) => {
       return ex.library_name
     })
   }
@@ -338,18 +348,21 @@ async function getExtensionData(filters, options, filtersUpdated) {
 }
 
 async function getElements(params) {
-  params.filters = { compatible_types: {v: [props.type], op: 'co'}}
-  await crfs.getAllElements(params).then(resp => {
+  params.filters = { compatible_types: { v: [props.type], op: 'co' } }
+  await crfs.getAllElements(params).then((resp) => {
     elements.value = resp.data.items
     total.value = resp.data.total
   })
 }
 
 async function getAttributes(params) {
-  params.filters = { vendor_element: { v: [] }, compatible_types: {v: [props.type], op: 'co'} }
+  params.filters = {
+    vendor_element: { v: [] },
+    compatible_types: { v: [props.type], op: 'co' },
+  }
   params.operator = 'and'
   await crfs.getAllAttributes(params).then((resp) => {
-    resp.data.items.forEach(attr => attr.type = 'attr')
+    resp.data.items.forEach((attr) => (attr.type = 'attr'))
     elements.value = [...elements.value, ...resp.data.items]
     total.value += resp.data.total
   })

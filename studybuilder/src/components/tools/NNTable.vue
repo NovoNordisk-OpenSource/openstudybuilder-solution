@@ -3,7 +3,8 @@
     <v-card :elevation="elevation" class="rounded-0">
       <v-card-title
         style="z-index: 3; position: relative"
-        class="pt-0 mt-3 d-flex align-center"
+        class="mt-3 d-flex align-center"
+        :class="props.noPadding ? 'pa-0' : 'pt-0'"
       >
         <v-text-field
           v-if="!hideSearchField || onlyTextSearch"
@@ -135,7 +136,7 @@
         </div>
         <slot name="beforeTable" />
       </v-card-title>
-      <v-card-text>
+      <v-card-text :class="{ 'pa-0': props.noPadding }">
         <v-fade-transition>
           <v-toolbar
             v-show="showFilterBar"
@@ -325,6 +326,7 @@
         :change-field="historyChangeField"
         :change-field-label="historyChangeFieldLabel"
         :excluded-headers="historyExcludedHeaders"
+        :loading="loading"
         @close="closeHistory"
         @refresh="(options) => getHistoryData(options)"
       />
@@ -545,6 +547,10 @@ const props = defineProps({
     type: Array,
     default: () => [],
   },
+  noPadding: {
+    type: Boolean,
+    default: false,
+  },
 })
 const emit = defineEmits(['filter'])
 
@@ -687,7 +693,9 @@ onMounted(() => {
     !props.disableFiltering &&
     !props.onlyTextSearch
   ) {
-    itemsToFilter.value = shownColumns.value.slice(1, shownColumns.value.length)
+    itemsToFilter.value = shownColumns.value.filter(
+      (col) => col.key !== 'actions' && !col.noFilter
+    )
   }
   if (props.items && props.items.length) {
     loading.value = false
@@ -695,7 +703,8 @@ onMounted(() => {
   // For now we will implement saving of latest filtering only for Library and Studies Activities, it might change in the future
   if (
     filteringParams.value.tableName === window.location.pathname &&
-    (window.location.pathname.indexOf('library/activities') > 0 || window.location.pathname.indexOf('activities/list'))
+    (window.location.pathname.indexOf('library/activities') > 0 ||
+      window.location.pathname.indexOf('activities/list'))
   ) {
     const map = JSON.parse(filteringParams.value.apiParams)
     for (const key in map) {
@@ -737,7 +746,10 @@ onUpdated(() => {
       continue
     }
     header.addEventListener('mouseover', () => {
-      columnValueIndex.value = shownColumns.value[index].key
+      const realIndex = showSelectBoxes.value ? index - 1 : index
+      if (realIndex >= 0) {
+        columnValueIndex.value = shownColumns.value[realIndex].key
+      }
     })
     header.addEventListener('mouseleave', () => {
       columnValueIndex.value = ''
@@ -884,11 +896,14 @@ function filterTable(options) {
       const bracketIndex = savedFilters.indexOf(']', index) + 1
       savedFilters =
         savedFilters.substring(0, bracketIndex) +
-        ', "op": "bw"' +
+        getDatesOperator() +
         savedFilters.substring(bracketIndex)
     }
     // For now we will implement saving of latest filtering only for Library and Studies Activities, it might change in the future
-    if (window.location.pathname.indexOf('library/activities') >= 0 || window.location.pathname.indexOf('activities/list')) {
+    if (
+      window.location.pathname.indexOf('library/activities') >= 0 ||
+      window.location.pathname.indexOf('activities/list')
+    ) {
       filteringParamsStore.setFilteringParams({
         filters: savedFilters,
         tableName: window.location.pathname,
@@ -897,6 +912,15 @@ function filterTable(options) {
     }
     emit('filter', savedFilters, options, filtersUpdated)
   }, 500)
+}
+function getDatesOperator() {
+  const dateKeys = ['start_date', 'name.start_date', 'attributes.start_date']
+  for (const key of dateKeys) {
+    if (apiParams.get(key) && apiParams.get(key)[0] === apiParams.get(key)[1]) {
+      return ', "op": "co"'
+    }
+  }
+  return ', "op": "bw"'
 }
 async function confirmExport(resolve) {
   if (!selected.value.length) {
@@ -908,6 +932,7 @@ async function confirmExport(resolve) {
   resolve(true)
 }
 async function getHistoryData(options) {
+  loading.value = true
   const resp = await props.historyDataFetcher(options)
   if (resp.items) {
     historyItems.value = resp.items
@@ -916,9 +941,9 @@ async function getHistoryData(options) {
     historyItems.value = resp
     historyItemsTotal.value = resp.length
   }
+  loading.value = false
 }
 async function openHistory() {
-  await getHistoryData({ page: 1, itemsPerPage: 10 })
   showHistory.value = true
 }
 function closeHistory() {

@@ -9,6 +9,7 @@ from neomodel import (
 )
 
 from clinical_mdr_api.domain_repositories.models.controlled_terminology import (
+    CTCodelistRoot,
     CTTermRoot,
 )
 from clinical_mdr_api.domain_repositories.models.generic import (
@@ -23,10 +24,16 @@ from clinical_mdr_api.domain_repositories.models.standard_data_model import (
 )
 
 
+class ActivityItemClassRel(ClinicalMdrRel):
+    mandatory = BooleanProperty()
+    is_adam_param_specific_enabled = BooleanProperty()
+
+
 class ActivityInstanceClassValue(VersionValue):
     order = IntegerProperty()
     definition = StringProperty()
     is_domain_specific = BooleanProperty()
+    level = IntegerProperty()
     has_latest_value = RelationshipFrom(
         "ActivityInstanceClassRoot", "LATEST", model=ClinicalMdrRel
     )
@@ -54,9 +61,13 @@ class ActivityInstanceClassRoot(VersionRoot):
         "ActivityInstanceClassRoot", "PARENT_CLASS", model=ClinicalMdrRel
     )
     maps_dataset_class = RelationshipTo(
-        DatasetClass,
-        "MAPS_DATASET_CLASS",
-        model=ClinicalMdrRel,
+        DatasetClass, "MAPS_DATASET_CLASS", model=ClinicalMdrRel
+    )
+    has_activity_item_class = RelationshipTo(
+        "ActivityItemClassRoot", "HAS_ITEM_CLASS", model=ActivityItemClassRel
+    )
+    has_data_domain = RelationshipTo(
+        CTTermRoot, "HAS_DATA_DOMAIN", model=ClinicalMdrRel
     )
 
 
@@ -64,7 +75,6 @@ class ActivityItemClassValue(VersionValue):
     definition = StringProperty()
     nci_concept_id = StringProperty()
     order = IntegerProperty()
-    mandatory = BooleanProperty()
     has_latest_value = RelationshipFrom(
         "ActivityItemClassRoot", "LATEST", model=ClinicalMdrRel
     )
@@ -103,11 +113,14 @@ class ActivityItemClassRoot(VersionRoot):
     has_activity_instance_class = RelationshipFrom(
         "ActivityInstanceClassRoot",
         "HAS_ITEM_CLASS",
-        model=ClinicalMdrRel,
+        model=ActivityItemClassRel,
         cardinality=OneOrMore,
     )
     maps_variable_class = RelationshipTo(
         VariableClass,
         "MAPS_VARIABLE_CLASS",
         model=ClinicalMdrRel,
+    )
+    related_codelist = RelationshipTo(
+        CTCodelistRoot, "RELATED_CODELIST", model=ClinicalMdrRel
     )

@@ -73,4 +73,11 @@ docker run -d \
     -e NEO4J_server_https_listen__address=:"$NEO4J_MDR_HTTPS_PORT" \
     -e NEO4J_server_metrics_enabled=false \
     --env=NEO4J_PLUGINS='["apoc"]' \
-    neo4j:5.18.1-enterprise
+    neo4j:5.19.0-enterprise
+# If you see some 'Unable to find the transaction entry for the given change identifier' coming from
+# capture_changes in data corrections please add the below configuration to the container setup above.
+# This will extend the size of the stored logs so that capture_changes can find a transaction identifier.
+#-e NEO4J_db_tx__log_rotation_retention__policy=keep_all \
+#-e NEO4J_db_tx__log_rotation_size=256M \
+#-e NEO4J_db_checkpoint_interval_time=15m \
+#-e NEO4J_db_checkpoint_interval_tx=100000 \

@@ -1,4 +1,5 @@
 const { Given, When, Then } = require("@badeball/cypress-cucumber-preprocessor");
+import { formatDateToMMMDDYYYY, getCurrentStudyId } from '../../support/helper_functions'
 
 When('The first column is selected from Select Columns option for table with actions', () => {
     const columnVisibilityCheckbox = '[data-cy="show-columns-form"] [type="checkbox"]'
@@ -66,6 +67,33 @@ Then('The user can navigate to authentication provider via top bar login button'
 
 Then('The username is visible in the navigation bar', () => {
     cy.get('[data-cy="topbar-user-name"]').should('contain', Cypress.env('TESTUSER_NAME'))
+})
+When('I click the {string} download button', (title) => {
+    cy.get([`"title=${title}"`])
+})
+
+When('The user exports the data in {string} format', (format) => {
+    cy.clickButton('table-export-button')
+    cy.contains('.v-list-item', format).click()
+    cy.clickButton('continue-popup')
+})
+
+Then('The study specific {string} file is downloaded in {string} format', (filename, format) => {
+    let currentDate1 = formatDateToMMMDDYYYY()
+    let currentStudy = getCurrentStudyId()
+    const filePath = `cypress/downloads/${currentStudy} ${filename} ${currentDate1}.${format}`
+    cy.readFile(filePath).then((file ) => {cy.log(file)})
+})
+
+Then('The {string} file is downloaded in {string} format', (filename, format) => {
+    let currentDate1 = formatDateToMMMDDYYYY()
+    const filePath = `cypress/downloads/${filename} ${currentDate1}.${format}`
+    cy.readFile(filePath).then((file ) => {cy.log(file)})
+})
+
+Then('The {string} file without timestamp is downloaded in {string} format', (filename, format) => {
+    const filePath = `cypress/downloads/${filename}.${format}`
+    cy.readFile(filePath).then((file ) => {cy.log(file)})
 })
 
 function checkTableHeaders(actionsAvailable) {

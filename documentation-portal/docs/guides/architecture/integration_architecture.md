@@ -11,3 +11,5 @@ The system will have the following integrations.
 | UNIX SCE & CDW <br> (Internal source data) | Data are extracted from the CDW MDR system using the MEDATA_VIEWER access profile from CDW directly or via UNIX SCE to CDW interface. | In this initial release a subset of sponsor defined standards from the General Clinical Metadata (GCMD) is migrated into the StudyBuilder system.  |
 | Word add-in <br> (Internal target data) | Scripting (?) programs within the Microsoft Word connecting to the internal StudyBuilder MDR API | The NN Microsoft Word authoring tool is used for our Common Protocol Template (CPT), this NN CPT will include content controls and importing functionality from the Clinical MDR API populating the structured protocol content defined within the StudyBuilder system. |
 
+
+

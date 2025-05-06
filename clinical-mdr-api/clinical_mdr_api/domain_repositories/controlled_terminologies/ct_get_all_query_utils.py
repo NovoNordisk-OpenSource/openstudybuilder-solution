@@ -30,13 +30,20 @@ from clinical_mdr_api.models.controlled_terminologies.ct_codelist_attributes imp
 from clinical_mdr_api.models.controlled_terminologies.ct_codelist_name import (
     CTCodelistName,
 )
+from clinical_mdr_api.models.controlled_terminologies.ct_term import (
+    SimpleTermModel,
+    TermWithCodelistMetadata,
+)
 from clinical_mdr_api.models.controlled_terminologies.ct_term_attributes import (
     CTTermAttributes,
 )
-from clinical_mdr_api.models.controlled_terminologies.ct_term_name import CTTermName
+from clinical_mdr_api.models.controlled_terminologies.ct_term_name import (
+    CTTermName,
+    CTTermNameSimple,
+)
 from clinical_mdr_api.models.utils import BaseModel
 from clinical_mdr_api.services.user_info import UserInfoService
-from common.utils import convert_to_datetime
+from common.utils import convert_to_datetime, get_field_type
 
 # Properties always on root level, even in aggregated mode (names + attributes)
 term_root_level_properties = [
@@ -109,9 +116,35 @@ def create_term_filter_statement(
     return filter_statement, filter_query_parameters
 
 
+def create_simple_term_instances_from_cypher_result(
+    term_dict: dict,
+) -> TermWithCodelistMetadata:
+    """
+    Method CTTermNameAR instance from the cypher query output.
+
+    :param term_dict
+    :return CTTermNameAR
+    """
+
+    return TermWithCodelistMetadata(
+        term_uid=term_dict.get("term_uid"),
+        name=term_dict.get("value_node_name").get("name"),
+        name_submission_value=term_dict.get("value_node_attributes").get(
+            "name_submission_value"
+        ),
+        code_submission_value=term_dict.get("value_node_attributes").get(
+            "code_submission_value"
+        ),
+        codelist_uid=term_dict.get("codelist_uid"),
+        codelist_submission_value=term_dict.get("codelist_submission_value"),
+    )
+
+
 def create_term_name_aggregate_instances_from_cypher_result(
-    term_dict: dict, is_aggregated_query: bool = False
-) -> CTTermNameAR:
+    term_dict: dict,
+    is_aggregated_query: bool = False,
+    ctterm_simple_model: bool = False,
+) -> CTTermNameAR | CTTermNameSimple:
     """
     Method CTTermNameAR instance from the cypher query output.
 
@@ -125,6 +158,12 @@ def create_term_name_aggregate_instances_from_cypher_result(
 
     rel_data = term_dict[f"rel_data{specific_suffix}"]
     major, minor = rel_data.get("version").split(".")
+
+    if ctterm_simple_model:
+        return SimpleTermModel(
+            term_uid=term_dict.get("term_uid"),
+            name=term_dict.get(f"value_node{specific_suffix}").get("name"),
+        )
 
     codelist_uid = term_dict.get("codelist_uid")
     codelists = []
@@ -312,12 +351,13 @@ def _parse_target_model_items(
     prefix = None
     if is_aggregated:
         prefix = "name" if target_model == CTTermName else "attributes"
-    for attribute, attr_desc in target_model.__fields__.items():
+    for attribute, attr_desc in target_model.model_fields.items():
         # Wildcard filtering only searches in properties of type string
+        jse = attr_desc.json_schema_extra or {}
         if (
-            attr_desc.type_ is str
+            get_field_type(attr_desc.annotation) is str
             and attribute not in ["possible_actions"]
-            and not attr_desc.field_info.extra.get("remove_from_wildcard", False)
+            and not jse.get("remove_from_wildcard", False)
         ):
             output.append(format_term_filter_sort_keys(attribute, prefix))
 
@@ -541,12 +581,13 @@ def _parse_target_model_items_codelist(is_aggregated: bool, target_model: BaseMo
     prefix = None
     if is_aggregated:
         prefix = "name" if target_model == CTCodelistName else "attributes"
-    for attribute, attr_desc in target_model.__fields__.items():
+    for attribute, attr_desc in target_model.model_fields.items():
         # Wildcard filtering only searches in properties of type string
+        jse = attr_desc.json_schema_extra or {}
         if (
-            attr_desc.type_ is str
+            get_field_type(attr_desc.annotation) is str
             and attribute not in ["possible_actions"]
-            and not attr_desc.field_info.extra.get("remove_from_wildcard", False)
+            and not jse.get("remove_from_wildcard", False)
         ):
             output.append(format_codelist_filter_sort_keys(attribute, prefix))
     return output

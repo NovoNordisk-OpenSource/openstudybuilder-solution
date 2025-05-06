@@ -450,6 +450,30 @@ def test_create_study_activity_instance(api_client):
         activity_items=[],
     )
 
+    new_preview_activity_instance_linked_to_weight_without_name_specified = (
+        TestUtils.create_activity_instance(
+            activity_instance_class_uid=new_instance_class.uid,
+            is_required_for_activity=True,
+            activities=[weight_activity.uid],
+            activity_subgroups=[body_measurements_activity_subgroup.uid],
+            activity_groups=[general_activity_group.uid],
+            activity_items=[],
+            preview=True,
+        )
+    )
+
+    assert (
+        new_preview_activity_instance_linked_to_weight_without_name_specified.name
+        == "Weight"
+    )
+    assert (
+        new_preview_activity_instance_linked_to_weight_without_name_specified.name_sentence_case
+        == "weight"
+    )
+    assert (
+        new_preview_activity_instance_linked_to_weight_without_name_specified.adam_param_code
+        == ""
+    )
     diffs = (
         new_preview_activity_instance_linked_to_weight.__dict__.items()
         ^ new_activity_instance_linked_to_weight.__dict__.items()
@@ -764,7 +788,7 @@ def test_study_activity_instances_states(
             name=activity_instance_name,
             activity_instance_class_uid=weight_activity_instance_class.uid,
             name_sentence_case=activity_instance_name.lower(),
-            topic_code="new test activity instance topic code",
+            topic_code=activity_instance_name + " topic code",
             is_required_for_activity=is_required,
             is_default_selected_for_activity=is_defaulted,
             activities=[new_test_activity.uid],
@@ -1122,7 +1146,7 @@ def test_study_activity_instances_return_proper_activity_instance_versionsing_da
         name=activity_instance_name,
         name_sentence_case=activity_instance_name.lower(),
         activity_instance_class_uid=weight_activity_instance_class.uid,
-        topic_code="first requrired topic code",
+        topic_code="the requrired topic code",
         is_required_for_activity=True,
         is_default_selected_for_activity=False,
         activities=[new_test_activity.uid],

@@ -470,13 +470,13 @@ export default {
               } else {
                 let valueNames = null
                 if (paramIndex === 0 && result.length < 4) {
-                  valueNames = this.parameters[
-                    paramIndex
-                  ].selectedValues.map((v) => v.name.charAt(0).toUpperCase() + v.name.slice(1))
+                  valueNames = this.parameters[paramIndex].selectedValues.map(
+                    (v) => v.name.charAt(0).toUpperCase() + v.name.slice(1)
+                  )
                 } else {
-                  valueNames = this.parameters[
-                    paramIndex
-                  ].selectedValues.map((v) => v.name)
+                  valueNames = this.parameters[paramIndex].selectedValues.map(
+                    (v) => v.name
+                  )
                 }
                 const concatenation = this.parameters[paramIndex]
                   .selectedSeparator

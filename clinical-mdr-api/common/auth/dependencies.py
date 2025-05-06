@@ -4,7 +4,7 @@ from typing import Annotated
 from authlib.integrations.starlette_client import OAuth
 from authlib.jose.errors import JoseError
 from authlib.jose.rfc7519.claims import JWTClaims
-from fastapi import Depends, Header
+from fastapi import Depends
 from fastapi.security import OAuth2AuthorizationCodeBearer
 from opencensus.trace import execution_context
 from opencensus.trace.tracer import Tracer
@@ -67,7 +67,7 @@ async def validate_token(token: Annotated[str, Depends(oauth_scheme)]):
         log.info(str(exc))
         raise NotAuthenticatedException("Model validation error") from exc
 
-    access_token_claims = AccessTokenClaims.parse_obj(jwt_claims)
+    access_token_claims = AccessTokenClaims.model_validate(jwt_claims)
 
     # Attributes to current tracing span
     tracer: Tracer = execution_context.get_opencensus_tracer()
@@ -87,17 +87,9 @@ async def validate_token(token: Annotated[str, Depends(oauth_scheme)]):
     persist_user(user_info=user())
 
 
-def dummy_user_auth(
-    x_test_user_id: Annotated[
-        str,
-        Header(description="A value to be injected into User object as user id."),
-    ] = None
-):
+def dummy_user_auth():
     """
     Sets context Auth object with dummy data.
-
-    Args:
-        x_test_user_id (str, optional): A value to be injected into User object as user id. Defaults to None.
 
     Returns:
         None
@@ -106,7 +98,7 @@ def dummy_user_auth(
         Any exceptions raised during token validation.
     """
 
-    context["auth"] = dummy_auth_object(dummy_access_token_claims(x_test_user_id))
+    context["auth"] = dummy_auth_object(dummy_access_token_claims())
     persist_user(user_info=user())
 
 
@@ -180,7 +172,7 @@ def dummy_access_token_claims(fake_user_id: str | None = None) -> AccessTokenCla
         exp=0,
         nbf=0,
         iat=0,
-        jti=0,
+        jti=None,
         sub=fake_user.sub,
         name=fake_user.name,
         username=fake_user.username,

@@ -15,9 +15,11 @@ import pytest
 from bs4 import BeautifulSoup
 from starlette.testclient import TestClient
 
+from clinical_mdr_api.domain_repositories.study_selections.study_soa_repository import (
+    SoALayout,
+)
 from clinical_mdr_api.models.study_selections.study import (
     StatusChangeDescription,
-    StudyCreateInput,
     StudyDescriptionJsonModel,
     StudyMetadataJsonModel,
     StudyPatchRequestJsonModel,
@@ -64,11 +66,15 @@ PROTOCOL_SOA_EXPORT_COLUMN_HEADERS = [
     "visit",
     "activity",
 ]
-
+PROTOCOL_SOA_JSON_EXPORT_COLUMN_HEADERS = PROTOCOL_SOA_EXPORT_COLUMN_HEADERS + [
+    "study_activity_schedule_uid"
+]
 DETAILED_SOA_EXPORT_COLUMN_HEADERS = PROTOCOL_SOA_EXPORT_COLUMN_HEADERS + [
     "is_data_collected"
 ]
-
+DETAILED_SOA_JSON_EXPORT_COLUMN_HEADERS = DETAILED_SOA_EXPORT_COLUMN_HEADERS + [
+    "study_activity_schedule_uid"
+]
 OPERATIONAL_SOA_EXPORT_COLUMN_HEADERS = [
     "study_number",
     "study_version",
@@ -81,6 +87,9 @@ OPERATIONAL_SOA_EXPORT_COLUMN_HEADERS = [
     "activity_instance",
     "topic_code",
     "param_code",
+]
+OPERATIONAL_SOA_JSON_EXPORT_COLUMN_HEADERS = OPERATIONAL_SOA_EXPORT_COLUMN_HEADERS + [
+    "study_activity_schedule_uid"
 ]
 OPERATIONAL_SOA_EXPORT_COLUMN_HEADERS_XLSX = [
     "Study number",
@@ -103,36 +112,31 @@ def soa_test_data(temp_database_populated: TempDatabasePopulated) -> SoATestData
 
 
 @pytest.mark.parametrize(
-    "time_unit, operational, hide_soa_groups",
+    "time_unit, layout",
     [
-        (None, None, False),
-        (None, False, False),
-        (None, True, False),
-        ("day", None, False),
-        ("day", False, False),
-        ("day", True, False),
-        ("week", None, False),
-        ("week", False, False),
-        ("week", True, False),
-        (None, False, True),
+        (None, SoALayout.DETAILED),
+        (None, SoALayout.DETAILED),
+        (None, SoALayout.OPERATIONAL),
+        ("day", SoALayout.DETAILED),
+        ("day", SoALayout.DETAILED),
+        ("day", SoALayout.OPERATIONAL),
+        ("week", SoALayout.DETAILED),
+        ("week", SoALayout.DETAILED),
+        ("week", SoALayout.OPERATIONAL),
+        (None, SoALayout.PROTOCOL),
     ],
 )
 def test_flowchart(
     soa_test_data: SoATestData,
     api_client: TestClient,
     time_unit: str,
-    operational: bool,
-    hide_soa_groups: bool,
+    layout: SoALayout,
 ):
     """Test /studies/{study_uid}/flowchart returns a valid TableWithFootnotes object as JSON"""
 
-    params = {}
+    params = {"layout": layout.value}
     if time_unit is not None:
         params["time_unit"] = time_unit
-    if operational is not None:
-        params["operational"] = operational
-    if hide_soa_groups:
-        params["detailed"] = False
 
     response = api_client.get(
         f"/studies/{soa_test_data.study.uid}/flowchart", params=params
@@ -168,7 +172,7 @@ def test_flowchart_study_versioning(soa_test_data: SoATestData, api_client):
         f"/studies/{soa_test_data.study.uid}/flowchart",
         params={
             "study_value_version": locked_study_version,
-            "operational": True,
+            "layout": SoALayout.OPERATIONAL.value,
         },
     )
     assert_response_status_code(response, 200)
@@ -178,7 +182,7 @@ def test_flowchart_study_versioning(soa_test_data: SoATestData, api_client):
     response = api_client.get(
         f"/studies/{soa_test_data.study.uid}/flowchart",
         params={
-            "operational": True,
+            "layout": SoALayout.OPERATIONAL.value,
         },
     )
     assert_response_status_code(response, 200)
@@ -232,18 +236,18 @@ def test_flowchart_coordinates(soa_test_data: SoATestData, api_client):
 
 
 @pytest.mark.parametrize(
-    "soa_table, detailed, operational, time_unit",
+    "soa_table, layout, time_unit",
     [
-        ("protocol_soa_table__days", None, None, "day"),
-        ("protocol_soa_table__weeks", None, None, "week"),
-        ("protocol_soa_table__days", None, False, "day"),
-        ("protocol_soa_table__weeks", False, None, "week"),
-        ("protocol_soa_table__weeks", False, False, "week"),
-        ("detailed_soa_table__days", True, None, "day"),
-        ("detailed_soa_table__weeks", True, False, "week"),
-        ("operational_soa_table__days", False, True, "day"),
-        ("operational_soa_table__weeks", None, True, "week"),
-        ("operational_soa_table__days", True, True, "day"),
+        ("protocol_soa_table__days", SoALayout.PROTOCOL, "day"),
+        ("protocol_soa_table__weeks", SoALayout.PROTOCOL, "week"),
+        ("protocol_soa_table__days", SoALayout.PROTOCOL, "day"),
+        ("protocol_soa_table__weeks", SoALayout.PROTOCOL, "week"),
+        ("protocol_soa_table__weeks", SoALayout.PROTOCOL, "week"),
+        ("detailed_soa_table__days", SoALayout.DETAILED, "day"),
+        ("detailed_soa_table__weeks", SoALayout.DETAILED, "week"),
+        ("operational_soa_table__days", SoALayout.OPERATIONAL, "day"),
+        ("operational_soa_table__weeks", SoALayout.OPERATIONAL, "week"),
+        ("operational_soa_table__days", SoALayout.OPERATIONAL, "day"),
     ],
 )
 def test_flowchart_html(
@@ -251,8 +255,7 @@ def test_flowchart_html(
     soa_test_data: SoATestData,
     api_client: TestClient,
     soa_table: TableWithFootnotes,
-    detailed: bool,
-    operational: bool,
+    layout: SoALayout,
     time_unit: str,
 ):
     """
@@ -263,14 +266,14 @@ def test_flowchart_html(
 
     soa_table: TableWithFootnotes = deepcopy(request.getfixturevalue(soa_table))
 
+    # Layout alterations of get_study_flowchart_docx()
+    if layout != SoALayout.PROTOCOL:
+        StudyFlowchartService.show_hidden_rows(soa_table.rows)
+
     # Query parameters
-    params = {}
+    params = {"layout": layout.value}
     if time_unit is not None:
         params["time_unit"] = time_unit
-    if detailed is not None:
-        params["detailed"] = detailed
-    if operational is not None:
-        params["operational"] = operational
 
     # Fetch HTML SoA
     response = api_client.get(
@@ -297,31 +300,31 @@ def test_flowchart_html(
     # Although table_f.table_to_html() has it's unit tests, we also run them on this SoA table
     # to increase the number of cases and to test on real-world scenarios.
 
-    if detailed or operational:
+    if layout != SoALayout.PROTOCOL:
         # Detailed and Operation SoA show all rows
         StudyFlowchartService.show_hidden_rows(soa_table.rows)
 
     # Compares table rows and cell contents and formatting
     compare_html_table(table, soa_table)
 
-    # Compares the footnote listing
-    if soa_table.footnotes:
+    if layout != SoALayout.OPERATIONAL:
+        # Compares the footnote listing
         compare_html_footnotes(doc, soa_table)
 
 
 @pytest.mark.parametrize(
-    "soa_table, detailed, operational, time_unit",
+    "soa_table, layout, time_unit",
     [
-        ("protocol_soa_table__days", None, None, "day"),
-        ("protocol_soa_table__weeks", None, None, "week"),
-        ("protocol_soa_table__days", None, False, "day"),
-        ("protocol_soa_table__weeks", False, None, "week"),
-        ("protocol_soa_table__weeks", False, False, "week"),
-        ("detailed_soa_table__days", True, None, "day"),
-        ("detailed_soa_table__weeks", True, False, "week"),
-        ("operational_soa_table__days", False, True, "day"),
-        ("operational_soa_table__weeks", None, True, "week"),
-        ("operational_soa_table__days", True, True, "day"),
+        ("protocol_soa_table__days", SoALayout.PROTOCOL, "day"),
+        ("protocol_soa_table__weeks", SoALayout.PROTOCOL, "week"),
+        ("protocol_soa_table__days", SoALayout.PROTOCOL, "day"),
+        ("protocol_soa_table__weeks", SoALayout.PROTOCOL, "week"),
+        ("protocol_soa_table__weeks", SoALayout.PROTOCOL, "week"),
+        ("detailed_soa_table__days", SoALayout.DETAILED, "day"),
+        ("detailed_soa_table__weeks", SoALayout.DETAILED, "week"),
+        ("operational_soa_table__days", SoALayout.OPERATIONAL, "day"),
+        ("operational_soa_table__weeks", SoALayout.OPERATIONAL, "week"),
+        ("operational_soa_table__days", SoALayout.OPERATIONAL, "day"),
     ],
 )
 def test_flowchart_docx(
@@ -329,8 +332,7 @@ def test_flowchart_docx(
     soa_test_data: SoATestData,
     api_client: TestClient,
     soa_table: TableWithFootnotes,
-    detailed: bool,
-    operational: bool,
+    layout: SoALayout,
     time_unit: str,
 ):
     """
@@ -339,17 +341,18 @@ def test_flowchart_docx(
     Go fix test_flowchart() first if both tests are failing.
     """
     soa_table: TableWithFootnotes = deepcopy(request.getfixturevalue(soa_table))
-    if not operational:
+
+    # Layout alterations of get_study_flowchart_docx()
+    if layout != SoALayout.PROTOCOL:
+        StudyFlowchartService.show_hidden_rows(soa_table.rows)
+
+    if layout == SoALayout.PROTOCOL:
         StudyFlowchartService.add_protocol_section_column(soa_table)
 
     # Query parameters
-    params = {}
+    params = {"layout": layout.value}
     if time_unit is not None:
         params["time_unit"] = time_unit
-    if detailed is not None:
-        params["detailed"] = detailed
-    if operational is not None:
-        params["operational"] = operational
 
     # Fetch DOCX SoA
     response = api_client.get(
@@ -368,49 +371,44 @@ def test_flowchart_docx(
     # Although table_f.table_to_docx() has it's unit test, we also run that on this SoA table
     # to increase the number of cases and to test on real-world scenarios.
 
-    if detailed or operational:
-        # Detailed and Operation SoA show all rows
-        StudyFlowchartService.show_hidden_rows(soa_table.rows)
-
     # Compare table rows and column contents and properties
     compare_docx_table(
         docx_doc.tables[0],
         soa_table,
-        OPERATIONAL_DOCX_STYLES if operational else DOCX_STYLES,
+        OPERATIONAL_DOCX_STYLES if layout == SoALayout.OPERATIONAL else DOCX_STYLES,
     )
 
-    if not operational:
+    if layout != SoALayout.OPERATIONAL:
         # Compares footnote listing
         compare_docx_footnotes(
             docx_doc,
             soa_table.footnotes,
-            OPERATIONAL_DOCX_STYLES if operational else DOCX_STYLES,
+            DOCX_STYLES,
         )
 
 
 @pytest.mark.parametrize(
-    "time_unit, detailed, operational, debug_uids, debug_coordinates, debug_propagation",
+    "time_unit, layout, debug_uids, debug_coordinates, debug_propagation",
     [
-        ("day", None, None, True, None, None),
-        ("day", None, None, None, True, None),
-        ("day", None, None, None, None, True),
-        ("week", None, None, True, None, None),
-        ("week", None, None, None, True, None),
-        ("week", None, None, None, None, True),
-        ("day", None, None, True, None, None),
-        ("day", True, False, None, True, None),
-        ("day", False, None, True, None, True),
-        ("week", None, True, True, None, None),
-        ("week", False, True, True, True, None),
-        ("week", True, True, True, True, True),
+        ("day", SoALayout.DETAILED, True, None, None),
+        ("day", SoALayout.DETAILED, None, True, None),
+        ("day", SoALayout.DETAILED, None, None, True),
+        ("week", SoALayout.DETAILED, True, None, None),
+        ("week", SoALayout.DETAILED, None, True, None),
+        ("week", SoALayout.DETAILED, None, None, True),
+        ("day", SoALayout.DETAILED, True, None, None),
+        ("day", SoALayout.DETAILED, None, True, None),
+        ("day", SoALayout.PROTOCOL, True, None, True),
+        ("week", SoALayout.OPERATIONAL, True, None, None),
+        ("week", SoALayout.OPERATIONAL, True, True, None),
+        ("week", SoALayout.OPERATIONAL, True, True, True),
     ],
 )
 def test_flowchart_html_debug(
     soa_test_data: SoATestData,
     api_client: TestClient,
     time_unit: str,
-    detailed: bool,
-    operational: bool,
+    layout: SoALayout,
     debug_uids: bool,
     debug_coordinates: bool,
     debug_propagation: bool,
@@ -422,8 +420,7 @@ def test_flowchart_html_debug(
     # Query parameters
     params = {
         "time_unit": time_unit,
-        "detailed": detailed,
-        "operational": operational,
+        "layout": layout.value,
         "debug_uids": debug_uids,
         "debug_coordinates": debug_coordinates,
         "debug_propagation": debug_propagation,
@@ -502,7 +499,7 @@ def test_endpoints_with_invalid_time_unit(
         (
             "/studies/{study_uid}/detailed-soa-exports",
             "application/json",
-            DETAILED_SOA_EXPORT_COLUMN_HEADERS,
+            DETAILED_SOA_JSON_EXPORT_COLUMN_HEADERS,
             [True, True],
         ),
         (
@@ -527,7 +524,7 @@ def test_endpoints_with_invalid_time_unit(
             "/studies/{study_uid}/protocol-soa-exports",
             "application/json",
             # for JSON output, the exported properties are not filtered
-            DETAILED_SOA_EXPORT_COLUMN_HEADERS,
+            DETAILED_SOA_JSON_EXPORT_COLUMN_HEADERS,
             [False, False],
         ),
         (
@@ -551,7 +548,7 @@ def test_endpoints_with_invalid_time_unit(
         (
             "/studies/{study_uid}/operational-soa-exports",
             "application/json",
-            OPERATIONAL_SOA_EXPORT_COLUMN_HEADERS,
+            OPERATIONAL_SOA_JSON_EXPORT_COLUMN_HEADERS,
             [],
         ),
     ],
@@ -662,7 +659,8 @@ def test_get_study_flowchart_versioned(api_client, soa_test_data):
 
     # GIVEN: a study with protocol SoA
     response = api_client.get(
-        f"/studies/{soa_test_data.study.uid}/flowchart", params={"detailed": False}
+        f"/studies/{soa_test_data.study.uid}/flowchart",
+        params={"layout": SoALayout.PROTOCOL.value},
     )
     assert_response_status_code(response, 200)
     initial_soa = response.json()
@@ -678,13 +676,13 @@ def test_get_study_flowchart_versioned(api_client, soa_test_data):
                     study_title=TestUtils.random_str(prefix="Title ")
                 )
             )
-        ).dict(),
+        ).model_dump(),
     )
     assert_response_status_code(response, 200)
 
     response = api_client.post(
         f"/studies/{soa_test_data.study.uid}/locks",
-        json=StatusChangeDescription(change_description="Locking good").dict(),
+        json=StatusChangeDescription(change_description="Locking good").model_dump(),
     )
     assert_response_status_code(response, 201)
 
@@ -704,7 +702,8 @@ def test_get_study_flowchart_versioned(api_client, soa_test_data):
 
     # WHEN: retrieving protocol SoA of draft version
     response = api_client.get(
-        f"/studies/{soa_test_data.study.uid}/flowchart", params={"detailed": False}
+        f"/studies/{soa_test_data.study.uid}/flowchart",
+        params={"layout": SoALayout.PROTOCOL.value},
     )
     assert_response_status_code(response, 200)
     recent_soa = response.json()
@@ -712,7 +711,10 @@ def test_get_study_flowchart_versioned(api_client, soa_test_data):
     # WHEN: retrieving protocol SoA of the locked version
     response = api_client.get(
         f"/studies/{soa_test_data.study.uid}/flowchart",
-        params={"detailed": False, "study_value_version": locked_study_version},
+        params={
+            "layout": SoALayout.PROTOCOL.value,
+            "study_value_version": locked_study_version,
+        },
     )
     assert_response_status_code(response, 200)
     locked_soa = response.json()
@@ -722,125 +724,3 @@ def test_get_study_flowchart_versioned(api_client, soa_test_data):
 
     # THEN: SoA of the latest draft study version is different from the SoA of the locked study version
     assert recent_soa != locked_soa
-
-
-def test_soa_snapshot_endpoints(api_client, soa_test_data):
-    """Test the SoA snapshot updating endpoint
-
-    SCENARIO: Update the SoA snapshot for existing studies for all their locked versions.
-    It Also creates an empty study to ensure the endpoint does not break on missing SoA data.
-    """
-
-    # get the first project
-    response = api_client.get("/projects")
-    assert_response_status_code(response, 200)
-    project = response.json()["items"][0]
-
-    # create an empty study
-    response = api_client.post(
-        "/studies",
-        json=StudyCreateInput(
-            study_number=TestUtils.random_str(4),
-            project_number=project["project_number"],
-            description="tests_soa_flowchart_snapshot_endpoint",
-        ).dict(),
-    )
-    assert_response_status_code(response, 201)
-    study_uid = response.json()["uid"]
-    response = api_client.patch(
-        f"/studies/{study_uid}",
-        json=StudyPatchRequestJsonModel(
-            current_metadata=StudyMetadataJsonModel(
-                study_description=StudyDescriptionJsonModel(
-                    study_title=TestUtils.random_str(prefix="Title ")
-                )
-            )
-        ).dict(),
-    )
-    assert_response_status_code(response, 200)
-
-    # list up to 10 studies (there's at least 2 studies in the db, one because of soa_test_data fixture)
-    response = api_client.get("/studies")
-    assert_response_status_code(response, 200)
-    study_uids = {item["uid"] for item in response.json()["items"]}
-    assert len(study_uids) >= 2, "At least 2 studies are expected at this point"
-
-    # ensure recently created study uid is included
-    study_uids.add(study_uid)
-
-    for study_uid in study_uids:
-        for i in range(1, 3):
-            # lock the study
-            response = api_client.post(
-                f"/studies/{study_uid}/locks",
-                json=StatusChangeDescription(change_description=f"Lock {i}").dict(),
-            )
-            assert_response_status_code(response, 201)
-
-            # unlock the study
-            response = api_client.delete(f"/studies/{study_uid}/locks")
-            assert_response_status_code(response, 200)
-
-        # get study versions
-        response = api_client.get(f"/studies/{study_uid}/snapshot-history")
-        assert_response_status_code(response, 200)
-
-        for study in response.json()["items"]:
-            study_status = study["current_metadata"]["version_metadata"]["study_status"]
-            study_version = study["current_metadata"]["version_metadata"][
-                "version_number"
-            ]
-
-            # on locked versions
-            if study_status != "LOCKED":
-                continue
-
-            # get protocol SoA before updating the snapshot
-            response = api_client.get(
-                f"/studies/{study['uid']}/flowchart",
-                params={
-                    "study_value_version": study_version,
-                    "detailed": False,
-                    "operational": False,
-                    "force_build": True,
-                },
-            )
-            assert_response_status_code(response, 200)
-            soa_before = response.json()
-
-            # update SoA snapshot of the specific study version
-            response = api_client.post(
-                f"/studies/{study['uid']}/flowchart/snapshot",
-                params={"study_value_version": study_version},
-            )
-            assert_response_status_code(response, 204)
-
-            if study["uid"] == study_uid:
-                # the empty study would fail below checks
-                continue
-
-            # get protocol SoA from snapshot
-            response = api_client.get(
-                f"/studies/{study['uid']}/flowchart/snapshot",
-                params={"study_value_version": study_version},
-            )
-            assert_response_status_code(response, 200)
-            soa_snapshot = response.json()
-
-            assert (
-                soa_snapshot == soa_before
-            ), "protocol SoA snapshot does not match the initial SoA"
-
-            # get protocol SoA after updating the snapshot
-            response = api_client.get(
-                f"/studies/{study['uid']}/flowchart",
-                params={
-                    "study_value_version": study_version,
-                    "detailed": False,
-                    "operational": False,
-                },
-            )
-            assert_response_status_code(response, 200)
-            soa = response.json()
-
-            assert soa == soa_snapshot, "protocol SoA does not match snapshot"

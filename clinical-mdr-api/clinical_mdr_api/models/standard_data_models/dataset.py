@@ -1,29 +1,37 @@
 from typing import Annotated
 
-from pydantic import Field
+from pydantic import ConfigDict, Field
 
-from clinical_mdr_api.models.standard_data_models.variable_class import (
-    SimpleDatasetClass,
-)
 from clinical_mdr_api.models.utils import BaseModel
 
 
+class SimpleDatasetClass(BaseModel):
+    dataset_class_uid: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    ordinal: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    dataset_class_name: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+
+
 class SimpleDataModelIG(BaseModel):
-    ordinal: Annotated[str | None, Field(nullable=True)] = None
+    ordinal: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
     data_model_ig_name: Annotated[str, Field(title="The name of the data model ig")]
 
 
 class Dataset(BaseModel):
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
     uid: Annotated[str, Field()]
     label: Annotated[str, Field()]
     title: Annotated[str, Field()]
-    description: Annotated[str | None, Field(nullable=True)] = None
+    description: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
     catalogue_name: Annotated[str, Field()]
     implemented_dataset_class: Annotated[
-        SimpleDatasetClass | None, Field(nullable=True)
+        SimpleDatasetClass | None, Field(json_schema_extra={"nullable": True})
     ] = None
     data_model_ig: Annotated[SimpleDataModelIG, Field()]
 
@@ -36,12 +44,16 @@ class Dataset(BaseModel):
             description=input_dict.get("standard_value").get("description"),
             catalogue_name=input_dict.get("catalogue_name"),
             parent_class=input_dict.get("parent_class_name"),
+            dataset_class_uids=input_dict.get("dataset_class_uids"),
             implemented_dataset_class=(
                 SimpleDatasetClass(
-                    ordinal=input_dict.get("implemented_dataset_class").get("ordinal"),
+                    dataset_class_uid=input_dict.get("implemented_dataset_class").get(
+                        "dataset_class_uid"
+                    ),
                     dataset_class_name=input_dict.get("implemented_dataset_class").get(
                         "dataset_class_name"
                     ),
+                    ordinal=input_dict.get("implemented_dataset_class").get("ordinal"),
                 )
                 if input_dict.get("implemented_dataset_class")
                 else None

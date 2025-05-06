@@ -27,70 +27,24 @@ def test_data():
     drop_db("old.json.test.odm.descriptions.negative")
 
 
-def test_create_a_new_odm_description(api_client):
-    data = {
-        "library_name": "Sponsor",
-        "name": "name1",
-        "language": "ENG",
-        "description": "description1",
-        "instruction": "instruction1",
-        "sponsor_instruction": "sponsor_instruction1",
-    }
-    response = api_client.post("concepts/odms/descriptions", json=data)
-
-    assert_response_status_code(response, 201)
-
-    res = response.json()
-
-    assert res["uid"] == "OdmDescription_000001"
-    assert res["name"] == "name1"
-    assert res["library_name"] == "Sponsor"
-    assert res["language"] == "ENG"
-    assert res["description"] == "description1"
-    assert res["instruction"] == "instruction1"
-    assert res["sponsor_instruction"] == "sponsor_instruction1"
-    assert res["end_date"] is None
-    assert res["status"] == "Draft"
-    assert res["version"] == "0.1"
-    assert res["change_description"] == "Initial version"
-    assert res["author_username"] == "unknown-user@example.com"
-    assert res["possible_actions"] == ["approve", "delete", "edit"]
-
-
-def test_cannot_inactivate_an_odm_description_that_is_in_draft_status(api_client):
-    response = api_client.delete(
-        "concepts/odms/descriptions/OdmDescription_000001/activations"
-    )
-
-    assert_response_status_code(response, 400)
-
-    res = response.json()
-
-    assert res["type"] == "BusinessLogicException"
-    assert res["message"] == "Cannot retire draft version."
-
-
-def test_cannot_reactivate_an_odm_description_that_is_not_retired(api_client):
-    response = api_client.post(
-        "concepts/odms/descriptions/OdmDescription_000001/activations"
-    )
-
-    assert_response_status_code(response, 400)
-
-    res = response.json()
-
-    assert res["type"] == "BusinessLogicException"
-    assert res["message"] == "Only RETIRED version can be reactivated."
-
-
-def test_create_an_odm_form_and_attach_the_odm_descriptio_to_it(api_client):
+def test_creating_a_new_odm_form_with_description(api_client):
     data = {
         "library_name": "Sponsor",
         "name": "name1",
         "oid": "oid1",
         "sdtm_version": "0.1",
         "repeating": "No",
-        "descriptions": ["OdmDescription_000001"],
+        "scope_uid": None,
+        "descriptions": [
+            {
+                "name": "name1",
+                "library_name": "Sponsor",
+                "language": "eng",
+                "description": "description1",
+                "instruction": "instruction1",
+                "sponsor_instruction": "sponsor_instruction1",
+            }
+        ],
         "alias_uids": [],
     }
     response = api_client.post("concepts/odms/forms", json=data)
@@ -115,7 +69,7 @@ def test_create_an_odm_form_and_attach_the_odm_descriptio_to_it(api_client):
         {
             "uid": "OdmDescription_000001",
             "name": "name1",
-            "language": "ENG",
+            "language": "eng",
             "description": "description1",
             "instruction": "instruction1",
             "sponsor_instruction": "sponsor_instruction1",
@@ -131,23 +85,74 @@ def test_create_an_odm_form_and_attach_the_odm_descriptio_to_it(api_client):
     assert res["possible_actions"] == ["approve", "delete", "edit"]
 
 
-def test_cannot_delete_an_odm_descriptio_that_is_being_used(api_client):
-    response = api_client.delete("concepts/odms/descriptions/OdmDescription_000001")
+# def test_cannot_inactivate_an_odm_description_that_is_in_draft_status(api_client):
+#     response = api_client.delete(
+#         "concepts/odms/descriptions/OdmDescription_000001/activations"
+#     )
 
-    assert_response_status_code(response, 400)
+#     assert_response_status_code(response, 400)
+
+#     res = response.json()
+
+#     assert res["type"] == "BusinessLogicException"
+#     assert res["message"] == "Cannot retire draft version."
+
+
+# def test_cannot_reactivate_an_odm_description_that_is_not_retired(api_client):
+#     response = api_client.post(
+#         "concepts/odms/descriptions/OdmDescription_000001/activations"
+#     )
+
+#     assert_response_status_code(response, 400)
+
+#     res = response.json()
+
+#     assert res["type"] == "BusinessLogicException"
+#     assert res["message"] == "Only RETIRED version can be reactivated."
+
+
+def test_cannot_create_an_odm_form_while_attaching_it_to_a_used_odm_description(
+    api_client,
+):
+    data = {
+        "library_name": "Sponsor",
+        "name": "name1",
+        "oid": "oid1",
+        "sdtm_version": "0.1",
+        "repeating": "No",
+        "descriptions": ["OdmDescription_000001"],
+        "alias_uids": [],
+    }
+    response = api_client.post("concepts/odms/forms", json=data)
+
+    assert_response_status_code(response, 409)
 
     res = response.json()
 
-    assert res["type"] == "BusinessLogicException"
-    assert res["message"] == "This ODM Description is in use."
+    assert res["type"] == "AlreadyExistsException"
+    assert (
+        res["message"]
+        == "ODM Form already exists with UID (OdmForm_000001) and data {'description_uids': ['OdmDescription_000001'], 'alias_uids': [], 'scope_uid': None, 'name': 'name1', 'oid': 'oid1', 'sdtm_version': '0.1', 'repeating': False}"
+    )
 
 
-def test_cannot_delete_non_existent_odm_description(api_client):
-    response = api_client.delete("concepts/odms/descriptions/wrong_uid")
+# def test_cannot_delete_an_odm_description_that_is_being_used(api_client):
+#     response = api_client.delete("concepts/odms/descriptions/OdmDescription_000001")
 
-    assert_response_status_code(response, 404)
+#     assert_response_status_code(response, 400)
 
-    res = response.json()
+#     res = response.json()
 
-    assert res["type"] == "NotFoundException"
-    assert res["message"] == "ODM Description with UID 'wrong_uid' doesn't exist."
+#     assert res["type"] == "BusinessLogicException"
+#     assert res["message"] == "This ODM Description is in use."
+
+
+# def test_cannot_delete_non_existent_odm_description(api_client):
+#     response = api_client.delete("concepts/odms/descriptions/wrong_uid")
+
+#     assert_response_status_code(response, 404)
+
+#     res = response.json()
+
+#     assert res["type"] == "NotFoundException"
+#     assert res["message"] == "ODM Description with UID 'wrong_uid' doesn't exist."

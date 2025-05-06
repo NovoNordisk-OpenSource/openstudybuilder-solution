@@ -66,7 +66,10 @@ def detailed_soa_table__days(soa_test_data: SoATestData) -> TableWithFootnotes:
     """get non-operational SoA table directly from StudyFlowchartService"""
     service = StudyFlowchartService()
     soa_table = service.build_flowchart_table(
-        study_uid=soa_test_data.study.uid, operational=False, time_unit="day"
+        study_uid=soa_test_data.study.uid,
+        study_value_version=None,
+        layout=SoALayout.DETAILED,
+        time_unit="day",
     )
     return soa_table
 
@@ -76,7 +79,10 @@ def detailed_soa_table__weeks(soa_test_data: SoATestData) -> TableWithFootnotes:
     """get non-operational SoA table directly from StudyFlowchartService"""
     service = StudyFlowchartService()
     soa_table = service.build_flowchart_table(
-        study_uid=soa_test_data.study.uid, operational=False, time_unit="week"
+        study_uid=soa_test_data.study.uid,
+        study_value_version=None,
+        layout=SoALayout.DETAILED,
+        time_unit="week",
     )
     return soa_table
 
@@ -86,7 +92,10 @@ def protocol_soa_table__days(soa_test_data: SoATestData) -> TableWithFootnotes:
     """get non-operational SoA table directly from StudyFlowchartService"""
     service = StudyFlowchartService()
     soa_table: TableWithFootnotes = service.build_flowchart_table(
-        study_uid=soa_test_data.study.uid, hide_soa_groups=True, time_unit="day"
+        study_uid=soa_test_data.study.uid,
+        study_value_version=None,
+        layout=SoALayout.PROTOCOL,
+        time_unit="day",
     )
     StudyFlowchartService.propagate_hidden_rows(soa_table.rows)
     soa_table.rows[0].cells[0].text = _gettext("procedure_label")
@@ -98,7 +107,10 @@ def protocol_soa_table__weeks(soa_test_data: SoATestData) -> TableWithFootnotes:
     """get non-operational SoA table directly from StudyFlowchartService"""
     service = StudyFlowchartService()
     soa_table: TableWithFootnotes = service.build_flowchart_table(
-        study_uid=soa_test_data.study.uid, hide_soa_groups=True, time_unit="week"
+        study_uid=soa_test_data.study.uid,
+        study_value_version=None,
+        layout=SoALayout.PROTOCOL,
+        time_unit="week",
     )
     StudyFlowchartService.propagate_hidden_rows(soa_table.rows)
     soa_table.rows[0].cells[0].text = _gettext("procedure_label")
@@ -110,7 +122,10 @@ def operational_soa_table__days(soa_test_data: SoATestData) -> TableWithFootnote
     """get non-operational SoA table directly from StudyFlowchartService"""
     service = StudyFlowchartService()
     soa_table = service.build_flowchart_table(
-        study_uid=soa_test_data.study.uid, operational=True, time_unit="day"
+        study_uid=soa_test_data.study.uid,
+        study_value_version=None,
+        layout=SoALayout.OPERATIONAL,
+        time_unit="day",
     )
     return soa_table
 
@@ -120,40 +135,43 @@ def operational_soa_table__weeks(soa_test_data: SoATestData) -> TableWithFootnot
     """get non-operational SoA table directly from StudyFlowchartService"""
     service = StudyFlowchartService()
     soa_table = service.build_flowchart_table(
-        study_uid=soa_test_data.study.uid, operational=True, time_unit="week"
+        study_uid=soa_test_data.study.uid,
+        study_value_version=None,
+        layout=SoALayout.OPERATIONAL,
+        time_unit="week",
     )
     return soa_table
 
 
 @pytest.mark.parametrize(
-    "time_unit, operational, hide_soa_groups",
+    "time_unit, layout, hide_soa_groups",
     [
-        (None, None, False),
-        (None, False, False),
-        (None, True, False),
-        ("day", None, False),
-        ("day", False, False),
-        ("day", True, False),
-        ("week", None, False),
-        ("week", False, False),
-        ("week", True, False),
-        (None, False, True),
-        ("week", None, True),
-        ("day", None, True),
+        (None, SoALayout.DETAILED, False),
+        (None, SoALayout.DETAILED, False),
+        (None, SoALayout.OPERATIONAL, False),
+        ("day", SoALayout.DETAILED, False),
+        ("day", SoALayout.DETAILED, False),
+        ("day", SoALayout.OPERATIONAL, False),
+        ("week", SoALayout.DETAILED, False),
+        ("week", SoALayout.DETAILED, False),
+        ("week", SoALayout.OPERATIONAL, False),
+        (None, SoALayout.PROTOCOL, True),
+        ("week", SoALayout.PROTOCOL, True),
+        ("day", SoALayout.PROTOCOL, True),
     ],
 )
 def test_build_flowchart_table(
     soa_test_data: SoATestData,
     time_unit: str,
-    operational: bool,
+    layout: SoALayout,
     hide_soa_groups: bool,
 ):
     service = StudyFlowchartService()
     table = service.build_flowchart_table(
         study_uid=soa_test_data.study.uid,
-        operational=operational,
+        study_value_version=None,
+        layout=layout,
         time_unit=time_unit,
-        hide_soa_groups=hide_soa_groups,
     )
 
     # Collect test data for comparison
@@ -188,28 +206,27 @@ def test_build_flowchart_table(
         StudyActivitySchedule
     ] = StudyActivityScheduleService().get_all_schedules(
         study_uid=soa_test_data.study.uid,
-        operational=operational,
+        operational=(layout == SoALayout.OPERATIONAL),
     )
 
     # Test title
     assert table.title == _gettext("protocol_flowchart")
 
     # Test dimensions
-    check_flowchart_table_dimensions(table, operational, soa_test_data.soa_preferences)
+    check_flowchart_table_dimensions(table, layout, soa_test_data.soa_preferences)
 
     # Test first header row
     check_flowchart_table_first_rows(
         table,
-        operational,
+        layout,
         study_epochs,
         study_visits,
         soa_test_data.soa_preferences,
-        hide_soa_groups,
     )
 
     # Test visit header rows
     visit_idx_by_uid = check_flowchart_table_visit_rows(
-        table, operational, time_unit, study_visits, soa_test_data.soa_preferences
+        table, layout, time_unit, study_visits, soa_test_data.soa_preferences
     )
 
     # Test the rest of the rows
@@ -308,7 +325,7 @@ def test_build_flowchart_table(
     # THEN all study activities are present in detailed and operational SoA tables (regardless whether scheduled for any visit)
     for activity in soa_test_data.study_activities.values():
         if (
-            operational
+            layout == SoALayout.OPERATIONAL
             and activity.activity.library_name == config.REQUESTED_LIBRARY_NAME
         ):
             # THEN Study Activity Placeholders are not shown in operational SoA
@@ -321,7 +338,7 @@ def test_build_flowchart_table(
             ), f"{activity.study_activity_uid} not found in SoA table"
 
     # THEN all study activity instances are present in operational SoA table (regardless whether scheduled for any visit)
-    if operational:
+    if layout == SoALayout.OPERATIONAL:
         for activity in soa_test_data.study_activity_instances.values():
             if activity.activity_instance:
                 assert (
@@ -329,7 +346,7 @@ def test_build_flowchart_table(
                 ), f"{activity.study_activity_instance_uid} not found in SoA table"
 
     for sas in study_activity_schedules:
-        if operational and sas.study_activity_instance_uid:
+        if layout == SoALayout.OPERATIONAL and sas.study_activity_instance_uid:
             assert (
                 sas.study_activity_instance_uid in study_activity_instances_map
             ), f"StudyActivityInstance {sas.study_activity_instance_uid} not found"
@@ -352,7 +369,7 @@ def test_build_flowchart_table(
         col_idx = visit_idx_by_uid[sas.study_visit_uid]
 
         # WHEN not operational SoA
-        if not operational:
+        if layout != SoALayout.OPERATIONAL:
             assert (
                 sas.study_activity_uid in rows_by_uid
             ), f"No row with reference to activity {sas.study_activity_uid}"
@@ -406,7 +423,7 @@ def test_build_flowchart_table(
                 not study_activity_instance.show_activity_instance_in_protocol_flowchart
             )
 
-    if operational:
+    if layout == SoALayout.OPERATIONAL:
         ensure_flowchart_table_has_no_footnotes(table)
     else:
         check_flowchart_table_footnotes(table, soa_test_data.soa_footnotes)
@@ -465,7 +482,6 @@ def test_get_flowchart_item_uid_coordinates(
     }
 
     # collected coordinates is a subset of get_flowchart_item_uid_coordinates() because of grouped visits
-    print(f"collected_coordinates {collected_coordinates}")
     for uid, expected_coordinates in collected_coordinates.items():
         assert uid in results, f"Missing coordinates for uid: {uid}"
         returned_coordinates = results.get(uid)
@@ -629,15 +645,19 @@ def test_download_detailed_soa_content(
                 sched.study_activity_uid
             ].show_activity_in_protocol_flowchart
         ]
-
+    study_activity_schedules_map: dict[str, StudyActivitySchedule] = {
+        schedule.study_activity_schedule_uid: schedule for schedule in schedules
+    }
     assert len(results) == len(schedules), "record count mismatch"
 
     sched: StudyActivitySchedule
-    for i, (res, sched) in enumerate(zip(results, schedules)):
+    for i, res in enumerate(results):
+        study_activity_schedule_uid = res["study_activity_schedule_uid"]
+        sched = study_activity_schedules_map[study_activity_schedule_uid]
         study_activity = study_activities_map[sched.study_activity_uid]
         study_visit = study_visits_map[sched.study_visit_uid]
 
-        assert len(res.keys()) == 9, f"record #{i} property count mismatch"
+        assert len(res.keys()) == 10, f"record #{i} property count mismatch"
         assert res["study_version"] == study_version(soa_test_data.study) or res[
             "study_version"
         ].startswith("LATEST on 20")
@@ -704,18 +724,22 @@ def test_download_operational_soa_content(
         )
         .items
     }
-
+    study_activity_schedules_map: dict[str, StudyActivitySchedule] = {
+        schedule.study_activity_schedule_uid: schedule for schedule in schedules
+    }
     assert len(results) == len(schedules), "record count mismatch"
 
     sched: StudyActivitySchedule
-    for i, (res, sched) in enumerate(zip(results, schedules)):
+    for i, res in enumerate(results):
+        study_activity_schedule_uid = res["study_activity_schedule_uid"]
+        sched = study_activity_schedules_map[study_activity_schedule_uid]
         study_activity = study_activities_map[sched.study_activity_uid]
         study_activity_instance = study_activity_instances_map[
             sched.study_activity_instance_uid
         ]
         study_visit = study_visits_map[sched.study_visit_uid]
 
-        assert len(res.keys()) == 11, f"record #{i} property count mismatch"
+        assert len(res.keys()) == 12, f"record #{i} property count mismatch"
         assert res["study_version"] == study_version(soa_test_data.study) or res[
             "study_version"
         ].startswith("LATEST on 20")
@@ -1246,10 +1270,9 @@ class TestSoASnapshot:
 
         expected_table = service.build_flowchart_table(
             study_uid=soa_test_data.study.uid,
-            time_unit=time_unit,
             study_value_version=None,
-            operational=(layout == SoALayout.OPERATIONAL),
-            hide_soa_groups=(layout not in {SoALayout.DETAILED, SoALayout.OPERATIONAL}),
+            layout=layout,
+            time_unit=time_unit,
         )
         if layout == SoALayout.PROTOCOL:
             service.propagate_hidden_rows(expected_table.rows)

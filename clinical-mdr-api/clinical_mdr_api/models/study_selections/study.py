@@ -4,8 +4,9 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Annotated, Callable, Collection, Iterable, Self
 
-from pydantic import Field
+from pydantic import ConfigDict, Field
 
+from clinical_mdr_api.descriptions.general import CHANGES_FIELD_DESC
 from clinical_mdr_api.domain_repositories.controlled_terminologies import (
     ct_term_generic_repository,
 )
@@ -57,20 +58,27 @@ def update_study_subpart_properties(study: "Study | CompactStudy"):
 
 
 class StudyPreferredTimeUnit(BaseModel):
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
     study_uid: Annotated[
-        str, Field(description="Uid of study", source="has_after.audit_trail.uid")
+        str,
+        Field(
+            description="Uid of study",
+            json_schema_extra={"source": "has_after.audit_trail.uid"},
+        ),
     ]
     time_unit_uid: Annotated[
-        str, Field(description="Uid of time unit", source="has_unit_definition.uid")
+        str,
+        Field(
+            description="Uid of time unit",
+            json_schema_extra={"source": "has_unit_definition.uid"},
+        ),
     ]
     time_unit_name: Annotated[
         str,
         Field(
             description="Name of time unit",
-            source="has_unit_definition.has_latest_value.name",
+            json_schema_extra={"source": "has_unit_definition.has_latest_value.name"},
         ),
     ]
 
@@ -80,9 +88,9 @@ class StudyPreferredTimeUnitInput(PatchInputModel):
 
 
 class StudySoaPreferencesInput(PatchInputModel):
-    class Config:
-        allow_population_by_field_name = True
-        title = "Study SoA Preferences input"
+    model_config = ConfigDict(
+        populate_by_name=True, title="Study SoA Preferences input"
+    )
 
     show_epochs: Annotated[
         bool,
@@ -108,108 +116,99 @@ class StudySoaPreferencesInput(PatchInputModel):
     ] = False
 
 
-class StudySoaPreferences(BaseModel):
-    class Config:
-        allow_population_by_field_name = True
-        title = "Study SoA Preferences"
+class StudySoaPreferences(StudySoaPreferencesInput):
+    model_config = ConfigDict(populate_by_name=True, title="Study SoA Preferences")
 
-    show_epochs: Annotated[
-        bool,
-        Field(
-            description="Show study epochs in detailed SoA",
-            alias=config.STUDY_FIELD_SOA_SHOW_EPOCHS,
-        ),
-    ] = True
-    show_milestones: Annotated[
-        bool,
-        Field(
-            description="Show study milestones in detailed SoA",
-            alias=config.STUDY_FIELD_SOA_SHOW_MILESTONES,
-        ),
-    ] = False
-    baseline_as_time_zero: Annotated[
-        bool,
-        Field(
-            title="Baseline shown as time 0",
-            description="Show the baseline visit as time 0 in all SoA layouts",
-            alias=config.STUDY_FIELD_SOA_BASELINE_AS_TIME_ZERO,
-        ),
-    ] = False
     study_uid: Annotated[str, Field(description="Uid of study")]
 
 
 class RegistryIdentifiersJsonModel(BaseModel):
-    class Config:
-        title = "RegistryIdentifiersMetadata"
-        description = "RegistryIdentifiersMetadata metadata for study definition."
+    model_config = ConfigDict(
+        title="RegistryIdentifiersMetadata",
+        description="RegistryIdentifiersMetadata metadata for study definition.",
+    )
 
-    ct_gov_id: Annotated[str | None, Field(nullable=True)] = None
+    ct_gov_id: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
     ct_gov_id_null_value_code: Annotated[
         SimpleCTTermNameWithConflictFlag | None,
-        Field(nullable=True),
+        Field(json_schema_extra={"nullable": True}),
     ] = None
-    eudract_id: Annotated[str | None, Field(nullable=True)] = None
+    eudract_id: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
     eudract_id_null_value_code: Annotated[
         SimpleCTTermNameWithConflictFlag | None,
-        Field(nullable=True),
+        Field(json_schema_extra={"nullable": True}),
     ] = None
-    universal_trial_number_utn: Annotated[str | None, Field(nullable=True)] = None
+    universal_trial_number_utn: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
     universal_trial_number_utn_null_value_code: Annotated[
         SimpleCTTermNameWithConflictFlag | None,
-        Field(nullable=True),
+        Field(json_schema_extra={"nullable": True}),
     ] = None
-    japanese_trial_registry_id_japic: Annotated[str | None, Field(nullable=True)] = None
+    japanese_trial_registry_id_japic: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
     japanese_trial_registry_id_japic_null_value_code: Annotated[
         SimpleCTTermNameWithConflictFlag | None,
-        Field(nullable=True),
+        Field(json_schema_extra={"nullable": True}),
     ] = None
     investigational_new_drug_application_number_ind: Annotated[
-        str | None, Field(nullable=True)
+        str | None, Field(json_schema_extra={"nullable": True})
     ] = None
     investigational_new_drug_application_number_ind_null_value_code: Annotated[
         SimpleCTTermNameWithConflictFlag | None,
-        Field(nullable=True),
+        Field(json_schema_extra={"nullable": True}),
     ] = None
-    eu_trial_number: Annotated[str | None, Field(nullable=True)] = None
+    eu_trial_number: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
     eu_trial_number_null_value_code: Annotated[
         SimpleCTTermNameWithConflictFlag | None,
-        Field(nullable=True),
+        Field(json_schema_extra={"nullable": True}),
     ] = None
-    civ_id_sin_number: Annotated[str | None, Field(nullable=True)] = None
+    civ_id_sin_number: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
     civ_id_sin_number_null_value_code: Annotated[
         SimpleCTTermNameWithConflictFlag | None,
-        Field(nullable=True),
+        Field(json_schema_extra={"nullable": True}),
     ] = None
-    national_clinical_trial_number: Annotated[str | None, Field(nullable=True)] = None
+    national_clinical_trial_number: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
     national_clinical_trial_number_null_value_code: Annotated[
         SimpleCTTermNameWithConflictFlag | None,
-        Field(nullable=True),
+        Field(json_schema_extra={"nullable": True}),
     ] = None
-    japanese_trial_registry_number_jrct: Annotated[str | None, Field(nullable=True)] = (
-        None
-    )
+    japanese_trial_registry_number_jrct: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
     japanese_trial_registry_number_jrct_null_value_code: Annotated[
         SimpleCTTermNameWithConflictFlag | None,
-        Field(nullable=True),
+        Field(json_schema_extra={"nullable": True}),
     ] = None
     national_medical_products_administration_nmpa_number: Annotated[
-        str | None, Field(nullable=True)
+        str | None, Field(json_schema_extra={"nullable": True})
     ] = None
     national_medical_products_administration_nmpa_number_null_value_code: Annotated[
         SimpleCTTermNameWithConflictFlag | None,
-        Field(nullable=True),
+        Field(json_schema_extra={"nullable": True}),
     ] = None
-    eudamed_srn_number: Annotated[str | None, Field(nullable=True)] = None
+    eudamed_srn_number: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
     eudamed_srn_number_null_value_code: Annotated[
         SimpleCTTermNameWithConflictFlag | None,
-        Field(nullable=True),
+        Field(json_schema_extra={"nullable": True}),
     ] = None
     investigational_device_exemption_ide_number: Annotated[
-        str | None, Field(nullable=True)
+        str | None, Field(json_schema_extra={"nullable": True})
     ] = None
     investigational_device_exemption_ide_number_null_value_code: Annotated[
         SimpleCTTermNameWithConflictFlag | None,
-        Field(nullable=True),
+        Field(json_schema_extra={"nullable": True}),
     ] = None
 
     @classmethod
@@ -349,21 +348,38 @@ class RegistryIdentifiersJsonModel(BaseModel):
 
 
 class StudyIdentificationMetadataJsonModel(BaseModel):
-    class Config:
-        title = "StudyIdentificationMetadata"
-        description = "Identification metadata for study definition."
+    model_config = ConfigDict(
+        title="StudyIdentificationMetadata",
+        description="Identification metadata for study definition.",
+    )
 
-    study_number: Annotated[str | None, Field(nullable=True)] = None
-    subpart_id: Annotated[str | None, Field(nullable=True)] = None
-    study_acronym: Annotated[str | None, Field(nullable=True)] = None
-    study_subpart_acronym: Annotated[str | None, Field(nullable=True)] = None
-    project_number: Annotated[str | None, Field(nullable=True)] = None
-    project_name: Annotated[str | None, Field(nullable=True)] = None
-    description: Annotated[str | None, Field(nullable=True)] = None
-    clinical_programme_name: Annotated[str | None, Field(nullable=True)] = None
-    study_id: Annotated[str | None, Field(nullable=True)] = None
+    study_number: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
+    subpart_id: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
+    study_acronym: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    study_subpart_acronym: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    project_number: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    project_name: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
+    description: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
+    clinical_programme_name: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    study_id: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
     registry_identifiers: Annotated[
-        RegistryIdentifiersJsonModel | None, Field(nullable=True)
+        RegistryIdentifiersJsonModel | None, Field(json_schema_extra={"nullable": True})
     ] = None
 
     @classmethod
@@ -405,19 +421,36 @@ class StudyIdentificationMetadataJsonModel(BaseModel):
 
 
 class CompactStudyIdentificationMetadataJsonModel(BaseModel):
-    class Config:
-        title = "CompactStudyIdentificationMetadata"
-        description = "Identification metadata for study definition."
+    model_config = ConfigDict(
+        title="CompactStudyIdentificationMetadata",
+        description="Identification metadata for study definition.",
+    )
 
-    study_number: Annotated[str | None, Field(nullable=True)] = None
-    subpart_id: Annotated[str | None, Field(nullable=True)] = None
-    study_acronym: Annotated[str | None, Field(nullable=True)] = None
-    study_subpart_acronym: Annotated[str | None, Field(nullable=True)] = None
-    project_number: Annotated[str | None, Field(nullable=True)] = None
-    project_name: Annotated[str | None, Field(nullable=True)] = None
-    description: Annotated[str | None, Field(nullable=True)] = None
-    clinical_programme_name: Annotated[str | None, Field(nullable=True)] = None
-    study_id: Annotated[str | None, Field(nullable=True)] = None
+    study_number: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
+    subpart_id: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
+    study_acronym: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    study_subpart_acronym: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    project_number: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    project_name: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
+    description: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
+    clinical_programme_name: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    study_id: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
 
     @classmethod
     def from_study_identification_vo(
@@ -449,17 +482,27 @@ class CompactStudyIdentificationMetadataJsonModel(BaseModel):
 
 
 class StudyVersionMetadataJsonModel(BaseModel):
-    class Config:
-        title = "StudyVersionMetadata"
-        description = "Version metadata for study definition."
+    model_config = ConfigDict(
+        title="StudyVersionMetadata",
+        description="Version metadata for study definition.",
+    )
 
-    study_status: Annotated[str | None, Field(nullable=True)] = None
-    version_number: Annotated[Decimal | None, Field(nullable=True)] = None
-    version_timestamp: Annotated[
-        datetime | None, Field(remove_from_wildcard=True, nullable=True)
+    study_status: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
+    version_number: Annotated[
+        Decimal | None, Field(json_schema_extra={"nullable": True})
     ] = None
-    version_author: Annotated[str | None, Field(nullable=True)] = None
-    version_description: Annotated[str | None, Field(nullable=True)] = None
+    version_timestamp: Annotated[
+        datetime | None,
+        Field(json_schema_extra={"remove_from_wildcard": True, "nullable": True}),
+    ] = None
+    version_author: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    version_description: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
 
     @classmethod
     def from_study_version_metadata_vo(
@@ -477,56 +520,76 @@ class StudyVersionMetadataJsonModel(BaseModel):
 
 
 class HighLevelStudyDesignJsonModel(BaseModel):
-    class Config:
-        title = "high_level_study_design"
-        description = "High level study design parameters for study definition."
+    model_config = ConfigDict(
+        title="high_level_study_design",
+        description="High level study design parameters for study definition.",
+    )
 
     study_type_code: Annotated[
-        SimpleCTTermNameWithConflictFlag | None, Field(nullable=True)
+        SimpleCTTermNameWithConflictFlag | None,
+        Field(json_schema_extra={"nullable": True}),
     ] = None
     study_type_null_value_code: Annotated[
-        SimpleCTTermNameWithConflictFlag | None, Field(nullable=True)
+        SimpleCTTermNameWithConflictFlag | None,
+        Field(json_schema_extra={"nullable": True}),
     ] = None
 
     trial_type_codes: Annotated[
-        list[SimpleCTTermNameWithConflictFlag] | None, Field(nullable=True)
+        list[SimpleCTTermNameWithConflictFlag] | None,
+        Field(json_schema_extra={"nullable": True}),
     ] = None
     trial_type_null_value_code: Annotated[
-        SimpleCTTermNameWithConflictFlag | None, Field(nullable=True)
+        SimpleCTTermNameWithConflictFlag | None,
+        Field(json_schema_extra={"nullable": True}),
     ] = None
 
     trial_phase_code: Annotated[
-        SimpleCTTermNameWithConflictFlag | None, Field(nullable=True)
+        SimpleCTTermNameWithConflictFlag | None,
+        Field(json_schema_extra={"nullable": True}),
     ] = None
     trial_phase_null_value_code: Annotated[
-        SimpleCTTermNameWithConflictFlag | None, Field(nullable=True)
+        SimpleCTTermNameWithConflictFlag | None,
+        Field(json_schema_extra={"nullable": True}),
     ] = None
 
-    is_extension_trial: Annotated[bool | None, Field(nullable=True)] = None
+    is_extension_trial: Annotated[
+        bool | None, Field(json_schema_extra={"nullable": True})
+    ] = None
     is_extension_trial_null_value_code: Annotated[
-        SimpleCTTermNameWithConflictFlag | None, Field(nullable=True)
+        SimpleCTTermNameWithConflictFlag | None,
+        Field(json_schema_extra={"nullable": True}),
     ] = None
 
-    is_adaptive_design: Annotated[bool | None, Field(nullable=True)] = None
+    is_adaptive_design: Annotated[
+        bool | None, Field(json_schema_extra={"nullable": True})
+    ] = None
     is_adaptive_design_null_value_code: Annotated[
-        SimpleCTTermNameWithConflictFlag | None, Field(nullable=True)
+        SimpleCTTermNameWithConflictFlag | None,
+        Field(json_schema_extra={"nullable": True}),
     ] = None
 
-    study_stop_rules: Annotated[str | None, Field(nullable=True)] = None
+    study_stop_rules: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
     study_stop_rules_null_value_code: Annotated[
-        SimpleCTTermNameWithConflictFlag | None, Field(nullable=True)
+        SimpleCTTermNameWithConflictFlag | None,
+        Field(json_schema_extra={"nullable": True}),
     ] = None
 
     confirmed_response_minimum_duration: Annotated[
-        DurationJsonModel | None, Field(nullable=True)
+        DurationJsonModel | None, Field(json_schema_extra={"nullable": True})
     ] = None
     confirmed_response_minimum_duration_null_value_code: Annotated[
-        SimpleCTTermNameWithConflictFlag | None, Field(nullable=True)
+        SimpleCTTermNameWithConflictFlag | None,
+        Field(json_schema_extra={"nullable": True}),
     ] = None
 
-    post_auth_indicator: Annotated[bool | None, Field(nullable=True)] = None
+    post_auth_indicator: Annotated[
+        bool | None, Field(json_schema_extra={"nullable": True})
+    ] = None
     post_auth_indicator_null_value_code: Annotated[
-        SimpleCTTermNameWithConflictFlag | None, Field(nullable=True)
+        SimpleCTTermNameWithConflictFlag | None,
+        Field(json_schema_extra={"nullable": True}),
     ] = None
 
     @classmethod
@@ -651,96 +714,122 @@ class HighLevelStudyDesignJsonModel(BaseModel):
 
 
 class StudyPopulationJsonModel(BaseModel):
-    class Config:
-        title = "study_population"
-        description = "Study population parameters for study definition."
+    model_config = ConfigDict(
+        title="study_population",
+        description="Study population parameters for study definition.",
+    )
 
     therapeutic_area_codes: Annotated[
-        list[SimpleTermModel] | None, Field(nullable=True)
+        list[SimpleTermModel] | None, Field(json_schema_extra={"nullable": True})
     ] = None
     therapeutic_area_null_value_code: Annotated[
-        SimpleCTTermNameWithConflictFlag | None, Field(nullable=True)
+        SimpleCTTermNameWithConflictFlag | None,
+        Field(json_schema_extra={"nullable": True}),
     ] = None
 
     disease_condition_or_indication_codes: Annotated[
-        list[SimpleTermModel] | None, Field(nullable=True)
+        list[SimpleTermModel] | None, Field(json_schema_extra={"nullable": True})
     ] = None
     disease_condition_or_indication_null_value_code: Annotated[
-        SimpleCTTermNameWithConflictFlag | None, Field(nullable=True)
+        SimpleCTTermNameWithConflictFlag | None,
+        Field(json_schema_extra={"nullable": True}),
     ] = None
 
     diagnosis_group_codes: Annotated[
-        list[SimpleTermModel] | None, Field(nullable=True)
+        list[SimpleTermModel] | None, Field(json_schema_extra={"nullable": True})
     ] = None
     diagnosis_group_null_value_code: Annotated[
-        SimpleCTTermNameWithConflictFlag | None, Field(nullable=True)
+        SimpleCTTermNameWithConflictFlag | None,
+        Field(json_schema_extra={"nullable": True}),
     ] = None
 
     sex_of_participants_code: Annotated[
-        SimpleCTTermNameWithConflictFlag | None, Field(nullable=True)
+        SimpleCTTermNameWithConflictFlag | None,
+        Field(json_schema_extra={"nullable": True}),
     ] = None
     sex_of_participants_null_value_code: Annotated[
-        SimpleCTTermNameWithConflictFlag | None, Field(nullable=True)
+        SimpleCTTermNameWithConflictFlag | None,
+        Field(json_schema_extra={"nullable": True}),
     ] = None
 
-    rare_disease_indicator: Annotated[bool | None, Field(nullable=True)] = None
+    rare_disease_indicator: Annotated[
+        bool | None, Field(json_schema_extra={"nullable": True})
+    ] = None
     rare_disease_indicator_null_value_code: Annotated[
-        SimpleCTTermNameWithConflictFlag | None, Field(nullable=True)
+        SimpleCTTermNameWithConflictFlag | None,
+        Field(json_schema_extra={"nullable": True}),
     ] = None
 
-    healthy_subject_indicator: Annotated[bool | None, Field(nullable=True)] = None
+    healthy_subject_indicator: Annotated[
+        bool | None, Field(json_schema_extra={"nullable": True})
+    ] = None
     healthy_subject_indicator_null_value_code: Annotated[
-        SimpleCTTermNameWithConflictFlag | None, Field(nullable=True)
+        SimpleCTTermNameWithConflictFlag | None,
+        Field(json_schema_extra={"nullable": True}),
     ] = None
 
     planned_minimum_age_of_subjects: Annotated[
-        DurationJsonModel | None, Field(nullable=True)
+        DurationJsonModel | None, Field(json_schema_extra={"nullable": True})
     ] = None
     planned_minimum_age_of_subjects_null_value_code: Annotated[
-        SimpleCTTermNameWithConflictFlag | None, Field(nullable=True)
+        SimpleCTTermNameWithConflictFlag | None,
+        Field(json_schema_extra={"nullable": True}),
     ] = None
 
     planned_maximum_age_of_subjects: Annotated[
-        DurationJsonModel | None, Field(nullable=True)
+        DurationJsonModel | None, Field(json_schema_extra={"nullable": True})
     ] = None
     planned_maximum_age_of_subjects_null_value_code: Annotated[
-        SimpleCTTermNameWithConflictFlag | None, Field(nullable=True)
+        SimpleCTTermNameWithConflictFlag | None,
+        Field(json_schema_extra={"nullable": True}),
     ] = None
 
     stable_disease_minimum_duration: Annotated[
-        DurationJsonModel | None, Field(nullable=True)
+        DurationJsonModel | None, Field(json_schema_extra={"nullable": True})
     ] = None
     stable_disease_minimum_duration_null_value_code: Annotated[
-        SimpleCTTermNameWithConflictFlag | None, Field(nullable=True)
+        SimpleCTTermNameWithConflictFlag | None,
+        Field(json_schema_extra={"nullable": True}),
     ] = None
 
-    pediatric_study_indicator: Annotated[bool | None, Field(nullable=True)] = None
+    pediatric_study_indicator: Annotated[
+        bool | None, Field(json_schema_extra={"nullable": True})
+    ] = None
     pediatric_study_indicator_null_value_code: Annotated[
-        SimpleCTTermNameWithConflictFlag | None, Field(nullable=True)
+        SimpleCTTermNameWithConflictFlag | None,
+        Field(json_schema_extra={"nullable": True}),
     ] = None
 
     pediatric_postmarket_study_indicator: Annotated[
-        bool | None, Field(nullable=True)
+        bool | None, Field(json_schema_extra={"nullable": True})
     ] = None
     pediatric_postmarket_study_indicator_null_value_code: Annotated[
-        SimpleCTTermNameWithConflictFlag | None, Field(nullable=True)
+        SimpleCTTermNameWithConflictFlag | None,
+        Field(json_schema_extra={"nullable": True}),
     ] = None
 
     pediatric_investigation_plan_indicator: Annotated[
-        bool | None, Field(nullable=True)
+        bool | None, Field(json_schema_extra={"nullable": True})
     ] = None
     pediatric_investigation_plan_indicator_null_value_code: Annotated[
-        SimpleCTTermNameWithConflictFlag | None, Field(nullable=True)
+        SimpleCTTermNameWithConflictFlag | None,
+        Field(json_schema_extra={"nullable": True}),
     ] = None
 
-    relapse_criteria: Annotated[str | None, Field(nullable=True)] = None
+    relapse_criteria: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
     relapse_criteria_null_value_code: Annotated[
-        SimpleCTTermNameWithConflictFlag | None, Field(nullable=True)
+        SimpleCTTermNameWithConflictFlag | None,
+        Field(json_schema_extra={"nullable": True}),
     ] = None
 
-    number_of_expected_subjects: Annotated[int | None, Field(nullable=True)] = None
+    number_of_expected_subjects: Annotated[
+        int | None, Field(json_schema_extra={"nullable": True})
+    ] = None
     number_of_expected_subjects_null_value_code: Annotated[
-        SimpleCTTermNameWithConflictFlag | None, Field(nullable=True)
+        SimpleCTTermNameWithConflictFlag | None,
+        Field(json_schema_extra={"nullable": True}),
     ] = None
 
     @classmethod
@@ -944,65 +1033,86 @@ class StudyPopulationJsonModel(BaseModel):
 
 
 class StudyInterventionJsonModel(BaseModel):
-    class Config:
-        title = "study_intervention"
-        description = "Study interventions parameters for study definition."
+    model_config = ConfigDict(
+        title="study_intervention",
+        description="Study interventions parameters for study definition.",
+    )
 
     intervention_type_code: Annotated[
-        SimpleCTTermNameWithConflictFlag | None, Field(nullable=True)
+        SimpleCTTermNameWithConflictFlag | None,
+        Field(json_schema_extra={"nullable": True}),
     ] = None
     intervention_type_null_value_code: Annotated[
-        SimpleCTTermNameWithConflictFlag | None, Field(nullable=True)
+        SimpleCTTermNameWithConflictFlag | None,
+        Field(json_schema_extra={"nullable": True}),
     ] = None
 
-    add_on_to_existing_treatments: Annotated[bool | None, Field(nullable=True)] = None
+    add_on_to_existing_treatments: Annotated[
+        bool | None, Field(json_schema_extra={"nullable": True})
+    ] = None
     add_on_to_existing_treatments_null_value_code: Annotated[
-        SimpleCTTermNameWithConflictFlag | None, Field(nullable=True)
+        SimpleCTTermNameWithConflictFlag | None,
+        Field(json_schema_extra={"nullable": True}),
     ] = None
 
     control_type_code: Annotated[
-        SimpleCTTermNameWithConflictFlag | None, Field(nullable=True)
+        SimpleCTTermNameWithConflictFlag | None,
+        Field(json_schema_extra={"nullable": True}),
     ] = None
     control_type_null_value_code: Annotated[
-        SimpleCTTermNameWithConflictFlag | None, Field(nullable=True)
+        SimpleCTTermNameWithConflictFlag | None,
+        Field(json_schema_extra={"nullable": True}),
     ] = None
 
     intervention_model_code: Annotated[
-        SimpleCTTermNameWithConflictFlag | None, Field(nullable=True)
+        SimpleCTTermNameWithConflictFlag | None,
+        Field(json_schema_extra={"nullable": True}),
     ] = None
     intervention_model_null_value_code: Annotated[
-        SimpleCTTermNameWithConflictFlag | None, Field(nullable=True)
+        SimpleCTTermNameWithConflictFlag | None,
+        Field(json_schema_extra={"nullable": True}),
     ] = None
 
-    is_trial_randomised: Annotated[bool | None, Field(nullable=True)] = None
+    is_trial_randomised: Annotated[
+        bool | None, Field(json_schema_extra={"nullable": True})
+    ] = None
     is_trial_randomised_null_value_code: Annotated[
-        SimpleCTTermNameWithConflictFlag | None, Field(nullable=True)
+        SimpleCTTermNameWithConflictFlag | None,
+        Field(json_schema_extra={"nullable": True}),
     ] = None
 
-    stratification_factor: Annotated[str | None, Field(nullable=True)] = None
+    stratification_factor: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
     stratification_factor_null_value_code: Annotated[
-        SimpleCTTermNameWithConflictFlag | None, Field(nullable=True)
+        SimpleCTTermNameWithConflictFlag | None,
+        Field(json_schema_extra={"nullable": True}),
     ] = None
 
     trial_blinding_schema_code: Annotated[
-        SimpleCTTermNameWithConflictFlag | None, Field(nullable=True)
+        SimpleCTTermNameWithConflictFlag | None,
+        Field(json_schema_extra={"nullable": True}),
     ] = None
     trial_blinding_schema_null_value_code: Annotated[
-        SimpleCTTermNameWithConflictFlag | None, Field(nullable=True)
+        SimpleCTTermNameWithConflictFlag | None,
+        Field(json_schema_extra={"nullable": True}),
     ] = None
 
-    planned_study_length: Annotated[DurationJsonModel | None, Field(nullable=True)] = (
-        None
-    )
+    planned_study_length: Annotated[
+        DurationJsonModel | None, Field(json_schema_extra={"nullable": True})
+    ] = None
     planned_study_length_null_value_code: Annotated[
-        SimpleCTTermNameWithConflictFlag | None, Field(nullable=True)
+        SimpleCTTermNameWithConflictFlag | None,
+        Field(json_schema_extra={"nullable": True}),
     ] = None
 
     trial_intent_types_codes: Annotated[
-        list[SimpleCTTermNameWithConflictFlag] | None, Field(nullable=True)
+        list[SimpleCTTermNameWithConflictFlag] | None,
+        Field(json_schema_extra={"nullable": True}),
     ] = None
     trial_intent_types_null_value_code: Annotated[
-        SimpleCTTermNameWithConflictFlag | None, Field(nullable=True)
+        SimpleCTTermNameWithConflictFlag | None,
+        Field(json_schema_extra={"nullable": True}),
     ] = None
 
     @classmethod
@@ -1142,12 +1252,17 @@ class StudyInterventionJsonModel(BaseModel):
 
 
 class StudyDescriptionJsonModel(BaseModel):
-    class Config:
-        title = "study_description"
-        description = "Study description for the study definition."
+    model_config = ConfigDict(
+        title="study_description",
+        description="Study description for the study definition.",
+    )
 
-    study_title: Annotated[str | None, Field(nullable=True)] = None
-    study_short_title: Annotated[str | None, Field(nullable=True)] = None
+    study_title: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
+    study_short_title: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
 
     @classmethod
     def from_study_description_vo(
@@ -1162,18 +1277,18 @@ class StudyDescriptionJsonModel(BaseModel):
 
 
 class CompactStudyMetadataJsonModel(BaseModel):
-    class Config:
-        title = "StudyMetadata"
-        description = "Study metadata"
+    model_config = ConfigDict(title="StudyMetadata", description="Study metadata")
 
     identification_metadata: Annotated[
-        CompactStudyIdentificationMetadataJsonModel | None, Field(nullable=True)
+        CompactStudyIdentificationMetadataJsonModel | None,
+        Field(json_schema_extra={"nullable": True}),
     ] = None
     version_metadata: Annotated[
-        StudyVersionMetadataJsonModel | None, Field(nullable=True)
+        StudyVersionMetadataJsonModel | None,
+        Field(json_schema_extra={"nullable": True}),
     ] = None
     study_description: Annotated[
-        StudyDescriptionJsonModel | None, Field(nullable=True)
+        StudyDescriptionJsonModel | None, Field(json_schema_extra={"nullable": True})
     ] = None
 
     @classmethod
@@ -1199,27 +1314,28 @@ class CompactStudyMetadataJsonModel(BaseModel):
 
 
 class StudyMetadataJsonModel(BaseModel):
-    class Config:
-        title = "StudyMetadata"
-        description = "Study metadata"
+    model_config = ConfigDict(title="StudyMetadata", description="Study metadata")
 
     identification_metadata: Annotated[
-        StudyIdentificationMetadataJsonModel | None, Field(nullable=True)
+        StudyIdentificationMetadataJsonModel | None,
+        Field(json_schema_extra={"nullable": True}),
     ] = None
     version_metadata: Annotated[
-        StudyVersionMetadataJsonModel | None, Field(nullable=True)
+        StudyVersionMetadataJsonModel | None,
+        Field(json_schema_extra={"nullable": True}),
     ] = None
     high_level_study_design: Annotated[
-        HighLevelStudyDesignJsonModel | None, Field(nullable=True)
+        HighLevelStudyDesignJsonModel | None,
+        Field(json_schema_extra={"nullable": True}),
     ] = None
     study_population: Annotated[
-        StudyPopulationJsonModel | None, Field(nullable=True)
+        StudyPopulationJsonModel | None, Field(json_schema_extra={"nullable": True})
     ] = None
     study_intervention: Annotated[
-        StudyInterventionJsonModel | None, Field(nullable=True)
+        StudyInterventionJsonModel | None, Field(json_schema_extra={"nullable": True})
     ] = None
     study_description: Annotated[
-        StudyDescriptionJsonModel | None, Field(nullable=True)
+        StudyDescriptionJsonModel | None, Field(json_schema_extra={"nullable": True})
     ] = None
 
     @classmethod
@@ -1270,27 +1386,37 @@ class StudyMetadataJsonModel(BaseModel):
 
 
 class StudyPatchRequestJsonModel(PatchInputModel):
-    class Config:
-        title = "StudyPatchRequest"
-        description = "Identification metadata for study definition."
+    model_config = ConfigDict(
+        title="StudyPatchRequest",
+        description="Identification metadata for study definition.",
+    )
 
     study_parent_part_uid: Annotated[
-        str | None,
-        Field(description="UID of the Study Parent Part"),
-    ]
-    current_metadata: Annotated[StudyMetadataJsonModel | None, Field(nullable=True)] = (
-        None
-    )
+        str | None, Field(description="UID of the Study Parent Part")
+    ] = None
+    current_metadata: Annotated[
+        StudyMetadataJsonModel | None, Field(json_schema_extra={"nullable": True})
+    ] = None
 
 
 class StudyParentPart(BaseModel):
     uid: str
-    study_number: Annotated[str | None, Field(nullable=True)] = None
-    study_acronym: Annotated[str | None, Field(nullable=True)] = None
-    project_number: Annotated[str | None, Field(nullable=True)] = None
-    description: Annotated[str | None, Field(nullable=True)] = None
-    study_id: Annotated[str | None, Field(nullable=True)] = None
-    study_title: Annotated[str | None, Field(nullable=True)] = None
+    study_number: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
+    study_acronym: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    project_number: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    description: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
+    study_id: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    study_title: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
     registry_identifiers: RegistryIdentifiersJsonModel
 
     @classmethod
@@ -1325,7 +1451,7 @@ class StudyParentPart(BaseModel):
 
 
 class StudyStructureOverview(BaseModel):
-    study_ids: Annotated[list[str], Field()]
+    study_ids: list[str]
     arms: Annotated[int, Field(title="Number of Study Arms")]
     pre_treatment_epochs: Annotated[
         int, Field(title="Number of Study Pre Treatment Epochs")
@@ -1339,7 +1465,7 @@ class StudyStructureOverview(BaseModel):
     no_treatment_elements: Annotated[
         int, Field(title="Number of No Treatment Elements")
     ]
-    cohorts_in_study: Annotated[str, Field()]
+    cohorts_in_study: str
 
 
 class CompactStudy(BaseModel):
@@ -1347,11 +1473,13 @@ class CompactStudy(BaseModel):
         str,
         Field(
             description="The unique id of the study.",
-            remove_from_wildcard=True,
+            json_schema_extra={"remove_from_wildcard": True},
         ),
     ]
-    study_parent_part: Annotated[StudyParentPart | None, Field(nullable=True)] = None
-    study_subpart_uids: Annotated[list[str], Field()]
+    study_parent_part: Annotated[
+        StudyParentPart | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    study_subpart_uids: list[str]
     possible_actions: Annotated[
         list[str],
         Field(
@@ -1362,7 +1490,8 @@ class CompactStudy(BaseModel):
         ),
     ]
     current_metadata: Annotated[
-        CompactStudyMetadataJsonModel | None, Field(nullable=True)
+        CompactStudyMetadataJsonModel | None,
+        Field(json_schema_extra={"nullable": True}),
     ] = None
 
     @classmethod
@@ -1401,9 +1530,9 @@ class Study(BaseModel):
     uid: Annotated[str, Field(description="The unique id of the study.")]
     study_parent_part: Annotated[
         StudyParentPart | None,
-        Field(nullable=True),
+        Field(json_schema_extra={"nullable": True}),
     ]
-    study_subpart_uids: Annotated[list[str], Field()]
+    study_subpart_uids: list[str]
     possible_actions: Annotated[
         list[str],
         Field(
@@ -1413,9 +1542,9 @@ class Study(BaseModel):
             )
         ),
     ]
-    current_metadata: Annotated[StudyMetadataJsonModel | None, Field(nullable=True)] = (
-        None
-    )
+    current_metadata: Annotated[
+        StudyMetadataJsonModel | None, Field(json_schema_extra={"nullable": True})
+    ] = None
 
     @classmethod
     def from_study_definition_ar(
@@ -1484,20 +1613,48 @@ class Study(BaseModel):
         return study
 
 
-class StudyCreateInput(PostInputModel):
-    study_number: Annotated[str | None, Field()]
+class StudyStructureStatistics(BaseModel):
 
-    study_acronym: Annotated[str | None, Field()]
+    arm_count: Annotated[int, Field(description="Number of connected arms")]
+    branch_count: Annotated[int, Field(description="Number of connected branches")]
+    cohort_count: Annotated[int, Field(description="Number of connected cohorts")]
+    element_count: Annotated[int, Field(description="Number of connected elements")]
+    epoch_count: Annotated[int, Field(description="Number of connected epochs")]
+    epoch_footnote_count: Annotated[
+        int, Field(description="Number of connected footnotes (epoch level)")
+    ]
+    visit_count: Annotated[int, Field(description="Number of connected visits")]
+    visit_footnote_count: Annotated[
+        int, Field(description="Number of connected footnotes (visit level)")
+    ]
+
+
+class StudyCreateInput(PostInputModel):
+    study_number: str | None = None
+
+    study_acronym: str | None = None
 
     project_number: Annotated[str, Field(min_length=1)]
 
-    description: Annotated[str | None, Field()]
+    description: str | None = None
+
+
+class StudyCloneInput(StudyCreateInput):
+    copy_study_arm: bool = False
+    copy_study_branch_arm: bool = False
+    copy_study_cohort: bool = False
+    copy_study_element: bool = False
+    copy_study_visit: bool = False
+    copy_study_visits_study_footnote: bool = False
+    copy_study_epoch: bool = False
+    copy_study_epochs_study_footnote: bool = False
+    copy_study_design_matrix: bool = False
 
 
 class StudySubpartCreateInput(PostInputModel):
     study_subpart_acronym: Annotated[str, Field(min_length=1)]
 
-    description: Annotated[str | None, Field()]
+    description: str | None = None
 
     study_parent_part_uid: Annotated[str, Field(min_length=1)]
 
@@ -1519,7 +1676,10 @@ class StudyFieldAuditTrailAction(BaseModel):
 
     before_value: Annotated[
         SimpleTermModel | None,
-        Field(description="The value of the field before the edit.", nullable=True),
+        Field(
+            description="The value of the field before the edit.",
+            json_schema_extra={"nullable": True},
+        ),
     ] = None
 
     after_value: Annotated[
@@ -1536,19 +1696,29 @@ class StudyFieldAuditTrailAction(BaseModel):
 
 class StudyFieldAuditTrailEntry(BaseModel):
     study_uid: Annotated[
-        str | None, Field(description="The unique id of the study.", nullable=True)
+        str | None,
+        Field(
+            description="The unique id of the study.",
+            json_schema_extra={"nullable": True},
+        ),
     ] = None
-    author_username: Annotated[str | None, Field(nullable=True)] = None
+    author_username: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
 
     date: Annotated[
-        str | None, Field(description="The date that the edit was made.", nullable=True)
+        str | None,
+        Field(
+            description="The date that the edit was made.",
+            json_schema_extra={"nullable": True},
+        ),
     ] = None
 
     actions: Annotated[
         list[StudyFieldAuditTrailAction] | None,
         Field(
             description="The actions that took place as part of this audit trial entry.",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
 
@@ -1584,15 +1754,33 @@ class StudyFieldAuditTrailEntry(BaseModel):
 
 class StudyProtocolTitle(BaseModel):
     study_uid: Annotated[
-        str | None, Field(description="The unique id of the study.", nullable=True)
+        str | None,
+        Field(
+            description="The unique id of the study.",
+            json_schema_extra={"nullable": True},
+        ),
     ] = None
-    study_title: Annotated[str | None, Field(nullable=True)] = None
-    study_short_title: Annotated[str | None, Field(nullable=True)] = None
-    eudract_id: Annotated[str | None, Field(nullable=True)] = None
-    universal_trial_number_utn: Annotated[str | None, Field(nullable=True)] = None
-    trial_phase_code: Annotated[SimpleTermModel | None, Field(nullable=True)] = None
-    ind_number: Annotated[str | None, Field(nullable=True)] = None
-    substance_name: Annotated[str | None, Field(nullable=True)] = None
+    study_title: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
+    study_short_title: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    eudract_id: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
+    universal_trial_number_utn: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    trial_phase_code: Annotated[
+        SimpleTermModel | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    ind_number: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
+    substance_name: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
 
     @classmethod
     def from_study_definition_ar(
@@ -1626,27 +1814,37 @@ class StudySubpartReorderingInput(PatchInputModel):
         Field(
             description="A single lowercase letter from 'a' to 'z' representing the Subpart ID.",
             max_length=1,
-            regex="[a-z]",
+            pattern="[a-z]",
         ),
     ]
 
 
 class StudySubpartAuditTrail(BaseModel):
-    subpart_uid: Annotated[str | None, Field(nullable=True)] = None
-    subpart_id: Annotated[str | None, Field(nullable=True)] = None
-    study_acronym: Annotated[str | None, Field(nullable=True)] = None
-    study_subpart_acronym: Annotated[str | None, Field(nullable=True)] = None
-    start_date: Annotated[datetime | None, Field(nullable=True)] = None
-    end_date: Annotated[datetime | None, Field(nullable=True)] = None
-    author_username: Annotated[str | None, Field(nullable=True)] = None
+    subpart_uid: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
+    subpart_id: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
+    study_acronym: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    study_subpart_acronym: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    start_date: Annotated[
+        datetime | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    end_date: Annotated[
+        datetime | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    author_username: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
     change_type: str
     changes: Annotated[
-        dict[str, bool] | None,
+        list[str],
         Field(
-            description=(
-                "Denotes whether or not there was a change in a specific field/property compared to the previous version. "
-                "The field names in this object here refer to the field names of the objective (e.g. name, start_date, ..)."
-            ),
-            nullable=True,
+            description=CHANGES_FIELD_DESC,
         ),
-    ] = None
+    ] = []

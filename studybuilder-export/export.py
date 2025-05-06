@@ -1,4 +1,6 @@
-import requests
+import ssl
+import httpx
+import httpx_auth
 from os import environ
 import os
 import logging
@@ -31,8 +33,7 @@ class StudyExporter:
         )
         self.log = logging.getLogger("studybuilder_export")
         self.api_base_url = self._read_env("API_BASE_URL")
-        api_headers = {"Accept": "application/json", "User-Agent": "studybuilder-export"}
-        self.api_headers = self._authenticate(api_headers)
+        self._create_httpx_client()
         self.verify_connection()
 
     def _read_env(self, varname):
@@ -43,42 +44,47 @@ class StudyExporter:
             raise RuntimeError(msg)
         return value
 
-    def _authenticate(self, headers):
-        """Authenticates with client secret flow and appends Authorization header the dict of API request headers"""
-        headers = headers.copy()
+    def _create_httpx_client(self):
+        """
+        Creates the HTTPX client with the appropriate authentication method
+        based on the environment variables.
+        """
         client_id = environ.get("CLIENT_ID", "")
-        api_token = environ.get("STUDYBUILDER_API_TOKEN", "")
+        scope = environ.get("SCOPE", "")
+        token_endpoint = environ.get("TOKEN_ENDPOINT", "")
+        auth_endpoint = environ.get("AUTH_ENDPOINT", "")
+        client_secret = environ.get("CLIENT_SECRET", "")
 
-        if api_token:
-            headers["Authorization"] = f"Bearer {api_token}"
-        elif client_id:
-            self.log.info("CLIENT_ID provided, enabling authentication")
-            client_secret = self._read_env('CLIENT_SECRET')
-            token_endpoint = self._read_env('TOKEN_ENDPOINT')
-            scope = self._read_env('SCOPE')
-            response = requests.post(token_endpoint,
-                                     data={
-                                         'client_id': client_id,
-                                         'client_secret': client_secret,
-                                         'grant_type': 'client_credentials',
-                                         'scope': scope,
-                                     })
-            response.raise_for_status()
-            payload = response.json()
-            access_token = payload.get("access_token")
-            if not access_token:
-                msg = "missing access token from token payload"
-                self.log.error(msg)
-                raise RuntimeError(msg)
-            token_type = payload.get("token_type")
-            if not access_token:
-                msg = "missing token type from token payload"
-                self.log.error(msg)
-                raise RuntimeError(msg)
-            headers['Authorization'] = f"{token_type} {access_token}"
+        # HTTPX doesn't automatically use the REQUESTS_CA_BUNDLE environment variable
+        ca_bundle = os.environ.get("REQUESTS_CA_BUNDLE", "")
+        if ca_bundle:
+            context = ssl.create_default_context(
+                cafile=ca_bundle
+            )
         else:
-            self.log.info("No CLIENT_ID or STUDYBUILDER_API_TOKEN provided, running without authentication")
-        return headers
+            context = None
+
+        if not client_id:
+            self.log.info("No CLIENT_ID provided, running without authentication")
+            auth = None
+        elif client_secret:
+            self.log.info("CLIENT_ID and CLIENT_SECRET provided, enabling authentication")
+            auth = httpx_auth.OAuth2ClientCredentials(
+                token_url=token_endpoint,
+                client_id=client_id,
+                client_secret=client_secret,
+                scope=scope,
+            )
+        else:
+            self.log.info("CLIENT_ID provided without CLIENT_SECRET, using interactive authentication")
+            auth = httpx_auth.OAuth2AuthorizationCodePKCE(
+                authorization_url=auth_endpoint,
+                token_url=token_endpoint,
+                client_id=client_id,
+                scope=scope,
+            )
+        self.client = httpx.Client(base_url=self.api_base_url, auth=auth, verify=context, timeout=60)
+
 
     # ---------------------------------------------------------------
     # Verify connection to api (and database)
@@ -88,9 +94,7 @@ class StudyExporter:
     # TODO Replace with api health check resource ...
     def verify_connection(self):
         try:
-            response = requests.get(
-                self.api_base_url + "/openapi.json", headers=self.api_headers
-            )
+            response = self.client.get("/libraries")
             response.raise_for_status()
             self.log.info(f"Connected to api at {self.api_base_url}")
         except Exception as e:
@@ -109,10 +113,8 @@ class StudyExporter:
                 if key not in params:
                     params[key] = value
 
-        response = requests.get(
-            self.api_base_url + path, params=params, headers=self.api_headers
-        )
-        if response.ok:
+        response = self.client.get(path, params=params)
+        if response.is_success:
             self.log.info(f"Successfully fetched data from: {path}")
             data = response.json()
             if items_only and isinstance(data, dict) and "items" in data.keys():
@@ -147,7 +149,7 @@ class StudyExporter:
         return all_data
 
     def get_dictionary_uid(self, library):
-        params = {"library": library}
+        params = {"library_name": library}
         data = self.get_from_api(f"/dictionaries/codelists", params=params)
         if data is None:
             return None
@@ -236,7 +238,7 @@ syntax_pre_instance_endpoints = [
 sponsor_ct_extensions = [
     {
         "endpoint": "ct/terms",
-        "parameters": {"codelist_name": "Unit", "library": "Sponsor"},
+        "parameters": {"codelist_name": "Unit", "library_name": "Sponsor"},
         "page_size": None,
     }
 ]
@@ -249,32 +251,32 @@ concept_endpoints = [
     },
     {
         "endpoint": "concepts/compounds",
-        "parameters": {"library": "Sponsor"},
+        "parameters": {"library_name": "Sponsor"},
         "page_size": None,
     },
     {
         "endpoint": "concepts/compound-aliases",
-        "parameters": {"library": "Sponsor"},
+        "parameters": {"library_name": "Sponsor"},
         "page_size": None,
     },
     {
         "endpoint": "concepts/activities/activity-instances",
-        "parameters": {"library": "Sponsor"},
+        "parameters": {"library_name": "Sponsor"},
         "page_size": 100,
     },
     {
         "endpoint": "concepts/activities/activity-groups",
-        "parameters": {"library": "Sponsor"},
+        "parameters": {"library_name": "Sponsor"},
         "page_size": None,
     },
     {
         "endpoint": "concepts/activities/activity-sub-groups",
-        "parameters": {"library": "Sponsor"},
+        "parameters": {"library_name": "Sponsor"},
         "page_size": None,
     },
     {
         "endpoint": "concepts/activities/activities",
-        "parameters": {"library": "Sponsor"},
+        "parameters": {"library_name": "Sponsor"},
         "page_size": 100,
     },
     {
@@ -352,12 +354,12 @@ concept_endpoints = [
 activity_endpoints = [
     {
         "endpoint": "activity-item-classes",
-        "parameters": {"library": "Sponsor"},
+        "parameters": {"library_name": "Sponsor"},
         "page_size": 100,
     },
     {
         "endpoint": "activity-instance-classes",
-        "parameters": {"library": "Sponsor"},
+        "parameters": {"library_name": "Sponsor"},
         "page_size": 100,
     }
 ]

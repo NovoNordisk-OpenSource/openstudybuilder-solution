@@ -65,6 +65,7 @@ const knownCodelists = {
   elementTypes: { attribute: 'codelist_name', value: 'Element Type' },
   language: { attribute: 'codelist_name', value: 'Language' },
   sdtmDomainAbbreviation: { attribute: 'codelist_uid', value: 'C66734' },
+  sendDomainAbbreviation: { attribute: 'codelist_uid', value: 'C111113' },
   originType: { attribute: 'codelist_uid', value: 'C170449' },
   dataType: { attribute: 'codelist_name', value: 'Data type' },
   frequency: { attribute: 'codelist_uid', value: 'C71113' },

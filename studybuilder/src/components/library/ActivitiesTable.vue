@@ -64,7 +64,7 @@
           </td>
         </tr>
       </template>
-      <template #[`item.possible_actions`]="{ item }">
+      <template #[`item.actions`]="{ item }">
         <div class="pr-0 mr-0">
           <ActionsMenu :actions="actions" :item="item" :source="source" />
         </div>
@@ -84,9 +84,41 @@
             {{ item.name }}
           </router-link>
         </template>
-        <div v-else :class="isExpand() ? 'font-weight-bold' : ''">
-          {{ item.name }}
-        </div>
+        <template v-else-if="source === 'activity-sub-groups'">
+          <template v-if="getActivitySubgroupUID(item)">
+            <router-link
+              :to="{
+                name: 'SubgroupOverview',
+                params: { id: getActivitySubgroupUID(item) },
+              }"
+            >
+              <span v-html="subGroupsDisplay(item)"></span>
+            </router-link>
+          </template>
+          <template v-else>
+            <span v-html="subGroupsDisplay(item)"></span>
+          </template>
+        </template>
+        <template v-else-if="source === 'activity-groups'">
+          <template v-if="getActivityGroupUID(item)">
+            <router-link
+              :to="{
+                name: 'GroupOverview',
+                params: { id: getActivityGroupUID(item) },
+              }"
+            >
+              <span v-html="groupsDisplay(item)"></span>
+            </router-link>
+          </template>
+          <template v-else>
+            <span v-html="groupsDisplay(item)"></span>
+          </template>
+        </template>
+        <template v-else>
+          <div :class="isExpand() ? 'font-weight-bold' : ''">
+            {{ item.name }}
+          </div>
+        </template>
       </template>
       <template #[`item.nci_concept_id`]="{ item }">
         <NCIConceptLink :concept-id="item.nci_concept_id" />
@@ -101,13 +133,141 @@
         {{ $filters.date(item.start_date) }}
       </template>
       <template #[`item.activity_groups`]="{ item }">
-        {{ $filters.names(item.activity_groups) }}
+        <div
+          v-if="
+            Array.isArray(item.activity_groups) && item.activity_groups.length
+          "
+        >
+          <template v-if="item.activity_groups.length === 1">
+            <router-link
+              :to="{
+                name: 'GroupOverview',
+                params: { id: item.activity_groups[0].uid },
+              }"
+            >
+              {{ item.activity_groups[0].name }}
+            </router-link>
+          </template>
+
+          <template v-else>
+            <div
+              v-for="group in item.activity_groups"
+              :key="group.uid"
+              style="margin-bottom: 4px"
+            >
+              <span>&#9679; </span>
+              <router-link
+                :to="{ name: 'GroupOverview', params: { id: group.uid } }"
+              >
+                {{ group.name }}
+              </router-link>
+            </div>
+          </template>
+        </div>
       </template>
       <template #[`item.activity_group.name`]="{ item }">
-        <div v-html="groupsDisplay(item)" />
+        <div v-if="item.activity_group && item.activity_group.name">
+          <div v-if="Array.isArray(item.activity_group.name)">
+            <template v-if="item.activity_group.name.length === 1">
+              <router-link
+                :to="{
+                  name: 'GroupOverview',
+                  params: { id: getActivityGroupUID(item) },
+                }"
+              >
+                {{ item.activity_group.name[0] }}
+              </router-link>
+            </template>
+            <template v-else>
+              <div
+                v-for="(gName, idx) in item.activity_group.name"
+                :key="idx"
+                style="margin-bottom: 4px"
+              >
+                <span>&#9679; </span>
+                <router-link
+                  :to="{
+                    name: 'GroupOverview',
+                    params: { id: getActivityGroupUID(item) },
+                  }"
+                >
+                  {{ gName }}
+                </router-link>
+              </div>
+            </template>
+          </div>
+
+          <div v-else>
+            <router-link
+              :to="{
+                name: 'GroupOverview',
+                params: { id: getActivityGroupUID(item) },
+              }"
+            >
+              {{ item.activity_group.name }}
+            </router-link>
+          </div>
+        </div>
       </template>
+
       <template #[`item.activity_subgroup.name`]="{ item }">
-        <div v-html="subGroupsDisplay(item)" />
+        <div v-if="item.activity_subgroup && item.activity_subgroup.name">
+          <div v-if="Array.isArray(item.activity_subgroup.name)">
+            <template v-if="item.activity_subgroup.name.length === 1">
+              <router-link
+                :to="{
+                  name: 'SubgroupOverview',
+                  params: { id: getActivitySubgroupUID(item) },
+                }"
+              >
+                {{ item.activity_subgroup.name[0] }}
+              </router-link>
+            </template>
+            <template v-else>
+              <div
+                v-for="(subName, idx) in item.activity_subgroup.name"
+                :key="idx"
+                style="margin-bottom: 4px"
+              >
+                <span>&#9679; </span>
+                <router-link
+                  :to="{
+                    name: 'SubgroupOverview',
+                    params: { id: getActivitySubgroupUID(item) },
+                  }"
+                >
+                  {{ subName }}
+                </router-link>
+              </div>
+            </template>
+          </div>
+
+          <div v-else>
+            <router-link
+              :to="{
+                name: 'SubgroupOverview',
+                params: { id: getActivitySubgroupUID(item) },
+              }"
+            >
+              {{ item.activity_subgroup.name }}
+            </router-link>
+          </div>
+        </div>
+      </template>
+      <template #[`item.activity_name`]="{ item }">
+        <template v-if="item.activities && item.activities.length > 0">
+          <router-link
+            :to="{
+              name: 'ActivityOverview',
+              params: { id: item.activities[0].uid },
+            }"
+          >
+            {{ item.activity_name }}
+          </router-link>
+        </template>
+        <template v-else>
+          {{ item.activity_name }}
+        </template>
       </template>
       <template #[`item.activities.name`]="{ item }">
         {{ activitiesDisplay(item) }}
@@ -286,9 +446,22 @@
       content-class="fullscreen-dialog"
     >
       <ActivitiesInstantiationsForm
+        v-if="!newWizardStepper || activeItem"
         :edited-activity="activeItem"
         @close="closeForm"
       />
+      <Suspense v-else>
+        <ActivityInstanceForm
+          :activity-instance-uid="activeItem?.uid"
+          @close="closeForm"
+        />
+        <template #fallback>
+          <v-skeleton-loader
+            class="fullscreen-dialog"
+            type="card"
+          ></v-skeleton-loader>
+        </template>
+      </Suspense>
     </v-dialog>
     <v-dialog
       v-model="showSponsorFromRequestedForm"
@@ -329,6 +502,7 @@ import ActivitiesForm from '@/components/library/ActivitiesForm.vue'
 import RequestedActivitiesForm from '@/components/library/RequestedActivitiesForm.vue'
 import ActivitiesGroupsForm from '@/components/library/ActivitiesGroupsForm.vue'
 import ActivitiesInstantiationsForm from '@/components/library/ActivitiesInstantiationsForm.vue'
+import ActivityInstanceForm from '@/components/library/ActivityInstanceForm.vue'
 import ActivitiesCreateSponsorFromRequestedForm from '@/components/library/ActivitiesCreateSponsorFromRequestedForm.vue'
 import libConstants from '@/constants/libraries'
 import { useAccessGuard } from '@/composables/accessGuard'
@@ -337,8 +511,10 @@ import filteringParameters from '@/utils/filteringParameters'
 import statuses from '@/constants/statuses'
 import _isEmpty from 'lodash/isEmpty'
 import { useLibraryActivitiesStore } from '@/stores/library-activities'
+import { useFeatureFlagsStore } from '@/stores/feature-flags'
 import { computed, inject, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import filters from '@/filters'
 
 const props = defineProps({
   source: {
@@ -354,6 +530,7 @@ const props = defineProps({
 const { t } = useI18n()
 const accessGuard = useAccessGuard()
 const activitiesStore = useLibraryActivitiesStore()
+const featureFlagsStore = useFeatureFlagsStore()
 const eventBusEmit = inject('eventBusEmit')
 const roles = inject('roles')
 const tableRef = ref()
@@ -431,21 +608,29 @@ const actions = [
 ]
 const activities = ref([])
 const activitiesHeaders = [
-  { title: '', key: 'possible_actions', width: '1%', noFilter: true },
+  { title: '', key: 'actions', width: '1%', noFilter: true },
   { title: t('_global.library'), key: 'library_name' },
   {
     title: t('ActivityTable.activity_group'),
     key: 'activity_group.name',
     externalFilterSource: 'concepts/activities/activity-groups$name',
     width: '15%',
-    exludeFromHeader: ['is_data_collected', 'is_used_by_legacy_instances'],
+    exludeFromHeader: [
+      'is_data_collected',
+      'is_used_by_legacy_instances',
+      'synonyms',
+    ],
   },
   {
     title: t('ActivityTable.activity_subgroup'),
     key: 'activity_subgroup.name',
     externalFilterSource: 'concepts/activities/activity-sub-groups$name',
     width: '15%',
-    exludeFromHeader: ['is_data_collected', 'is_used_by_legacy_instances'],
+    exludeFromHeader: [
+      'is_data_collected',
+      'is_used_by_legacy_instances',
+      'synonyms',
+    ],
   },
   {
     title: t('ActivityTable.activity_name'),
@@ -483,12 +668,29 @@ const activitiesHeaders = [
   { title: t('_global.version'), key: 'version' },
 ]
 const instantiationsHeaders = [
-  { title: '', key: 'possible_actions', width: '1%', noFilter: true },
+  { title: '', key: 'actions', width: '1%', noFilter: true },
   { title: t('_global.library'), key: 'library_name' },
-  { title: t('ActivityTable.activity_group'), key: 'activity_group.name' },
+  {
+    title: t('ActivityTable.activity_group'),
+    key: 'activity_group.name',
+    externalFilterSource: 'concepts/activities/activity-groups$name',
+    width: '15%',
+    exludeFromHeader: [
+      'is_data_collected',
+      'is_used_by_legacy_instances',
+      'synonyms',
+    ],
+  },
   {
     title: t('ActivityTable.activity_subgroup'),
     key: 'activity_subgroup.name',
+    externalFilterSource: 'concepts/activities/activity-sub-groups$name',
+    width: '15%',
+    exludeFromHeader: [
+      'is_data_collected',
+      'is_used_by_legacy_instances',
+      'synonyms',
+    ],
   },
   {
     title: t('ActivityTable.activity'),
@@ -547,16 +749,18 @@ const groupsHeaders = [
   { title: t('_global.version'), key: 'version' },
 ]
 const requestedHeaders = [
-  { title: '', key: 'possible_actions', width: '1%' },
+  { title: '', key: 'actions', width: '1%' },
   {
     title: t('ActivityTable.activity_group'),
     key: 'activity_group.name',
     externalFilterSource: 'concepts/activities/activity-groups$name',
+    exludeFromHeader: ['request_rationale'],
   },
   {
     title: t('ActivityTable.activity_subgroup'),
     key: 'activity_subgroup.name',
     externalFilterSource: 'concepts/activities/activity-sub-groups$name',
+    exludeFromHeader: ['request_rationale'],
   },
   {
     title: t('ActivityTable.activity'),
@@ -580,7 +784,7 @@ const requestedHeaders = [
   { title: t('_global.version'), key: 'version' },
 ]
 const activityGroupHeaders = [
-  { title: '', key: 'possible_actions', width: '1%' },
+  { title: '', key: 'actions', width: '1%' },
   { title: t('ActivityTable.activity_group'), key: 'name' },
   {
     title: t('ActivityTable.sentence_case_name'),
@@ -593,13 +797,19 @@ const activityGroupHeaders = [
   { title: t('_global.version'), key: 'version' },
 ]
 const activitySubgroupHeaders = [
-  { title: '', key: 'possible_actions', width: '1%' },
+  { title: '', key: 'actions', width: '1%' },
   {
     title: t('ActivityTable.activity_group'),
     key: 'activity_groups',
+    historyFilter: filters.names,
     externalFilterSource: 'concepts/activities/activity-groups$name',
   },
-  { title: t('ActivityTable.activity_subgroup'), key: 'name' },
+  {
+    title: t('ActivityTable.activity_subgroup'),
+    key: 'name',
+    externalFilterSource: 'concepts/activities/activity-sub-groups$name',
+    value: 'activity_subgroup.name',
+  },
   {
     title: t('ActivityTable.sentence_case_name'),
     key: 'name_sentence_case',
@@ -612,7 +822,7 @@ const activitySubgroupHeaders = [
 ]
 const groupMode = ref(false)
 const historyItems = ref([])
-const historyExcludedHeaders = ['possible_actions']
+const historyExcludedHeaders = ['actions']
 const total = ref(0)
 const savedFilters = ref('')
 const showActivityForm = ref(false)
@@ -678,9 +888,45 @@ const currentHeaders = computed(() => {
   return []
 })
 
+const newWizardStepper = computed(() => {
+  return featureFlagsStore.getFeatureFlag(
+    'new_activity_instance_wizard_stepper'
+  )
+})
+
 onMounted(() => {
   activitiesStore.getGroupsAndSubgroups()
 })
+
+function getActivitySubgroupUID(item) {
+  if (item.activity_subgroup?.uid) {
+    return item.activity_subgroup.uid
+  }
+
+  if (Array.isArray(item.activity_groupings)) {
+    for (const grouping of item.activity_groupings) {
+      if (grouping.activity_subgroup_uid) {
+        return grouping.activity_subgroup_uid
+      }
+    }
+  }
+  return null
+}
+
+function getActivityGroupUID(item) {
+  if (item.activity_group?.uid) {
+    return item.activity_group.uid
+  }
+
+  if (Array.isArray(item.activity_groupings)) {
+    for (const grouping of item.activity_groupings) {
+      if (grouping.activity_group_uid) {
+        return grouping.activity_group_uid
+      }
+    }
+  }
+  return null
+}
 
 function transformItems(items) {
   const activities = []
@@ -708,6 +954,17 @@ function transformItems(items) {
         })
       }
     }
+  } else if (props.source === 'activity-sub-groups') {
+    for (const item of items) {
+      activities.push({
+        activity_subgroup: {
+          name: item.name,
+          uid: item.uid,
+        },
+        item_key: item.uid,
+        ...item,
+      })
+    }
   } else if (props.source === 'activity-instances') {
     for (const item of items) {
       if (item.activity_groupings.length > 0) {
@@ -720,10 +977,16 @@ function transformItems(items) {
       item.item_key = item.uid
       activities.push(item)
     }
-  } else if (
-    props.source === 'activity-groups' ||
-    props.source === 'activities-by-grouping'
-  ) {
+  } else if (props.source === 'activity-groups') {
+    for (const item of items) {
+      item.activity_group = {
+        name: item.name,
+        uid: item.uid,
+      }
+      item.item_key = item.uid
+      activities.push(item)
+    }
+  } else if (props.source === 'activities-by-grouping') {
     for (const item of items) {
       item.subgroups = []
       item.subgroupsLoading = false
@@ -767,10 +1030,11 @@ function fetchActivities(filters, options, filtersUpdated) {
     params.library_name = libConstants.LIBRARY_REQUESTED
   }
   if (
-    savedFilters.value &&
-    savedFilters.value !== undefined &&
-    savedFilters.value !== '{}' &&
-    props.source === 'activities'
+    (savedFilters.value &&
+      savedFilters.value !== undefined &&
+      savedFilters.value !== '{}' &&
+      props.source === 'activities') ||
+    props.source === 'activity-instances'
   ) {
     const filtersObj = JSON.parse(savedFilters.value)
     if (filtersObj['activity_group.name']) {
@@ -794,19 +1058,6 @@ function fetchActivities(filters, options, filtersUpdated) {
       })
       delete filtersObj.name
     }
-    if (
-      Object.keys(filtersObj).length !== 0 &&
-      filtersObj.constructor === Object
-    ) {
-      params.filters = JSON.stringify(filtersObj)
-    }
-  } else if (
-    savedFilters.value &&
-    savedFilters.value !== undefined &&
-    savedFilters.value !== '{}' &&
-    props.source === 'activity-instances'
-  ) {
-    const filtersObj = JSON.parse(savedFilters.value)
     if (filtersObj['activities.name']) {
       params.activity_names = []
       filtersObj['activities.name'].v.forEach((value) => {
@@ -934,18 +1185,6 @@ function isExpand() {
   return props.source === 'activities-by-grouping'
 }
 
-function subGroupsDisplay(item) {
-  if (!item.activity_subgroup || !item.activity_subgroup.name) {
-    return '';
-  }
-
-  if (Array.isArray(item.activity_subgroup.name)) {
-    return item.activity_subgroup.name.map((name) => `&#9679; ${name}`).join('</br>');
-  }
-
-  return `&#9679; ${item.activity_subgroup.name}`;
-}
-
 function synonymsDisplay(item) {
   let display = ''
   if (!item) {
@@ -960,14 +1199,38 @@ function synonymsDisplay(item) {
 
 function groupsDisplay(item) {
   if (!item.activity_group || !item.activity_group.name) {
-    return '';
+    return ''
   }
 
-  if (Array.isArray(item.activity_group.name)) {
-    return item.activity_group.name.map((name) => `&#9679; ${name}`).join('</br>');
+  const groupName = item.activity_group.name
+
+  if (Array.isArray(groupName)) {
+    if (groupName.length === 1) {
+      return groupName[0]
+    } else {
+      return groupName.map((name) => `&#9679; ${name}`).join('</br>')
+    }
   }
 
-  return `&#9679; ${item.activity_group.name}`;
+  return groupName
+}
+
+function subGroupsDisplay(item) {
+  if (!item.activity_subgroup || !item.activity_subgroup.name) {
+    return ''
+  }
+
+  const subName = item.activity_subgroup.name
+
+  if (Array.isArray(subName)) {
+    if (subName.length === 1) {
+      return subName[0]
+    } else {
+      return subName.map((name) => `&#9679; ${name}`).join('</br>')
+    }
+  }
+
+  return subName
 }
 
 function activitiesDisplay(item) {
@@ -1041,7 +1304,7 @@ function newItemVersion(item, source) {
 
 function showForm() {
   switch (props.source) {
-      case 'activities':
+    case 'activities':
       if (props.requested) {
         showRequestedActivityForm.value = true
       } else {

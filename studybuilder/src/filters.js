@@ -35,8 +35,8 @@ export default {
   /*
    ** Display order as a letter, eg. 1 -> a, 2 ->b. Numbers after 26 (letter z) are converted to z1, z2...
    */
-  letteredOrder(value) {
-    return dataFormating.letteredOrder(value)
+  footnoteSymbol(value) {
+    return dataFormating.footnoteSymbol(value)
   },
 
   /*
@@ -101,4 +101,4 @@ export default {
 // /*
 // ** Display order as a letter, eg. 1 -> a, 2 ->b. Numbers after 26 (letter z) are converted to z1, z2...
 // */
-// Vue.filter('letteredOrder', dataFormating.letteredOrder)
+// Vue.filter('footnoteSymbol', dataFormating.footnoteSymbol)

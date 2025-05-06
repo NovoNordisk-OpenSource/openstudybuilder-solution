@@ -1,8 +1,7 @@
 from typing import Annotated, Generic, TypeVar
 
 from fastapi import Request
-from pydantic import Field
-from pydantic.generics import GenericModel
+from pydantic import BaseModel, Field
 from requests.utils import requote_uri
 
 from consumer_api.shared.common import urlencode_link
@@ -10,7 +9,7 @@ from consumer_api.shared.common import urlencode_link
 T = TypeVar("T")
 
 
-class PaginatedResponse(GenericModel, Generic[T]):
+class PaginatedResponse(BaseModel, Generic[T]):
     """
     Paginated response model
     """
@@ -54,6 +53,7 @@ class PaginatedResponse(GenericModel, Generic[T]):
         prev_link = f"{path}?{query_params}sort_by={sort_by}&sort_order={sort_order}&page_size={page_size}&page_number={prev_page_number}"
         next_link = f"{path}?{query_params}sort_by={sort_by}&sort_order={sort_order}&page_size={page_size}&page_number={page_number + 1}"
 
+        # pylint: disable=kwarg-superseded-by-positional-arg
         return cls(
             self=urlencode_link(self_link),
             prev=urlencode_link(prev_link),

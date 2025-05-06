@@ -176,9 +176,7 @@ export default {
     },
   },
   mounted() {
-    this.studiesCompoundsStore.fetchStudyCompoundDosings(
-      this.selectedStudy.uid
-    )
+    this.studiesCompoundsStore.fetchStudyCompoundDosings(this.selectedStudy.uid)
   },
   methods: {
     async deleteStudyCompoundDosing(studyCompoundDosing) {

@@ -33,207 +33,215 @@
   </v-menu>
 </template>
 
-<script>
+<script setup>
 import { DateTime } from 'luxon'
 import ExcelJS from 'exceljs'
 import repository from '@/api/repository'
 import exportLoader from '@/utils/exportLoader'
+import { useStudiesGeneralStore } from '@/stores/studies-general'
 
-export default {
-  props: {
-    objectLabel: {
-      type: String,
-      default: '',
-    },
-    dataUrl: {
-      type: String,
-      default: '',
-    },
-    dataUrlParams: {
-      type: Object,
-      default: () => {},
-    },
-    headers: {
-      type: Array,
-      required: false,
-      default: () => [],
-    },
-    items: {
-      type: Array,
-      required: false,
-      default: () => [],
-    },
-    filters: {
-      type: String,
-      required: false,
-      default: null,
-    },
+const emit = defineEmits(['export'])
+const studiesGeneralStore = useStudiesGeneralStore()
+
+const props = defineProps({
+  objectLabel: {
+    type: String,
+    default: '',
   },
-  emits: ['export'],
-  data() {
-    return {
-      downloadFormats: [
-        { name: 'CSV', mediaType: 'text/csv', extension: 'csv' },
-        { name: 'JSON', mediaType: 'application/json', extension: 'json' },
-        { name: 'XML', mediaType: 'text/xml', extension: 'xml' },
-        {
-          name: 'EXCEL',
-          mediaType:
-            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-          extension: 'xlsx',
-        },
-      ],
+  dataUrl: {
+    type: String,
+    default: '',
+  },
+  dataUrlParams: {
+    type: Object,
+    default: () => {},
+  },
+  headers: {
+    type: Array,
+    required: false,
+    default: () => [],
+  },
+  items: {
+    type: Array,
+    required: false,
+    default: () => [],
+  },
+  filters: {
+    type: String,
+    required: false,
+    default: null,
+  },
+})
+
+const downloadFormats = [
+  { name: 'CSV', mediaType: 'text/csv', extension: 'csv' },
+  { name: 'JSON', mediaType: 'application/json', extension: 'json' },
+  { name: 'XML', mediaType: 'text/xml', extension: 'xml' },
+  {
+    name: 'EXCEL',
+    mediaType:
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    extension: 'xlsx',
+  },
+]
+
+function createDownloadLink(content, format) {
+  const today = DateTime.local().toFormat('yyyy-MM-dd')
+  let fileName = `${props.objectLabel} ${today}.${format.extension}`
+  if (window.location.pathname.startsWith('/studies')) {
+    fileName =
+      `${studiesGeneralStore.selectedStudy.current_metadata.identification_metadata.study_id} ` +
+      fileName
+  }
+  exportLoader.downloadFile(content, format.mediaType, fileName)
+}
+
+function getValue(header, item) {
+  let value = item
+  header.key.split('.').forEach((part) => {
+    if (value !== undefined && value !== null) {
+      value = value[part]
     }
-  },
-  methods: {
-    createDownloadLink(content, format) {
-      const today = DateTime.local().toFormat('yyyyMMdd')
-      const fileName = `MDRSB_Library_${this.objectLabel}_${today}.${format.extension}`
-      exportLoader.downloadFile(content, format.mediaType, fileName)
-    },
-    getValue(header, item) {
-      let value = item
-      header.key.split('.').forEach((part) => {
-        if (value !== undefined && value !== null) {
-          value = value[part]
-        }
-      })
-      if (value !== undefined) {
-        if (typeof value === 'string') {
-          return value.replace(/[\n]/g, '')
-        }
-        return value
-      }
-      return ''
-    },
-    convertHeaderLabelToName(label) {
-      return label.toLowerCase().replace(/\s/g, '-')
-    },
-    exportToCSV() {
-      const delimiter = ';'
-      let csv =
-        this.headers
-          .filter((header) => header.key !== 'actions')
-          .map((header) => header.title)
-          .join(delimiter) + '\n'
-      this.items.forEach((item) => {
-        let row = ''
-        this.headers.forEach((header) => {
-          if (header.key === 'actions') {
-            return
-          }
-          if (row !== '') {
-            row += delimiter
-          }
-          const value = this.getValue(header, item)
-          if (value !== undefined) {
-            row += `"${value}"`
-          }
-        })
-        csv += row + '\n'
-      })
-      return csv
-    },
-    async exportToXSLX() {
-      const workbook = new ExcelJS.Workbook()
-      const sheet = workbook.addWorksheet('Sheet 1')
-      const headers = this.headers
-        .filter((header) => header.key !== 'actions')
-        .map((header) => {
-          return { header: header.title, key: header.key }
-        })
-      const rows = []
-      sheet.columns = headers
-      this.items.forEach((item) => {
-        const row = []
-        this.headers.forEach((header) => {
-          if (header.key === 'actions') {
-            return
-          }
-          row.push(this.getValue(header, item))
-        })
-        rows.push(row)
-      })
-      sheet.addRows(rows)
-      return await workbook.xlsx.writeBuffer()
-    },
-    /*
-     ** Manual XML export.
-     ** We could have used a DOM element and then use XMLSerializer() but the output is not formatted properly so...
-     */
-    exportToXML() {
-      let result = '<items>\n'
-      this.items.forEach((item) => {
-        result += '  <item>\n'
-        this.headers.forEach((header) => {
-          if (header.key === 'actions') {
-            return
-          }
-          const value = this.getValue(header, item)
-          const name = this.convertHeaderLabelToName(header.title)
-          result += `    <${name}>${value}</${name}>\n`
-        })
-        result += '  </item>\n'
-      })
-      result += '</items>\n'
-      return result
-    },
-    exportToJSON() {
-      const result = []
-      this.items.forEach((item) => {
-        const newItem = {}
-        this.headers.forEach((header) => {
-          if (header.key === 'actions') {
-            return
-          }
-          const value = this.getValue(header, item)
-          const name = this.convertHeaderLabelToName(header.title)
-          newItem[name] = value
-        })
-        result.push(newItem)
-      })
-      return JSON.stringify(result)
-    },
-    async localExport(format) {
-      let content = ''
-      if (format.name === 'CSV') {
-        content = this.exportToCSV()
-      } else if (format.name === 'EXCEL') {
-        content = await this.exportToXSLX()
-      } else if (format.name === 'XML') {
-        content = this.exportToXML()
-      } else if (format.name === 'JSON') {
-        content = this.exportToJSON()
-      }
-      this.createDownloadLink(content, format)
-    },
-    async exportContent(format) {
-      const result = await new Promise((resolve) =>
-        this.$emit('export', resolve)
-      )
-      if (!result) {
-        return
-      }
-      if (this.items.length) {
-        this.localExport(format)
-        return
-      }
+  })
+  if (value !== undefined) {
+    if (typeof value === 'string') {
+      return value.replace(/[\n]/g, '')
+    }
+    return value
+  }
+  return ''
+}
 
-      const headers = {}
-      headers.Accept = format.mediaType
-      const params = { ...this.dataUrlParams }
-      if (params.page_size === undefined) {
-        params.page_size = 0
+function convertHeaderLabelToName(label) {
+  return label.toLowerCase().replace(/\s/g, '-')
+}
+
+function exportToCSV() {
+  const delimiter = ';'
+  let csv =
+    props.headers
+      .filter((header) => header.key !== 'actions')
+      .map((header) => header.title)
+      .join(delimiter) + '\n'
+  props.items.forEach((item) => {
+    let row = ''
+    props.headers.forEach((header) => {
+      if (header.key === 'actions') {
+        return
       }
-      if (this.filters) {
-        params.filters = this.filters
+      if (row !== '') {
+        row += delimiter
       }
-      repository
-        .get(this.dataUrl, { params, headers, responseType: 'blob' })
-        .then((response) => {
-          this.createDownloadLink(response.data, format)
-        })
-    },
-  },
+      const value = getValue(header, item)
+      if (value !== undefined) {
+        row += `"${value}"`
+      }
+    })
+    csv += row + '\n'
+  })
+  return csv
+}
+
+async function exportToXSLX() {
+  const workbook = new ExcelJS.Workbook()
+  const sheet = workbook.addWorksheet('Sheet 1')
+  const headers = props.headers
+    .filter((header) => header.key !== 'actions')
+    .map((header) => {
+      return { header: header.title, key: header.key }
+    })
+  const rows = []
+  sheet.columns = headers
+  props.items.forEach((item) => {
+    const row = []
+    props.headers.forEach((header) => {
+      if (header.key === 'actions') {
+        return
+      }
+      row.push(getValue(header, item))
+    })
+    rows.push(row)
+  })
+  sheet.addRows(rows)
+  return await workbook.xlsx.writeBuffer()
+}
+
+/*
+ ** Manual XML export.
+ ** We could have used a DOM element and then use XMLSerializer() but the output is not formatted properly so...
+ */
+function exportToXML() {
+  let result = '<items>\n'
+  props.items.forEach((item) => {
+    result += '  <item>\n'
+    props.headers.forEach((header) => {
+      if (header.key === 'actions') {
+        return
+      }
+      const value = getValue(header, item)
+      const name = convertHeaderLabelToName(header.title)
+      result += `    <${name}>${value}</${name}>\n`
+    })
+    result += '  </item>\n'
+  })
+  result += '</items>\n'
+  return result
+}
+
+function exportToJSON() {
+  const result = []
+  props.items.forEach((item) => {
+    const newItem = {}
+    props.headers.forEach((header) => {
+      if (header.key === 'actions') {
+        return
+      }
+      const value = getValue(header, item)
+      const name = convertHeaderLabelToName(header.title)
+      newItem[name] = value
+    })
+    result.push(newItem)
+  })
+  return JSON.stringify(result)
+}
+
+async function localExport(format) {
+  let content = ''
+  if (format.name === 'CSV') {
+    content = exportToCSV()
+  } else if (format.name === 'EXCEL') {
+    content = await exportToXSLX()
+  } else if (format.name === 'XML') {
+    content = exportToXML()
+  } else if (format.name === 'JSON') {
+    content = exportToJSON()
+  }
+  createDownloadLink(content, format)
+}
+
+async function exportContent(format) {
+  const result = await new Promise((resolve) => emit('export', resolve))
+  if (!result) {
+    return
+  }
+  if (props.items.length) {
+    localExport(format)
+    return
+  }
+
+  const headers = {}
+  headers.Accept = format.mediaType
+  const params = { ...props.dataUrlParams }
+  if (params.page_size === undefined) {
+    params.page_size = 0
+  }
+  if (props.filters) {
+    params.filters = props.filters
+  }
+  repository
+    .get(props.dataUrl, { params, headers, responseType: 'blob' })
+    .then((response) => {
+      createDownloadLink(response.data, format)
+    })
 }
 </script>

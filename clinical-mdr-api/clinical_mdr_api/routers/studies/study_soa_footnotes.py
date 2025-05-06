@@ -30,7 +30,7 @@ from common.models.error import ErrorResponse
     response_model=CustomPage[StudySoAFootnote],
     status_code=200,
     responses={
-        500: _generic_descriptions.ERROR_500,
+        403: _generic_descriptions.ERROR_403,
     },
 )
 def get_all_study_soa_footnotes_from_all_studies(
@@ -86,11 +86,11 @@ def get_all_study_soa_footnotes_from_all_studies(
     response_model=CustomPage[StudySoAFootnote],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - there is no study with the given uid.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_all_study_soa_footnotes(
@@ -154,11 +154,11 @@ def get_all_study_soa_footnotes(
     response_model=list[Any],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - Invalid field name specified",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_distinct_values_for_header(
@@ -207,11 +207,11 @@ def get_distinct_values_for_header(
     response_model=list[Any],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - Invalid field name specified",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_distinct_values_for_header_top_level(
@@ -253,11 +253,11 @@ def get_distinct_values_for_header_top_level(
     response_model=StudySoAFootnote,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - there is no study with the given uid or the study soa footnote doesn't exist",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_study_soa_footnote(
@@ -281,11 +281,11 @@ def get_study_soa_footnote(
     response_model=StudySoAFootnote,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - Study, footnote or SoA item is not found with the passed 'study_uid'.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
@@ -319,11 +319,11 @@ def post_new_soa_footnote(
     response_model=list[StudySoAFootnote],
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - Study, footnote or SoA item is not found with the passed 'study_uid'.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
@@ -345,8 +345,8 @@ def post_new_soa_footnotes_batch_select(
     response_model=list[StudySoAFootnoteBatchOutput],
     status_code=207,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
@@ -371,6 +371,7 @@ def batch_edit_study_soa_footnote(
     response_model=StudySoAFootnote,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {
             "description": "No Content - The study soa footnote was successfully edited."
         },
@@ -378,7 +379,6 @@ def batch_edit_study_soa_footnote(
             "model": ErrorResponse,
             "description": "Not Found - the study soa footnote doesn't exist.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
@@ -405,6 +405,7 @@ def edit_study_soa_footnote(
     response_model=None,
     status_code=204,
     responses={
+        403: _generic_descriptions.ERROR_403,
         204: {
             "description": "No Content - The study soa footnote was successfully deleted."
         },
@@ -412,7 +413,6 @@ def edit_study_soa_footnote(
             "model": ErrorResponse,
             "description": "Not Found - the study soa footnote doesn't exist.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
@@ -433,6 +433,7 @@ def delete_study_soa_footnote(
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         400: {
             "model": ErrorResponse,
             "description": "Forbidden - There already exists a study soa footnote",
@@ -441,7 +442,6 @@ def delete_study_soa_footnote(
             "model": ErrorResponse,
             "description": "Not Found - Study or soa footnote is not found with the passed 'study_uid'.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
@@ -476,8 +476,8 @@ The following values should be returned for all study soa footnotes:
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_specific_soa_footnotes_audit_trail(
@@ -506,8 +506,8 @@ The following values should be returned for all study soa footnotes:
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_all_soa_footnotes_audit_trail(
@@ -539,11 +539,11 @@ def get_all_soa_footnotes_audit_trail(
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - There exist no selection between the study and study soa footnote",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
@@ -584,11 +584,11 @@ def patch_footnote_accept_version(
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - There exist no selection between the study and study soa footnote",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")

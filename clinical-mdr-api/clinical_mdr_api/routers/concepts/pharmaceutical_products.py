@@ -51,8 +51,8 @@ Possible errors:
     response_model=CustomPage[PharmaceuticalProduct],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.allow_exports(
@@ -146,8 +146,8 @@ Possible errors:
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.allow_exports(
@@ -223,11 +223,11 @@ def get_pharmaceutical_products_versions(
     response_model=list[Any],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - Invalid field name specified",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_distinct_values_for_header(
@@ -274,8 +274,8 @@ Possible errors:
     response_model=PharmaceuticalProduct,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_activity(
@@ -306,11 +306,11 @@ Possible errors:
     response_model=list[PharmaceuticalProduct],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - The pharmaceutical product with the specified 'pharmaceutical_product_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_versions(
@@ -349,6 +349,7 @@ Possible errors:
     response_model=PharmaceuticalProduct,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {
             "description": "Created - The pharmaceutical product was successfully created."
         },
@@ -358,7 +359,6 @@ Possible errors:
             "- The library doesn't exist.\n"
             "- The library doesn't allow to add new items.\n",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def create(
@@ -397,6 +397,7 @@ Possible errors:
     response_model=PharmaceuticalProduct,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -409,7 +410,6 @@ Possible errors:
             "model": ErrorResponse,
             "description": "Not Found - The pharmaceutical product with the specified 'pharmaceutical_product_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def edit(
@@ -449,6 +449,7 @@ Possible errors:
     response_model=PharmaceuticalProduct,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -460,7 +461,6 @@ Possible errors:
             "model": ErrorResponse,
             "description": "Not Found - The pharmaceutical product with the specified 'pharmaceutical_product_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def approve(
@@ -491,6 +491,7 @@ Possible errors:
     response_model=PharmaceuticalProduct,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -503,7 +504,6 @@ Possible errors:
             "- The pharmaceutical product is not in final status.\n"
             "- The pharmaceutical product with the specified 'pharmaceutical_product_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def create_new_version(
@@ -539,6 +539,7 @@ Possible errors:
     response_model=PharmaceuticalProduct,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -549,7 +550,6 @@ Possible errors:
             "model": ErrorResponse,
             "description": "Not Found - The pharmaceutical product with the specified 'pharmaceutical_product_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def inactivate(
@@ -585,6 +585,7 @@ Possible errors:
     response_model=PharmaceuticalProduct,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -595,7 +596,6 @@ Possible errors:
             "model": ErrorResponse,
             "description": "Not Found - The pharmaceutical product with the specified 'pharmaceutical_product_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def reactivate(
@@ -629,6 +629,7 @@ Possible errors:
     response_model=None,
     status_code=204,
     responses={
+        403: _generic_descriptions.ERROR_403,
         204: {
             "description": "No Content - The pharmaceutical product was successfully deleted."
         },
@@ -643,7 +644,6 @@ Possible errors:
             "model": ErrorResponse,
             "description": "Not Found - A pharmaceutical product with the specified 'pharmaceutical_product_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def delete(

@@ -1,5 +1,9 @@
 <template>
-  <div v-if="label" class="text-nnTrueBlue mb-5" :class="{ 'label--disabled': disabled }">
+  <div
+    v-if="label"
+    class="text-nnTrueBlue mb-5"
+    :class="{ 'label--disabled': disabled }"
+  >
     <label>{{ label }}</label>
   </div>
   <div>
@@ -35,7 +39,7 @@
 import { computed } from 'vue'
 
 const props = defineProps({
-  modelValue: { type: [Number, String], default: null },
+  modelValue: { type: [Boolean, Number, String], default: null },
   label: { type: String, default: '' },
   choices: { type: Array, default: () => [] },
   disabled: {

@@ -1,5 +1,11 @@
 from neomodel import NodeSet, RelationshipDefinition
-from neomodel.sync_.match import Collect, Last, RawCypher, RelationNameResolver
+from neomodel.sync_.match import (
+    Collect,
+    Last,
+    NodeNameResolver,
+    RawCypher,
+    RelationNameResolver,
+)
 
 from clinical_mdr_api.domain_repositories.library_item_repository import (
     LibraryItemRepositoryImplBase,
@@ -54,6 +60,7 @@ class SponsorModelRepository(
             )
             .annotate(latest_version=Last(Collect("rel"))),
             ["latest_version"],
+            initial_context=[NodeNameResolver("self")],
         )
 
     def generate_name(self, ig_uid: str, ig_version_number: str, version_number: str):
@@ -62,7 +69,7 @@ class SponsorModelRepository(
                 str.lower(ig_uid),
                 SPONSOR_MODEL_PREFIX,
                 ig_version_number,
-                f"{SPONSOR_MODEL_VERSION_NUMBER_PREFIX}{version_number}",
+                f"{SPONSOR_MODEL_VERSION_NUMBER_PREFIX}{int(version_number):02}",
             ]
         )
         return name

@@ -5,13 +5,13 @@
 ### 1. Indexes and Constraints
 -------------------------------------
 #### Change Description
-- Re-create all db indexes and constraints according to [db schema definition](https://novonordiskit.visualstudio.com/Clinical-MDR/_git/neo4j-mdr-db?path=/db_schema.py&version=GBmain&_a=contents).
+- Re-create all db indexes and constraints according to [db schema definition](https://orgremoved.visualstudio.com/Clinical-MDR/_git/neo4j-mdr-db?path=/db_schema.py&version=GBmain&_a=contents).
 
 
 ### 2. CT Config Values (Study Fields Configuration)
 -------------------------------------  
 #### Change Description
-- Re-create all `CTConfigValue` nodes according to values defined in [this file](https://novonordiskit.visualstudio.com/Clinical-MDR/_git/studybuilder-import?path=/datafiles/configuration/study_fields_configuration.csv).
+- Re-create all `CTConfigValue` nodes according to values defined in [this file](https://orgremoved.visualstudio.com/Clinical-MDR/_git/studybuilder-import?path=/datafiles/configuration/study_fields_configuration.csv).
 
 #### Nodes Affected
 - CTConfigValue
@@ -24,7 +24,7 @@
 ----------------------------  
 #### Change Description
 - Save protocol SoA snapshot for all locked versions of all studies
-  [PR](https://dev.azure.com/novonordiskit/Clinical-MDR/_git/studybuilder/pullrequest/186326)
+  [PR](https://dev.azure.com/orgremoved/Clinical-MDR/_git/studybuilder/pullrequest/186326)
 
 #### Relationships Affected
 - HAS_PROTOCOL_SOA_CELL
@@ -39,7 +39,7 @@
 - Create `User` nodes for all unique users that have performed any actions until now, and persist their `id, email/username`.
 
 
-- [Related PR](https://dev.azure.com/novonordiskit/Clinical-MDR/_git/clinical-mdr-api/pullrequest/187112).
+- [Related PR](https://dev.azure.com/orgremoved/Clinical-MDR/_git/clinical-mdr-api/pullrequest/187112).
 
 #### Nodes and Relatiosnhips Affected
 - `CTPackage, StudyAction, Edit, Create, Delete` nodes: `user_initials` field value copied to `author_id` field.
@@ -53,7 +53,7 @@
 - All StudyVisits should have the same window unit across all StudyVisits in a single Study.
 - If some Study used `week` unit for some of the StudyVisits it should be changed for `days`
 
-- [Related PR](https://dev.azure.com/novonordiskit/Clinical-MDR/_git/clinical-mdr-api/pullrequest/185762).
+- [Related PR](https://dev.azure.com/orgremoved/Clinical-MDR/_git/clinical-mdr-api/pullrequest/185762).
 
 #### Nodes Affected
 - `:StudySelectionMetadata`
@@ -67,7 +67,7 @@
 - Renamed `molecular_weight_conv_expon` to `use_molecular_weight`
 - Added new `use_complex_unit_conversion` boolean property with value `false`
 
-- [Related PR](https://dev.azure.com/novonordiskit/Clinical-MDR/_git/clinical-mdr-api/pullrequest/190535).
+- [Related PR](https://dev.azure.com/orgremoved/Clinical-MDR/_git/clinical-mdr-api/pullrequest/190535).
 
 #### Nodes Affected
 - `:UnitDefinitionValue`
@@ -78,7 +78,9 @@
 #### Change Description
 - Merge duplicated nodes for `StudySoAGroup`, `StudyActivityGroup` and `StudyActivitySubGroup`.
 
-- [Related PR](https://dev.azure.com/novonordiskit/Clinical-MDR/_git/clinical-mdr-api/pullrequest/203233).
+- [Related PR](https://dev.azure.com/orgremoved/Clinical-MDR/_git/clinical-mdr-api/pullrequest/203233).
 
 #### Nodes Affected
 - `StudySoAGroup`, `StudyActivityGroup` and `StudyActivitySubGroup`
+
+

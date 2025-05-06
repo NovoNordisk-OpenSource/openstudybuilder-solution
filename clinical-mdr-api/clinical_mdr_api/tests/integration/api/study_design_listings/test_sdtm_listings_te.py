@@ -166,7 +166,7 @@ def test_te_listing(api_client):
             TEDUR="P70H",
             TEENRL="stop_rule",
             TESTRL="start_rule",
-        ),
+        ).model_dump(),
         # 1
         StudyElementListing(
             DOMAIN="TE",
@@ -176,7 +176,7 @@ def test_te_listing(api_client):
             TEDUR="P70H",
             TEENRL="stop_rule",
             TESTRL="start_rule",
-        ),
+        ).model_dump(),
     ]
     assert res == expected_output
 

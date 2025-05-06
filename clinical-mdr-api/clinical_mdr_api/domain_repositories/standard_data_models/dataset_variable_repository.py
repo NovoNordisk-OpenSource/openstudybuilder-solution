@@ -127,7 +127,7 @@ class DatasetVariableRepository(StandardDataModelRepository):
             apoc.coll.toSet([(standard_value)<-[:HAS_DATASET_VARIABLE]-
                 (:DatasetInstance)<-[:HAS_DATASET]-(data_model_ig_value:DataModelIGValue) 
                 | data_model_ig_value.name]) AS data_model_ig_names,
-            {ordinal:toInteger(has_dataset_variable_rel.ordinal), name:dataset_value.label} AS dataset,
+            {ordinal:has_dataset_variable_rel.ordinal, name:dataset_value.label} AS dataset,
             head([(standard_value)-[:IMPLEMENTS_VARIABLE]->(class_variable_value:VariableClassInstance)<-[:HAS_INSTANCE]-(class_variable_root) | {
             uid:class_variable_root.uid, name:class_variable_value.label }]) AS implements_variable,
             head([(standard_value)-[:HAS_MAPPING_TARGET]->(dataset_variable_value:DatasetVariableInstance)

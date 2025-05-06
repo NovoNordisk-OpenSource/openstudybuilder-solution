@@ -41,7 +41,7 @@ def test_data():
     objective_template = ct_models.ObjectiveTemplateCreateInput(**otdata)
     objective_template = ObjectiveTemplateService().create(objective_template)
     if isinstance(objective_template, BaseModel):
-        objective_template = objective_template.dict()
+        objective_template = objective_template.model_dump()
     ObjectiveTemplateService().approve(objective_template["uid"])
 
     yield

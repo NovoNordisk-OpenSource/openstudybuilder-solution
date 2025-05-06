@@ -1,7 +1,7 @@
 <template>
   <PackageTimelines
-    :catalogue-name="catalogueName"
-    :package-name="packageName"
+    :catalogue-name="props.catalogueName"
+    :package-name="props.packageName"
     @catalogue-changed="updateUrl"
     @package-changed="updateUrl"
   >

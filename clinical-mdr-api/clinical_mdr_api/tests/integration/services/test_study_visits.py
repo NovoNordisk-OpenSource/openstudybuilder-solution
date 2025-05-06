@@ -604,7 +604,7 @@ class TestStudyVisitManagement(unittest.TestCase):
             first_visit_after_create.end_date, first_visit_after_edit.start_date
         )
         self.assertEqual(first_visit_after_create.change_type, "Create")
-        self.assertEqual(first_visit_after_create.changes, {})
+        self.assertEqual(first_visit_after_create.changes, [])
         self.assertEqual(first_visit_after_create.study_duration_weeks_label, "0 weeks")
         self.assertEqual(first_visit_after_create.week_in_study_label, "Week 0")
 
@@ -667,10 +667,10 @@ class TestStudyVisitManagement(unittest.TestCase):
         self.assertEqual(first_visit_after_edit.week_in_study_label, "Week 1")
         self.assertEqual(first_visit_after_edit.change_type, "Edit")
         self.assertEqual(first_visit_after_create.change_type, "Create")
-        self.assertEqual(first_visit_after_create.changes, {})
+        self.assertEqual(first_visit_after_create.changes, [])
         self.assertEqual(first_visit_after_create.study_duration_weeks_label, "0 weeks")
         self.assertEqual(first_visit_after_create.week_in_study_label, "Week 0")
-        self.assertEqual(second_visit_history.changes, {})
+        self.assertEqual(second_visit_history.changes, [])
         self.assertEqual(second_visit_history.uid, second_visit.uid)
 
     def test__create_subvisits_uvn__reordered_successfully(self):

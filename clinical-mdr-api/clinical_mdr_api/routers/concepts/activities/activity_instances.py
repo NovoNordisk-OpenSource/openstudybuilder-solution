@@ -11,6 +11,7 @@ from clinical_mdr_api.models.concepts.activities.activity_instance import (
     ActivityInstanceCreateInput,
     ActivityInstanceEditInput,
     ActivityInstanceOverview,
+    ActivityInstancePreviewInput,
 )
 from clinical_mdr_api.models.utils import CustomPage
 from clinical_mdr_api.repositories._utils import FilterOperator
@@ -51,8 +52,8 @@ Possible errors:
     response_model=CustomPage[ActivityInstance],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.allow_exports(
@@ -188,8 +189,8 @@ Possible errors:
     response_model=CustomPage[ActivityInstance],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.allow_exports(
@@ -293,11 +294,11 @@ def get_activity_instances_versions(
     response_model=list[Any],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - Invalid field name specified",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_distinct_values_for_header(
@@ -355,8 +356,8 @@ Possible errors:
     response_model=ActivityInstance,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_activity(activity_instance_uid: Annotated[str, ActivityInstanceUID]):
@@ -389,8 +390,8 @@ Possible errors:
     response_model=ActivityInstanceOverview,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.allow_exports(
@@ -443,9 +444,9 @@ Possible errors:
  - Invalid uid.
  """,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"content": {"application/x-yaml": {}}},
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 # pylint: disable=unused-argument
@@ -482,11 +483,11 @@ Possible errors:
     response_model=list[ActivityInstance],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - The activity isntance with the specified 'activity_instance_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_versions(activity_instance_uid: Annotated[str, ActivityInstanceUID]):
@@ -520,6 +521,7 @@ Possible errors:
     response_model=ActivityInstance,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {
             "description": "Created - The activity instance was successfully created."
         },
@@ -530,7 +532,6 @@ Possible errors:
             "- The library doesn't allow to add new items.\n",
         },
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def create(
@@ -568,6 +569,7 @@ Possible errors:
     response_model=ActivityInstance,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {
             "description": "Created - The activity instance was successfully previewed."
         },
@@ -578,12 +580,11 @@ Possible errors:
             "- The library doesn't allow to add new items.\n",
         },
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def preview(
     activity_instance_create_input: Annotated[
-        ActivityInstanceCreateInput,
+        ActivityInstancePreviewInput,
         Body(
             description="Related parameters of the objective that shall be previewed."
         ),
@@ -619,6 +620,7 @@ Possible errors:
     response_model=ActivityInstance,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -631,7 +633,6 @@ Possible errors:
             "model": ErrorResponse,
             "description": "Not Found - The activity instance with the specified 'activity_instance_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def edit(
@@ -665,6 +666,7 @@ Possible errors:
     response_model=ActivityInstance,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -677,7 +679,6 @@ Possible errors:
             "- The activity instance is not in final status.\n"
             "- The activity instance with the specified 'activity_instance_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def create_new_version(
@@ -711,6 +712,7 @@ Possible errors:
     response_model=ActivityInstance,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -722,7 +724,6 @@ Possible errors:
             "model": ErrorResponse,
             "description": "Not Found - The activity instance with the specified 'activity_instance_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def approve(
@@ -756,6 +757,7 @@ Possible errors:
     response_model=ActivityInstance,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -766,7 +768,6 @@ Possible errors:
             "model": ErrorResponse,
             "description": "Not Found - The activity instance with the specified 'activity_instance_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def inactivate(
@@ -800,6 +801,7 @@ Possible errors:
     response_model=ActivityInstance,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -810,7 +812,6 @@ Possible errors:
             "model": ErrorResponse,
             "description": "Not Found - The activity instance with the specified 'activity_instance_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def reactivate(
@@ -842,6 +843,7 @@ Possible errors:
     response_model=None,
     status_code=204,
     responses={
+        403: _generic_descriptions.ERROR_403,
         204: {
             "description": "No Content - The activity instance was successfully deleted."
         },
@@ -856,7 +858,6 @@ Possible errors:
             "model": ErrorResponse,
             "description": "Not Found - An activity instance with the specified 'activity_instance_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def delete_activity_instance(

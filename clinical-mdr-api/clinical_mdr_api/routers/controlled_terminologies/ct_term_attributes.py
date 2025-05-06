@@ -37,8 +37,8 @@ CTTermUID = Path(description="The unique id of the CTTermAttributes")
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_terms(
@@ -121,11 +121,11 @@ def get_terms(
     response_model=list[Any],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - Invalid field name specified",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_distinct_values_for_header(
@@ -186,8 +186,8 @@ def get_distinct_values_for_header(
     response_model=CTTermAttributes,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_term_attributes(
@@ -238,11 +238,11 @@ def get_term_attributes(
     response_model=list[CTTermAttributesVersion],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - The codelist with the specified 'codelist_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_versions(term_uid: Annotated[str, CTTermUID]):
@@ -265,6 +265,7 @@ If the request succeeds:
     response_model=CTTermAttributes,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -277,7 +278,6 @@ If the request succeeds:
             "model": ErrorResponse,
             "description": "Not Found - The term with the specified 'term_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def edit(
@@ -311,6 +311,7 @@ If the request succeeds:
     response_model=CTTermAttributes,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {"description": "Created - The term was successfully created."},
         400: {
             "model": ErrorResponse,
@@ -323,7 +324,6 @@ If the request succeeds:
             "- The term is not in final status.\n"
             "- The term with the specified 'codelist_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def create(term_uid: Annotated[str, CTTermUID]):
@@ -347,6 +347,7 @@ If the request succeeds:
     response_model=CTTermAttributes,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -358,7 +359,6 @@ If the request succeeds:
             "model": ErrorResponse,
             "description": "Not Found - The term with the specified 'term_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def approve(term_uid: Annotated[str, CTTermUID]):
@@ -381,6 +381,7 @@ If the request succeeds:
     response_model=CTTermAttributes,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -391,7 +392,6 @@ If the request succeeds:
             "model": ErrorResponse,
             "description": "Not Found - The term with the specified 'term_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def inactivate(term_uid: Annotated[str, CTTermUID]):
@@ -414,6 +414,7 @@ If the request succeeds:
     response_model=CTTermAttributes,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -424,7 +425,6 @@ If the request succeeds:
             "model": ErrorResponse,
             "description": "Not Found - The term with the specified 'term_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def reactivate(term_uid: Annotated[str, CTTermUID]):
@@ -443,6 +443,7 @@ def reactivate(term_uid: Annotated[str, CTTermUID]):
     response_model=None,
     status_code=204,
     responses={
+        403: _generic_descriptions.ERROR_403,
         204: {"description": "No Content - The term was successfully deleted."},
         400: {
             "model": ErrorResponse,
@@ -455,7 +456,6 @@ def reactivate(term_uid: Annotated[str, CTTermUID]):
             "model": ErrorResponse,
             "description": "Not Found - An term with the specified 'term_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def delete_ct_term(term_uid: Annotated[str, CTTermUID]):

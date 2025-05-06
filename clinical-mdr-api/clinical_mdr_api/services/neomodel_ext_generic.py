@@ -120,7 +120,7 @@ class NeomodelExtGenericService(ABC):
             msg=f"Returned more than one {self.api_model_class.__class__} with UID '{uid}'.",
         )
 
-        return self.api_model_class.from_orm(item[0])
+        return self.api_model_class.model_validate(item[0])
 
     def _find_by_uid_or_raise_not_found(
         self, uid: str, for_update: bool
@@ -143,7 +143,9 @@ class NeomodelExtGenericService(ABC):
             )
 
             versions = [
-                self._transform_aggregate_root_to_pydantic_model(codelist_ar).dict()
+                self._transform_aggregate_root_to_pydantic_model(
+                    codelist_ar
+                ).model_dump()
                 for codelist_ar in all_versions
             ]
             return calculate_diffs(versions, self.version_class)

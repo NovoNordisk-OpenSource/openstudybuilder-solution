@@ -79,7 +79,6 @@ def get_license_md() -> FileResponse:
     status_code=200,
     responses={
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_all_feature_flags() -> list[FeatureFlag]:
@@ -93,7 +92,6 @@ def get_all_feature_flags() -> list[FeatureFlag]:
     status_code=200,
     responses={
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_all_active_notifications() -> list[Notification]:

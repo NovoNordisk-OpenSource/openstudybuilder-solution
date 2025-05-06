@@ -26,8 +26,8 @@ router = APIRouter()
     response_model=list[CTCatalogue],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 # pylint: disable=unused-argument
@@ -50,8 +50,8 @@ def get_catalogues(
     response_model=CTCatalogueChanges,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_catalogues_changes(

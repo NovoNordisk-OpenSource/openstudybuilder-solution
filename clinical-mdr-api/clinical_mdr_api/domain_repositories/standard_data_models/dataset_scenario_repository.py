@@ -86,7 +86,7 @@ class DatasetScenarioRepository(StandardDataModelRepository):
         WITH *,
             standard_value.label AS label,
             head([(standard_root)<-[:HAS_DATASET_SCENARIO]-(catalogue:DataModelCatalogue) | catalogue.name]) AS catalogue_name,
-            {ordinal:toInteger(has_dataset_scenario.ordinal), name:dataset_value.label} AS dataset,
+            {ordinal:has_dataset_scenario.ordinal, name:dataset_value.label} AS dataset,
             apoc.coll.toSet([(standard_value)<-[:HAS_DATASET_SCENARIO]-
                 (:DatasetInstance)<-[:HAS_DATASET]-(data_model_ig_value:DataModelIGValue) 
                 | data_model_ig_value.name]) AS data_model_ig_names

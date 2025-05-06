@@ -1,0 +1,300 @@
+[
+  {
+    "accepted_version": false,
+    "author_username": "study.setup@b2bfv7zbjhkehgyw.onmicrosoft.com",
+    "change_type": null,
+    "code": "CTTerm_000140",
+    "description": null,
+    "element_colour": "#FFE082FF",
+    "element_subtype": {
+      "author_username": "9247d4f6-415b-4e6e-bda7-873eaeb1156b",
+      "catalogue_name": "SDTM CT",
+      "change_description": "Approved version",
+      "codelists": [
+        {
+          "codelist_uid": "CTCodelist_000025",
+          "library_name": "Sponsor",
+          "order": 1
+        }
+      ],
+      "date_conflict": false,
+      "end_date": null,
+      "library_name": "Sponsor",
+      "possible_actions": [
+        "inactivate",
+        "new_version"
+      ],
+      "queried_effective_date": null,
+      "sponsor_preferred_name": "Screening",
+      "sponsor_preferred_name_sentence_case": "screening",
+      "start_date": "2025-03-26T01:49:36.643818Z",
+      "status": "Final",
+      "term_uid": "CTTerm_000145",
+      "version": "1.0"
+    },
+    "element_type": {
+      "author_username": "9247d4f6-415b-4e6e-bda7-873eaeb1156b",
+      "catalogue_name": "SDTM CT",
+      "change_description": "Approved version",
+      "codelists": [
+        {
+          "codelist_uid": "CTCodelist_000024",
+          "library_name": "Sponsor",
+          "order": 2
+        }
+      ],
+      "date_conflict": false,
+      "end_date": null,
+      "library_name": "Sponsor",
+      "possible_actions": [
+        "inactivate",
+        "new_version"
+      ],
+      "queried_effective_date": null,
+      "sponsor_preferred_name": "No Treatment",
+      "sponsor_preferred_name_sentence_case": "no treatment",
+      "start_date": "2025-03-26T01:49:35.337406Z",
+      "status": "Final",
+      "term_uid": "CTTerm_000140",
+      "version": "1.0"
+    },
+    "element_uid": "StudyElement_000226",
+    "end_date": null,
+    "end_rule": null,
+    "name": "Screening",
+    "order": 1,
+    "planned_duration": {
+      "duration_unit_code": {
+        "name": "weeks",
+        "uid": "UnitDefinition_000368"
+      },
+      "duration_value": 2
+    },
+    "short_name": "Screening",
+    "start_date": "2025-03-27T11:51:54.571653Z",
+    "start_rule": "Informed consent signed",
+    "status": null,
+    "study_compound_dosing_count": 0,
+    "study_uid": "Study_000051",
+    "study_version": "LATEST on 2025-03-27T13:38:23.678142+00:00"
+  },
+  {
+    "accepted_version": false,
+    "author_username": "study.setup@b2bfv7zbjhkehgyw.onmicrosoft.com",
+    "change_type": null,
+    "code": "CTTerm_000139",
+    "description": null,
+    "element_colour": "#3949ABFF",
+    "element_subtype": {
+      "author_username": "9247d4f6-415b-4e6e-bda7-873eaeb1156b",
+      "catalogue_name": "SDTM CT",
+      "change_description": "Approved version",
+      "codelists": [
+        {
+          "codelist_uid": "CTCodelist_000025",
+          "library_name": "Sponsor",
+          "order": 3
+        }
+      ],
+      "date_conflict": false,
+      "end_date": null,
+      "library_name": "Sponsor",
+      "possible_actions": [
+        "inactivate",
+        "new_version"
+      ],
+      "queried_effective_date": null,
+      "sponsor_preferred_name": "Treatment",
+      "sponsor_preferred_name_sentence_case": "treatment",
+      "start_date": "2025-03-26T01:49:36.152042Z",
+      "status": "Final",
+      "term_uid": "CTTerm_000142",
+      "version": "1.0"
+    },
+    "element_type": {
+      "author_username": "9247d4f6-415b-4e6e-bda7-873eaeb1156b",
+      "catalogue_name": "SDTM CT",
+      "change_description": "Approved version",
+      "codelists": [
+        {
+          "codelist_uid": "CTCodelist_000024",
+          "library_name": "Sponsor",
+          "order": 1
+        }
+      ],
+      "date_conflict": false,
+      "end_date": null,
+      "library_name": "Sponsor",
+      "possible_actions": [
+        "inactivate",
+        "new_version"
+      ],
+      "queried_effective_date": null,
+      "sponsor_preferred_name": "Treatment",
+      "sponsor_preferred_name_sentence_case": "treatment",
+      "start_date": "2025-03-26T01:49:35.258139Z",
+      "status": "Final",
+      "term_uid": "CTTerm_000139",
+      "version": "1.0"
+    },
+    "element_uid": "StudyElement_000225",
+    "end_date": null,
+    "end_rule": null,
+    "name": "Human Insulin",
+    "order": 2,
+    "planned_duration": null,
+    "short_name": "Human Insulin",
+    "start_date": "2025-03-27T11:51:54.571653Z",
+    "start_rule": "First dose of Human Insulin",
+    "status": null,
+    "study_compound_dosing_count": 0,
+    "study_uid": "Study_000051",
+    "study_version": "LATEST on 2025-03-27T13:38:23.709281+00:00"
+  },
+  {
+    "accepted_version": false,
+    "author_username": "study.setup@b2bfv7zbjhkehgyw.onmicrosoft.com",
+    "change_type": null,
+    "code": "CTTerm_000139",
+    "description": null,
+    "element_colour": "#2E7D32FF",
+    "element_subtype": {
+      "author_username": "9247d4f6-415b-4e6e-bda7-873eaeb1156b",
+      "catalogue_name": "SDTM CT",
+      "change_description": "Approved version",
+      "codelists": [
+        {
+          "codelist_uid": "CTCodelist_000025",
+          "library_name": "Sponsor",
+          "order": 3
+        }
+      ],
+      "date_conflict": false,
+      "end_date": null,
+      "library_name": "Sponsor",
+      "possible_actions": [
+        "inactivate",
+        "new_version"
+      ],
+      "queried_effective_date": null,
+      "sponsor_preferred_name": "Treatment",
+      "sponsor_preferred_name_sentence_case": "treatment",
+      "start_date": "2025-03-26T01:49:36.152042Z",
+      "status": "Final",
+      "term_uid": "CTTerm_000142",
+      "version": "1.0"
+    },
+    "element_type": {
+      "author_username": "9247d4f6-415b-4e6e-bda7-873eaeb1156b",
+      "catalogue_name": "SDTM CT",
+      "change_description": "Approved version",
+      "codelists": [
+        {
+          "codelist_uid": "CTCodelist_000024",
+          "library_name": "Sponsor",
+          "order": 1
+        }
+      ],
+      "date_conflict": false,
+      "end_date": null,
+      "library_name": "Sponsor",
+      "possible_actions": [
+        "inactivate",
+        "new_version"
+      ],
+      "queried_effective_date": null,
+      "sponsor_preferred_name": "Treatment",
+      "sponsor_preferred_name_sentence_case": "treatment",
+      "start_date": "2025-03-26T01:49:35.258139Z",
+      "status": "Final",
+      "term_uid": "CTTerm_000139",
+      "version": "1.0"
+    },
+    "element_uid": "StudyElement_000227",
+    "end_date": null,
+    "end_rule": null,
+    "name": "Metformin",
+    "order": 3,
+    "planned_duration": null,
+    "short_name": "Metformin",
+    "start_date": "2025-03-27T11:51:54.571653Z",
+    "start_rule": "First dose of metformin",
+    "status": null,
+    "study_compound_dosing_count": 0,
+    "study_uid": "Study_000051",
+    "study_version": "LATEST on 2025-03-27T13:38:23.710711+00:00"
+  },
+  {
+    "accepted_version": false,
+    "author_username": "study.setup@b2bfv7zbjhkehgyw.onmicrosoft.com",
+    "change_type": null,
+    "code": "CTTerm_000140",
+    "description": null,
+    "element_colour": "#FF9800FF",
+    "element_subtype": {
+      "author_username": "9247d4f6-415b-4e6e-bda7-873eaeb1156b",
+      "catalogue_name": "SDTM CT",
+      "change_description": "Approved version",
+      "codelists": [
+        {
+          "codelist_uid": "CTCodelist_000025",
+          "library_name": "Sponsor",
+          "order": 5
+        }
+      ],
+      "date_conflict": false,
+      "end_date": null,
+      "library_name": "Sponsor",
+      "possible_actions": [
+        "inactivate",
+        "new_version"
+      ],
+      "queried_effective_date": null,
+      "sponsor_preferred_name": "Follow-up",
+      "sponsor_preferred_name_sentence_case": "follow-up",
+      "start_date": "2025-03-26T01:49:36.289724Z",
+      "status": "Final",
+      "term_uid": "CTTerm_000144",
+      "version": "1.0"
+    },
+    "element_type": {
+      "author_username": "9247d4f6-415b-4e6e-bda7-873eaeb1156b",
+      "catalogue_name": "SDTM CT",
+      "change_description": "Approved version",
+      "codelists": [
+        {
+          "codelist_uid": "CTCodelist_000024",
+          "library_name": "Sponsor",
+          "order": 2
+        }
+      ],
+      "date_conflict": false,
+      "end_date": null,
+      "library_name": "Sponsor",
+      "possible_actions": [
+        "inactivate",
+        "new_version"
+      ],
+      "queried_effective_date": null,
+      "sponsor_preferred_name": "No Treatment",
+      "sponsor_preferred_name_sentence_case": "no treatment",
+      "start_date": "2025-03-26T01:49:35.337406Z",
+      "status": "Final",
+      "term_uid": "CTTerm_000140",
+      "version": "1.0"
+    },
+    "element_uid": "StudyElement_000228",
+    "end_date": null,
+    "end_rule": null,
+    "name": "Follow-up",
+    "order": 4,
+    "planned_duration": null,
+    "short_name": "Follow-up",
+    "start_date": "2025-03-27T11:51:54.571653Z",
+    "start_rule": "Attend follow-up visit 0 to 30 days after last dose",
+    "status": null,
+    "study_compound_dosing_count": 0,
+    "study_uid": "Study_000051",
+    "study_version": "LATEST on 2025-03-27T13:38:23.712142+00:00"
+  }
+]

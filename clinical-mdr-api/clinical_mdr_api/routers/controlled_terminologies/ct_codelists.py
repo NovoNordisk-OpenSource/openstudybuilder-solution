@@ -43,6 +43,7 @@ TermUID = Path(description="The unique id of the Codelist Term")
     response_model=CTCodelist,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {"description": "Created - The codelist was successfully created."},
         400: {
             "model": ErrorResponse,
@@ -51,7 +52,6 @@ TermUID = Path(description="The unique id of the Codelist Term")
             "- The library doesn't exist.\n"
             "- The library doesn't allow to add new items.\n",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def create(
@@ -75,8 +75,8 @@ def create(
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.allow_exports(
@@ -201,8 +201,8 @@ def get_codelists(
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_sub_codelists_that_have_given_terms(
@@ -261,11 +261,11 @@ def get_sub_codelists_that_have_given_terms(
     response_model=list[Any],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - Invalid field name specified",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_distinct_values_for_header(
@@ -330,6 +330,7 @@ def get_distinct_values_for_header(
     response_model=CTCodelist,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {
             "description": "The HAS_TERM relationship was successfully created.\n"
             "The TemplateParameter labels and HAS_PARAMETER_TERM relationship were successfully added "
@@ -343,7 +344,6 @@ def get_distinct_values_for_header(
             "- The codelist is not extensible.\n"
             "- The codelist already has passed term.\n",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def add_term(
@@ -365,6 +365,7 @@ def add_term(
     response_model=CTCodelist,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {
             "description": "The HAS_TERM relationship was successfully deleted and "
             "HAD_TERM relationship was successfully created.\n"
@@ -379,7 +380,6 @@ def add_term(
             "- The codelist is not extensible.\n"
             "- The codelist doesn't have passed term.\n",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def remove_term(

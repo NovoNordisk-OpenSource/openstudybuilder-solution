@@ -187,3 +187,5 @@ UI starts with a landing page with a login button, which starts the authorizatio
 The result of the auth code flow provides the UI with access, refresh, and id tokens.
 
 Then the UI sends the access token as `Authorization: Bearer fb6ac92cd.....` with each request to the API. UI should check when the token gets expired, and use the refresh token to obtain a new access token.
+
+

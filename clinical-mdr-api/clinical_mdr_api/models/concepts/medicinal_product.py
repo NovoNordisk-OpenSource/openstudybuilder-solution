@@ -2,6 +2,7 @@ from typing import Annotated, Callable, Self
 
 from pydantic import Field
 
+from clinical_mdr_api.descriptions.general import CHANGES_FIELD_DESC
 from clinical_mdr_api.domains.concepts.compound import CompoundAR
 from clinical_mdr_api.domains.concepts.medicinal_product import MedicinalProductAR
 from clinical_mdr_api.domains.concepts.pharmaceutical_product import (
@@ -30,16 +31,26 @@ from clinical_mdr_api.models.utils import PatchInputModel, PostInputModel
 class MedicinalProduct(VersionProperties):
     uid: str
     name: Annotated[str, Field()]
-    name_sentence_case: Annotated[str | None, Field(nullable=True)] = None
-    external_id: Annotated[str | None, Field(nullable=True)] = None
+    name_sentence_case: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    external_id: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
     library_name: str
     compound: SimpleCompound
     pharmaceutical_products: list[SimplePharmaceuticalProduct] = []
 
     dose_values: list[SimpleNumericValueWithUnit] = []
-    dose_frequency: Annotated[SimpleTermModel | None, Field(nullable=True)] = None
-    delivery_device: Annotated[SimpleTermModel | None, Field(nullable=True)] = None
-    dispenser: Annotated[SimpleTermModel | None, Field(nullable=True)] = None
+    dose_frequency: Annotated[
+        SimpleTermModel | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    delivery_device: Annotated[
+        SimpleTermModel | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    dispenser: Annotated[
+        SimpleTermModel | None, Field(json_schema_extra={"nullable": True})
+    ] = None
 
     possible_actions: Annotated[
         list[str],
@@ -147,12 +158,8 @@ class MedicinalProductEditInput(PatchInputModel):
 
 class MedicinalProductVersion(MedicinalProduct):
     changes: Annotated[
-        dict[str, bool] | None,
+        list[str],
         Field(
-            description=(
-                "Denotes whether or not there was a change in a specific field/property compared to the previous version. "
-                "The field names in this object here refer to the field names of the objective (e.g. name, start_date, ..)."
-            ),
-            nullable=True,
+            description=CHANGES_FIELD_DESC,
         ),
-    ] = None
+    ] = []

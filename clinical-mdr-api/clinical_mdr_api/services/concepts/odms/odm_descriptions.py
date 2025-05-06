@@ -109,11 +109,11 @@ class OdmDescriptionService(OdmGenericService[OdmDescriptionAR]):
                     raise exceptions.MethodNotAllowedException(method=operation.method)
                 result["response_code"] = response_code
                 if item:
-                    result["content"] = item.dict()
+                    result["content"] = item.model_dump()
                 results.append(OdmDescriptionBatchOutput(**result))
             except exceptions.MDRApiBaseException as error:
                 results.append(
-                    OdmDescriptionBatchOutput.construct(
+                    OdmDescriptionBatchOutput.model_construct(
                         response_code=error.status_code,
                         content=BatchErrorResponse(message=str(error)),
                     )

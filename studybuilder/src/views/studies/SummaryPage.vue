@@ -39,13 +39,14 @@
               </div>
             </template>
             <v-list>
-              <v-list-item
-                v-for="(subitem, index) in item.children"
-                :key="index"
-                @click="redirect(subitem, item)"
-              >
-                <v-list-item-title>{{ subitem.title }}</v-list-item-title>
-              </v-list-item>
+              <template v-for="subitem in item.children" :key="subitem.title">
+                <v-list-item
+                  v-if="checkFeatureFlag(subitem)"
+                  @click="redirect(subitem, item)"
+                >
+                  <v-list-item-title>{{ subitem.title }}</v-list-item-title>
+                </v-list-item>
+              </template>
             </v-list>
           </v-menu>
         </div>
@@ -61,8 +62,10 @@ import { ref } from 'vue'
 import ExpandableHeaderContent from '@/components/tools/ExpandableHeaderContent.vue'
 import RedirectHandler from '@/components/tools/RedirectHandler.vue'
 import { useAppStore } from '@/stores/app'
+import { useFeatureFlagsStore } from '@/stores/feature-flags'
 
 const appStore = useAppStore()
+const featureFlagsStore = useFeatureFlagsStore()
 
 const target = ref({})
 
@@ -72,6 +75,11 @@ function startFrom(arr, idx) {
 
 async function redirect(subitem, item) {
   target.value = { subitem: subitem, item: item }
+}
+
+function checkFeatureFlag(item) {
+  if (!item.featureFlag) return true
+  return featureFlagsStore.getFeatureFlag(item.featureFlag) !== false
 }
 </script>
 

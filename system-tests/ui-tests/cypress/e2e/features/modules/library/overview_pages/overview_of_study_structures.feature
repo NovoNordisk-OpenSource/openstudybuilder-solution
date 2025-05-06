@@ -1,4 +1,4 @@
-@REQ_ID:xxx
+@REQ_ID:2866926
 Feature: Library - Overview of Study Structures
 
     As a user, I want to see the overview page of Study Structure for existing studies

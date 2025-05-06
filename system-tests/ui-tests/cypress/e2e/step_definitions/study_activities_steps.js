@@ -1,12 +1,18 @@
+import { apiActivityName } from "./library_activities_steps";
 const { Given, When, Then } = require("@badeball/cypress-cucumber-preprocessor");
-const popUpRowLocator = '.v-sheet table tbody tr'
 
 let activity_placeholder_name, activity_library, activity_soa_group, activity_group, activity_sub_group, activity_activity
-let foundActivities
+
+Given('Study activities for Study_000001 are loaded', () => {
+    cy.intercept('/api/studies/Study_000001/study-activities?*').as('getData')
+    cy.wait('@getData', {timeout: 30000})
+})
 
 Given('The activity exists in the library', () => {
     cy.log('Handled by import script')
 })
+
+Given('Study Activity is found', () => cy.searchFor(apiActivityName))
 
 When('The Study Activity is added from an existing study by study id', () => {
     createActivity('id', '999-3000')
@@ -15,23 +21,29 @@ When('The Study Activity is added from an existing study by study id', () => {
 When('The Study Activity is added from an existing study by study acronym', () => {
     createActivity('acronym', 'DummyStudy 0')
 })
+
 When('The Study Activity is added from the library', () => {
     activity_soa_group = 'INFORMED CONSENT'
-    cy.clickButton('add-study-activity', true)
-    cy.get('[data-cy="select-from-library"]').within(() => cy.get('.v-selection-control__input').click())
-    cy.clickFormActionButton('continue')
-    cy.get('.v-data-table__td--select-row input').each((el, index) => {
-        if (el.is(':enabled')) {
-            cy.wrap(el).check()
-            cy.get('[data-cy="flowchart-group"]').eq(index).click()
-            cy.contains('.v-overlay .v-list-item-title', activity_soa_group).click({force: true})
-            cy.get(popUpRowLocator).eq(index).find('td').eq(1).invoke('text').then((text) => activity_library = text)
-            cy.get(popUpRowLocator).eq(index).find('td').eq(3).invoke('text').then((text) => activity_group = text)
-            cy.get(popUpRowLocator).eq(index).find('td').eq(4).invoke('text').then((text) => activity_sub_group = text)
-            cy.get(popUpRowLocator).eq(index).find('td').eq(5).invoke('text').then((text) => activity_activity = text)
-            return false
-        }
-    })
+    initiateActivityCreation()
+    selectActivityAndGetItsData(activity_soa_group)
+    saveActivity()
+})
+
+When('User tries to add Activity in Draft status', () => {
+    initiateActivityCreation()
+    cy.searchForInPopUp(apiActivityName)
+    cy.waitForTable()    
+})
+
+When('User initiate adding Study Activity from Library', () => {
+    initiateActivityCreation()
+    addLibraryActivityByName()
+    cy.clickFormActionButton('save')
+})
+
+When('User adds newly created activity with status Final', () => {
+    initiateActivityCreation()
+    addLibraryActivityByName()
     saveActivity()
 })
 
@@ -43,6 +55,13 @@ Then('The Study Activity copied from existing study is visible within the Study 
     checkIfTableContainsActivity()
 })
 
+Then('The Activity in Draft status is not found', () => cy.contains('.v-sheet table tbody tr', 'No data available'))
+
+Then('The new Study Activity added from Library is visible in table', () => {  
+    cy.searchFor(activity_activity)
+    cy.tableContains(activity_activity)
+})
+
 When('The Study Activity is added as a placeholder for new activity request', () => {
     activity_placeholder_name = `Placeholder Instance Name ${Date.now()}`
     cy.clickButton('add-study-activity', true)
@@ -50,7 +69,8 @@ When('The Study Activity is added as a placeholder for new activity request', ()
     cy.clickFormActionButton('continue')
     cy.contains('.choice .text', 'Create a placeholder activity without submitting for approval').click()
     cy.selectVSelect('flowchart-group', 'INFORMED CONSENT')
-    cy.selectVSelect('activity-group', 'General')
+    cy.get('[data-cy="activity-group"] input').type('General')
+    cy.selectFirstVSelect('activity-group')
     cy.selectFirstVSelect('activity-subgroup')
     cy.fillInput('instance-name', activity_placeholder_name)
     cy.fillInput('activity-rationale', 'Placeholder Test Rationale')
@@ -76,20 +96,9 @@ Then('The edited Study Activity data is reflected within the Study Activity tabl
     cy.tableContains('EFFICACY')
 })
 
-When('The Study Activity is deleted', () => {
-    cy.searchAndCheckResults(activity_activity, false)
-    cy.get('table tbody tr').its('length').then(len => foundActivities = len)
-    cy.tableRowActions(0, 'Remove Activity')
-    cy.clickButton('continue-popup')
-})
-
 When('The Study Activity Placeholder is deleted', () => {
     cy.rowActionsByValue(activity_placeholder_name, 'Remove Activity')
     cy.clickButton('continue-popup')
-})
-
-Then('The Study Activity is no longer available', () => {
-    foundActivities == 1 ? cy.tableContains('No data available') : cy.get('table tbody tr').should('have.length', foundActivities - 1)
 })
 
 Then('The Study Activity Placeholder is no longer available', () => cy.tableNotContains(activity_placeholder_name))
@@ -152,12 +161,16 @@ Then('The SoA group can be changed', () => {
     cy.get('.v-card-actions button').contains('Save').click( {force: true} )
 })
 
-function getValuesFromRow(rowIndex) {
-    cy.get(popUpRowLocator).eq(rowIndex).find('td').eq(2).invoke('text').then((text) => activity_library = text)
-    cy.get(popUpRowLocator).eq(rowIndex).find('td').eq(3).invoke('text').then((text) => activity_soa_group = text)
-    cy.get(popUpRowLocator).eq(rowIndex).find('td').eq(4).invoke('text').then((text) => activity_group = text)
-    cy.get(popUpRowLocator).eq(rowIndex).find('td').eq(5).invoke('text').then((text) => activity_sub_group = text)
-    cy.get(popUpRowLocator).eq(rowIndex).find('td').eq(6).invoke('text').then((text) => activity_activity = text.slice(0, 30))
+Then('Warning that {string} {string} can not be added to the study is displayed', (status, item) => {
+    cy.get('.v-snackbar__content').should('contain', `has status ${status}. Only Final ${item} can be added to a study.`)
+})
+
+function getActivityData(rowIndex, getSoAGroupValue) {
+    cy.getCellValueInPopUp(rowIndex, 'Library').then((text) => activity_library = text)
+    if (getSoAGroupValue) cy.getCellValueInPopUp(rowIndex, 'SoA group').then((text) => activity_soa_group = text)
+    cy.getCellValueInPopUp(rowIndex, 'Activity group').then((text) => activity_group = text)
+    cy.getCellValueInPopUp(rowIndex, 'Activity subgroup').then((text) => activity_sub_group = text)
+    cy.getCellValueInPopUp(rowIndex, 'Activity').then((text) => activity_activity = text.slice(0, 50))
 }
 
 function checkIfTableContainsActivity() {
@@ -170,19 +183,40 @@ function checkIfTableContainsActivity() {
 }
 
 function createActivity(activityBy, value) {
+    initiateActivityCreation(activityBy, value)
+    selectActivityAndGetItsData()
+    saveActivity()
+}
+
+function addLibraryActivityByName() {
+    activity_activity = apiActivityName
+    cy.searchForInPopUp(activity_activity)
     cy.waitForTable()
-    cy.clickButton('add-study-activity', true)
-    cy.get('[data-cy="select-from-studies"]').within(() => cy.get('.v-selection-control__input').click())
-    cy.selectVSelect(`select-study-for-activity-by-${activityBy}`, value)
+    cy.get('[data-cy="select-activity"] input').check()
+    cy.selectVSelect('flowchart-group', 'INFORMED CONSENT')
+}
+
+function initiateActivityCreation(activityBy = null, activityValue = null) {
+    let radioButtonLocator = activityBy ? 'studies' : 'library'
+    cy.waitForTable()
+    cy.clickButton('add-study-activity')
+    cy.get(`[data-cy="select-from-${radioButtonLocator}"] input`).check( {force: true} )
+    if (activityBy) cy.selectVSelect(`select-study-for-activity-by-${activityBy}`, activityValue)
     cy.clickFormActionButton('continue')
+}
+
+function selectActivityAndGetItsData(activity_soa_group = null) {
     cy.get('.v-data-table__td--select-row input').each((el, index) => {
         if (el.is(':enabled')) {
             cy.wrap(el).check()
-            getValuesFromRow(index)
+            if(activity_soa_group) {
+                cy.get('[data-cy="flowchart-group"]').eq(index).click()
+                cy.contains('.v-overlay .v-list-item-title', activity_soa_group).click({force: true})
+            }
+            getActivityData(index, !activity_soa_group)
             return false
         }
     })
-    saveActivity()
 }
 
 function saveActivity() {

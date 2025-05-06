@@ -10,3 +10,4 @@ for more details.
 
 The goal is to initialize the sponsor-specific names of those codelists and terms that
 have been created the first time (initial CDISC CT load).
+

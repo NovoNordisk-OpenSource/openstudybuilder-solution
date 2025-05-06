@@ -30,8 +30,8 @@ OdmConditionUID = Path(description="The unique id of the ODM Condition.")
     response_model=CustomPage[OdmCondition],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_all_odm_conditions(
@@ -88,11 +88,11 @@ def get_all_odm_conditions(
     response_model=list[Any],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - Invalid field name specified",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_distinct_values_for_header(
@@ -135,8 +135,8 @@ def get_distinct_values_for_header(
     response_model=OdmCondition,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_odm_condition(odm_condition_uid: Annotated[str, OdmConditionUID]):
@@ -151,8 +151,8 @@ def get_odm_condition(odm_condition_uid: Annotated[str, OdmConditionUID]):
     response_model=dict,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_active_relationships(odm_condition_uid: Annotated[str, OdmConditionUID]):
@@ -181,11 +181,11 @@ Possible errors:
     response_model=list[OdmCondition],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - The ODM Condition with the specified 'odm_condition_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_odm_condition_versions(odm_condition_uid: Annotated[str, OdmConditionUID]):
@@ -200,6 +200,7 @@ def get_odm_condition_versions(odm_condition_uid: Annotated[str, OdmConditionUID
     response_model=OdmCondition,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {"description": "Created - The ODM Condition was successfully created."},
         400: {
             "model": ErrorResponse,
@@ -208,7 +209,6 @@ def get_odm_condition_versions(odm_condition_uid: Annotated[str, OdmConditionUID
             "- The library doesn't allow to add new items.\n",
         },
         409: _generic_descriptions.ERROR_409,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def create_odm_condition(
@@ -227,6 +227,7 @@ def create_odm_condition(
     response_model=OdmCondition,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -240,7 +241,6 @@ def create_odm_condition(
             "description": "Not Found - The ODM Condition with the specified 'odm_condition_uid' wasn't found.",
         },
         409: _generic_descriptions.ERROR_409,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def edit_odm_condition(
@@ -274,6 +274,7 @@ Possible errors:
     response_model=OdmCondition,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -286,7 +287,6 @@ Possible errors:
             "- The ODM Condition is not in final status.\n"
             "- The ODM Condition with the specified 'odm_condition_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def create_odm_condition_version(odm_condition_uid: Annotated[str, OdmConditionUID]):
@@ -303,6 +303,7 @@ def create_odm_condition_version(odm_condition_uid: Annotated[str, OdmConditionU
     response_model=OdmCondition,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -314,7 +315,6 @@ def create_odm_condition_version(odm_condition_uid: Annotated[str, OdmConditionU
             "model": ErrorResponse,
             "description": "Not Found - The ODM Condition with the specified 'odm_condition_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def approve_odm_condition(odm_condition_uid: Annotated[str, OdmConditionUID]):
@@ -331,6 +331,7 @@ def approve_odm_condition(odm_condition_uid: Annotated[str, OdmConditionUID]):
     response_model=OdmCondition,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -341,7 +342,6 @@ def approve_odm_condition(odm_condition_uid: Annotated[str, OdmConditionUID]):
             "model": ErrorResponse,
             "description": "Not Found - The ODM Condition with the specified 'odm_condition_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def inactivate_odm_condition(odm_condition_uid: Annotated[str, OdmConditionUID]):
@@ -358,6 +358,7 @@ def inactivate_odm_condition(odm_condition_uid: Annotated[str, OdmConditionUID])
     response_model=OdmCondition,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -368,7 +369,6 @@ def inactivate_odm_condition(odm_condition_uid: Annotated[str, OdmConditionUID])
             "model": ErrorResponse,
             "description": "Not Found - The ODM Condition with the specified 'odm_condition_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def reactivate_odm_condition(odm_condition_uid: Annotated[str, OdmConditionUID]):
@@ -385,6 +385,7 @@ def reactivate_odm_condition(odm_condition_uid: Annotated[str, OdmConditionUID])
     response_model=None,
     status_code=204,
     responses={
+        403: _generic_descriptions.ERROR_403,
         204: {
             "description": "No Content - The ODM Condition was successfully deleted."
         },
@@ -399,7 +400,6 @@ def reactivate_odm_condition(odm_condition_uid: Annotated[str, OdmConditionUID])
             "model": ErrorResponse,
             "description": "Not Found - An ODM Condition with the specified 'odm_condition_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def delete_odm_condition(odm_condition_uid: Annotated[str, OdmConditionUID]):

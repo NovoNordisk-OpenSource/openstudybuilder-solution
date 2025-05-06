@@ -1,4 +1,5 @@
 import asyncio
+from collections import defaultdict
 import csv
 import json
 
@@ -648,10 +649,13 @@ class Activities(BaseImporter):
             result = (
                 existing_parent_uid == new_parent_uid
                 and existing.get("name") == new.get("name")
+                and existing.get("level") == new.get("level")
                 and existing.get("library_name") == new.get("library_name")
                 and existing.get("is_domain_specific") == new_is_specific
                 and existing.get("definition") == new.get("definition")
                 and existing.get("order") == new_order
+                and [domain["uid"] for domain in existing.get("data_domains") or []]
+                == new.get("data_domain_uids", [])
             )
             return result
 
@@ -690,6 +694,39 @@ class Activities(BaseImporter):
                 self.log.info(
                     f"Identical entry '{data['body']['name']}' already exists in library '{data['body']['library_name']}'"
                 )
+
+        with open(
+            load_env(
+                "MDR_MIGRATION_ACTIVITY_INSTANCE_CLASS_TO_DATA_DOMAIN_RELATIONSHIPS"
+            ),
+            encoding="utf-8",
+        ) as file:
+            data_domain_relationships = csv.reader(file)
+
+            # Skip the header row
+            next(data_domain_relationships)
+
+            data_domains = set()
+            activity_instance_class_data_domain_relationships = defaultdict(set)
+            for (
+                table,
+                _,
+                _,
+                level_2_class,
+            ) in data_domain_relationships:
+
+                if level_2_class.strip():
+                    data_domains.add(table.strip())
+                    activity_instance_class_data_domain_relationships[
+                        level_2_class.strip()
+                    ].add(table.strip())
+
+            rs_data_domains = {
+                data_domain_term["code_submission_value"]: data_domain_term["term_uid"]
+                for data_domain_term in self.api.get_filtered_terms(
+                    {"code_submission_value": {"v": list(data_domains)}}
+                )
+            }
 
         for row in readCSV:
             # migrating Level 0 ActivityInstanceClass
@@ -733,6 +770,14 @@ class Activities(BaseImporter):
                     "level": 2,
                     "parent_uid": existing_rows.get(ac_1_level_name, {}).get("uid"),
                     "library_name": "Sponsor",
+                    "data_domain_uids": [
+                        uid
+                        for domain, uid in rs_data_domains.items()
+                        if domain
+                        in activity_instance_class_data_domain_relationships[
+                            ac_2_level_name
+                        ]
+                    ],
                 },
             }
             if ac_2_level_name not in migrated_ac_level_2:
@@ -745,7 +790,7 @@ class Activities(BaseImporter):
                 "path": ACTIVITY_INSTANCE_CLASSES_PATH,
                 "approve_path": ACTIVITY_INSTANCE_CLASSES_PATH,
                 "body": {
-                    "name": row[headers.index("LEVEL_3_CLASS")],
+                    "name": ac_3_level_name,
                     "level": 3,
                     "parent_uid": existing_rows.get(ac_2_level_name, {}).get("uid"),
                     "is_domain_specific": row[headers.index("DOMAIN_SPECIFIC")],
@@ -765,7 +810,7 @@ class Activities(BaseImporter):
                     "path": ACTIVITY_INSTANCE_CLASSES_PATH,
                     "approve_path": ACTIVITY_INSTANCE_CLASSES_PATH,
                     "body": {
-                        "name": row[headers.index("LEVEL_4_CLASS")],
+                        "name": ac_4_level_name,
                         "level": 4,
                         "parent_uid": existing_rows.get(ac_3_level_name, {}).get("uid"),
                         "is_domain_specific": row[headers.index("DOMAIN_SPECIFIC")],
@@ -784,16 +829,78 @@ class Activities(BaseImporter):
         await asyncio.gather(*api_tasks_for_3_level_ac)
         await asyncio.gather(*api_tasks_for_4_level_ac)
 
+    @open_file_async()
+    async def handle_activity_instance_class_parent_relationship(
+        self, csvfile, session
+    ):
+        readCSV = csv.reader(csvfile, delimiter=",")
+        headers = next(readCSV)
+        existing_rows = self.api.response_to_dict(
+            self.api.get_all_from_api(ACTIVITY_INSTANCE_CLASSES_PATH),
+            identifier="name",
+        )
+
+        for row in readCSV:
+            for i in range(1, 4):
+                current_class_name = row[headers.index(f"LEVEL_{i}_CLASS")]
+                current_uid = existing_rows.get(current_class_name, {}).get("uid")
+                parent_class_name = row[headers.index(f"LEVEL_{i-1}_CLASS")]
+                parent_uid = existing_rows.get(parent_class_name, {}).get("uid")
+
+                data = {
+                    "path": ACTIVITY_INSTANCE_CLASSES_PATH,
+                    "approve_path": ACTIVITY_INSTANCE_CLASSES_PATH,
+                    "new_path": path_join(
+                        ACTIVITY_INSTANCE_CLASSES_PATH, current_uid, "versions"
+                    ),
+                    "patch_path": path_join(
+                        ACTIVITY_INSTANCE_CLASSES_PATH, current_uid
+                    ),
+                    "body": {
+                        "change_description": "StudybuilderImport modification for parent relationship",
+                        "parent_uid": parent_uid,
+                    },
+                }
+                self.log.info(
+                    f"Patch activity instance class '{current_class_name}' by connecting to parent '{parent_class_name}'"
+                )
+                response = await self.api.new_version_patch_then_approve(
+                    data=data, session=session, approve=True
+                )
+                if response:
+                    existing_rows[current_class_name] = response
+
     def are_item_classes_equal(self, new, existing):
+        def are_instance_classes_equal():
+            _new = []
+            for i in new.get("activity_instance_classes") or []:
+                _new.append(
+                    {
+                        "name": i["name"],
+                        "mandatory": i["mandatory"],
+                        "is_adam_param_specific_enabled": i[
+                            "is_adam_param_specific_enabled"
+                        ],
+                    }
+                )
+            _new = sorted(_new, key=json.dumps)
+
+            _existing = []
+            for i in existing.get("activity_instance_classes") or []:
+                _existing.append(
+                    {
+                        "name": i["name"],
+                        "mandatory": i["mandatory"],
+                        "is_adam_param_specific_enabled": i[
+                            "is_adam_param_specific_enabled"
+                        ],
+                    }
+                )
+            _existing = sorted(_existing, key=json.dumps)
+
+            return _new == _existing
+
         new_order = int(new.get("order")) if new.get("order") else None
-        new_instance_class_names = (
-            set(new.get("activity_instance_class_names"))
-            if new.get("activity_instance_class_names")
-            else set()
-        )
-        existing_instance_class_names = set(
-            inst_cls["name"] for inst_cls in existing.get("activity_instance_classes")
-        )
         result = (
             existing.get("name") == new.get("name")
             and existing.get("library_name") == new.get("library_name")
@@ -803,7 +910,9 @@ class Activities(BaseImporter):
             and existing.get("order") == new_order
             and existing.get("role").get("uid") == new.get("role_uid")
             and existing.get("data_type").get("uid") == new.get("data_type_uid")
-            and existing_instance_class_names == new_instance_class_names
+            and [codelist["uid"] for codelist in existing.get("codelists") or []]
+            == new.get("codelist_uids", [])
+            and are_instance_classes_equal()
         )
         return result
 
@@ -854,30 +963,71 @@ class Activities(BaseImporter):
                     f"wasn't found in available activity instance classes in the db"
                 )
                 continue
+
+            codelist_uids = []
+            codelist_submission_values = [
+                value.strip()
+                for value in row[headers.index("CODELIST")].split(";")
+                if value.strip()
+            ]
+            for codelist_submission_value in codelist_submission_values:
+                _codelist = self.api.find_object_by_key(
+                    codelist_submission_value,
+                    "ct/codelists/attributes",
+                    "submission_value",
+                )
+                if _codelist:
+                    codelist_uids.append(_codelist["codelist_uid"])
+                else:
+                    self.log.warning(
+                        f"The codelist ({codelist_submission_value}) wasn't found for the following ActivityItemClass ({activity_item_class_name})"
+                    )
+
             data = {
                 "path": ACTIVITY_ITEM_CLASSES_PATH,
                 "approve_path": ACTIVITY_ITEM_CLASSES_PATH,
                 "body": {
                     "name": activity_item_class_name,
                     "order": row[headers.index("ORDER")],
-                    "mandatory": map_boolean(row[headers.index("MANDATORY")]),
                     "definition": row[headers.index("DEFINITION")] or "TBD",
                     "nci_concept_id": row[headers.index("NCI_C_CODE")] or None,
-                    "activity_instance_class_uids": [instance_class_uid],
+                    "activity_instance_classes": [
+                        {
+                            "uid": instance_class_uid,
+                            "name": activity_instance_class_name,
+                            "mandatory": map_boolean(row[headers.index("MANDATORY")]),
+                            "is_adam_param_specific_enabled": map_boolean(
+                                row[headers.index("IS_ADAM_PARAM_SPECIFIC_ENABLED")]
+                            ),
+                        }
+                    ],
                     "activity_instance_class_names": [activity_instance_class_name],
                     "role_uid": role_uid,
                     "data_type_uid": data_type_uid,
+                    "codelist_uids": codelist_uids,
                     "library_name": "Sponsor",
                 },
             }
             if activity_item_class_name not in activity_item_data:
                 activity_item_data[activity_item_class_name] = data
             else:
-                current_instance_classes = activity_item_data[activity_item_class_name][
-                    "body"
-                ]["activity_instance_class_uids"]
+                current_instance_classes = (
+                    activity_item_data[activity_item_class_name]["body"][
+                        "activity_instance_classes"
+                    ]
+                    or []
+                )
                 if instance_class_uid not in current_instance_classes:
-                    current_instance_classes.append(instance_class_uid)
+                    current_instance_classes.append(
+                        {
+                            "uid": instance_class_uid,
+                            "name": activity_instance_class_name,
+                            "mandatory": map_boolean(row[headers.index("MANDATORY")]),
+                            "is_adam_param_specific_enabled": map_boolean(
+                                row[headers.index("IS_ADAM_PARAM_SPECIFIC_ENABLED")]
+                            ),
+                        }
+                    )
                     activity_item_data[activity_item_class_name]["body"][
                         "activity_instance_class_names"
                     ].append(activity_instance_class_name)
@@ -1415,6 +1565,7 @@ class Activities(BaseImporter):
             "activity_item_class_uid": self.all_activity_item_classes.get(item_class),
             "ct_term_uids": set(),
             "unit_definition_uids": set(),
+            "is_adam_param_specific": False,
         }
         if len(unit_uids) > 0 and len(term_uids) > 0:
             self.log.warning(
@@ -1426,10 +1577,8 @@ class Activities(BaseImporter):
             item_data["unit_definition_uids"] = unit_uids
         else:
             self.log.warning(
-                f"Activity Items '{items}' could not be linked with any related nodes like"
-                f"CTTerm or UnitDefinition"
+                f"Activity Items '{items}' could not be linked with any related nodes like CTTerm or UnitDefinition"
             )
-            return
         if item_data["activity_item_class_uid"] is None:
             self.log.warning(
                 f"Activity Items '{items}' have unknown item class '{item_class}'"
@@ -1509,6 +1658,9 @@ class Activities(BaseImporter):
             ):
                 self.refresh_auth()
                 await self.handle_activity_instance_classes(
+                    mdr_migration_activity_instance_classes, session
+                )
+                await self.handle_activity_instance_class_parent_relationship(
                     mdr_migration_activity_instance_classes, session
                 )
             else:

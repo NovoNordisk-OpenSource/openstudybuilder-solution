@@ -4,13 +4,13 @@
 ## 1. Indexes and Constraints
 -------------------------------------
 ### Change Description
-- Re-create all db indexes and constraints according to [db schema definition](https://novonordiskit.visualstudio.com/Clinical-MDR/_git/neo4j-mdr-db?path=/db_schema.py&version=GBmain&_a=contents).
+- Re-create all db indexes and constraints according to [db schema definition](https://orgremoved.visualstudio.com/Clinical-MDR/_git/neo4j-mdr-db?path=/db_schema.py&version=GBmain&_a=contents).
 
 
 ## 2. CT Config Values (Study Fields Configuration)
 -------------------------------------  
 ### Change Description
-- Re-create all `CTConfigValue` nodes according to values defined in [this file](https://novonordiskit.visualstudio.com/Clinical-MDR/_git/studybuilder-import?path=/datafiles/configuration/study_fields_configuration.csv).
+- Re-create all `CTConfigValue` nodes according to values defined in [this file](https://orgremoved.visualstudio.com/Clinical-MDR/_git/studybuilder-import?path=/datafiles/configuration/study_fields_configuration.csv).
 
 ### Nodes Affected
 - CTConfigValue
@@ -22,7 +22,7 @@
 - Convert each ActivityItemRoot and ActivityItemValue node pair to ActivityItem nodes that are versioned via the ActivityInstanceValue node.
   The root/value pairs can be shared by several instances, while the new nodes belong to their instance.
 
-- [Related PR](https://dev.azure.com/novonordiskit/Clinical-MDR/_git/clinical-mdr-api/pullrequest/102208).
+- [Related PR](https://dev.azure.com/orgremoved/Clinical-MDR/_git/clinical-mdr-api/pullrequest/102208).
 
 ### Nodes Affected
   - `ActivityItemRoot`
@@ -35,7 +35,7 @@
 - Merge separate nodes belonging to the same ActivityItemClass that are connected to each ActivityInstance.
   After merging, each ActivityItem node may have relatiohsips to several ct terms or unit definitions. 
 
-- [Related PR](https://dev.azure.com/novonordiskit/Clinical-MDR/_git/clinical-mdr-api/pullrequest/104659).
+- [Related PR](https://dev.azure.com/orgremoved/Clinical-MDR/_git/clinical-mdr-api/pullrequest/104659).
 
 ### Nodes Affected
   - `ActivityItem`
@@ -46,7 +46,7 @@
 ### Change Description
 - Migrate StudyActivitySubGroup and StudyActivityGroup selections for each StudyActivity
 
-- [Related PR](https://dev.azure.com/novonordiskit/Clinical-MDR/_git/clinical-mdr-api/pullrequest/100824).
+- [Related PR](https://dev.azure.com/orgremoved/Clinical-MDR/_git/clinical-mdr-api/pullrequest/100824).
 
 
 ## 6. StudySoAGroup selection
@@ -55,7 +55,7 @@
 - Migrate StudySoAGroup node for each StudyActivity. Reconnect HAS_FLOWCHART_GROUP relationship that points
 - to CTTermRoot from StudyActivity into StudySoAGroup.
 
-- [Related PR](https://dev.azure.com/novonordiskit/Clinical-MDR/_git/clinical-mdr-api/pullrequest/103484).
+- [Related PR](https://dev.azure.com/orgremoved/Clinical-MDR/_git/clinical-mdr-api/pullrequest/103484).
 
 ### Nodes Affected
   - `StudyActivity`
@@ -69,7 +69,7 @@
 - Migrate relationship between StudyActivity and StudyActivityGroup called `STUDY_ACTIVITY_HAS_STUDY_ACTIVITY_GROUP`.
 - Remove relationship between StudyActivitySubGroup and StudyActivityGroup called `STUDY_ACTIVITY_SUBGROUP_HAS_STUDY_ACTIVITY_GROUP`
 - Add new label for `StudyActivitySubGroup`, `StudyActivityGroup` and `StudySoAGroup` nodes called `StudySelectionMetadata` and remove `StudySelection` label
-- [Related PR](https://dev.azure.com/novonordiskit/Clinical-MDR/_git/clinical-mdr-api/pullrequest/105127).
+- [Related PR](https://dev.azure.com/orgremoved/Clinical-MDR/_git/clinical-mdr-api/pullrequest/105127).
 
 ### Nodes Affected
   - `StudyActivity`
@@ -85,8 +85,10 @@
 ### Change Description
 - Renumbered `sequence_id`s of all `SyntaxTemplateRoot`s and `SyntaxPreInstanceRoot`s
 - Prefixed all `sequence_id`s of `SyntaxTemplateRoot`s in User Defined library with `U-`
-- [Related PR](https://dev.azure.com/novonordiskit/Clinical-MDR/_git/clinical-mdr-api/pullrequest/108796).
+- [Related PR](https://dev.azure.com/orgremoved/Clinical-MDR/_git/clinical-mdr-api/pullrequest/108796).
 
 ### Nodes Affected
   - `SyntaxTemplateRoot`
   - `SyntaxPreInstanceRoot`
+
+

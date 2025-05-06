@@ -17,12 +17,16 @@ from fastapi.testclient import TestClient
 from neomodel import db
 
 from clinical_mdr_api.main import app
+from clinical_mdr_api.models.clinical_programmes.clinical_programme import (
+    ClinicalProgramme,
+)
 from clinical_mdr_api.models.concepts.activities.activity import Activity
 from clinical_mdr_api.models.concepts.activities.activity_group import ActivityGroup
 from clinical_mdr_api.models.concepts.activities.activity_sub_group import (
     ActivitySubGroup,
 )
 from clinical_mdr_api.models.controlled_terminologies import ct_term
+from clinical_mdr_api.models.projects.project import Project
 from clinical_mdr_api.models.study_selections.study import Study
 from clinical_mdr_api.tests.integration.utils.api import (
     inject_and_clear_db,
@@ -44,7 +48,14 @@ study: Study
 general_activity_group: ActivityGroup
 randomisation_activity_subgroup: ActivitySubGroup
 randomized_activity: Activity
+body_measurements_activity_subgroup: ActivitySubGroup
+body_mes_activity: Activity
+weight_activity: Activity
+clinical_programme: ClinicalProgramme
+project: Project
 initial_ct_term_study_standard_test: ct_term.CTTerm
+term_efficacy_uid: str
+informed_consent_uid: str
 
 
 @pytest.fixture(scope="module")
@@ -71,6 +82,18 @@ def test_data():
     global general_activity_group
     global randomisation_activity_subgroup
     global randomized_activity
+    global body_measurements_activity_subgroup
+    global body_mes_activity
+    global weight_activity
+    global clinical_programme
+    global project
+    clinical_programme = TestUtils.create_clinical_programme(name="CP")
+    project = TestUtils.create_project(
+        name="Project for SoA",
+        project_number="1234",
+        description="Base project",
+        clinical_programme_uid=clinical_programme.uid,
+    )
 
     general_activity_group = TestUtils.create_activity_group(name="General")
     randomisation_activity_subgroup = TestUtils.create_activity_subgroup(
@@ -81,6 +104,38 @@ def test_data():
         activity_subgroups=[randomisation_activity_subgroup.uid],
         activity_groups=[general_activity_group.uid],
         library_name="Sponsor",
+    )
+    body_mes_activity = TestUtils.create_activity(
+        name="Body Measurement activity",
+        activity_subgroups=[randomisation_activity_subgroup.uid],
+        activity_groups=[general_activity_group.uid],
+        library_name="Sponsor",
+    )
+    body_measurements_activity_subgroup = TestUtils.create_activity_subgroup(
+        name="Body Measurements", activity_groups=[general_activity_group.uid]
+    )
+    weight_activity = TestUtils.create_activity(
+        name="Weight",
+        activity_subgroups=[
+            body_measurements_activity_subgroup.uid,
+            randomisation_activity_subgroup.uid,
+        ],
+        activity_groups=[general_activity_group.uid, general_activity_group.uid],
+        library_name="Sponsor",
+    )
+    global term_efficacy_uid
+    term_efficacy_uid = "term_efficacy_uid"
+    db.cypher_query(
+        get_codelist_with_term_cypher(
+            "EFFICACY", "Flowchart Group", term_uid=term_efficacy_uid
+        )
+    )
+    global informed_consent_uid
+    informed_consent_uid = "informed_consent_uid"
+    db.cypher_query(
+        get_codelist_with_term_cypher(
+            "INFORMED_CONSENT", "Flowchart Group", term_uid=informed_consent_uid
+        )
     )
 
     catalogue_name, library_name = get_catalogue_name_library_name(use_test_utils=True)
@@ -264,3 +319,169 @@ def test_modify_visibility_flag_in_protocol_flowchart(
     assert res["show_activity_subgroup_in_protocol_flowchart"] is False
     assert res["show_activity_group_in_protocol_flowchart"] is True
     assert res["show_soa_group_in_protocol_flowchart"] is False
+
+
+def test_study_activity_subgroup_reordering(api_client):
+    test_study = TestUtils.create_study(project_number=project.project_number)
+    # create study activity
+    randomized_sa = TestUtils.create_study_activity(
+        study_uid=test_study.uid,
+        activity_uid=randomized_activity.uid,
+        activity_group_uid=general_activity_group.uid,
+        activity_subgroup_uid=randomisation_activity_subgroup.uid,
+        soa_group_term_uid=term_efficacy_uid,
+    )
+    body_measurement_sa = TestUtils.create_study_activity(
+        study_uid=test_study.uid,
+        activity_uid=body_mes_activity.uid,
+        activity_group_uid=general_activity_group.uid,
+        activity_subgroup_uid=randomisation_activity_subgroup.uid,
+        soa_group_term_uid=term_efficacy_uid,
+    )
+    weight_sa1 = TestUtils.create_study_activity(
+        study_uid=test_study.uid,
+        activity_uid=weight_activity.uid,
+        activity_group_uid=general_activity_group.uid,
+        activity_subgroup_uid=body_measurements_activity_subgroup.uid,
+        soa_group_term_uid=term_efficacy_uid,
+    )
+    weight_sa2 = TestUtils.create_study_activity(
+        study_uid=test_study.uid,
+        activity_uid=weight_activity.uid,
+        activity_group_uid=general_activity_group.uid,
+        activity_subgroup_uid=randomisation_activity_subgroup.uid,
+        soa_group_term_uid=term_efficacy_uid,
+    )
+
+    response = api_client.get(f"/studies/{test_study.uid}/study-activities")
+    assert_response_status_code(response, 200)
+    study_activities = response.json()["items"]
+    assert len(study_activities) == 4
+    assert study_activities[0]["activity"]["uid"] == randomized_sa.activity.uid
+    assert study_activities[0]["study_soa_group"]["order"] == 1
+    assert study_activities[0]["study_activity_group"]["order"] == 1
+    assert study_activities[0]["study_activity_subgroup"]["order"] == 1
+    assert study_activities[0]["order"] == 1
+    assert study_activities[1]["activity"]["uid"] == body_measurement_sa.activity.uid
+    assert study_activities[1]["study_soa_group"]["order"] == 1
+    assert study_activities[1]["study_activity_group"]["order"] == 1
+    assert study_activities[1]["study_activity_subgroup"]["order"] == 1
+    assert study_activities[1]["order"] == 2
+    assert study_activities[2]["activity"]["uid"] == weight_sa2.activity.uid
+    assert study_activities[2]["study_soa_group"]["order"] == 1
+    assert study_activities[2]["study_activity_group"]["order"] == 1
+    assert study_activities[2]["study_activity_subgroup"]["order"] == 1
+    assert study_activities[2]["order"] == 3
+    assert study_activities[3]["activity"]["uid"] == weight_sa1.activity.uid
+    assert study_activities[3]["study_soa_group"]["order"] == 1
+    assert study_activities[3]["study_activity_group"]["order"] == 1
+    assert study_activities[3]["study_activity_subgroup"]["order"] == 2
+    assert study_activities[3]["order"] == 1
+
+    # Reorder first SA
+    response = api_client.patch(
+        f"/studies/{test_study.uid}/study-activity-subgroups/{weight_sa2.study_activity_subgroup.study_activity_subgroup_uid}/order",
+        json={
+            "new_order": 3,
+        },
+    )
+    assert_response_status_code(response, 400)
+    res = response.json()
+    assert (
+        res["message"]
+        == f"The maximum new order is (2) as there are 2 StudyActivitySubGroups in {general_activity_group.name} group and order (3) was requested"
+    )
+
+    response = api_client.patch(
+        f"/studies/{test_study.uid}/study-activity-subgroups/{weight_sa2.study_activity_subgroup.study_activity_subgroup_uid}/order",
+        json={
+            "new_order": 1,
+        },
+    )
+    assert_response_status_code(response, 400)
+    res = response.json()
+    assert (
+        res["message"]
+        == f"The order (1) for study activity subgroup {weight_sa2.study_activity_subgroup.activity_subgroup_name} was not changed"
+    )
+
+    response = api_client.patch(
+        f"/studies/{test_study.uid}/study-activity-subgroups/{weight_sa2.study_activity_subgroup.study_activity_subgroup_uid}/order",
+        json={
+            "new_order": 2,
+        },
+    )
+    assert_response_status_code(response, 200)
+    res = response.json()
+    assert (
+        res["study_activity_subgroup_uid"]
+        == weight_sa2.study_activity_subgroup.study_activity_subgroup_uid
+    )
+    assert res["order"] == 2
+
+    # Get all SA after SA reorder
+    response = api_client.get(f"/studies/{test_study.uid}/study-activities")
+    assert_response_status_code(response, 200)
+    study_activities = response.json()["items"]
+    assert len(study_activities) == 4
+    assert study_activities[0]["activity"]["uid"] == weight_sa1.activity.uid
+    assert study_activities[0]["study_soa_group"]["order"] == 1
+    assert study_activities[0]["study_activity_group"]["order"] == 1
+    assert study_activities[0]["study_activity_subgroup"]["order"] == 1
+    assert study_activities[0]["order"] == 1
+    assert study_activities[1]["activity"]["uid"] == randomized_sa.activity.uid
+    assert study_activities[1]["study_soa_group"]["order"] == 1
+    assert study_activities[1]["study_activity_group"]["order"] == 1
+    assert study_activities[1]["study_activity_subgroup"]["order"] == 2
+    assert study_activities[1]["order"] == 1
+    assert study_activities[2]["activity"]["uid"] == body_measurement_sa.activity.uid
+    assert study_activities[2]["study_soa_group"]["order"] == 1
+    assert study_activities[2]["study_activity_group"]["order"] == 1
+    assert study_activities[2]["study_activity_subgroup"]["order"] == 2
+    assert study_activities[2]["order"] == 2
+    assert study_activities[3]["activity"]["uid"] == weight_sa2.activity.uid
+    assert study_activities[3]["study_soa_group"]["order"] == 1
+    assert study_activities[3]["study_activity_group"]["order"] == 1
+    assert study_activities[3]["study_activity_subgroup"]["order"] == 2
+    assert study_activities[3]["order"] == 3
+
+    response = api_client.patch(
+        f"/studies/{test_study.uid}/study-activities/{weight_sa1.study_activity_uid}",
+        json={
+            "soa_group_term_uid": informed_consent_uid,
+        },
+    )
+    assert_response_status_code(response, 200)
+    res = response.json()
+    assert res["activity"]["uid"] == weight_sa1.activity.uid
+    assert res["study_soa_group"]["order"] == 2
+    assert res["study_activity_group"]["order"] == 1
+    assert res["study_activity_subgroup"]["order"] == 1
+    assert res["order"] == 1
+
+    # Get all SA after SoA Group patch to check if subgroups are reordered
+    response = api_client.get(f"/studies/{test_study.uid}/study-activities")
+    assert_response_status_code(response, 200)
+    study_activities = response.json()["items"]
+    assert len(study_activities) == 4
+
+    assert study_activities[0]["activity"]["uid"] == randomized_sa.activity.uid
+    assert study_activities[0]["study_soa_group"]["order"] == 1
+    assert study_activities[0]["study_activity_group"]["order"] == 1
+    assert study_activities[0]["study_activity_subgroup"]["order"] == 1
+    assert study_activities[0]["order"] == 1
+    assert study_activities[1]["activity"]["uid"] == body_measurement_sa.activity.uid
+    assert study_activities[1]["study_soa_group"]["order"] == 1
+    assert study_activities[1]["study_activity_group"]["order"] == 1
+    assert study_activities[1]["study_activity_subgroup"]["order"] == 1
+    assert study_activities[1]["order"] == 2
+    assert study_activities[2]["activity"]["uid"] == weight_sa2.activity.uid
+    assert study_activities[2]["study_soa_group"]["order"] == 1
+    assert study_activities[2]["study_activity_group"]["order"] == 1
+    assert study_activities[2]["study_activity_subgroup"]["order"] == 1
+    assert study_activities[2]["order"] == 3
+    assert study_activities[3]["activity"]["uid"] == weight_sa1.activity.uid
+    assert study_activities[3]["study_soa_group"]["order"] == 2
+    assert study_activities[3]["study_activity_group"]["order"] == 1
+    assert study_activities[3]["study_activity_subgroup"]["order"] == 1
+    assert study_activities[3]["order"] == 1

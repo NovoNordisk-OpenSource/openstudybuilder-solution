@@ -2,6 +2,7 @@
   <NNTable
     key="studyActivityInstancesTable"
     ref="tableRef"
+    export-object-label="ActivityInstances"
     :headers="headers"
     :items="studyActivitiesInstances"
     :items-length="total"
@@ -56,9 +57,9 @@
         {{
           item.activity_instance
             ? item.activity_instance.name
-            : (item.activity.is_data_collected
+            : item.activity.is_data_collected
               ? $t('StudyActivityInstances.add_instance')
-              : $t('StudyActivityInstances.na'))
+              : $t('StudyActivityInstances.na')
         }}
       </div>
     </template>
@@ -150,6 +151,7 @@ const defaultFilters = [
     title: t('StudyActivityInstances.activity_instance'),
     key: 'activity_instance.name',
   },
+  { title: t('StudyActivityInstances.state_actions'), key: 'state' },
 ]
 const studyActivitiesInstances = ref([])
 const total = ref(0)

@@ -41,6 +41,8 @@ const NNCustomLightTheme = {
     nnBaseBlue: '#005BD2',
     nnTrueBlue: '#001965',
     nnBaseGray: '#939AA7',
+    nnBaseHeavy: '#E8EAF0',
+    nnBaseLight: '#F7F8FA',
     nnGray200: '#E9EAED',
     nnGray300: '#D3D6DB',
     nnSeaBlue100: '#E5F1FF',
@@ -53,7 +55,7 @@ const NNCustomLightTheme = {
     nnLightBlue200: '#D7EAF8',
     nnFadedBlue200: '#DEE1EB',
     nnGoldenSun200: '#FAEECC',
-    nnGraniteGrey1: "#f4f5f6"
+    nnGraniteGrey1: '#f4f5f6',
   },
 }
 

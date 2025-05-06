@@ -50,8 +50,8 @@ If `parent` is empty or `*` is given then the mapping will apply to all occurren
     summary="Export ODM XML",
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_odm_document(
@@ -63,7 +63,7 @@ def get_odm_document(
     allowed_namespaces: Annotated[
         list[str] | None,
         Query(
-            description="Names of the Vendor Namespaces to export. If not specified, all Vendor Namespaces available will be exported."
+            description="Names of the Vendor Namespaces to export or `*` to export all available Vendor Namespaces. If not specified, no Vendor Namespaces will be exported."
         ),
     ] = None,
     status: Annotated[ObjectStatus, Query()] = ObjectStatus.LATEST_FINAL,
@@ -111,8 +111,8 @@ def get_odm_document(
     summary="Export ODM CSV",
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_odm_csv(target_uid: str, target_type: TargetType):
@@ -133,8 +133,8 @@ def get_odm_csv(target_uid: str, target_type: TargetType):
     summary="Import ODM XML",
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def store_odm_xml(
@@ -166,8 +166,8 @@ def store_odm_xml(
     response_model=list[str],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_available_stylesheet_names():
@@ -180,8 +180,8 @@ def get_available_stylesheet_names():
     summary="Get a specific ODM XML Stylesheet",
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_specific_stylesheet(

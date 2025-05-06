@@ -1,30 +1,27 @@
-import { activityName } from "./library_activities_steps";
-
+import { apiActivityName } from "./api_library_steps";
 const { Given, When, Then } = require("@badeball/cypress-cucumber-preprocessor");
 
-let activityInstance
-let nciconceptid = "NCI-ID"
-let topiccode = "Totic-code"
-let definition = "DEF"
-let adamcode = "Adam-code"
-let approvalConfirmation = 'Activity instance is now in Final state'
-let inactivationConfirmation = 'Activity instance inactivated'
+let activityInstance, apiActivitInstanceyName, apiTopicCode
+let nciconceptid = "NCI-ID", nciname = 'NCI-name', definition = "DEF", adamcode = "Adam-code", topicCode = `Topic${Date.now()}`
 
 When('The Add Activity Instance button is clicked', () => startActivityCreation())
 
-When('The activity instance data is filled in and saved', () => addInstanceDataAndSave())
+When('The activity instance data is filled in and saved', () => addInstanceAndConfirmCreation(true))
 
-When('The activity instance form is filled with data', () => addInstanceData())
+When('The activity instance data with custom activity is filled in and saved', () => addInstanceAndConfirmCreation(false, apiActivityName))
 
-Given('The test Activity Instance item exists with a status as Draft', () => addInstanceAndConfirmCreation())
+When('The activity instance form is filled with data', () => addInstanceMandatoryData())
 
-Then('The newly added Activity Instance item is added in the table by default', () => {   
-    cy.wait(2500)
-    cy.searchAndCheckResults(activityInstance)
+When('Second activity instance data is created with the same topic code', () => {
+    addInstanceMandatoryData(apiTopicCode)
+    cy.clickFormActionButton('save')
+})
+
+Then('The newly added Activity Instance item is added in the table by default', () => {
     cy.checkRowByIndex(0, 'Activity Instance', activityInstance)
     cy.checkRowByIndex(0,'Definition', definition)
     cy.checkRowByIndex(0, 'NCI Concept ID', nciconceptid)
-    cy.checkRowByIndex(0, 'Topic code', topiccode)
+    cy.checkRowByIndex(0, 'Topic code', topicCode)
     cy.checkRowByIndex(0, 'ADaM parameter code', adamcode)
     cy.checkRowByIndex(0, 'Required for activity', "Yes")
     cy.checkRowByIndex(0, 'Default selected for activity', "No")
@@ -35,12 +32,13 @@ Then('The newly added Activity Instance item is added in the table by default', 
 
 When('Activity selection is not made', () => cy.clickFormActionButton('continue'))
 
-Then('The message is displayed as {string} in the Activity field', (message) => {
-    cy.warningIsDisplayedForField('[data-cy="instanceform-activity-class"]', message)
-})
+Then('The validation message appears for Activity field', () => cy.checkIfValidationAppears('instanceform-activity-class'))
 
-Then('The message is displayed as {string} in the class field', (message) => {
-    cy.warningIsDisplayedForField('[data-cy="instanceform-instanceclass-class"]', message)
+Then('The validation message appears for class field', () => cy.checkIfValidationAppears('instanceform-instanceclass-class'))
+
+Then('The validation error for activity in not allowed state is displayed', () => {
+    const validationMessage = 'Selected activity is in DRAFT state. Please move the activity to FINAL state before creating the Activity Instance.'
+    cy.get('.v-alert__content').should('have.text', validationMessage)
 })
 
 Then('The message of {string} displayed in all the above mandatory fields', (message) => {
@@ -57,10 +55,14 @@ When('The Activity instance class does not select any data', () => {
     cy.clickFormActionButton('continue')
 })
 
-When('The user is editing an activity instance', () => {
+When('The Activity created through API is selected', () => {
+    fillInstanceActivityGroupData(apiActivityName)
+    cy.clickFormActionButton('continue')
+})
+
+When('The user fills group and class instance data', () => {
     startActivityCreation()
-    fillInstanceActivityGroupData()
-    fillInstanceClassData()
+    fillInstanceGroupAndClassData()
 })
 
 When('The user enters a value for Activity instance name', () => {
@@ -82,91 +84,85 @@ Then('The user is not able to save', () => cy.get('[data-cy="save-button"]').sho
 Then('The user is not able to continue', () => cy.get('[data-cy="continue-button"]').should('be.visible'))
 
 When('The Activity instance name, Sentence case name, Definition and Topic code fields are not filled with data', () => {
-    fillInstanceActivityGroupData()
-    fillInstanceClassData()
+    fillInstanceGroupAndClassData()
     cy.clickFormActionButton('save')
 })
 
 When('The activity instance is edited', () => {
+    activityInstance = apiActivitInstanceyName
     editActivityInstance()
     saveActivityInstance('updated')
 })
 
 When('The activity instance edition form is filled with data', () => editActivityInstance())
 
-Given('The test Activity Instance item exists with a status as Final', () => {
-    addInstanceAndConfirmCreation()
-    approveAndConfirmStatus()
-})
-
-Given('First activity instance for search test is created', () => addInstanceDataAndSave('SearchTest'))
-
-Given('Second activity instance for search test is created', () => addInstanceDataAndSave('SearchTest'))
-
-Given('The test Activity Instance with status Final and version 1.0 is linked to the test activity', () => {
-    addInstanceAndConfirmCreation(activityName)
-    approveAndConfirmStatus()
-})
-
-Given('The test Activity Instance item exists with a status as Retired', () => {
-    addInstanceAndConfirmCreation()
-    approveAndConfirmStatus()
-    cy.performActionOnSearchedItem('Inactivate', inactivationConfirmation)
-    cy.checkStatusAndVersion('Retired', '1.0')
-})
-
-Then('The activity instance has status {string} and version {string}', (status, version) => cy.checkStatusAndVersion(status, version))
-
-Then('The activity instance is no longer available', () => cy.confirmItemNotAvailable(activityInstance))
+Then('The activity instance is no longer available', () => cy.confirmItemNotAvailable(apiActivitInstanceyName))
 
 Then('The activity instance is not created', () => cy.confirmItemNotAvailable(activityInstance))
 
 Then('The activity instance is not edited', () => cy.confirmItemNotAvailable(activityInstance))
 
-Then('One activity instance is found after performing full name search', () => cy.searchAndCheckResults(activityInstance))
+Then('One activity instance is found after performing full name search', () => cy.searchAndCheckResults(apiActivitInstanceyName))
 
-function addInstanceData(namePrefix = 'Instance') {
-    activityInstance = `${namePrefix}${Date.now()}`
-    startActivityCreation()
-    fillInstanceActivityGroupData(activityName)
-    fillInstanceClassData()
-    cy.fillInput('instanceform-instancename-field', activityInstance)
-    cy.fillInput('instanceform-definition-field', definition)
+Then('Activity Instance is found', () => cy.searchFor(apiActivitInstanceyName, false))
+
+Then('Activity instance cannot be saved', () => cy.get('.v-overlay .v-window').should('be.visible'))
+
+When('[API] Activity Instance in status Final with Final group, subgroub and activity linked exists', () => {
+    if (!apiActivitInstanceyName) createAndApproveActivityInstanceViaApi()
+    cy.getActivityInstanceNameByUid().then(name => apiActivitInstanceyName = name)
+})
+
+When('[API] Activity Instance in status Draft exists', () => createActivityInstanceViaApi())
+
+When('[API] Activity Instance is approved', () => cy.approveActivityInstance())
+
+When('[API] Activity Instance is inactivated', () => cy.inactivateActivityInstance())
+
+Given('[API] First activity instance for search test is created', () => createActivityInstanceViaApi(`SearchTest${Date.now()}`))
+
+Given('[API] Second activity instance for search test is created', () => cy.createActivityInstance(`SearchTest${Date.now()}`))
+
+function addInstanceAllData() {
+    addInstanceMandatoryData()
     cy.fillInput('instanceform-nciconceptid-field', nciconceptid)
-    cy.fillInput('instanceform-topiccode-field', topiccode)
+    cy.fillInput('instanceform-nciconceptname-field', nciname)
     cy.fillInput('instanceform-adamcode-field', adamcode)
     cy.get('[data-cy="instanceform-requiredforactivity-checkbox"] input').check()
 }
 
-function addInstanceDataAndSave(namePrefix = 'Instance') {
-    addInstanceData(namePrefix)
-    saveActivityInstance('created')
+function addInstanceMandatoryData(code = topicCode, customAction = '') {
+    activityInstance = `Instance${Date.now()}`
+    startActivityCreation()
+    fillInstanceGroupAndClassData(customAction)
+    cy.fillInput('instanceform-instancename-field', activityInstance)
+    cy.fillInput('instanceform-definition-field', definition)
+    cy.fillInput('instanceform-topiccode-field', code) 
 }
 
-function addInstanceAndConfirmCreation() {
-    addInstanceDataAndSave()
+function addInstanceAndConfirmCreation(optionalData = false, customAction = '') {
+    optionalData ? addInstanceAllData() : addInstanceMandatoryData(`Topic${Date.now()}`, customAction)
+    saveActivityInstance('created')
     cy.wait(2500)
     cy.searchAndCheckResults(activityInstance)
     cy.checkStatusAndVersion('Draft', '0.1')
 }
 
 function startActivityCreation() {
-    cy.clickButton('add-activity', true)
+    cy.clickButton('add-activity')
     cy.wait(1000)
 }
 
-function fillInstanceActivityGroupData() {
-    if(activityName != null) {
-        cy.get('[data-cy=instanceform-activity-dropdown] input').type(activityName)
-        cy.contains('.v-list-item', activityName).click()
-    }
-    else cy.selectFirstVSelect('instanceform-activity-dropdown')
-    cy.get('[data-cy=instanceform-activitygroup-table]').within(() => cy.get('.v-checkbox-btn').first().click())
+function fillInstanceGroupAndClassData(customActivity = '') {
+    fillInstanceActivityGroupData(customActivity)
+    cy.selectFirstVSelect('instanceform-instanceclass-dropdown')
     cy.clickFormActionButton('continue')
 }
 
-function fillInstanceClassData() {
-    cy.selectFirstVSelect('instanceform-instanceclass-dropdown')
+function fillInstanceActivityGroupData(customActivity = '') {
+    if (customActivity) cy.get('[data-cy=instanceform-activity-dropdown] input').type(customActivity)
+    cy.selectFirstVSelect('instanceform-activity-dropdown')
+    cy.get('[data-cy=instanceform-activitygroup-table]').within(() => cy.get('.v-checkbox-btn').first().click())
     cy.clickFormActionButton('continue')
 }
 
@@ -179,11 +175,6 @@ function saveActivityInstance(action) {
     cy.wait('@getData2', {timeout: 30000})
 }
 
-function approveAndConfirmStatus() {
-    cy.performActionOnSearchedItem('Approve', approvalConfirmation)
-    cy.checkStatusAndVersion('Final', '1.0')
-}
-
 function editActivityInstance() {
     activityInstance = `Update ${activityInstance}`
     cy.get('.v-card-title').should('contain', 'Edit activity instance')
@@ -192,4 +183,30 @@ function editActivityInstance() {
     cy.clickFormActionButton('continue')
     cy.fillInput('instanceform-instancename-field', activityInstance)
     cy.fillInput('instanceform-definition-field', "update")
+}
+
+function createActivityInstanceViaApi(customName = '') {
+    cy.intercept('/api/concepts/activities/activity-instances?*').as('getData')
+    cy.getFinalGroupUid()
+    cy.getFinalSubGroupUid()
+    cy.getClassUid()
+    cy.createActivity()
+    cy.approveActivity()
+    cy.createActivityInstance(customName)
+    cy.getActivityInstanceNameByUid().then(name => apiActivitInstanceyName = name)
+    cy.getActivityInstanceTopicCodeByUid().then(code => apiTopicCode = code)
+    cy.wait('@getData', {timeout: 30000})
+}
+
+function createAndApproveActivityInstanceViaApi() {
+    cy.getClassUid()
+    createAndApproveViaApi(() => cy.createGroup(), () => cy.approveGroup())
+    createAndApproveViaApi(() => cy.createSubGroup(), () => cy.approveSubGroup())
+    createAndApproveViaApi(() => cy.createActivity(), () => cy.approveActivity())
+    createAndApproveViaApi(() => cy.createActivityInstance(), () => cy.approveActivityInstance())
+}
+
+function createAndApproveViaApi(createFunction, approveFunction) {
+    createFunction()
+    approveFunction()
 }

@@ -106,9 +106,7 @@ export default {
     )
   },
   getAllBranchesForArm(uid, armUid) {
-    return repository.get(
-      `${resource}/${uid}/study-branch-arms/arm/${armUid}`
-    )
+    return repository.get(`${resource}/${uid}/study-branch-arms/arm/${armUid}`)
   },
   getAllCohorts(uid, options) {
     const params = {

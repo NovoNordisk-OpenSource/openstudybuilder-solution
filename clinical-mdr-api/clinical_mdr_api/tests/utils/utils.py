@@ -68,3 +68,8 @@ def assert_with_key_exclusion(
     assert (
         cleaned_dict1 == cleaned_dict2
     ), f"Dictionaries differ: {cleaned_dict1} != {cleaned_dict2}"
+
+
+def get_db_name(module_name: str) -> str:
+    # Max length of a Neo4j database name is 63 characters
+    return "tmp." + module_name.replace("_", "-").replace("clinical-mdr-api.", "")[-58:]

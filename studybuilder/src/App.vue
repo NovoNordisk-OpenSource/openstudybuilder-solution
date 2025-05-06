@@ -54,7 +54,16 @@
         </v-col>
         <v-col cols="10">
           <div class="text-body-1 text-white mt-1">
-            {{ notification }}
+            <div v-if="notificationTitle" class="font-weight-bold mb-4">
+              {{ notificationTitle }}
+            </div>
+            <div
+              v-for="(line, index) in notification"
+              :key="`notif-line-${index}`"
+              class="mb-2"
+            >
+              {{ line }}
+            </div>
             <template v-if="correlationId">
               <p />
               <p class="text-body-2">
@@ -109,7 +118,8 @@ const systemAnnouncement = computed(() => appStore.systemAnnouncement)
 
 const snackbar = ref(false)
 const correlationId = ref(null)
-const notification = ref('')
+const notification = ref([])
+const notificationTitle = ref(null)
 const notificationColor = ref(null)
 const notificationTimeout = ref(-1)
 
@@ -189,6 +199,10 @@ function navigateToRoot() {
 }
 function showNotification(options) {
   notification.value = options.msg
+  if (typeof notification.value === 'string') {
+    notification.value = [notification.value]
+  }
+  notificationTitle.value = options.title
   if (options.type) {
     notificationColor.value =
       options.type === 'error' ? '#E6553F' : options.type

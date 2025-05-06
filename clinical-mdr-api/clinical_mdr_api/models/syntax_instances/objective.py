@@ -3,6 +3,7 @@ from typing import Annotated, Self
 
 from pydantic import Field
 
+from clinical_mdr_api.descriptions.general import CHANGES_FIELD_DESC
 from clinical_mdr_api.domains.syntax_instances.objective import ObjectiveAR
 from clinical_mdr_api.models.libraries.library import Library
 from clinical_mdr_api.models.syntax_templates.objective_template import (
@@ -20,15 +21,25 @@ from clinical_mdr_api.models.utils import BaseModel, PatchInputModel, PostInputM
 
 class Objective(BaseModel):
     uid: str
-    name: Annotated[str | None, Field(nullable=True)] = None
-    name_plain: Annotated[str | None, Field(nullable=True)] = None
+    name: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    name_plain: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
 
-    start_date: Annotated[datetime | None, Field(nullable=True)] = None
-    end_date: Annotated[datetime | None, Field(nullable=True)] = None
-    status: Annotated[str | None, Field(nullable=True)] = None
-    version: Annotated[str | None, Field(nullable=True)] = None
-    change_description: Annotated[str | None, Field(nullable=True)] = None
-    author_username: Annotated[str | None, Field(nullable=True)] = None
+    start_date: Annotated[
+        datetime | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    end_date: Annotated[
+        datetime | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    status: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    version: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    change_description: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    author_username: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
     possible_actions: Annotated[
         list[str],
         Field(
@@ -39,14 +50,16 @@ class Objective(BaseModel):
         ),
     ] = []
 
-    template: ObjectiveTemplateNameUidLibrary | None
+    template: ObjectiveTemplateNameUidLibrary | None = None
     parameter_terms: Annotated[
         list[MultiTemplateParameterTerm],
         Field(
             description="Holds the parameter terms that are used within the objective. The terms are ordered as they occur in the objective name.",
         ),
     ] = []
-    library: Annotated[Library | None, Field(nullable=True)] = None
+    library: Annotated[Library | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
 
     study_count: Annotated[
         int, Field(description="Count of studies referencing objective")
@@ -104,15 +117,11 @@ class ObjectiveVersion(Objective):
     """
 
     changes: Annotated[
-        dict[str, bool] | None,
+        list[str],
         Field(
-            description=(
-                "Denotes whether or not there was a change in a specific field/property compared to the previous version. "
-                "The field names in this object here refer to the field names of the objective (e.g. name, start_date, ..)."
-            ),
-            nullable=True,
+            description=CHANGES_FIELD_DESC,
         ),
-    ] = None
+    ] = []
 
 
 class ObjectiveEditInput(PatchInputModel):

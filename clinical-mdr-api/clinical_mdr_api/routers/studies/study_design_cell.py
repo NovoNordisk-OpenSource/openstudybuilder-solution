@@ -27,11 +27,11 @@ from common.models.error import ErrorResponse
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - there is no study with the given uid.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_all_design_cells(
@@ -55,6 +55,7 @@ def get_all_design_cells(
     response_model_exclude_unset=True,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         400: {
             "model": ErrorResponse,
             "description": "Forbidden - A study design cell already exists for selected study arm and epoch",
@@ -63,7 +64,6 @@ def get_all_design_cells(
             "model": ErrorResponse,
             "description": "Not Found - Study, study arm or study epoch is not found with the passed 'study_uid'.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
@@ -109,6 +109,7 @@ def post_new_design_cell_create(
     response_model_exclude_unset=True,
     status_code=204,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {
             "description": "No content - The study design cell was successfully updated."
         },
@@ -116,7 +117,6 @@ def post_new_design_cell_create(
             "model": ErrorResponse,
             "description": "Not Found - The study design cell with the specified 'study_design_cell_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
@@ -144,12 +144,12 @@ def edit_design_cell(
     response_model=None,
     status_code=204,
     responses={
+        403: _generic_descriptions.ERROR_403,
         204: {"description": "No Content - The selection was successfully deleted."},
         404: {
             "model": ErrorResponse,
             "description": "Not Found - there exist no selection of the design cell and the study provided.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
@@ -178,8 +178,8 @@ The following values should be returned for all study design cells:
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_all_design_cells_audit_trail(
@@ -197,11 +197,11 @@ def get_all_design_cells_audit_trail(
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - there exist no selection of the design cell for the study provided.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_specific_schedule_audit_trail(
@@ -221,8 +221,8 @@ def get_specific_schedule_audit_trail(
     response_model=list[StudyDesignCellBatchOutput],
     status_code=207,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
@@ -263,8 +263,8 @@ def design_cell_batch_operations(
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_all_selected_design_cells_connected_arm(
@@ -312,8 +312,8 @@ def get_all_selected_design_cells_connected_arm(
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_all_selected_design_cells_connected_branch_arm(
@@ -357,8 +357,8 @@ def get_all_selected_design_cells_connected_branch_arm(
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_all_selected_design_cells_connected_epoch(

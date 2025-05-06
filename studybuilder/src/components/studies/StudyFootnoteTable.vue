@@ -36,7 +36,7 @@
       />
     </template>
     <template #[`item.order`]="{ item }">
-      {{ $filters.letteredOrder(item.order) }}
+      {{ $filters.footnoteSymbol(item.order) }}
     </template>
     <template #[`item.name`]="{ item }">
       <template v-if="item.template">
@@ -58,7 +58,7 @@
       </div>
       <div
         v-else-if="item.referenced_items.length > 0 && activeFootnote === item"
-        style="display: flex;"
+        style="display: flex"
       >
         <div v-for="i in item.referenced_items" :key="i.item_uid">
           <v-chip
@@ -71,11 +71,9 @@
           </v-chip>
         </div>
       </div>
-      <div 
-        v-else
-        class="warning"
-      >
-        <v-icon class="mr-2">mdi-alert-circle-outline</v-icon>{{ $t('StudyFootnoteTable.not_linked_warning') }}
+      <div v-else class="warning">
+        <v-icon class="mr-2">mdi-alert-circle-outline</v-icon
+        >{{ $t('StudyFootnoteTable.not_linked_warning') }}
       </div>
     </template>
     <template #[`item.start_date`]="{ item }">
@@ -136,7 +134,11 @@ import { useFootnotesStore } from '@/stores/studies-footnotes'
 const { t } = useI18n()
 const eventBusEmit = inject('eventBusEmit')
 const roles = inject('roles')
-const emit = defineEmits(['enableFootnoteMode', 'update', 'removeElementFromFootnote'])
+const emit = defineEmits([
+  'enableFootnoteMode',
+  'update',
+  'removeElementFromFootnote',
+])
 const route = useRoute()
 
 const accessGuard = useAccessGuard()
@@ -182,7 +184,7 @@ const actions = [
     click: deleteStudyFootnote,
     condition: () => !studiesGeneralStore.selectedStudyVersion,
     accessRole: roles.STUDY_WRITE,
-  }
+  },
 ]
 const footnoteHistoryItems = ref([])
 const headers = [
@@ -337,7 +339,12 @@ function editStudyFootnote(studyFootnote) {
 }
 
 async function deleteStudyFootnote(studyFootnote) {
-  const options = { type: 'warning', agreeLabel: t('StudyFootnoteTable.remove'), cancelLabel: t('StudyFootnoteTable.keep'), title: t('StudyFootnoteTable.remove') }
+  const options = {
+    type: 'warning',
+    agreeLabel: t('StudyFootnoteTable.remove'),
+    cancelLabel: t('StudyFootnoteTable.keep'),
+    title: t('StudyFootnoteTable.remove'),
+  }
   const footnote = studyFootnote.footnote
     ? studyFootnote.footnote.name_plain
     : '(unnamed)'
@@ -407,7 +414,6 @@ async function updateFootnoteVersion(item) {
 }
 </script>
 <style>
-
 .warning {
   background-color: rgb(var(--v-theme-nnGoldenSun200));
   height: 30px;

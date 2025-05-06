@@ -4,5 +4,5 @@ Then('The Need Help? button is presented to the user with correct link to sharep
     cy.get('[data-cy="topbar-need-help"]')
       .should("have.attr", "href")
       .should("not.be.empty")
-      .and("contain", "https://openstudybuilder.com");
+      .and("contain", "https://novonordisk.sharepoint.com/sites/MDR-StudyBuilder/SitePages/Support.aspx");
   })

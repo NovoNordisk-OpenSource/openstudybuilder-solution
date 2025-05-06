@@ -47,6 +47,7 @@ STUDY_VISIT_FIELDS_ALL = [
     "visit_short_name",
     "visit_window_min",
     "visit_window_max",
+    "is_global_anchor_visit",
     "visit_type_uid",
     "visit_type_name",
     "visit_window_unit_uid",
@@ -369,7 +370,7 @@ def test_get_studies_invalid_pagination_params(api_client):
     assert_response_status_code(response, 422)
     assert (
         response.json()["detail"][0]["msg"]
-        == "ensure this value is greater than or equal to 1"
+        == "Input should be greater than or equal to 1"
     )
 
     response = api_client.get(
@@ -378,7 +379,7 @@ def test_get_studies_invalid_pagination_params(api_client):
     assert_response_status_code(response, 422)
     assert (
         response.json()["detail"][0]["msg"]
-        == "ensure this value is less than or equal to 1000"
+        == "Input should be less than or equal to 1000"
     )
 
     response = api_client.get(

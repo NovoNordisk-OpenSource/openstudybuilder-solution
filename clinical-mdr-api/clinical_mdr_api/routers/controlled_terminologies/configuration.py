@@ -35,6 +35,7 @@ CodelistConfigUID = Path(description="The unique id of configuration.")
     response_model=list[CTConfigOGM],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {
             "content": {
                 "text/csv": {
@@ -51,7 +52,6 @@ CodelistConfigUID = Path(description="The unique id of configuration.")
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {},
             }
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.allow_exports(
@@ -91,12 +91,12 @@ def get_all(
     response_model=CTConfigModel,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": """Not Found - The configuration with the specified 'configuration_uid'
             (and the specified date/time, version and/or status) wasn't found.""",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_by_uid(
@@ -148,6 +148,7 @@ def get_by_uid(
     response_model=list[CTConfigModel],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {
             "content": {
                 "text/csv": {
@@ -168,7 +169,6 @@ def get_by_uid(
             "model": ErrorResponse,
             "description": "Not Found - The configuration with the specified 'configuration_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.allow_exports(
@@ -215,13 +215,13 @@ If the request succeeds:
 """,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {"description": "Created - The configuration was successfully created."},
         400: {
             "model": ErrorResponse,
             "description": "Forbidden - Reasons include e.g.: \n"
             "- The configuration name is not valid.\n",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def post(
@@ -248,6 +248,7 @@ If the request succeeds:
     response_model=CTConfigModel,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -258,7 +259,6 @@ If the request succeeds:
             "model": ErrorResponse,
             "description": "Not Found - The configuration with the specified 'configuration_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def patch(
@@ -290,6 +290,7 @@ If the request succeeds:
     response_model=CTConfigModel,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -300,7 +301,6 @@ If the request succeeds:
             "model": ErrorResponse,
             "description": "Not Found - The  configuration with the specified 'configuration_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def new_version(
@@ -325,6 +325,7 @@ If the request succeeds:
     response_model=CTConfigModel,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -335,7 +336,6 @@ If the request succeeds:
             "model": ErrorResponse,
             "description": "Not Found - The configuration with the specified 'configuration_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def approve(
@@ -360,6 +360,7 @@ If the request succeeds:
     response_model=CTConfigModel,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -370,7 +371,6 @@ If the request succeeds:
             "model": ErrorResponse,
             "description": "Not Found - The configuration with the specified 'configuration_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def inactivate(
@@ -395,6 +395,7 @@ If the request succeeds:
     response_model=CTConfigModel,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -405,7 +406,6 @@ If the request succeeds:
             "model": ErrorResponse,
             "description": "Not Found - The configuration with the specified 'configuration_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def reactivate(
@@ -426,6 +426,7 @@ def reactivate(
     response_model=None,
     status_code=204,
     responses={
+        403: _generic_descriptions.ERROR_403,
         204: {
             "description": "No Content - The configuration was successfully deleted."
         },
@@ -439,7 +440,6 @@ def reactivate(
             "model": ErrorResponse,
             "description": "Not Found - An configuration with the specified uid could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def delete(

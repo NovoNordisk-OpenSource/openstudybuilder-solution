@@ -13,7 +13,6 @@ from clinical_mdr_api.domain_repositories.models.activities import (
 from clinical_mdr_api.domain_repositories.models.study import StudyValue
 from clinical_mdr_api.domain_repositories.models.study_audit_trail import StudyAction
 from clinical_mdr_api.domain_repositories.models.study_selections import (
-    StudyActivity,
     StudyActivityGroup,
     StudySelection,
 )
@@ -51,9 +50,6 @@ class StudySelectionActivityGroupRepository(
 ):
     _aggregate_root_type = StudySelectionActivityGroupAR
 
-    def is_repository_based_on_ordered_selection(self):
-        return False
-
     def _create_value_object_from_repository(
         self, selection: dict, acv: bool
     ) -> StudySelectionActivityGroupVO:
@@ -81,17 +77,25 @@ class StudySelectionActivityGroupRepository(
     def _additional_match(self) -> str:
         return """
             WITH sr, sv
-            MATCH (sv)-[:HAS_STUDY_ACTIVITY]->(study_activity)-[:STUDY_ACTIVITY_HAS_STUDY_ACTIVITY_GROUP]->
+            MATCH (sv)-[:HAS_STUDY_ACTIVITY]->(study_activity:StudyActivity)-[:STUDY_ACTIVITY_HAS_STUDY_ACTIVITY_GROUP]->
                 (sa:StudyActivityGroup)-[:HAS_SELECTED_ACTIVITY_GROUP]->(av:ActivityGroupValue)<-[ver:HAS_VERSION]-(ar:ActivityGroupRoot)
+            MATCH (study_activity)-[STUDY_ACTIVITY_HAS_STUDY_SOA_GROUP]->(study_soa_group:StudySoAGroup)
         """
 
     def _filter_clause(self, query_parameters: dict, **kwargs) -> str:
-        return ""
+        filter_query = "WHERE NOT (sa)<-[:BEFORE]-()"
+
+        study_soa_group_uid = kwargs.get("study_soa_group_uid")
+        if study_soa_group_uid is not None:
+            filter_query += "AND study_soa_group.uid=$study_soa_group_uid"
+            query_parameters["study_soa_group_uid"] = study_soa_group_uid
+
+        return filter_query
 
     def _order_by_query(self):
         return """
             WITH DISTINCT *
-            ORDER BY study_activity.order ASC
+            ORDER BY study_soa_group.order, sa.order ASC
             MATCH (sa)<-[:AFTER]-(sac:StudyAction)
         """
 
@@ -214,7 +218,8 @@ class StudySelectionActivityGroupRepository(
         )
         # Create new activity group selection
         study_activity_group_selection_node = StudyActivityGroup(
-            show_activity_group_in_protocol_flowchart=selection.show_activity_group_in_protocol_flowchart
+            show_activity_group_in_protocol_flowchart=selection.show_activity_group_in_protocol_flowchart,
+            order=order,
         )
         study_activity_group_selection_node.uid = selection.study_selection_uid
         study_activity_group_selection_node.accepted_version = (
@@ -239,7 +244,6 @@ class StudySelectionActivityGroupRepository(
                 previous_item=last_study_selection_node,
                 study_value_node=latest_study_value_node,
                 new_item=study_activity_group_selection_node,
-                exclude_study_selection_relationships=[StudyActivity],
             )
 
     def generate_uid(self) -> str:

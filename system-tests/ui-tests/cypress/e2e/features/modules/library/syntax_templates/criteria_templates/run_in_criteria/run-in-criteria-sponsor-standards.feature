@@ -50,7 +50,7 @@ Feature: Library - Run-in Criteria - parent template
   Scenario: User must not be able to create a new Run-in Criteria template without Template Text populated
     Given The 'library/criteria_templates/Run-in/parent' page is opened
     When The new Criteria template is added without template text
-    Then The validation appears for Template Text field
+    Then The validation appears for Template name
     And The form is not closed
 
   Scenario: User must not be able to create a new Run-in Criteria template without Indication or Disorder populated

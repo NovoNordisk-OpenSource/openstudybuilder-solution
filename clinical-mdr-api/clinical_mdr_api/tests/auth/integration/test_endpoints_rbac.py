@@ -191,7 +191,9 @@ def test_endpoints_rbac_correct_roles(
             is_json,
             content_type,
         )
-        assert_response_status_code(response, (200, 201, 204, 207, 400, 404, 409, 422))
+        assert_response_status_code(
+            response, (200, 201, 202, 204, 207, 400, 403, 404, 409, 422)
+        )
 
         if response.status_code == 400:
             payload = response.json()

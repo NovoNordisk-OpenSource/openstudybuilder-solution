@@ -14,3 +14,5 @@ The controlled terminologies is a set of code lists and term values used with da
 | CTTerm | Controlled Terminology term values are defined as being part of an code list. The term values can be defined by CDISC or as a sponsor defined term. The individual term values applicable for a study will be documented as part of the Define.xml file for code list or for a value level definition. This documentation will refer to this definition of the term value. | BLACK OR AFRICAN AMERICAN (Black or African American) |
 | CTTermName | Holds the unique submission values (names) for the CTTerm | BLACK OR AFRICAN AMERICAN |
 | CTTermSynonym | Holds synonym values for the CTTermName values |   |
+
+

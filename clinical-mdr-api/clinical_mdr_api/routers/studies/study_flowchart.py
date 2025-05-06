@@ -4,7 +4,7 @@ import io
 import os
 from typing import Annotated
 
-from fastapi import Path, Query, status
+from fastapi import Path, Query
 from fastapi.responses import HTMLResponse, StreamingResponse
 from starlette.requests import Request
 
@@ -24,12 +24,14 @@ from clinical_mdr_api.services.utils.table_f import TableWithFootnotes
 from common import config
 from common.auth import rbac
 
-DETAILED_QUERY_DESCRIPTION = "Return detailed SoA, including all rows that are otherwise hidden from protocol SoA"
+LAYOUT_QUERY = Query(
+    description="The requested layout or detail level of Schedule of Activities"
+)
 
-DETAILED_QUERY = Query(description=DETAILED_QUERY_DESCRIPTION)
+MIME_TYPE_XLSX = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 
-OPERATIONAL_QUERY = Query(
-    description="Returns operational SoA if True else Protocol SoA if False (default)"
+MIME_TYPE_DOCX = (
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
 )
 
 STUDY_UID_PATH = Path(description="The unique id of the study.")
@@ -45,8 +47,8 @@ TIME_UNIT_QUERY = Query(
     summary="Returns uid to [row,column] coordinates mapping of items included in SoA Protocol Flowchart table",
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
     response_model=dict[str, tuple[int, int]],
 )
@@ -68,8 +70,8 @@ def get_study_flowchart_coordinates(
     summary="Protocol, Detailed or Operational SoA table with footnotes as JSON",
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
     response_model=TableWithFootnotes,
     response_model_exclude_none=True,
@@ -80,10 +82,7 @@ def get_study_flowchart(
         str | None, _generic_descriptions.STUDY_VALUE_VERSION_QUERY
     ] = None,
     time_unit: Annotated[str | None, TIME_UNIT_QUERY] = None,
-    detailed: Annotated[
-        bool | None, Query(description=DETAILED_QUERY_DESCRIPTION)
-    ] = True,
-    operational: Annotated[bool | None, OPERATIONAL_QUERY] = False,
+    layout: Annotated[SoALayout, LAYOUT_QUERY] = SoALayout.PROTOCOL,
     force_build: Annotated[
         bool | None,
         Query(description="Force building of SoA without using any saved snapshot"),
@@ -93,7 +92,7 @@ def get_study_flowchart(
         study_uid=study_uid,
         time_unit=time_unit,
         study_value_version=study_value_version,
-        layout=StudyFlowchartService.choose_soa_layout(detailed, operational),
+        layout=layout,
         force_build=force_build,
     )
 
@@ -105,9 +104,9 @@ def get_study_flowchart(
     dependencies=[rbac.STUDY_READ],
     summary="Builds and returns an HTML document with Protocol, Detailed or Operational SoA table with footnotes",
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"content": {"text/html": {"schema": {"type": "string"}}}},
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_study_flowchart_html(
@@ -116,25 +115,23 @@ def get_study_flowchart_html(
         str | None, _generic_descriptions.STUDY_VALUE_VERSION_QUERY
     ] = None,
     time_unit: Annotated[str | None, TIME_UNIT_QUERY] = None,
-    detailed: Annotated[bool | None, DETAILED_QUERY] = False,
+    layout: Annotated[SoALayout, LAYOUT_QUERY] = SoALayout.PROTOCOL,
     debug_uids: Annotated[
-        bool | None, Query(description="Show uids on column superscript")
+        bool, Query(description="Show uids on column superscript")
     ] = False,
     debug_coordinates: Annotated[
-        bool | None, Query(description="Debug coordinates as superscripts")
+        bool, Query(description="Debug coordinates as superscripts")
     ] = False,
     debug_propagation: Annotated[
-        bool | None, Query(description="Debug propagations without hiding rows")
+        bool, Query(description="Debug propagations without hiding rows")
     ] = False,
-    operational: Annotated[bool | None, OPERATIONAL_QUERY] = False,
 ) -> HTMLResponse:
     return HTMLResponse(
         StudyFlowchartService().get_study_flowchart_html(
             study_uid=study_uid,
             time_unit=time_unit,
             study_value_version=study_value_version,
-            detailed=detailed,
-            operational=operational,
+            layout=layout,
             debug_uids=debug_uids,
             debug_coordinates=debug_coordinates,
             debug_propagation=debug_propagation,
@@ -147,13 +144,9 @@ def get_study_flowchart_html(
     dependencies=[rbac.STUDY_READ],
     summary="Builds and returns an DOCX document with Protocol, Detailed or Operational SoA table with footnotes",
     responses={
-        200: {
-            "content": {
-                "application/vnd.openxmlformats-officedocument.wordprocessingml.document": {}
-            }
-        },
+        403: _generic_descriptions.ERROR_403,
+        200: {"content": {MIME_TYPE_DOCX: {}}},
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_study_flowchart_docx(
@@ -162,48 +155,24 @@ def get_study_flowchart_docx(
         str | None, _generic_descriptions.STUDY_VALUE_VERSION_QUERY
     ] = None,
     time_unit: Annotated[str | None, TIME_UNIT_QUERY] = None,
-    detailed: Annotated[bool | None, DETAILED_QUERY] = False,
-    operational: Annotated[bool | None, OPERATIONAL_QUERY] = False,
+    layout: Annotated[SoALayout, LAYOUT_QUERY] = SoALayout.PROTOCOL,
 ) -> StreamingResponse:
     stream = (
         StudyFlowchartService()
         .get_study_flowchart_docx(
             study_uid=study_uid,
-            time_unit=time_unit,
             study_value_version=study_value_version,
-            detailed=detailed,
-            operational=operational,
+            layout=layout,
+            time_unit=time_unit,
         )
         .get_document_stream()
     )
 
-    # determine the size of the binary DOCX document for HTTP header
-    size = stream.seek(0, os.SEEK_END)
-    stream.seek(0)
+    study_id = _get_study_id(study_uid, study_value_version)
+    filename = f"{study_id or study_uid} {layout.value} SoA.docx"
+    mime_type = MIME_TYPE_DOCX
 
-    # get study_id for constructing download filename
-    study = StudyService().get_by_uid(
-        study_uid, study_value_version=study_value_version
-    )
-
-    # construct download filename
-    filename = []
-    if study.current_metadata.identification_metadata.study_id:
-        filename.append(study.current_metadata.identification_metadata.study_id)
-    if detailed:
-        filename.append("detailed")
-    filename.append("flowchart.docx")
-    filename = " ".join(filename)
-
-    # send response along with document info in HTTP headers
-    return StreamingResponse(
-        stream,
-        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        headers={
-            "Content-Disposition": f'attachment; filename="{filename}"',
-            "Content-Length": f"{size:d}",
-        },
-    )
+    return _streaming_response(stream, filename, mime_type)
 
 
 @router.get(
@@ -211,13 +180,9 @@ def get_study_flowchart_docx(
     dependencies=[rbac.STUDY_READ],
     summary="Builds and returns an XLSX document with Operational SoA",
     responses={
-        200: {
-            "content": {
-                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {}
-            }
-        },
+        403: _generic_descriptions.ERROR_403,
+        200: {"content": {MIME_TYPE_XLSX: {}}},
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_operational_soa_xlsx(
@@ -227,38 +192,22 @@ def get_operational_soa_xlsx(
     ] = None,
     time_unit: Annotated[str | None, TIME_UNIT_QUERY] = None,
 ) -> StreamingResponse:
+    layout = SoALayout.OPERATIONAL
     xlsx = StudyFlowchartService().get_operational_soa_xlsx(
         study_uid=study_uid,
         time_unit=time_unit,
         study_value_version=study_value_version,
     )
 
-    # render document into a stream
+    # render document into Bytes stream
     stream = io.BytesIO()
     xlsx.save(stream)
-    size = stream.seek(0, os.SEEK_END)
-    stream.seek(0)
 
-    # get Study for constructing download filename
-    study = StudyService().get_by_uid(
-        study_uid, study_value_version=study_value_version
-    )
+    study_id = _get_study_id(study_uid, study_value_version)
+    filename = f"{study_id or study_uid} {layout.value} SoA.xlsx"
+    mime_type = MIME_TYPE_XLSX
 
-    # construct download filename
-    filename = ["operational", "SoA.xlsx"]
-    if study.current_metadata.identification_metadata.study_id:
-        filename.insert(0, study.current_metadata.identification_metadata.study_id)
-    filename = " ".join(filename)
-
-    # send response along with document info in HTTP header
-    return StreamingResponse(
-        stream,
-        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={
-            "Content-Disposition": f'attachment; filename="{filename}"',
-            "Content-Length": f"{size:d}",
-        },
-    )
+    return _streaming_response(stream, filename, mime_type)
 
 
 @router.get(
@@ -266,9 +215,9 @@ def get_operational_soa_xlsx(
     dependencies=[rbac.STUDY_READ],
     summary="Builds and returns an HTML document with Operational SoA",
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"content": {"text/html": {}}},
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_operational_soa_html(
@@ -294,8 +243,8 @@ def get_operational_soa_html(
     response_model=CustomPage[DetailedSoAHistory],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_detailed_soa_history(
@@ -314,7 +263,7 @@ def get_detailed_soa_history(
     total_count: Annotated[
         bool | None, Query(description=_generic_descriptions.TOTAL_COUNT)
     ] = False,
-) -> list[DetailedSoAHistory]:
+) -> CustomPage[DetailedSoAHistory]:
     detailed_soa_history = StudyActivitySelectionService().get_detailed_soa_history(
         study_uid=study_uid,
         page_size=page_size,
@@ -336,8 +285,8 @@ def get_detailed_soa_history(
     response_model=list[dict],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.allow_exports(
@@ -386,8 +335,8 @@ def export_detailed_soa_content(
     response_model=list[dict],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.allow_exports(
@@ -448,8 +397,8 @@ def export_operational_soa_content(
     response_model=list[dict],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.allow_exports(
@@ -491,58 +440,33 @@ def export_protocol_soa_content(
     return soa_content
 
 
-@router.get(
-    "/{study_uid}/flowchart/snapshot",
-    dependencies=[rbac.ADMIN_READ],
-    summary="Retrieve the saved SoA snapshot for a study version. If no SoA snapshot saved, returns 404.",
-    status_code=status.HTTP_200_OK,
-    responses={
-        status.HTTP_404_NOT_FOUND: _generic_descriptions.ERROR_404,
-        status.HTTP_500_INTERNAL_SERVER_ERROR: _generic_descriptions.ERROR_500,
-    },
-    response_model=TableWithFootnotes,
-    response_model_exclude_none=True,
-    tags=["Data Migration"],
-)
-def get_soa_snapshot(
-    study_uid: Annotated[str, STUDY_UID_PATH],
-    study_value_version: Annotated[
-        str | None, _generic_descriptions.STUDY_VALUE_VERSION_QUERY
-    ] = None,
-    layout: Annotated[
-        str, Query(description="SoA layout", pattern=SoALayout.PROTOCOL.value)
-    ] = SoALayout.PROTOCOL.value,
-) -> TableWithFootnotes:
-    return StudyFlowchartService().load_soa_snapshot(
-        study_uid=study_uid,
-        study_value_version=study_value_version,
-        layout=layout,
+def _get_study_id(study_uid, study_value_version):
+    """gets study_id of study"""
+
+    study = StudyService().get_by_uid(
+        study_uid, study_value_version=study_value_version
     )
 
+    return study.current_metadata.identification_metadata.study_id
 
-@router.post(
-    "/{study_uid}/flowchart/snapshot",
-    dependencies=[rbac.ADMIN_WRITE],
-    summary="Update SoA snapshot for a study version based on the recent SoA rules (intended for data migration only)",
-    status_code=status.HTTP_204_NO_CONTENT,
-    responses={
-        status.HTTP_404_NOT_FOUND: _generic_descriptions.ERROR_404,
-        status.HTTP_500_INTERNAL_SERVER_ERROR: _generic_descriptions.ERROR_500,
-    },
-    response_model=None,
-    tags=["Data Migration"],
-)
-def update_soa_snapshot(
-    study_uid: Annotated[str, STUDY_UID_PATH],
-    study_value_version: Annotated[
-        str | None, _generic_descriptions.STUDY_VALUE_VERSION_QUERY
-    ] = None,
-    layout: Annotated[
-        str, Query(description="SoA layout", pattern=SoALayout.PROTOCOL.value)
-    ] = SoALayout.PROTOCOL.value,
-) -> None:
-    StudyFlowchartService().update_soa_snapshot(
-        study_uid=study_uid,
-        study_value_version=study_value_version,
-        layout=layout,
+
+def _streaming_response(
+    stream: io.BytesIO, filename: str, mime_type: str
+) -> StreamingResponse:
+    """Returns StreamingResponse from a stream, with filename, size, and mime-type HTTP headers."""
+
+    # determine the size of the binary data
+    filesize = stream.seek(0, os.SEEK_END)
+    stream.seek(0)
+
+    # response with document info HTTP headers
+    response = StreamingResponse(
+        stream,
+        media_type=mime_type,
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Content-Length": f"{filesize:d}",
+        },
     )
+
+    return response

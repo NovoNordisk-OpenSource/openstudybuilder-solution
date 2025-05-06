@@ -11,54 +11,80 @@ from clinical_mdr_api.models.utils import BaseModel
 class SimpleReferencedCodelist(BaseModel):
     uid: Annotated[
         str | None,
-        Field(title="The uid of the referenced codelist", nullable=True),
+        Field(
+            title="The uid of the referenced codelist",
+            json_schema_extra={"nullable": True},
+        ),
     ] = None
     name: Annotated[
         str | None,
-        Field(title="The name of the referenced codelist", nullable=True),
+        Field(
+            title="The name of the referenced codelist",
+            json_schema_extra={"nullable": True},
+        ),
     ] = None
 
 
 class SimpleDatasetClass(BaseModel):
-    ordinal: Annotated[str | None, Field(nullable=True)] = None
-    dataset_class_name: Annotated[str | None, Field(nullable=True)] = None
+    ordinal: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    dataset_class_name: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
 
 
 class SimpleVariableClass(BaseModel):
-    uid: Annotated[str | None, Field(nullable=True)] = None
-    name: Annotated[str | None, Field(nullable=True)] = None
+    uid: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    name: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
 
 
 class VariableClass(BaseModel):
     uid: Annotated[str, Field()]
     label: Annotated[str, Field()]
     title: Annotated[str, Field()]
-    description: Annotated[str | None, Field(nullable=True)] = None
-    implementation_notes: Annotated[str | None, Field(nullable=True)] = None
-    mapping_instructions: Annotated[str | None, Field(nullable=True)] = None
-    core: Annotated[str | None, Field(nullable=True)] = None
-    completion_instructions: Annotated[str | None, Field(nullable=True)] = None
-    prompt: Annotated[str | None, Field(nullable=True)] = None
-    question_text: Annotated[str | None, Field(nullable=True)] = None
-    simple_datatype: Annotated[str | None, Field(nullable=True)] = None
-    role: Annotated[str | None, Field(nullable=True)] = None
-    described_value_domain: Annotated[str | None, Field(nullable=True)] = None
-    notes: Annotated[str | None, Field(nullable=True)] = None
-    usage_restrictions: Annotated[str | None, Field(nullable=True)] = None
-    examples: Annotated[str | None, Field(nullable=True)] = None
+    description: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
+    implementation_notes: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    mapping_instructions: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    core: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    completion_instructions: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    prompt: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    question_text: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    simple_datatype: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    role: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    described_value_domain: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    notes: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    usage_restrictions: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    examples: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
     dataset_class: Annotated[SimpleDatasetClass, Field()]
-    dataset_variable_name: Annotated[str | None, Field(nullable=True)] = None
+    dataset_variable_name: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
     catalogue_name: Annotated[str, Field()]
     data_model_names: Annotated[list[str], Field()]
-    has_mapping_target: Annotated[SimpleMappingTarget | None, Field(nullable=True)] = (
-        None
-    )
-    referenced_codelist: Annotated[
-        SimpleReferencedCodelist | None, Field(nullable=True)
+    has_mapping_target: Annotated[
+        SimpleMappingTarget | None, Field(json_schema_extra={"nullable": True})
     ] = None
-    qualifies_variable: Annotated[SimpleVariableClass | None, Field(nullable=True)] = (
-        None
-    )
+    referenced_codelist: Annotated[
+        SimpleReferencedCodelist | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    qualifies_variable: Annotated[
+        SimpleVariableClass | None, Field(json_schema_extra={"nullable": True})
+    ] = None
 
     @classmethod
     def from_repository_output(cls, input_dict: dict):

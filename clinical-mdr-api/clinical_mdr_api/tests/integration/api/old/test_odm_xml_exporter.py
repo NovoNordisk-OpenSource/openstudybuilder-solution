@@ -71,7 +71,7 @@ def test_data():
 
 def test_get_odm_xml_study_event(api_client):
     response = api_client.post(
-        "concepts/odms/metadata/xmls/export?target_uid=odm_study_event1&target_type=study_event&stylesheet=file.xsl",
+        "concepts/odms/metadata/xmls/export?target_uid=odm_study_event1&target_type=study_event&stylesheet=file.xsl&allowed_namespaces=*",
     )
 
     expected_xml = ET.fromstring(export_study_event)
@@ -89,7 +89,7 @@ def test_get_odm_xml_study_event(api_client):
 
 def test_get_odm_xml_form(api_client):
     response = api_client.post(
-        "concepts/odms/metadata/xmls/export?target_uid=odm_form1&target_type=form&stylesheet=file.xsl",
+        "concepts/odms/metadata/xmls/export?target_uid=odm_form1&target_type=form&stylesheet=file.xsl&allowed_namespaces=*",
     )
 
     expected_xml = ET.fromstring(export_form)
@@ -107,7 +107,7 @@ def test_get_odm_xml_form(api_client):
 
 def test_get_odm_xml_item_group(api_client):
     response = api_client.post(
-        "concepts/odms/metadata/xmls/export?target_uid=odm_item_group1&target_type=item_group&stylesheet=file.xsl",
+        "concepts/odms/metadata/xmls/export?target_uid=odm_item_group1&target_type=item_group&stylesheet=file.xsl&allowed_namespaces=*",
     )
 
     expected_xml = ET.fromstring(export_item_group)
@@ -125,7 +125,7 @@ def test_get_odm_xml_item_group(api_client):
 
 def test_get_odm_xml_item(api_client):
     response = api_client.post(
-        "concepts/odms/metadata/xmls/export?target_uid=odm_item1&target_type=item&stylesheet=file.xsl",
+        "concepts/odms/metadata/xmls/export?target_uid=odm_item1&target_type=item&stylesheet=file.xsl&allowed_namespaces=*",
     )
 
     expected_xml = ET.fromstring(export_item)
@@ -159,7 +159,7 @@ def test_get_odm_xml_with_allowed_namespaces(api_client):
 
 def test_get_odm_xml_with_mapper_csv(api_client):
     response = api_client.post(
-        "concepts/odms/metadata/xmls/export?target_type=study_event&target_uid=odm_study_event1",
+        "concepts/odms/metadata/xmls/export?target_type=study_event&target_uid=odm_study_event1&allowed_namespaces=*",
         files={
             "mapper_file": (
                 "mapper.csv",

@@ -252,6 +252,8 @@ class StudyDiseaseMilestoneService:
             repetition_indicator=study_disease_milestone_edit_input.repetition_indicator,
         )
 
+        study_disease_milestone_to_edit.author_id = self.author
+
     @db.transaction
     def create(
         self,
@@ -373,7 +375,7 @@ class StudyDiseaseMilestoneService:
             uid=disease_milestone_uid, study_uid=study_uid
         )
         versions = [
-            self._transform_all_to_response_history_model(_).dict()
+            self._transform_all_to_response_history_model(_).model_dump()
             for _ in all_versions
         ]
         data = calculate_diffs(versions, StudyDiseaseMilestoneVersion)

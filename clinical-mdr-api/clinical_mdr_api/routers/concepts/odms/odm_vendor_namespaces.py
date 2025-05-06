@@ -32,8 +32,8 @@ OdmVendorNamespaceUID = Path(description="The unique id of the ODM Vendor Namesp
     response_model=CustomPage[OdmVendorNamespace],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_all_odm_vendor_namespaces(
@@ -90,11 +90,11 @@ def get_all_odm_vendor_namespaces(
     response_model=list[Any],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - Invalid field name specified",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_distinct_values_for_header(
@@ -137,8 +137,8 @@ def get_distinct_values_for_header(
     response_model=OdmVendorNamespace,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_odm_vendor_namespace(
@@ -155,8 +155,8 @@ def get_odm_vendor_namespace(
     response_model=dict,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_active_relationships(
@@ -189,11 +189,11 @@ Possible errors:
     response_model=list[OdmVendorNamespace],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - The ODM Vendor Namespace with the specified 'odm_vendor_namespace_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_odm_vendor_namespace_versions(
@@ -212,6 +212,7 @@ def get_odm_vendor_namespace_versions(
     response_model=OdmVendorNamespace,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {
             "description": "Created - The ODM Vendor Namespace was successfully created."
         },
@@ -222,7 +223,6 @@ def get_odm_vendor_namespace_versions(
             "- The library doesn't allow to add new items.\n",
         },
         409: _generic_descriptions.ERROR_409,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def create_odm_vendor_namespace(
@@ -241,6 +241,7 @@ def create_odm_vendor_namespace(
     response_model=OdmVendorNamespace,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -253,7 +254,6 @@ def create_odm_vendor_namespace(
             "model": ErrorResponse,
             "description": "Not Found - The ODM Vendor Namespace with the specified 'odm_vendor_namespace_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def edit_odm_vendor_namespace(
@@ -287,6 +287,7 @@ Possible errors:
     response_model=OdmVendorNamespace,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -299,7 +300,6 @@ Possible errors:
             "- The ODM Vendor Namespace is not in final status.\n"
             "- The ODM Vendor Namespace with the specified 'odm_vendor_namespace_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def create_odm_vendor_namespace_version(
@@ -316,6 +316,7 @@ def create_odm_vendor_namespace_version(
     response_model=OdmVendorNamespace,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -327,7 +328,6 @@ def create_odm_vendor_namespace_version(
             "model": ErrorResponse,
             "description": "Not Found - The ODM Vendor Namespace with the specified 'odm_vendor_namespace_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def approve_odm_vendor_namespace(
@@ -344,6 +344,7 @@ def approve_odm_vendor_namespace(
     response_model=OdmVendorNamespace,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -354,7 +355,6 @@ def approve_odm_vendor_namespace(
             "model": ErrorResponse,
             "description": "Not Found - The ODM Vendor Namespace with the specified 'odm_vendor_namespace_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def inactivate_odm_vendor_namespace(
@@ -371,6 +371,7 @@ def inactivate_odm_vendor_namespace(
     response_model=OdmVendorNamespace,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -381,7 +382,6 @@ def inactivate_odm_vendor_namespace(
             "model": ErrorResponse,
             "description": "Not Found - The ODM Vendor Namespace with the specified 'odm_vendor_namespace_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def reactivate_odm_vendor_namespace(
@@ -398,6 +398,7 @@ def reactivate_odm_vendor_namespace(
     response_model=None,
     status_code=204,
     responses={
+        403: _generic_descriptions.ERROR_403,
         204: {
             "description": "No Content - The ODM Vendor Namespace was successfully deleted."
         },
@@ -412,7 +413,6 @@ def reactivate_odm_vendor_namespace(
             "model": ErrorResponse,
             "description": "Not Found - An ODM Vendor Namespace with the specified 'odm_vendor_namespace_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def delete_odm_vendor_namespace(

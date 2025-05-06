@@ -157,6 +157,9 @@ from clinical_mdr_api.domain_repositories.projects.project_repository import (
 from clinical_mdr_api.domain_repositories.standard_data_models.data_model_ig_repository import (
     DataModelIGRepository,
 )
+from clinical_mdr_api.domain_repositories.standard_data_models.dataset_class_repository import (
+    DatasetClassRepository,
+)
 from clinical_mdr_api.domain_repositories.standard_data_models.dataset_repository import (
     DatasetRepository,
 )
@@ -366,6 +369,10 @@ class MetaRepository:
     @property
     def dataset_repository(self) -> DatasetRepository:
         return DatasetRepository()
+
+    @property
+    def dataset_class_repository(self) -> DatasetClassRepository:
+        return DatasetClassRepository()
 
     @property
     def dataset_variable_repository(self) -> DatasetVariableRepository:

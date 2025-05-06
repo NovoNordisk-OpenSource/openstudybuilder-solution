@@ -25,3 +25,5 @@ Run the [installation script](./install-git-hooks.sh) once via e.g.:
 ```
 
 That's it, the hook(s) should be installed.
+
+

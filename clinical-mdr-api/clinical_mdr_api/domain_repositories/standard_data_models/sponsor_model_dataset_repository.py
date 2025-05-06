@@ -14,7 +14,9 @@ from clinical_mdr_api.domain_repositories.models.generic import (
     VersionRelationship,
 )
 from clinical_mdr_api.domain_repositories.models.standard_data_model import (
+    DataModelCatalogue,
     Dataset,
+    DatasetClass,
     DatasetVariable,
     SponsorModelDatasetInstance,
     SponsorModelValue,
@@ -47,6 +49,9 @@ class SponsorModelDatasetRepository(
         return Dataset.nodes.fetch_relations(
             "has_sponsor_model_instance__has_dataset",
             "has_dataset__has_library",
+            Optional(
+                "has_sponsor_model_instance__implements_dataset_class__is_instance_of"
+            ),
             Optional("has_sponsor_model_instance__has_key"),
             Optional("has_sponsor_model_instance__has_sort_key"),
         ).annotate(
@@ -77,7 +82,9 @@ class SponsorModelDatasetRepository(
             or ar.sponsor_model_dataset_vo.xml_title != value.xml_title
             or ar.sponsor_model_dataset_vo.structure != value.structure
             or ar.sponsor_model_dataset_vo.purpose != value.purpose
+            or ar.sponsor_model_dataset_vo.is_cdisc_std != value.is_cdisc_std
             or ar.sponsor_model_dataset_vo.source_ig != value.source_ig
+            or ar.sponsor_model_dataset_vo.standard_ref != value.standard_ref
             or ar.sponsor_model_dataset_vo.comment != value.comment
             or ar.sponsor_model_dataset_vo.ig_comment != value.ig_comment
             or ar.sponsor_model_dataset_vo.map_domain_flag != value.map_domain_flag
@@ -96,8 +103,14 @@ class SponsorModelDatasetRepository(
         """
         root = Dataset.nodes.get_or_none(uid=item.uid)
 
-        if root is None:
+        if not root:
+            # Create a new "root" node with uid
             root = Dataset(uid=item.uid).save()
+            # Link it with the DataModelCatalogue node
+            catalogue = DataModelCatalogue.nodes.get_or_none(
+                name=item.sponsor_model_dataset_vo.target_data_model_catalogue
+            )
+            root.has_dataset.connect(catalogue)
 
         instance = self._get_or_create_instance(root=root, ar=item)
 
@@ -131,7 +144,9 @@ class SponsorModelDatasetRepository(
             xml_title=ar.sponsor_model_dataset_vo.xml_title,
             structure=ar.sponsor_model_dataset_vo.structure,
             purpose=ar.sponsor_model_dataset_vo.purpose,
+            is_cdisc_std=ar.sponsor_model_dataset_vo.is_cdisc_std,
             source_ig=ar.sponsor_model_dataset_vo.source_ig,
+            standard_ref=ar.sponsor_model_dataset_vo.standard_ref,
             comment=ar.sponsor_model_dataset_vo.comment,
             ig_comment=ar.sponsor_model_dataset_vo.ig_comment,
             map_domain_flag=ar.sponsor_model_dataset_vo.map_domain_flag,
@@ -165,7 +180,28 @@ class SponsorModelDatasetRepository(
             sort_keys_dict = {key.uid: key for key in sort_keys}
             for index, key in enumerate(ar.sponsor_model_dataset_vo.sort_keys):
                 if key in sort_keys_dict:
-                    new_instance.has_sort_key.connect(keys_dict[key], {"order": index})
+                    new_instance.has_sort_key.connect(
+                        sort_keys_dict[key], {"order": index}
+                    )
+
+        # Connect with implemented dataset class - if provided
+        if ar.sponsor_model_dataset_vo.implemented_dataset_class:
+            implemented_dataset_class = DatasetClass.nodes.filter(
+                uid=ar.sponsor_model_dataset_vo.implemented_dataset_class,
+                has_instance__has_dataset_class__implements__extended_by__name=ar.sponsor_model_dataset_vo.sponsor_model_name,
+            ).fetch_relations("has_instance")
+            BusinessLogicException.raise_if_not(
+                implemented_dataset_class,
+                msg=f"Dataset class with uid '{ar.sponsor_model_dataset_vo.implemented_dataset_class}' does not exist.",
+            )
+            implemented_dataset_class_instance = (
+                implemented_dataset_class.resolve_subgraph()[0]._relations[
+                    "has_instance"
+                ]
+            )
+            new_instance.implements_dataset_class.connect(
+                implemented_dataset_class_instance
+            )
 
         return new_instance
 
@@ -193,13 +229,16 @@ class SponsorModelDatasetRepository(
                 sponsor_model_version_number=sponsor_model_version,
                 dataset_uid=root.uid,
                 is_basic_std=value.is_basic_std,
+                implemented_dataset_class=value.implemented_dataset_class,
                 xml_path=value.xml_path,
                 xml_title=value.xml_title,
                 structure=value.structure,
                 purpose=value.purpose,
                 keys=None,
                 sort_keys=None,
+                is_cdisc_std=value.is_cdisc_std,
                 source_ig=value.source_ig,
+                standard_ref=value.standard_ref,
                 comment=value.comment,
                 ig_comment=value.ig_comment,
                 map_domain_flag=value.map_domain_flag,

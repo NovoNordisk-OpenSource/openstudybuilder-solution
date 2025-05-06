@@ -9,6 +9,8 @@ from clinical_mdr_api.domains.versioned_object_aggregate import (
     LibraryVO,
 )
 
+# pylint: disable=too-many-arguments
+
 
 @dataclass(frozen=True)
 class SponsorModelDatasetVariableVO:
@@ -22,6 +24,8 @@ class SponsorModelDatasetVariableVO:
     sponsor_model_version_number: str
 
     is_basic_std: bool
+    implemented_parent_dataset_class: str
+    implemented_variable_class: str
     label: str
     order: int
     variable_type: str
@@ -32,15 +36,18 @@ class SponsorModelDatasetVariableVO:
     xml_codelist_multi: list[str]
     core: str
     origin: str
+    origin_type: str
+    origin_source: str
     role: str
     term: str
     algorithm: str
     qualifiers: list[str]
+    is_cdisc_std: bool
     comment: str
     ig_comment: str
     class_table: str
     class_column: str
-    map_var_flag: bool
+    map_var_flag: str
     fixed_mapping: str
     include_in_raw: bool
     nn_internal: bool
@@ -51,6 +58,7 @@ class SponsorModelDatasetVariableVO:
     enrich_build_order: int
     enrich_rule: str
     xml_codelist_values: bool
+    target_data_model_catalogue: str | None = None
 
     @classmethod
     def from_repository_values(
@@ -60,6 +68,8 @@ class SponsorModelDatasetVariableVO:
         sponsor_model_name: str | None,
         sponsor_model_version_number: str | None,
         is_basic_std: bool,
+        implemented_parent_dataset_class: str | None,
+        implemented_variable_class: str | None,
         label: str,
         order: int,
         variable_type: str,
@@ -70,15 +80,18 @@ class SponsorModelDatasetVariableVO:
         xml_codelist_multi: list[str],
         core: str,
         origin: str,
+        origin_type: str,
+        origin_source: str,
         role: str,
         term: str,
         algorithm: str,
         qualifiers: list[str],
+        is_cdisc_std: bool,
         comment: str,
         ig_comment: str,
         class_table: str,
         class_column: str,
-        map_var_flag: bool,
+        map_var_flag: str,
         fixed_mapping: str,
         include_in_raw: bool,
         nn_internal: bool,
@@ -89,6 +102,7 @@ class SponsorModelDatasetVariableVO:
         enrich_build_order: int,
         enrich_rule: str,
         xml_codelist_values: bool,
+        target_data_model_catalogue: str | None = None,
     ) -> Self:
         sponsor_model_dataset_variable_vo = cls(
             dataset_uid=dataset_uid,
@@ -96,6 +110,8 @@ class SponsorModelDatasetVariableVO:
             sponsor_model_name=sponsor_model_name,
             sponsor_model_version_number=sponsor_model_version_number,
             is_basic_std=is_basic_std,
+            implemented_parent_dataset_class=implemented_parent_dataset_class,
+            implemented_variable_class=implemented_variable_class,
             label=label,
             order=order,
             variable_type=variable_type,
@@ -106,10 +122,13 @@ class SponsorModelDatasetVariableVO:
             xml_codelist_multi=xml_codelist_multi,
             core=core,
             origin=origin,
+            origin_type=origin_type,
+            origin_source=origin_source,
             role=role,
             term=term,
             algorithm=algorithm,
             qualifiers=qualifiers,
+            is_cdisc_std=is_cdisc_std,
             comment=comment,
             ig_comment=ig_comment,
             class_table=class_table,
@@ -125,6 +144,7 @@ class SponsorModelDatasetVariableVO:
             enrich_build_order=enrich_build_order,
             enrich_rule=enrich_rule,
             xml_codelist_values=xml_codelist_values,
+            target_data_model_catalogue=target_data_model_catalogue,
         )
 
         return sponsor_model_dataset_variable_vo

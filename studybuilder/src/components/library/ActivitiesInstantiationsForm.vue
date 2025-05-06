@@ -29,6 +29,13 @@
             />
           </v-col>
         </v-row>
+        <v-alert
+          v-if="selectedActivity && selectedActivity.status !== statuses.FINAL"
+          density="compact"
+          type="warning"
+          class="text-white mb-4"
+          :text="draftActivityAlert"
+        />
         <v-row>
           <v-col>
             <v-data-table
@@ -121,7 +128,7 @@
             />
           </v-col>
         </v-row>
-        <v-row>
+        <v-row v-if="checkIfNumericFindings">
           <v-col cols="8">
             <v-text-field
               v-model="form.molecular_weight"
@@ -193,6 +200,7 @@ import HorizontalStepperForm from '@/components/tools/HorizontalStepperForm.vue'
 import SentenceCaseNameField from '@/components/tools/SentenceCaseNameField.vue'
 import { useFormStore } from '@/stores/form'
 import statuses from '@/constants/statuses'
+import parameters from '@/constants/parameters'
 
 const source = 'activity-instances'
 
@@ -218,6 +226,7 @@ export default {
   },
   data() {
     return {
+      statuses: statuses,
       form: { activity_groupings: [] },
       type: '',
       activities: [],
@@ -253,10 +262,23 @@ export default {
     }
   },
   computed: {
+    checkIfNumericFindings() {
+      return (
+        this.activityInstanceClasses.find(
+          (instanceClass) =>
+            instanceClass.uid === this.form.activity_instance_class_uid
+        ).name === parameters.NUMERIC_FINDINGS
+      )
+    },
     title() {
       return this.editedActivity
         ? this.$t('ActivityForms.editInstance')
         : this.$t('ActivityForms.addInstance')
+    },
+    draftActivityAlert() {
+      return this.editedActivity
+        ? this.$t('ActivityForms.draft_activity_edit_alert')
+        : this.$t('ActivityForms.draft_activity_create_alert')
     },
     filteredGroups() {
       if (
@@ -347,7 +369,7 @@ export default {
         is_research_lab: value.is_research_lab,
         is_required_for_activity: value.is_required_for_activity,
         is_default_selected_for_activity:
-        value.is_default_selected_for_activity,
+          value.is_default_selected_for_activity,
         is_data_sharing: value.is_data_sharing,
         is_legacy_usage: value.is_legacy_usage,
         activity_groupings: [],
@@ -365,6 +387,9 @@ export default {
       ]
     },
     async extraValidation(step) {
+      if (this.selectedActivity.status !== statuses.FINAL) {
+        return false
+      }
       if (step !== 1) {
         return true
       }
@@ -433,7 +458,6 @@ export default {
       const params = {
         page_size: 20,
         filters: {
-          status: { v: [statuses.FINAL] },
           library_name: { v: [libraries.LIBRARY_SPONSOR] },
         },
       }
@@ -450,14 +474,19 @@ export default {
           },
         }
         if (
-          this.editedActivity && this.editedActivity.activities.length > 0
-          && !fetched_activities.some((act) => act.uid === this.editedActivity.activities[0].uid)
+          this.editedActivity &&
+          this.editedActivity.activities.length > 0 &&
+          !fetched_activities.some(
+            (act) => act.uid === this.editedActivity.activities[0].uid
+          )
         ) {
           params.filters.uid.v.push(this.editedActivity.activities[0].uid)
         }
         if (
-          this.selectedActivity
-          && !fetched_activities.some((act) => act.uid === this.selectedActivity.uid)
+          this.selectedActivity &&
+          !fetched_activities.some(
+            (act) => act.uid === this.selectedActivity.uid
+          )
         ) {
           params.filters.uid.v.push(this.selectedActivity.uid)
         }
@@ -475,7 +504,11 @@ export default {
       })
     },
     setActivityGroupings() {
-      if (!this.selectedActivity && this.editedActivity && this.editedActivity.activities.length > 0) {
+      if (
+        !this.selectedActivity &&
+        this.editedActivity &&
+        this.editedActivity.activities.length > 0
+      ) {
         // editedActivity is set, but selectedActivity is not set.
         // This means that the form is newly opened to edit an existing instance.
         // Set selectedActivity to the activity of the edited instance.
@@ -495,25 +528,21 @@ export default {
             )
           })
         }
-      }
-      else if (!this.selectedActivity) {
+      } else if (!this.selectedActivity) {
         // No activity is selected, clear groupings
         this.selectedGroupings = []
-        if (this.editedActivity) {
-          this.editedActivity.activity_groupings = []
-        }
       }
     },
     clearGroupings() {
-      if (this.selectedActivity && this.previouslySelectedActivity && this.selectedActivity.uid === this.previouslySelectedActivity.uid) {
+      if (
+        this.selectedActivity &&
+        this.previouslySelectedActivity &&
+        this.selectedActivity.uid === this.previouslySelectedActivity.uid
+      ) {
         // No change, just return
         return
       }
       this.selectedGroupings = []
-      if (this.editedActivity) {
-        this.editedActivity.activities = []
-        this.editedActivity.activity_groupings = []
-      }
       this.previouslySelectedActivity = this.selectedActivity
     },
     updateActivities(value) {
@@ -526,3 +555,8 @@ export default {
   },
 }
 </script>
+<style lang="scss" scoped>
+.text-white {
+  color: white !important;
+}
+</style>

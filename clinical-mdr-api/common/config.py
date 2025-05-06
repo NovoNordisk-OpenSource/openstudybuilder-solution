@@ -5,7 +5,7 @@ import urllib.parse
 from os import environ
 
 from neomodel import config as neomodel_config
-from pydantic import BaseSettings
+from pydantic_settings import BaseSettings
 
 _UPPERCASE_FALSE_STRINGS = ("", "FALSE", "0", "OFF", "NO", "DISABLED")
 _UPPERCASE_TRUE_STRINGS = ("TRUE", "1", "ON", "YES", "Y", "ENABLED")

@@ -41,7 +41,7 @@
         },
         {
           "id": "cc1e42a6-ae68-42c2-911c-fea586401029",
-          "title": "Missing Activity Items",
+          "title": "List of Missing Mandatory Items for Instances",
           "query": "After using the top-down search page, you will be able to view the results on the Missing Activity Items page. This page returns a list of information about the activity items attached to your selected classes/subclasses and groups/subgroups. The idea is to identify gaps in the table to more easily modify the database.\n\n\n",
           "width": 8,
           "height": 4,
@@ -104,7 +104,7 @@
         },
         {
           "title": "Number of Activities (Instances per Activity, when Subgroup is Selected)",
-          "query": "CALL apoc.case([not $neodash_activityinstanceclassvalue_name='' and $neodash_activityinstanceclassvalue_name_subtype='' and $neodash_activitygroupvalue_name='' and $neodash_activitysubgroupvalue_name='', \n'MATCH(act:ActivityValue)-[R1:HAS_GROUPING]->(g:ActivityGrouping)-[R2:IN_SUBGROUP]->(sg:ActivityValidGroup)<-[R3:HAS_GROUP]-(asgrp:ActivitySubGroupValue),\n(sg)-[R4:IN_GROUP]->(agrp:ActivityGroupValue)\nMATCH(g:ActivityGrouping)<-[R5:HAS_ACTIVITY]-(ai:ActivityInstanceValue)<-[:LATEST]-()\nMATCH (ai)-[R42:ACTIVITY_INSTANCE_CLASS]->(aicr:ActivityInstanceClassRoot)-[R43:LATEST]->(aic:ActivityInstanceClassValue)\nWHERE exists { (aicr)-[:HAS_ITEM_CLASS]->(aitmrp:ActivityItemClassRoot)-[:LATEST]->(aitmvp:ActivityItemClassValue {mandatory: TRUE}) }\nMATCH (aicr)-[R10:PARENT_CLASS]->(aicrp:ActivityInstanceClassRoot)-[R11:LATEST]->(aicp:ActivityInstanceClassValue) where aicp.name in [$a] \nreturn aic.name as Category,\ncount(distinct act) as `Number of Activities` order by Category' , \nnot $neodash_activityinstanceclassvalue_name='' and not $neodash_activityinstanceclassvalue_name_subtype='' and $neodash_activitygroupvalue_name='' and $neodash_activitysubgroupvalue_name='', \n'MATCH(act:ActivityValue)-[R1:HAS_GROUPING]->(g:ActivityGrouping)-[R2:IN_SUBGROUP]->(sg:ActivityValidGroup)<-[R3:HAS_GROUP]-(asgrp:ActivitySubGroupValue),\n(sg)-[R4:IN_GROUP]->(agrp:ActivityGroupValue)\nMATCH(g:ActivityGrouping)<-[R5:HAS_ACTIVITY]-(ai:ActivityInstanceValue)<-[:LATEST]-()\nMATCH (ai)-[R42:ACTIVITY_INSTANCE_CLASS]->(aicr:ActivityInstanceClassRoot)-[R43:LATEST]->(aic:ActivityInstanceClassValue) where aic.name in [$b] AND exists { (aicr)-[:HAS_ITEM_CLASS]->(aitmrp:ActivityItemClassRoot)-[:LATEST]->(aitmvp:ActivityItemClassValue {mandatory: TRUE}) }\nMATCH (aicr)-[R10:PARENT_CLASS]->(aicrp:ActivityInstanceClassRoot)-[R11:LATEST]->(aicp:ActivityInstanceClassValue) where aicp.name in [$a] AND exists { (aicr)-[:HAS_ITEM_CLASS]->(aitmrp:ActivityItemClassRoot)-[:LATEST]->(aitmvp:ActivityItemClassValue {mandatory: TRUE}) }\nreturn agrp.name as Category,\ncount(distinct act) as `Number of Activities` order by Category', \nnot $neodash_activityinstanceclassvalue_name='' and not $neodash_activityinstanceclassvalue_name_subtype='' and not $neodash_activitygroupvalue_name='' and $neodash_activitysubgroupvalue_name='', \n'MATCH(act:ActivityValue)-[R1:HAS_GROUPING]->(g:ActivityGrouping)-[R2:IN_SUBGROUP]->(sg:ActivityValidGroup)<-[R3:HAS_GROUP]-(asgrp:ActivitySubGroupValue),\n(sg)-[R4:IN_GROUP]->(agrp:ActivityGroupValue) where agrp.name in [$c]\nMATCH(g:ActivityGrouping)<-[R5:HAS_ACTIVITY]-(ai:ActivityInstanceValue)<-[:LATEST]-()\nMATCH (ai)-[R42:ACTIVITY_INSTANCE_CLASS]->(aicr:ActivityInstanceClassRoot)-[R43:LATEST]->(aic:ActivityInstanceClassValue) where aic.name in [$b] AND exists { (aicr)-[:HAS_ITEM_CLASS]->(aitmrp:ActivityItemClassRoot)-[:LATEST]->(aitmvp:ActivityItemClassValue {mandatory: TRUE}) }\nMATCH (aicr)-[R10:PARENT_CLASS]->(aicrp:ActivityInstanceClassRoot)-[R11:LATEST]->(aicp:ActivityInstanceClassValue) where aicp.name in [$a] AND exists { (aicr)-[:HAS_ITEM_CLASS]->(aitmrp:ActivityItemClassRoot)-[:LATEST]->(aitmvp:ActivityItemClassValue {mandatory: TRUE}) }\nreturn asgrp.name as Category,\ncount(distinct act) as `Number of Activities` order by Category',\nnot $neodash_activityinstanceclassvalue_name='' and not $neodash_activityinstanceclassvalue_name_subtype='' and not $neodash_activitygroupvalue_name='' and not $neodash_activitysubgroupvalue_name='', \n'MATCH(act:ActivityValue)-[R1:HAS_GROUPING]->(g:ActivityGrouping)-[R2:IN_SUBGROUP]->(sg:ActivityValidGroup)<-[R3:HAS_GROUP]-(asgrp:ActivitySubGroupValue),\n(sg)-[R4:IN_GROUP]->(agrp:ActivityGroupValue) where agrp.name in [$c] and asgrp.name in[$d]\nMATCH(g:ActivityGrouping)<-[R5:HAS_ACTIVITY]-(ai:ActivityInstanceValue)<-[:LATEST]-()\nMATCH (ai)-[R42:ACTIVITY_INSTANCE_CLASS]->(aicr:ActivityInstanceClassRoot)-[R43:LATEST]->(aic:ActivityInstanceClassValue) where aic.name in [$b] AND exists { (aicr)-[:HAS_ITEM_CLASS]->(aitmrp:ActivityItemClassRoot)-[:LATEST]->(aitmvp:ActivityItemClassValue {mandatory: TRUE}) }\nMATCH (aicr)-[R10:PARENT_CLASS]->(aicrp:ActivityInstanceClassRoot)-[R11:LATEST]->(aicp:ActivityInstanceClassValue) where aicp.name in [$a] AND exists { (aicr)-[:HAS_ITEM_CLASS]->(aitmrp:ActivityItemClassRoot)-[:LATEST]->(aitmvp:ActivityItemClassValue {mandatory: TRUE}) }\nreturn act.name as Category,\ncount(distinct ai) as `Number of Activities` order by Category'],\n'MATCH(act:ActivityValue)-[R1:HAS_GROUPING]->(g:ActivityGrouping)-[R2:IN_SUBGROUP]->(sg:ActivityValidGroup)<-[R3:HAS_GROUP]-(asgrp:ActivitySubGroupValue),\n(sg)-[R4:IN_GROUP]->(agrp:ActivityGroupValue) \nMATCH(g:ActivityGrouping)<-[R5:HAS_ACTIVITY]-(ai:ActivityInstanceValue)<-[:LATEST]-()\nMATCH (ai)-[R42:ACTIVITY_INSTANCE_CLASS]->(aicr:ActivityInstanceClassRoot)-[R43:LATEST]->(aic:ActivityInstanceClassValue) \nMATCH (aicr)-[R10:PARENT_CLASS]->(aicrp:ActivityInstanceClassRoot)-[R11:LATEST]->(aicp:ActivityInstanceClassValue) \nreturn aicp.name as Category,\ncount(distinct act) as `Number of Activities` order by Category',\n{a:$neodash_activityinstanceclassvalue_name,\nb:$neodash_activityinstanceclassvalue_name_subtype,\nc:$neodash_activitygroupvalue_name, \nd:$neodash_activitysubgroupvalue_name}) YIELD value \nreturn value.Category as Category,\nvalue.`Number of Activities` as`Number of Activities/Instances` order by Category\n\n",
+          "query": "CALL apoc.case([not $neodash_activityinstanceclassvalue_name='' and $neodash_activityinstanceclassvalue_name_subtype='' and $neodash_activitygroupvalue_name='' and $neodash_activitysubgroupvalue_name='', \n'MATCH(act:ActivityValue)-[R1:HAS_GROUPING]->(g:ActivityGrouping)-[R2:IN_SUBGROUP]->(sg:ActivityValidGroup)<-[R3:HAS_GROUP]-(asgrp:ActivitySubGroupValue),\n(sg)-[R4:IN_GROUP]->(agrp:ActivityGroupValue)\nMATCH(g:ActivityGrouping)<-[R5:HAS_ACTIVITY]-(ai:ActivityInstanceValue)<-[:LATEST]-()\nMATCH (ai)-[R42:ACTIVITY_INSTANCE_CLASS]->(aicr:ActivityInstanceClassRoot)-[R43:LATEST]->(aic:ActivityInstanceClassValue)\nMATCH (aicr)-[R10:PARENT_CLASS]->(aicrp:ActivityInstanceClassRoot)-[R11:LATEST]->(aicp:ActivityInstanceClassValue) where aicp.name in [$a]\nreturn aic.name as Category,\ncount(distinct act) as `Number of Activities` order by Category' , \nnot $neodash_activityinstanceclassvalue_name='' and not $neodash_activityinstanceclassvalue_name_subtype='' and $neodash_activitygroupvalue_name='' and $neodash_activitysubgroupvalue_name='', \n'MATCH(act:ActivityValue)-[R1:HAS_GROUPING]->(g:ActivityGrouping)-[R2:IN_SUBGROUP]->(sg:ActivityValidGroup)<-[R3:HAS_GROUP]-(asgrp:ActivitySubGroupValue),\n(sg)-[R4:IN_GROUP]->(agrp:ActivityGroupValue)\nMATCH(g:ActivityGrouping)<-[R5:HAS_ACTIVITY]-(ai:ActivityInstanceValue)<-[:LATEST]-()\nMATCH (ai)-[R42:ACTIVITY_INSTANCE_CLASS]->(aicr:ActivityInstanceClassRoot)-[R43:LATEST]->(aic:ActivityInstanceClassValue) where aic.name in [$b]\nMATCH (aicr)-[R10:PARENT_CLASS]->(aicrp:ActivityInstanceClassRoot)-[R11:LATEST]->(aicp:ActivityInstanceClassValue) where aicp.name in [$a]\nreturn agrp.name as Category,\ncount(distinct act) as `Number of Activities` order by Category', \nnot $neodash_activityinstanceclassvalue_name='' and not $neodash_activityinstanceclassvalue_name_subtype='' and not $neodash_activitygroupvalue_name='' and $neodash_activitysubgroupvalue_name='', \n'MATCH(act:ActivityValue)-[R1:HAS_GROUPING]->(g:ActivityGrouping)-[R2:IN_SUBGROUP]->(sg:ActivityValidGroup)<-[R3:HAS_GROUP]-(asgrp:ActivitySubGroupValue),\n(sg)-[R4:IN_GROUP]->(agrp:ActivityGroupValue) where agrp.name in [$c]\nMATCH(g:ActivityGrouping)<-[R5:HAS_ACTIVITY]-(ai:ActivityInstanceValue)<-[:LATEST]-()\nMATCH (ai)-[R42:ACTIVITY_INSTANCE_CLASS]->(aicr:ActivityInstanceClassRoot)-[R43:LATEST]->(aic:ActivityInstanceClassValue) where aic.name in [$b]\nMATCH (aicr)-[R10:PARENT_CLASS]->(aicrp:ActivityInstanceClassRoot)-[R11:LATEST]->(aicp:ActivityInstanceClassValue) where aicp.name in [$a]\nreturn asgrp.name as Category,\ncount(distinct act) as `Number of Activities` order by Category',\nnot $neodash_activityinstanceclassvalue_name='' and not $neodash_activityinstanceclassvalue_name_subtype='' and not $neodash_activitygroupvalue_name='' and not $neodash_activitysubgroupvalue_name='', \n'MATCH(act:ActivityValue)-[R1:HAS_GROUPING]->(g:ActivityGrouping)-[R2:IN_SUBGROUP]->(sg:ActivityValidGroup)<-[R3:HAS_GROUP]-(asgrp:ActivitySubGroupValue),\n(sg)-[R4:IN_GROUP]->(agrp:ActivityGroupValue) where agrp.name in [$c] and asgrp.name in[$d]\nMATCH(g:ActivityGrouping)<-[R5:HAS_ACTIVITY]-(ai:ActivityInstanceValue)<-[:LATEST]-()\nMATCH (ai)-[R42:ACTIVITY_INSTANCE_CLASS]->(aicr:ActivityInstanceClassRoot)-[R43:LATEST]->(aic:ActivityInstanceClassValue) where aic.name in [$b]\nMATCH (aicr)-[R10:PARENT_CLASS]->(aicrp:ActivityInstanceClassRoot)-[R11:LATEST]->(aicp:ActivityInstanceClassValue) where aicp.name in [$a]\nreturn act.name as Category,\ncount(distinct ai) as `Number of Activities` order by Category'],\n'MATCH(act:ActivityValue)-[R1:HAS_GROUPING]->(g:ActivityGrouping)-[R2:IN_SUBGROUP]->(sg:ActivityValidGroup)<-[R3:HAS_GROUP]-(asgrp:ActivitySubGroupValue),\n(sg)-[R4:IN_GROUP]->(agrp:ActivityGroupValue) \nMATCH(g:ActivityGrouping)<-[R5:HAS_ACTIVITY]-(ai:ActivityInstanceValue)<-[:LATEST]-()\nMATCH (ai)-[R42:ACTIVITY_INSTANCE_CLASS]->(aicr:ActivityInstanceClassRoot)-[R43:LATEST]->(aic:ActivityInstanceClassValue) \nMATCH (aicr)-[R10:PARENT_CLASS]->(aicrp:ActivityInstanceClassRoot)-[R11:LATEST]->(aicp:ActivityInstanceClassValue) \nreturn aicp.name as Category,\ncount(distinct act) as `Number of Activities` order by Category',\n{a:$neodash_activityinstanceclassvalue_name,\nb:$neodash_activityinstanceclassvalue_name_subtype,\nc:$neodash_activitygroupvalue_name, \nd:$neodash_activitysubgroupvalue_name}) YIELD value \nreturn value.Category as Category,\nvalue.`Number of Activities` as`Number of Activities/Instances` order by Category\n\n",
           "width": 24,
           "height": 6,
           "x": 0,
@@ -159,7 +159,7 @@
         },
         {
           "title": "Activity Class",
-          "query": "MATCH(act:ActivityValue)-[R1:HAS_GROUPING]->(g:ActivityGrouping)-[R2:IN_SUBGROUP]->(sg:ActivityValidGroup)<-[R3:HAS_GROUP]-(asgrp:ActivitySubGroupValue),\n(sg)-[R4:IN_GROUP]->(agrp:ActivityGroupValue)\nMATCH (g:ActivityGrouping)<-[R5:HAS_ACTIVITY]-(ai:ActivityInstanceValue)\nMATCH (ai)-[R42:ACTIVITY_INSTANCE_CLASS]->(aicr:ActivityInstanceClassRoot)-[R43:LATEST]->(aic:ActivityInstanceClassValue)\nWHERE exists { (aicr)-[:HAS_ITEM_CLASS]->(aitmrp:ActivityItemClassRoot)-[:LATEST]->(aitmvp:ActivityItemClassValue {mandatory: TRUE}) } \nMATCH (aicr)-[R10:PARENT_CLASS]->(aicrp:ActivityInstanceClassRoot)-[R11:LATEST]->(aicp:ActivityInstanceClassValue) return distinct aicp.name as value,  aicp.`name` as display ORDER BY size(toString(value)) ASC ",
+          "query": "MATCH(act:ActivityValue)-[R1:HAS_GROUPING]->(g:ActivityGrouping)-[R2:IN_SUBGROUP]->(sg:ActivityValidGroup)<-[R3:HAS_GROUP]-(asgrp:ActivitySubGroupValue),\n(sg)-[R4:IN_GROUP]->(agrp:ActivityGroupValue)\nMATCH(g:ActivityGrouping)<-[R5:HAS_ACTIVITY]-(ai:ActivityInstanceValue)\nMATCH (ai)-[R42:ACTIVITY_INSTANCE_CLASS]->(aicr:ActivityInstanceClassRoot)-[R43:LATEST]->(aic:ActivityInstanceClassValue)\nMATCH (aicr)-[R10:PARENT_CLASS]->(aicrp:ActivityInstanceClassRoot)-[R11:LATEST]->(aicp:ActivityInstanceClassValue) return distinct aicp.name as value,  aicp.`name` as display ORDER BY size(toString(value)) ASC ",
           "width": 6,
           "height": 2,
           "x": 0,
@@ -179,7 +179,7 @@
           "schema": []
         },
         {
-          "title": "Activity as a Graph View (logical view) - $neodash_activity",
+          "title": "Activity as a Graph View (Logical View) - $neodash_activity",
           "query": "MATCH(p_act:ActivityValue)-[R1:HAS_GROUPING]->(g:ActivityGrouping)<-[R5:HAS_ACTIVITY]-(p_ai:ActivityInstanceValue)<-[:LATEST]-() where p_act.name=$neodash_activity\nMATCH (p_ai)-[R42:ACTIVITY_INSTANCE_CLASS]->(p_aicr:ActivityInstanceClassRoot)-[R43:LATEST]->(p_aic:ActivityInstanceClassValue)\nWITH g,p_act,p_ai,p_aicr,\napoc.create.vNode([\"ActivityInstance\"],properties(p_ai)) as ai,\napoc.create.vNode([\"ActivityInstanceClass\"],properties(p_aic)) as aic\nWITH g,p_act,p_ai,p_aicr,ai,aic,\napoc.create.vRelationship(p_act,\"HAS\",{type:\"logical\"},ai) as r1,\napoc.create.vRelationship(ai,\"HAS_ACTIVITY\",{type:\"logical\"},g) as r2,\napoc.create.vRelationship(ai,\"OF_CLASS\",{type:\"logical\"},aic) as r3\nwith g,p_act,p_ai,p_aicr,ai,aic,r1,r2,r3\nMATCH(p_act:ActivityValue)-[R3:HAS_GROUPING]->(g:ActivityGrouping)-[R4:IN_SUBGROUP]->(sg:ActivityValidGroup)<-[R5:HAS_GROUP]-(p_asgrp:ActivitySubGroupValue),\n(sg)-[R6:IN_GROUP]->(p_agrp:ActivityGroupValue)\nwith g,sg,p_agrp,p_asgrp,p_act,p_ai,p_aicr,ai,aic,r1,r2,r3,R3,R4,R5,R6\nMATCH (p_ai:ActivityInstanceValue)-[R7:CONTAINS_ACTIVITY_ITEM]->(p_aitm1:ActivityItem)\nOPTIONAL MATCH(p_aitm1)<-[R9:HAS_ACTIVITY_ITEM]-(p_aitmc1r:ActivityItemClassRoot)-[R10:LATEST]->(p_aitmc1:ActivityItemClassValue)\nOPTIONAL MATCH (p_aicr)-[R11:PARENT_CLASS]->(p_aicrp:ActivityInstanceClassRoot)-[R12:LATEST]->(p_aicp:ActivityInstanceClassValue)\nOPTIONAL MATCH (p_aicrp)-[R13:PARENT_CLASS]->(p_aicrpp:ActivityInstanceClassRoot)-[R14:LATEST]->(p_aicpp:ActivityInstanceClassValue)\nOPTIONAL MATCH(p_aitmc1r)<-[R15:HAS_ITEM_CLASS]-(p_aicr)\nOPTIONAL MATCH(p_aitmc1r)<-[R16:HAS_ITEM_CLASS]-(p_aicrp)\nOPTIONAL MATCH(p_aitmc1r)<-[R17:HAS_ITEM_CLASS]-(p_aicrpp) \nWITH g,sg,p_agrp,p_asgrp,p_act,p_ai,ai,aic,r1,r2,r3,p_aitm1,p_aitmc1,p_aicp,p_aicpp,R3,R4,R5,R6,R15,R16,R17,\np_aitm1 as aitm1,\napoc.create.vNode([\"ActivityItemClass\"],properties(p_aitmc1)) as aitmc1,\nCASE WHEN R16 is not null THEN apoc.create.vNode([\"ActivityInstanceClass\"],properties(p_aicp)) END as aicp,\nCASE WHEN R17 is not null THEN apoc.create.vNode([\"ActivityInstanceClass\"],properties(p_aicpp)) END as aicpp\nWITH g,sg,p_agrp,p_asgrp,p_act,p_ai,p_aitm1,p_aitmc1,ai,aic,r1,r2,r3,aitm1,aitmc1,aicp,aicpp,R3,R4,R5,R6,R15,R16,R17,\napoc.create.vRelationship(ai,\"HAS\",{type:\"logical\"},aitm1) as r4,\napoc.create.vRelationship(aitm1,\"OF_CLASS\",{type:\"logical\"},aitmc1) as r5,\nCASE WHEN (R15 is not null) THEN \napoc.create.vRelationship(aitmc1,\"OF_CLASS\",{type:\"logical\"},aic) END as r6,\nCASE WHEN (R16 is not null) \nTHEN apoc.create.vRelationship(aitmc1,\"OF_CLASS\",{type:\"logical\"},aicp) END as r7,\nCASE WHEN (R17 is not null) \nTHEN apoc.create.vRelationship(aitmc1,\"OF_CLASS\",{type:\"logical\"},aicpp) END as r8\nWITH g,sg,p_agrp,p_asgrp,p_act,p_ai,p_aitm1,p_aitmc1,ai,aic,aicp,aicpp,aitm1,aitmc1,r1,r2,r3,r4,r5,r6,r7,r8,R3,R4,R5,R6,R15,R16,R17\nOPTIONAL MATCH (p_aitm1)-[R18]->(p_ct2cd:CTTermRoot)-[R19:HAS_NAME_ROOT]->(ct2cdr:CTTermNameRoot)-[R20:LATEST]->(p_ct2_sponsor), (p_ct2cd)-[R21:HAS_ATTRIBUTES_ROOT]->(ct2att:CTTermAttributesRoot)-[R22:LATEST]->(p_ct2_cdisc)\nOPTIONAL MATCH (p_aitm1)-[:HAS_UNIT_DEFINITION]->(p_unitdefr:UnitDefinitionRoot)-[:LATEST]->(p_unitdef:UnitDefinitionValue)\nOPTIONAL MATCH(p_aitmc1)-[:HAS_ROLE]->(p_role_r:CTTermRoot)-[:HAS_NAME_ROOT]->(ctnr_role)-[:LATEST]->(p_role_val), (p_role_r)-[:HAS_ATTRIBUTES_ROOT]->(ctattr)-[:LATEST]->(p_role_attr_val)\nOPTIONAL MATCH(p_aitmc1)-[:HAS_DATA_TYPE]->(p_dtype_r)-[:HAS_NAME_ROOT]->(ctnr_dtype)-[:LATEST]->(p_dtype_val), (p_dtype_r)-[:HAS_ATTRIBUTES_ROOT]->(ctattr_dtype)-[:LATEST]->(p_dtype_attr_val)\nWITH g,sg,p_agrp,p_asgrp,p_act,p_ai,ai,aic,aicp,aicpp,aitm1,aitmc1,r1,r2,r3,r4,r5,r6,r7,r8,R3,R4,R5,R6,\np_ct2cd,p_unitdefr,p_role_r,p_dtype_r,p_ct2_cdisc,p_ct2_sponsor,p_unitdef,p_role_val,p_role_attr_val,p_dtype_val,p_dtype_attr_val,\nCASE WHEN p_ct2cd is not null THEN\napoc.create.vNode([\"CTTerm\"],apoc.map.merge(properties(p_ct2_cdisc),properties(p_ct2_sponsor))) END as ct2,\nCASE WHEN p_unitdefr is not null THEN\napoc.create.vNode([\"CTTerm\"],properties(p_unitdef)) END as unit_ct,\nCASE WHEN p_role_r is not null THEN apoc.create.vNode([\"CTTerm\"],apoc.map.merge(properties(p_role_val),properties(p_role_attr_val))) END as role,\nCASE WHEN p_dtype_r is not null THEN apoc.create.vNode([\"CTTerm\"],apoc.map.merge(properties(p_dtype_val),properties(p_dtype_attr_val))) END as dtype\nWITH g,sg,p_agrp,p_asgrp,p_act,p_ai,ai,aic,aicp,aicpp,aitm1,aitmc1,r1,r2,r3,r4,r5,r6,r7,r8,R3,R4,R5,R6,\np_ct2cd,p_unitdefr,p_role_r,p_dtype_r,p_ct2_cdisc,p_ct2_sponsor,p_unitdef,p_role_val,p_role_attr_val,p_dtype_val,p_dtype_attr_val,ct2,unit_ct,role,dtype,\nCASE WHEN p_ct2cd is not null THEN\napoc.create.vRelationship(aitm1,\"FOR\",{type:\"logical\"},ct2) END as r9, \nCASE WHEN p_unitdefr is not null THEN\napoc.create.vRelationship(aitm1,\"FOR\",{type:\"logical\"},unit_ct) END as r10,\nCASE WHEN p_role_r is not null THEN apoc.create.vRelationship(aitmc1,\"HAS_ROLE\",{type:\"logical\"},role)END as r11,\nCASE WHEN p_dtype_r is not null THEN apoc.create.vRelationship(aitmc1,\"HAS_TYPE\",{type:\"logical\"},dtype) END as r12\nWITH g,sg,p_agrp,p_asgrp,p_act,p_ai,ai,aic,aicp,aicpp,aitm1,aitmc1,r1,r2,r3,r4,r5,r6,r7,r8,r9,r10,r11,r12,R3,R4,R5,R6,\np_ct2cd,p_unitdefr,p_unitdef,ct2,unit_ct,role,dtype\nOPTIONAL MATCH(p_ct2cd)<-[R23:HAS_TERM]-(clr:CTCodelistRoot)-[R24:HAS_ATTRIBUTES_ROOT]->(clatt:CTCodelistAttributesRoot)-[R27:LATEST]->(p_cl_cdisc:CTCodelistAttributesValue),(pc:CTPackageCodelist) where ((p_cl_cdisc)<-[:CONTAINS_ATTRIBUTES]-(pc) and pc.uid CONTAINS \"SDTM\") or NOT ((p_cl_cdisc)<-[:CONTAINS_ATTRIBUTES]-())\nOPTIONAL MATCH(clr)-[R25:HAS_NAME_ROOT]->(clattr:CTCodelistNameRoot)-[R26:LATEST]-(p_cl_sponsor)\nOPTIONAL MATCH (p_unitdef:UnitDefinitionValue)-[:HAS_CT_DIMENSION]-(unit_term:CTTermRoot)<-[:HAS_TERM]-(cl_root)-[:HAS_ATTRIBUTES_ROOT]->(clattr2)-[:LATEST]->(unit_cld)\nwith distinct g as g,\nsg as sg,\np_agrp as p_agrp ,\np_asgrp as p_asgrp,\np_act as p_act,\np_ai as p_ai,\nai as ai,\naic as aic,\naicp as aicp,\naicpp as aicpp,\naitm1 as aitm1,\naitmc1 as aitmc1,\nr1 as r1,\nr2 as r2,\nr3 as r3,\nr4 as r4,\nr5 as r5,\nr6 as r6,\nr7 as r7,\nr8 as r8,\nr9 as r9,\nr10 as r10,\nr11 as r11,\nr12 as r12,\nR3 as R3,\nR4 as R4,\nR5 as R5,\nR6 as R6,\np_ct2cd as p_ct2cd,\np_unitdefr as p_unitdefr,\nct2 as ct2,\nunit_ct as unit_ct,\nrole as role,\ndtype as dtype,\np_cl_cdisc as p_cl_cdisc,\np_cl_sponsor as p_cl_sponsor,\nunit_cld as unit_cld\nWITH g,sg,p_agrp,p_asgrp,p_act,p_ai,ai,aic,aicp,aicpp,aitm1,aitmc1,r1,r2,r3,r4,r5,r6,r7,r8,r9,r10,r11,r12,R3,R4,R5,R6,p_ct2cd,p_unitdefr,ct2,unit_ct,role,dtype,p_cl_cdisc,p_cl_sponsor,unit_cld,\nCASE WHEN p_ct2cd is not null THEN apoc.create.vNode([\"CTCodeList\"],apoc.map.merge(properties(p_cl_cdisc),properties(p_cl_sponsor))) END as cl,\nCASE WHEN p_unitdefr is not null THEN\napoc.create.vNode([\"CTCodeList\"],properties(unit_cld)) END as unit_cl\nWITH g,sg,p_agrp,p_asgrp,p_act,p_ai,ai,aic,aicp,aicpp,aitm1,aitmc1,r1,r2,r3,r4,r5,r6,r7,r8,r9,r10,r11,r12,R3,R4,R5,R6,p_ct2cd,p_unitdefr,ct2,unit_ct,role,dtype,cl,unit_cl,\nCASE WHEN p_ct2cd is not null THEN\napoc.create.vRelationship(cl,\"HAS\",{type:\"logical\"},ct2) END as r13,\nCASE WHEN p_unitdefr is not null THEN\napoc.create.vRelationship(unit_ct,\"HAS\",{type:\"logical\"},unit_cl) END as r14\nRETURN g,sg,p_agrp,p_asgrp,p_act,ai,aic,aicp,aicpp,aitm1,aitmc1,r1,r2,r3,r4,r5,r6,r7,r8,r9,r10,r11,r12,r13,r14,R3,R4,R5,R6,ct2,unit_ct,role,dtype,unit_cl,cl",
           "width": 12,
           "height": 6,
@@ -384,7 +384,7 @@
         },
         {
           "title": "Activity Subclass",
-          "query": "MATCH (g:ActivityGrouping)<-[R5:HAS_ACTIVITY]-(ai:ActivityInstanceValue)\nMATCH (ai)-[R42:ACTIVITY_INSTANCE_CLASS]->(aicr:ActivityInstanceClassRoot)-[R43:LATEST]->(aic:ActivityInstanceClassValue)\nWHERE exists { (aicr)-[:HAS_ITEM_CLASS]->(:ActivityItemClassRoot)-[:LATEST]->(:ActivityItemClassValue {mandatory: TRUE}) }\nWITH aicr, aic\nMATCH (aicr)-[R10:PARENT_CLASS]->(aicrp:ActivityInstanceClassRoot)-[R11:LATEST]->(aicp:ActivityInstanceClassValue) \nwhere aicp.name = $neodash_activityinstanceclassvalue_name \nreturn distinct aic.`name` as value,  aic.`name` as display ORDER BY size(toString(value)) ASC ",
+          "query": "MATCH(act:ActivityValue)-[R1:HAS_GROUPING]->(g:ActivityGrouping)-[R2:IN_SUBGROUP]->(sg:ActivityValidGroup)<-[R3:HAS_GROUP]-(asgrp:ActivitySubGroupValue),\n(sg)-[R4:IN_GROUP]->(agrp:ActivityGroupValue)\nMATCH(g:ActivityGrouping)<-[R5:HAS_ACTIVITY]-(ai:ActivityInstanceValue)\nMATCH (ai)-[R42:ACTIVITY_INSTANCE_CLASS]->(aicr:ActivityInstanceClassRoot)-[R43:LATEST]->(aic:ActivityInstanceClassValue)\nMATCH (aicr)-[R10:PARENT_CLASS]->(aicrp:ActivityInstanceClassRoot)-[R11:LATEST]->(aicp:ActivityInstanceClassValue) where aicp.name = $neodash_activityinstanceclassvalue_name return distinct aic.`name` as value,  aic.`name` as display ORDER BY size(toString(value)) ASC ",
           "width": 6,
           "height": 2,
           "x": 6,
@@ -424,7 +424,7 @@
           "schema": []
         },
         {
-          "title": "Activity as a Graph View (physical view) - $neodash_activity",
+          "title": "Activity as a Graph View (Physical View) - $neodash_activity",
           "query": "MATCH(p_act:ActivityValue)-[R1:HAS_GROUPING]->(g:ActivityGrouping)-[R2:IN_SUBGROUP]->(sg:ActivityValidGroup)<-[R3:HAS_GROUP]-(p_asgrp:ActivitySubGroupValue),\n(sg)-[R4:IN_GROUP]->(p_agrp:ActivityGroupValue) where p_act.name=$neodash_activity\nMATCH(g:ActivityGrouping)<-[R5:HAS_ACTIVITY]-(p_ai:ActivityInstanceValue)-[R6:CONTAINS_ACTIVITY_ITEM]->(p_aitm1:ActivityItem),(p_ai)<-[:LATEST]-()\nMATCH (p_ai)-[R42:ACTIVITY_INSTANCE_CLASS]->(p_aicr:ActivityInstanceClassRoot)-[R43:LATEST]->(p_aic:ActivityInstanceClassValue)\nOPTIONAL MATCH(p_aitm1)<-[R8:HAS_ACTIVITY_ITEM]-(p_aitmc1r:ActivityItemClassRoot)-[R9:LATEST]->(p_aitmc1:ActivityItemClassValue)\nOPTIONAL MATCH (p_aicr)-[R10:PARENT_CLASS]->(p_aicrp:ActivityInstanceClassRoot)-[R11:LATEST]->(p_aicp:ActivityInstanceClassValue)\nOPTIONAL MATCH (p_aicrp)-[R12:PARENT_CLASS]->(p_aicrpp:ActivityInstanceClassRoot)-[R13:LATEST]->(p_aicpp:ActivityInstanceClassValue)\nOPTIONAL MATCH(p_aitmc1r)<-[R14:HAS_ITEM_CLASS]-(p_aicr)\nOPTIONAL MATCH(p_aitmc1r)<-[R15:HAS_ITEM_CLASS]-(p_aicrp)\nOPTIONAL MATCH(p_aitmc1r)<-[R16:HAS_ITEM_CLASS]-(p_aicrpp) \nOPTIONAL MATCH (p_aitm1)-[R17]->(p_ct2cd:CTTermRoot)-[R18:HAS_NAME_ROOT]->(ct2cdr:CTTermNameRoot)-[R19:LATEST]->(p_ct2_sponsor), (p_ct2cd)-[R20:HAS_ATTRIBUTES_ROOT]->(ct2att:CTTermAttributesRoot)-[R21:LATEST]->(p_ct2_cdisc)\nOPTIONAL MATCH (p_aitm1)-[:HAS_UNIT_DEFINITION]->(p_unitdefr:UnitDefinitionRoot)-[R22:LATEST]->(p_unitdef:UnitDefinitionValue)\nOPTIONAL MATCH(p_ct2cd)<-[R23:HAS_TERM]-(clr:CTCodelistRoot)-[R24:HAS_ATTRIBUTES_ROOT]->(clatt:CTCodelistAttributesRoot)-[R27:LATEST]->(p_cl_cdisc:CTCodelistAttributesValue),(pc:CTPackageCodelist) where ((p_cl_cdisc)<-[:CONTAINS_ATTRIBUTES]-(pc) and pc.uid CONTAINS \"SDTM\") or NOT ((p_cl_cdisc)<-[:CONTAINS_ATTRIBUTES]-())\nOPTIONAL MATCH(clr)-[R25:HAS_NAME_ROOT]->(clattr:CTCodelistNameRoot)-[R26:LATEST]-(p_cl_sponsor)\nOPTIONAL MATCH (p_unitdef:UnitDefinitionValue)-[R28:HAS_CT_DIMENSION]-(unit_term:CTTermRoot)<-[R29:HAS_TERM]-(cl_root)-[R30:HAS_ATTRIBUTES_ROOT]->(clattr2)-[R31:LATEST]->(unit_cld)\nOPTIONAL MATCH(p_aitmc1)-[R32:HAS_ROLE]->(p_role_r:CTTermRoot), (p_role_r)-[R33:HAS_NAME_ROOT]->(ctnr_role)-[R34:LATEST]->(p_role_val), (p_role_r)-[R35:HAS_ATTRIBUTES_ROOT]->(ctattr)-[R36:LATEST]->(p_role_attr_val)\nOPTIONAL MATCH(p_aitmc1)-[R37:HAS_DATA_TYPE]->(p_dtype_r),  (p_dtype_r)-[R38:HAS_NAME_ROOT]->(ctnr_dtype)-[R39:LATEST]->(p_dtype_val), (p_dtype_r)-[R40:HAS_ATTRIBUTES_ROOT]->(ctattr_dtype)-[R41:LATEST]->(p_dtype_attr_val)\nreturn distinct g,sg,p_agrp,p_asgrp,p_act,p_ai,p_aicr,p_aic,p_aitm1,p_aitmc1r,p_aitmc1,p_aicrp,p_aicp,p_aicrpp,p_aicpp,p_ct2cd,ct2cdr,p_ct2_sponsor,ct2att,p_ct2_cdisc,p_unitdefr,p_unitdef,clr,clatt,clattr,p_cl_sponsor,p_cl_cdisc,unit_term,cl_root,clattr2,unit_cld,p_role_r,ctattr,ctnr_role, p_role_val, p_role_attr_val,p_dtype_r,p_dtype_val, ctnr_dtype,p_dtype_attr_val,ctattr_dtype,R1,R2, R3, R4, R5, R6, R8, R9, R10, R11, R12, R13, R14, R15, R16, R17, R18, R19, R20, R21, R22, R23, R24, R25, R26, R27, R28, R29, R30, R31, R32, R33, R34, R35, R36, R37, R38, R39, R40, R41,R42,R43",
           "width": 12,
           "height": 6,
@@ -722,7 +722,7 @@
             [
               "HAS_TERM",
               "UNIQUE IMPORT ID REL",
-              "author_id",
+              "user_initials",
               "start_date",
               "order"
             ],
@@ -818,7 +818,7 @@
         },
         {
           "id": "2a328d78-132e-49c6-b4a5-884d1fdaa015",
-          "title": " Select Instance of $neodash_activity",
+          "title": " Select Instance - $neodash_activity",
           "query": "MATCH(act:ActivityValue)-[R1:HAS_GROUPING]->(g:ActivityGrouping)<-[R5:HAS_ACTIVITY]-(ai:ActivityInstanceValue)<-[:LATEST]-() \nwhere act.name = $neodash_activity \nreturn ai.name as Instance, ai.adam_param_code as `ADaM Param Code`",
           "width": 7,
           "height": 5,
@@ -890,16 +890,6 @@
             "ActivityInstanceClass": "name",
             "ActivityItem": "(label)",
             "ActivityItemClass": "name",
-            "HAS": "(label)",
-            "HAS_ACTIVITY": "(label)",
-            "OF_CLASS": "(label)",
-            "FOR": "(label)",
-            "HAS_ROLE": "(label)",
-            "HAS_TYPE": "(label)",
-            "HAS_GROUPING": "(label)",
-            "IN_SUBGROUP": "(label)",
-            "HAS_GROUP": "(label)",
-            "IN_GROUP": "(label)",
             "CTTerm": "name",
             "CTCodeList": "name"
           },
@@ -1202,16 +1192,98 @@
       ]
     },
     {
-      "title": "List of Missing Activity Items for Activity Instances",
+      "title": "List of Missing Mandatory Items for Instances",
       "reports": [
         {
           "id": "6eba64b3-890f-46b1-80a6-5d630525df46",
           "title": "Results",
-          "query": "WITH [$neodash_activityinstanceclassvalue_name,$neodash_activityinstanceclassvalue_name_subtype] AS activity_filter, $neodash_activitygroupvalue_name AS activity_group, $neodash_activitysubgroupvalue_name AS activity_subgroup\n  MATCH ()-[:LATEST]->(act:ActivityValue)-[:HAS_GROUPING]->(g:ActivityGrouping)-[:IN_SUBGROUP]->(sg:ActivityValidGroup)<-[:HAS_GROUP]-(asgrp:ActivitySubGroupValue)\n  WHERE (activity_subgroup = \"\" OR asgrp.name = activity_subgroup)\n  MATCH (sg)-[:IN_GROUP]->(agrp:ActivityGroupValue)\n  WHERE (activity_group = \"\" OR agrp.name = activity_group)\n  WITH  activity_filter, g, agrp.name as ActivityGroup, asgrp.name as ActivitySubGroup, act.name as Activity \n  //get the activity instances ParentInstanceClass - aiclass_parent. Also getting the immediate class of the instance(aiclass)\n  MATCH (g)<-[:HAS_ACTIVITY]-(ai:ActivityInstanceValue)<-[:LATEST]-(), \n  (ai)-[:ACTIVITY_INSTANCE_CLASS]->(root:ActivityInstanceClassRoot)-[:LATEST]->(aiclass:ActivityInstanceClassValue),\n  (root)-[:PARENT_CLASS]->{0,1}(aicr:ActivityInstanceClassRoot)-[:LATEST]->(aiclass_parent:ActivityInstanceClassValue)\nWITH ActivityGroup, ActivitySubGroup, Activity, ai, [aiclass_parent.name,aiclass.name] as type_filter, apoc.coll.removeAll(activity_filter,['']) as activity_filter\nWITH ActivityGroup, ActivitySubGroup, Activity, ai,type_filter where  (activity_filter = [\"\"] OR apoc.coll.containsAll(type_filter,activity_filter))\nMATCH(ai)-[:ACTIVITY_INSTANCE_CLASS]->(:ActivityInstanceClassRoot)-[:PARENT_CLASS]->{0,1}(aicr:ActivityInstanceClassRoot)-[:LATEST]->(aicp:ActivityInstanceClassValue)\nMATCH (aicp)<-[:LATEST]-(aicr_mandatory:ActivityInstanceClassRoot)-[:HAS_ITEM_CLASS]->(aitmrp_mandatory:ActivityItemClassRoot)-[:LATEST]->(aitmv_mandatory:ActivityItemClassValue{mandatory: TRUE})\nwhere (not (ai)-[:CONTAINS_ACTIVITY_ITEM]->(:ActivityItem)<-[:HAS_ACTIVITY_ITEM]-(aitmrp_mandatory)) \nRETURN DISTINCT ActivityGroup, ActivitySubGroup, Activity, ai.name as ActivityInstance, type_filter as ActivityInstanceClass, aitmv_mandatory.name as `ActivityItem (missing)`, aicp.name as `Class (of missing item)`\n",
+          "query": "WITH [$neodash_activityinstanceclassvalue_name,$neodash_activityinstanceclassvalue_name_subtype] AS activity_filter, $neodash_activitygroupvalue_name AS activity_group, $neodash_activitysubgroupvalue_name AS activity_subgroup\nMATCH ()-[:LATEST]->(act:ActivityValue)-[:HAS_GROUPING]->(g:ActivityGrouping)-[:IN_SUBGROUP]->(sg:ActivityValidGroup)<-[:HAS_GROUP]-(asgrp:ActivitySubGroupValue)\nWHERE (activity_subgroup = \"\" OR asgrp.name = activity_subgroup)\nMATCH (sg)-[:IN_GROUP]->(agrp:ActivityGroupValue)\nWHERE (activity_group = \"\" OR agrp.name = activity_group)\nWITH  activity_filter, g, agrp.name as ActivityGroup, asgrp.name as ActivitySubGroup, act.name as Activity \n//get the activity instances ParentInstanceClass - aiclass_parent. Also getting the immediate class of the instance(aiclass)\nMATCH (g)<-[:HAS_ACTIVITY]-(ai:ActivityInstanceValue)<-[:LATEST]-(), \n(ai)-[:ACTIVITY_INSTANCE_CLASS]->(root:ActivityInstanceClassRoot)-[:LATEST]->(aiclass:ActivityInstanceClassValue),\n(root)-[:PARENT_CLASS]->{0,1}(aicr:ActivityInstanceClassRoot)-[:LATEST]->(aiclass_parent:ActivityInstanceClassValue)\nWITH ActivityGroup, ActivitySubGroup, Activity, ai, [aiclass_parent.name,aiclass.name] as type_filter, apoc.coll.removeAll(activity_filter,['']) as activity_filter\nWITH ActivityGroup, ActivitySubGroup, Activity, ai,type_filter where  (activity_filter = [\"\"] OR apoc.coll.containsAll(type_filter,activity_filter))\nMATCH(ai)-[:ACTIVITY_INSTANCE_CLASS]->(:ActivityInstanceClassRoot)-[:PARENT_CLASS]->{0,1}(aicr:ActivityInstanceClassRoot)-[:LATEST]->(aicp:ActivityInstanceClassValue)\nMATCH (aicp)<-[:LATEST]-(aicr_mandatory:ActivityInstanceClassRoot)-[:HAS_ITEM_CLASS]->(aitmrp_mandatory:ActivityItemClassRoot)-[:LATEST]->(aitmv_mandatory:ActivityItemClassValue{mandatory: TRUE})\nwhere (not (ai)-[:CONTAINS_ACTIVITY_ITEM]->(:ActivityItem)<-[:HAS_ACTIVITY_ITEM]-(aitmrp_mandatory)) \nRETURN DISTINCT ActivityGroup as `Activity Group`, ActivitySubGroup as `Activity Subgroup`, Activity, ai.name as `Activity Instance`, type_filter as `Activity Instance Class`, aitmv_mandatory.name as `Missing Activity Item`, aicp.name as `Class of Missing Activity Item`\n",
           "width": 24,
           "height": 8,
           "x": 0,
           "y": 0,
+          "type": "table",
+          "selection": {},
+          "settings": {
+            "wrapContent": true
+          }
+        }
+      ]
+    },
+    {
+      "title": "Full Path of Missing Items",
+      "reports": [
+        {
+          "id": "c8503a91-d602-4d61-b919-33aaed43b741",
+          "title": "Search",
+          "query": "In this page, you **MUST** make sure that the **Activity Class** and **Activity Subclass** parameters are selected.\n\nThe results can be filtered more granually by selecting **Activity Group** and **Activity Subgroup** parameters on the Activity Lib (search bottom-up) page.",
+          "width": 12,
+          "height": 2,
+          "x": 0,
+          "y": 0,
+          "type": "text",
+          "selection": {},
+          "settings": {
+            "type": "Node Property"
+          },
+          "schema": []
+        },
+        {
+          "id": "eec86f8e-a93e-43f4-92eb-69da05b6e49a",
+          "title": "Results (Mandatory)",
+          "query": "WITH [$neodash_activityinstanceclassvalue_name,$neodash_activityinstanceclassvalue_name_subtype] AS activity_filter, $neodash_activitygroupvalue_name AS activity_group, $neodash_activitysubgroupvalue_name AS activity_subgroup\nMATCH ()-[:LATEST]->(act:ActivityValue)-[:HAS_GROUPING]->(g:ActivityGrouping)-[:IN_SUBGROUP]->(sg:ActivityValidGroup)<-[:HAS_GROUP]-(asgrp:ActivitySubGroupValue)\nWHERE (activity_subgroup = \"\" OR asgrp.name = activity_subgroup)\nMATCH (sg)-[:IN_GROUP]->(agrp:ActivityGroupValue)\nWHERE (activity_group = \"\" OR agrp.name = activity_group)\nWITH  activity_filter, g, agrp.name as ActivityGroup, asgrp.name as ActivitySubGroup, act.name as Activity \n//get the activity instances ParentInstanceClass - aiclass_parent. Also getting the immediate class of the instance(aiclass)\nMATCH (g)<-[:HAS_ACTIVITY]-(ai:ActivityInstanceValue)<-[:LATEST]-(), \n(ai)-[:ACTIVITY_INSTANCE_CLASS]->(root:ActivityInstanceClassRoot)-[:LATEST]->(aiclass:ActivityInstanceClassValue),\n(root)-[:PARENT_CLASS]->{0,2}(aicr:ActivityInstanceClassRoot)-[:LATEST]->(aiclass_parent:ActivityInstanceClassValue)\nWITH ActivityGroup, ActivitySubGroup, Activity, ai, [aiclass_parent.name,aiclass.name] as type_filter, apoc.coll.removeAll(activity_filter,['']) as activity_filter\nWITH activity_filter, ActivityGroup, ActivitySubGroup, Activity, ai,type_filter where  (apoc.coll.containsAll(type_filter,activity_filter) AND size(activity_filter) = 2)\nMATCH(ai)-[:ACTIVITY_INSTANCE_CLASS]->(:ActivityInstanceClassRoot)-[:PARENT_CLASS]->{0,2}(aicr:ActivityInstanceClassRoot)-[:LATEST]->(aicp:ActivityInstanceClassValue)\nMATCH (aicp)<-[:LATEST]-(aicr_mandatory:ActivityInstanceClassRoot)-[:HAS_ITEM_CLASS]->(aitmrp_mandatory:ActivityItemClassRoot)-[:LATEST]->(aitmv_mandatory:ActivityItemClassValue{mandatory: TRUE})\nwhere (not (ai)-[:CONTAINS_ACTIVITY_ITEM]->(:ActivityItem)<-[:HAS_ACTIVITY_ITEM]-(aitmrp_mandatory)) \nRETURN DISTINCT ActivityGroup as `Activity Group`, ActivitySubGroup as `Activity Subgroup`, Activity, ai.name as `Activity Instance`, type_filter as `Activity Instance Class`, aitmv_mandatory.name as `Missing Activity Item`, aicp.name as `Class of Missing Activity Item`\n",
+          "width": 24,
+          "height": 4,
+          "x": 0,
+          "y": 2,
+          "type": "table",
+          "selection": {},
+          "settings": {
+            "wrapContent": true
+          }
+        },
+        {
+          "id": "c9c1f804-fde1-4515-8bf4-3fb9e163c40d",
+          "title": "Activity Class",
+          "query": "MATCH(act:ActivityValue)-[R1:HAS_GROUPING]->(g:ActivityGrouping)-[R2:IN_SUBGROUP]->(sg:ActivityValidGroup)<-[R3:HAS_GROUP]-(asgrp:ActivitySubGroupValue),\n(sg)-[R4:IN_GROUP]->(agrp:ActivityGroupValue)\nMATCH(g:ActivityGrouping)<-[R5:HAS_ACTIVITY]-(ai:ActivityInstanceValue)\nMATCH (ai)-[R42:ACTIVITY_INSTANCE_CLASS]->(aicr:ActivityInstanceClassRoot)-[R43:LATEST]->(aic:ActivityInstanceClassValue)\nMATCH (aicr)-[R10:PARENT_CLASS]->(aicrp:ActivityInstanceClassRoot)-[R11:LATEST]->(aicp:ActivityInstanceClassValue) return distinct aicp.name as value,  aicp.`name` as display ORDER BY size(toString(value)) ASC ",
+          "width": 6,
+          "height": 2,
+          "x": 12,
+          "y": 0,
+          "type": "select",
+          "selection": {},
+          "settings": {
+            "type": "Custom Query",
+            "entityType": "activityinstanceclassvalue_name",
+            "parameterName": "neodash_activityinstanceclassvalue_name"
+          },
+          "schema": []
+        },
+        {
+          "id": "acaf0a95-cf39-40a4-a1e3-572ca898eaf8",
+          "title": "Activity Subclass",
+          "query": "MATCH (g:ActivityGrouping)<-[R5:HAS_ACTIVITY]-(ai:ActivityInstanceValue)\nMATCH (ai)-[R42:ACTIVITY_INSTANCE_CLASS]->(aicr:ActivityInstanceClassRoot)-[R43:LATEST]->(aic:ActivityInstanceClassValue)\nWHERE exists { (aicr)-[:HAS_ITEM_CLASS]->(:ActivityItemClassRoot)-[:LATEST]->(:ActivityItemClassValue {mandatory: TRUE}) }\nWITH aicr, aic\nMATCH (aicr)-[R10:PARENT_CLASS]->(aicrp:ActivityInstanceClassRoot)-[R11:LATEST]->(aicp:ActivityInstanceClassValue) \nwhere aicp.name = $neodash_activityinstanceclassvalue_name \nreturn distinct aic.`name` as value,  aic.`name` as display ORDER BY size(toString(value)) ASC ",
+          "width": 6,
+          "height": 2,
+          "x": 18,
+          "y": 0,
+          "type": "select",
+          "selection": {},
+          "settings": {
+            "type": "Custom Query",
+            "entityType": "activityinstanceclassvalue_name_subtype",
+            "parameterName": "neodash_activityinstanceclassvalue_name_subtype"
+          },
+          "schema": []
+        },
+        {
+          "id": "75709134-8427-4d0e-9e2c-a457bcb069c3",
+          "title": "Results (All)",
+          "query": "WITH [$neodash_activityinstanceclassvalue_name,$neodash_activityinstanceclassvalue_name_subtype] AS activity_filter, $neodash_activitygroupvalue_name AS activity_group, $neodash_activitysubgroupvalue_name AS activity_subgroup\nMATCH ()-[:LATEST]->(act:ActivityValue)-[:HAS_GROUPING]->(g:ActivityGrouping)-[:IN_SUBGROUP]->(sg:ActivityValidGroup)<-[:HAS_GROUP]-(asgrp:ActivitySubGroupValue)\nWHERE (activity_subgroup = \"\" OR asgrp.name = activity_subgroup)\nMATCH (sg)-[:IN_GROUP]->(agrp:ActivityGroupValue)\nWHERE (activity_group = \"\" OR agrp.name = activity_group)\nWITH  activity_filter, g, agrp.name as ActivityGroup, asgrp.name as ActivitySubGroup, act.name as Activity \n//get the activity instances ParentInstanceClass - aiclass_parent. Also getting the immediate class of the instance(aiclass)\nMATCH (g)<-[:HAS_ACTIVITY]-(ai:ActivityInstanceValue)<-[:LATEST]-(), \n(ai)-[:ACTIVITY_INSTANCE_CLASS]->(root:ActivityInstanceClassRoot)-[:LATEST]->(aiclass:ActivityInstanceClassValue),\n(root)-[:PARENT_CLASS]->{0,2}(aicr:ActivityInstanceClassRoot)-[:LATEST]->(aiclass_parent:ActivityInstanceClassValue)\nWITH ActivityGroup, ActivitySubGroup, Activity, ai, [aiclass_parent.name,aiclass.name] as type_filter, apoc.coll.removeAll(activity_filter,['']) as activity_filter\nWITH activity_filter, ActivityGroup, ActivitySubGroup, Activity, ai,type_filter where  (apoc.coll.containsAll(type_filter,activity_filter) AND size(activity_filter) = 2)\nMATCH(ai)-[:ACTIVITY_INSTANCE_CLASS]->(:ActivityInstanceClassRoot)-[:PARENT_CLASS]->{0,2}(aicr:ActivityInstanceClassRoot)-[:LATEST]->(aicp:ActivityInstanceClassValue)\nMATCH (aicp)<-[:LATEST]-(aicr_mandatory:ActivityInstanceClassRoot)-[:HAS_ITEM_CLASS]->(aitmrp_mandatory:ActivityItemClassRoot)-[:LATEST]->(aitmv_mandatory:ActivityItemClassValue)\nWHERE (not (ai)-[:CONTAINS_ACTIVITY_ITEM]->(:ActivityItem)<-[:HAS_ACTIVITY_ITEM]-(aitmrp_mandatory))\nRETURN DISTINCT ActivityGroup as `Activity Group`, ActivitySubGroup as `Activity Subgroup`, Activity, ai.name as `Activity Instance`, type_filter as `Activity Instance Class`, aitmv_mandatory.name as `Missing Activity Item`, aicp.name as `Class of Missing Activity Item`, aitmv_mandatory.mandatory AS Mandatory",
+          "width": 24,
+          "height": 4,
+          "x": 0,
+          "y": 6,
           "type": "table",
           "selection": {},
           "settings": {
@@ -1228,7 +1300,7 @@
           "title": "Activities and their Activity Instances",
           "query": "WITH $neodash_activityvalue_name AS activity_val_name\nMATCH (aig)<-[:HAS_GROUPING]-(av:ActivityValue)<-[:LATEST]-(:ActivityRoot)\nWHERE (activity_val_name = [] OR av.name IN activity_val_name)\nWITH DISTINCT aig, av.name AS `Activity Value`\nOPTIONAL MATCH (:ActivityInstanceRoot)-[:LATEST]->(aiv:ActivityInstanceValue)-[:HAS_ACTIVITY]->(aig)\nWITH DISTINCT `Activity Value`, aig.uid AS `Grouping`, count(aiv) AS `Instance Value Count`, collect(aiv.name) AS `Activity Instance Values` \nRETURN `Activity Value`, `Grouping`, `Instance Value Count`, `Activity Instance Values`",
           "width": 24,
-          "height": 6,
+          "height": 4,
           "x": 0,
           "y": 5,
           "type": "table",
@@ -1295,7 +1367,7 @@
           "type": "table",
           "selection": {},
           "settings": {
-            "noDataMessage": "No Activities without Groupings."
+            "noDataMessage": "No Activity Instances without Groupings."
           }
         },
         {
@@ -1309,7 +1381,7 @@
           "type": "table",
           "selection": {},
           "settings": {
-            "noDataMessage": "No Activities without Groupings."
+            "noDataMessage": "No Activity Instances Attached to \"Requested\"."
           }
         },
         {
@@ -1328,11 +1400,11 @@
         {
           "id": "3dc91522-5b1f-46e6-b8fe-84530d0447c5",
           "title": "Activities with Outdated Activity Instances Only",
-          "query": "match (ar:ActivityRoot)-[:LATEST]->(av:ActivityValue)--(n:ActivityGrouping)--(aiv:ActivityInstanceValue)-[]-(air:ActivityInstanceRoot)\nwhere (not exists {()-[:LATEST]->(:ActivityInstanceValue)--(n)})\nreturn av.name, n.uid, collect(aiv.name) as instanceval order by n.uid",
+          "query": "match (ar:ActivityRoot)-[:LATEST]->(av:ActivityValue)--(n:ActivityGrouping)--(aiv:ActivityInstanceValue)-[]-(air:ActivityInstanceRoot)\nwhere (not exists {()-[:LATEST]->(:ActivityInstanceValue)--(n)})\nreturn av.name as Activity, n.uid as `Grouping UID`, collect(aiv.name) as `Activity Instances` order by `Grouping UID`",
           "width": 24,
-          "height": 4,
+          "height": 3,
           "x": 0,
-          "y": 15,
+          "y": 12,
           "type": "table",
           "selection": {},
           "settings": {
@@ -1344,11 +1416,11 @@
         {
           "id": "fa706efe-2fcf-4c55-be98-f2d625905f45",
           "title": "Outdated Activities",
-          "query": "match (ar:ActivityRoot)-[]-(av:ActivityValue)--(n:ActivityGrouping)--(aiv:ActivityInstanceValue)<-[:LATEST]-(air:ActivityInstanceRoot)\nwhere not exists {()-[:LATEST]->(:ActivityValue)--(n)}\nreturn av.name, n.uid, collect(aiv.name) as instanceval order by n.uid",
+          "query": "match (ar:ActivityRoot)-[]-(av:ActivityValue)--(n:ActivityGrouping)--(aiv:ActivityInstanceValue)<-[:LATEST]-(air:ActivityInstanceRoot)\nwhere not exists {()-[:LATEST]->(:ActivityValue)--(n)}\nreturn av.name as Activity, n.uid as `Grouping UID`, collect(aiv.name) as `Activity Instances` order by `Grouping UID`",
           "width": 24,
-          "height": 4,
+          "height": 3,
           "x": 0,
-          "y": 11,
+          "y": 9,
           "type": "table",
           "selection": {},
           "settings": {

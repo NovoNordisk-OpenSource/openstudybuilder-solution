@@ -1,9 +1,6 @@
-import repository from './repository'
+import baseCollection from './baseCollection'
 
 const resource = 'activity-instance-classes'
+const api = baseCollection(resource)
 
-export default {
-  getAll(params) {
-    return repository.get(resource, { params })
-  },
-}
+export default api

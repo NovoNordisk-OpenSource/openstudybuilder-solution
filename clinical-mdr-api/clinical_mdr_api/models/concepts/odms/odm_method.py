@@ -2,6 +2,7 @@ from typing import Annotated, Callable, Self
 
 from pydantic import Field
 
+from clinical_mdr_api.descriptions.general import CHANGES_FIELD_DESC
 from clinical_mdr_api.domains.concepts.odms.alias import OdmAliasAR
 from clinical_mdr_api.domains.concepts.odms.description import OdmDescriptionAR
 from clinical_mdr_api.domains.concepts.odms.formal_expression import (
@@ -93,8 +94,8 @@ class OdmMethod(ConceptModel):
 
 
 class OdmMethodPostInput(ConceptPostInput):
-    oid: Annotated[str | None, Field(min_length=1)]
-    method_type: Annotated[str | None, Field(min_length=1)]
+    oid: Annotated[str | None, Field(min_length=1)] = None
+    method_type: Annotated[str | None, Field(min_length=1)] = None
     formal_expressions: list[OdmFormalExpressionPostInput | str]
     descriptions: list[OdmDescriptionPostInput | str]
     alias_uids: list[str]
@@ -116,12 +117,8 @@ class OdmMethodVersion(OdmMethod):
     """
 
     changes: Annotated[
-        dict[str, bool] | None,
+        list[str],
         Field(
-            description=(
-                "Denotes whether or not there was a change in a specific field/property compared to the previous version. "
-                "The field names in this object here refer to the field names of the objective (e.g. name, start_date, ..)."
-            ),
-            nullable=True,
+            description=CHANGES_FIELD_DESC,
         ),
-    ] = None
+    ] = []

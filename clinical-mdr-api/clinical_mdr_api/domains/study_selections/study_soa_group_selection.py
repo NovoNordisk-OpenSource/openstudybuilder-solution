@@ -92,4 +92,4 @@ class StudySoAGroupAR(study_selection_base.StudySelectionBaseAR):
     _object_type = "soa_group"
     _object_uid_field = ""
     _object_name_field = ""
-    _order_field_name = ""
+    _order_field_name = "order"

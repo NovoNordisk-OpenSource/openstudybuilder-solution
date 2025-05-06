@@ -36,7 +36,7 @@ class DataModel(BaseModel):
         datetime,
         Field(description=_generic_descriptions.START_DATE),
     ]
-    status: Annotated[str | None, Field(nullable=True)] = None
+    status: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
 
     @classmethod
     def from_repository_output(cls, input_dict: dict):

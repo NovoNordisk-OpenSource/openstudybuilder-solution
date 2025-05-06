@@ -28,6 +28,7 @@ from clinical_mdr_api.repositories._utils import (
 from clinical_mdr_api.utils import extract_parameters
 from common.exceptions import ValidationException
 from common.telemetry import trace_calls
+from common.utils import get_field_type
 
 
 def is_library_editable(name: str) -> bool:
@@ -106,17 +107,14 @@ def get_input_or_new_value(
     return f"{prefix}{initials}{sep}{int(time())}"
 
 
-def object_diff(objt1, objt2=None):
+def object_diff(objt1, objt2=None) -> list[str]:
     """
     Calculate difference table between pydantic objects and return only those fields in the payload that have changed
     """
     if objt2 is None:
-        return {}
-    return {
-        name: objt1[name] != objt2[name]
-        for name in objt1.keys()
-        if objt1[name] != objt2[name]
-    }
+        return []
+
+    return [name for name in objt1.keys() if objt1[name] != objt2[name]]
 
 
 def get_otv(version_object_class, object1, object2=None):
@@ -125,7 +123,7 @@ def get_otv(version_object_class, object1, object2=None):
     with the differences with object object2
     """
 
-    changes = object_diff(object1, object2) if object2 is not None else {}
+    changes = object_diff(object1, object2) if object2 is not None else []
     return version_object_class(changes=changes, **object1)
 
 
@@ -162,7 +160,7 @@ def fill_missing_values_in_base_model_from_reference_base_model(
     Returns:
         None
     """
-    for field_name in base_model_with_missing_values.__fields_set__:
+    for field_name in base_model_with_missing_values.model_fields_set:
         if isinstance(
             getattr(base_model_with_missing_values, field_name), BaseModel
         ) and isinstance(getattr(reference_base_model, field_name), BaseModel):
@@ -176,26 +174,26 @@ def fill_missing_values_in_base_model_from_reference_base_model(
     # The following for loop iterates over all fields that are not present in the partial payload but are available
     # in the reference model and are available in the model that contains missing values
     for field_name in (
-        reference_base_model.__fields_set__
-        - base_model_with_missing_values.__fields_set__
-    ).intersection(base_model_with_missing_values.__fields__):
+        reference_base_model.model_fields_set
+        - base_model_with_missing_values.model_fields_set
+    ).intersection(base_model_with_missing_values.model_fields):
         if field_name.endswith("Code") and not field_name.endswith("NullValueCode"):
             # both value field and null value code field not exists in the base (coming) set
             if (
                 field_name.replace("Code", "") + "NullValueCode"
-                not in base_model_with_missing_values.__fields_set__
+                not in base_model_with_missing_values.model_fields_set
             ):
                 fields_to_assign_with_previous_value.append(field_name)
             # value field doesn't exist and null value field exist in the base (coming) set
             elif (
                 field_name.replace("Code", "") + "NullValueCode"
-                in base_model_with_missing_values.__fields_set__
+                in base_model_with_missing_values.model_fields_set
             ):
                 fields_to_assign_with_none.append(field_name)
         # value field doesn't exist and null value code exist in the base (coming) set but value is not code field
         elif (
             field_name + "NullValueCode"
-            in base_model_with_missing_values.__fields_set__
+            in base_model_with_missing_values.model_fields_set
         ):
             fields_to_assign_with_none.append(field_name)
         else:
@@ -364,7 +362,7 @@ def filter_base_model_using_fields_directive(
     input_base_model: _SomeBaseModelSubtype, fields_directive: FieldsDirective
 ) -> _SomeBaseModelSubtype:
     args_dict_for_result_object = {}
-    for field_name in input_base_model.__fields_set__:
+    for field_name in input_base_model.model_fields_set:
         if fields_directive.is_field_included(field_name):
             field_value = getattr(input_base_model, field_name)
             if isinstance(field_value, BaseModel):
@@ -557,14 +555,39 @@ def generic_item_filtering(
                     uids.add(item.uid)
     else:
         raise ValidationException(msg=f"Invalid filter_operator: {filter_operator}")
+
     # Do sorting
-    for sort_key, sort_order in sort_by.items():
+    distinct_sort_orders = set(list(sort_by.values()))
+    # If all orders for SortKeys are the same we can order the list in a single sort function call
+    if len(distinct_sort_orders) == 1:
         filtered_items.sort(
-            key=lambda x, s=sort_key: (
-                elm if (elm := extract_nested_key_value(x, s)) is not None else "-1"
-            ),
-            reverse=not sort_order,
+            key=lambda x: [
+                (
+                    elm
+                    if (elm := extract_nested_key_value(x, sort_key)) is not None
+                    else (
+                        "-1"
+                        if issubclass(extract_nested_key_type(x, sort_key), str)
+                        else -1
+                    )
+                )
+                for sort_key in sort_by.keys()
+            ],
+            reverse=not distinct_sort_orders.pop(),
         )
+    # If orders for SortKeys are different we have to order list calling sort function a few times, once per each SortKey
+    elif len(distinct_sort_orders) > 1:
+        for sort_key, sort_order in sort_by.items():
+            filtered_items.sort(
+                key=lambda x, s=sort_key: (
+                    elm
+                    if (elm := extract_nested_key_value(x, s)) is not None
+                    else (
+                        "-1" if issubclass(extract_nested_key_type(x, s), str) else -1
+                    )
+                ),
+                reverse=not sort_order,
+            )
     return filtered_items
 
 
@@ -737,6 +760,10 @@ def extract_nested_key_value(term, key):
     return rgetattr(term, key)
 
 
+def extract_nested_key_type(term, key):
+    return rgetattr_type(term, key)
+
+
 def extract_properties_for_wildcard(item, prefix: str = ""):
     output = []
     if prefix:
@@ -747,9 +774,10 @@ def extract_properties_for_wildcard(item, prefix: str = ""):
         if isinstance(item, list | tuple) and len(item) > 0:
             return extract_properties_for_wildcard(item[0], prefix[:-1])
         # Otherwise, let's iterate over all the attributes of the single item we have
-        for attribute, attr_desc in item.__fields__.items():
+        for attribute, attr_desc in item.model_fields.items():
             # if we have marked a field to be removed from wildcard filtering we have to continue to next row
-            if attr_desc.field_info.extra.get("remove_from_wildcard", False):
+            jse = attr_desc.json_schema_extra or {}
+            if jse.get("remove_from_wildcard", False):
                 continue
             # The attribute might be a non-class dictionary
             # In that case, we extract the first value and make a recursive call on it
@@ -763,8 +791,8 @@ def extract_properties_for_wildcard(item, prefix: str = ""):
             # An attribute can be a nested class, which will inherit from Pydantic's BaseModel
             # In that case, we do a recursive call and add the attribute key of the class as a prefix, like "nested_class."
             # Checking for isinstance of type will make sure that the attribute is a class before checking if it is a subclass
-            elif isinstance(attr_desc.type_, type) and issubclass(
-                attr_desc.type_, BaseModel
+            elif isinstance(get_field_type(attr_desc.annotation), type) and issubclass(
+                get_field_type(attr_desc.annotation), BaseModel
             ):
                 output = output + extract_properties_for_wildcard(
                     getattr(item, attribute), prefix=prefix + attribute
@@ -865,7 +893,7 @@ def apply_filter_operator(
 
 
 # Recursive getattr to access properties in nested objects
-def rgetattr(obj, attr, *args):
+def rgetattr(obj, attr):
     """
     Recursively gets an attribute of an object based on a string representation of the attribute.
 
@@ -880,12 +908,45 @@ def rgetattr(obj, attr, *args):
 
     def _getattr(obj, attr):
         if isinstance(obj, list):
-            return [_getattr(element, attr, *args) for element in obj]
+            return [_getattr(element, attr) for element in obj]
         if isinstance(obj, dict):
-            return [_getattr(element, attr, *args) for element in obj.values()]
-        return getattr(obj, attr, *args) if hasattr(obj, attr) else None
+            return [_getattr(element, attr) for element in obj.values()]
+        return getattr(obj, attr, None)
 
-    return functools.reduce(_getattr, [obj] + attr.split("."))
+    return functools.reduce(_getattr, attr.split("."), obj)
+
+
+def rgetattr_type(obj, attr):
+    """
+    Recursively gets an attribute of an object based on a string representation of the attribute.
+    When the last attribute is found it returns a type of the most inner attribute.
+
+    Args:
+        obj: The object to get the attribute from.
+        attr: The attribute to get, represented as a string.
+        *args: Optional additional arguments to pass to the getattr function.
+
+    Returns:
+        Type | None: The type of the attribute, or None if the attribute doesn't exist.
+    """
+
+    def _getattr(obj, attr):
+        if isinstance(obj, list):
+            return [_getattr(element, attr) for element in obj]
+        if isinstance(obj, dict):
+            return [_getattr(element, attr) for element in obj.values()]
+        inner_obj = getattr(obj, attr, None)
+        if not isinstance(inner_obj, BaseModel):
+            prop = obj.model_fields.get(attr)
+            if prop:
+                return get_field_type(prop.annotation)
+            ValidationException.raise_if(
+                True,
+                msg=f"Cannot resolve a model field for attribute {attr}",
+            )
+        return inner_obj
+
+    return functools.reduce(_getattr, attr.split("."), obj)
 
 
 @trace_calls

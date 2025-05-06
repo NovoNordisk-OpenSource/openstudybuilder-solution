@@ -76,12 +76,10 @@ export const useStudiesCompoundsStore = defineStore('studiesCompounds', {
       })
     },
     fetchStudyCompoundDosings(studyUid) {
-      study
-        .getStudyCompoundDosings(studyUid)
-        .then((resp) => {
-          this.studyCompoundDosings = resp.data.items
-          this.studyCompoundDosingTotal = resp.data.total
-        })
+      study.getStudyCompoundDosings(studyUid).then((resp) => {
+        this.studyCompoundDosings = resp.data.items
+        this.studyCompoundDosingTotal = resp.data.total
+      })
     },
     addStudyCompoundDosing({ studyUid, data }) {
       return study.addStudyCompoundDosing(studyUid, data).then(() => {

@@ -43,6 +43,7 @@ Allowed parameters include : filter on fields, sort by field name with sort dire
     response_model=CustomPage[UnitDefinitionModel],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {
             "content": {
                 "text/csv": {
@@ -59,7 +60,6 @@ Allowed parameters include : filter on fields, sort by field name with sort dire
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {},
             }
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.allow_exports(
@@ -164,11 +164,11 @@ def get_all(
     response_model=list[Any],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - Invalid field name specified",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_distinct_values_for_header(
@@ -227,12 +227,12 @@ def get_distinct_values_for_header(
     response_model=UnitDefinitionModel,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": """Not Found - The unit definition with the specified
             'unit_definition_uid' (and the specified date/time, version and/or status) wasn't found.""",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_by_uid(
@@ -287,6 +287,7 @@ The returned versions are ordered by `start_date` descending (newest entries fir
     response_model=list[UnitDefinitionModel],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {
             "content": {
                 "text/csv": {
@@ -307,7 +308,6 @@ The returned versions are ordered by `start_date` descending (newest entries fir
             "model": ErrorResponse,
             "description": "Not Found - The concept with the specified 'unit_definition_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.allow_exports(
@@ -367,6 +367,7 @@ If the request succeeds:
 """,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {"description": "Created - The concept was successfully created."},
         400: {
             "model": ErrorResponse,
@@ -379,7 +380,6 @@ If the request succeeds:
             "description": "Not Found - The library with the specified 'library_name' could not be found.",
         },
         409: _generic_descriptions.ERROR_409,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def post(
@@ -407,6 +407,7 @@ If the request succeeds:
     response_model=UnitDefinitionModel,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -419,7 +420,6 @@ If the request succeeds:
             "description": "Not Found - The concept with the specified 'unit_definition_uid' could not be found.",
         },
         409: _generic_descriptions.ERROR_409,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def patch(
@@ -452,6 +452,7 @@ If the request succeeds:
     response_model=UnitDefinitionModel,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -463,7 +464,6 @@ If the request succeeds:
             "model": ErrorResponse,
             "description": "Not Found - The  concept with the specified 'unit_definition_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def new_version(
@@ -489,6 +489,7 @@ If the request succeeds:
     response_model=UnitDefinitionModel,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -500,7 +501,6 @@ If the request succeeds:
             "model": ErrorResponse,
             "description": "Not Found - The unit definition with the specified 'unit_definition_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def approve(
@@ -525,6 +525,7 @@ If the request succeeds:
     response_model=UnitDefinitionModel,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -535,7 +536,6 @@ If the request succeeds:
             "model": ErrorResponse,
             "description": "Not Found - The unit definition with the specified 'unit_definition_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def inactivate(
@@ -560,6 +560,7 @@ If the request succeeds:
     response_model=UnitDefinitionModel,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -570,7 +571,6 @@ If the request succeeds:
             "model": ErrorResponse,
             "description": "Not Found - The concept with the specified 'unit_definition_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def reactivate(
@@ -591,6 +591,7 @@ def reactivate(
     response_model=None,
     status_code=204,
     responses={
+        403: _generic_descriptions.ERROR_403,
         204: {"description": "No Content - The concept was successfully deleted."},
         400: {
             "model": ErrorResponse,
@@ -603,7 +604,6 @@ def reactivate(
             "model": ErrorResponse,
             "description": "Not Found - An concept with the specified uid could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def delete(

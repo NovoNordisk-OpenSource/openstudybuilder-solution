@@ -242,7 +242,7 @@ class GenericSyntaxService(Generic[_AggregateRootType], abc.ABC):
                 uid=uid, return_study_count=return_study_count, for_audit_trail=True
             )
             versions = [
-                self._transform_aggregate_root_to_pydantic_model(_).dict()
+                self._transform_aggregate_root_to_pydantic_model(_).model_dump()
                 for _ in all_versions
             ]
 

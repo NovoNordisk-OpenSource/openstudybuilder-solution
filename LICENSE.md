@@ -19,6 +19,7 @@ Data Export (MIT) | studybuilder-export
 Standards Import (GPLv3) | mdr-standards-import
 DB Schema Migration (MIT) | db-schema-migration
 System Tests (MIT) | system-tests
+StudyBuilder Word Add-In (MIT) | studybuilder-word-addin
 
 ## License Terms (GPLv3)
 
@@ -705,3 +706,5 @@ library, you may consider it more useful to permit linking proprietary
 applications with the library. If this is what you want to do, use the
 GNU Lesser General Public License instead of this License. But first,
 please read <https://www.gnu.org/licenses/why-not-lgpl.html>.
+
+

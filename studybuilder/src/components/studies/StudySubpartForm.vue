@@ -308,7 +308,9 @@ export default {
   methods: {
     initForm() {
       this.form = {
-        study_acronym: this.selectedStudy.current_metadata.identification_metadata.study_acronym
+        study_acronym:
+          this.selectedStudy.current_metadata.identification_metadata
+            .study_acronym,
       }
       this.formStore.save(this.form)
     },
@@ -329,9 +331,13 @@ export default {
           v: [null],
           op: 'ne',
         }
-        filtersObj['current_metadata.identification_metadata.project_number'] = {
-          v: [this.selectedStudy.current_metadata.identification_metadata.project_number],
-        }
+        filtersObj['current_metadata.identification_metadata.project_number'] =
+          {
+            v: [
+              this.selectedStudy.current_metadata.identification_metadata
+                .project_number,
+            ],
+          }
         filters = filtersObj
       } else {
         filters = {

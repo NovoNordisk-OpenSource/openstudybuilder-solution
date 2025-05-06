@@ -35,7 +35,7 @@
             />
           </v-col>
         </v-row>
-        <v-spacer v-if="expand || expand2"/>
+        <v-spacer v-if="expand || expand2" />
         <v-row>
           <v-col cols="6">
             <v-text-field

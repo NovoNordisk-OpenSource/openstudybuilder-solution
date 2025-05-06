@@ -71,8 +71,8 @@ Feature: Library - CRF Form
     Scenario: User must be able to delete CRF Form in draft status
         Given The 'library/crfs/forms' page is opened
         And The CRF Form in draft status with sub 1 version exists
-        When The 'Approve' action is clicked for the CRF Form
-        Then The Form status is changed to 'Final' and version is rounded up to full number
+        When The 'Delete' option is clicked from the three dot menu list
+        Then The CRF Form is no longer available
 
     @manual_test    
     Scenario: User must be able to read change history of selected element

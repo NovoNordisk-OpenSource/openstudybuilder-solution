@@ -12,6 +12,9 @@ from clinical_mdr_api.models.biomedical_concepts.activity_item_class import (
     ActivityItemClassEditInput,
     ActivityItemClassMappingInput,
 )
+from clinical_mdr_api.models.controlled_terminologies.ct_term import (
+    TermWithCodelistMetadata,
+)
 from clinical_mdr_api.models.utils import CustomPage
 from clinical_mdr_api.repositories._utils import FilterOperator
 from clinical_mdr_api.routers import _generic_descriptions, decorators
@@ -51,8 +54,8 @@ Possible errors:
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.allow_exports(
@@ -120,11 +123,11 @@ def get_activity_item_classes(
     response_model=list[Any],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - Invalid field name specified",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_distinct_values_for_header(
@@ -176,8 +179,8 @@ Possible errors:
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_activity(
@@ -209,11 +212,11 @@ Possible errors:
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - The activity with the specified 'activity_item_class_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_versions(
@@ -221,6 +224,99 @@ def get_versions(
 ):
     activity_item_class_service = ActivityItemClassService()
     return activity_item_class_service.get_version_history(uid=activity_item_class_uid)
+
+
+@router.get(
+    "/{activity_item_class_uid}/terms",
+    dependencies=[rbac.LIBRARY_READ],
+    summary="Returns all terms names and attributes.",
+    description=_generic_descriptions.DATA_EXPORTS_HEADER,
+    response_model=CustomPage[TermWithCodelistMetadata],
+    response_model_exclude_unset=True,
+    status_code=200,
+    responses={
+        404: _generic_descriptions.ERROR_404,
+    },
+)
+@decorators.allow_exports(
+    {
+        "defaults": [
+            "term_uid",
+            "catalogue_name",
+            "codelist_uid",
+            "library_name",
+            "name.sponsor_preferred_name",
+            "name.sponsor_preferred_name_sentence_case",
+            "name.order",
+            "name.start_date",
+            "name.end_date",
+            "name.status",
+            "name.version",
+            "name.change_description",
+            "name.author_username",
+            "attributes.code_submission_value",
+            "attributes.name_submission_value",
+            "attributes.nci_preferred_name",
+            "attributes.definition",
+            "attributes.start_date",
+            "attributes.end_date",
+            "attributes.status",
+            "attributes.version",
+            "attributes.change_description",
+            "attributes.author_username",
+        ],
+        "formats": [
+            "text/csv",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            "text/xml",
+            "application/json",
+        ],
+    }
+)
+# pylint: disable=unused-argument
+def get_all_terms(
+    request: Request,  # request is actually required by the allow_exports decorator
+    activity_item_class_uid: Annotated[str, ActivityItemClassUID],
+    sort_by: Annotated[
+        Json | None, Query(description=_generic_descriptions.SORT_BY)
+    ] = None,
+    page_number: Annotated[
+        int | None, Query(ge=1, description=_generic_descriptions.PAGE_NUMBER)
+    ] = config.DEFAULT_PAGE_NUMBER,
+    page_size: Annotated[
+        int | None,
+        Query(
+            ge=0,
+            le=config.MAX_PAGE_SIZE,
+            description=_generic_descriptions.PAGE_SIZE,
+        ),
+    ] = config.DEFAULT_PAGE_SIZE,
+    filters: Annotated[
+        Json | None,
+        Query(
+            description=_generic_descriptions.FILTERS,
+            openapi_examples=_generic_descriptions.FILTERS_EXAMPLE,
+        ),
+    ] = None,
+    operator: Annotated[
+        str | None, Query(description=_generic_descriptions.FILTER_OPERATOR)
+    ] = config.DEFAULT_FILTER_OPERATOR,
+    total_count: Annotated[
+        bool | None, Query(description=_generic_descriptions.TOTAL_COUNT)
+    ] = False,
+):
+    results = ActivityItemClassService().get_terms_of_activity_item_class(
+        activity_item_class_uid=activity_item_class_uid,
+        sort_by=sort_by,
+        page_number=page_number,
+        page_size=page_size,
+        total_count=total_count,
+        filter_by=filters,
+        filter_operator=FilterOperator.from_str(operator),
+    )
+    return CustomPage.create(
+        items=results.items, total=results.total, page=page_number, size=page_size
+    )
 
 
 @router.post(
@@ -250,6 +346,7 @@ Possible errors:
     response_model_exclude_unset=True,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {"description": "Created - The activity was successfully created."},
         400: {
             "model": ErrorResponse,
@@ -257,7 +354,6 @@ Possible errors:
             "- The library doesn't exist.\n"
             "- The library doesn't allow to add new items.\n",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def create(
@@ -292,6 +388,7 @@ Possible errors:
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -304,7 +401,6 @@ Possible errors:
             "model": ErrorResponse,
             "description": "Not Found - The item class with the specified 'activity_item_class_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def edit(
@@ -335,13 +431,13 @@ Possible errors:
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "OK."},
         404: {
             "model": ErrorResponse,
             "description": "Not Found - Reasons include e.g.: \n"
             "- The activity item class with the specified 'activity_item_class_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def patch_mappings(
@@ -379,6 +475,7 @@ Possible errors:
     response_model_exclude_unset=True,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -391,7 +488,6 @@ Possible errors:
             "- The activity item class is not in final status.\n"
             "- The activity item class with the specified 'activity_item_class_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def new_version(
@@ -426,6 +522,7 @@ Possible errors:
     response_model_exclude_unset=True,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -437,7 +534,6 @@ Possible errors:
             "model": ErrorResponse,
             "description": "Not Found - The activity item class with the specified 'activity_item_class_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def approve(
@@ -472,6 +568,7 @@ Possible errors:
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -482,7 +579,6 @@ Possible errors:
             "model": ErrorResponse,
             "description": "Not Found - The activity with the specified 'activity_item_class_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def inactivate(
@@ -517,6 +613,7 @@ Possible errors:
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -527,7 +624,6 @@ Possible errors:
             "model": ErrorResponse,
             "description": "Not Found - The activity item class with the specified 'activity_item_class_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def reactivate(
@@ -559,6 +655,7 @@ Possible errors:
     response_model=None,
     status_code=204,
     responses={
+        403: _generic_descriptions.ERROR_403,
         204: {
             "description": "No Content - The activity item class was successfully deleted."
         },
@@ -573,7 +670,6 @@ Possible errors:
             "model": ErrorResponse,
             "description": "Not Found - An activity item class with the specified 'activity_item_class_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def delete_activity_item_class(

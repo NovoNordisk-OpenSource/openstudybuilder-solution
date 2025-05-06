@@ -1,6 +1,6 @@
 from typing import VT, Annotated, Callable, Iterator
 
-from pydantic import Field
+from pydantic import ConfigDict, Field
 
 from clinical_mdr_api.models.utils import BaseModel
 
@@ -69,6 +69,8 @@ class TableDimension(dict):
 
 
 class Table(BaseModel):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
     data: Annotated[
         TableDimension,
         Field(
@@ -88,7 +90,7 @@ class Table(BaseModel):
         Field(
             title="Number of header rows",
             description="Number of rows from the beginning of the table used as column headers",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = 0
     num_header_columns: Annotated[
@@ -96,7 +98,7 @@ class Table(BaseModel):
         Field(
             title="Number of header columns",
             description="Number of columns from the beginning of each row used as row headers",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = 0
 

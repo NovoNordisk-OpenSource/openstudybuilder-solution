@@ -45,6 +45,26 @@ Feature: Studies - Study Withdrawal Criteria
         And The 'Withdrawal' criteria from test study is copied
         Then The 'Withdrawal Criteria' copied from test study is visible within the table with correct data
 
+    Scenario: User must be able to export the data in CSV format
+        Given The '/studies/Study_000002/selection_criteria/Withdrawal%20Criteria' page is opened
+        And The user exports the data in 'CSV' format
+        Then The study specific 'StudyCriteria' file is downloaded in 'csv' format
+
+    Scenario: User must be able to export the data in JSON format
+        Given The '/studies/Study_000002/selection_criteria/Withdrawal%20Criteria' page is opened
+        And The user exports the data in 'JSON' format
+        Then The study specific 'StudyCriteria' file is downloaded in 'json' format
+
+    Scenario: User must be able to export the data in XML format
+        Given The '/studies/Study_000002/selection_criteria/Withdrawal%20Criteria' page is opened
+        And The user exports the data in 'XML' format
+        Then The study specific 'StudyCriteria' file is downloaded in 'xml' format
+
+    Scenario: User must be able to export the data in EXCEL format
+        Given The '/studies/Study_000002/selection_criteria/Withdrawal%20Criteria' page is opened
+        And The user exports the data in 'EXCEL' format
+        Then The study specific 'StudyCriteria' file is downloaded in 'xlsx' format
+
     @pending_implementation
     Scenario: User must be able to select Withdrawal Criteria from other existing studies by study acronym
         Given The '/studies/Study_000002/selection_criteria/Withdrawal%20Criteria' page is opened

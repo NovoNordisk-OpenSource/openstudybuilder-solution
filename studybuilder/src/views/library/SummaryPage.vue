@@ -39,13 +39,11 @@
               </div>
             </template>
             <v-list>
-              <v-list-item
-                v-for="(subitem, index) in item.children"
-                :key="index"
-                :to="subitem.url"
-              >
-                <v-list-item-title>{{ subitem.title }}</v-list-item-title>
-              </v-list-item>
+              <template v-for="subitem in item.children" :key="subitem.title">
+                <v-list-item v-if="checkFeatureFlag(subitem)" :to="subitem.url">
+                  <v-list-item-title>{{ subitem.title }}</v-list-item-title>
+                </v-list-item>
+              </template>
             </v-list>
           </v-menu>
         </div>
@@ -58,11 +56,18 @@
 <script setup>
 import { useAppStore } from '@/stores/app'
 import ExpandableHeaderContent from '@/components/tools/ExpandableHeaderContent.vue'
+import { useFeatureFlagsStore } from '@/stores/feature-flags'
 
 const appStore = useAppStore()
+const featureFlagsStore = useFeatureFlagsStore()
 
 function startFrom(arr, idx) {
   return arr.slice(idx)
+}
+
+function checkFeatureFlag(item) {
+  if (!item.featureFlag) return true
+  return featureFlagsStore.getFeatureFlag(item.featureFlag) !== false
 }
 </script>
 

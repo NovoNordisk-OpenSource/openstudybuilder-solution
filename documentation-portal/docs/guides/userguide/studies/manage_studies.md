@@ -196,3 +196,4 @@ Then go to Manage study/Study/Study Subparts to get the overview – see Figure 
 A study subpart cannot be released or locked individually - a subpart can only be released or locked together with the parent study. This ensure a multiple parts study always is versioned as a bundle of a parent study and its subparts.
 
 Se more on [study versioning](#maintain-study-status-and-versioning).
+

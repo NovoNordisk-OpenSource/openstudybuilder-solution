@@ -12,6 +12,7 @@ from clinical_mdr_api.tests.integration.utils.api import (
     inject_and_clear_db,
     inject_base_data,
 )
+from clinical_mdr_api.tests.utils.checks import assert_response_status_code
 
 # pylint: disable=unused-argument
 # pylint: disable=redefined-outer-name
@@ -46,7 +47,7 @@ def test_get_caches(api_client):
     api_client.get("/clinical-programmes/ClinicalProgramme_000001")
 
     response = api_client.get("/admin/caches?show_items=true")
-    assert response.status_code == 200
+    assert_response_status_code(response, 200)
     assert len(response.json()) > 1
 
     all_store_classes = [item["class"] for item in response.json()]
@@ -70,11 +71,11 @@ def test_get_caches(api_client):
 def test_clear_caches(api_client):
     """Test DELETE /admin/caches"""
     response = api_client.delete("/admin/caches")
-    assert response.status_code == 200
+    assert_response_status_code(response, 200)
     assert len(response.json()) > 1
 
     response = api_client.get("/admin/caches?show_items=true")
-    assert response.status_code == 200
+    assert_response_status_code(response, 200)
     assert len(response.json()) > 1
 
     # Assert that the cache store 'cache_store_item_by_uid' is empty
@@ -89,7 +90,7 @@ def test_clear_caches(api_client):
 def test_get_users(api_client):
     """Test GET /admin/users"""
     response = api_client.get("/admin/users")
-    assert response.status_code == 200
+    assert_response_status_code(response, 200)
     assert len(response.json()) > 0
     assert response.json()[0]["user_id"] == "unknown-user"
     assert response.json()[0]["username"] == "unknown-user@example.com"
@@ -103,11 +104,11 @@ def test_patch_user(api_client):
     response = api_client.patch(
         f"/admin/users/{user_id}", json={"username": new_username}
     )
-    assert response.status_code == 200
+    assert_response_status_code(response, 200)
     assert response.json()["username"] == new_username
 
     response = api_client.get("/admin/users")
-    assert response.status_code == 200
+    assert_response_status_code(response, 200)
     for item in response.json():
         if item["user_id"] == user_id:
             assert item["username"] == new_username

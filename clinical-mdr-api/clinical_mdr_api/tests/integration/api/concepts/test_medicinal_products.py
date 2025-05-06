@@ -1064,15 +1064,10 @@ def test_negative_create_medicinal_product_wrong_links(api_client):
     response = api_client.post(BASE_URL, data=json.dumps(payload), headers=HEADERS)
 
     assert_response_status_code(response, 422)
-    assert response.json() == {
-        "detail": [
-            {
-                "loc": ["body", "compound_uid"],
-                "msg": "field required",
-                "type": "value_error.missing",
-            }
-        ]
-    }
+    res = response.json()
+    assert res["detail"][0]["type"] == "missing"
+    assert res["detail"][0]["loc"] == ["body", "compound_uid"]
+    assert res["detail"][0]["msg"] == "Field required"
 
     # Try to create new medicinal product with non-existing pharmaceutical product
     payload = copy.deepcopy(CREATE_MEDICINAL_PRODUCT_PAYLOAD_OK)

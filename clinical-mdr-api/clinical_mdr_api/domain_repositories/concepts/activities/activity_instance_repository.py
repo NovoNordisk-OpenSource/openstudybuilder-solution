@@ -26,6 +26,7 @@ from clinical_mdr_api.domain_repositories.models.generic import (
     Library,
     VersionRelationship,
 )
+from clinical_mdr_api.domain_repositories.models.odm import OdmItemRoot
 from clinical_mdr_api.domains._utils import ObjectStatus
 from clinical_mdr_api.domains.concepts.activities.activity_instance import (
     ActivityInstanceAR,
@@ -44,6 +45,7 @@ from clinical_mdr_api.domains.versioned_object_aggregate import (
 )
 from clinical_mdr_api.models.concepts.activities.activity_instance import (
     ActivityInstance,
+    CompactOdmItem,
 )
 from clinical_mdr_api.models.concepts.activities.activity_item import (
     CompactUnitDefinition,
@@ -53,7 +55,7 @@ from clinical_mdr_api.models.concepts.unit_definitions.unit_definition import (
 )
 from common.config import REQUESTED_LIBRARY_NAME
 from common.exceptions import BusinessLogicException
-from common.utils import convert_to_datetime
+from common.utils import convert_to_datetime, version_string_to_tuple
 
 
 class ActivityInstanceRepository(ConceptGenericRepository[ActivityInstanceAR]):
@@ -118,18 +120,38 @@ class ActivityInstanceRepository(ConceptGenericRepository[ActivityInstanceAR]):
         value_node.activity_instance_class.connect(activity_instance_class)
 
         for item in ar.concept_vo.activity_items:
-            activity_item_node = ActivityItem()
-            activity_item_node.save()
             activity_item_class = ActivityItemClassRoot.nodes.get_or_none(
                 uid=item.activity_item_class_uid
             )
+            is_adam_param_specific = (
+                item.is_adam_param_specific
+                if getattr(
+                    activity_item_class.has_activity_instance_class.relationship(
+                        activity_instance_class
+                    ),
+                    "is_adam_param_specific_enabled",
+                    False,
+                )
+                else False
+            )
+            activity_item_node = ActivityItem(
+                is_adam_param_specific=is_adam_param_specific
+            )
+            activity_item_node.save()
             activity_item_node.has_activity_item_class.connect(activity_item_class)
+
             for term in item.ct_terms:
                 ct_term_root = CTTermRoot.nodes.get_or_none(uid=term.uid)
                 activity_item_node.has_ct_term.connect(ct_term_root)
+
             for unit in item.unit_definitions:
                 unit_definition = UnitDefinitionRoot.nodes.get_or_none(uid=unit.uid)
                 activity_item_node.has_unit_definition.connect(unit_definition)
+
+            for odm_item in item.odm_items:
+                odm_item = OdmItemRoot.nodes.get_or_none(uid=odm_item.uid)
+                activity_item_node.has_odm_item.connect(odm_item)
+
             value_node.contains_activity_item.connect(activity_item_node)
         return value_node
 
@@ -138,9 +160,11 @@ class ActivityInstanceRepository(ConceptGenericRepository[ActivityInstanceAR]):
         for item in ar_items:
             ar_activity_items.append(
                 {
+                    "is_adam_param_specific": item.is_adam_param_specific,
                     "class": item.activity_item_class_uid,
                     "units": set(unit.uid for unit in item.unit_definitions),
                     "terms": set(term.uid for term in item.ct_terms),
+                    "odm_items": set(odm_item.uid for odm_item in item.odm_items),
                 }
             )
 
@@ -149,11 +173,16 @@ class ActivityInstanceRepository(ConceptGenericRepository[ActivityInstanceAR]):
             item_class_uid = activity_item_node.has_activity_item_class.get().uid
             unit_nodes = activity_item_node.has_unit_definition.all()
             ct_term_nodes = activity_item_node.has_ct_term.all()
+            odm_item_nodes = activity_item_node.has_odm_item.all()
             value_activity_items.append(
                 {
+                    "is_adam_param_specific": activity_item_node.is_adam_param_specific,
                     "class": item_class_uid,
                     "units": set(unit_node.uid for unit_node in unit_nodes),
                     "terms": set(ct_term_node.uid for ct_term_node in ct_term_nodes),
+                    "odm_items": set(
+                        odm_item_node.uid for odm_item_node in odm_item_nodes
+                    ),
                 }
             )
         for item in ar_activity_items:
@@ -299,6 +328,9 @@ class ActivityInstanceRepository(ConceptGenericRepository[ActivityInstanceAR]):
                 ],
                 activity_items=[
                     ActivityItemVO.from_repository_values(
+                        is_adam_param_specific=activity_item.get(
+                            "is_adam_param_specific"
+                        ),
                         activity_item_class_uid=activity_item.get(
                             "activity_item_class_uid"
                         ),
@@ -316,6 +348,14 @@ class ActivityInstanceRepository(ConceptGenericRepository[ActivityInstanceAR]):
                                 dimension_name=unit["dimension_name"],
                             )
                             for unit in activity_item.get("unit_definitions")
+                        ],
+                        odm_items=[
+                            CompactOdmItem(
+                                uid=odm_item["uid"],
+                                oid=odm_item["oid"],
+                                name=odm_item["name"],
+                            )
+                            for odm_item in activity_item.get("odm_items")
                         ],
                     )
                     for activity_item in input_dict.get("activity_items", [])
@@ -357,6 +397,7 @@ class ActivityInstanceRepository(ConceptGenericRepository[ActivityInstanceAR]):
             )
             ct_terms = []
             unit_definitions = []
+            odm_items = []
             for unit in activity_item.has_unit_definition.all():
                 if ct_dimension := unit.has_version.single().has_ct_dimension.single():
                     dimension_name = (
@@ -381,12 +422,23 @@ class ActivityInstanceRepository(ConceptGenericRepository[ActivityInstanceAR]):
                         name=term.has_name_root.single().has_version.single().name,
                     )
                 )
+            for odm_item in activity_item.has_odm_item.all():
+                odm_item_value = odm_item.has_latest_value.single()
+                odm_items.append(
+                    CompactOdmItem(
+                        uid=odm_item.uid,
+                        oid=odm_item_value.oid,
+                        name=odm_item_value.name,
+                    )
+                )
             activity_item_vos.append(
                 ActivityItemVO.from_repository_values(
+                    is_adam_param_specific=activity_item.is_adam_param_specific,
                     activity_item_class_uid=activity_item_class_root.uid,
                     activity_item_class_name=activity_item_class_root.has_latest_value.get_or_none().name,
                     ct_terms=ct_terms,
                     unit_definitions=unit_definitions,
+                    odm_items=odm_items,
                 )
             )
         activity_groupings_nodes = value.has_activity.all()
@@ -402,7 +454,9 @@ class ActivityInstanceRepository(ConceptGenericRepository[ActivityInstanceAR]):
             all_activity_rels = activity_value_node.has_version.all_relationships(
                 activity_root
             )
-            latest_activity = max(all_activity_rels, key=lambda r: float(r.version))
+            latest_activity = max(
+                all_activity_rels, key=lambda r: version_string_to_tuple(r.version)
+            )
 
             activity_valid_groups = activity_grouping.in_subgroup.all()
             for activity_valid_group in activity_valid_groups:
@@ -412,7 +466,9 @@ class ActivityInstanceRepository(ConceptGenericRepository[ActivityInstanceAR]):
                 all_group_rels = activity_group_value.has_version.all_relationships(
                     activity_group_root
                 )
-                latest_group = max(all_group_rels, key=lambda r: float(r.version))
+                latest_group = max(
+                    all_group_rels, key=lambda r: version_string_to_tuple(r.version)
+                )
                 # ActivitySubGroup
                 activity_subgroup_value = activity_valid_group.has_group.get()
                 activity_subgroup_root = activity_subgroup_value.has_version.single()
@@ -421,7 +477,9 @@ class ActivityInstanceRepository(ConceptGenericRepository[ActivityInstanceAR]):
                         activity_subgroup_root
                     )
                 )
-                latest_subgroup = max(all_subgroup_rels, key=lambda r: float(r.version))
+                latest_subgroup = max(
+                    all_subgroup_rels, key=lambda r: version_string_to_tuple(r.version)
+                )
 
                 activity_groupings.append(
                     ActivityInstanceGroupingVO(
@@ -494,6 +552,7 @@ class ActivityInstanceRepository(ConceptGenericRepository[ActivityInstanceAR]):
         for activity_item in activity_instance_objects["activity_items"]:
             ct_terms = []
             unit_definitions = []
+            odm_items = []
             for unit in activity_item["unit_definitions"]:
                 unit_definitions.append(
                     UnitDefinitionSimpleModel(
@@ -508,12 +567,20 @@ class ActivityInstanceRepository(ConceptGenericRepository[ActivityInstanceAR]):
                         name=term["name"],
                     )
                 )
+            for odm_item in activity_item["odm_items"]:
+                odm_items.append(
+                    CompactOdmItem(
+                        uid=odm_item["uid"], oid=odm_item["oid"], name=odm_item["name"]
+                    )
+                )
             activity_item_vos.append(
                 ActivityItemVO.from_repository_values(
+                    is_adam_param_specific=activity_item["is_adam_param_specific"],
                     activity_item_class_uid=activity_item["activity_item_class_uid"],
                     activity_item_class_name=activity_item["activity_item_class_name"],
                     ct_terms=ct_terms,
                     unit_definitions=unit_definitions,
+                    odm_items=odm_items,
                 )
             )
         activity_groupings = []
@@ -584,7 +651,7 @@ class ActivityInstanceRepository(ConceptGenericRepository[ActivityInstanceAR]):
         )
 
     def specific_alias_clause(
-        self, only_specific_status: str = ObjectStatus.LATEST.name
+        self, only_specific_status: str = ObjectStatus.LATEST.name, **kwargs
     ) -> str:
         return """
         WITH *,
@@ -610,7 +677,9 @@ class ActivityInstanceRepository(ConceptGenericRepository[ActivityInstanceAR]):
                     activity_item_class_uid: activity_item_class_root.uid,
                     activity_item_class_name: activity_item_class_value.name,
                     ct_terms: [(activity_item)-[:HAS_CT_TERM]->(term_root:CTTermRoot)-[:HAS_NAME_ROOT]->(term_name_root:CTTermNameRoot)-[:LATEST]->(term_name_value:CTTermNameValue) | {uid: term_root.uid, name: term_name_value.name}],
-                    unit_definitions: [(activity_item)-[:HAS_UNIT_DEFINITION]->(unit_definition_root:UnitDefinitionRoot)-[:LATEST]->(unit_definition_value:UnitDefinitionValue)-[:HAS_CT_DIMENSION]-(:CTTermRoot)-[:HAS_NAME_ROOT]->(CTTermNamesRoot)-[:LATEST]->(dimension_value:CTTermNameValue) | {uid: unit_definition_root.uid, name: unit_definition_value.name, dimension_name: dimension_value.name}]
+                    unit_definitions: [(activity_item)-[:HAS_UNIT_DEFINITION]->(unit_definition_root:UnitDefinitionRoot)-[:LATEST]->(unit_definition_value:UnitDefinitionValue)-[:HAS_CT_DIMENSION]-(:CTTermRoot)-[:HAS_NAME_ROOT]->(CTTermNamesRoot)-[:LATEST]->(dimension_value:CTTermNameValue) | {uid: unit_definition_root.uid, name: unit_definition_value.name, dimension_name: dimension_value.name}],
+                    is_adam_param_specific: activity_item.is_adam_param_specific,
+                    odm_items: [(activity_item)-[:HAS_ODM_ITEM]->(odm_item_root:OdmItemRoot)-[:LATEST]->(odm_item_value:OdmItemValue) | {uid: odm_item_root.uid, oid: odm_item_value.oid, name: odm_item_value.name}]
                 }] AS activity_items,
             head([(concept_value)-[:HAS_ACTIVITY]->(activity_grouping)<-[:HAS_GROUPING]-(activity_value) | activity_value.name]) as activity_name,
             apoc.coll.toSet([(concept_value)-[:HAS_ACTIVITY]->(activity_grouping:ActivityGrouping)-[:IN_SUBGROUP]->(activity_valid_group:ActivityValidGroup)
@@ -755,11 +824,16 @@ class ActivityInstanceRepository(ConceptGenericRepository[ActivityInstanceAR]):
                     activity_versions: [(activity_value)<-[hav:HAS_VERSION]-(activity_root:ActivityRoot) | hav { .version, .status, .start_date, .end_date}],
                     activity_library_name: head([(activity_value:ActivityValue)<-[:HAS_VERSION]-(activity_root:ActivityRoot)<-[:CONTAINS_CONCEPT]-(library) 
                     | library.name]),
-                    activity_subgroup_value:head([(activity_grouping:ActivityGrouping)-[:IN_SUBGROUP]->
+                    activity_subgroup_value: head([(activity_grouping:ActivityGrouping)-[:IN_SUBGROUP]->
                     (activity_valid_group:ActivityValidGroup)<-[:HAS_GROUP]-(activity_subgroup_value:ActivitySubGroupValue) 
-                        | activity_subgroup_value]), 
-                    activity_group_value:head([(activity_grouping:ActivityGrouping)-[:IN_SUBGROUP]->(activity_valid_group)-[:IN_GROUP]->(activity_group_value) 
-                        | activity_group_value])
+                        | activity_subgroup_value]),
+                    activity_subgroup_uid: head([(activity_grouping:ActivityGrouping)-[:IN_SUBGROUP]->
+                    (activity_valid_group:ActivityValidGroup)<-[:HAS_GROUP]-(activity_subgroup_value:ActivitySubGroupValue)<-[:HAS_VERSION]-(activity_subgroup_root:ActivitySubGroupRoot) 
+                        | activity_subgroup_root.uid]),
+                    activity_group_value: head([(activity_grouping:ActivityGrouping)-[:IN_SUBGROUP]->(activity_valid_group)-[:IN_GROUP]->(activity_group_value) 
+                        | activity_group_value]),
+                    activity_group_uid: head([(activity_grouping:ActivityGrouping)-[:IN_SUBGROUP]->(activity_valid_group)-[:IN_GROUP]->(activity_group_value)<-[:HAS_VERSION]-(activity_group_root:ActivityGroupRoot) 
+                        | activity_group_root.uid])
                 }
             ] AS hierarchy,
             apoc.coll.toSet([(activity_instance_value)-[:CONTAINS_ACTIVITY_ITEM]->(activity_item)
@@ -774,7 +848,9 @@ class ActivityInstanceRepository(ConceptGenericRepository[ActivityInstanceAR]):
                     (activity_item)-[:HAS_UNIT_DEFINITION]->(unit_definition_root:UnitDefinitionRoot)-[:LATEST]->(unit_definition_value:UnitDefinitionValue)
                     -[:HAS_CT_DIMENSION]-(:CTTermRoot)-[:HAS_NAME_ROOT]->(CTTermNamesRoot)-[:LATEST]->(dimension_value:CTTermNameValue)
                     | {uid: unit_definition_root.uid, name: unit_definition_value.name, dimension_name: dimension_value.name}
-                ]
+                ],
+                is_adam_param_specific: activity_item.is_adam_param_specific,
+                odm_items: [(activity_item)-[:HAS_ODM_ITEM]->(odm_item_root:OdmItemRoot)-[:LATEST]->(odm_item_value:OdmItemValue) | {uid: odm_item_root.uid, oid: odm_item_value.oid, name: odm_item_value.name}]
             }
             ]) AS activity_items
         WITH DISTINCT 

@@ -11,7 +11,9 @@ from clinical_mdr_api.repositories._utils import (
     get_order_by_clause,
     merge_q_query_filters,
     transform_filters_into_neomodel,
+    validate_filter_by_is_dict,
     validate_filters_and_add_search_string,
+    validate_sort_by_is_dict,
 )
 from common.utils import validate_page_number_and_page_size
 
@@ -44,23 +46,25 @@ class NeomodelExtBaseRepository:
         filter_operator: FilterOperator | None = FilterOperator.AND,
         total_count: bool = False,
     ) -> tuple[list[_StandardsReturnType], int]:
+        # Validate params
+        filter_by = validate_filter_by_is_dict(filter_by=filter_by)
+        sort_by = validate_sort_by_is_dict(sort_by=sort_by)
+        validate_page_number_and_page_size(page_number=page_number, page_size=page_size)
+
         q_filters = transform_filters_into_neomodel(
             filter_by=filter_by, model=self.return_model
         )
         q_filters = merge_q_query_filters(q_filters, filter_operator=filter_operator)
         sort_paths = get_order_by_clause(sort_by=sort_by, model=self.return_model)
-        validate_page_number_and_page_size(page_number=page_number, page_size=page_size)
         start: int = (page_number - 1) * page_size
         end: int = start + page_size
-        nodes = (
-            self.get_neomodel_extension_query()
-            .order_by(sort_paths[0] if len(sort_paths) > 0 else "uid")
-            .filter(*q_filters)[start:end]
-            .resolve_subgraph()
-        )
+        nodes = self.get_neomodel_extension_query()
+        nodes = nodes.order_by(sort_paths[0] if len(sort_paths) > 0 else "uid")
+        nodes = nodes.filter(*q_filters)[start:end]
+        nodes = nodes.resolve_subgraph()
 
         all_data_model = [
-            self.return_model.from_orm(activity_node) for activity_node in nodes
+            self.return_model.model_validate(activity_node) for activity_node in nodes
         ]
         if total_count:
             len_query = self.root_class.nodes.filter(*q_filters)

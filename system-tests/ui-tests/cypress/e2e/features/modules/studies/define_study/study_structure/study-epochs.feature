@@ -57,6 +57,26 @@ Feature: Studies - Study Epochs
         When The Study Epoch is deleted
         Then The Epoch is not visible in the table
 
+    Scenario: User must be able to export the data in CSV format
+        Given The '/studies/Study_000001/study_structure/epochs' page is opened
+        And The user exports the data in 'CSV' format
+        Then The study specific 'StudyEpochs' file is downloaded in 'csv' format
+
+    Scenario: User must be able to export the data in JSON format
+        Given The '/studies/Study_000001/study_structure/epochs' page is opened
+        And The user exports the data in 'JSON' format
+        Then The study specific 'StudyEpochs' file is downloaded in 'json' format
+
+    Scenario: User must be able to export the data in XML format
+        Given The '/studies/Study_000001/study_structure/epochs' page is opened
+        And The user exports the data in 'XML' format
+        Then The study specific 'StudyEpochs' file is downloaded in 'xml' format
+
+    Scenario: User must be able to export the data in EXCEL format
+        Given The '/studies/Study_000001/study_structure/epochs' page is opened
+        And The user exports the data in 'EXCEL' format
+        Then The study specific 'StudyEpochs' file is downloaded in 'xlsx' format
+
     @manual_test
     Scenario: User must not be able to delete the Study Epoch with study visits related
         Given The '/studies/Study_000001/study_structure/epochs' page is opened

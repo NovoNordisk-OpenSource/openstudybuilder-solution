@@ -23,45 +23,79 @@ from clinical_mdr_api.services._utils import get_name_or_none
 
 
 class CompactStudyArm(BaseModel):
-    arm_type: Annotated[str | None, Field(nullable=True)] = None
+    arm_type: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
     arm_title: Annotated[str, Field()]
-    arm_description: Annotated[str | None, Field(nullable=True)] = None
+    arm_description: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
 
 
 class CompactOutcomeMeasure(BaseModel):
-    title: Annotated[str | None, Field(nullable=True)] = None
-    timeframe: Annotated[str | None, Field(nullable=True)] = None
-    description: Annotated[str | None, Field(nullable=True)] = None
+    title: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    timeframe: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    description: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
 
 
 class CompactRegistryIdentifier(BaseModel):
-    secondary_id: Annotated[str | None, Field(nullable=True)] = None
-    id_type: Annotated[str | None, Field(nullable=True)] = None
-    description: Annotated[str | None, Field(nullable=True)] = None
+    secondary_id: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
+    id_type: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    description: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
 
 
 class StudyPharmaCM(BaseModel):
     unique_protocol_identification_number: Annotated[str, Field()]
-    brief_title: Annotated[str | None, Field(nullable=True)] = None
-    official_title: Annotated[str | None, Field(nullable=True)] = None
-    acronym: Annotated[str | None, Field(nullable=True)] = None
-    study_type: Annotated[str | None, Field(nullable=True)] = None
-    secondary_ids: Annotated[list[CompactRegistryIdentifier], Field(nullable=True)] = []
+    brief_title: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
+    official_title: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    acronym: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    study_type: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
+    secondary_ids: Annotated[
+        list[CompactRegistryIdentifier], Field(json_schema_extra={"nullable": True})
+    ] = []
 
     responsible_party: Annotated[str, Field()] = "Sponsor"
     primary_disease_or_condition_being_studied: Annotated[list[str], Field()] = []
     primary_purpose: Annotated[list[str], Field()] = []
-    study_phase: Annotated[str | None, Field(nullable=True)] = None
-    interventional_study_model: Annotated[str | None, Field(nullable=True)] = None
-    number_of_arms: Annotated[int | None, Field(nullable=True)] = None
-    allocation: Annotated[str | None, Field(nullable=True)] = None
-    number_of_subjects: Annotated[int | None, Field(nullable=True)] = None
+    study_phase: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
+    interventional_study_model: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    number_of_arms: Annotated[
+        int | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    allocation: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
+    number_of_subjects: Annotated[
+        int | None, Field(json_schema_extra={"nullable": True})
+    ] = None
     study_arms: Annotated[list[CompactStudyArm], Field()] = []
-    intervention_type: Annotated[str | None, Field(nullable=True)] = None
+    intervention_type: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
     outcome_measures: Annotated[list[CompactOutcomeMeasure], Field()] = []
-    minimum_age: Annotated[str | None, Field(nullable=True)] = None
-    maximum_age: Annotated[str | None, Field(nullable=True)] = None
-    accepts_healthy_volunteers: Annotated[bool | None, Field(nullable=True)] = None
+    minimum_age: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
+    maximum_age: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
+    accepts_healthy_volunteers: Annotated[
+        bool | None, Field(json_schema_extra={"nullable": True})
+    ] = None
     inclusion_criteria: Annotated[list[str], Field()] = []
     exclusion_criteria: Annotated[list[str], Field()] = []
 

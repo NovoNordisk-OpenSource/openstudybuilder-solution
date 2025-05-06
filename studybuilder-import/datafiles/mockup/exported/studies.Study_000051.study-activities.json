@@ -1,0 +1,445 @@
+[
+  {
+    "accepted_version": false,
+    "activity": {
+      "abbreviation": null,
+      "activity_groupings": [
+        {
+          "activity_group_name": "Body Measurements",
+          "activity_group_uid": "ActivityGroup_000010",
+          "activity_subgroup_name": "Body Measurements",
+          "activity_subgroup_uid": "ActivitySubGroup_000022"
+        }
+      ],
+      "activity_instances": [],
+      "author_username": "9247d4f6-415b-4e6e-bda7-873eaeb1156b",
+      "change_description": "Approved version",
+      "contact_person": null,
+      "definition": null,
+      "end_date": null,
+      "is_data_collected": true,
+      "is_finalized": false,
+      "is_multiple_selection_allowed": true,
+      "is_request_final": false,
+      "is_request_rejected": false,
+      "is_used_by_legacy_instances": false,
+      "library_name": "Sponsor",
+      "name": "Height",
+      "name_sentence_case": "height",
+      "nci_concept_id": null,
+      "nci_concept_name": null,
+      "possible_actions": [
+        "inactivate",
+        "new_version"
+      ],
+      "reason_for_rejecting": null,
+      "replaced_by_activity": null,
+      "request_rationale": null,
+      "requester_study_id": null,
+      "start_date": "2025-03-26T01:54:12.611712Z",
+      "status": "Final",
+      "synonyms": [],
+      "uid": "Activity_000168",
+      "version": "1.0"
+    },
+    "author_username": "study.setup@b2bfv7zbjhkehgyw.onmicrosoft.com",
+    "latest_activity": null,
+    "order": 1,
+    "show_activity_group_in_protocol_flowchart": true,
+    "show_activity_in_protocol_flowchart": false,
+    "show_activity_subgroup_in_protocol_flowchart": true,
+    "show_soa_group_in_protocol_flowchart": false,
+    "start_date": "2025-03-27T12:10:42.370778Z",
+    "study_activity_group": {
+      "activity_group_name": "Body Measurements",
+      "activity_group_uid": "ActivityGroup_000010",
+      "order": null,
+      "study_activity_group_uid": "StudyActivityGroup_001589"
+    },
+    "study_activity_subgroup": {
+      "activity_subgroup_name": "Body Measurements",
+      "activity_subgroup_uid": "ActivitySubGroup_000022",
+      "order": null,
+      "study_activity_subgroup_uid": "StudyActivitySubGroup_002229"
+    },
+    "study_activity_uid": "StudyActivity_002687",
+    "study_soa_group": {
+      "order": null,
+      "soa_group_term_name": "SUBJECT RELATED INFORMATION",
+      "soa_group_term_uid": "CTTerm_000066",
+      "study_soa_group_uid": "StudySoAGroup_000202"
+    },
+    "study_uid": "Study_000051",
+    "study_version": "LATEST on 2025-03-27T13:38:24.534118+00:00"
+  },
+  {
+    "accepted_version": false,
+    "activity": {
+      "abbreviation": null,
+      "activity_groupings": [
+        {
+          "activity_group_name": "Body Measurements",
+          "activity_group_uid": "ActivityGroup_000010",
+          "activity_subgroup_name": "Body Measurements",
+          "activity_subgroup_uid": "ActivitySubGroup_000022"
+        }
+      ],
+      "activity_instances": [
+        {
+          "name": "Sponsor Activity Instance 58",
+          "uid": "ActivityInstance_000059"
+        }
+      ],
+      "author_username": "9247d4f6-415b-4e6e-bda7-873eaeb1156b",
+      "change_description": "Approved version",
+      "contact_person": null,
+      "definition": null,
+      "end_date": null,
+      "is_data_collected": true,
+      "is_finalized": false,
+      "is_multiple_selection_allowed": true,
+      "is_request_final": false,
+      "is_request_rejected": false,
+      "is_used_by_legacy_instances": false,
+      "library_name": "Sponsor",
+      "name": "Weight",
+      "name_sentence_case": "weight",
+      "nci_concept_id": null,
+      "nci_concept_name": null,
+      "possible_actions": [
+        "inactivate",
+        "new_version"
+      ],
+      "reason_for_rejecting": null,
+      "replaced_by_activity": null,
+      "request_rationale": null,
+      "requester_study_id": null,
+      "start_date": "2025-03-26T01:53:57.093420Z",
+      "status": "Final",
+      "synonyms": [],
+      "uid": "Activity_000060",
+      "version": "1.0"
+    },
+    "author_username": "study.setup@b2bfv7zbjhkehgyw.onmicrosoft.com",
+    "latest_activity": null,
+    "order": 2,
+    "show_activity_group_in_protocol_flowchart": true,
+    "show_activity_in_protocol_flowchart": false,
+    "show_activity_subgroup_in_protocol_flowchart": true,
+    "show_soa_group_in_protocol_flowchart": false,
+    "start_date": "2025-03-27T12:10:42.631018Z",
+    "study_activity_group": {
+      "activity_group_name": "Body Measurements",
+      "activity_group_uid": "ActivityGroup_000010",
+      "order": null,
+      "study_activity_group_uid": "StudyActivityGroup_001589"
+    },
+    "study_activity_subgroup": {
+      "activity_subgroup_name": "Body Measurements",
+      "activity_subgroup_uid": "ActivitySubGroup_000022",
+      "order": null,
+      "study_activity_subgroup_uid": "StudyActivitySubGroup_002229"
+    },
+    "study_activity_uid": "StudyActivity_002688",
+    "study_soa_group": {
+      "order": null,
+      "soa_group_term_name": "SUBJECT RELATED INFORMATION",
+      "soa_group_term_uid": "CTTerm_000066",
+      "study_soa_group_uid": "StudySoAGroup_000202"
+    },
+    "study_uid": "Study_000051",
+    "study_version": "LATEST on 2025-03-27T13:38:24.534195+00:00"
+  },
+  {
+    "accepted_version": false,
+    "activity": {
+      "abbreviation": null,
+      "activity_groupings": [
+        {
+          "activity_group_name": "End of Study",
+          "activity_group_uid": "ActivityGroup_000018",
+          "activity_subgroup_name": "End of Study",
+          "activity_subgroup_uid": "ActivitySubGroup_000035"
+        }
+      ],
+      "activity_instances": [],
+      "author_username": "9247d4f6-415b-4e6e-bda7-873eaeb1156b",
+      "change_description": "Approved version",
+      "contact_person": null,
+      "definition": null,
+      "end_date": null,
+      "is_data_collected": true,
+      "is_finalized": false,
+      "is_multiple_selection_allowed": true,
+      "is_request_final": false,
+      "is_request_rejected": false,
+      "is_used_by_legacy_instances": false,
+      "library_name": "Sponsor",
+      "name": "End of Study",
+      "name_sentence_case": "end of study",
+      "nci_concept_id": null,
+      "nci_concept_name": null,
+      "possible_actions": [
+        "inactivate",
+        "new_version"
+      ],
+      "reason_for_rejecting": null,
+      "replaced_by_activity": null,
+      "request_rationale": null,
+      "requester_study_id": null,
+      "start_date": "2025-03-26T01:54:05.059395Z",
+      "status": "Final",
+      "synonyms": [],
+      "uid": "Activity_000117",
+      "version": "1.0"
+    },
+    "author_username": "study.setup@b2bfv7zbjhkehgyw.onmicrosoft.com",
+    "latest_activity": null,
+    "order": 3,
+    "show_activity_group_in_protocol_flowchart": true,
+    "show_activity_in_protocol_flowchart": false,
+    "show_activity_subgroup_in_protocol_flowchart": true,
+    "show_soa_group_in_protocol_flowchart": false,
+    "start_date": "2025-03-27T12:10:42.923792Z",
+    "study_activity_group": {
+      "activity_group_name": "End of Study",
+      "activity_group_uid": "ActivityGroup_000018",
+      "order": null,
+      "study_activity_group_uid": "StudyActivityGroup_001590"
+    },
+    "study_activity_subgroup": {
+      "activity_subgroup_name": "End of Study",
+      "activity_subgroup_uid": "ActivitySubGroup_000035",
+      "order": null,
+      "study_activity_subgroup_uid": "StudyActivitySubGroup_002230"
+    },
+    "study_activity_uid": "StudyActivity_002689",
+    "study_soa_group": {
+      "order": null,
+      "soa_group_term_name": "SUBJECT RELATED INFORMATION",
+      "soa_group_term_uid": "CTTerm_000066",
+      "study_soa_group_uid": "StudySoAGroup_000202"
+    },
+    "study_uid": "Study_000051",
+    "study_version": "LATEST on 2025-03-27T13:38:24.534239+00:00"
+  },
+  {
+    "accepted_version": false,
+    "activity": {
+      "abbreviation": null,
+      "activity_groupings": [
+        {
+          "activity_group_name": "Laboratory Assessments",
+          "activity_group_uid": "ActivityGroup_000004",
+          "activity_subgroup_name": "Glucose Metabolism",
+          "activity_subgroup_uid": "ActivitySubGroup_000023"
+        }
+      ],
+      "activity_instances": [],
+      "author_username": "9247d4f6-415b-4e6e-bda7-873eaeb1156b",
+      "change_description": "Approved version",
+      "contact_person": null,
+      "definition": null,
+      "end_date": null,
+      "is_data_collected": true,
+      "is_finalized": false,
+      "is_multiple_selection_allowed": true,
+      "is_request_final": false,
+      "is_request_rejected": false,
+      "is_used_by_legacy_instances": false,
+      "library_name": "Sponsor",
+      "name": "HbA1c",
+      "name_sentence_case": "hba1c",
+      "nci_concept_id": null,
+      "nci_concept_name": null,
+      "possible_actions": [
+        "inactivate",
+        "new_version"
+      ],
+      "reason_for_rejecting": null,
+      "replaced_by_activity": null,
+      "request_rationale": null,
+      "requester_study_id": null,
+      "start_date": "2025-03-26T01:54:13.935691Z",
+      "status": "Final",
+      "synonyms": [],
+      "uid": "Activity_000179",
+      "version": "1.0"
+    },
+    "author_username": "study.setup@b2bfv7zbjhkehgyw.onmicrosoft.com",
+    "latest_activity": null,
+    "order": 4,
+    "show_activity_group_in_protocol_flowchart": true,
+    "show_activity_in_protocol_flowchart": false,
+    "show_activity_subgroup_in_protocol_flowchart": true,
+    "show_soa_group_in_protocol_flowchart": false,
+    "start_date": "2025-03-27T12:10:43.219766Z",
+    "study_activity_group": {
+      "activity_group_name": "Laboratory Assessments",
+      "activity_group_uid": "ActivityGroup_000004",
+      "order": null,
+      "study_activity_group_uid": "StudyActivityGroup_001591"
+    },
+    "study_activity_subgroup": {
+      "activity_subgroup_name": "Glucose Metabolism",
+      "activity_subgroup_uid": "ActivitySubGroup_000023",
+      "order": null,
+      "study_activity_subgroup_uid": "StudyActivitySubGroup_002231"
+    },
+    "study_activity_uid": "StudyActivity_002690",
+    "study_soa_group": {
+      "order": null,
+      "soa_group_term_name": "EFFICACY",
+      "soa_group_term_uid": "CTTerm_000064",
+      "study_soa_group_uid": "StudySoAGroup_000203"
+    },
+    "study_uid": "Study_000051",
+    "study_version": "LATEST on 2025-03-27T13:38:24.534275+00:00"
+  },
+  {
+    "accepted_version": false,
+    "activity": {
+      "abbreviation": null,
+      "activity_groupings": [
+        {
+          "activity_group_name": "Laboratory Assessments",
+          "activity_group_uid": "ActivityGroup_000004",
+          "activity_subgroup_name": "Lipids",
+          "activity_subgroup_uid": "ActivitySubGroup_000041"
+        }
+      ],
+      "activity_instances": [],
+      "author_username": "9247d4f6-415b-4e6e-bda7-873eaeb1156b",
+      "change_description": "Approved version",
+      "contact_person": null,
+      "definition": null,
+      "end_date": null,
+      "is_data_collected": true,
+      "is_finalized": false,
+      "is_multiple_selection_allowed": true,
+      "is_request_final": false,
+      "is_request_rejected": false,
+      "is_used_by_legacy_instances": false,
+      "library_name": "Sponsor",
+      "name": "LDL Cholesterol",
+      "name_sentence_case": "ldl cholesterol",
+      "nci_concept_id": null,
+      "nci_concept_name": null,
+      "possible_actions": [
+        "inactivate",
+        "new_version"
+      ],
+      "reason_for_rejecting": null,
+      "replaced_by_activity": null,
+      "request_rationale": null,
+      "requester_study_id": null,
+      "start_date": "2025-03-26T01:54:19.597752Z",
+      "status": "Final",
+      "synonyms": [],
+      "uid": "Activity_000231",
+      "version": "1.0"
+    },
+    "author_username": "study.setup@b2bfv7zbjhkehgyw.onmicrosoft.com",
+    "latest_activity": null,
+    "order": 5,
+    "show_activity_group_in_protocol_flowchart": true,
+    "show_activity_in_protocol_flowchart": false,
+    "show_activity_subgroup_in_protocol_flowchart": true,
+    "show_soa_group_in_protocol_flowchart": false,
+    "start_date": "2025-03-27T12:10:43.520652Z",
+    "study_activity_group": {
+      "activity_group_name": "Laboratory Assessments",
+      "activity_group_uid": "ActivityGroup_000004",
+      "order": null,
+      "study_activity_group_uid": "StudyActivityGroup_001592"
+    },
+    "study_activity_subgroup": {
+      "activity_subgroup_name": "Lipids",
+      "activity_subgroup_uid": "ActivitySubGroup_000041",
+      "order": null,
+      "study_activity_subgroup_uid": "StudyActivitySubGroup_002232"
+    },
+    "study_activity_uid": "StudyActivity_002691",
+    "study_soa_group": {
+      "order": null,
+      "soa_group_term_name": "SAFETY",
+      "soa_group_term_uid": "CTTerm_000067",
+      "study_soa_group_uid": "StudySoAGroup_000204"
+    },
+    "study_uid": "Study_000051",
+    "study_version": "LATEST on 2025-03-27T13:38:24.534306+00:00"
+  },
+  {
+    "accepted_version": false,
+    "activity": {
+      "abbreviation": null,
+      "activity_groupings": [
+        {
+          "activity_group_name": "Laboratory Assessments",
+          "activity_group_uid": "ActivityGroup_000004",
+          "activity_subgroup_name": "Lipids",
+          "activity_subgroup_uid": "ActivitySubGroup_000041"
+        }
+      ],
+      "activity_instances": [],
+      "author_username": "9247d4f6-415b-4e6e-bda7-873eaeb1156b",
+      "change_description": "Approved version",
+      "contact_person": null,
+      "definition": null,
+      "end_date": null,
+      "is_data_collected": true,
+      "is_finalized": false,
+      "is_multiple_selection_allowed": true,
+      "is_request_final": false,
+      "is_request_rejected": false,
+      "is_used_by_legacy_instances": false,
+      "library_name": "Sponsor",
+      "name": "HDL Cholesterol",
+      "name_sentence_case": "hdl cholesterol",
+      "nci_concept_id": null,
+      "nci_concept_name": null,
+      "possible_actions": [
+        "inactivate",
+        "new_version"
+      ],
+      "reason_for_rejecting": null,
+      "replaced_by_activity": null,
+      "request_rationale": null,
+      "requester_study_id": null,
+      "start_date": "2025-03-26T01:54:12.148797Z",
+      "status": "Final",
+      "synonyms": [],
+      "uid": "Activity_000165",
+      "version": "1.0"
+    },
+    "author_username": "study.setup@b2bfv7zbjhkehgyw.onmicrosoft.com",
+    "latest_activity": null,
+    "order": 6,
+    "show_activity_group_in_protocol_flowchart": true,
+    "show_activity_in_protocol_flowchart": false,
+    "show_activity_subgroup_in_protocol_flowchart": true,
+    "show_soa_group_in_protocol_flowchart": false,
+    "start_date": "2025-03-27T12:10:43.660314Z",
+    "study_activity_group": {
+      "activity_group_name": "Laboratory Assessments",
+      "activity_group_uid": "ActivityGroup_000004",
+      "order": null,
+      "study_activity_group_uid": "StudyActivityGroup_001592"
+    },
+    "study_activity_subgroup": {
+      "activity_subgroup_name": "Lipids",
+      "activity_subgroup_uid": "ActivitySubGroup_000041",
+      "order": null,
+      "study_activity_subgroup_uid": "StudyActivitySubGroup_002232"
+    },
+    "study_activity_uid": "StudyActivity_002692",
+    "study_soa_group": {
+      "order": null,
+      "soa_group_term_name": "SAFETY",
+      "soa_group_term_uid": "CTTerm_000067",
+      "study_soa_group_uid": "StudySoAGroup_000204"
+    },
+    "study_uid": "Study_000051",
+    "study_version": "LATEST on 2025-03-27T13:38:24.534339+00:00"
+  }
+]

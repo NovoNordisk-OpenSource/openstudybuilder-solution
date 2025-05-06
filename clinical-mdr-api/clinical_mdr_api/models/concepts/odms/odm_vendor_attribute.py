@@ -1,7 +1,8 @@
 from typing import Annotated, Callable, Self
 
-from pydantic import Field, root_validator, validator
+from pydantic import Field, field_validator, model_validator
 
+from clinical_mdr_api.descriptions.general import CHANGES_FIELD_DESC
 from clinical_mdr_api.domains.concepts.odms.vendor_attribute import (
     OdmVendorAttributeAR,
     OdmVendorAttributeRelationVO,
@@ -31,14 +32,17 @@ from common.exceptions import ValidationException
 
 
 class OdmVendorAttribute(ConceptModel):
-    compatible_types: Annotated[list[str], Field(is_json=True)]
-    data_type: Annotated[str | None, Field(nullable=True)] = None
-    value_regex: Annotated[str | None, Field(nullable=True)] = None
+    compatible_types: Annotated[list[str], Field(json_schema_extra={"is_json": True})]
+    data_type: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    value_regex: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
     vendor_namespace: Annotated[
-        OdmVendorNamespaceSimpleModel | None, Field(nullable=True)
+        OdmVendorNamespaceSimpleModel | None,
+        Field(json_schema_extra={"nullable": True}),
     ] = None
     vendor_element: Annotated[
-        OdmVendorElementSimpleModel | None, Field(nullable=True)
+        OdmVendorElementSimpleModel | None, Field(json_schema_extra={"nullable": True})
     ] = None
     possible_actions: list[str]
 
@@ -115,11 +119,15 @@ class OdmVendorAttributeRelationModel(BaseModel):
         return odm_vendor_element_ref_model
 
     uid: Annotated[str, Field()]
-    name: Annotated[str | None, Field(nullable=True)] = None
-    data_type: Annotated[str | None, Field(nullable=True)] = None
-    value_regex: Annotated[str | None, Field(nullable=True)] = None
-    value: Annotated[str | None, Field(nullable=True)] = None
-    vendor_namespace_uid: Annotated[str | None, Field(nullable=True)] = None
+    name: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    data_type: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    value_regex: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
+    value: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    vendor_namespace_uid: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
 
 
 class OdmVendorElementAttributeRelationModel(BaseModel):
@@ -162,11 +170,15 @@ class OdmVendorElementAttributeRelationModel(BaseModel):
         return odm_vendor_element_ref_model
 
     uid: Annotated[str, Field()]
-    name: Annotated[str | None, Field(nullable=True)] = None
-    data_type: Annotated[str | None, Field(nullable=True)] = None
-    value_regex: Annotated[str | None, Field(nullable=True)] = None
-    value: Annotated[str | None, Field(nullable=True)] = None
-    vendor_element_uid: Annotated[str | None, Field(nullable=True)] = None
+    name: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    data_type: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    value_regex: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
+    value: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    vendor_element_uid: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
 
 
 class OdmVendorAttributePostInput(ConceptPostInput):
@@ -176,14 +188,12 @@ class OdmVendorAttributePostInput(ConceptPostInput):
     vendor_namespace_uid: Annotated[str | None, Field(min_length=1)] = None
     vendor_element_uid: Annotated[str | None, Field(min_length=1)] = None
 
-    _validate_regex = validator("value_regex", pre=True, allow_reuse=True)(
-        validate_regex
+    _validate_regex = field_validator("value_regex", mode="before")(validate_regex)
+    _validate_name_only_contains_letters = field_validator("name", mode="before")(
+        validate_name_only_contains_letters
     )
-    _validate_name_only_contains_letters = validator(
-        "name", pre=True, allow_reuse=True
-    )(validate_name_only_contains_letters)
 
-    @root_validator()
+    @model_validator(mode="before")
     @classmethod
     def one_and_only_one_of_the_two_uids_must_be_present(cls, values):
         ValidationException.raise_if(
@@ -205,9 +215,7 @@ class OdmVendorAttributePatchInput(ConceptPatchInput):
     data_type: Annotated[str | None, Field(min_length=1)]
     value_regex: Annotated[str | None, Field(min_length=1)]
 
-    _validate_regex = validator("value_regex", pre=True, allow_reuse=True)(
-        validate_regex
-    )
+    _validate_regex = field_validator("value_regex", mode="before")(validate_regex)
 
 
 class OdmVendorAttributeVersion(OdmVendorAttribute):
@@ -216,12 +224,8 @@ class OdmVendorAttributeVersion(OdmVendorAttribute):
     """
 
     changes: Annotated[
-        dict[str, bool] | None,
+        list[str],
         Field(
-            description=(
-                "Denotes whether or not there was a change in a specific field/property compared to the previous version. "
-                "The field names in this object here refer to the field names of the objective (e.g. name, start_date, ..)."
-            ),
-            nullable=True,
+            description=CHANGES_FIELD_DESC,
         ),
-    ] = None
+    ] = []

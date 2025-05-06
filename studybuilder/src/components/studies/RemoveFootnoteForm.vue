@@ -11,9 +11,12 @@
       {{ $t('StudyRemoveFootnoteForm.remove_info') }}
       <v-form ref="observer" class="mt-4">
         <v-checkbox
-          v-for="item of footnotes" :key="item.uid"
+          v-for="item of footnotes"
+          :key="item.uid"
           v-model="selectedFootnotes"
-          :label="item.footnote ? item.footnote.name_plain : item.template.name_plain"
+          :label="
+            item.footnote ? item.footnote.name_plain : item.template.name_plain
+          "
           :value="item.uid"
           density="compact"
         ></v-checkbox>
@@ -56,33 +59,38 @@ function fetchFootnotes(filters, options, filtersUpdated) {
     filters,
     filtersUpdated
   )
-  params.filters = {"referenced_items.item_uid":{ v: [props.itemUid], "op": "co"}}
-  study.getStudyFootnotes(studiesGeneralStore.selectedStudy.uid, params).then((resp) => {
-    footnotes.value = resp.data.items
-  })
+  params.filters = {
+    'referenced_items.item_uid': { v: [props.itemUid], op: 'co' },
+  }
+  study
+    .getStudyFootnotes(studiesGeneralStore.selectedStudy.uid, params)
+    .then((resp) => {
+      footnotes.value = resp.data.items
+    })
 }
 
 function submit() {
   let footnotesToSave = []
-  selectedFootnotes.value.forEach(async footnote => {
-    let elementsForFootnote = footnotes.value.find((a) => a.uid === footnote).referenced_items
-    elementsForFootnote = elementsForFootnote.filter(item => {
+  selectedFootnotes.value.forEach(async (footnote) => {
+    let elementsForFootnote = footnotes.value.find(
+      (a) => a.uid === footnote
+    ).referenced_items
+    elementsForFootnote = elementsForFootnote.filter((item) => {
       if (item.item_uid !== props.itemUid) {
         return true
       }
     })
-    footnotesToSave.push(
-      {
-        referenced_items: elementsForFootnote,
-        study_soa_footnote_uid: footnote
-      }
-    )
+    footnotesToSave.push({
+      referenced_items: elementsForFootnote,
+      study_soa_footnote_uid: footnote,
+    })
   })
   study
     .batchUpdateStudyFootnotes(
       studiesGeneralStore.selectedStudy.uid,
       footnotesToSave
-    ).then(() => {
+    )
+    .then(() => {
       emit('close')
     })
 }

@@ -1,3 +1,5 @@
+from neomodel import db
+
 from clinical_mdr_api.domain_repositories.concepts.concept_generic_repository import (
     ConceptGenericRepository,
 )
@@ -27,7 +29,8 @@ from clinical_mdr_api.domains.versioned_object_aggregate import (
 from clinical_mdr_api.models.concepts.activities.activity_sub_group import (
     ActivitySubGroup,
 )
-from common.utils import convert_to_datetime
+from common.exceptions import BusinessLogicException
+from common.utils import convert_to_datetime, version_string_to_tuple
 
 
 class ActivitySubGroupRepository(ConceptGenericRepository[ActivitySubGroupAR]):
@@ -122,7 +125,7 @@ class ActivitySubGroupRepository(ConceptGenericRepository[ActivitySubGroupAR]):
             all_rels = activity_group_value.has_version.all_relationships(
                 activity_group_root
             )
-            latest = max(all_rels, key=lambda r: float(r.version))
+            latest = max(all_rels, key=lambda r: version_string_to_tuple(r.version))
             activity_groups.append(
                 SimpleActivityGroupVO(
                     activity_group_uid=activity_group_root.uid,
@@ -147,7 +150,9 @@ class ActivitySubGroupRepository(ConceptGenericRepository[ActivitySubGroupAR]):
         )
 
     def specific_alias_clause(
-        self, only_specific_status: str = ObjectStatus.LATEST.name
+        self,
+        only_specific_status: str = ObjectStatus.LATEST.name,
+        **kwargs,
     ) -> str:
         # concept_value property comes from the main part of the query
         # which is specified in the activity_generic_repository_impl
@@ -211,6 +216,159 @@ class ActivitySubGroupRepository(ConceptGenericRepository[ActivitySubGroupAR]):
                 else ""
             )
         return filter_statements_to_return, filter_query_parameters
+
+    def get_linked_activity_group_uids(
+        self, subgroup_uid: str, version: str | None = None
+    ) -> list[dict]:
+        """
+        Get UIDs of activity groups linked to a specific activity subgroup.
+
+        Args:
+            subgroup_uid: The UID of the activity subgroup
+            version: Optional specific version to get linked activity groups for
+
+        Returns:
+            A list of activity group UIDs directly linked to this subgroup
+        """
+        match_clause = """
+        MATCH (sgr:ActivitySubGroupRoot {uid: $uid})
+        """
+
+        params = {"uid": subgroup_uid}
+
+        if version:
+            match_clause += (
+                "-[:HAS_VERSION {version: $version}]->(sgv:ActivitySubGroupValue)"
+            )
+            params["version"] = version
+        else:
+            match_clause += "-[:LATEST]->(sgv:ActivitySubGroupValue)"
+
+        query = f"""
+        {match_clause}
+        // Find all activity groups directly connected to this subgroup version
+        MATCH (sgv)-[:HAS_GROUP]->(avg:ActivityValidGroup)-[:IN_GROUP]->(agv:ActivityGroupValue)
+        
+        // Get the activity group roots and their Final version relationships
+        MATCH (agr:ActivityGroupRoot)-[ag_rel:HAS_VERSION {{status: "Final"}}]-(agv)
+        
+        // Group by activity group root and collect all version relationships
+        WITH DISTINCT agr, agv, collect(ag_rel) as versions
+        
+        // Sort versions and take the latest one
+        WITH agr, agv, versions,
+             [v in versions | v.version] as version_strings
+        ORDER BY agv.name
+        
+        // Return the result with all necessary fields
+        RETURN
+            agr.uid as uid, 
+            agv.name as name, 
+            head([v in versions | v.version]) as version, 
+            head([v in versions | v.status]) as status
+        """
+
+        result, _ = db.cypher_query(query=query, params=params)
+
+        # Return formatted results
+        return [
+            {"uid": row[0], "name": row[1], "version": row[2], "status": row[3]}
+            for row in result
+            if row[0] is not None
+        ]
+
+    def get_linked_activity_uids(
+        self, subgroup_uid: str, version: str | None = None
+    ) -> list[str]:
+        """
+        Get UIDs of activities linked to a specific activity subgroup.
+
+        Args:
+            subgroup_uid: The UID of the activity subgroup
+            version: Optional specific version to get linked activities for
+
+        Returns:
+            A list of activity UIDs directly linked to this subgroup
+        """
+        match_clause = """
+        MATCH (subgroup_root:ActivitySubGroupRoot {uid:$uid})
+        """
+
+        params = {"uid": subgroup_uid}
+
+        if version:
+            match_clause += "-[v:HAS_VERSION {version: $version}]->(subgroup_value:ActivitySubGroupValue)"
+            params["version"] = version
+        else:
+            match_clause += "-[:LATEST]->(subgroup_value:ActivitySubGroupValue)"
+
+        query = f"""
+        {match_clause}
+        MATCH (subgroup_value)-[:HAS_GROUP]->(avg:ActivityValidGroup)<-[:IN_SUBGROUP]-(ag:ActivityGrouping)<-[:HAS_GROUPING]-(av:ActivityValue)<-[:HAS_VERSION]-(ar:ActivityRoot)
+        WHERE NOT EXISTS ((av)<--(:DeletedActivityRoot))
+        RETURN DISTINCT ar.uid as uid
+        """
+
+        result, _ = db.cypher_query(query=query, params=params)
+        return [row[0] for row in result]
+
+    def get_cosmos_subgroup_overview(self, subgroup_uid: str) -> dict:
+        """
+        Get a COSMoS compatible representation of a specific activity subgroup.
+        Similar to get_activity_overview but formatted for COSMoS.
+
+        Args:
+            subgroup_uid: The UID of the activity subgroup
+
+        Returns:
+            A dictionary representation compatible with COSMoS format
+        """
+        query = """
+        MATCH (subgroup_root:ActivitySubGroupRoot {uid:$uid})-[:LATEST]->(subgroup_value:ActivitySubGroupValue)
+        WITH DISTINCT subgroup_root, subgroup_value,
+            head([(library)-[:CONTAINS_CONCEPT]->(subgroup_root) | library.name]) AS subgroup_library_name,
+            [(subgroup_root)-[versions:HAS_VERSION]->(:ActivitySubGroupValue) | versions.version] as all_versions,
+            apoc.coll.toSet([(subgroup_value)-[:HAS_GROUP]->(activity_valid_group:ActivityValidGroup)-[:IN_GROUP]->
+                (activity_group_value:ActivityGroupValue)<-[:HAS_VERSION]-(activity_group_root:ActivityGroupRoot)
+                | {
+                    uid: activity_group_root.uid,
+                    name: activity_group_value.name
+                }]) AS activity_groups,
+            apoc.coll.toSet(
+                [(subgroup_value)-[:HAS_GROUP]->(activity_valid_group:ActivityValidGroup)<-[:IN_SUBGROUP]-
+                (activity_grouping:ActivityGrouping)<-[:HAS_GROUPING]-(activity_value:ActivityValue)<-[:HAS_VERSION]-
+                (activity_root:ActivityRoot)
+                WHERE NOT EXISTS ((activity_value)<--(:DeletedActivityRoot))
+                | {
+                    uid: activity_root.uid,
+                    name: activity_value.name,
+                    definition: activity_value.definition,
+                    nci_concept_id: activity_value.nci_concept_id,
+                    status: head([(activity_root)-[hv:HAS_VERSION]->(activity_value) | hv.status]),
+                    version: head([(activity_root)-[hv:HAS_VERSION]->(activity_value) | hv.version])
+                }]) AS linked_activities
+        RETURN
+            subgroup_value,
+            subgroup_library_name,
+            activity_groups,
+            linked_activities,
+            apoc.coll.dropDuplicateNeighbors(apoc.coll.sort(all_versions)) AS all_versions
+        """
+
+        result_array, attribute_names = db.cypher_query(
+            query=query, params={"uid": subgroup_uid}
+        )
+        BusinessLogicException.raise_if(
+            len(result_array) != 1,
+            msg=f"The overview query returned broken data: {result_array}",
+        )
+
+        overview = result_array[0]
+        overview_dict = {}
+        for overview_prop, attribute_name in zip(overview, attribute_names):
+            overview_dict[attribute_name] = overview_prop
+
+        return overview_dict
 
     def _create_new_value_node(self, ar: ActivitySubGroupAR) -> VersionValue:
         value_node: ActivitySubGroupValue = super()._create_new_value_node(ar=ar)

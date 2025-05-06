@@ -162,7 +162,7 @@ def remove_na_version_properties(db_driver, log, run_label):
     with versioning properties on the `LATEST_FINAL` relationship.
     These should not exist as the versioning is carried by the `HAS_VERSION` relationship.
 
-    - [Related PR](https://dev.azure.com/novonordiskit/Clinical-MDR/_git/neo4j-mdr-db/pullrequest/112369)
+    - [Related PR](https://dev.azure.com/orgremoved/Clinical-MDR/_git/neo4j-mdr-db/pullrequest/112369)
 
     ### Nodes and relationships affected
     - `LATEST_FINAL` from `TemplateParameterValueRoot` node with uid "NA"
@@ -574,3 +574,5 @@ def remove_duplicated_terms_in_frequency(db_driver, log, run_label):
 
 if __name__ == "__main__":
     main()
+
+

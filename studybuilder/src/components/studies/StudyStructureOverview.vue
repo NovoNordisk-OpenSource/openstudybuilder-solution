@@ -171,14 +171,10 @@ export default {
       this.armsLoading = false
     })
     this.metadataLoading = true
-    study
-      .getStudyInterventionMetadata(
-        this.selectedStudy.uid
-      )
-      .then((resp) => {
-        this.metadata = resp.data.current_metadata.study_intervention
-        this.metadataLoading = false
-      })
+    study.getStudyInterventionMetadata(this.selectedStudy.uid).then((resp) => {
+      this.metadata = resp.data.current_metadata.study_intervention
+      this.metadataLoading = false
+    })
   },
   methods: {
     getDesignCellByBranch(studyEpochUid, branchArmUid) {

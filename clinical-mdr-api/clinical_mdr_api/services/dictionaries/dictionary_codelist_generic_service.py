@@ -172,7 +172,7 @@ class DictionaryCodelistGenericService:
             versions = [
                 DictionaryCodelist.from_dictionary_codelist_ar(
                     dictionary_codelist_ar
-                ).dict()
+                ).model_dump()
                 for dictionary_codelist_ar in all_versions
             ]
             return calculate_diffs(versions, self.version_class)

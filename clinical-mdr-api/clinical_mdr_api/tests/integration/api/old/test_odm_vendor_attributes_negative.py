@@ -190,9 +190,11 @@ def test_cannot_create_a_new_odm_vendor_attribute_with_invalid_regex(api_client)
 
     assert res["detail"] == [
         {
-            "loc": ["body", "value_regex"],
-            "msg": "Provided regex value '(*'*(!'' for field 'value_regex' is invalid.",
             "type": "value_error",
+            "loc": ["body", "value_regex"],
+            "msg": "Value error, Provided regex value '(*'*(!'' for field 'value_regex' is invalid.",
+            "input": "(*'*(!'",
+            "ctx": {"error": {}},
         }
     ]
 

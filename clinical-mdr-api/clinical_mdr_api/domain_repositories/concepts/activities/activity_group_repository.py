@@ -1,3 +1,5 @@
+from neomodel import db
+
 from clinical_mdr_api.domain_repositories.concepts.concept_generic_repository import (
     ConceptGenericRepository,
 )
@@ -22,6 +24,7 @@ from clinical_mdr_api.domains.versioned_object_aggregate import (
     LibraryVO,
 )
 from clinical_mdr_api.models.concepts.activities.activity_group import ActivityGroup
+from common.exceptions import BusinessLogicException
 from common.utils import convert_to_datetime
 
 
@@ -134,7 +137,7 @@ class ActivityGroupRepository(ConceptGenericRepository[ActivityGroupAR]):
         return filter_statements_to_return, filter_query_parameters
 
     def specific_alias_clause(
-        self, only_specific_status: str = ObjectStatus.LATEST.name
+        self, only_specific_status: str = ObjectStatus.LATEST.name, **kwargs
     ) -> str:
         # concept_value property comes from the main part of the query
         # which is specified in the activity_generic_repository_impl
@@ -155,3 +158,116 @@ class ActivityGroupRepository(ConceptGenericRepository[ActivityGroupAR]):
         return """
             MATCH (concept_root:ActivityGroupRoot)-[version:HAS_VERSION]->(concept_value:ActivityGroupValue)
         """
+
+    def get_cosmos_group_overview(self, group_uid: str) -> dict:
+        """
+        Get a COSMoS compatible representation of a specific activity group.
+        Similar to get_group_overview but formatted for COSMoS.
+
+        Args:
+            group_uid: The UID of the activity group
+
+        Returns:
+            A dictionary representation compatible with COSMoS format
+        """
+
+        query = """
+        MATCH (group_root:ActivityGroupRoot {uid:$uid})-[:LATEST]->(group_value:ActivityGroupValue)
+        WITH DISTINCT group_root, group_value,
+            head([(library)-[:CONTAINS_CONCEPT]->(group_root) | library.name]) AS group_library_name,
+            [(group_root)-[versions:HAS_VERSION]->(:ActivityGroupValue) | versions.version] as all_versions,
+            apoc.coll.toSet([(sgv:ActivitySubGroupValue)-[:HAS_GROUP]->(avg:ActivityValidGroup)-[:IN_GROUP]->(group_value)
+                | {
+                    uid: head([(sgr:ActivitySubGroupRoot)-[:HAS_VERSION]->(sgv) | sgr.uid]),
+                    name: sgv.name,
+                    definition: sgv.definition,
+                    status: head([(sgr:ActivitySubGroupRoot)-[hv:HAS_VERSION]->(sgv) | hv.status]),
+                    version: head([(sgr:ActivitySubGroupRoot)-[hv:HAS_VERSION]->(sgv) | hv.version])
+                }]) AS linked_subgroups,
+            apoc.coll.toSet(
+                [(group_value)<-[:IN_GROUP]-(activity_valid_group:ActivityValidGroup)<-[:IN_SUBGROUP]-
+                (activity_grouping:ActivityGrouping)<-[:HAS_GROUPING]-(activity_value:ActivityValue)<-[:HAS_VERSION]-
+                (activity_root:ActivityRoot)
+                WHERE NOT EXISTS ((activity_value)<--(:DeletedActivityRoot))
+                | {
+                    uid: activity_root.uid,
+                    name: activity_value.name,
+                    definition: activity_value.definition,
+                    nci_concept_id: activity_value.nci_concept_id,
+                    status: head([(activity_root)-[hv:HAS_VERSION]->(activity_value) | hv.status]),
+                    version: head([(activity_root)-[hv:HAS_VERSION]->(activity_value) | hv.version])
+                }]) AS linked_activities
+        RETURN
+            group_value,
+            group_library_name,
+            linked_subgroups,
+            linked_activities,
+            apoc.coll.dropDuplicateNeighbors(apoc.coll.sort(all_versions)) AS all_versions
+        """
+
+        result_array, attribute_names = db.cypher_query(
+            query=query, params={"uid": group_uid}
+        )
+        BusinessLogicException.raise_if(
+            len(result_array) != 1,
+            msg=f"The overview query returned broken data: {result_array}",
+        )
+
+        overview = result_array[0]
+        overview_dict = {}
+        for overview_prop, attribute_name in zip(overview, attribute_names):
+            overview_dict[attribute_name] = overview_prop
+
+        return overview_dict
+
+    def get_linked_activity_subgroup_uids(
+        self, group_uid: str, version: str
+    ) -> list[dict[str, str]]:
+        """
+        Get the UIDs of all activity subgroups linked to a specific activity group version.
+        Will return the latest version of each subgroup connected to this activity group version.
+
+        Args:
+            group_uid: The UID of the activity group
+            version: The version of the activity group
+
+        Returns:
+            A list of dictionaries containing the subgroup uid, name, status and version
+        """
+        # Find all subgroups connected to this specific group version and collect all their versions
+        query = """
+        // 1. Find the specific activity group version
+        MATCH (agr:ActivityGroupRoot {uid: $group_uid})-[:HAS_VERSION {version: $version}]-(gv:ActivityGroupValue)
+        
+        // 2. Find subgroups directly connected to this group version through the valid relationship path
+        MATCH (gv)-[:IN_GROUP]-(avg:ActivityValidGroup)-[:HAS_GROUP]-(sgv:ActivitySubGroupValue)
+        
+        // 3. Get the subgroup roots and their Final version relationships
+        MATCH (sgr:ActivitySubGroupRoot)-[sgv_rel:HAS_VERSION {status: "Final"}]-(sgv)
+        
+        // 4. Group by subgroup root and collect all version relationships
+        WITH DISTINCT agr, gv, sgr, sgv, collect(sgv_rel) as versions
+        
+        // 5. Sort results by subgroup name
+        ORDER BY sgv.name
+        
+        // 6. Return the result with all necessary fields
+        RETURN {
+            uid: sgr.uid,
+            name: sgv.name,
+            version: head([v in versions | v.version]),
+            status: head([v in versions | v.status]),
+            definition: sgv.definition
+        } as result
+        """
+
+        results, _ = db.cypher_query(
+            query,
+            {
+                "group_uid": group_uid,
+                "version": version,
+            },
+        )
+        if not results:
+            return []
+        return [dict(result[0]) for result in results]

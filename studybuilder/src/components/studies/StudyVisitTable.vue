@@ -136,7 +136,15 @@
         />
       </template>
       <template #[`item.is_soa_milestone`]="{ item }">
-        <div v-if="editMode && ![visitConstants.CLASS_NON_VISIT, visitConstants.CLASS_UNSCHEDULED_VISIT].includes(item.visit_class)">
+        <div
+          v-if="
+            editMode &&
+            ![
+              visitConstants.CLASS_NON_VISIT,
+              visitConstants.CLASS_UNSCHEDULED_VISIT,
+            ].includes(item.visit_class)
+          "
+        >
           <v-checkbox
             v-model="item.is_soa_milestone"
             :disabled="item.disabled && itemsDisabled"
@@ -220,7 +228,11 @@
       <template #[`item.visit_window`]="{ item }">
         <div
           v-if="
-            editMode && item.visit_class === visitConstants.CLASS_SINGLE_VISIT
+            editMode &&
+            [
+              visitConstants.CLASS_MANUALLY_DEFINED_VISIT,
+              visitConstants.CLASS_SINGLE_VISIT,
+            ].indexOf(item.visit_class) !== -1
           "
         >
           <v-row class="wideCellWidth">
@@ -264,11 +276,7 @@
         </template>
       </template>
       <template #[`item.show_visit`]="{ item }">
-        <div
-          v-if="
-            editMode && item.visit_class === visitConstants.CLASS_SINGLE_VISIT
-          "
-        >
+        <div v-if="editMode">
           <v-checkbox
             v-model="item.show_visit"
             :disabled="item.disabled && itemsDisabled"
@@ -301,7 +309,11 @@
       <template #[`item.time_value`]="{ item }">
         <div
           v-if="
-            editMode && item.visit_class === visitConstants.CLASS_SINGLE_VISIT
+            editMode &&
+            [
+              visitConstants.CLASS_MANUALLY_DEFINED_VISIT,
+              visitConstants.CLASS_SINGLE_VISIT,
+            ].indexOf(item.visit_class) !== -1
           "
         >
           <v-row class="cellWidth">
@@ -331,11 +343,7 @@
         </div>
       </template>
       <template #[`item.visit_contact_mode.sponsor_preferred_name`]="{ item }">
-        <div
-          v-if="
-            editMode && item.visit_class === visitConstants.CLASS_SINGLE_VISIT
-          "
-        >
+        <div v-if="editMode">
           <v-select
             v-model="item.visit_contact_mode_uid"
             class="cellWidth"
@@ -354,15 +362,36 @@
       <template #[`item.time_reference_name`]="{ item }">
         <div
           v-if="
-            editMode && item.visit_class === visitConstants.CLASS_SINGLE_VISIT
+            editMode &&
+            [
+              visitConstants.CLASS_SPECIAL_VISIT,
+              visitConstants.CLASS_MANUALLY_DEFINED_VISIT,
+              visitConstants.CLASS_SINGLE_VISIT,
+            ].indexOf(item.visit_class) !== -1
           "
         >
           <v-select
+            v-if="
+              item.visit_subclass !==
+                visitConstants.SUBCLASS_ADDITIONAL_SUBVISIT_IN_A_GROUP_OF_SUBV &&
+              item.visit_class !== visitConstants.CLASS_SPECIAL_VISIT
+            "
             v-model="item.time_reference_uid"
             class="cellWidth"
             :items="timeReferences"
             item-title="name.sponsor_preferred_name"
             item-value="term_uid"
+            density="compact"
+            :disabled="item.disabled && itemsDisabled"
+            @update:model-value="disableOthers(item)"
+          />
+          <v-select
+            v-else
+            v-model="item.visit_sublabel_reference"
+            class="cellWidth"
+            :items="anchorVisits"
+            item-title="visit_name"
+            item-value="uid"
             density="compact"
             :disabled="item.disabled && itemsDisabled"
             @update:model-value="disableOthers(item)"
@@ -381,11 +410,7 @@
         </div>
       </template>
       <template #[`item.description`]="{ item }">
-        <div
-          v-if="
-            editMode && item.visit_class === visitConstants.CLASS_SINGLE_VISIT
-          "
-        >
+        <div v-if="editMode">
           <v-row class="cellWidth">
             <v-col>
               <v-text-field
@@ -402,11 +427,7 @@
         </div>
       </template>
       <template #[`item.start_rule`]="{ item }">
-        <div
-          v-if="
-            editMode && item.visit_class === visitConstants.CLASS_SINGLE_VISIT
-          "
-        >
+        <div v-if="editMode">
           <v-row class="cellWidth">
             <v-col>
               <v-text-field
@@ -423,11 +444,7 @@
         </div>
       </template>
       <template #[`item.end_rule`]="{ item }">
-        <div
-          v-if="
-            editMode && item.visit_class === visitConstants.CLASS_SINGLE_VISIT
-          "
-        >
+        <div v-if="editMode">
           <v-row class="cellWidth">
             <v-col>
               <v-text-field
@@ -578,15 +595,23 @@ const actions = ref([
     label: t('StudyVisitTable.duplicate'),
     icon: 'mdi-plus-box-multiple-outline',
     iconColor: 'primary',
-    condition: (item) => 
-      ![visitConstants.CLASS_NON_VISIT, visitConstants.CLASS_UNSCHEDULED_VISIT, visitConstants.CLASS_MANUALLY_DEFINED_VISIT, visitConstants.CLASS_SPECIAL_VISIT].includes(item.visit_class) && item.visit_subclass !== visitConstants.SUBCLASS_ANCHOR_VISIT_IN_GROUP_OF_SUBV,
+    condition: (item) =>
+      ![
+        visitConstants.CLASS_NON_VISIT,
+        visitConstants.CLASS_UNSCHEDULED_VISIT,
+        visitConstants.CLASS_MANUALLY_DEFINED_VISIT,
+        visitConstants.CLASS_SPECIAL_VISIT,
+      ].includes(item.visit_class) &&
+      item.visit_subclass !==
+        visitConstants.SUBCLASS_ANCHOR_VISIT_IN_GROUP_OF_SUBV,
     click: openDuplicateForm,
     accessRole: roles.STUDY_WRITE,
   },
   {
     label: t('_global.history'),
     icon: 'mdi-history',
-    condition: (item) => item.visit_class === visitConstants.CLASS_SINGLE_VISIT && !editMode.value,
+    condition: (item) =>
+      item.visit_class === visitConstants.CLASS_SINGLE_VISIT && !editMode.value,
     click: openVisitHistory,
   },
 ])
@@ -730,7 +755,10 @@ const editHeaders = ref([
     title: t('StudyVisitForm.global_anchor_visit'),
     key: 'is_global_anchor_visit',
   },
-  { title: t('StudyVisitForm.contact_mode'), key: 'visit_contact_mode.sponsor_preferred_name' },
+  {
+    title: t('StudyVisitForm.contact_mode'),
+    key: 'visit_contact_mode.sponsor_preferred_name',
+  },
   { title: t('StudyVisitForm.time_reference'), key: 'time_reference_name' },
   { title: t('StudyVisitForm.time_value'), key: 'time_value', width: '10%' },
   { title: t('StudyVisitForm.visit_name'), key: 'visit_name' },
@@ -886,6 +914,11 @@ const visitSubClasses = [
   },
 ]
 
+const anchorVisits = computed(() => {
+  return epochsStore.studyVisits.filter(
+    (el) => el.visit_class !== visitConstants.CLASS_SPECIAL_VISIT
+  )
+})
 const studyEpochs = computed(() => {
   return epochsStore.studyEpochs
 })
@@ -1203,7 +1236,6 @@ function buildChart() {
       contact_mode: el.visit_contact_mode.sponsor_preferred_name,
       visit_type: el.visit_type_name,
       week: el.study_week_label,
-      
     })
     sameWeek = el.study_week_label
   })

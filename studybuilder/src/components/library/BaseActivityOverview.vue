@@ -92,7 +92,13 @@
         </v-card>
       </v-window-item>
     </v-window>
-    <slot v-if="showForm" name="itemForm" :show="showForm" :item="item" :close="closeForm" />
+    <slot
+      v-if="showForm"
+      name="itemForm"
+      :show="showForm"
+      :item="item"
+      :close="closeForm"
+    />
     <v-dialog
       v-model="showHistory"
       persistent
@@ -260,11 +266,17 @@ export default {
       ]
     },
     historyTitle() {
-      return this.source === 'activities'
-        ? this.$t('ActivityOverview.history_title', { uid: this.itemUid })
-        : this.$t('ActivityInstanceOverview.history_title', {
-            uid: this.itemUid,
-          })
+      if (this.source === 'activities') {
+        return this.$t('ActivityOverview.history_title', { uid: this.itemUid })
+      } else if (this.source === 'activity-sub-groups') {
+        return this.$t('SubgroupOverview.history_title', { uid: this.itemUid })
+      } else if (this.source === 'activity-groups') {
+        return this.$t('GroupOverview.history_title', { uid: this.itemUid })
+      } else {
+        return this.$t('ActivityInstanceOverview.history_title', {
+          uid: this.itemUid,
+        })
+      }
     },
   },
   mounted() {
@@ -356,7 +368,22 @@ export default {
     transformItems(items) {
       const result = []
       for (const item of items) {
-        if (item.activity_groupings.length > 0) {
+        if (this.source === 'activities') {
+          // For activities, check activity_groupings
+          if (item.activity_groupings && item.activity_groupings.length > 0) {
+            this.transformFunc(item)
+            result.push(item)
+          }
+        } else if (this.source === 'activity-sub-groups') {
+          // For subgroups, check activity_groups
+          if (item.activity_groups && item.activity_groups.length >= 0) {
+            this.transformFunc(item)
+            result.push(item)
+          }
+        } else if (this.source === 'activity-groups') {
+          this.transformFunc(item)
+          result.push(item)
+        } else {
           this.transformFunc(item)
           result.push(item)
         }

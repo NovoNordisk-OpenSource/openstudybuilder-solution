@@ -215,41 +215,9 @@ Feature: Studies - Detailed SoA
         When The user delete activities in bulk
         Then The activities are removed from the study
         
-    #### Order of Activities
-
-    @manual_test
     Scenario: User must be able to enable reordering of activities in Detailed SoA
-        Given At least '2' activites are present in 'Study_000001' study
+        Given At least '3' activities are present in 'Study_000001' in the same 'Acute Kidney Injury' flowchart subgroup and 'BIOMARKERS' group
         And The '/studies/Study_000001/activities/soa' page is opened
-        When The user enables the Reorder Activities function
-        Then The reordering checkboxes are present for activities rows
-        And The quick reorder buttons are present for activities rows
-        And The orders button are present for activities rows
-
-    @manual_test
-    Scenario: User must be able to reorder activities in Detailed SoA by updating the order of the row
-        Given At least '2' activites are present in 'Study_000001' study
-        And The '/studies/Study_000001/activities/soa' page is opened
-        When The user enables the Reorder Activities function
-        And The user clicks on order button for given activity row
-        And The user updates the order for that row
-        Then The activities in the SoA are updating to match new order
-        And The pop up snack displays 'The ordering of study activities has been updated.'
-
-    @manual_test
-    Scenario Outline: User must be able to reorder activities in Detailed SoA by quick order update
-        Given At least '2' activites are present in 'Study_000001' study
-        And The '/studies/Study_000001/activities/soa' page is opened
-        When The user enables the Reorder Activities function
-        And The user clicks on order button for given activity row
-        And The clicks on chosen 'order' type
-        Then The activity is moved in SoA to 'order'
-        And The pop up snack displays 'The ordering of study activities has been updated.'
-
-        Examples:
-            | order           |
-            | Top of group    |
-            | One row up      |
-            | One row down    |
-            | Bottom of group |
-
+        When The user enables the Reorder Activities function for acitivities in the same 'Acute Kidney Injury' flowchart subgroup and 'BIOMARKERS' group
+        And The user updates the order of activities
+        Then The new order of activites is visible

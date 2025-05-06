@@ -502,6 +502,7 @@ class StudyDesignCellRepository:
                 "study_epoch__has_epoch__has_name_root__has_latest_value",
                 "has_after__audit_trail",
                 "study_epoch__study_value",
+                "study_branch_arm",
                 Optional("study_branch_arm__study_value"),
                 Optional("study_element__study_value"),
             )

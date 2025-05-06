@@ -3,6 +3,7 @@ from typing import Annotated, Self
 
 from pydantic import Field
 
+from clinical_mdr_api.descriptions.general import CHANGES_FIELD_DESC
 from clinical_mdr_api.domains.syntax_templates.footnote_template import (
     FootnoteTemplateAR,
 )
@@ -23,14 +24,14 @@ class FootnoteTemplateName(BaseModel):
         str | None,
         Field(
             description="The actual value/content. It may include parameters referenced by simple strings in square brackets [].",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
     name_plain: Annotated[
         str | None,
         Field(
             description="The plain text version of the name property, stripped of HTML tags",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
 
@@ -38,9 +39,14 @@ class FootnoteTemplateName(BaseModel):
 class FootnoteTemplateNameUid(FootnoteTemplateName):
     uid: Annotated[
         str | None,
-        Field(description="The unique id of the footnote template.", nullable=True),
+        Field(
+            description="The unique id of the footnote template.",
+            json_schema_extra={"nullable": True},
+        ),
     ] = None
-    sequence_id: Annotated[str | None, Field(nullable=True)] = None
+    sequence_id: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
 
 
 class FootnoteTemplateNameUidLibrary(FootnoteTemplateNameUid):
@@ -54,7 +60,7 @@ class FootnoteTemplate(FootnoteTemplateNameUid):
             default_factory=datetime.utcnow,
             description="Part of the metadata: The point in time when the (version of the) footnote template was created. "
             "The format is ISO 8601 in UTC±0, e.g.: '2020-10-31T16:00:00+00:00' for October 31, 2020 at 6pm in UTC+2 timezone.",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ]
     end_date: Annotated[
@@ -63,7 +69,7 @@ class FootnoteTemplate(FootnoteTemplateNameUid):
             default_factory=datetime.utcnow,
             description="Part of the metadata: The point in time when the version of the footnote template was closed (and a new one was created). "
             "The format is ISO 8601 in UTC±0, e.g.: '2020-10-31T16:00:00+00:00' for October 31, 2020 at 6pm in UTC+2 timezone.",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ]
     status: Annotated[
@@ -71,7 +77,7 @@ class FootnoteTemplate(FootnoteTemplateNameUid):
         Field(
             description="The status in which the (version of the) footnote template is in. "
             "Possible values are: 'Final', 'Draft' or 'Retired'.",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
     version: Annotated[
@@ -79,20 +85,20 @@ class FootnoteTemplate(FootnoteTemplateNameUid):
         Field(
             description="The version number of the (version of the) footnote template. "
             "The format is: <major>.<minor> where <major> and <minor> are digits. E.g. '0.1', '0.2', '1.0', ...",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
     change_description: Annotated[
         str | None,
         Field(
             description="A short description about what has changed compared to the previous version.",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
     author_username: Annotated[
         str | None,
         Field(
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
     possible_actions: Annotated[
@@ -112,14 +118,14 @@ class FootnoteTemplate(FootnoteTemplateNameUid):
         Library | None,
         Field(
             description="The library to which the footnote template belongs.",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
 
     # Template indexings
     type: Annotated[
         SimpleCTTermNameAndAttributes | None,
-        Field(description="The footnote type.", nullable=True),
+        Field(description="The footnote type.", json_schema_extra={"nullable": True}),
     ] = None
     indications: Annotated[
         list[SimpleTermModel],
@@ -180,7 +186,10 @@ class FootnoteTemplate(FootnoteTemplateNameUid):
 class FootnoteTemplateWithCount(FootnoteTemplate):
     counts: Annotated[
         ItemCounts | None,
-        Field(description="Optional counts of footnote instantiations", nullable=True),
+        Field(
+            description="Optional counts of footnote instantiations",
+            json_schema_extra={"nullable": True},
+        ),
     ] = None
 
     @classmethod
@@ -204,15 +213,11 @@ class FootnoteTemplateVersion(FootnoteTemplate):
     """
 
     changes: Annotated[
-        dict[str, bool] | None,
+        list[str],
         Field(
-            description=(
-                "Denotes whether or not there was a change in a specific field/property compared to the previous version. "
-                "The field names in this object here refer to the field names of the footnote template (e.g. name, start_date, ..)."
-            ),
-            nullable=True,
+            description=CHANGES_FIELD_DESC,
         ),
-    ] = None
+    ] = []
 
 
 class FootnoteTemplatePreValidateInput(PostInputModel):

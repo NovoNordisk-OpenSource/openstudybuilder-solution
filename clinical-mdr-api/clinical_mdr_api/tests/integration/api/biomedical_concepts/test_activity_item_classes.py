@@ -22,7 +22,7 @@ from clinical_mdr_api.tests.integration.utils.api import (
     inject_and_clear_db,
     inject_base_data,
 )
-from clinical_mdr_api.tests.integration.utils.utils import TestUtils
+from clinical_mdr_api.tests.integration.utils.utils import CT_CODELIST_UIDS, TestUtils
 from clinical_mdr_api.tests.utils.checks import assert_response_status_code
 
 # pylint: disable=unused-argument
@@ -92,21 +92,34 @@ def test_data():
             definition="definition A",
             nci_concept_id="nci id A",
             order=1,
-            mandatory=True,
-            activity_instance_class_uids=[
-                activity_instance_class.uid,
-                activity_instance_class2.uid,
+            activity_instance_classes=[
+                {
+                    "uid": activity_instance_class.uid,
+                    "mandatory": True,
+                    "is_adam_param_specific_enabled": True,
+                },
+                {
+                    "uid": activity_instance_class2.uid,
+                    "mandatory": True,
+                    "is_adam_param_specific_enabled": True,
+                },
             ],
             role_uid=role_term.term_uid,
             data_type_uid=data_type_term.term_uid,
+            codelist_uids=[CT_CODELIST_UIDS.default],
         ),
         TestUtils.create_activity_item_class(
             name="name-AAA",
             definition="definition AAA",
             nci_concept_id="nci id AAA",
             order=2,
-            mandatory=True,
-            activity_instance_class_uids=[activity_instance_class.uid],
+            activity_instance_classes=[
+                {
+                    "uid": activity_instance_class.uid,
+                    "mandatory": True,
+                    "is_adam_param_specific_enabled": True,
+                }
+            ],
             role_uid=role_term.term_uid,
             data_type_uid=data_type_term.term_uid,
         ),
@@ -115,8 +128,13 @@ def test_data():
             definition="definition BBB",
             nci_concept_id="nci id BBB",
             order=3,
-            mandatory=True,
-            activity_instance_class_uids=[activity_instance_class.uid],
+            activity_instance_classes=[
+                {
+                    "uid": activity_instance_class.uid,
+                    "mandatory": True,
+                    "is_adam_param_specific_enabled": True,
+                }
+            ],
             role_uid=role_term.term_uid,
             data_type_uid=data_type_term.term_uid,
         ),
@@ -125,8 +143,13 @@ def test_data():
             definition="definition XXX",
             nci_concept_id="nci id XXX",
             order=4,
-            mandatory=True,
-            activity_instance_class_uids=[activity_instance_class.uid],
+            activity_instance_classes=[
+                {
+                    "uid": activity_instance_class.uid,
+                    "mandatory": True,
+                    "is_adam_param_specific_enabled": True,
+                }
+            ],
             role_uid=role_term.term_uid,
             data_type_uid=data_type_term.term_uid,
         ),
@@ -135,8 +158,13 @@ def test_data():
             definition="definition YYY",
             nci_concept_id="nci id YYY",
             order=5,
-            mandatory=True,
-            activity_instance_class_uids=[activity_instance_class.uid],
+            activity_instance_classes=[
+                {
+                    "uid": activity_instance_class.uid,
+                    "mandatory": True,
+                    "is_adam_param_specific_enabled": True,
+                }
+            ],
             role_uid=role_term.term_uid,
             data_type_uid=data_type_term.term_uid,
         ),
@@ -149,8 +177,13 @@ def test_data():
                 definition=f"definition AAA-{index}",
                 nci_concept_id=f"nci id AAA-{index}",
                 order=(index * 4) + 1,
-                mandatory=False,
-                activity_instance_class_uids=[activity_instance_class2.uid],
+                activity_instance_classes=[
+                    {
+                        "uid": activity_instance_class.uid,
+                        "mandatory": False,
+                        "is_adam_param_specific_enabled": False,
+                    }
+                ],
                 role_uid=role_term.term_uid,
                 data_type_uid=data_type_term.term_uid,
             )
@@ -161,8 +194,13 @@ def test_data():
                 definition=f"definition BBB-{index}",
                 nci_concept_id=f"nci id BBB-{index}",
                 order=(index * 4) + 2,
-                mandatory=False,
-                activity_instance_class_uids=[activity_instance_class2.uid],
+                activity_instance_classes=[
+                    {
+                        "uid": activity_instance_class.uid,
+                        "mandatory": False,
+                        "is_adam_param_specific_enabled": False,
+                    },
+                ],
                 role_uid=role_term.term_uid,
                 data_type_uid=data_type_term.term_uid,
             )
@@ -173,8 +211,13 @@ def test_data():
                 definition=f"definition XXX-{index}",
                 nci_concept_id=f"nci id XXX-{index}",
                 order=(index * 4) + 3,
-                mandatory=False,
-                activity_instance_class_uids=[activity_instance_class2.uid],
+                activity_instance_classes=[
+                    {
+                        "uid": activity_instance_class.uid,
+                        "mandatory": False,
+                        "is_adam_param_specific_enabled": False,
+                    },
+                ],
                 role_uid=role_term.term_uid,
                 data_type_uid=data_type_term.term_uid,
             )
@@ -185,8 +228,13 @@ def test_data():
                 definition=f"definition YYY-{index}",
                 nci_concept_id=f"nci id YYY-{index}",
                 order=(index * 4) + 4,
-                mandatory=False,
-                activity_instance_class_uids=[activity_instance_class2.uid],
+                activity_instance_classes=[
+                    {
+                        "uid": activity_instance_class.uid,
+                        "mandatory": False,
+                        "is_adam_param_specific_enabled": False,
+                    },
+                ],
                 role_uid=role_term.term_uid,
                 data_type_uid=data_type_term.term_uid,
             )
@@ -199,11 +247,11 @@ ACTIVITY_IC_FIELDS_ALL = [
     "definition",
     "nci_concept_id",
     "order",
-    "mandatory",
     "activity_instance_classes",
     "data_type",
     "role",
     "variable_classes",
+    "codelists",
     "library_name",
     "start_date",
     "end_date",
@@ -218,7 +266,6 @@ ACTIVITY_IC_FIELDS_NOT_NULL = [
     "uid",
     "name",
     "order",
-    "mandatory",
     "activity_instance_classes",
     "data_type",
     "role",
@@ -242,7 +289,6 @@ def test_get_activity_item_class(api_client):
     assert res["name"] == "name A"
     assert res["definition"] == "definition A"
     assert res["nci_concept_id"] == "nci id A"
-    assert res["mandatory"] is True
     assert res["order"] == 1
     assert sorted(
         instance_class["uid"] for instance_class in res["activity_instance_classes"]
@@ -252,6 +298,8 @@ def test_get_activity_item_class(api_client):
     ) == [activity_instance_class.name, activity_instance_class2.name]
     assert res["role"]["uid"] == role_term.term_uid
     assert res["data_type"]["uid"] == data_type_term.term_uid
+    assert res["codelists"][0]["uid"] == CT_CODELIST_UIDS.default
+    assert res["codelists"][0]["name"] == "C66737 NAME"
     assert res["version"] == "1.0"
     assert res["status"] == "Final"
     assert res["library_name"] == "Sponsor"
@@ -414,7 +462,6 @@ def test_filtering_wildcard(
         pytest.param('{"name": {"v": ["name-AAA"]}}', "name", "name-AAA"),
         pytest.param('{"name": {"v": ["name-BBB"]}}', "name", "name-BBB"),
         pytest.param('{"name": {"v": ["cc"]}}', None, None),
-        pytest.param('{"mandatory": {"v": [true]}}', "mandatory", True),
         pytest.param('{"order": {"v": [1]}}', "order", 1),
         pytest.param(
             '{"activity_instance_classes.uid": {"v": ["ActivityInstanceClass_000001"]}}',
@@ -425,6 +472,11 @@ def test_filtering_wildcard(
             '{"activity_instance_classes.name": {"v": ["Activity Instance Class name1"]}}',
             "activity_instance_classes.name",
             "Activity Instance Class name1",
+        ),
+        pytest.param(
+            '{"activity_instance_classes.mandatory": {"v": [true]}}',
+            "activity_instance_classes.mandatory",
+            True,
         ),
         pytest.param(
             '{"data_type.name": {"v": ["Data type"]}}',
@@ -480,9 +532,14 @@ def test_edit_activity_item_class(api_client):
     )
     activity_item_class = TestUtils.create_activity_item_class(
         name="New item class",
-        mandatory=True,
         order=30,
-        activity_instance_class_uids=[activity_instance_class.uid],
+        activity_instance_classes=[
+            {
+                "uid": activity_instance_class.uid,
+                "mandatory": True,
+                "is_adam_param_specific_enabled": True,
+            }
+        ],
         approve=False,
         data_type_uid=data_type_term.term_uid,
         role_uid=role_term.term_uid,
@@ -493,9 +550,14 @@ def test_edit_activity_item_class(api_client):
             "name": "new name for item class",
             "definition": "new definition for item class",
             "nci_concept_id": "new nci concept id",
-            "mandatory": False,
             "order": 45,
-            "activity_instance_class_uids": [activity_instance_class_after_edit.uid],
+            "activity_instance_classes": [
+                {
+                    "uid": activity_instance_class_after_edit.uid,
+                    "mandatory": False,
+                    "is_adam_param_specific_enabled": False,
+                }
+            ],
         },
     )
     res = response.json()
@@ -503,9 +565,13 @@ def test_edit_activity_item_class(api_client):
     assert res["name"] == "new name for item class"
     assert res["definition"] == "new definition for item class"
     assert res["nci_concept_id"] == "new nci concept id"
-    assert res["mandatory"] is False
     assert res["order"] == 45
     assert res["activity_instance_classes"][0]["name"] == "Activity IC after edit"
+    assert res["activity_instance_classes"][0]["mandatory"] is False
+    assert (
+        res["activity_instance_classes"][0]["is_adam_param_specific_enabled"] is False
+    )
+    assert res["codelists"] == []
     assert res["version"] == "0.2"
     assert res["status"] == "Draft"
     assert res["possible_actions"] == ["approve", "delete", "edit"]
@@ -529,10 +595,15 @@ def test_post_activity_item_class(api_client):
             "name": "New AIC Name",
             "definition": "New AIC Def",
             "nci_concept_id": "New nci id",
-            "mandatory": True,
             "order": 36,
             "library_name": "Sponsor",
-            "activity_instance_class_uids": [activity_instance_class.uid],
+            "activity_instance_classes": [
+                {
+                    "uid": activity_instance_class.uid,
+                    "mandatory": True,
+                    "is_adam_param_specific_enabled": True,
+                }
+            ],
             "role_uid": role_term.term_uid,
             "data_type_uid": data_type_term.term_uid,
         },
@@ -543,9 +614,11 @@ def test_post_activity_item_class(api_client):
     assert res["definition"] == "New AIC Def"
     assert res["nci_concept_id"] == "New nci id"
     assert res["order"] == 36
-    assert res["mandatory"] is True
     assert res["activity_instance_classes"][0]["uid"] == activity_instance_class.uid
     assert res["activity_instance_classes"][0]["name"] == activity_instance_class.name
+    assert res["activity_instance_classes"][0]["mandatory"] is True
+    assert res["activity_instance_classes"][0]["is_adam_param_specific_enabled"] is True
+    assert res["codelists"] == []
     assert res["version"] == "0.1"
     assert res["status"] == "Draft"
     assert res["possible_actions"] == ["approve", "delete", "edit"]
@@ -556,8 +629,13 @@ def test_activity_item_class_versioning(api_client):
     activity_item_class = TestUtils.create_activity_item_class(
         name="New item",
         order=2,
-        mandatory=False,
-        activity_instance_class_uids=[activity_instance_class.uid],
+        activity_instance_classes=[
+            {
+                "uid": activity_instance_class.uid,
+                "mandatory": False,
+                "is_adam_param_specific_enabled": False,
+            }
+        ],
         approve=False,
         data_type_uid=data_type_term.term_uid,
         role_uid=role_term.term_uid,
@@ -614,8 +692,13 @@ def test_activity_item_class_versioning(api_client):
     activity_ic_to_delete = TestUtils.create_activity_item_class(
         name="activity ic to delete",
         order=2,
-        mandatory=False,
-        activity_instance_class_uids=[activity_instance_class.uid],
+        activity_instance_classes=[
+            {
+                "uid": activity_instance_class.uid,
+                "mandatory": False,
+                "is_adam_param_specific_enabled": False,
+            },
+        ],
         approve=False,
         data_type_uid=data_type_term.term_uid,
         role_uid=role_term.term_uid,
@@ -623,3 +706,115 @@ def test_activity_item_class_versioning(api_client):
     # successful delete
     response = api_client.delete(f"/activity-item-classes/{activity_ic_to_delete.uid}")
     assert_response_status_code(response, 204)
+
+
+def test_get_activity_item_class_terms(api_client):
+    response = api_client.get(
+        f"/activity-item-classes/{activity_item_classes_all[0].uid}/terms"
+    )
+    assert_response_status_code(response, 200)
+    res = response.json()
+    assert res["items"] == [
+        {
+            "code_submission_value": None,
+            "codelist_submission_value": "C66737 SUMBVAL",
+            "codelist_uid": "C66737",
+            "name": "C123631_PDPSTINDname",
+            "name_submission_value": None,
+            "term_uid": "C123631_PDPSTIND",
+        },
+        {
+            "code_submission_value": None,
+            "codelist_submission_value": "C66737 SUMBVAL",
+            "codelist_uid": "C66737",
+            "name": "C123632_PDSTINDname",
+            "name_submission_value": None,
+            "term_uid": "C123632_PDSTIND",
+        },
+        {
+            "code_submission_value": None,
+            "codelist_submission_value": "C66737 SUMBVAL",
+            "codelist_uid": "C66737",
+            "name": "C126069_PIPINDname",
+            "name_submission_value": None,
+            "term_uid": "C126069_PIPIND",
+        },
+        {
+            "code_submission_value": None,
+            "codelist_submission_value": "C66737 SUMBVAL",
+            "codelist_uid": "C66737",
+            "name": "C126070_RDINDname",
+            "name_submission_value": None,
+            "term_uid": "C126070_RDIND",
+        },
+        {
+            "code_submission_value": None,
+            "codelist_submission_value": "C66737 SUMBVAL",
+            "codelist_uid": "C66737",
+            "name": "C139274_EXTTINDname",
+            "name_submission_value": None,
+            "term_uid": "C139274_EXTTIND",
+        },
+        {
+            "code_submission_value": None,
+            "codelist_submission_value": "C66737 SUMBVAL",
+            "codelist_uid": "C66737",
+            "name": "C139275_PASSINDname",
+            "name_submission_value": None,
+            "term_uid": "C139275_PASSIND",
+        },
+        {
+            "code_submission_value": None,
+            "codelist_submission_value": "C66737 SUMBVAL",
+            "codelist_uid": "C66737",
+            "name": "C146995_ADAPTname",
+            "name_submission_value": None,
+            "term_uid": "C146995_ADAPT",
+        },
+        {
+            "code_submission_value": None,
+            "codelist_submission_value": "C66737 SUMBVAL",
+            "codelist_uid": "C66737",
+            "name": "C25196_RANDOMname",
+            "name_submission_value": None,
+            "term_uid": "C25196_RANDOM",
+        },
+        {
+            "code_submission_value": None,
+            "codelist_submission_value": "C66737 SUMBVAL",
+            "codelist_uid": "C66737",
+            "name": "C49703_ADDONname",
+            "name_submission_value": None,
+            "term_uid": "C49703_ADDON",
+        },
+        {
+            "code_submission_value": None,
+            "codelist_submission_value": "C66737 SUMBVAL",
+            "codelist_uid": "C66737",
+            "name": "C98737_HLTSUBJIname",
+            "name_submission_value": None,
+            "term_uid": "C98737_HLTSUBJI",
+        },
+    ]
+
+
+def test_edit_activity_item_class_codelist_relationship(api_client):
+    api_client.post(
+        f"/activity-item-classes/{activity_item_classes_all[0].uid}/versions"
+    )
+    response = api_client.patch(
+        f"/activity-item-classes/{activity_item_classes_all[0].uid}",
+        json={"codelist_uids": [CT_CODELIST_UIDS.frequency]},
+    )
+    res = response.json()
+    assert_response_status_code(response, 200)
+    assert len(res["codelists"]) == 1
+    assert res["codelists"][0]["uid"] == CT_CODELIST_UIDS.frequency
+
+    response = api_client.get(
+        f"/activity-item-classes/{activity_item_classes_all[0].uid}"
+    )
+    res = response.json()
+    assert_response_status_code(response, 200)
+    assert len(res["codelists"]) == 1
+    assert res["codelists"][0]["uid"] == CT_CODELIST_UIDS.frequency

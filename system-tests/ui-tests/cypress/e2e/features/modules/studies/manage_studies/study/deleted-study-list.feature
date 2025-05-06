@@ -30,6 +30,26 @@ Feature: Studies - List deleted studies
         Given The '/studies/select_or_add_study/deleted' page is opened
         When The first column is selected from Select Columns option for table with actions
         Then The table contain only selected column
+
+    Scenario: User must be able to export the data in CSV format
+        Given The '/studies/select_or_add_study/deleted' page is opened
+        And The user exports the data in 'CSV' format
+        Then The 'Studies' file is downloaded in 'csv' format
+
+    Scenario: User must be able to export the data in JSON format
+        Given The '/studies/select_or_add_study/deleted' page is opened
+        And The user exports the data in 'JSON' format
+        Then The 'Studies' file is downloaded in 'json' format
+
+    Scenario: User must be able to export the data in XML format
+        Given The '/studies/select_or_add_study/deleted' page is opened
+        And The user exports the data in 'XML' format
+        Then The 'Studies' file is downloaded in 'xml' format
+
+    Scenario: User must be able to export the data in EXCEL format
+        Given The '/studies/select_or_add_study/deleted' page is opened
+        And The user exports the data in 'EXCEL' format
+        Then The 'Studies' file is downloaded in 'xlsx' format
     
     @pending_implementation
     Scenario: User must be able to see value changes for the study core attributes for deleted studies on history page

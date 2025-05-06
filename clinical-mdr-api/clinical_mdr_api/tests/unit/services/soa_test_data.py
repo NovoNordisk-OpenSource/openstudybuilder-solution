@@ -1006,16 +1006,19 @@ STUDY_ACTIVITIES = [
             study_activity_subgroup_uid="StudyActivitySubGroup_000033",
             activity_subgroup_uid="ActivitySubGroup_000016",
             activity_subgroup_name="Informed Consent and Demography",
+            order=1,
         ),
         study_activity_group=SimpleStudyActivityGroup(
             study_activity_group_uid="StudyActivityGroup_000033",
             activity_group_uid="ActivityGroup_000010",
             activity_group_name="Informed Consent and Demography",
+            order=1,
         ),
         study_soa_group=SimpleStudySoAGroup(
             study_soa_group_uid="StudySoAGroup_000033",
             soa_group_term_uid="CTTerm_000066",
             soa_group_term_name="SUBJECT RELATED INFORMATION",
+            order=1,
         ),
         activity=ActivityForStudyActivity(
             start_date=datetime.datetime(2023, 9, 25, 11, 34, 8, 76019),
@@ -1067,7 +1070,7 @@ STUDY_ACTIVITIES = [
     ),
     StudySelectionActivity(
         study_uid="Study_000002",
-        order=2,
+        order=1,
         project_number=None,
         project_name=None,
         show_activity_in_protocol_flowchart=True,
@@ -1079,16 +1082,19 @@ STUDY_ACTIVITIES = [
             study_activity_subgroup_uid="StudyActivitySubGroup_000034",
             activity_subgroup_uid="ActivitySubGroup_000018",
             activity_subgroup_name="Eligibility Criteria",
+            order=1,
         ),
         study_activity_group=SimpleStudyActivityGroup(
             study_activity_group_uid="StudyActivityGroup_000034",
             activity_group_uid="ActivityGroup_000011",
             activity_group_name="Eligibility Criteria",
+            order=2,
         ),
         study_soa_group=SimpleStudySoAGroup(
             study_soa_group_uid="StudySoAGroup_000034",
             soa_group_term_uid="CTTerm_000066",
             soa_group_term_name="SUBJECT RELATED INFORMATION",
+            order=1,
         ),
         activity=ActivityForStudyActivity(
             start_date=datetime.datetime(2023, 9, 25, 11, 34, 5, 65621),
@@ -1128,7 +1134,7 @@ STUDY_ACTIVITIES = [
     ),
     StudySelectionActivity(
         study_uid="Study_000002",
-        order=3,
+        order=1,
         project_number=None,
         project_name=None,
         show_activity_in_protocol_flowchart=False,
@@ -1140,16 +1146,19 @@ STUDY_ACTIVITIES = [
             study_activity_subgroup_uid="StudyActivitySubGroup_000035",
             activity_subgroup_uid="ActivitySubGroup_000030",
             activity_subgroup_name="Medical History/Concomitant Illness",
+            order=1,
         ),
         study_activity_group=SimpleStudyActivityGroup(
             study_activity_group_uid="StudyActivityGroup_000035",
             activity_group_uid="ActivityGroup_000017",
             activity_group_name="Medical History/Concomitant Illness",
+            order=3,
         ),
         study_soa_group=SimpleStudySoAGroup(
             study_soa_group_uid="StudySoAGroup_000035",
             soa_group_term_uid="CTTerm_000066",
             soa_group_term_name="SUBJECT RELATED INFORMATION",
+            order=1,
         ),
         activity=ActivityForStudyActivity(
             start_date=datetime.datetime(2023, 9, 25, 11, 34, 8, 699174),
@@ -1189,7 +1198,7 @@ STUDY_ACTIVITIES = [
     ),
     StudySelectionActivity(
         study_uid="Study_000002",
-        order=4,
+        order=1,
         project_number=None,
         project_name=None,
         show_activity_in_protocol_flowchart=False,
@@ -1201,16 +1210,19 @@ STUDY_ACTIVITIES = [
             study_activity_subgroup_uid="StudyActivitySubGroup_000036",
             activity_subgroup_uid="ActivitySubGroup_000010",
             activity_subgroup_name="Body Measurements",
+            order=1,
         ),
         study_activity_group=SimpleStudyActivityGroup(
             study_activity_group_uid="StudyActivityGroup_000036",
             activity_group_uid="ActivityGroup_000005",
             activity_group_name="Body Measurements",
+            order=4,
         ),
         study_soa_group=SimpleStudySoAGroup(
             study_soa_group_uid="StudySoAGroup_000036",
             soa_group_term_uid="CTTerm_000066",
             soa_group_term_name="SUBJECT RELATED INFORMATION",
+            order=1,
         ),
         activity=ActivityForStudyActivity(
             start_date=datetime.datetime(2023, 9, 25, 11, 34, 7, 274454),
@@ -1250,7 +1262,7 @@ STUDY_ACTIVITIES = [
     ),
     StudySelectionActivity(
         study_uid="Study_000002",
-        order=5,
+        order=2,
         project_number=None,
         project_name=None,
         show_activity_in_protocol_flowchart=False,
@@ -1262,16 +1274,19 @@ STUDY_ACTIVITIES = [
             study_activity_subgroup_uid="StudyActivitySubGroup_000037",
             activity_subgroup_uid="ActivitySubGroup_000010",
             activity_subgroup_name="Body Measurements",
+            order=1,
         ),
         study_activity_group=SimpleStudyActivityGroup(
             study_activity_group_uid="StudyActivityGroup_000037",
             activity_group_uid="ActivityGroup_000005",
             activity_group_name="Body Measurements",
+            order=4,
         ),
         study_soa_group=SimpleStudySoAGroup(
             study_soa_group_uid="StudySoAGroup_000037",
             soa_group_term_uid="CTTerm_000066",
             soa_group_term_name="SUBJECT RELATED INFORMATION",
+            order=1,
         ),
         activity=ActivityForStudyActivity(
             start_date=datetime.datetime(2023, 9, 25, 11, 34, 2, 443094),
@@ -1311,7 +1326,7 @@ STUDY_ACTIVITIES = [
     ),
     StudySelectionActivity(
         study_uid="Study_000002",
-        order=6,
+        order=1,
         project_number=None,
         project_name=None,
         show_activity_in_protocol_flowchart=False,
@@ -1323,16 +1338,19 @@ STUDY_ACTIVITIES = [
             study_activity_subgroup_uid="StudyActivitySubGroup_000038",
             activity_subgroup_uid="ActivitySubGroup_000021",
             activity_subgroup_name="Haematology",
+            order=1,
         ),
         study_activity_group=SimpleStudyActivityGroup(
             study_activity_group_uid="StudyActivityGroup_000038",
             activity_group_uid="ActivityGroup_000004",
             activity_group_name="Laboratory Assessments",
+            order=5,
         ),
         study_soa_group=SimpleStudySoAGroup(
             study_soa_group_uid="StudySoAGroup_000038",
             soa_group_term_uid="CTTerm_000066",
             soa_group_term_name="SUBJECT RELATED INFORMATION",
+            order=1,
         ),
         activity=ActivityForStudyActivity(
             start_date=datetime.datetime(2023, 9, 25, 11, 34, 5, 630967),
@@ -1396,7 +1414,7 @@ STUDY_ACTIVITIES = [
     ),
     StudySelectionActivity(
         study_uid="Study_000002",
-        order=7,
+        order=1,
         project_number=None,
         project_name=None,
         show_activity_in_protocol_flowchart=False,
@@ -1408,16 +1426,19 @@ STUDY_ACTIVITIES = [
             study_activity_subgroup_uid="StudyActivitySubGroup_000039",
             activity_subgroup_uid="ActivitySubGroup_000009",
             activity_subgroup_name="Vital Signs",
+            order=1,
         ),
         study_activity_group=SimpleStudyActivityGroup(
             study_activity_group_uid="StudyActivityGroup_000039",
             activity_group_uid="ActivityGroup_000006",
             activity_group_name="Vital Signs",
+            order=6,
         ),
         study_soa_group=SimpleStudySoAGroup(
             study_soa_group_uid="StudySoAGroup_000039",
             soa_group_term_uid="CTTerm_000066",
             soa_group_term_name="SUBJECT RELATED INFORMATION",
+            order=1,
         ),
         activity=ActivityForStudyActivity(
             start_date=datetime.datetime(2023, 9, 25, 11, 34, 2, 671856),
@@ -1457,7 +1478,7 @@ STUDY_ACTIVITIES = [
     ),
     StudySelectionActivity(
         study_uid="Study_000002",
-        order=8,
+        order=2,
         project_number=None,
         project_name=None,
         show_activity_in_protocol_flowchart=False,
@@ -1469,16 +1490,19 @@ STUDY_ACTIVITIES = [
             study_activity_subgroup_uid="StudyActivitySubGroup_000040",
             activity_subgroup_uid="ActivitySubGroup_000009",
             activity_subgroup_name="Vital Signs",
+            order=1,
         ),
         study_activity_group=SimpleStudyActivityGroup(
             study_activity_group_uid="StudyActivityGroup_000040",
             activity_group_uid="ActivityGroup_000006",
             activity_group_name="Vital Signs",
+            order=6,
         ),
         study_soa_group=SimpleStudySoAGroup(
             study_soa_group_uid="StudySoAGroup_000040",
             soa_group_term_uid="CTTerm_000066",
             soa_group_term_name="SUBJECT RELATED INFORMATION",
+            order=1,
         ),
         activity=ActivityForStudyActivity(
             start_date=datetime.datetime(2023, 9, 25, 11, 34, 2, 546360),
@@ -1518,7 +1542,7 @@ STUDY_ACTIVITIES = [
     ),
     StudySelectionActivity(
         study_uid="Study_000002",
-        order=9,
+        order=2,
         project_number=None,
         project_name=None,
         show_activity_in_protocol_flowchart=False,
@@ -1530,16 +1554,19 @@ STUDY_ACTIVITIES = [
             study_activity_subgroup_uid="StudyActivitySubGroup_000041",
             activity_subgroup_uid="ActivitySubGroup_000016",
             activity_subgroup_name="Informed Consent and Demography",
+            order=1,
         ),
         study_activity_group=SimpleStudyActivityGroup(
             study_activity_group_uid="StudyActivityGroup_000041",
             activity_group_uid="ActivityGroup_000010",
             activity_group_name="Informed Consent and Demography",
+            order=1,
         ),
         study_soa_group=SimpleStudySoAGroup(
             study_soa_group_uid="StudySoAGroup_000041",
             soa_group_term_uid="CTTerm_000066",
             soa_group_term_name="SUBJECT RELATED INFORMATION",
+            order=1,
         ),
         activity=ActivityForStudyActivity(
             start_date=datetime.datetime(2023, 9, 25, 11, 34, 4, 279777),
@@ -2333,85 +2360,85 @@ COORDINATES = {
     "StudyVisit_000023": (1, 10),
     "StudyVisit_000024": (1, 11),
     "StudySoAGroup_000033": (4, 0),
-    "StudySoAGroup_000034": (4, 0),
-    "StudySoAGroup_000035": (4, 0),
-    "StudySoAGroup_000036": (4, 0),
-    "StudySoAGroup_000037": (4, 0),
-    "StudySoAGroup_000038": (4, 0),
-    "StudySoAGroup_000039": (4, 0),
-    "StudySoAGroup_000040": (4, 0),
-    "StudySoAGroup_000041": (4, 0),
     "StudyActivityGroup_000033": (5, 0),
     "StudyActivitySubGroup_000033": (6, 0),
     "StudyActivity_000033": (7, 0),
-    "StudyActivitySchedule_000237": (7, 8),
-    "StudyActivitySchedule_000224": (7, 5),
-    "StudyActivitySchedule_000223": (7, 5),
-    "StudyActivitySchedule_000222": (7, 5),
     "StudyActivitySchedule_000167": (7, 1),
-    "StudyActivity_000041": (8, 0),
-    "StudyActivitySchedule_000146": (8, 2),
-    "StudyActivitySchedule_000148": (8, 3),
-    "StudyActivitySchedule_000140": (8, 1),
-    "StudyActivitySchedule_000186": (8, 4),
-    "StudyActivitySchedule_000207": (8, 5),
-    "StudyActivitySchedule_000184": (8, 5),
-    "StudyActivitySchedule_000215": (8, 5),
-    "StudyActivityGroup_000034": (9, 0),
-    "StudyActivitySubGroup_000034": (10, 0),
-    "StudyActivity_000034": (11, 0),
-    "StudyActivitySchedule_000168": (11, 1),
-    "StudyActivityGroup_000035": (12, 0),
-    "StudyActivitySubGroup_000035": (13, 0),
-    "StudyActivity_000035": (14, 0),
-    "StudyActivitySchedule_000219": (14, 9),
-    "StudyActivitySchedule_000218": (14, 2),
-    "StudyActivitySchedule_000217": (14, 1),
-    "StudyActivityGroup_000036": (15, 0),
-    "StudyActivityGroup_000037": (15, 0),
-    "StudyActivitySubGroup_000036": (16, 0),
-    "StudyActivity_000036": (17, 0),
-    "StudyActivitySchedule_000221": (17, 7),
-    "StudyActivitySchedule_000169": (17, 1),
-    "StudyActivitySchedule_000220": (17, 3),
-    "StudyActivity_000037": (18, 0),
-    "StudyActivitySchedule_000175": (18, 2),
-    "StudyActivitySchedule_000170": (18, 1),
-    "StudyActivitySchedule_000143": (18, 6),
-    "StudyActivitySchedule_000176": (18, 5),
-    "StudyActivitySchedule_000205": (18, 5),
-    "StudyActivitySchedule_000144": (18, 9),
-    "StudyActivitySchedule_000214": (18, 5),
-    "StudyActivityGroup_000038": (19, 0),
-    "StudyActivitySubGroup_000038": (20, 0),
-    "StudyActivity_000038": (21, 0),
-    "StudyActivitySchedule_000166": (21, 4),
-    "StudyActivitySchedule_000173": (21, 1),
-    "StudyActivitySchedule_000165": (21, 9),
-    "StudyActivityGroup_000039": (22, 0),
-    "StudyActivityGroup_000040": (22, 0),
-    "StudyActivitySubGroup_000039": (23, 0),
-    "StudyActivity_000039": (24, 0),
-    "StudyActivitySchedule_000216": (24, 5),
-    "StudyActivitySchedule_000206": (24, 5),
-    "StudyActivitySchedule_000145": (24, 2),
-    "StudyActivitySchedule_000187": (24, 4),
-    "StudyActivitySchedule_000151": (24, 5),
-    "StudyActivitySchedule_000137": (24, 1),
-    "StudyActivitySchedule_000179": (24, 3),
-    "StudyActivitySchedule_000163": (24, 9),
-    "StudyActivity_000040": (25, 0),
-    "StudyActivitySchedule_000235": (25, 8),
-    "StudyActivitySchedule_000232": (25, 6),
-    "StudyActivitySchedule_000231": (25, 5),
-    "StudyActivitySchedule_000230": (25, 5),
-    "StudyActivitySchedule_000229": (25, 5),
-    "StudyActivitySchedule_000228": (25, 3),
-    "StudyActivitySchedule_000227": (25, 1),
-    "StudyActivityGroup_000041": (5, 0),
-    "StudyActivitySubGroup_000037": (16, 0),
-    "StudyActivitySubGroup_000040": (23, 0),
-    "StudyActivitySubGroup_000041": (6, 0),
+    "StudyActivitySchedule_000222": (7, 5),
+    "StudyActivitySchedule_000223": (7, 5),
+    "StudyActivitySchedule_000224": (7, 5),
+    "StudyActivitySchedule_000237": (7, 8),
+    "StudySoAGroup_000034": (4, 0),
+    "StudyActivityGroup_000034": (8, 0),
+    "StudyActivitySubGroup_000034": (9, 0),
+    "StudyActivity_000034": (10, 0),
+    "StudyActivitySchedule_000168": (10, 1),
+    "StudySoAGroup_000035": (4, 0),
+    "StudyActivityGroup_000035": (11, 0),
+    "StudyActivitySubGroup_000035": (12, 0),
+    "StudyActivity_000035": (13, 0),
+    "StudyActivitySchedule_000217": (13, 1),
+    "StudyActivitySchedule_000218": (13, 2),
+    "StudyActivitySchedule_000219": (13, 9),
+    "StudySoAGroup_000036": (4, 0),
+    "StudyActivityGroup_000036": (14, 0),
+    "StudyActivitySubGroup_000036": (15, 0),
+    "StudyActivity_000036": (16, 0),
+    "StudyActivitySchedule_000169": (16, 1),
+    "StudyActivitySchedule_000220": (16, 3),
+    "StudyActivitySchedule_000221": (16, 7),
+    "StudySoAGroup_000037": (4, 0),
+    "StudyActivityGroup_000037": (14, 0),
+    "StudyActivitySubGroup_000037": (15, 0),
+    "StudyActivity_000037": (17, 0),
+    "StudyActivitySchedule_000170": (17, 1),
+    "StudyActivitySchedule_000175": (17, 2),
+    "StudyActivitySchedule_000176": (17, 5),
+    "StudyActivitySchedule_000205": (17, 5),
+    "StudyActivitySchedule_000214": (17, 5),
+    "StudyActivitySchedule_000143": (17, 6),
+    "StudyActivitySchedule_000144": (17, 9),
+    "StudySoAGroup_000038": (4, 0),
+    "StudyActivityGroup_000038": (18, 0),
+    "StudyActivitySubGroup_000038": (19, 0),
+    "StudyActivity_000038": (20, 0),
+    "StudyActivitySchedule_000173": (20, 1),
+    "StudyActivitySchedule_000166": (20, 4),
+    "StudyActivitySchedule_000165": (20, 9),
+    "StudySoAGroup_000039": (4, 0),
+    "StudyActivityGroup_000039": (21, 0),
+    "StudyActivitySubGroup_000039": (22, 0),
+    "StudyActivity_000039": (23, 0),
+    "StudyActivitySchedule_000137": (23, 1),
+    "StudyActivitySchedule_000145": (23, 2),
+    "StudyActivitySchedule_000179": (23, 3),
+    "StudyActivitySchedule_000187": (23, 4),
+    "StudyActivitySchedule_000151": (23, 5),
+    "StudyActivitySchedule_000206": (23, 5),
+    "StudyActivitySchedule_000216": (23, 5),
+    "StudyActivitySchedule_000163": (23, 9),
+    "StudySoAGroup_000040": (4, 0),
+    "StudyActivityGroup_000040": (21, 0),
+    "StudyActivitySubGroup_000040": (22, 0),
+    "StudyActivity_000040": (24, 0),
+    "StudyActivitySchedule_000227": (24, 1),
+    "StudyActivitySchedule_000228": (24, 3),
+    "StudyActivitySchedule_000229": (24, 5),
+    "StudyActivitySchedule_000230": (24, 5),
+    "StudyActivitySchedule_000231": (24, 5),
+    "StudyActivitySchedule_000232": (24, 6),
+    "StudyActivitySchedule_000235": (24, 8),
+    "StudySoAGroup_000041": (4, 0),
+    "StudyActivityGroup_000041": (25, 0),
+    "StudyActivitySubGroup_000041": (26, 0),
+    "StudyActivity_000041": (27, 0),
+    "StudyActivitySchedule_000140": (27, 1),
+    "StudyActivitySchedule_000146": (27, 2),
+    "StudyActivitySchedule_000148": (27, 3),
+    "StudyActivitySchedule_000186": (27, 4),
+    "StudyActivitySchedule_000184": (27, 5),
+    "StudyActivitySchedule_000207": (27, 5),
+    "StudyActivitySchedule_000215": (27, 5),
 }
 FOOTNOTES: list[StudySoAFootnote] = [
     StudySoAFootnote(
@@ -2702,7 +2729,9 @@ DETAILED_SOA_TABLE = TableWithFootnotes(
     rows=[
         TableRow(
             cells=[
-                TableCell(text="", style="header1"),
+                TableCell(
+                    style="header1",
+                ),
                 TableCell(
                     text="Screening",
                     style="header1",
@@ -2715,7 +2744,9 @@ DETAILED_SOA_TABLE = TableWithFootnotes(
                     style="header1",
                     refs=[Ref(type="StudyEpoch", uid="StudyEpoch_000005")],
                 ),
-                TableCell(text="", span=0),
+                TableCell(
+                    span=0,
+                ),
                 TableCell(
                     text="Treatment 1",
                     style="header1",
@@ -2727,8 +2758,12 @@ DETAILED_SOA_TABLE = TableWithFootnotes(
                     style="header1",
                     refs=[Ref(type="StudyEpoch", uid="StudyEpoch_000007")],
                 ),
-                TableCell(text="", span=0),
-                TableCell(text="", span=0),
+                TableCell(
+                    span=0,
+                ),
+                TableCell(
+                    span=0,
+                ),
                 TableCell(
                     text="Follow-up",
                     style="header1",
@@ -2736,10 +2771,15 @@ DETAILED_SOA_TABLE = TableWithFootnotes(
                 ),
             ],
             hide=False,
+            order=None,
+            level=None,
         ),
         TableRow(
             cells=[
-                TableCell(text="Visit short name", style="header2"),
+                TableCell(
+                    text="Visit short name",
+                    style="header2",
+                ),
                 TableCell(
                     text="V1",
                     style="header2",
@@ -2788,34 +2828,94 @@ DETAILED_SOA_TABLE = TableWithFootnotes(
                 ),
             ],
             hide=False,
+            order=None,
+            level=None,
         ),
         TableRow(
             cells=[
-                TableCell(text="Study day", style="header3"),
-                TableCell(text="-14", style="header3"),
-                TableCell(text="-3", style="header3"),
-                TableCell(text="-1", style="header3"),
-                TableCell(text="1-5", style="header3"),
-                TableCell(text="15", style="header3"),
-                TableCell(text="17", style="header3"),
-                TableCell(text="19", style="header3"),
-                TableCell(text="22", style="header3"),
+                TableCell(
+                    text="Study day",
+                    style="header3",
+                ),
+                TableCell(
+                    text="-14",
+                    style="header3",
+                ),
+                TableCell(
+                    text="-3",
+                    style="header3",
+                ),
+                TableCell(
+                    text="-1",
+                    style="header3",
+                ),
+                TableCell(
+                    text="1-5",
+                    style="header3",
+                ),
+                TableCell(
+                    text="15",
+                    style="header3",
+                ),
+                TableCell(
+                    text="17",
+                    style="header3",
+                ),
+                TableCell(
+                    text="19",
+                    style="header3",
+                ),
+                TableCell(
+                    text="22",
+                    style="header3",
+                ),
             ],
             hide=False,
+            order=None,
+            level=None,
         ),
         TableRow(
             cells=[
-                TableCell(text="Visit window (days)", style="header4"),
-                TableCell(text="0", style="header4"),
-                TableCell(text="0", style="header4"),
-                TableCell(text="0", style="header4"),
-                TableCell(text="0", style="header4"),
-                TableCell(text="0", style="header4"),
-                TableCell(text="0", style="header4"),
-                TableCell(text="0", style="header4"),
-                TableCell(text="0", style="header4"),
+                TableCell(
+                    text="Visit window (days)",
+                    style="header4",
+                ),
+                TableCell(
+                    text="0",
+                    style="header4",
+                ),
+                TableCell(
+                    text="0",
+                    style="header4",
+                ),
+                TableCell(
+                    text="0",
+                    style="header4",
+                ),
+                TableCell(
+                    text="0",
+                    style="header4",
+                ),
+                TableCell(
+                    text="0",
+                    style="header4",
+                ),
+                TableCell(
+                    text="0",
+                    style="header4",
+                ),
+                TableCell(
+                    text="0",
+                    style="header4",
+                ),
+                TableCell(
+                    text="0",
+                    style="header4",
+                ),
             ],
             hide=False,
+            order=None,
+            level=None,
         ),
         TableRow(
             cells=[
@@ -2837,6 +2937,8 @@ DETAILED_SOA_TABLE = TableWithFootnotes(
                 TableCell(),
             ],
             hide=False,
+            order=1,
+            level=1,
         ),
         TableRow(
             cells=[
@@ -2858,6 +2960,8 @@ DETAILED_SOA_TABLE = TableWithFootnotes(
                 TableCell(),
             ],
             hide=False,
+            order=1,
+            level=2,
         ),
         TableRow(
             cells=[
@@ -2882,6 +2986,8 @@ DETAILED_SOA_TABLE = TableWithFootnotes(
                 TableCell(),
             ],
             hide=False,
+            order=1,
+            level=3,
         ),
         TableRow(
             cells=[
@@ -2938,71 +3044,8 @@ DETAILED_SOA_TABLE = TableWithFootnotes(
                 TableCell(),
             ],
             hide=False,
-        ),
-        TableRow(
-            cells=[
-                TableCell(
-                    text="Date of Birth",
-                    style="activity",
-                    refs=[
-                        Ref(type="StudyActivity", uid="StudyActivity_000041"),
-                        Ref(type="Activity", uid="Activity_000037"),
-                    ],
-                ),
-                TableCell(
-                    text="X",
-                    style="activitySchedule",
-                    refs=[
-                        Ref(
-                            type="StudyActivitySchedule",
-                            uid="StudyActivitySchedule_000140",
-                        )
-                    ],
-                ),
-                TableCell(
-                    text="X",
-                    style="activitySchedule",
-                    refs=[
-                        Ref(
-                            type="StudyActivitySchedule",
-                            uid="StudyActivitySchedule_000146",
-                        )
-                    ],
-                ),
-                TableCell(
-                    text="X",
-                    style="activitySchedule",
-                    refs=[
-                        Ref(
-                            type="StudyActivitySchedule",
-                            uid="StudyActivitySchedule_000186",
-                        )
-                    ],
-                ),
-                TableCell(
-                    text="X",
-                    style="activitySchedule",
-                    refs=[
-                        Ref(
-                            type="StudyActivitySchedule",
-                            uid="StudyActivitySchedule_000184",
-                        ),
-                        Ref(
-                            type="StudyActivitySchedule",
-                            uid="StudyActivitySchedule_000207",
-                        ),
-                        Ref(
-                            type="StudyActivitySchedule",
-                            uid="StudyActivitySchedule_000215",
-                        ),
-                    ],
-                ),
-                TableCell(),
-                TableCell(),
-                TableCell(),
-                TableCell(),
-            ],
-            hide=True,
+            order=1,
+            level=4,
         ),
         TableRow(
             cells=[
@@ -3024,6 +3067,8 @@ DETAILED_SOA_TABLE = TableWithFootnotes(
                 TableCell(),
             ],
             hide=True,
+            order=2,
+            level=2,
         ),
         TableRow(
             cells=[
@@ -3048,6 +3093,8 @@ DETAILED_SOA_TABLE = TableWithFootnotes(
                 TableCell(),
             ],
             hide=True,
+            order=1,
+            level=3,
         ),
         TableRow(
             cells=[
@@ -3078,6 +3125,8 @@ DETAILED_SOA_TABLE = TableWithFootnotes(
                 TableCell(),
             ],
             hide=False,
+            order=1,
+            level=4,
         ),
         TableRow(
             cells=[
@@ -3099,6 +3148,8 @@ DETAILED_SOA_TABLE = TableWithFootnotes(
                 TableCell(),
             ],
             hide=False,
+            order=3,
+            level=2,
         ),
         TableRow(
             cells=[
@@ -3123,6 +3174,8 @@ DETAILED_SOA_TABLE = TableWithFootnotes(
                 TableCell(),
             ],
             hide=True,
+            order=1,
+            level=3,
         ),
         TableRow(
             cells=[
@@ -3171,6 +3224,8 @@ DETAILED_SOA_TABLE = TableWithFootnotes(
                 ),
             ],
             hide=True,
+            order=1,
+            level=4,
         ),
         TableRow(
             cells=[
@@ -3179,6 +3234,7 @@ DETAILED_SOA_TABLE = TableWithFootnotes(
                     style="group",
                     refs=[
                         Ref(type="StudyActivityGroup", uid="StudyActivityGroup_000036"),
+                        Ref(type="StudyActivityGroup", uid="StudyActivityGroup_000037"),
                         Ref(type="ActivityGroup", uid="ActivityGroup_000005"),
                     ],
                 ),
@@ -3192,6 +3248,8 @@ DETAILED_SOA_TABLE = TableWithFootnotes(
                 TableCell(),
             ],
             hide=True,
+            order=4,
+            level=2,
         ),
         TableRow(
             cells=[
@@ -3202,6 +3260,10 @@ DETAILED_SOA_TABLE = TableWithFootnotes(
                         Ref(
                             type="StudyActivitySubGroup",
                             uid="StudyActivitySubGroup_000036",
+                        ),
+                        Ref(
+                            type="StudyActivitySubGroup",
+                            uid="StudyActivitySubGroup_000037",
                         ),
                         Ref(type="ActivitySubGroup", uid="ActivitySubGroup_000010"),
                     ],
@@ -3217,6 +3279,8 @@ DETAILED_SOA_TABLE = TableWithFootnotes(
                 TableCell(),
             ],
             hide=False,
+            order=1,
+            level=3,
         ),
         TableRow(
             cells=[
@@ -3257,6 +3321,8 @@ DETAILED_SOA_TABLE = TableWithFootnotes(
                 TableCell(),
             ],
             hide=True,
+            order=1,
+            level=4,
         ),
         TableRow(
             cells=[
@@ -3334,6 +3400,8 @@ DETAILED_SOA_TABLE = TableWithFootnotes(
                 ),
             ],
             hide=True,
+            order=2,
+            level=4,
         ),
         TableRow(
             cells=[
@@ -3356,6 +3424,8 @@ DETAILED_SOA_TABLE = TableWithFootnotes(
                 TableCell(),
             ],
             hide=False,
+            order=5,
+            level=2,
         ),
         TableRow(
             cells=[
@@ -3367,10 +3437,7 @@ DETAILED_SOA_TABLE = TableWithFootnotes(
                             type="StudyActivitySubGroup",
                             uid="StudyActivitySubGroup_000038",
                         ),
-                        Ref(
-                            type="ActivitySubGroup",
-                            uid="ActivitySubGroup_000021",
-                        ),
+                        Ref(type="ActivitySubGroup", uid="ActivitySubGroup_000021"),
                     ],
                     footnotes=["b", "d"],
                 ),
@@ -3384,6 +3451,8 @@ DETAILED_SOA_TABLE = TableWithFootnotes(
                 TableCell(),
             ],
             hide=True,
+            order=1,
+            level=3,
         ),
         TableRow(
             cells=[
@@ -3433,6 +3502,8 @@ DETAILED_SOA_TABLE = TableWithFootnotes(
                 ),
             ],
             hide=True,
+            order=1,
+            level=4,
         ),
         TableRow(
             cells=[
@@ -3441,10 +3512,9 @@ DETAILED_SOA_TABLE = TableWithFootnotes(
                     style="group",
                     refs=[
                         Ref(type="StudyActivityGroup", uid="StudyActivityGroup_000039"),
-                        Ref(
-                            type="ActivityGroup",
-                            uid="ActivityGroup_000006",
-                        ),
+                        Ref(type="StudyActivityGroup", uid="StudyActivityGroup_000040"),
+                        Ref(type="StudyActivityGroup", uid="StudyActivityGroup_000041"),
+                        Ref(type="ActivityGroup", uid="ActivityGroup_000006"),
                     ],
                 ),
                 TableCell(),
@@ -3457,6 +3527,8 @@ DETAILED_SOA_TABLE = TableWithFootnotes(
                 TableCell(),
             ],
             hide=False,
+            order=6,
+            level=2,
         ),
         TableRow(
             cells=[
@@ -3467,6 +3539,10 @@ DETAILED_SOA_TABLE = TableWithFootnotes(
                         Ref(
                             type="StudyActivitySubGroup",
                             uid="StudyActivitySubGroup_000039",
+                        ),
+                        Ref(
+                            type="StudyActivitySubGroup",
+                            uid="StudyActivitySubGroup_000040",
                         ),
                         Ref(type="ActivitySubGroup", uid="ActivitySubGroup_000009"),
                     ],
@@ -3481,6 +3557,8 @@ DETAILED_SOA_TABLE = TableWithFootnotes(
                 TableCell(),
             ],
             hide=False,
+            order=1,
+            level=3,
         ),
         TableRow(
             cells=[
@@ -3558,6 +3636,8 @@ DETAILED_SOA_TABLE = TableWithFootnotes(
                 ),
             ],
             hide=True,
+            order=1,
+            level=4,
         ),
         TableRow(
             cells=[
@@ -3621,9 +3701,104 @@ DETAILED_SOA_TABLE = TableWithFootnotes(
                     ],
                     footnotes=["d"],
                 ),
-                TableCell(text="", ref=None, vertical=None),
+                TableCell(),
             ],
             hide=True,
+            order=2,
+            level=4,
+        ),
+        TableRow(
+            cells=[
+                TableCell(
+                    text="Informed Consent and Demography",
+                    style="subGroup",
+                    refs=[
+                        Ref(
+                            type="StudyActivitySubGroup",
+                            uid="StudyActivitySubGroup_000041",
+                        ),
+                        Ref(type="ActivitySubGroup", uid="ActivitySubGroup_000016"),
+                    ],
+                ),
+                TableCell(),
+                TableCell(),
+                TableCell(),
+                TableCell(),
+                TableCell(),
+                TableCell(),
+                TableCell(),
+                TableCell(),
+            ],
+            hide=False,
+            order=1,
+            level=3,
+        ),
+        TableRow(
+            cells=[
+                TableCell(
+                    text="Date of Birth",
+                    style="activity",
+                    refs=[
+                        Ref(type="StudyActivity", uid="StudyActivity_000041"),
+                        Ref(type="Activity", uid="Activity_000037"),
+                    ],
+                ),
+                TableCell(
+                    text="X",
+                    style="activitySchedule",
+                    refs=[
+                        Ref(
+                            type="StudyActivitySchedule",
+                            uid="StudyActivitySchedule_000140",
+                        )
+                    ],
+                ),
+                TableCell(
+                    text="X",
+                    style="activitySchedule",
+                    refs=[
+                        Ref(
+                            type="StudyActivitySchedule",
+                            uid="StudyActivitySchedule_000146",
+                        )
+                    ],
+                ),
+                TableCell(
+                    text="X",
+                    style="activitySchedule",
+                    refs=[
+                        Ref(
+                            type="StudyActivitySchedule",
+                            uid="StudyActivitySchedule_000186",
+                        )
+                    ],
+                ),
+                TableCell(
+                    text="X",
+                    style="activitySchedule",
+                    refs=[
+                        Ref(
+                            type="StudyActivitySchedule",
+                            uid="StudyActivitySchedule_000184",
+                        ),
+                        Ref(
+                            type="StudyActivitySchedule",
+                            uid="StudyActivitySchedule_000207",
+                        ),
+                        Ref(
+                            type="StudyActivitySchedule",
+                            uid="StudyActivitySchedule_000215",
+                        ),
+                    ],
+                ),
+                TableCell(),
+                TableCell(),
+                TableCell(),
+                TableCell(),
+            ],
+            hide=True,
+            order=2,
+            level=4,
         ),
     ],
     footnotes={
@@ -3651,12 +3826,15 @@ DETAILED_SOA_TABLE = TableWithFootnotes(
     num_header_rows=4,
     num_header_cols=1,
     title="Protocol Flowchart",
+    id=None,
 )
 PROTOCOL_SOA_TABLE = TableWithFootnotes(
     rows=[
         TableRow(
             cells=[
-                TableCell(text="", style="header1"),
+                TableCell(
+                    style="header1",
+                ),
                 TableCell(
                     text="Screening",
                     style="header1",
@@ -3669,7 +3847,9 @@ PROTOCOL_SOA_TABLE = TableWithFootnotes(
                     style="header1",
                     refs=[Ref(type="StudyEpoch", uid="StudyEpoch_000005")],
                 ),
-                TableCell(text="", span=0),
+                TableCell(
+                    span=0,
+                ),
                 TableCell(
                     text="Treatment 1",
                     style="header1",
@@ -3681,8 +3861,12 @@ PROTOCOL_SOA_TABLE = TableWithFootnotes(
                     style="header1",
                     refs=[Ref(type="StudyEpoch", uid="StudyEpoch_000007")],
                 ),
-                TableCell(text="", span=0),
-                TableCell(text="", span=0),
+                TableCell(
+                    span=0,
+                ),
+                TableCell(
+                    span=0,
+                ),
                 TableCell(
                     text="Follow-up",
                     style="header1",
@@ -3690,10 +3874,15 @@ PROTOCOL_SOA_TABLE = TableWithFootnotes(
                 ),
             ],
             hide=False,
+            order=None,
+            level=None,
         ),
         TableRow(
             cells=[
-                TableCell(text="Visit short name", style="header2"),
+                TableCell(
+                    text="Visit short name",
+                    style="header2",
+                ),
                 TableCell(
                     text="V1",
                     style="header2",
@@ -3742,34 +3931,94 @@ PROTOCOL_SOA_TABLE = TableWithFootnotes(
                 ),
             ],
             hide=False,
+            order=None,
+            level=None,
         ),
         TableRow(
             cells=[
-                TableCell(text="Study day", style="header3"),
-                TableCell(text="-14", style="header3"),
-                TableCell(text="-3", style="header3"),
-                TableCell(text="-1", style="header3"),
-                TableCell(text="1-5", style="header3"),
-                TableCell(text="15", style="header3"),
-                TableCell(text="17", style="header3"),
-                TableCell(text="19", style="header3"),
-                TableCell(text="22", style="header3"),
+                TableCell(
+                    text="Study day",
+                    style="header3",
+                ),
+                TableCell(
+                    text="-14",
+                    style="header3",
+                ),
+                TableCell(
+                    text="-3",
+                    style="header3",
+                ),
+                TableCell(
+                    text="-1",
+                    style="header3",
+                ),
+                TableCell(
+                    text="1-5",
+                    style="header3",
+                ),
+                TableCell(
+                    text="15",
+                    style="header3",
+                ),
+                TableCell(
+                    text="17",
+                    style="header3",
+                ),
+                TableCell(
+                    text="19",
+                    style="header3",
+                ),
+                TableCell(
+                    text="22",
+                    style="header3",
+                ),
             ],
             hide=False,
+            order=None,
+            level=None,
         ),
         TableRow(
             cells=[
-                TableCell(text="Visit window (days)", style="header4"),
-                TableCell(text="0", style="header4"),
-                TableCell(text="0", style="header4"),
-                TableCell(text="0", style="header4"),
-                TableCell(text="0", style="header4"),
-                TableCell(text="0", style="header4"),
-                TableCell(text="0", style="header4"),
-                TableCell(text="0", style="header4"),
-                TableCell(text="0", style="header4"),
+                TableCell(
+                    text="Visit window (days)",
+                    style="header4",
+                ),
+                TableCell(
+                    text="0",
+                    style="header4",
+                ),
+                TableCell(
+                    text="0",
+                    style="header4",
+                ),
+                TableCell(
+                    text="0",
+                    style="header4",
+                ),
+                TableCell(
+                    text="0",
+                    style="header4",
+                ),
+                TableCell(
+                    text="0",
+                    style="header4",
+                ),
+                TableCell(
+                    text="0",
+                    style="header4",
+                ),
+                TableCell(
+                    text="0",
+                    style="header4",
+                ),
+                TableCell(
+                    text="0",
+                    style="header4",
+                ),
             ],
             hide=False,
+            order=None,
+            level=None,
         ),
         TableRow(
             cells=[
@@ -3791,6 +4040,8 @@ PROTOCOL_SOA_TABLE = TableWithFootnotes(
                 TableCell(),
             ],
             hide=False,
+            order=1,
+            level=1,
         ),
         TableRow(
             cells=[
@@ -3812,6 +4063,8 @@ PROTOCOL_SOA_TABLE = TableWithFootnotes(
                 TableCell(),
             ],
             hide=False,
+            order=1,
+            level=2,
         ),
         TableRow(
             cells=[
@@ -3826,16 +4079,18 @@ PROTOCOL_SOA_TABLE = TableWithFootnotes(
                         Ref(type="ActivitySubGroup", uid="ActivitySubGroup_000016"),
                     ],
                 ),
-                TableCell(text="X"),
-                TableCell(text="X"),
-                TableCell(text="X"),
-                TableCell(text="X"),
+                TableCell(),
+                TableCell(),
+                TableCell(),
+                TableCell(),
                 TableCell(),
                 TableCell(),
                 TableCell(),
                 TableCell(),
             ],
             hide=False,
+            order=1,
+            level=3,
         ),
         TableRow(
             cells=[
@@ -3892,71 +4147,8 @@ PROTOCOL_SOA_TABLE = TableWithFootnotes(
                 TableCell(),
             ],
             hide=False,
-        ),
-        TableRow(
-            cells=[
-                TableCell(
-                    text="Date of Birth",
-                    style="activity",
-                    refs=[
-                        Ref(type="StudyActivity", uid="StudyActivity_000041"),
-                        Ref(type="Activity", uid="Activity_000037"),
-                    ],
-                ),
-                TableCell(
-                    text="X",
-                    style="activitySchedule",
-                    refs=[
-                        Ref(
-                            type="StudyActivitySchedule",
-                            uid="StudyActivitySchedule_000140",
-                        )
-                    ],
-                ),
-                TableCell(
-                    text="X",
-                    style="activitySchedule",
-                    refs=[
-                        Ref(
-                            type="StudyActivitySchedule",
-                            uid="StudyActivitySchedule_000146",
-                        )
-                    ],
-                ),
-                TableCell(
-                    text="X",
-                    style="activitySchedule",
-                    refs=[
-                        Ref(
-                            type="StudyActivitySchedule",
-                            uid="StudyActivitySchedule_000186",
-                        )
-                    ],
-                ),
-                TableCell(
-                    text="X",
-                    style="activitySchedule",
-                    refs=[
-                        Ref(
-                            type="StudyActivitySchedule",
-                            uid="StudyActivitySchedule_000184",
-                        ),
-                        Ref(
-                            type="StudyActivitySchedule",
-                            uid="StudyActivitySchedule_000207",
-                        ),
-                        Ref(
-                            type="StudyActivitySchedule",
-                            uid="StudyActivitySchedule_000215",
-                        ),
-                    ],
-                ),
-                TableCell(),
-                TableCell(),
-                TableCell(),
-                TableCell(),
-            ],
-            hide=True,
+            order=1,
+            level=4,
         ),
         TableRow(
             cells=[
@@ -3978,6 +4170,8 @@ PROTOCOL_SOA_TABLE = TableWithFootnotes(
                 TableCell(),
             ],
             hide=True,
+            order=2,
+            level=2,
         ),
         TableRow(
             cells=[
@@ -4002,6 +4196,8 @@ PROTOCOL_SOA_TABLE = TableWithFootnotes(
                 TableCell(),
             ],
             hide=True,
+            order=1,
+            level=3,
         ),
         TableRow(
             cells=[
@@ -4032,6 +4228,8 @@ PROTOCOL_SOA_TABLE = TableWithFootnotes(
                 TableCell(),
             ],
             hide=False,
+            order=1,
+            level=4,
         ),
         TableRow(
             cells=[
@@ -4043,16 +4241,24 @@ PROTOCOL_SOA_TABLE = TableWithFootnotes(
                         Ref(type="ActivityGroup", uid="ActivityGroup_000017"),
                     ],
                 ),
-                TableCell(text="X"),
-                TableCell(text="X"),
+                TableCell(
+                    text="X",
+                ),
+                TableCell(
+                    text="X",
+                ),
                 TableCell(),
                 TableCell(),
                 TableCell(),
                 TableCell(),
                 TableCell(),
-                TableCell(text="X"),
+                TableCell(
+                    text="X",
+                ),
             ],
             hide=False,
+            order=3,
+            level=2,
         ),
         TableRow(
             cells=[
@@ -4077,6 +4283,8 @@ PROTOCOL_SOA_TABLE = TableWithFootnotes(
                 TableCell(),
             ],
             hide=True,
+            order=1,
+            level=3,
         ),
         TableRow(
             cells=[
@@ -4125,6 +4333,8 @@ PROTOCOL_SOA_TABLE = TableWithFootnotes(
                 ),
             ],
             hide=True,
+            order=1,
+            level=4,
         ),
         TableRow(
             cells=[
@@ -4133,6 +4343,7 @@ PROTOCOL_SOA_TABLE = TableWithFootnotes(
                     style="group",
                     refs=[
                         Ref(type="StudyActivityGroup", uid="StudyActivityGroup_000036"),
+                        Ref(type="StudyActivityGroup", uid="StudyActivityGroup_000037"),
                         Ref(type="ActivityGroup", uid="ActivityGroup_000005"),
                     ],
                 ),
@@ -4146,6 +4357,8 @@ PROTOCOL_SOA_TABLE = TableWithFootnotes(
                 TableCell(),
             ],
             hide=True,
+            order=4,
+            level=2,
         ),
         TableRow(
             cells=[
@@ -4157,20 +4370,38 @@ PROTOCOL_SOA_TABLE = TableWithFootnotes(
                             type="StudyActivitySubGroup",
                             uid="StudyActivitySubGroup_000036",
                         ),
+                        Ref(
+                            type="StudyActivitySubGroup",
+                            uid="StudyActivitySubGroup_000037",
+                        ),
                         Ref(type="ActivitySubGroup", uid="ActivitySubGroup_000010"),
                     ],
                     footnotes=["b"],
                 ),
-                TableCell(text="X"),
-                TableCell(text="X", footnotes=None),
+                TableCell(
+                    text="X",
+                ),
+                TableCell(
+                    text="X",
+                ),
                 TableCell(),
-                TableCell(text="X", footnotes=None),
-                TableCell(text="X"),
-                TableCell(text="X", footnotes=None),
+                TableCell(
+                    text="X",
+                ),
+                TableCell(
+                    text="X",
+                ),
+                TableCell(
+                    text="X",
+                ),
                 TableCell(),
-                TableCell(text="X", footnotes=None),
+                TableCell(
+                    text="X",
+                ),
             ],
             hide=False,
+            order=1,
+            level=3,
         ),
         TableRow(
             cells=[
@@ -4211,6 +4442,8 @@ PROTOCOL_SOA_TABLE = TableWithFootnotes(
                 TableCell(),
             ],
             hide=True,
+            order=1,
+            level=4,
         ),
         TableRow(
             cells=[
@@ -4288,6 +4521,8 @@ PROTOCOL_SOA_TABLE = TableWithFootnotes(
                 ),
             ],
             hide=True,
+            order=2,
+            level=4,
         ),
         TableRow(
             cells=[
@@ -4300,16 +4535,24 @@ PROTOCOL_SOA_TABLE = TableWithFootnotes(
                     ],
                     footnotes=["b"],
                 ),
-                TableCell(text="X"),
+                TableCell(
+                    text="X",
+                ),
                 TableCell(),
-                TableCell(text="X"),
+                TableCell(
+                    text="X",
+                ),
                 TableCell(),
                 TableCell(),
                 TableCell(),
                 TableCell(),
-                TableCell(text="X"),
+                TableCell(
+                    text="X",
+                ),
             ],
             hide=False,
+            order=5,
+            level=2,
         ),
         TableRow(
             cells=[
@@ -4321,10 +4564,7 @@ PROTOCOL_SOA_TABLE = TableWithFootnotes(
                             type="StudyActivitySubGroup",
                             uid="StudyActivitySubGroup_000038",
                         ),
-                        Ref(
-                            type="ActivitySubGroup",
-                            uid="ActivitySubGroup_000021",
-                        ),
+                        Ref(type="ActivitySubGroup", uid="ActivitySubGroup_000021"),
                     ],
                     footnotes=["b", "d"],
                 ),
@@ -4338,6 +4578,8 @@ PROTOCOL_SOA_TABLE = TableWithFootnotes(
                 TableCell(),
             ],
             hide=True,
+            order=1,
+            level=3,
         ),
         TableRow(
             cells=[
@@ -4387,6 +4629,8 @@ PROTOCOL_SOA_TABLE = TableWithFootnotes(
                 ),
             ],
             hide=True,
+            order=1,
+            level=4,
         ),
         TableRow(
             cells=[
@@ -4395,10 +4639,9 @@ PROTOCOL_SOA_TABLE = TableWithFootnotes(
                     style="group",
                     refs=[
                         Ref(type="StudyActivityGroup", uid="StudyActivityGroup_000039"),
-                        Ref(
-                            type="ActivityGroup",
-                            uid="ActivityGroup_000006",
-                        ),
+                        Ref(type="StudyActivityGroup", uid="StudyActivityGroup_000040"),
+                        Ref(type="StudyActivityGroup", uid="StudyActivityGroup_000041"),
+                        Ref(type="ActivityGroup", uid="ActivityGroup_000006"),
                     ],
                 ),
                 TableCell(),
@@ -4411,6 +4654,8 @@ PROTOCOL_SOA_TABLE = TableWithFootnotes(
                 TableCell(),
             ],
             hide=False,
+            order=6,
+            level=2,
         ),
         TableRow(
             cells=[
@@ -4422,20 +4667,39 @@ PROTOCOL_SOA_TABLE = TableWithFootnotes(
                             type="StudyActivitySubGroup",
                             uid="StudyActivitySubGroup_000039",
                         ),
+                        Ref(
+                            type="StudyActivitySubGroup",
+                            uid="StudyActivitySubGroup_000040",
+                        ),
                         Ref(type="ActivitySubGroup", uid="ActivitySubGroup_000009"),
                     ],
-                    footnotes=None,
                 ),
-                TableCell(text="X", footnotes=None),
-                TableCell(text="X", footnotes=None),
-                TableCell(text="X"),
-                TableCell(text="X"),
-                TableCell(text="X"),
+                TableCell(
+                    text="X",
+                ),
+                TableCell(
+                    text="X",
+                ),
+                TableCell(
+                    text="X",
+                ),
+                TableCell(
+                    text="X",
+                ),
+                TableCell(
+                    text="X",
+                ),
                 TableCell(),
-                TableCell(text="X", footnotes=None),
-                TableCell(text="X"),
+                TableCell(
+                    text="X",
+                ),
+                TableCell(
+                    text="X",
+                ),
             ],
             hide=False,
+            order=1,
+            level=3,
         ),
         TableRow(
             cells=[
@@ -4513,6 +4777,8 @@ PROTOCOL_SOA_TABLE = TableWithFootnotes(
                 ),
             ],
             hide=True,
+            order=1,
+            level=4,
         ),
         TableRow(
             cells=[
@@ -4576,9 +4842,112 @@ PROTOCOL_SOA_TABLE = TableWithFootnotes(
                     ],
                     footnotes=["d"],
                 ),
-                TableCell(text="", ref=None, vertical=None),
+                TableCell(),
             ],
             hide=True,
+            order=2,
+            level=4,
+        ),
+        TableRow(
+            cells=[
+                TableCell(
+                    text="Informed Consent and Demography",
+                    style="subGroup",
+                    refs=[
+                        Ref(
+                            type="StudyActivitySubGroup",
+                            uid="StudyActivitySubGroup_000041",
+                        ),
+                        Ref(type="ActivitySubGroup", uid="ActivitySubGroup_000016"),
+                    ],
+                ),
+                TableCell(
+                    text="X",
+                ),
+                TableCell(
+                    text="X",
+                ),
+                TableCell(
+                    text="X",
+                ),
+                TableCell(
+                    text="X",
+                ),
+                TableCell(),
+                TableCell(),
+                TableCell(),
+                TableCell(),
+            ],
+            hide=False,
+            order=1,
+            level=3,
+        ),
+        TableRow(
+            cells=[
+                TableCell(
+                    text="Date of Birth",
+                    style="activity",
+                    refs=[
+                        Ref(type="StudyActivity", uid="StudyActivity_000041"),
+                        Ref(type="Activity", uid="Activity_000037"),
+                    ],
+                ),
+                TableCell(
+                    text="X",
+                    style="activitySchedule",
+                    refs=[
+                        Ref(
+                            type="StudyActivitySchedule",
+                            uid="StudyActivitySchedule_000140",
+                        )
+                    ],
+                ),
+                TableCell(
+                    text="X",
+                    style="activitySchedule",
+                    refs=[
+                        Ref(
+                            type="StudyActivitySchedule",
+                            uid="StudyActivitySchedule_000146",
+                        )
+                    ],
+                ),
+                TableCell(
+                    text="X",
+                    style="activitySchedule",
+                    refs=[
+                        Ref(
+                            type="StudyActivitySchedule",
+                            uid="StudyActivitySchedule_000186",
+                        )
+                    ],
+                ),
+                TableCell(
+                    text="X",
+                    style="activitySchedule",
+                    refs=[
+                        Ref(
+                            type="StudyActivitySchedule",
+                            uid="StudyActivitySchedule_000184",
+                        ),
+                        Ref(
+                            type="StudyActivitySchedule",
+                            uid="StudyActivitySchedule_000207",
+                        ),
+                        Ref(
+                            type="StudyActivitySchedule",
+                            uid="StudyActivitySchedule_000215",
+                        ),
+                    ],
+                ),
+                TableCell(),
+                TableCell(),
+                TableCell(),
+                TableCell(),
+            ],
+            hide=True,
+            order=2,
+            level=4,
         ),
     ],
     footnotes={
@@ -4606,12 +4975,15 @@ PROTOCOL_SOA_TABLE = TableWithFootnotes(
     num_header_rows=4,
     num_header_cols=1,
     title="Protocol Flowchart",
+    id=None,
 )
 PROTOCOL_SOA_TABLE_WITH_REF_PROPAGATION = TableWithFootnotes(
     rows=[
         TableRow(
             cells=[
-                TableCell(text="", style="header1"),
+                TableCell(
+                    style="header1",
+                ),
                 TableCell(
                     text="Screening",
                     style="header1",
@@ -4624,7 +4996,9 @@ PROTOCOL_SOA_TABLE_WITH_REF_PROPAGATION = TableWithFootnotes(
                     style="header1",
                     refs=[Ref(type="StudyEpoch", uid="StudyEpoch_000005")],
                 ),
-                TableCell(text="", span=0),
+                TableCell(
+                    span=0,
+                ),
                 TableCell(
                     text="Treatment 1",
                     style="header1",
@@ -4636,8 +5010,12 @@ PROTOCOL_SOA_TABLE_WITH_REF_PROPAGATION = TableWithFootnotes(
                     style="header1",
                     refs=[Ref(type="StudyEpoch", uid="StudyEpoch_000007")],
                 ),
-                TableCell(text="", span=0),
-                TableCell(text="", span=0),
+                TableCell(
+                    span=0,
+                ),
+                TableCell(
+                    span=0,
+                ),
                 TableCell(
                     text="Follow-up",
                     style="header1",
@@ -4645,10 +5023,15 @@ PROTOCOL_SOA_TABLE_WITH_REF_PROPAGATION = TableWithFootnotes(
                 ),
             ],
             hide=False,
+            order=None,
+            level=None,
         ),
         TableRow(
             cells=[
-                TableCell(text="Visit short name", style="header2"),
+                TableCell(
+                    text="Visit short name",
+                    style="header2",
+                ),
                 TableCell(
                     text="V1",
                     style="header2",
@@ -4697,34 +5080,94 @@ PROTOCOL_SOA_TABLE_WITH_REF_PROPAGATION = TableWithFootnotes(
                 ),
             ],
             hide=False,
+            order=None,
+            level=None,
         ),
         TableRow(
             cells=[
-                TableCell(text="Study day", style="header3"),
-                TableCell(text="-14", style="header3"),
-                TableCell(text="-3", style="header3"),
-                TableCell(text="-1", style="header3"),
-                TableCell(text="1-5", style="header3"),
-                TableCell(text="15", style="header3"),
-                TableCell(text="17", style="header3"),
-                TableCell(text="19", style="header3"),
-                TableCell(text="22", style="header3"),
+                TableCell(
+                    text="Study day",
+                    style="header3",
+                ),
+                TableCell(
+                    text="-14",
+                    style="header3",
+                ),
+                TableCell(
+                    text="-3",
+                    style="header3",
+                ),
+                TableCell(
+                    text="-1",
+                    style="header3",
+                ),
+                TableCell(
+                    text="1-5",
+                    style="header3",
+                ),
+                TableCell(
+                    text="15",
+                    style="header3",
+                ),
+                TableCell(
+                    text="17",
+                    style="header3",
+                ),
+                TableCell(
+                    text="19",
+                    style="header3",
+                ),
+                TableCell(
+                    text="22",
+                    style="header3",
+                ),
             ],
             hide=False,
+            order=None,
+            level=None,
         ),
         TableRow(
             cells=[
-                TableCell(text="Visit window (days)", style="header4"),
-                TableCell(text="0", style="header4"),
-                TableCell(text="0", style="header4"),
-                TableCell(text="0", style="header4"),
-                TableCell(text="0", style="header4"),
-                TableCell(text="0", style="header4"),
-                TableCell(text="0", style="header4"),
-                TableCell(text="0", style="header4"),
-                TableCell(text="0", style="header4"),
+                TableCell(
+                    text="Visit window (days)",
+                    style="header4",
+                ),
+                TableCell(
+                    text="0",
+                    style="header4",
+                ),
+                TableCell(
+                    text="0",
+                    style="header4",
+                ),
+                TableCell(
+                    text="0",
+                    style="header4",
+                ),
+                TableCell(
+                    text="0",
+                    style="header4",
+                ),
+                TableCell(
+                    text="0",
+                    style="header4",
+                ),
+                TableCell(
+                    text="0",
+                    style="header4",
+                ),
+                TableCell(
+                    text="0",
+                    style="header4",
+                ),
+                TableCell(
+                    text="0",
+                    style="header4",
+                ),
             ],
             hide=False,
+            order=None,
+            level=None,
         ),
         TableRow(
             cells=[
@@ -4746,6 +5189,8 @@ PROTOCOL_SOA_TABLE_WITH_REF_PROPAGATION = TableWithFootnotes(
                 TableCell(),
             ],
             hide=False,
+            order=1,
+            level=1,
         ),
         TableRow(
             cells=[
@@ -4767,6 +5212,8 @@ PROTOCOL_SOA_TABLE_WITH_REF_PROPAGATION = TableWithFootnotes(
                 TableCell(),
             ],
             hide=False,
+            order=1,
+            level=2,
         ),
         TableRow(
             cells=[
@@ -4781,56 +5228,18 @@ PROTOCOL_SOA_TABLE_WITH_REF_PROPAGATION = TableWithFootnotes(
                         Ref(type="ActivitySubGroup", uid="ActivitySubGroup_000016"),
                     ],
                 ),
-                TableCell(
-                    text="X",
-                    refs=[
-                        Ref(
-                            type="StudyActivitySchedule",
-                            uid="StudyActivitySchedule_000140",
-                        )
-                    ],
-                ),
-                TableCell(
-                    text="X",
-                    refs=[
-                        Ref(
-                            type="StudyActivitySchedule",
-                            uid="StudyActivitySchedule_000146",
-                        )
-                    ],
-                ),
-                TableCell(
-                    text="X",
-                    refs=[
-                        Ref(
-                            type="StudyActivitySchedule",
-                            uid="StudyActivitySchedule_000186",
-                        )
-                    ],
-                ),
-                TableCell(
-                    text="X",
-                    refs=[
-                        Ref(
-                            type="StudyActivitySchedule",
-                            uid="StudyActivitySchedule_000184",
-                        ),
-                        Ref(
-                            type="StudyActivitySchedule",
-                            uid="StudyActivitySchedule_000207",
-                        ),
-                        Ref(
-                            type="StudyActivitySchedule",
-                            uid="StudyActivitySchedule_000215",
-                        ),
-                    ],
-                ),
+                TableCell(),
+                TableCell(),
+                TableCell(),
+                TableCell(),
                 TableCell(),
                 TableCell(),
                 TableCell(),
                 TableCell(),
             ],
             hide=False,
+            order=1,
+            level=3,
         ),
         TableRow(
             cells=[
@@ -4887,71 +5296,8 @@ PROTOCOL_SOA_TABLE_WITH_REF_PROPAGATION = TableWithFootnotes(
                 TableCell(),
             ],
             hide=False,
-        ),
-        TableRow(
-            cells=[
-                TableCell(
-                    text="Date of Birth",
-                    style="activity",
-                    refs=[
-                        Ref(type="StudyActivity", uid="StudyActivity_000041"),
-                        Ref(type="Activity", uid="Activity_000037"),
-                    ],
-                ),
-                TableCell(
-                    text="X",
-                    style="activitySchedule",
-                    refs=[
-                        Ref(
-                            type="StudyActivitySchedule",
-                            uid="StudyActivitySchedule_000140",
-                        )
-                    ],
-                ),
-                TableCell(
-                    text="X",
-                    style="activitySchedule",
-                    refs=[
-                        Ref(
-                            type="StudyActivitySchedule",
-                            uid="StudyActivitySchedule_000146",
-                        )
-                    ],
-                ),
-                TableCell(
-                    text="X",
-                    style="activitySchedule",
-                    refs=[
-                        Ref(
-                            type="StudyActivitySchedule",
-                            uid="StudyActivitySchedule_000186",
-                        )
-                    ],
-                ),
-                TableCell(
-                    text="X",
-                    style="activitySchedule",
-                    refs=[
-                        Ref(
-                            type="StudyActivitySchedule",
-                            uid="StudyActivitySchedule_000184",
-                        ),
-                        Ref(
-                            type="StudyActivitySchedule",
-                            uid="StudyActivitySchedule_000207",
-                        ),
-                        Ref(
-                            type="StudyActivitySchedule",
-                            uid="StudyActivitySchedule_000215",
-                        ),
-                    ],
-                ),
-                TableCell(),
-                TableCell(),
-                TableCell(),
-                TableCell(),
-            ],
-            hide=True,
+            order=1,
+            level=4,
         ),
         TableRow(
             cells=[
@@ -4973,6 +5319,8 @@ PROTOCOL_SOA_TABLE_WITH_REF_PROPAGATION = TableWithFootnotes(
                 TableCell(),
             ],
             hide=True,
+            order=2,
+            level=2,
         ),
         TableRow(
             cells=[
@@ -4997,6 +5345,8 @@ PROTOCOL_SOA_TABLE_WITH_REF_PROPAGATION = TableWithFootnotes(
                 TableCell(),
             ],
             hide=True,
+            order=1,
+            level=3,
         ),
         TableRow(
             cells=[
@@ -5027,6 +5377,8 @@ PROTOCOL_SOA_TABLE_WITH_REF_PROPAGATION = TableWithFootnotes(
                 TableCell(),
             ],
             hide=False,
+            order=1,
+            level=4,
         ),
         TableRow(
             cells=[
@@ -5072,6 +5424,8 @@ PROTOCOL_SOA_TABLE_WITH_REF_PROPAGATION = TableWithFootnotes(
                 ),
             ],
             hide=False,
+            order=3,
+            level=2,
         ),
         TableRow(
             cells=[
@@ -5096,6 +5450,8 @@ PROTOCOL_SOA_TABLE_WITH_REF_PROPAGATION = TableWithFootnotes(
                 TableCell(),
             ],
             hide=True,
+            order=1,
+            level=3,
         ),
         TableRow(
             cells=[
@@ -5144,6 +5500,8 @@ PROTOCOL_SOA_TABLE_WITH_REF_PROPAGATION = TableWithFootnotes(
                 ),
             ],
             hide=True,
+            order=1,
+            level=4,
         ),
         TableRow(
             cells=[
@@ -5152,6 +5510,7 @@ PROTOCOL_SOA_TABLE_WITH_REF_PROPAGATION = TableWithFootnotes(
                     style="group",
                     refs=[
                         Ref(type="StudyActivityGroup", uid="StudyActivityGroup_000036"),
+                        Ref(type="StudyActivityGroup", uid="StudyActivityGroup_000037"),
                         Ref(type="ActivityGroup", uid="ActivityGroup_000005"),
                     ],
                 ),
@@ -5165,6 +5524,8 @@ PROTOCOL_SOA_TABLE_WITH_REF_PROPAGATION = TableWithFootnotes(
                 TableCell(),
             ],
             hide=True,
+            order=4,
+            level=2,
         ),
         TableRow(
             cells=[
@@ -5175,6 +5536,10 @@ PROTOCOL_SOA_TABLE_WITH_REF_PROPAGATION = TableWithFootnotes(
                         Ref(
                             type="StudyActivitySubGroup",
                             uid="StudyActivitySubGroup_000036",
+                        ),
+                        Ref(
+                            type="StudyActivitySubGroup",
+                            uid="StudyActivitySubGroup_000037",
                         ),
                         Ref(type="ActivitySubGroup", uid="ActivitySubGroup_000010"),
                     ],
@@ -5201,7 +5566,6 @@ PROTOCOL_SOA_TABLE_WITH_REF_PROPAGATION = TableWithFootnotes(
                             uid="StudyActivitySchedule_000175",
                         )
                     ],
-                    footnotes=None,
                 ),
                 TableCell(),
                 TableCell(
@@ -5220,7 +5584,6 @@ PROTOCOL_SOA_TABLE_WITH_REF_PROPAGATION = TableWithFootnotes(
                             uid="StudyActivitySchedule_000214",
                         ),
                     ],
-                    footnotes=None,
                 ),
                 TableCell(
                     text="X",
@@ -5239,7 +5602,6 @@ PROTOCOL_SOA_TABLE_WITH_REF_PROPAGATION = TableWithFootnotes(
                             uid="StudyActivitySchedule_000221",
                         )
                     ],
-                    footnotes=None,
                 ),
                 TableCell(),
                 TableCell(
@@ -5250,10 +5612,11 @@ PROTOCOL_SOA_TABLE_WITH_REF_PROPAGATION = TableWithFootnotes(
                             uid="StudyActivitySchedule_000144",
                         )
                     ],
-                    footnotes=None,
                 ),
             ],
             hide=False,
+            order=1,
+            level=3,
         ),
         TableRow(
             cells=[
@@ -5294,6 +5657,8 @@ PROTOCOL_SOA_TABLE_WITH_REF_PROPAGATION = TableWithFootnotes(
                 TableCell(),
             ],
             hide=True,
+            order=1,
+            level=4,
         ),
         TableRow(
             cells=[
@@ -5371,6 +5736,8 @@ PROTOCOL_SOA_TABLE_WITH_REF_PROPAGATION = TableWithFootnotes(
                 ),
             ],
             hide=True,
+            order=2,
+            level=4,
         ),
         TableRow(
             cells=[
@@ -5417,6 +5784,8 @@ PROTOCOL_SOA_TABLE_WITH_REF_PROPAGATION = TableWithFootnotes(
                 ),
             ],
             hide=False,
+            order=5,
+            level=2,
         ),
         TableRow(
             cells=[
@@ -5428,10 +5797,7 @@ PROTOCOL_SOA_TABLE_WITH_REF_PROPAGATION = TableWithFootnotes(
                             type="StudyActivitySubGroup",
                             uid="StudyActivitySubGroup_000038",
                         ),
-                        Ref(
-                            type="ActivitySubGroup",
-                            uid="ActivitySubGroup_000021",
-                        ),
+                        Ref(type="ActivitySubGroup", uid="ActivitySubGroup_000021"),
                     ],
                     footnotes=["b", "d"],
                 ),
@@ -5445,6 +5811,8 @@ PROTOCOL_SOA_TABLE_WITH_REF_PROPAGATION = TableWithFootnotes(
                 TableCell(),
             ],
             hide=True,
+            order=1,
+            level=3,
         ),
         TableRow(
             cells=[
@@ -5494,6 +5862,8 @@ PROTOCOL_SOA_TABLE_WITH_REF_PROPAGATION = TableWithFootnotes(
                 ),
             ],
             hide=True,
+            order=1,
+            level=4,
         ),
         TableRow(
             cells=[
@@ -5502,10 +5872,9 @@ PROTOCOL_SOA_TABLE_WITH_REF_PROPAGATION = TableWithFootnotes(
                     style="group",
                     refs=[
                         Ref(type="StudyActivityGroup", uid="StudyActivityGroup_000039"),
-                        Ref(
-                            type="ActivityGroup",
-                            uid="ActivityGroup_000006",
-                        ),
+                        Ref(type="StudyActivityGroup", uid="StudyActivityGroup_000040"),
+                        Ref(type="StudyActivityGroup", uid="StudyActivityGroup_000041"),
+                        Ref(type="ActivityGroup", uid="ActivityGroup_000006"),
                     ],
                 ),
                 TableCell(),
@@ -5518,6 +5887,8 @@ PROTOCOL_SOA_TABLE_WITH_REF_PROPAGATION = TableWithFootnotes(
                 TableCell(),
             ],
             hide=False,
+            order=6,
+            level=2,
         ),
         TableRow(
             cells=[
@@ -5529,9 +5900,12 @@ PROTOCOL_SOA_TABLE_WITH_REF_PROPAGATION = TableWithFootnotes(
                             type="StudyActivitySubGroup",
                             uid="StudyActivitySubGroup_000039",
                         ),
+                        Ref(
+                            type="StudyActivitySubGroup",
+                            uid="StudyActivitySubGroup_000040",
+                        ),
                         Ref(type="ActivitySubGroup", uid="ActivitySubGroup_000009"),
                     ],
-                    footnotes=None,
                 ),
                 TableCell(
                     text="X",
@@ -5545,7 +5919,6 @@ PROTOCOL_SOA_TABLE_WITH_REF_PROPAGATION = TableWithFootnotes(
                             uid="StudyActivitySchedule_000227",
                         ),
                     ],
-                    footnotes=None,
                 ),
                 TableCell(
                     text="X",
@@ -5555,7 +5928,6 @@ PROTOCOL_SOA_TABLE_WITH_REF_PROPAGATION = TableWithFootnotes(
                             uid="StudyActivitySchedule_000145",
                         )
                     ],
-                    footnotes=None,
                 ),
                 TableCell(
                     text="X",
@@ -5613,7 +5985,6 @@ PROTOCOL_SOA_TABLE_WITH_REF_PROPAGATION = TableWithFootnotes(
                             uid="StudyActivitySchedule_000235",
                         )
                     ],
-                    footnotes=None,
                 ),
                 TableCell(
                     text="X",
@@ -5626,6 +5997,8 @@ PROTOCOL_SOA_TABLE_WITH_REF_PROPAGATION = TableWithFootnotes(
                 ),
             ],
             hide=False,
+            order=1,
+            level=3,
         ),
         TableRow(
             cells=[
@@ -5703,6 +6076,8 @@ PROTOCOL_SOA_TABLE_WITH_REF_PROPAGATION = TableWithFootnotes(
                 ),
             ],
             hide=True,
+            order=1,
+            level=4,
         ),
         TableRow(
             cells=[
@@ -5766,9 +6141,144 @@ PROTOCOL_SOA_TABLE_WITH_REF_PROPAGATION = TableWithFootnotes(
                     ],
                     footnotes=["d"],
                 ),
-                TableCell(text="", ref=None, vertical=None),
+                TableCell(),
             ],
             hide=True,
+            order=2,
+            level=4,
+        ),
+        TableRow(
+            cells=[
+                TableCell(
+                    text="Informed Consent and Demography",
+                    style="subGroup",
+                    refs=[
+                        Ref(
+                            type="StudyActivitySubGroup",
+                            uid="StudyActivitySubGroup_000041",
+                        ),
+                        Ref(type="ActivitySubGroup", uid="ActivitySubGroup_000016"),
+                    ],
+                ),
+                TableCell(
+                    text="X",
+                    refs=[
+                        Ref(
+                            type="StudyActivitySchedule",
+                            uid="StudyActivitySchedule_000140",
+                        )
+                    ],
+                ),
+                TableCell(
+                    text="X",
+                    refs=[
+                        Ref(
+                            type="StudyActivitySchedule",
+                            uid="StudyActivitySchedule_000146",
+                        )
+                    ],
+                ),
+                TableCell(
+                    text="X",
+                    refs=[
+                        Ref(
+                            type="StudyActivitySchedule",
+                            uid="StudyActivitySchedule_000186",
+                        )
+                    ],
+                ),
+                TableCell(
+                    text="X",
+                    refs=[
+                        Ref(
+                            type="StudyActivitySchedule",
+                            uid="StudyActivitySchedule_000184",
+                        ),
+                        Ref(
+                            type="StudyActivitySchedule",
+                            uid="StudyActivitySchedule_000207",
+                        ),
+                        Ref(
+                            type="StudyActivitySchedule",
+                            uid="StudyActivitySchedule_000215",
+                        ),
+                    ],
+                ),
+                TableCell(),
+                TableCell(),
+                TableCell(),
+                TableCell(),
+            ],
+            hide=False,
+            order=1,
+            level=3,
+        ),
+        TableRow(
+            cells=[
+                TableCell(
+                    text="Date of Birth",
+                    style="activity",
+                    refs=[
+                        Ref(type="StudyActivity", uid="StudyActivity_000041"),
+                        Ref(type="Activity", uid="Activity_000037"),
+                    ],
+                ),
+                TableCell(
+                    text="X",
+                    style="activitySchedule",
+                    refs=[
+                        Ref(
+                            type="StudyActivitySchedule",
+                            uid="StudyActivitySchedule_000140",
+                        )
+                    ],
+                ),
+                TableCell(
+                    text="X",
+                    style="activitySchedule",
+                    refs=[
+                        Ref(
+                            type="StudyActivitySchedule",
+                            uid="StudyActivitySchedule_000146",
+                        )
+                    ],
+                ),
+                TableCell(
+                    text="X",
+                    style="activitySchedule",
+                    refs=[
+                        Ref(
+                            type="StudyActivitySchedule",
+                            uid="StudyActivitySchedule_000186",
+                        )
+                    ],
+                ),
+                TableCell(
+                    text="X",
+                    style="activitySchedule",
+                    refs=[
+                        Ref(
+                            type="StudyActivitySchedule",
+                            uid="StudyActivitySchedule_000184",
+                        ),
+                        Ref(
+                            type="StudyActivitySchedule",
+                            uid="StudyActivitySchedule_000207",
+                        ),
+                        Ref(
+                            type="StudyActivitySchedule",
+                            uid="StudyActivitySchedule_000215",
+                        ),
+                    ],
+                ),
+                TableCell(),
+                TableCell(),
+                TableCell(),
+                TableCell(),
+            ],
+            hide=True,
+            order=2,
+            level=4,
         ),
     ],
     footnotes={
@@ -5796,6 +6306,7 @@ PROTOCOL_SOA_TABLE_WITH_REF_PROPAGATION = TableWithFootnotes(
     num_header_rows=4,
     num_header_cols=1,
     title="Protocol Flowchart",
+    id=None,
 )
 ADD_PROTOCOL_SECTION_COLUMN_CASE1 = (
     TableWithFootnotes(

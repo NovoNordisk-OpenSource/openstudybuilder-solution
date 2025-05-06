@@ -13,7 +13,7 @@ class TemplateParameter(BaseModel):
         str | None,
         Field(
             description="The name of the template parameter. E.g. 'Intervention', 'Indication', 'Activity', ...",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ]
 
@@ -24,8 +24,8 @@ class TemplateParameter(BaseModel):
 
 
 class ComplexTemplateParameter(BaseModel):
-    name: str | None
-    format: str | None
+    name: str | None = None
+    format: str | None = None
     parameters: Annotated[list[TemplateParameter], Field()] = []
     terms: Annotated[
         list[TemplateParameterTerm],

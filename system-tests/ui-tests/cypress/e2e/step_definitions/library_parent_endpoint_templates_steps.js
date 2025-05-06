@@ -1,119 +1,64 @@
 const { Given, When, Then } = require('@badeball/cypress-cucumber-preprocessor')
 
-let defaultEndpointName
-let newEndpointName2 = Date.now() + 10
-let newEndpointNameUpdated = Date.now() + 'Updated'
-let randomParamEndpointTemplate = 'Test [Activity] and [Event] template' + Date.now() + 15
-let indicationSelected
-let endpointCatSelected
-let endpointSubCatSelected
-let parameterSelected
-let newVersion
-let rowIndex
+let defaultEndpointName, apiEndpointName, endpointSequenceNumber
+let indicationSelected, categorySelected, subCategorySelected
 
-Given('The endpoint template exists with a status as {string}', (status) => {
-  cy.getRowIndexByText(status).then(index => {
-    rowIndex = index
-    cy.getValueFromCellsWithIndex(rowIndex, 5).then((curVersion) => newVersion = parseFloat(curVersion))
-  })
+When('The endpoint template is found', () => cy.searchFor(apiEndpointName))
+
+When('The endpoint template is not created', () => cy.confirmItemNotAvailable(defaultEndpointName))
+
+When('The endpoint template is not updated', () => cy.confirmItemNotAvailable(defaultEndpointName))
+
+Then('The endpoint template name is displayed in the table', () => cy.checkRowByIndex(0, 'Parent template', defaultEndpointName))
+
+When('The latest endpoint sequence number is saved', () => cy.getCellValue(0, 'Sequence number').then(text => endpointSequenceNumber = Number(text.replace('E', ''))))
+
+Then('Endpoint sequence number is incremented', () => cy.getCellValue(0, 'Sequence number').then(text => expect(Number(text.replace('E', ''))).greaterThan(endpointSequenceNumber)))
+
+Then('The endpoint template name is checked and user goes to indexes', () => {
+  cy.get('[data-cy="template-text-field"] [id="editor"]').invoke('text').then(text => cy.wrap(text).should('equal', defaultEndpointName))
+  cy.contains('.v-stepper-item', 'Index template').click()
 })
 
 When('The new endpoint is added in the library', () => {
-  defaultEndpointName = Date.now() + 5
-  cy.clickButton('add-template')
-  cy.fillTextArea('template-text-field', defaultEndpointName)
-  cy.clickFormActionButton('continue')
-  cy.clickFormActionButton('continue')
-  cy.selectFirstMultipleSelect('template-indication-dropdown')
-  cy.get('[data-cy="template-indication-dropdown"] > .v-input__control > .v-field > .v-field__field > .v-field__input > .v-autocomplete__selection > .v-autocomplete__selection-text')
-    .invoke('text')
-    .then((text) => {
-      indicationSelected = text
-    })
-  cy.selectFirstMultipleSelect('template-endpoint-category')
-  cy.get('[data-cy="template-endpoint-category"] > .v-input__control > .v-field > .v-field__field > .v-field__input > .v-autocomplete__selection > .v-autocomplete__selection-text')
-    .invoke('text')
-    .then((text) => {
-      endpointCatSelected = text
-    })
-  cy.selectFirstMultipleSelect('template-endpoint-sub-category')
-  cy.get('[data-cy="template-endpoint-sub-category"] > .v-input__control > .v-field > .v-field__field > .v-field__input > .v-autocomplete__selection > .v-autocomplete__selection-text')
-    .invoke('text')
-    .then((text) => {
-      endpointSubCatSelected = text
-    })
+  defaultEndpointName = `Endpoint${Date.now()}`
+  fillTemplateData(defaultEndpointName)
+})
 
-    cy.clickFormActionButton('save')
+When('The endpoint template form is filled with data', () => {
+  defaultEndpointName = `Endpoint${Date.now()}`
+  fillTemplateDataWithNoApplicableIndexes(defaultEndpointName)
+})
+
+When('The endpoint template edition form is filled with data', () => {
+  defaultEndpointName = `CancelEdit${Date.now()}`
+  fillTemplateDataWithNoApplicableIndexes(defaultEndpointName, false)
+  cy.clickFormActionButton('continue')
 })
 
 When('The second endpoint is added with the same template text', () => {
-  cy.wait(1500)
-  cy.clickButton('add-template')
-  cy.fillTextArea('template-text-field', defaultEndpointName)
-  cy.clickFormActionButton('continue')
-  cy.clickFormActionButton('continue')
-  cy.checkAllCheckboxes()
-
+  fillTemplateDataWithNoApplicableIndexes(apiEndpointName)
   cy.clickFormActionButton('save')
-})
-
-Then('The new Endpoint is visible in the Endpoint Templates Table', () => {
-  cy.checkRowValueByColumnName(defaultEndpointName, 'Parent template', defaultEndpointName)
-  cy.checkRowValueByColumnName(defaultEndpointName, 'Status', 'Draft')
-  cy.checkRowValueByColumnName(defaultEndpointName, 'Version', '0.1')
-})
-
-Then('The validation appears for Template Text field', () => {
-  cy.elementContain('form-body', 'This field is required')
 })
 
 When('The new Endpoint is added in the library with not applicable for indexes', () => {
-  cy.clickButton('add-template')
-  cy.fillTextArea('template-text-field', newEndpointName2)
-  cy.clickFormActionButton('continue')
-  cy.clickFormActionButton('continue')
-  cy.checkAllCheckboxes()
-  cy.clickFormActionButton('save')
+  defaultEndpointName = `Endpoint${Date.now()}`
+  fillTemplateDataWithNoApplicableIndexes(defaultEndpointName)
+  saveAndSearch(defaultEndpointName)
 })
 
-Then('The new Endpoint is visible with Not Applicable indexes in the Endpoint Templates Table', () => {
-  cy.checkRowValueByColumnName(newEndpointName2, 'Parent template', newEndpointName2)
-  cy.checkRowValueByColumnName(newEndpointName2, 'Status', 'Draft')
-  cy.checkRowValueByColumnName(newEndpointName2, 'Version', '0.1')
-})
-
-When('The {string} action is clicked for the endpoint', (action) => {
-  cy.tableRowActions(rowIndex, action)
-})
-
-When('The {string} action is clicked for the created endpoint with parameters', (action) => {
-  cy.rowActionsByValue(randomParamEndpointTemplate, action)
-})
-
-When('The {string} action is clicked for the created endpoint', (action) => {
-  cy.waitForTable()
-  cy.wait(1000)
-  cy.rowActionsByValue(defaultEndpointName, action)
+Then('The template has not applicable selected for all indexes', () => {
+  cy.contains('.v-stepper-item', 'Index template').click()
+  cy.get('.v-sheet .v-window [type="checkbox"]').each(checkbox => cy.wrap(checkbox).should('be.checked'))
 })
 
 When('The endpoint metadata is updated', () => {
-  cy.wait(1500)
-  cy.fillTextArea('template-text-field', newEndpointNameUpdated)
-  cy.clickFormActionButton('continue')
-  cy.clickFormActionButton('continue')
-  cy.selectLastMultipleSelect('template-indication-dropdown')
-  cy.get('[data-cy="not-applicable-checkbox"] input').eq(1).click()
-  cy.selectLastMultipleSelect('template-endpoint-sub-category')
+  defaultEndpointName = `Update${Date.now()}`
+  startTemplateCreation(defaultEndpointName, false)
+  changeIndexes(true)
   cy.clickFormActionButton('continue')
   cy.fillInput('template-change-description', 'updated for test')
-  cy.clickFormActionButton('save')
-})
-
-Then('The updated Endpoint is visible within the table', () => {
-  cy.wait(1500)
-  cy.checkRowValueByColumnName(newEndpointNameUpdated, 'Parent template', newEndpointNameUpdated)
-  cy.checkRowValueByColumnName(newEndpointNameUpdated, 'Status', 'Draft')
-  cy.checkRowValueByColumnName(newEndpointNameUpdated, 'Version', '0.2')
+  saveAndSearch(defaultEndpointName, 'Endpoint template updated')
 })
 
 When('The new Endpoint template is added without template text', () => {
@@ -121,116 +66,109 @@ When('The new Endpoint template is added without template text', () => {
   cy.clickFormActionButton('continue')
 })
 
-When('The new Endpoint template is added without Indication or Disorder', () => {
-  cy.clickButton('add-template')
-  cy.fillTextArea('template-text-field', newEndpointNameUpdated)
-  cy.clickFormActionButton('continue')
-  cy.clickFormActionButton('continue')
-  cy.selectLastMultipleSelect('template-endpoint-category')
-  cy.selectFirstMultipleSelect('template-endpoint-sub-category')
-  cy.clickFormActionButton('save')
-})
+When('The new Endpoint template is added without Indication or Disorder', () => fillTemplateIndexesIncorrectly(false))
 
-When('The new Endpoint template is added without Endpoint Category', () => {
-  cy.clickButton('add-template')
-  cy.fillTextArea('template-text-field', newEndpointNameUpdated)
-  cy.clickFormActionButton('continue')
-  cy.clickFormActionButton('continue')
-  cy.selectFirstMultipleSelect('template-indication-dropdown')
-  cy.selectFirstMultipleSelect('template-endpoint-sub-category')
-  cy.clickFormActionButton('save')
-})
+When('The new Endpoint template is added without Endpoint Category', () => fillTemplateIndexesIncorrectly(true, false))
 
-When('The new Endpoint template is added without Endpoint Subcategory', () => {
-  cy.clickButton('add-template')
-  cy.fillTextArea('template-text-field', newEndpointNameUpdated)
-  cy.clickFormActionButton('continue')
-  cy.clickFormActionButton('continue')
-  cy.selectFirstMultipleSelect('template-indication-dropdown')
-  cy.selectLastMultipleSelect('template-endpoint-category')
-  cy.clickFormActionButton('save')
-})
+When('The new Endpoint template is added without Endpoint Subcategory', () => fillTemplateIndexesIncorrectly(true, true, false))
 
-Then('The validation appears for Endpoint Category field', () => {
-  cy.elementContain('template-endpoint-category', 'This field is required').should('be.visible')
-})
+Then('The validation appears for Endpoint Category field', () => cy.checkIfValidationAppears('template-endpoint-category'))
 
-Then('The validation appears for Endpoint Subcategory field', () => {
-  cy.elementContain('template-endpoint-sub-category', 'This field is required').should('be.visible')
-})
+Then('The validation appears for Endpoint Subcategory field', () => cy.checkIfValidationAppears('template-endpoint-sub-category'))
 
-When('The new Endpoint text is created with a parameters', () => {
-  cy.clickButton('add-template')
-  cy.fillTextArea('template-text-field', randomParamEndpointTemplate)
-  cy.clickFormActionButton('continue')
-  cy.clickFormActionButton('continue')
-  cy.selectFirstMultipleSelect('template-indication-dropdown')
-  cy.selectFirstMultipleSelect('template-endpoint-category')
-  cy.clickFormActionButton('save')
-})
-
-Then('The status of the template displayed as Final with a version rounded up to 1.0', () => {
-  cy.checkRowValueByColumnName(defaultEndpointName, 'Status', 'Final')
-  cy.checkRowValueByColumnName(defaultEndpointName, 'Version', '1.0')
-})
-
-When('The created endpoint template is edited without change description provided', () => {
-  cy.fillTextArea('template-text-field', 'testDescriptionUpdate')
-  cy.clickFormActionButton('continue')
-  cy.clickFormActionButton('continue')
-  cy.selectLastMultipleSelect('template-indication-dropdown')
-  cy.selectLastMultipleSelect('template-endpoint-category')
-  cy.clickFormActionButton('continue')
-  cy.clearField("template-change-description")
-  cy.clickFormActionButton('save')
-})
-
-Then('The validation appears for endpoint change description field', () => {
-  cy.contains('.v-messages__message', 'This field is required').should('be.visible')
-})
-
-Then('The endpoint is no longer available', () => {
-  cy.wait(500)
-  cy.contains(defaultEndpointName).should('not.exist')
-})
+Then('The endpoint is no longer available', () => cy.confirmItemNotAvailable(apiEndpointName))
 
 When('The indexing is updated for the Endpoint Template', () => {
-  cy.selectLastMultipleSelect('template-indication-dropdown')
-  cy.selectLastMultipleSelect('template-endpoint-category')
-  cy.get('[data-cy="template-indication-dropdown"] > .v-input__control > .v-field > .v-field__field > .v-field__input >')
-    .invoke('text')
-    .then((text) => {
-      indicationSelected = text
-    })
-    cy.get('[data-cy="template-endpoint-category"] > .v-input__control > .v-field > .v-field__field > .v-field__input >')
-    .invoke('text')
-    .then((text) => {
-      endpointCatSelected = text
-    })
-    cy.clickFormActionButton('save')
+  changeIndexes(false)
+  saveAndSearch(apiEndpointName, 'Indexing properties updated')
 })
+
+When('The endpoint indexes edition is initiated', () => {
+  changeIndex('template-indication-dropdown', true)
+  cy.getText('[data-cy="template-indication-dropdown"] [class$="selection-text"]').then(text => indicationSelected = text)
+})
+
+When('The endpoint indexes are not updated', () => cy.get('[data-cy="form-body"]').should('not.contain', indicationSelected))
 
 Then('The indexes in endpoint template are updated', () => {
   const indications = indicationSelected.split(',')
-  const endpoints = endpointCatSelected.split(',')
-  indications.forEach(indication => cy.get('[data-cy="form-body"]').should('contain', indication.trim()));
-  endpoints.forEach(endpoint => cy.get('[data-cy="form-body"]').should('contain', endpoint.trim()));
+  const cateogories = categorySelected.split(',')
+  const subCateogories = subCategorySelected.split(',')
+  indications.forEach(indication => cy.get('[data-cy="form-body"]').should('contain', indication.trim()))
+  cateogories.forEach(category => cy.get('[data-cy="form-body"]').should('contain', category.trim()))
+  subCateogories.forEach(subgategory => cy.get('[data-cy="form-body"]').should('contain', subgategory.trim()))
 })
 
-Then('The endpoint template is updated to draft with version incremented by 0.1', () => {
-  cy.wait(4000)
-  cy.checkRowByIndex(rowIndex, 'Status', 'Draft')
-  cy.checkRowByIndex(rowIndex, 'Version', newVersion + 0.1)
+When('[API] Endpoint template is inactivated', () => cy.inactivateEndpoint())
+
+When('[API] Approve endpoint template', () => cy.approveEndpoint())
+
+When('[API] Create endpoint template', () => {
+  createEndpointViaApi()
+  cy.getEndpointName().then(name => apiEndpointName = name.replace('<p>', '').replace('</p>', '').trim())
 })
 
-Then('The endpoint template is displayed with a status as Retired with the same version as before', () => {
-  cy.wait(4000)
-  cy.checkRowByIndex(rowIndex, 'Status', 'Retired')
-  cy.checkRowByIndex(rowIndex, 'Version', newVersion)
+When('[API] Search Test - Create first endpoint template', () => {
+  apiEndpointName = `SearchTest${Date.now()}`
+  createEndpointViaApi(apiEndpointName)
 })
 
-Then('The endpoint template is displayed with a status as Final with the same version as before', () => {
-  cy.wait(4000)
-  cy.checkRowByIndex(rowIndex, 'Status', 'Final')
-  cy.checkRowByIndex(rowIndex, 'Version', newVersion)
-})
+When('[API] Search Test - Create second endpoint template', () => createEndpointViaApi(`SearchTest${Date.now()}`))
+
+function fillTemplateData(name) {
+  startTemplateCreation(name)
+  fillIndexingData()
+  saveAndSearch(name)
+}
+
+function fillTemplateDataWithNoApplicableIndexes(name, clickAddButton = true) {
+  startTemplateCreation(name, clickAddButton)
+  cy.checkAllCheckboxes()
+}
+
+function fillTemplateIndexesIncorrectly(addIndication = true, addEndpointCategory = true, addEndpointSubCategory = true) {
+  startTemplateCreation('test')
+  fillIndexingData(addIndication, addEndpointCategory, addEndpointSubCategory)
+  cy.clickFormActionButton('save')
+}
+
+function fillIndexingData(addIndication = true, addEndpointCategory = true, addEndpointSubCategory = true) {
+  if (addIndication) cy.selectFirstMultipleSelect(`template-indication-dropdown`)
+  if (addEndpointCategory) cy.selectFirstMultipleSelect(`template-endpoint-category`)
+  if (addEndpointSubCategory) cy.selectFirstMultipleSelect('template-endpoint-sub-category')
+}
+
+function startTemplateCreation(name, clickAddButton = true) {
+  if (clickAddButton) cy.clickButton('add-template')
+  cy.fillTextArea('template-text-field', name)
+  cy.clickFormActionButton('continue')
+  cy.clickFormActionButton('continue')
+}
+
+function saveAndSearch(name, action = 'add') {
+  let message = action === 'add' ? 'Endpoint template added' : action
+  cy.clickFormActionButton('save')
+  cy.checkSnackbarMessage(message)
+  cy.searchFor(name)
+}
+
+function changeIndexes(clear) {
+  changeIndex('template-indication-dropdown', clear)
+  changeIndex('template-endpoint-category', clear)
+  changeIndex('template-endpoint-sub-category', clear)
+  cy.getText('[data-cy="template-indication-dropdown"] [class$="selection-text"]').then(text => indicationSelected = text)
+  cy.getText('[data-cy="template-endpoint-category"] [class$="selection-text"]').then(text => categorySelected = text)
+  cy.getText('[data-cy="template-endpoint-sub-category"] [class$="selection-text"]').then(text => subCategorySelected = text)
+}
+
+function changeIndex(indexLocator, clear) {
+  if (clear) cy.clearField(indexLocator)
+  cy.selectLastMultipleSelect(indexLocator)
+}
+
+function createEndpointViaApi(customName = '') {
+  cy.getInidicationUid()
+  cy.getEndpointCategoryUid()
+  cy.getEndpointSubCategoryUid()
+  cy.createEndpoint(customName)
+}

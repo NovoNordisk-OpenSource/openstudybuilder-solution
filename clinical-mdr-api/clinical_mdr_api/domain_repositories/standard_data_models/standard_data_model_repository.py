@@ -50,6 +50,9 @@ class StandardDataModelRepository(ABC):
         uid: str,
         **kwargs,
     ) -> BaseModel:
+        if not uid:
+            return None
+
         match_clause = self.generic_match_clause(
             versioning_relationship="LATEST", uid=uid
         )

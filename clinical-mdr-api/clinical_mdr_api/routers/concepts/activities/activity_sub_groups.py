@@ -4,15 +4,18 @@ from typing import Annotated, Any
 
 from fastapi import APIRouter, Body, Path, Query, Response, status
 from pydantic.types import Json
+from starlette.requests import Request
 
 from clinical_mdr_api.models.concepts.activities.activity_sub_group import (
     ActivitySubGroup,
     ActivitySubGroupCreateInput,
     ActivitySubGroupEditInput,
+    ActivitySubGroupOverview,
 )
 from clinical_mdr_api.models.utils import CustomPage
 from clinical_mdr_api.repositories._utils import FilterOperator
-from clinical_mdr_api.routers import _generic_descriptions
+from clinical_mdr_api.routers import _generic_descriptions, decorators
+from clinical_mdr_api.routers.responses import YAMLResponse
 from clinical_mdr_api.services.concepts.activities.activity_sub_group_service import (
     ActivitySubGroupService,
 )
@@ -45,8 +48,8 @@ Possible errors:
     response_model=CustomPage[ActivitySubGroup],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_activity_subgroups(
@@ -126,8 +129,8 @@ Possible errors:
     response_model=CustomPage[ActivitySubGroup],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_activity_subgroups_versions(
@@ -193,11 +196,11 @@ def get_activity_subgroups_versions(
     response_model=list[Any],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - Invalid field name specified",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_distinct_values_for_header(
@@ -271,8 +274,8 @@ Possible errors:
     response_model=ActivitySubGroup,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_activity(
@@ -303,11 +306,11 @@ Possible errors:
     response_model=list[ActivitySubGroup],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - The activity sub group with the specified 'activity_subgroup_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_versions(
@@ -315,6 +318,93 @@ def get_versions(
 ):
     activity_subgroup_service = ActivitySubGroupService()
     return activity_subgroup_service.get_version_history(uid=activity_subgroup_uid)
+
+
+@router.get(
+    "/activity-sub-groups/{activity_subgroup_uid}/overview",
+    dependencies=[rbac.LIBRARY_READ],
+    summary="Get detailed overview of a specific activity subgroup",
+    description="""
+Returns detailed description about activity subgroup including:
+- Activity Subgroup details
+- Linked Activities
+- Version history
+
+State before:
+- UID must exist
+
+State after:
+- No change
+
+Possible errors:
+- Invalid uid
+    """,
+    response_model=ActivitySubGroupOverview,
+    status_code=200,
+    responses={
+        404: _generic_descriptions.ERROR_404,
+    },
+)
+@decorators.allow_exports(
+    {
+        "defaults": ["activity_subgroup", "activities", "all_versions"],
+        "formats": ["application/x-yaml"],
+    }
+)
+# pylint: disable=unused-argument
+def get_activity_subgroup_overview(
+    request: Request,
+    activity_subgroup_uid: Annotated[str, ActivitySubGroupUID],
+    version: Annotated[
+        str | None,
+        Query(description="Select specific version, omit to view latest version"),
+    ] = None,
+):
+    if version == "":
+        version = None
+
+    service = ActivitySubGroupService()
+    return service.get_subgroup_overview(
+        subgroup_uid=activity_subgroup_uid, version=version
+    )
+
+
+@router.get(
+    "/activity-sub-groups/{activity_subgroup_uid}/overview.cosmos",
+    dependencies=[rbac.LIBRARY_READ],
+    summary="Get a COSMoS compatible representation of a specific activity subgroup",
+    description="""
+Returns detailed description about activity subgroup, including information about:
+ - Activity Subgroup details
+ - Linked activity groups
+ - Linked activities
+
+State before:
+ - An activity subgroup with uid must exist.
+
+State after:
+ - No change
+
+Possible errors:
+ - Invalid uid.
+ """,
+    responses={
+        403: _generic_descriptions.ERROR_403,
+        200: {"content": {"application/x-yaml": {}}},
+        404: _generic_descriptions.ERROR_404,
+    },
+)
+# pylint: disable=unused-argument
+def get_cosmos_activity_subgroup_overview(
+    request: Request,  # request is actually required by the YAMLResponse
+    activity_subgroup_uid: Annotated[str, ActivitySubGroupUID],
+):
+    activity_subgroup_service = ActivitySubGroupService()
+    return YAMLResponse(
+        activity_subgroup_service.get_cosmos_subgroup_overview(
+            subgroup_uid=activity_subgroup_uid
+        )
+    )
 
 
 @router.post(
@@ -344,6 +434,7 @@ Possible errors:
     response_model=ActivitySubGroup,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {
             "description": "Created - The activity sub group was successfully created."
         },
@@ -353,7 +444,6 @@ Possible errors:
             "- The library doesn't exist.\n"
             "- The library doesn't allow to add new items.\n",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def create(
@@ -388,6 +478,7 @@ Possible errors:
     response_model=ActivitySubGroup,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -400,7 +491,6 @@ Possible errors:
             "model": ErrorResponse,
             "description": "Not Found - The activity sub group with the specified 'activity_subgroup_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def edit(
@@ -434,6 +524,7 @@ Possible errors:
     response_model=ActivitySubGroup,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -446,7 +537,6 @@ Possible errors:
             "- The activity sub group is not in final status.\n"
             "- The activity sub group with the specified 'activity_subgroup_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def new_version(
@@ -480,6 +570,7 @@ Possible errors:
     response_model=ActivitySubGroup,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -491,7 +582,6 @@ Possible errors:
             "model": ErrorResponse,
             "description": "Not Found - The activity sub group with the specified 'activity_subgroup_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def approve(
@@ -525,6 +615,7 @@ Possible errors:
     response_model=ActivitySubGroup,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -535,7 +626,6 @@ Possible errors:
             "model": ErrorResponse,
             "description": "Not Found - The activity sub group with the specified 'activity_subgroup_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def inactivate(
@@ -569,6 +659,7 @@ Possible errors:
     response_model=ActivitySubGroup,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -579,7 +670,6 @@ Possible errors:
             "model": ErrorResponse,
             "description": "Not Found - The activity sub group with the specified 'activity_subgroup_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def reactivate(
@@ -611,6 +701,7 @@ Possible errors:
     response_model=None,
     status_code=204,
     responses={
+        403: _generic_descriptions.ERROR_403,
         204: {
             "description": "No Content - The activity sub group was successfully deleted."
         },
@@ -625,7 +716,6 @@ Possible errors:
             "model": ErrorResponse,
             "description": "Not Found - An activity sub group with the specified 'activity_subgroup_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def delete_activity_subgroup(

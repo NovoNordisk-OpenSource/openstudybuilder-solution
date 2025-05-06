@@ -133,7 +133,7 @@
               multiple
               chips
             >
-              <template v-slot:selection="{ attrs, selected }">
+              <template #selection="{ attrs, selected }">
                 <v-chip v-bind="attrs" :model-value="selected" />
               </template>
             </v-combobox>
@@ -182,6 +182,7 @@
             <v-textarea
               v-model="form.change_description"
               density="compact"
+              :rules="[formRules.required]"
               clearable
               auto-grow
               rows="1"
@@ -239,6 +240,10 @@ const helpItems = [
 ]
 const editing = ref(false)
 
+onMounted(() => {
+  activitiesStore.getGroupsAndSubgroups()
+})
+
 const title = computed(() => {
   return !_isEmpty(props.editedActivity)
     ? t('ActivityForms.edit_activity')
@@ -256,11 +261,14 @@ watch(
   }
 )
 
-watch(() => props.open, () => {
+watch(
+  () => props.open,
+  () => {
     if (props.open && _isEmpty(props.editedActivity)) {
       formStore.save(form.value)
     }
-})
+  }
+)
 
 onMounted(() => {
   if (!_isEmpty(props.editedActivity)) {
@@ -291,7 +299,7 @@ function initForm(value) {
     is_data_collected: value.is_data_collected,
     definition: value.definition,
     abbreviation: value.abbreviation,
-    change_description: '',
+    change_description: t('_global.work_in_progress'),
     library_name: value.library_name,
     activity_groupings: [{}],
   }
@@ -341,7 +349,9 @@ async function submit() {
       }
     )
   } else {
-    activities.update(props.editedActivity.uid, form.value, {}, 'activities').then(
+    activities
+      .update(props.editedActivity.uid, form.value, {}, 'activities')
+      .then(
         () => {
           eventBusEmit('notification', {
             msg: t('ActivityForms.activity_updated'),

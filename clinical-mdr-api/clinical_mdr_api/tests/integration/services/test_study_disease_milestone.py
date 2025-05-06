@@ -240,7 +240,7 @@ class TestStudyDiseaseMilestoneManagement(unittest.TestCase):
             study_uid=disease_milestone.study_uid,
         )
         previous_disease_milestone = disease_milestone_versions[1]
-        self.assertEqual(previous_disease_milestone.changes, {})
+        self.assertEqual(previous_disease_milestone.changes, [])
 
         # test all versions
         disease_milestone: StudyDiseaseMilestone = create_study_disease_milestone(
@@ -264,8 +264,8 @@ class TestStudyDiseaseMilestoneManagement(unittest.TestCase):
 
         previous_disease_milestone = disease_milestone_versions[1]
         previous_disease_milestone_2 = disease_milestone_versions[3]
-        self.assertEqual(previous_disease_milestone.changes, {})
-        self.assertEqual(previous_disease_milestone_2.changes, {})
+        self.assertEqual(previous_disease_milestone.changes, [])
+        self.assertEqual(previous_disease_milestone_2.changes, [])
 
     def test__delete_study_disease_milestone(self):
         disease_milestone_service = StudyDiseaseMilestoneService()

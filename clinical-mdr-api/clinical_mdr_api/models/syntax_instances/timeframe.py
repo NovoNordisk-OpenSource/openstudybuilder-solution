@@ -3,6 +3,7 @@ from typing import Annotated, Self
 
 from pydantic import Field
 
+from clinical_mdr_api.descriptions.general import CHANGES_FIELD_DESC
 from clinical_mdr_api.domains.syntax_instances.timeframe import TimeframeAR
 from clinical_mdr_api.models.libraries.library import Library
 from clinical_mdr_api.models.syntax_templates.template_parameter_multi_select_input import (
@@ -22,16 +23,26 @@ from clinical_mdr_api.utils import extract_parameters
 
 class Timeframe(BaseModel):
     uid: str
-    name: Annotated[str | None, Field(nullable=True)] = None
-    name_plain: Annotated[str | None, Field(nullable=True)] = None
+    name: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    name_plain: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
 
-    start_date: Annotated[datetime | None, Field(nullable=True)] = None
-    end_date: Annotated[datetime | None, Field(nullable=True)] = None
-    status: Annotated[str | None, Field(nullable=True)] = None
-    version: Annotated[str | None, Field(nullable=True)] = None
-    change_description: Annotated[str | None, Field(nullable=True)] = None
+    start_date: Annotated[
+        datetime | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    end_date: Annotated[
+        datetime | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    status: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    version: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    change_description: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
 
-    author_username: Annotated[str | None, Field(nullable=True)] = None
+    author_username: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
     possible_actions: Annotated[
         list[str],
         Field(
@@ -42,14 +53,16 @@ class Timeframe(BaseModel):
         ),
     ] = []
 
-    template: TimeframeTemplateNameUidLibrary | None
+    template: TimeframeTemplateNameUidLibrary | None = None
     parameter_terms: Annotated[
         list[MultiTemplateParameterTerm],
         Field(
             description="Holds the parameter terms that are used within the timeframe. The terms are ordered as they occur in the timeframe name.",
         ),
     ] = []
-    library: Annotated[Library | None, Field(nullable=True)] = None
+    library: Annotated[Library | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
     study_count: Annotated[
         int, Field(description="Count of studies referencing endpoint")
     ] = 0
@@ -133,15 +146,11 @@ class TimeframeVersion(Timeframe):
     """
 
     changes: Annotated[
-        dict[str, bool] | None,
+        list[str],
         Field(
-            description=(
-                "Denotes whether or not there was a change in a specific field/property compared to the previous version. "
-                "The field names in this object here refer to the field names of the timeframe (e.g. name, start_date, ..)."
-            ),
-            nullable=True,
+            description=CHANGES_FIELD_DESC,
         ),
-    ] = None
+    ] = []
 
 
 class TimeframeEditInput(PatchInputModel):

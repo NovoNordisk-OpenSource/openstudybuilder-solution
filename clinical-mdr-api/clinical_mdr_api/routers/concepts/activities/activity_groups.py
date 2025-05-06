@@ -10,10 +10,12 @@ from clinical_mdr_api.models.concepts.activities.activity_group import (
     ActivityGroup,
     ActivityGroupCreateInput,
     ActivityGroupEditInput,
+    ActivityGroupOverview,
 )
 from clinical_mdr_api.models.utils import CustomPage
 from clinical_mdr_api.repositories._utils import FilterOperator
 from clinical_mdr_api.routers import _generic_descriptions, decorators
+from clinical_mdr_api.routers.responses import YAMLResponse
 from clinical_mdr_api.services.concepts.activities.activity_group_service import (
     ActivityGroupService,
 )
@@ -49,8 +51,8 @@ Possible errors:
     response_model=CustomPage[ActivityGroup],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.allow_exports(
@@ -66,7 +68,7 @@ Possible errors:
 )
 # pylint: disable=unused-argument
 def get_activity_groups(
-    request: Request,  # request is actually required by the allow_exports decorator
+    _request: Request,
     library_name: Annotated[str | None, Query()] = None,
     sort_by: Annotated[
         Json | None, Query(description=_generic_descriptions.SORT_BY)
@@ -134,8 +136,8 @@ Possible errors:
     response_model=CustomPage[ActivityGroup],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.allow_exports(
@@ -202,11 +204,11 @@ def get_activity_groups_versions(
     response_model=list[Any],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - Invalid field name specified",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_distinct_values_for_header(
@@ -280,8 +282,8 @@ Possible errors:
     response_model=ActivityGroup,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_activity(activity_group_uid: Annotated[str, ActivityGroupUID]):
@@ -310,16 +312,99 @@ Possible errors:
     response_model=list[ActivityGroup],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - The activity group with the specified 'activity_group_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_versions(activity_group_uid: Annotated[str, ActivityGroupUID]):
     activity_group_service = ActivityGroupService()
     return activity_group_service.get_version_history(uid=activity_group_uid)
+
+
+@router.get(
+    "/activity-groups/{activity_group_uid}/overview",
+    dependencies=[rbac.LIBRARY_READ],
+    summary="Get detailed overview of a specific activity group",
+    description="""
+Returns detailed description about activity group including:
+- Activity Group details
+- Linked Subgroups
+- Version history
+
+State before:
+- UID must exist
+
+State after:
+- No change
+
+Possible errors:
+- Invalid uid
+    """,
+    response_model=ActivityGroupOverview,
+    status_code=200,
+    responses={
+        404: _generic_descriptions.ERROR_404,
+    },
+)
+@decorators.allow_exports(
+    {
+        "defaults": ["group", "subgroups", "all_versions"],
+        "formats": ["application/x-yaml"],
+    }
+)
+def get_activity_group_overview(
+    # pylint: disable=unused-argument
+    request: Request,  # request is actually required by the allow_exports decorator
+    activity_group_uid: Annotated[str, ActivityGroupUID],
+    version: Annotated[
+        str | None,
+        Query(description="Select specific version, omit to view latest version"),
+    ] = None,
+):
+    if version == "":
+        version = None
+
+    service = ActivityGroupService()
+    return service.get_group_overview(group_uid=activity_group_uid, version=version)
+
+
+@router.get(
+    "/activity-groups/{activity_group_uid}/overview.cosmos",
+    dependencies=[rbac.LIBRARY_READ],
+    summary="Get a COSMoS compatible representation of a specific activity group",
+    description="""
+Returns detailed description about activity group, including information about:
+ - Activity Group details
+ - Linked activity subgroups
+ - Linked activities
+
+State before:
+ - An activity group with uid must exist.
+
+State after:
+ - No change
+
+Possible errors:
+ - Invalid uid.
+ """,
+    responses={
+        403: _generic_descriptions.ERROR_403,
+        200: {"content": {"application/x-yaml": {}}},
+        404: _generic_descriptions.ERROR_404,
+    },
+)
+# pylint: disable=unused-argument
+def get_cosmos_activity_group_overview(
+    request: Request,
+    activity_group_uid: Annotated[str, ActivityGroupUID],
+):
+    activity_group_service = ActivityGroupService()
+    return YAMLResponse(
+        activity_group_service.get_cosmos_group_overview(group_uid=activity_group_uid)
+    )
 
 
 @router.post(
@@ -349,6 +434,7 @@ Possible errors:
     response_model=ActivityGroup,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {"description": "Created - The activity group was successfully created."},
         400: {
             "model": ErrorResponse,
@@ -357,7 +443,6 @@ Possible errors:
             "- The library doesn't allow to add new items.\n",
         },
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def create(
@@ -392,6 +477,7 @@ Possible errors:
     response_model=ActivityGroup,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -404,7 +490,6 @@ Possible errors:
             "model": ErrorResponse,
             "description": "Not Found - The activity group with the specified 'activity_group_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def edit(
@@ -438,6 +523,7 @@ Possible errors:
     response_model=ActivityGroup,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -450,7 +536,6 @@ Possible errors:
             "- The activity group is not in final status.\n"
             "- The activity group with the specified 'activity_group_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def create_new_version(activity_group_uid: Annotated[str, ActivityGroupUID]):
@@ -482,6 +567,7 @@ Possible errors:
     response_model=ActivityGroup,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -493,7 +579,6 @@ Possible errors:
             "model": ErrorResponse,
             "description": "Not Found - The activity group with the specified 'activity_group_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def approve(activity_group_uid: Annotated[str, ActivityGroupUID]):
@@ -525,6 +610,7 @@ Possible errors:
     response_model=ActivityGroup,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -535,7 +621,6 @@ Possible errors:
             "model": ErrorResponse,
             "description": "Not Found - The activity group with the specified 'activity_group_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def inactivate(activity_group_uid: Annotated[str, ActivityGroupUID]):
@@ -567,6 +652,7 @@ Possible errors:
     response_model=ActivityGroup,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -577,7 +663,6 @@ Possible errors:
             "model": ErrorResponse,
             "description": "Not Found - The activity group with the specified 'activity_group_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def reactivate(activity_group_uid: Annotated[str, ActivityGroupUID]):
@@ -607,6 +692,7 @@ Possible errors:
     response_model=None,
     status_code=204,
     responses={
+        403: _generic_descriptions.ERROR_403,
         204: {
             "description": "No Content - The activity group was successfully deleted."
         },
@@ -621,7 +707,6 @@ Possible errors:
             "model": ErrorResponse,
             "description": "Not Found - An activity group with the specified 'activity_group_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def delete_activity_group(activity_group_uid: Annotated[str, ActivityGroupUID]):

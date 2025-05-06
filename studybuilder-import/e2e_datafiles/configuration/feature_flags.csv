@@ -1,2 +1,3 @@
 name,enabled,description
 studies_view_listings_analysis_study_metadata_new,1,"This flag toggles on/off the whole subpage found at Studies/View Listings/Analysis Study Metadata (New)"
+new_activity_instance_wizard_stepper,1,"This flag toggles on/off the new wizard stepper to create/edit Activity Instances (Library/Concepts/Activities/Activity Instances)"

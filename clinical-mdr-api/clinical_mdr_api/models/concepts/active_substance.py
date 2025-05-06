@@ -2,6 +2,7 @@ from typing import Annotated, Callable, Self
 
 from pydantic import Field
 
+from clinical_mdr_api.descriptions.general import CHANGES_FIELD_DESC
 from clinical_mdr_api.domains.concepts.active_substance import ActiveSubstanceAR
 from clinical_mdr_api.domains.dictionaries.dictionary_term import DictionaryTermAR
 from clinical_mdr_api.domains.dictionaries.dictionary_term_substance import (
@@ -16,13 +17,23 @@ from clinical_mdr_api.models.utils import BaseModel, PatchInputModel, PostInputM
 class ActiveSubstance(VersionProperties):
     uid: str
 
-    analyte_number: Annotated[str | None, Field(nullable=True)] = None
-    short_number: Annotated[str | None, Field(nullable=True)] = None
-    long_number: Annotated[str | None, Field(nullable=True)] = None
-    inn: Annotated[str | None, Field(nullable=True)] = None
-    external_id: Annotated[str | None, Field(nullable=True)] = None
+    analyte_number: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    short_number: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
+    long_number: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
+    inn: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    external_id: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
     library_name: str
-    unii: Annotated[CompoundSubstance | None, Field(nullable=True)] = None
+    unii: Annotated[
+        CompoundSubstance | None, Field(json_schema_extra={"nullable": True})
+    ] = None
     possible_actions: Annotated[
         list[str],
         Field(
@@ -92,25 +103,31 @@ class ActiveSubstanceEditInput(PatchInputModel):
 
 class ActiveSubstanceVersion(ActiveSubstance):
     changes: Annotated[
-        dict[str, bool] | None,
+        list[str],
         Field(
-            description=(
-                "Denotes whether or not there was a change in a specific field/property compared to the previous version. "
-                "The field names in this object here refer to the field names of the objective (e.g. name, start_date, ..)."
-            ),
-            nullable=True,
+            description=CHANGES_FIELD_DESC,
         ),
-    ] = None
+    ] = []
 
 
 class SimpleActiveSubstance(BaseModel):
     uid: str
-    analyte_number: Annotated[str | None, Field(nullable=True)] = None
-    short_number: Annotated[str | None, Field(nullable=True)] = None
-    long_number: Annotated[str | None, Field(nullable=True)] = None
-    inn: Annotated[str | None, Field(nullable=True)] = None
-    external_id: Annotated[str | None, Field(nullable=True)] = None
-    unii: Annotated[CompoundSubstance | None, Field(nullable=True)] = None
+    analyte_number: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    short_number: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
+    long_number: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
+    inn: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    external_id: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
+    unii: Annotated[
+        CompoundSubstance | None, Field(json_schema_extra={"nullable": True})
+    ] = None
 
     @classmethod
     def from_concept_uid(

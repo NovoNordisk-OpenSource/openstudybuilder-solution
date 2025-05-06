@@ -27,8 +27,8 @@ service = NotificationService()
     response_model=list[Notification],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_all_notifications() -> list[Notification]:
@@ -42,8 +42,8 @@ def get_all_notifications() -> list[Notification]:
     response_model=Notification,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_serial_number_against_neo4j_max_and_min_int()
@@ -58,8 +58,8 @@ def get_notification(serial_number: Annotated[int, SN]) -> Notification:
     response_model=Notification,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def create_notification(
@@ -75,8 +75,8 @@ def create_notification(
     response_model=Notification,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_serial_number_against_neo4j_max_and_min_int()
@@ -93,8 +93,8 @@ def update_notification(
     summary="Deletes the notification identified by the provided Serial Number.",
     status_code=204,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_serial_number_against_neo4j_max_and_min_int()

@@ -1664,7 +1664,7 @@ def test_updating_an_existing_odm_form_with_relations(api_client):
         "sdtm_version": "0.1",
         "repeating": "Yes",
         "change_description": "repeating changed to Yes",
-        "scope": None,
+        "scope_uid": None,
         "descriptions": [
             {
                 "name": "string3",

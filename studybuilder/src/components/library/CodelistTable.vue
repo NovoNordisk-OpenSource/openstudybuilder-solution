@@ -53,10 +53,7 @@
         @update:search="updateTerms"
       >
         <template #item="{ props }">
-          <v-list-item
-            v-bind="props"
-            @click="props.onClick"
-          >
+          <v-list-item v-bind="props" @click="props.onClick">
             <template #prepend="{ isActive }">
               <v-list-item-action start>
                 <v-checkbox-btn :model-value="isActive" />
@@ -292,7 +289,9 @@ const termslabel = computed(() => {
   let label = ''
   let labelLength = selectedTerms.value.length === 1 ? 36 : 30
   if (selectedTerms.value[0].sponsor_preferred_name.length > 30) {
-    label = selectedTerms.value[0].sponsor_preferred_name.substring(0, labelLength) + '...'
+    label =
+      selectedTerms.value[0].sponsor_preferred_name.substring(0, labelLength) +
+      '...'
   } else {
     label = selectedTerms.value[0].sponsor_preferred_name
   }

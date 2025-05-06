@@ -23,13 +23,18 @@
       "neodash_studyaction_uid": "",
       "neodash_studyaction_uid_display": "",
       "neodash_action_id_number": "",
-      "neodash_start_date": "2023-12-01",
-      "neodash_end_date": "2025-01-26",
+      "neodash_start_date": "",
+      "neodash_end_date": "",
       "neodash_studyroot_uid": "",
-      "neodash_idaction": "",
+      "neodash_idaction_1": "",
+      "neodash_idaction_2": "",
       "neodash_action_id": "",
-      "neodash_user_username": "",
-      "neodash_user_username_display": ""
+      "neodash_user_username_1": "",
+      "neodash_user_username_2": "",
+      "neodash_user_username_1_display": "",
+      "neodash_study_min_date": "",
+      "neodash_study_max_date": "",
+      "neodash_user_username_2_display": ""
     },
     "theme": "light",
     "disableRowLimiting": false,
@@ -108,7 +113,8 @@
             "entityType": "User",
             "propertyType": "username",
             "propertyTypeDisplay": "username",
-            "parameterName": "neodash_user_username"
+            "parameterName": "neodash_user_username_1",
+            "id": "1"
           },
           "id": "52360e3d-4402-49f1-8254-68c63857b02d"
         },
@@ -152,7 +158,7 @@
         },
         {
           "title": "Actions Table",
-          "query": "//get root nodes\nWITH $neodash_user_username AS neodash_user_username,\n  CASE \n  WHEN $neodash_start_date <> \"\" \n    THEN \n    CASE \n      WHEN $neodash_start_date =~ \"\\d{4,}-\\d{2,}-\\d{2,}\" THEN Date($neodash_start_date)\n      ELSE Date(\"IS NOT A VALID DATE\")\n    END\n    ELSE \"2015-01-01\"\n  END AS neodash_start_date,\n  CASE \n  WHEN $neodash_end_date  <> \"\"  \n    THEN \n    CASE \n      WHEN $neodash_end_date =~ \"\\d{4,}-\\d{2,}-\\d{2,}\" THEN Date($neodash_end_date)\n      ELSE Date(\"IS NOT A VALID DATE\")\n    END\n    ELSE Date(datetime())+duration({days:1})\n  END AS neodash_end_date\n\nMATCH (user:User) \n  where user.username  = neodash_user_username or neodash_user_username = \"\"\n\n// TODO: remove latest final when hasversion/latestfinal issue is resolved in database\nMATCH (root)-[version:HAS_VERSION|LATEST|LATEST_FINAL|LATEST_DRAFT]->(component)\nWHERE \n  (toString(neodash_user_username) = '' or toString(version.author_id) = toString(user.oid)) AND\n  (date(version.start_date) >= date(neodash_start_date) ) AND\n  (date(version.start_date) <= date(neodash_end_date) )\n\n\n//INIT ROOT CODE  --------------------------------------------------------\n// TODO: remove latest final when hasversion/latestfinal issue is resolved in database\nOPTIONAL MATCH (component)<-[version]-(root)-[old_version:HAS_VERSION|LATEST|LATEST_FINAL|LATEST_DRAFT]->(old_component)\n  WHERE old_version.start_date < version.start_date\nWITH root, \ncomponent, \nversion, \nold_component, \nold_version\nORDER BY version.start_date, old_version.start_date DESC\nWITH DISTINCT root, component, version, collect(old_component) AS old_component_collected, collect(old_version) AS old_version_collected\nWITH root, \n  component, \n  version, \n  head(old_component_collected) AS prev_component, \n  head(old_version_collected) AS prev_version\nWITH version, \n  prev_version, \n  component, \n  prev_component,  \n  keys(component) AS properties, \n  keys(prev_component) AS prev_properties\nWITH version, prev_version, \n  component, \n  prev_component,  \n  CASE\n    WHEN prev_properties IS  NULL  \n    THEN properties\n    ELSE properties + prev_properties\n  END AS joint_properties\n// WITH joint_properties --> UNION property name between before and after component\n  UNWIND joint_properties AS unw_joint_properties\n// distinct property name\nWITH version, \n  prev_version, \n  component, \n  prev_component, \n  collect(DISTINCT unw_joint_properties) AS dis_joint_properties\n  UNWIND dis_joint_properties AS unw_dis_joint_properties\n// WITH version, component, before_component, unw_dis_joint_property --> ith property name, content_after --> the ith_property of the after node, content_before (same as content after)\nWITH version, \n  prev_version, \n  component, \n  prev_component,\n  component[unw_dis_joint_properties] AS after,  \n  prev_component[unw_dis_joint_properties] AS before\nWHERE after <> before \n  OR before IS NULL \n  OR after IS NULL \n  OR prev_version.status <> version.status \nWITH version,\n  prev_version,\n  component,\n  prev_component,\n  after,\n  before\n//END ROOT CODE ------------------------------------\n\n// CODE FOR EACH ACTION NODE \n// CREATE COLLECTION OF PROPERTIES AFTER/BEFORE TO DETECT IF IT WAS A CHANGE\nWITH \n  version,\n  prev_version,\n  component,\n  prev_component,\n  before As old_value,\n  CASE \n    WHEN before = after \n    THEN 'N/A'\n    ELSE after\n  END AS new_value,\n  CASE\n    WHEN before <> after OR (NOT before IS NULL AND after IS NULL) OR (before IS NULL AND NOT after is NULL) THEN TRUE\n    ELSE FALSE\n  END AS change_flag\nWITH \n  version,\n  prev_version,\n  component,\n  prev_component,\n  collect(change_flag) AS change_flag_collected\nWITH\n  apoc.date.format(DateTime(version.start_date).epochMillis, \"ms\", \"yyyy-MM-dd'T'HH:mm:ssz\") AS action_date,\n  version,\n  prev_version,\n  version.status AS value_status,\n  id(version) AS action_id,\n  id(component) AS component_id,\n  component,\n  prev_component,\n  CASE\n    WHEN prev_version.status <> version.status\n    THEN 'STATUS CHANGE'\n    WHEN prev_component IS NULL\n    THEN 'CREATE'\n    WHEN TRUE in change_flag_collected \n    THEN 'EDIT'\n    ELSE 'NO MATCH'\n  END AS action_type,\n  version AS action_labels,\n  labels(component) AS component_labels\n  ORDER BY version.start_date  DESC,\n  version.end_date DESC\noptional match (final_user:User) where final_user.oid = version.author_id\nRETURN \n  action_date AS `Timestamp`,\n  final_user.username AS `User`,\n  value_status AS `Status`,\n  toString(action_id) AS `Action ID`,\n  toString(component_id) AS `Component ID`,\n  action_type AS `Action Type`,\n  apoc.text.join(component_labels, ', ') AS `Component Labels`\n  ORDER BY version.start_date  DESC,\n  version.end_date DESC\nLIMIT 1000",
+          "query": "//get root nodes\nWITH $neodash_user_username_1 AS neodash_user_username,\n  CASE \n  WHEN $neodash_start_date <> \"\" \n    THEN \n    CASE \n      WHEN $neodash_start_date =~ \"\\d{4,}-\\d{2,}-\\d{2,}\" THEN Date($neodash_start_date)\n      ELSE Date(\"IS NOT A VALID DATE\")\n    END\n    ELSE \"2015-01-01\"\n  END AS neodash_start_date,\n  CASE \n  WHEN $neodash_end_date  <> \"\"  \n    THEN \n    CASE \n      WHEN $neodash_end_date =~ \"\\d{4,}-\\d{2,}-\\d{2,}\" THEN Date($neodash_end_date)\n      ELSE Date(\"IS NOT A VALID DATE\")\n    END\n    ELSE Date(datetime())+duration({days:1})\n  END AS neodash_end_date\n\nMATCH (user:User) \n  where user.username  = neodash_user_username or neodash_user_username = \"\"\n\n// TODO: remove latest final when hasversion/latestfinal issue is resolved in database\nMATCH (root)-[version:HAS_VERSION|LATEST|LATEST_FINAL|LATEST_DRAFT]->(component)\nWHERE \n  (toString(neodash_user_username) = '' or toString(version.author_id) = toString(user.oid)) AND\n  (date(version.start_date) >= date(neodash_start_date) ) AND\n  (date(version.start_date) <= date(neodash_end_date) )\n\n\n//INIT ROOT CODE  --------------------------------------------------------\n// TODO: remove latest final when hasversion/latestfinal issue is resolved in database\nOPTIONAL MATCH (component)<-[version]-(root)-[old_version:HAS_VERSION|LATEST|LATEST_FINAL|LATEST_DRAFT]->(old_component)\n  WHERE old_version.start_date < version.start_date\nWITH root, \ncomponent, \nversion, \nold_component, \nold_version\nORDER BY version.start_date, old_version.start_date DESC\nWITH DISTINCT root, component, version, collect(old_component) AS old_component_collected, collect(old_version) AS old_version_collected\nWITH root, \n  component, \n  version, \n  head(old_component_collected) AS prev_component, \n  head(old_version_collected) AS prev_version\nWITH version, \n  prev_version, \n  component, \n  prev_component,  \n  keys(component) AS properties, \n  keys(prev_component) AS prev_properties\nWITH version, prev_version, \n  component, \n  prev_component,  \n  CASE\n    WHEN prev_properties IS  NULL  \n    THEN properties\n    ELSE properties + prev_properties\n  END AS joint_properties\n// WITH joint_properties --> UNION property name between before and after component\n  UNWIND joint_properties AS unw_joint_properties\n// distinct property name\nWITH version, \n  prev_version, \n  component, \n  prev_component, \n  collect(DISTINCT unw_joint_properties) AS dis_joint_properties\n  UNWIND dis_joint_properties AS unw_dis_joint_properties\n// WITH version, component, before_component, unw_dis_joint_property --> ith property name, content_after --> the ith_property of the after node, content_before (same as content after)\nWITH version, \n  prev_version, \n  component, \n  prev_component,\n  component[unw_dis_joint_properties] AS after,  \n  prev_component[unw_dis_joint_properties] AS before\nWHERE after <> before \n  OR before IS NULL \n  OR after IS NULL \n  OR prev_version.status <> version.status \nWITH version,\n  prev_version,\n  component,\n  prev_component,\n  after,\n  before\n//END ROOT CODE ------------------------------------\n\n// CODE FOR EACH ACTION NODE \n// CREATE COLLECTION OF PROPERTIES AFTER/BEFORE TO DETECT IF IT WAS A CHANGE\nWITH \n  version,\n  prev_version,\n  component,\n  prev_component,\n  before As old_value,\n  CASE \n    WHEN before = after \n    THEN 'N/A'\n    ELSE after\n  END AS new_value,\n  CASE\n    WHEN before <> after OR (NOT before IS NULL AND after IS NULL) OR (before IS NULL AND NOT after is NULL) THEN TRUE\n    ELSE FALSE\n  END AS change_flag\nWITH \n  version,\n  prev_version,\n  component,\n  prev_component,\n  collect(change_flag) AS change_flag_collected\nWITH\n  apoc.date.format(DateTime(version.start_date).epochMillis, \"ms\", \"yyyy-MM-dd'T'HH:mm:ssz\") AS action_date,\n  version,\n  prev_version,\n  version.status AS value_status,\n  id(version) AS action_id,\n  id(component) AS component_id,\n  component,\n  prev_component,\n  CASE\n    WHEN prev_version.status <> version.status\n    THEN 'STATUS CHANGE'\n    WHEN prev_component IS NULL\n    THEN 'CREATE'\n    WHEN TRUE in change_flag_collected \n    THEN 'EDIT'\n    ELSE 'NO MATCH'\n  END AS action_type,\n  version AS action_labels,\n  labels(component) AS component_labels\n  ORDER BY version.start_date  DESC,\n  version.end_date DESC\noptional match (final_user:User) where final_user.oid = version.author_id\nRETURN \n  action_date AS `Timestamp`,\n  final_user.username AS `User`,\n  value_status AS `Status`,\n  toString(action_id) AS `Action ID`,\n  toString(component_id) AS `Component ID`,\n  action_type AS `Action Type`,\n  apoc.text.join(component_labels, ', ') AS `Component Labels`\n  ORDER BY version.start_date  DESC,\n  version.end_date DESC\nLIMIT 1000",
           "width": 24,
           "height": 4,
           "x": 0,
@@ -243,7 +249,7 @@
         },
         {
           "title": "Outbound Relationships per Action ID Table",
-          "query": "//get root nodes\nWITH $neodash_action_id AS specific_action_id,\n  $neodash_user_username AS neodash_user_username,\n  CASE \n  WHEN $neodash_start_date <> \"\" \n    THEN \n    CASE \n      WHEN $neodash_start_date =~ \"\\d{4,}-\\d{2,}-\\d{2,}\" THEN Date($neodash_start_date)\n      ELSE Date(\"IS NOT A VALID DATE\")\n    END\n    ELSE \"2015-01-01\"\n  END AS neodash_start_date,\n  CASE \n  WHEN $neodash_end_date  <> \"\"  \n    THEN \n    CASE \n      WHEN $neodash_end_date =~ \"\\d{4,}-\\d{2,}-\\d{2,}\" THEN Date($neodash_end_date)\n      ELSE Date(\"IS NOT A VALID DATE\")\n    END\n    ELSE Date(datetime())+duration({days:1})\n  END AS neodash_end_date\nOPTIONAL MATCH (user:User) \n  where user.username  = neodash_user_username \n// TODO: remove latest final when hasversion/latestfinal issue is resolved in database\nMATCH (root)-[version:HAS_VERSION|LATEST|LATEST_FINAL|LATEST_DRAFT]->(component)\nWHERE \n  (NOT specific_action_id = '') AND ( toStringOrNull(id(version)) = specific_action_id) AND\n  (toString(neodash_user_username) = '' or toString(version.author_id) = toString(user.oid)) AND\n  (date(version.start_date) >= date(neodash_start_date) ) AND\n  (date(version.start_date) <= date(neodash_end_date) )\n\n\n//INIT ROOT CODE  --------------------------------------------------------\n// TODO: remove latest final when hasversion/latestfinal issue is resolved in database\nOPTIONAL MATCH (component)<-[version]-(root)-[old_version:HAS_VERSION|LATEST|LATEST_FINAL|LATEST_DRAFT]->(old_component)\nWHERE old_version.start_date < version.start_date\nWITH root, \ncomponent, \nversion, \nold_component, \nold_version\nORDER BY version.start_date, old_version.start_date DESC\nWITH DISTINCT root, component, version, collect(old_component) AS old_component_collected, collect(old_version) AS old_version_collected\nWITH root, \n  component, \n  version, \n  head(old_component_collected) AS prev_component, \n  head(old_version_collected) AS prev_version\n  \n// MATCH FOR MATAINED REL WITH DIFFERENT VERSION NODES\nOPTIONAL MATCH (prev_component)-[m_p]-(m_ob_values)-[m_p2]-(component)\nWHERE m_ob_values <> root AND prev_component <> component\n// MATCH FOR MAINTAINED REL WITH SAME VERSION NODES\nOPTIONAL MATCH (m2_ob_values)-[m2_p2]-(component)\n  WHERE m2_ob_values <> root and prev_component = component\n// MATCH FOR DROPED REL WITH DIFFERENT VERSION NODES\noptional MATCH (d_ob_values)-[d_p]-(prev_component)--(root)--(component)\n  WHERE d_ob_values <> root AND (NOT exists((d_ob_values)--(component)))\n// MATCH FOR CREATE REL WITH DIFFERENT VERSION NODES\noptional MATCH (c_ob_values)-[c_p]-(component)--(root)\n  WHERE c_ob_values <> root AND (prev_component IS NULL OR (exists((component)--(root)--(prev_component)) AND NOT exists((c_ob_values)--(prev_component))))\n\nWITH DISTINCT prev_component, component, m_ob_values, m_p2, m2_ob_values, m2_p2, d_ob_values, d_p, c_ob_values, c_p\nWITH collect(DISTINCT[d_ob_values,d_p,\"DROPPED\"])+COLLECT(DISTINCT[m_ob_values,m_p2,\"MAINTAINED\"])+COLLECT(DISTINCT[m2_ob_values,m2_p2,\"NO CHANGE\"])+COLLECT(DISTINCT[c_ob_values,c_p,\"CREATED\"]) AS RESULT_TABLE_COLLECTED\nUNWIND RESULT_TABLE_COLLECTED AS RESULT_TABLE\nWITH RESULT_TABLE[0] AS rel_value ,RESULT_TABLE[1] AS rel,RESULT_TABLE[2] AS rel_tag\nWHERE not rel_value IS NULL\nreturn rel_value AS `Related Value`,rel AS `Relationship`, rel_tag AS `Relationship Change`\norder by `Related Value` DESC\nlimit 1000",
+          "query": "//get root nodes\nWITH $neodash_action_id AS specific_action_id,\n  $neodash_user_username_1 AS neodash_user_username,\n  CASE \n  WHEN $neodash_start_date <> \"\" \n    THEN \n    CASE \n      WHEN $neodash_start_date =~ \"\\d{4,}-\\d{2,}-\\d{2,}\" THEN Date($neodash_start_date)\n      ELSE Date(\"IS NOT A VALID DATE\")\n    END\n    ELSE \"2015-01-01\"\n  END AS neodash_start_date,\n  CASE \n  WHEN $neodash_end_date  <> \"\"  \n    THEN \n    CASE \n      WHEN $neodash_end_date =~ \"\\d{4,}-\\d{2,}-\\d{2,}\" THEN Date($neodash_end_date)\n      ELSE Date(\"IS NOT A VALID DATE\")\n    END\n    ELSE Date(datetime())+duration({days:1})\n  END AS neodash_end_date\nOPTIONAL MATCH (user:User) \n  where user.username  = neodash_user_username \n// TODO: remove latest final when hasversion/latestfinal issue is resolved in database\nMATCH (root)-[version:HAS_VERSION|LATEST|LATEST_FINAL|LATEST_DRAFT]->(component)\nWHERE \n  (NOT specific_action_id = '') AND ( toStringOrNull(id(version)) = specific_action_id) AND\n  (toString(neodash_user_username) = '' or toString(version.author_id) = toString(user.oid)) AND\n  (date(version.start_date) >= date(neodash_start_date) ) AND\n  (date(version.start_date) <= date(neodash_end_date) )\n\n\n//INIT ROOT CODE  --------------------------------------------------------\n// TODO: remove latest final when hasversion/latestfinal issue is resolved in database\nOPTIONAL MATCH (component)<-[version]-(root)-[old_version:HAS_VERSION|LATEST|LATEST_FINAL|LATEST_DRAFT]->(old_component)\nWHERE old_version.start_date < version.start_date\nWITH root, \ncomponent, \nversion, \nold_component, \nold_version\nORDER BY version.start_date, old_version.start_date DESC\nWITH DISTINCT root, component, version, collect(old_component) AS old_component_collected, collect(old_version) AS old_version_collected\nWITH root, \n  component, \n  version, \n  head(old_component_collected) AS prev_component, \n  head(old_version_collected) AS prev_version\n  \n// MATCH FOR MATAINED REL WITH DIFFERENT VERSION NODES\nOPTIONAL MATCH (prev_component)-[m_p]-(m_ob_values)-[m_p2]-(component)\nWHERE m_ob_values <> root AND prev_component <> component\n// MATCH FOR MAINTAINED REL WITH SAME VERSION NODES\nOPTIONAL MATCH (m2_ob_values)-[m2_p2]-(component)\n  WHERE m2_ob_values <> root and prev_component = component\n// MATCH FOR DROPED REL WITH DIFFERENT VERSION NODES\noptional MATCH (d_ob_values)-[d_p]-(prev_component)--(root)--(component)\n  WHERE d_ob_values <> root AND (NOT exists((d_ob_values)--(component)))\n// MATCH FOR CREATE REL WITH DIFFERENT VERSION NODES\noptional MATCH (c_ob_values)-[c_p]-(component)--(root)\n  WHERE c_ob_values <> root AND (prev_component IS NULL OR (exists((component)--(root)--(prev_component)) AND NOT exists((c_ob_values)--(prev_component))))\n\nWITH DISTINCT prev_component, component, m_ob_values, m_p2, m2_ob_values, m2_p2, d_ob_values, d_p, c_ob_values, c_p\nWITH collect(DISTINCT[d_ob_values,d_p,\"DROPPED\"])+COLLECT(DISTINCT[m_ob_values,m_p2,\"MAINTAINED\"])+COLLECT(DISTINCT[m2_ob_values,m2_p2,\"NO CHANGE\"])+COLLECT(DISTINCT[c_ob_values,c_p,\"CREATED\"]) AS RESULT_TABLE_COLLECTED\nUNWIND RESULT_TABLE_COLLECTED AS RESULT_TABLE\nWITH RESULT_TABLE[0] AS rel_value ,RESULT_TABLE[1] AS rel,RESULT_TABLE[2] AS rel_tag\nWHERE not rel_value IS NULL\nreturn rel_value AS `Related Value`,rel AS `Relationship`, rel_tag AS `Relationship Change`\norder by `Related Value` DESC\nlimit 1000",
           "width": 12,
           "height": 4,
           "x": 12,
@@ -291,7 +297,7 @@
         {
           "id": "c510658b-a6c2-47df-addb-a34d47b992ca",
           "title": "Version/Status Changes",
-          "query": "//get root nodes\nWITH $neodash_action_id AS specific_action_id,\n  $neodash_user_username AS neodash_user_username,\n  CASE \n  WHEN $neodash_start_date <> \"\" \n    THEN \n    CASE \n      WHEN $neodash_start_date =~ \"\\d{4,}-\\d{2,}-\\d{2,}\" THEN Date($neodash_start_date)\n      ELSE Date(\"IS NOT A VALID DATE\")\n    END\n    ELSE \"2015-01-01\"\n  END AS neodash_start_date,\n  CASE \n  WHEN $neodash_end_date  <> \"\"  \n    THEN \n    CASE \n      WHEN $neodash_end_date =~ \"\\d{4,}-\\d{2,}-\\d{2,}\" THEN Date($neodash_end_date)\n      ELSE Date(\"IS NOT A VALID DATE\")\n    END\n    ELSE Date(datetime())+duration({days:1})\n  END AS neodash_end_date\n\nMATCH (user:User) \n  where user.username  = neodash_user_username or neodash_user_username = \"\"\n// TODO: remove latest final when hasversion/latestfinal issue is resolved in database\nMATCH (root)-[version:HAS_VERSION|LATEST|LATEST_FINAL|LATEST_DRAFT]->(component)\nWHERE \n  (NOT specific_action_id = '') AND ( toStringOrNull(id(version)) = specific_action_id) AND\n  (toString(neodash_user_username) = '' or toString(version.author_id) = toString(user.oid)) AND\n  (date(version.start_date) >= date(neodash_start_date) ) AND\n  (date(version.start_date) <= date(neodash_end_date) )\n\n\n//INIT ROOT CODE  --------------------------------------------------------\n// TODO: remove latest final when hasversion/latestfinal issue is resolved in database\nOPTIONAL MATCH (component)<-[version]-(root)-[old_version:HAS_VERSION|LATEST|LATEST_FINAL|LATEST_DRAFT]->(old_component)\n  WHERE old_version.start_date < version.start_date\nWITH root, \ncomponent, \nversion, \nold_component, \nold_version\nORDER BY version.start_date, old_version.start_date DESC\nWITH DISTINCT root, component, version, collect(old_component) AS old_component_collected, collect(old_version) AS old_version_collected\nWITH root, \n  component, \n  version, \n  head(old_component_collected) AS prev_component, \n  head(old_version_collected) AS prev_version\nWITH version, \n  prev_version, \n  component, \n  prev_component,  \n  keys(component) AS properties, \n  keys(prev_component) AS prev_properties\nWITH version, prev_version, \n  component, \n  prev_component,  \n  CASE\n    WHEN prev_properties IS  NULL  \n    THEN properties\n    ELSE properties + prev_properties\n  END AS joint_properties\n// WITH joint_properties --> UNION property name between before and after component\n  UNWIND joint_properties AS unw_joint_properties\n// distinct property name\nWITH version, \n  prev_version, \n  component, \n  prev_component, \n  collect(DISTINCT unw_joint_properties) AS dis_joint_properties\n  UNWIND dis_joint_properties AS unw_dis_joint_properties\n// WITH version, component, before_component, unw_dis_joint_property --> ith property name, content_after --> the ith_property of the after node, content_before (same as content after)\nWITH version, \n  prev_version, \n  component, \n  prev_component, \n  unw_dis_joint_properties, \n  component[unw_dis_joint_properties] AS after,  \n  prev_component[unw_dis_joint_properties] AS before\nWHERE after <> before \n  OR before IS NULL \n  OR after IS NULL \n  OR prev_version.status <> version.status \nWITH version,\n  prev_version,\n  component,\n  prev_component,\n  unw_dis_joint_properties,\n  after,\n  before\n//END ROOT CODE ------------------------------------\n\n// CODE FOR EACH PROPERTY NODE \n\noptional match (final_user:User) where final_user.oid = version.author_id\n\nWITH DISTINCT\n  apoc.date.format(DateTime(version.start_date).epochMillis, \"ms\", \"yyyy-MM-dd'T'HH:mm:ssz\") AS action_date,\n  version,\n  version.version AS version_after,\n  prev_version,\n  prev_version.version AS version_before,\n  version.status AS value_status,\n  id(component) AS component_id,\n  component,\n  labels(component) AS component_labels,\n  final_user.username AS user_name,\n  version AS action_labels,\n  labels(component) AS componenet_labels\n  ORDER BY version.start_date  DESC,\n  version.end_date DESC\nRETURN\n  action_date AS `Timestamp`,\n  user_name AS `User`,\n  toString(id(version)) AS `Action ID`,\n  toString(component_id) AS `Component ID`,\n  version_before AS `Old Version`,\n  version_after AS `New Version`,\n  prev_version.status AS `Old Status`,\n  value_status AS `New Status`\n  ORDER BY version.start_date  desc,\n  version.end_date desc\nlimit 1000",
+          "query": "//get root nodes\nWITH $neodash_action_id AS specific_action_id,\n  $neodash_user_username_1 AS neodash_user_username,\n  CASE \n  WHEN $neodash_start_date <> \"\" \n    THEN \n    CASE \n      WHEN $neodash_start_date =~ \"\\d{4,}-\\d{2,}-\\d{2,}\" THEN Date($neodash_start_date)\n      ELSE Date(\"IS NOT A VALID DATE\")\n    END\n    ELSE \"2015-01-01\"\n  END AS neodash_start_date,\n  CASE \n  WHEN $neodash_end_date  <> \"\"  \n    THEN \n    CASE \n      WHEN $neodash_end_date =~ \"\\d{4,}-\\d{2,}-\\d{2,}\" THEN Date($neodash_end_date)\n      ELSE Date(\"IS NOT A VALID DATE\")\n    END\n    ELSE Date(datetime())+duration({days:1})\n  END AS neodash_end_date\n\nMATCH (user:User) \n  where user.username  = neodash_user_username or neodash_user_username = \"\"\n// TODO: remove latest final when hasversion/latestfinal issue is resolved in database\nMATCH (root)-[version:HAS_VERSION|LATEST|LATEST_FINAL|LATEST_DRAFT]->(component)\nWHERE \n  (NOT specific_action_id = '') AND ( toStringOrNull(id(version)) = specific_action_id) AND\n  (toString(neodash_user_username) = '' or toString(version.author_id) = toString(user.oid)) AND\n  (date(version.start_date) >= date(neodash_start_date) ) AND\n  (date(version.start_date) <= date(neodash_end_date) )\n\n\n//INIT ROOT CODE  --------------------------------------------------------\n// TODO: remove latest final when hasversion/latestfinal issue is resolved in database\nOPTIONAL MATCH (component)<-[version]-(root)-[old_version:HAS_VERSION|LATEST|LATEST_FINAL|LATEST_DRAFT]->(old_component)\n  WHERE old_version.start_date < version.start_date\nWITH root, \ncomponent, \nversion, \nold_component, \nold_version\nORDER BY version.start_date, old_version.start_date DESC\nWITH DISTINCT root, component, version, collect(old_component) AS old_component_collected, collect(old_version) AS old_version_collected\nWITH root, \n  component, \n  version, \n  head(old_component_collected) AS prev_component, \n  head(old_version_collected) AS prev_version\nWITH version, \n  prev_version, \n  component, \n  prev_component,  \n  keys(component) AS properties, \n  keys(prev_component) AS prev_properties\nWITH version, prev_version, \n  component, \n  prev_component,  \n  CASE\n    WHEN prev_properties IS  NULL  \n    THEN properties\n    ELSE properties + prev_properties\n  END AS joint_properties\n// WITH joint_properties --> UNION property name between before and after component\n  UNWIND joint_properties AS unw_joint_properties\n// distinct property name\nWITH version, \n  prev_version, \n  component, \n  prev_component, \n  collect(DISTINCT unw_joint_properties) AS dis_joint_properties\n  UNWIND dis_joint_properties AS unw_dis_joint_properties\n// WITH version, component, before_component, unw_dis_joint_property --> ith property name, content_after --> the ith_property of the after node, content_before (same as content after)\nWITH version, \n  prev_version, \n  component, \n  prev_component, \n  unw_dis_joint_properties, \n  component[unw_dis_joint_properties] AS after,  \n  prev_component[unw_dis_joint_properties] AS before\nWHERE after <> before \n  OR before IS NULL \n  OR after IS NULL \n  OR prev_version.status <> version.status \nWITH version,\n  prev_version,\n  component,\n  prev_component,\n  unw_dis_joint_properties,\n  after,\n  before\n//END ROOT CODE ------------------------------------\n\n// CODE FOR EACH PROPERTY NODE \n\noptional match (final_user:User) where final_user.oid = version.author_id\n\nWITH DISTINCT\n  apoc.date.format(DateTime(version.start_date).epochMillis, \"ms\", \"yyyy-MM-dd'T'HH:mm:ssz\") AS action_date,\n  version,\n  version.version AS version_after,\n  prev_version,\n  prev_version.version AS version_before,\n  version.status AS value_status,\n  id(component) AS component_id,\n  component,\n  labels(component) AS component_labels,\n  final_user.username AS user_name,\n  version AS action_labels,\n  labels(component) AS componenet_labels\n  ORDER BY version.start_date  DESC,\n  version.end_date DESC\nRETURN\n  action_date AS `Timestamp`,\n  user_name AS `User`,\n  toString(id(version)) AS `Action ID`,\n  toString(component_id) AS `Component ID`,\n  version_before AS `Old Version`,\n  version_after AS `New Version`,\n  prev_version.status AS `Old Status`,\n  value_status AS `New Status`\n  ORDER BY version.start_date  desc,\n  version.end_date desc\nlimit 1000",
           "width": 20,
           "height": 2,
           "x": 4,
@@ -310,7 +316,7 @@
         {
           "id": "b18a016a-6fb3-41a7-8fef-6e584c0c1651",
           "title": "Field Value Changes",
-          "query": "//get root nodes\nWITH $neodash_action_id AS specific_action_id,\n  $neodash_user_username AS neodash_user_username,\n  CASE \n  WHEN $neodash_start_date <> \"\" \n    THEN \n    CASE \n      WHEN $neodash_start_date =~ \"\\d{4,}-\\d{2,}-\\d{2,}\" THEN Date($neodash_start_date)\n      ELSE Date(\"IS NOT A VALID DATE\")\n    END\n    ELSE \"2015-01-01\"\n  END AS neodash_start_date,\n  CASE \n  WHEN $neodash_end_date  <> \"\"  \n    THEN \n    CASE \n      WHEN $neodash_end_date =~ \"\\d{4,}-\\d{2,}-\\d{2,}\" THEN Date($neodash_end_date)\n      ELSE Date(\"IS NOT A VALID DATE\")\n    END\n    ELSE Date(datetime())+duration({days:1})\n  END AS neodash_end_date\nOPTIONAL MATCH (user:User) \n  where user.username  = neodash_user_username \n// TODO: remove latest final when hasversion/latestfinal issue is resolved in database\nMATCH (root)-[version:HAS_VERSION|LATEST|LATEST_FINAL|LATEST_DRAFT]->(component)\nWHERE \n  (NOT specific_action_id = '') AND ( toStringOrNull(id(version)) = specific_action_id) AND\n  (toString(neodash_user_username) = '' or toString(version.author_id) = toString(user.oid)) AND\n  (date(version.start_date) >= date(neodash_start_date) ) AND\n  (date(version.start_date) <= date(neodash_end_date) )\n\n\n//INIT ROOT CODE  --------------------------------------------------------\n// TODO: remove latest final when hasversion/latestfinal issue is resolved in database\nOPTIONAL MATCH (component)<-[h_v]-(root)-[old_version:HAS_VERSION|LATEST|LATEST_FINAL|LATEST_DRAFT]->(old_component)\n  WHERE old_version.start_date < version.start_date\nWITH root, \ncomponent, \nversion, \nold_component, \nold_version\nORDER BY version.start_date, old_version.start_date DESC\nWITH DISTINCT root, component, version, collect(old_component) AS old_component_collected, collect(old_version) AS old_version_collected\nWITH root, \n  component, \n  version, \n  head(old_component_collected) AS prev_component, \n  head(old_version_collected) AS prev_version\nWITH version, \n  prev_version, \n  component, \n  prev_component,  \n  keys(component) AS properties, \n  keys(prev_component) AS prev_properties\nWITH version, prev_version, \n  component, \n  prev_component,  \n  CASE\n    WHEN prev_properties IS  NULL  \n    THEN properties\n    ELSE properties + prev_properties\n  END AS joint_properties\n// WITH joint_properties --> UNION property name between before and after component\n  UNWIND joint_properties AS unw_joint_properties\n// distinct property name\nWITH version, \n  prev_version, \n  component, \n  prev_component, \n  collect(DISTINCT unw_joint_properties) AS dis_joint_properties\n  UNWIND dis_joint_properties AS unw_dis_joint_properties\n// WITH version, component, prev_component, unw_dis_joint_property --> ith property name, content_after --> the ith_property of the after node, content_before (same as content after)\nWITH version, \n  prev_version, \n  component, \n  prev_component, \n  unw_dis_joint_properties, \n  component[unw_dis_joint_properties] AS after,  \n  prev_component[unw_dis_joint_properties] AS before\nWITH version,\n  prev_version,\n  component,\n  prev_component,\n  unw_dis_joint_properties,\n  after,\n  before\n//END ROOT CODE ------------------------------------\n\n\n// CODE FOR EACH PROPERTY NODE \nWITH\n  apoc.date.format(DateTime(version.start_date).epochMillis, \"ms\", \"yyyy-MM-dd'T'HH:mm:ssz\") AS action_date,\n  version,\n  version.status AS value_status,\n  id(component) AS component_id,\n  unw_dis_joint_properties AS field,\n  before AS old_value,\n  after AS new_value,\nCASE WHEN before = after THEN \"no\" ELSE CASE WHEN before is null and after is null THEN \"no\" ELSE \"yes\" END END as __Diff\n  order by version.start_date  DESC,\n  version.end_date DESC\nRETURN \n  action_date AS `Timestamp`,\n  toString(component_id) AS `Component ID`,\n  field AS `Field`,\n  old_value AS `Old Value`,\n  new_value AS `New Value`,\n  __Diff\n  order by version.start_date DESC,\n  version.end_date DESC\nlimit 1000",
+          "query": "//get root nodes\nWITH $neodash_action_id AS specific_action_id,\n  $neodash_user_username_1 AS neodash_user_username,\n  CASE \n  WHEN $neodash_start_date <> \"\" \n    THEN \n    CASE \n      WHEN $neodash_start_date =~ \"\\d{4,}-\\d{2,}-\\d{2,}\" THEN Date($neodash_start_date)\n      ELSE Date(\"IS NOT A VALID DATE\")\n    END\n    ELSE \"2015-01-01\"\n  END AS neodash_start_date,\n  CASE \n  WHEN $neodash_end_date  <> \"\"  \n    THEN \n    CASE \n      WHEN $neodash_end_date =~ \"\\d{4,}-\\d{2,}-\\d{2,}\" THEN Date($neodash_end_date)\n      ELSE Date(\"IS NOT A VALID DATE\")\n    END\n    ELSE Date(datetime())+duration({days:1})\n  END AS neodash_end_date\nOPTIONAL MATCH (user:User) \n  where user.username  = neodash_user_username \n// TODO: remove latest final when hasversion/latestfinal issue is resolved in database\nMATCH (root)-[version:HAS_VERSION|LATEST|LATEST_FINAL|LATEST_DRAFT]->(component)\nWHERE \n  (NOT specific_action_id = '') AND ( toStringOrNull(id(version)) = specific_action_id) AND\n  (toString(neodash_user_username) = '' or toString(version.author_id) = toString(user.oid)) AND\n  (date(version.start_date) >= date(neodash_start_date) ) AND\n  (date(version.start_date) <= date(neodash_end_date) )\n\n\n//INIT ROOT CODE  --------------------------------------------------------\n// TODO: remove latest final when hasversion/latestfinal issue is resolved in database\nOPTIONAL MATCH (component)<-[h_v]-(root)-[old_version:HAS_VERSION|LATEST|LATEST_FINAL|LATEST_DRAFT]->(old_component)\n  WHERE old_version.start_date < version.start_date\nWITH root, \ncomponent, \nversion, \nold_component, \nold_version\nORDER BY version.start_date, old_version.start_date DESC\nWITH DISTINCT root, component, version, collect(old_component) AS old_component_collected, collect(old_version) AS old_version_collected\nWITH root, \n  component, \n  version, \n  head(old_component_collected) AS prev_component, \n  head(old_version_collected) AS prev_version\nWITH version, \n  prev_version, \n  component, \n  prev_component,  \n  keys(component) AS properties, \n  keys(prev_component) AS prev_properties\nWITH version, prev_version, \n  component, \n  prev_component,  \n  CASE\n    WHEN prev_properties IS  NULL  \n    THEN properties\n    ELSE properties + prev_properties\n  END AS joint_properties\n// WITH joint_properties --> UNION property name between before and after component\n  UNWIND joint_properties AS unw_joint_properties\n// distinct property name\nWITH version, \n  prev_version, \n  component, \n  prev_component, \n  collect(DISTINCT unw_joint_properties) AS dis_joint_properties\n  UNWIND dis_joint_properties AS unw_dis_joint_properties\n// WITH version, component, prev_component, unw_dis_joint_property --> ith property name, content_after --> the ith_property of the after node, content_before (same as content after)\nWITH version, \n  prev_version, \n  component, \n  prev_component, \n  unw_dis_joint_properties, \n  component[unw_dis_joint_properties] AS after,  \n  prev_component[unw_dis_joint_properties] AS before\nWITH version,\n  prev_version,\n  component,\n  prev_component,\n  unw_dis_joint_properties,\n  after,\n  before\n//END ROOT CODE ------------------------------------\n\n\n// CODE FOR EACH PROPERTY NODE \nWITH\n  apoc.date.format(DateTime(version.start_date).epochMillis, \"ms\", \"yyyy-MM-dd'T'HH:mm:ssz\") AS action_date,\n  version,\n  version.status AS value_status,\n  id(component) AS component_id,\n  unw_dis_joint_properties AS field,\n  before AS old_value,\n  after AS new_value,\nCASE WHEN before = after THEN \"no\" ELSE CASE WHEN before is null and after is null THEN \"no\" ELSE \"yes\" END END as __Diff\n  order by version.start_date  DESC,\n  version.end_date DESC\nRETURN \n  action_date AS `Timestamp`,\n  toString(component_id) AS `Component ID`,\n  field AS `Field`,\n  old_value AS `Old Value`,\n  new_value AS `New Value`,\n  __Diff\n  order by version.start_date DESC,\n  version.end_date DESC\nlimit 1000",
           "width": 24,
           "height": 4,
           "x": 0,
@@ -472,7 +478,7 @@
       ]
     },
     {
-      "title": "Study Audit Trail",
+      "title": "Study Audit Trail by Date",
       "reports": [
         {
           "x": 0,
@@ -490,7 +496,8 @@
             "description": "This parameter is used to filter the results in the Actions Table below based on a specific user. The value must be a valid user initial to render any results.",
             "propertyType": "username",
             "propertyTypeDisplay": "username",
-            "parameterName": "neodash_user_username"
+            "parameterName": "neodash_user_username_1",
+            "id": "1"
           },
           "id": "5d70c29a-7d78-4bb5-9d12-c36dd6e0e05c"
         },
@@ -498,7 +505,7 @@
           "x": 0,
           "y": 12,
           "title": "Before and After Values per Action ID",
-          "query": "//get root nodes\nwith $neodash_idaction as neodash_idaction\n  ,case \n  WHEN $neodash_start_date <> \"\" \n    THEN CASE \n      WHEN $neodash_start_date =~ \"\\d{4,}-\\d{2,}-\\d{2,}\" THEN Date($neodash_start_date)\n      ELSE Date(\"IS NOT A VALID DATE OF YYYY-MM-DD FORMAT\")\n    END\n    ELSE \"2015-01-01\"\n  end as init_start_date\n  ,case \n  WHEN $neodash_end_date  <> \"\"  \n    THEN CASE \n      WHEN $neodash_end_date =~ \"\\d{4,}-\\d{2,}-\\d{2,}\" THEN Date($neodash_end_date)\n      ELSE Date(\"IS NOT A VALID DATE OF YYYY-MM-DD FORMAT\")\n    END\n    ELSE Date(datetime())+duration({days:1})\n  END  AS init_last_start_date\n\nmatch (sr:StudyRoot)-[at:AUDIT_TRAIL]->(all_study_action:StudyAction)-[:AFTER]-(component)\nWHERE date(all_study_action.date) >= date(init_start_date) \n  and date(all_study_action.date) <= date(init_last_start_date)\n  and (toStringOrNull(id(all_study_action)) = neodash_idaction)\n\noptional match (all_study_action)-[:BEFORE]-(before_component)\n\nWITH sr, all_study_action, component, before_component,  keys(component) AS after_properties , keys(before_component) AS before_properties\nWITH sr, all_study_action, component, before_component,  \n  CASE\n    WHEN before_properties IS  NULL \n    THEN after_properties\n    ELSE after_properties + before_properties\n  END AS joint_properties\nUNWIND joint_properties AS unw_joint_properties\nWITH sr, all_study_action, component, before_component, collect(distinct unw_joint_properties) AS dis_joint_properties\nUNWIND dis_joint_properties AS unw_dis_joint_properties\nWITH sr, all_study_action, component, before_component, unw_dis_joint_properties, component[unw_dis_joint_properties] AS content_after,  before_component[unw_dis_joint_properties] AS content_before\nWITH sr, all_study_action, component, before_component, unw_dis_joint_properties, toString(content_after) AS after, toString(content_before) AS before\nWITH all_study_action, component, unw_dis_joint_properties, before, after, CASE WHEN before = after THEN \"no\" ELSE CASE WHEN before is null and after is null THEN \"no\" ELSE \"yes\" END END as __Diff\nRETURN\n    apoc.date.format(DateTime(all_study_action.date).epochMillis, \"ms\", \"yyyy-MM-dd'T'HH:mm:ssz\") as `Timestamp`, \n    case \n      when  component.uid is NULL THEN \"N/A\"\n      else component.uid\n    end as `Component UID`,\n    unw_dis_joint_properties as `Property`, \n    before as `Old Value`, \n    after as `New Value`,\n    __Diff\n    order by all_study_action.date desc\nlimit 1000",
+          "query": "//get root nodes\nwith $neodash_idaction as neodash_idaction\n  ,case \n  WHEN $neodash_start_date <> \"\" \n    THEN CASE \n      WHEN $neodash_start_date =~ \"\\d{4,}-\\d{2,}-\\d{2,}\" THEN Date($neodash_start_date)\n      ELSE Date(\"IS NOT A VALID DATE OF YYYY-MM-DD FORMAT\")\n    END\n    ELSE \"2015-01-01\"\n  end as init_start_date\n  ,case \n  WHEN $neodash_end_date  <> \"\"  \n    THEN CASE \n      WHEN $neodash_end_date =~ \"\\d{4,}-\\d{2,}-\\d{2,}\" THEN Date($neodash_end_date)\n      ELSE Date(\"IS NOT A VALID DATE OF YYYY-MM-DD FORMAT\")\n    END\n    ELSE Date(datetime())+duration({days:1})\n  END  AS init_last_start_date\n\nmatch (sr:StudyRoot)-[at:AUDIT_TRAIL]->(all_study_action:StudyAction)-[:AFTER]-(component)\nWHERE date(all_study_action.date) >= date(init_start_date) \n  and date(all_study_action.date) <= date(init_last_start_date)\n  and (toStringOrNull(id(all_study_action)) = neodash_idaction)\n\noptional match (all_study_action)-[:BEFORE]-(before_component)\n\nWITH sr, all_study_action, component, before_component,  keys(component) AS after_properties , keys(before_component) AS before_properties\nWITH sr, all_study_action, component, before_component,  \n  CASE\n    WHEN before_properties IS  NULL \n    THEN after_properties\n    ELSE after_properties + before_properties\n  END AS joint_properties\nUNWIND joint_properties AS unw_joint_properties\nWITH sr, all_study_action, component, before_component, collect(distinct unw_joint_properties) AS dis_joint_properties\nUNWIND dis_joint_properties AS unw_dis_joint_properties\nWITH sr, all_study_action, component, before_component, unw_dis_joint_properties, component[unw_dis_joint_properties] AS content_after,  before_component[unw_dis_joint_properties] AS content_before\nWITH sr, all_study_action, component, before_component, unw_dis_joint_properties, toString(content_after) AS after, toString(content_before) AS before\nWITH all_study_action, component, unw_dis_joint_properties, before, after, CASE WHEN before = after THEN \"no\" ELSE CASE WHEN before is null and after is null THEN \"no\" ELSE \"yes\" END END as __Diff\nRETURN\n    apoc.date.format(DateTime(all_study_action.date).epochMillis, \"ms\", \"yyyy-MM-dd'T'HH:mm:ssz\") as `Timestamp`, \n    case \n      when  component.uid is NULL THEN \"N/A\"\n      else component.uid\n    end as `Component UID`,\n    unw_dis_joint_properties as `Field`, \n    before as `Old Value`, \n    after as `New Value`,\n    __Diff\n    order by all_study_action.date desc\nlimit 1000",
           "width": 24,
           "type": "table",
           "height": 4,
@@ -531,7 +538,7 @@
         },
         {
           "title": "Actions Table",
-          "query": "WITH $neodash_user_username as user_name,\ncase \n  WHEN $neodash_start_date <> \"\" \n    THEN CASE \n      WHEN $neodash_start_date =~ \"\\d{4,}-\\d{2,}-\\d{2,}\" THEN Date($neodash_start_date)\n      ELSE Date(\"IS NOT A VALID DATE OF YYYY-MM-DD FORMAT\")\n    END\n    ELSE \"2015-01-01\"\n  end as init_start_date\n  ,case \n  WHEN $neodash_end_date  <> \"\"  \n    THEN CASE \n      WHEN $neodash_end_date =~ \"\\d{4,}-\\d{2,}-\\d{2,}\" THEN Date($neodash_end_date)\n      ELSE Date(\"IS NOT A VALID DATE OF YYYY-MM-DD FORMAT\")\n    END\n    ELSE Date(datetime())+duration({days:1})\n  END  AS init_last_start_date\n\nMATCH (user:User) \n  where user.username = user_name or user_name = \"\" \nmatch (sr:StudyRoot)-[at:AUDIT_TRAIL]->(all_study_action:StudyAction)-[:AFTER]-(component)\nWHERE (user_name = \"\" OR all_study_action.author_id = user.oid)\n  and date(all_study_action.date) >= date(init_start_date) \n  and date(all_study_action.date) <= date(init_last_start_date)\n\noptional match (all_study_action)-[:BEFORE]-(before_component)\noptional match (final_user:User) where final_user.oid = all_study_action.author_id\n\nwith sr, all_study_action, component, before_component, final_user \nwith sr, \n  all_study_action, \n  component, \n  before_component,\n  final_user\ncall{\n      with all_study_action\n     with labels(all_study_action) as action_labels\n      unwind action_labels as action_labels_unw\n      with action_labels_unw\n        where not action_labels_unw contains \"StudyAction\"\n      return action_labels_unw\n    }\n  \nWith\n    apoc.date.format(DateTime(all_study_action.date).epochMillis, \"ms\", \"yyyy-MM-dd'T'HH:mm:ssz\") as DateTime, \n    toStringOrNull(id(all_study_action)) as action_id,\n    case \n      when  component.uid is NULL THEN \"N/A\"\n      else component.uid\n    end as alias,\n    sr.uid as study_uid,\n    labels(component) as labels,\n    final_user.username as user_final_name,\n    action_labels_unw\n    order by all_study_action.date desc\n\nRETURN \n    DateTime as `Timestamp`\n    ,user_final_name as `User`\n    ,study_uid as `Study UID`\n    ,action_id as `Action ID`\n    ,alias as `Component UID`\n    ,action_labels_unw as `Action Type`\n    ,apoc.text.join(labels, ', ') as `Component Labels`\n    order by DateTime desc\nlimit 1000",
+          "query": "WITH $neodash_user_username_1 as user_name,\ncase \n  WHEN $neodash_start_date <> \"\" \n    THEN CASE \n      WHEN $neodash_start_date =~ \"\\d{4,}-\\d{2,}-\\d{2,}\" THEN Date($neodash_start_date)\n      ELSE Date(\"IS NOT A VALID DATE OF YYYY-MM-DD FORMAT\")\n    END\n    ELSE \"2015-01-01\"\n  end as init_start_date\n  ,case \n  WHEN $neodash_end_date  <> \"\"  \n    THEN CASE \n      WHEN $neodash_end_date =~ \"\\d{4,}-\\d{2,}-\\d{2,}\" THEN Date($neodash_end_date)\n      ELSE Date(\"IS NOT A VALID DATE OF YYYY-MM-DD FORMAT\")\n    END\n    ELSE Date(datetime())+duration({days:1})\n  END  AS init_last_start_date\n\nMATCH (user:User) \n  where user.username = user_name or user_name = \"\" \nmatch (sr:StudyRoot)-[at:AUDIT_TRAIL]->(all_study_action:StudyAction)-[:AFTER]-(component)\nWHERE (user_name = \"\" OR all_study_action.author_id = user.oid)\n  and date(all_study_action.date) >= date(init_start_date) \n  and date(all_study_action.date) <= date(init_last_start_date)\n\noptional match (all_study_action)-[:BEFORE]-(before_component)\noptional match (final_user:User) where final_user.oid = all_study_action.author_id\n\nwith sr, all_study_action, component, before_component, final_user \nwith sr, \n  all_study_action, \n  component, \n  before_component,\n  final_user\ncall{\n      with all_study_action\n     with labels(all_study_action) as action_labels\n      unwind action_labels as action_labels_unw\n      with action_labels_unw\n        where not action_labels_unw contains \"StudyAction\"\n      return action_labels_unw\n    }\n  \nWith\n    apoc.date.format(DateTime(all_study_action.date).epochMillis, \"ms\", \"yyyy-MM-dd'T'HH:mm:ssz\") as DateTime, \n    toStringOrNull(id(all_study_action)) as action_id,\n    case \n      when  component.uid is NULL THEN \"N/A\"\n      else component.uid\n    end as alias,\n    sr.uid as study_uid,\n    labels(component) as labels,\n    final_user.username as user_final_name,\n    action_labels_unw\n    order by all_study_action.date desc\n\nRETURN \n    DateTime as `Timestamp`\n    ,user_final_name as `User`\n    ,study_uid as `Study UID`\n    ,action_id as `Action ID`\n    ,alias as `Component UID`\n    ,action_labels_unw as `Action Type`\n    ,apoc.text.join(labels, ', ') as `Component Labels`\n    order by DateTime desc\nlimit 1000",
           "width": 24,
           "height": 4,
           "x": 0,
@@ -684,7 +691,8 @@
               }
             ],
             "description": "A list of studies where the selected User has performed an action. You must select a User (above) to obtain results in this table.",
-            "wrapContent": true
+            "wrapContent": true,
+            "noDataMessage": "User must be selected."
           }
         },
         {
@@ -707,7 +715,7 @@
                 "field": "Action ID",
                 "value": "Action ID",
                 "customization": "set variable",
-                "customizationValue": "idaction"
+                "customizationValue": "idaction_1"
               }
             ],
             "styleRules": [
@@ -746,7 +754,7 @@
         },
         {
           "title": "Action ID",
-          "query": "RETURN $neodash_idaction",
+          "query": "RETURN $neodash_idaction_1",
           "width": 5,
           "height": 2,
           "x": 0,
@@ -772,6 +780,313 @@
           },
           "id": "391def3b-3bda-4c47-9c51-71226526a137",
           "schema": []
+        }
+      ]
+    },
+    {
+      "title": "Study Audit Trail by Version",
+      "reports": [
+        {
+          "x": 0,
+          "y": 11,
+          "title": "Before and After Values per Action ID",
+          "query": "\n\n//get root nodes\nwith $neodash_idaction_2 as neodash_idaction,\n$neodash_studyroot_uid as study_uid,\n$neodash_study_min_date as study_min_date,\n$neodash_study_max_date as study_max_date\n\nMATCH (sr:StudyRoot)\n  WHERE sr.uid = study_uid\n\nmatch (sr)-[at:AUDIT_TRAIL]->(all_study_action:StudyAction)-[:AFTER]-(component)\n    WHERE ( datetime(all_study_action.date) >= datetime(study_min_date) ) \n    and (datetime(all_study_action.date) <= datetime(study_max_date))\n    and (toStringOrNull(id(all_study_action)) = neodash_idaction)\n\noptional match (all_study_action)-[:BEFORE]-(before_component)\n\nWITH sr, all_study_action, component, before_component,  keys(component) AS after_properties , keys(before_component) AS before_properties\nWITH sr, all_study_action, component, before_component,  \n  CASE\n    WHEN before_properties IS  NULL \n    THEN after_properties\n    ELSE after_properties + before_properties\n  END AS joint_properties\nUNWIND joint_properties AS unw_joint_properties\nWITH sr, all_study_action, component, before_component, collect(distinct unw_joint_properties) AS dis_joint_properties\nUNWIND dis_joint_properties AS unw_dis_joint_properties\nWITH sr, all_study_action, component, before_component, unw_dis_joint_properties, component[unw_dis_joint_properties] AS content_after,  before_component[unw_dis_joint_properties] AS content_before\nWITH sr, all_study_action, component, before_component, unw_dis_joint_properties, toString(content_after) AS after, toString(content_before) AS before\nWITH all_study_action, component, unw_dis_joint_properties, before, after, CASE WHEN before = after THEN \"no\" ELSE CASE WHEN before is null and after is null THEN \"no\" ELSE \"yes\" END END as __Diff\nRETURN\n    apoc.date.format(DateTime(all_study_action.date).epochMillis, \"ms\", \"yyyy-MM-dd'T'HH:mm:ssz\") as `Timestamp`, \n    case \n      when  component.uid is NULL THEN \"N/A\"\n      else component.uid\n    end as `Component UID`,\n    unw_dis_joint_properties as `Field`, \n    before as `Old Value`, \n    after as `New Value`,\n    __Diff\n    order by all_study_action.date desc\nlimit 1000",
+          "width": 24,
+          "type": "table",
+          "height": 4,
+          "selection": {},
+          "settings": {
+            "allowDownload": true,
+            "compact": true,
+            "description": "This table displays the details in each field linked to a specific action ID before and after a change was made. The results shown are based on the Action ID parameter chosen in the parameter tile above or by clicking on the blue Action ID button on the table above.\n\nNOTE: If the message \"Query returned no data\" appears below, the Action ID selected has no linked fields and therefore nothing to display here.",
+            "refreshButtonEnabled": true,
+            "styleRules": [
+              {
+                "field": "__Diff",
+                "condition": "=",
+                "value": "no",
+                "customization": "row color",
+                "customizationValue": "#5FE8866E"
+              },
+              {
+                "field": "__Diff",
+                "condition": "=",
+                "value": "yes",
+                "customization": "row color",
+                "customizationValue": "#FF11116E"
+              }
+            ],
+            "columnWidths": "[2.5,2,1.3,6,6]",
+            "wrapContent": true
+          },
+          "id": "62458e21-1923-481b-8bb7-7ec4c2fe2f4e"
+        },
+        {
+          "id": "5bd8e021-9485-45d3-9bff-b8a5be96f9a2",
+          "title": "Change Visualisation",
+          "query": "\n\n//get root nodes\nwith  \n  $neodash_idaction_2 as neodash_idaction,\n $neodash_user_username_2 as user_name,\n$neodash_studyroot_uid as study_uid,\n$neodash_study_min_date as study_min_date,\n$neodash_study_max_date as study_max_date\n\nMATCH (user:User) \n  where user.username = user_name or user_name = \"\" \nMATCH (sr:StudyRoot)\n  WHERE sr.uid = study_uid\n\nmatch p =((sr)-[at:AUDIT_TRAIL]->(all_study_action:StudyAction)-[:AFTER]-(component))\n  WHERE (user_name = \"\" OR all_study_action.author_id = user.oid)\n    AND ( datetime(all_study_action.date) >= datetime(study_min_date) ) \n    AND (datetime(all_study_action.date) <= datetime(study_max_date))\n    AND (toStringOrNull(id(all_study_action)) = neodash_idaction)\n\noptional match p2 = (all_study_action)-[:BEFORE]-(prev_component)\n\n\nreturn p, p2",
+          "width": 8,
+          "height": 6,
+          "x": 16,
+          "y": 5,
+          "type": "graph",
+          "selection": {
+            "StudyRoot": "uid",
+            "StudyAction": "(label)",
+            "Edit": "(label)",
+            "StudySelection": "uid",
+            "StudyBranchArm": "name"
+          },
+          "settings": {
+            "refreshButtonEnabled": true,
+            "description": "\nHere is a visual overview of the changes made between versions. We expect to see:\n\nThe root node (the StudyRoot)\nThe AUDIT_TRAIL to the action preformed\nThe BEFORE and AFTER states of the component (there will be no BEFORE state if the action type is 'Create'\n\nA User (above), Study UID (left), and Action ID (left) must be selected to obtain results in this graph."
+          },
+          "schema": [
+            [
+              "StudyRoot",
+              "uid"
+            ],
+            [
+              "StudyAction",
+              "date",
+              "author_id"
+            ],
+            [
+              "Edit",
+              "date",
+              "author_id"
+            ],
+            [
+              "StudySelection",
+              "uid",
+              "colour_code",
+              "randomization_group",
+              "branch_arm_code",
+              "accepted_version",
+              "name",
+              "description",
+              "number_of_subjects",
+              "short_name",
+              "order"
+            ],
+            [
+              "StudyBranchArm",
+              "uid",
+              "colour_code",
+              "randomization_group",
+              "branch_arm_code",
+              "accepted_version",
+              "name",
+              "description",
+              "number_of_subjects",
+              "short_name",
+              "order"
+            ]
+          ]
+        },
+        {
+          "id": "da42d518-f7a4-4a0d-b0ea-63cb1a1185c4",
+          "title": "Select Study UID",
+          "query": "\n\nmatch (val:StudyValue)--(sr:StudyRoot)-[at:AUDIT_TRAIL]->(all_study_action:StudyAction)-[:AFTER]-(component)\nreturn distinct val.study_acronym AS `Study Name`\n  ,sr.uid AS `Study UID`\n",
+          "width": 6,
+          "height": 3,
+          "x": 0,
+          "y": 0,
+          "type": "table",
+          "selection": {},
+          "settings": {
+            "refreshButtonEnabled": true,
+            "actionsRules": [
+              {
+                "condition": "Click",
+                "field": "Study UID",
+                "value": "Study UID",
+                "customization": "set variable",
+                "customizationValue": "studyroot_uid"
+              }
+            ],
+            "description": "A list of studies where the selected User has performed an action. You must select a User (above) to obtain results in this table.",
+            "wrapContent": true
+          }
+        },
+        {
+          "id": "09ebc707-d7f8-43d3-b80c-185a22b5e953",
+          "title": "Actions Table on $neodash_studyroot_uid",
+          "query": "\nWITH $neodash_user_username_2 as user_name,\n$neodash_studyroot_uid as study_uid,\n$neodash_study_min_date as study_min_date,\n$neodash_study_max_date as study_max_date\n\nMATCH (user:User) \n  where user.name = user_name or user_name = \"\" \nMATCH (sr:StudyRoot)\n  WHERE sr.uid = study_uid\n\nmatch (sr)-[at:AUDIT_TRAIL]->(all_study_action:StudyAction)-[:AFTER]-(component)\n  WHERE (user_name = \"\" OR all_study_action.author_id = user.oid)\n    and (datetime(all_study_action.date) >= datetime(study_min_date)) \n    and (datetime(all_study_action.date) <= datetime(study_max_date))\n\noptional match (all_study_action)-[:BEFORE]-(before_component)\noptional match (final_user:User) where final_user.oid = all_study_action.author_id\n\nwith sr, all_study_action, component, before_component, final_user\nwith sr, \n  all_study_action, \n  component, \n  before_component,\n  final_user\ncall{\n      with all_study_action\n     with labels(all_study_action) as action_labels\n      unwind action_labels as action_labels_unw\n      with action_labels_unw\n        where not action_labels_unw contains \"StudyAction\"\n      return action_labels_unw\n    }\nWith\n    apoc.date.format(DateTime(all_study_action.date).epochMillis, \"ms\", \"yyyy-MM-dd'T'HH:mm:ssz\") as DateTime, \n    toString(id(all_study_action)) as action_id,\n    case \n      when component.uid is NULL THEN \"N/A\"\n      else component.uid\n    end as alias,\n    sr.uid as study_uid,\n    labels(component) as labels,\n    final_user.name as user_final_name,\n    action_labels_unw\n    order by all_study_action.date desc\n\nRETURN DISTINCT\n    DateTime as `Timestamp`\n    ,user_final_name as `User Name`\n    ,action_id as `Action ID`\n    ,alias as `Component UID`\n    ,action_labels_unw as `Action Type`\n    order by DateTime desc\nlimit 1000",
+          "width": 16,
+          "height": 6,
+          "x": 0,
+          "y": 5,
+          "type": "table",
+          "selection": {},
+          "settings": {
+            "refreshButtonEnabled": true,
+            "compact": false,
+            "allowDownload": true,
+            "actionsRules": [
+              {
+                "condition": "Click",
+                "field": "Action ID",
+                "value": "Action ID",
+                "customization": "set variable",
+                "customizationValue": "idaction_2"
+              }
+            ],
+            "styleRules": [
+              {
+                "field": "Action Type",
+                "condition": "=",
+                "value": "Create",
+                "customization": "cell color",
+                "customizationValue": "#5FE8866E"
+              },
+              {
+                "field": "Action Type",
+                "condition": "=",
+                "value": "Edit",
+                "customization": "cell color",
+                "customizationValue": "#FFA4006E"
+              },
+              {
+                "field": "Action Type",
+                "condition": "=",
+                "value": "Delete",
+                "customization": "cell color",
+                "customizationValue": "#FF11116E"
+              },
+              {
+                "field": "Component UID",
+                "condition": "=",
+                "value": "N/A",
+                "customization": "cell color",
+                "customizationValue": "#FF11116E"
+              }
+            ],
+            "description": "A list of all actions preformed by the selected User on a specific Study. You must select a User (above), as well as a Study UID (left) to obtain results in this table.",
+            "columnWidths": "[2,2,1,2,2]"
+          }
+        },
+        {
+          "title": "Action ID",
+          "query": "RETURN $neodash_idaction_2",
+          "width": 5,
+          "height": 2,
+          "x": 19,
+          "y": 3,
+          "type": "value",
+          "selection": {},
+          "settings": {
+            "type": "Free Text",
+            "clearParameterOnFieldClear": false,
+            "manualPropertyNameSpecification": false,
+            "searchType": "CONTAINS",
+            "overridePropertyDisplayName": false,
+            "entityType": "idaction",
+            "parameterName": "neodash_idaction",
+            "deduplicateSuggestions": false,
+            "description": "Shows the action ID selected.",
+            "helperText": "Action ID Number",
+            "monospace": true,
+            "textAlign": "center",
+            "verticalAlign": "middle",
+            "backgroundColor": "#1a76d2",
+            "color": "rgba(255,255,255)"
+          },
+          "id": "391def3b-3bda-4c47-9c51-71226526a137",
+          "schema": []
+        },
+        {
+          "x": 0,
+          "y": 3,
+          "title": "Select User",
+          "query": "WITH $neodash_studyroot_uid as study_uid,\n$neodash_study_min_date as study_min_date,\n$neodash_study_max_date as study_max_date\n\nMATCH (sr:StudyRoot)\n  WHERE sr.uid = study_uid\n\nMATCH (sr)-[at:AUDIT_TRAIL]->(all_study_action:StudyAction)-[:AFTER]-(component)\n  WHERE  (datetime(all_study_action.date) >= datetime(study_min_date)) \n    and (datetime(all_study_action.date) <= datetime(study_max_date))\n\nWITH DISTINCT all_study_action.author_id as author_id\n\nMATCH (user:User)\nWHERE user.oid = author_id\n\nRETURN user.name as value",
+          "width": 6,
+          "type": "select",
+          "height": 2,
+          "selection": {},
+          "settings": {
+            "type": "Custom Query",
+            "helperText": "Username",
+            "description": "This parameter is used to filter the results in the Actions Table below based on a specific user. The value must be a valid user initial to render any results.",
+            "entityType": "user_username_2",
+            "parameterName": "neodash_user_username_2"
+          },
+          "id": "14740fbe-885b-4b31-b38a-2b76753502f5"
+        },
+        {
+          "id": "a2723104-4fef-4a23-829f-3d034357e0bf",
+          "title": "Select Study Min Date Version",
+          "query": "\nwith $neodash_studyroot_uid as study_uid\n\nmatch (val:StudyValue)-[ver_rel:HAS_VERSION]-(sr:StudyRoot)\nWHERE sr.uid = study_uid\nWITH COLLECT (ver_rel) as ver_rel_collected \nCALL{\n  WITH ver_rel_collected\n  unwIND ver_rel_collected as ver_rel_unw\n  with ver_rel_unw as ver_rel_drafts\n    ORDER BY ver_rel_drafts.start_date DESC\n    WHERE ver_rel_drafts.status = \"DRAFT\"\n  WITH HEAD(COLLECT(distinct ver_rel_drafts)) AS ver_rel_draft_latest\n  return ver_rel_draft_latest.start_date as ver_rel_draft_latest_date\n}\n// return *\nUNWIND  ver_rel_collected as ver_rel\nWITH \n  case \n    when ver_rel.version is NULL THEN \"LATEST\" \n    ELSE  ver_rel.version \n  end AS `Study Version`,\n  ver_rel.start_date as study_date,\n  ver_rel.status AS `Version Status`, \n  ver_rel_draft_latest_date\n\nRETURN distinct \n  `Study Version`,  \n  `Version Status`,\n  CASE \n    WHEN `Study Version` = \"LATEST\" THEN ver_rel_draft_latest_date\n    ELSE study_date\n  end as `Study Min Date`\n  ORDER BY `Study Min Date` DESC\n\n\n",
+          "width": 9,
+          "height": 3,
+          "x": 6,
+          "y": 0,
+          "type": "table",
+          "selection": {},
+          "settings": {
+            "refreshButtonEnabled": true,
+            "actionsRules": [
+              {
+                "condition": "Click",
+                "field": "Study Min Date",
+                "value": "Study Min Date",
+                "customization": "set variable",
+                "customizationValue": "study_min_date"
+              },
+              {
+                "condition": "Click",
+                "field": "Study Max Date",
+                "value": "Study Max Date",
+                "customization": "set variable",
+                "customizationValue": "study_max_date"
+              }
+            ],
+            "description": "A list of studies where the selected User has performed an action. You must select a User (above) to obtain results in this table.",
+            "wrapContent": true,
+            "noDataMessage": "Select a Study.",
+            "columnWidths": "[1.5,1.5,4]"
+          }
+        },
+        {
+          "id": "68dfcfd9-940b-4068-b2df-43ae4580cbf0",
+          "title": "Select Study Max Date Version",
+          "query": "\nwith $neodash_studyroot_uid as study_uid\n\nmatch (val:StudyValue)-[ver_rel:HAS_VERSION]-(sr:StudyRoot)-[at:AUDIT_TRAIL]->(all_study_action:StudyAction)-[:AFTER]-(component)\nWHERE sr.uid = study_uid\n\nWITH \n   \n  case \n    when ver_rel.version is NULL THEN \"LATEST\" \n    ELSE  ver_rel.version \n  end AS `Study Version`,\n  ver_rel.start_date as study_date,\n  ver_rel.status AS `Version Status`\n\nRETURN distinct \n  `Study Version`,  \n  `Version Status`,\n  CASE \n    WHEN `Study Version` = \"LATEST\" THEN datetime(datetime())+duration({days:1})\n    ELSE study_date\n  end as `Study Max Date`\n",
+          "width": 9,
+          "height": 3,
+          "x": 15,
+          "y": 0,
+          "type": "table",
+          "selection": {},
+          "settings": {
+            "refreshButtonEnabled": true,
+            "actionsRules": [
+              {
+                "condition": "Click",
+                "field": "Study Max Date",
+                "value": "Study Max Date",
+                "customization": "set variable",
+                "customizationValue": "study_max_date"
+              }
+            ],
+            "description": "A list of studies where the selected User has performed an action. You must select a User (above) to obtain results in this table.",
+            "wrapContent": true,
+            "noDataMessage": "Select a Study.",
+            "columnWidths": "[1.5,1.5,4]"
+          }
+        },
+        {
+          "id": "b4dfbe45-3459-4e19-a144-39028b360fdc",
+          "title": "Selections Table",
+          "query": "\n\n\nWITH $neodash_user_username_2 as user_name,\n$neodash_studyroot_uid as study_uid,\n$neodash_study_min_date as study_min_date,\n$neodash_study_max_date as study_max_date\nRETURN \n  study_uid  as `Study UID`,\n  study_min_date AS `Selected Start Date`,\n  study_max_date AS `Selected End Date`",
+          "width": 13,
+          "height": 2,
+          "x": 6,
+          "y": 3,
+          "type": "table",
+          "selection": {},
+          "settings": {
+            "columnWidths": "[1,2,2]"
+          }
         }
       ]
     }

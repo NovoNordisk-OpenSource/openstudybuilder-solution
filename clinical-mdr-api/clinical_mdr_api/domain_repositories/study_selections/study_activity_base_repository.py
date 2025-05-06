@@ -236,24 +236,54 @@ class StudySelectionActivityBaseRepository(Generic[_AggregateRootType], abc.ABC)
     def _get_audit_node(
         self, study_selection: _AggregateRootType, study_selection_uid: str
     ):
-        all_current_ids = []
-        for item in study_selection.study_objects_selection:
-            all_current_ids.append(item.study_selection_uid)
-        all_closure_ids = []
-        for item in study_selection.repository_closure_data:
-            all_closure_ids.append(item.study_selection_uid)
-        # if uid is in current data
-        if study_selection_uid in all_current_ids:
-            # if uid is in closure data
-            if study_selection_uid in all_closure_ids:
-                return Edit()
-            return Create()
-        return Delete()
+        if not any(
+            item.study_selection_uid == study_selection_uid
+            for item in study_selection.study_objects_selection
+        ):
+            return Delete()
+
+        if any(
+            item.study_selection_uid == study_selection_uid
+            for item in study_selection.repository_closure_data
+        ) or (
+            study_selection.closure_from_other_ar
+            and study_selection_uid
+            == study_selection.closure_from_other_ar.study_selection_uid
+        ):
+            return Edit()
+        return Create()
 
     def is_repository_based_on_ordered_selection(self):
         return True
 
-    def save(self, study_selection: StudySelectionBaseAR, author_id: str) -> None:
+    def _get_audit_trail_nodes_to_reference(
+        self,
+        study_root_node: StudyRoot,
+        latest_study_value_node: StudyValue,
+        author_id: str,
+        study_activity: StudySelectionBaseVO,
+        study_selection: StudySelectionBaseAR,
+    ):
+        last_study_selection_node = (
+            self.get_study_selection_node_from_latest_study_value(
+                study_value=latest_study_value_node, study_selection=study_activity
+            )
+        )
+
+        audit_node = self._get_audit_node(
+            study_selection, study_activity.study_selection_uid
+        )
+        audit_node = self._set_before_audit_info(
+            last_study_selection_node, audit_node, study_root_node, author_id
+        )
+        return audit_node, last_study_selection_node
+
+    def save(
+        self,
+        study_selection: StudySelectionBaseAR,
+        author_id: str,
+        make_order_check=True,
+    ) -> None:
         assert study_selection.repository_closure_data is not None
         # get the closure_data
         closure_data = study_selection.repository_closure_data
@@ -304,31 +334,35 @@ class StudySelectionActivityBaseRepository(Generic[_AggregateRootType], abc.ABC)
 
         # loop through and remove selections
         for order, study_activity in selections_to_remove:
-            last_study_selection_node = (
-                self.get_study_selection_node_from_latest_study_value(
-                    study_value=latest_study_value_node, study_selection=study_activity
-                )
-            )
 
-            audit_node = self._get_audit_node(
-                study_selection, study_activity.study_selection_uid
-            )
-            audit_node = self._set_before_audit_info(
-                last_study_selection_node, audit_node, study_root_node, author_id
-            )
-            audit_trail_nodes[study_activity.study_selection_uid] = (
-                audit_node,
-                last_study_selection_node,
-            )
-            if isinstance(audit_node, Delete):
-                self._add_new_selection(
-                    latest_study_value_node,
-                    order,
-                    study_activity,
+            if not (
+                study_selection.closure_from_other_ar
+                and study_selection.closure_from_other_ar.study_selection_uid
+                == study_activity.study_selection_uid
+            ):
+                audit_node, last_study_selection_node = (
+                    self._get_audit_trail_nodes_to_reference(
+                        study_root_node=study_root_node,
+                        latest_study_value_node=latest_study_value_node,
+                        author_id=author_id,
+                        study_activity=study_activity,
+                        study_selection=study_selection,
+                    )
+                )
+                audit_trail_nodes[study_activity.study_selection_uid] = (
                     audit_node,
                     last_study_selection_node,
-                    True,
                 )
+
+                if isinstance(audit_node, Delete):
+                    self._add_new_selection(
+                        latest_study_value_node,
+                        order,
+                        study_activity,
+                        audit_node,
+                        last_study_selection_node,
+                        True,
+                    )
 
         # loop through and add selections
         for order, selection in selections_to_add:
@@ -337,15 +371,32 @@ class StudySelectionActivityBaseRepository(Generic[_AggregateRootType], abc.ABC)
                 audit_node, last_study_selection_node = audit_trail_nodes[
                     selection.study_selection_uid
                 ]
+            elif (
+                study_selection.closure_from_other_ar
+                and selection.study_selection_uid
+                == study_selection.closure_from_other_ar.study_selection_uid
+            ):
+                audit_node, last_study_selection_node = (
+                    self._get_audit_trail_nodes_to_reference(
+                        study_root_node=study_root_node,
+                        latest_study_value_node=latest_study_value_node,
+                        author_id=author_id,
+                        study_activity=selection,
+                        study_selection=study_selection,
+                    )
+                )
             else:
                 audit_node = Create()
                 audit_node.author_id = selection.author_id
                 audit_node.date = selection.start_date
                 audit_node.save()
                 study_root_node.audit_trail.connect(audit_node)
+            new_order = order
+            if not make_order_check:
+                new_order = selection.order
             self._add_new_selection(
                 latest_study_value_node,
-                order,
+                new_order,
                 selection,
                 audit_node,
                 last_study_selection_node,

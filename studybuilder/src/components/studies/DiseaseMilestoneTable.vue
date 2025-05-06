@@ -13,8 +13,36 @@
       :export-data-url="exportDataUrl"
       :column-data-resource="exportDataUrl"
       disable-filtering
+      :hide-default-body="sortMode && diseaseMilestones.length > 0"
       @filter="fetchDiseaseMilestones"
     >
+      <template #afterSwitches>
+        <div :title="$t('NNTableTooltips.reorder_content')">
+          <v-switch
+            v-model="sortMode"
+            :label="$t('NNTable.reorder_content')"
+            hide-details
+            class="mr-6"
+            color="primary"
+            :disabled="!accessGuard.checkPermission($roles.STUDY_WRITE)"
+          />
+        </div>
+      </template>
+      <template #tbody>
+        <tbody v-show="sortMode" ref="parent">
+          <tr v-for="milestone in diseaseMilestones" :key="milestone.uid">
+            <td>
+              <v-icon size="small"> mdi-sort </v-icon>
+            </td>
+            <td>{{ milestone.order }}</td>
+            <td>{{ milestone.disease_milestone_type_name }}</td>
+            <td>{{ milestone.disease_milestone_type_definition }}</td>
+            <td>{{ $filters.yesno(milestone.repetition_indicator) }}</td>
+            <td>{{ $filters.date(milestone.start_date) }}</td>
+            <td>{{ milestone.author_username }}</td>
+          </tr>
+        </tbody>
+      </template>
       <template #actions="">
         <v-btn
           data-cy="create-disease-milestone"
@@ -24,8 +52,8 @@
           color="nnBaseBlue"
           :title="$t('DiseaseMilestoneForm.add_title')"
           :disabled="
-            !checkPermission($roles.STUDY_WRITE) ||
-            selectedStudyVersion !== null
+            !accessGuard.checkPermission($roles.STUDY_WRITE) ||
+            studiesGeneralStore.selectedStudyVersion !== null
           "
           icon="mdi-plus"
           @click="createDiseaseMilestone()"
@@ -63,18 +91,10 @@
         @close="closeHistory"
       />
     </v-dialog>
-    <SelectionOrderUpdateForm
-      v-if="selectedDiseaseMilestone"
-      ref="orderForm"
-      :initial-value="selectedDiseaseMilestone.order"
-      :open="showOrderForm"
-      @close="closeOrderForm"
-      @submit="submitOrder"
-    />
   </div>
 </template>
 
-<script>
+<script setup>
 import ActionsMenu from '@/components/tools/ActionsMenu.vue'
 import ConfirmDialog from '@/components/tools/ConfirmDialog.vue'
 import dataFormating from '@/utils/dataFormating'
@@ -82,194 +102,190 @@ import DiseaseMilestoneForm from './DiseaseMilestoneForm.vue'
 import filteringParameters from '@/utils/filteringParameters'
 import HistoryTable from '@/components/tools/HistoryTable.vue'
 import NNTable from '@/components/tools/NNTable.vue'
-import SelectionOrderUpdateForm from '@/components/studies/SelectionOrderUpdateForm.vue'
 import study from '@/api/study'
 import { useAccessGuard } from '@/composables/accessGuard'
 import { useStudiesGeneralStore } from '@/stores/studies-general'
+import { computed, inject, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { useDragAndDrop } from '@formkit/drag-and-drop/vue'
 
-export default {
-  components: {
-    ActionsMenu,
-    ConfirmDialog,
-    DiseaseMilestoneForm,
-    HistoryTable,
-    NNTable,
-    SelectionOrderUpdateForm,
+const [parent, diseaseMilestones] = useDragAndDrop([], {
+  onDragend: (event) => {
+    const newOrder =
+      event.draggedNode.data.value.order -
+      (event.state.initialIndex - event.state.targetIndex)
+    changeOrder(event.draggedNode.data.value.uid, newOrder)
   },
-  inject: ['eventBusEmit'],
-  setup() {
-    const studiesGeneralStore = useStudiesGeneralStore()
-    return {
-      ...useAccessGuard(),
-      selectedStudy: studiesGeneralStore.selectedStudy,
-      selectedStudyVersion: studiesGeneralStore.selectedStudyVersion,
-    }
+})
+
+const { t } = useI18n()
+const eventBusEmit = inject('eventBusEmit')
+const roles = inject('roles')
+const studiesGeneralStore = useStudiesGeneralStore()
+const accessGuard = useAccessGuard()
+const table = ref()
+const confirm = ref()
+
+const actions = [
+  {
+    label: t('_global.edit'),
+    icon: 'mdi-pencil-outline',
+    iconColor: 'primary',
+    condition: () => !studiesGeneralStore.selectedStudyVersion,
+    click: editDiseaseMilestone,
+    accessRole: roles.STUDY_WRITE,
   },
-  data() {
-    return {
-      actions: [
-        {
-          label: this.$t('_global.edit'),
-          icon: 'mdi-pencil-outline',
-          iconColor: 'primary',
-          condition: () => !this.selectedStudyVersion,
-          click: this.editDiseaseMilestone,
-          accessRole: this.$roles.STUDY_WRITE,
-        },
-        {
-          label: this.$t('_global.change_order'),
-          icon: 'mdi-pencil-outline',
-          iconColor: 'primary',
-          condition: () => !this.selectedStudyVersion,
-          click: this.changeOrder,
-          accessRole: this.$roles.STUDY_WRITE,
-        },
-        {
-          label: this.$t('_global.delete'),
-          icon: 'mdi-delete-outline',
-          iconColor: 'error',
-          condition: () => !this.selectedStudyVersion,
-          click: this.deleteDiseaseMilestone,
-          accessRole: this.$roles.STUDY_WRITE,
-        },
-        {
-          label: this.$t('_global.history'),
-          icon: 'mdi-history',
-          click: this.openHistory,
-        },
-      ],
-      diseaseMilestones: [],
-      headers: [
-        { title: '', key: 'actions', width: '1%' },
-        { title: '#', key: 'order', width: '5%' },
-        {
-          title: this.$t('DiseaseMilestone.disease_milestone_type'),
-          key: 'disease_milestone_type_name',
-        },
-        {
-          title: this.$t('_global.definition'),
-          key: 'disease_milestone_type_definition',
-        },
-        {
-          title: this.$t('DiseaseMilestone.repetition_indicator'),
-          key: 'repetition_indicator',
-        },
-        { title: this.$t('_global.modified'), key: 'start_date' },
-        { title: this.$t('_global.modified_by'), key: 'author_username' },
-      ],
-      historyItems: [],
-      selectedDiseaseMilestone: null,
-      showForm: false,
-      showHistory: false,
-      showOrderForm: false,
-      total: 0,
-    }
+  {
+    label: t('_global.delete'),
+    icon: 'mdi-delete-outline',
+    iconColor: 'error',
+    condition: () => !studiesGeneralStore.selectedStudyVersion,
+    click: deleteDiseaseMilestone,
+    accessRole: roles.STUDY_WRITE,
   },
-  computed: {
-    exportDataUrl() {
-      return `studies/${this.selectedStudy.uid}/study-disease-milestones`
-    },
-    diseaseMilestoneHistoryTitle() {
-      if (this.selectedDiseaseMilestone) {
-        return this.$t('DiseaseMilestoneTable.item_history_title', {
-          uid: this.selectedDiseaseMilestone.uid,
-        })
-      }
-      return ''
-    },
+  {
+    label: t('_global.history'),
+    icon: 'mdi-history',
+    click: openHistory,
   },
-  methods: {
-    fetchDiseaseMilestones(filters, options, filtersUpdated) {
-      const params = filteringParameters.prepareParameters(
-        options,
-        filters,
-        filtersUpdated
-      )
-      study
-        .getStudyDiseaseMilestones(this.selectedStudy.uid, params)
-        .then((resp) => {
-          this.diseaseMilestones = resp.data.items
-          this.total = resp.data.total
-        })
-    },
-    formatItems(items) {
-      const result = []
-      for (const item of items) {
-        item.repetition_indicator = dataFormating.yesno(
-          item.repetition_indicator
-        )
-        result.push(item)
-      }
-      return result
-    },
-    async fetchDiseaseMilestonesHistory() {
-      const resp = await study.getStudyDiseaseMilestonesAuditTrail(
-        this.selectedStudy.uid
-      )
-      return this.formatItems(resp.data)
-    },
-    createDiseaseMilestone() {
-      this.selectedDiseaseMilestone = null
-      this.showForm = true
-    },
-    closeForm() {
-      this.showForm = false
-      this.$refs.table.filterTable()
-    },
-    editDiseaseMilestone(item) {
-      this.selectedDiseaseMilestone = item
-      this.showForm = true
-    },
-    async deleteDiseaseMilestone(item) {
-      const options = { type: 'warning' }
-      const context = { name: item.disease_milestone_type_name }
-      const msg = this.$t('DiseaseMilestoneTable.confirm_delete', context)
-      if (!(await this.$refs.confirm.open(msg, options))) {
-        return
-      }
-      study
-        .deleteStudyDiseaseMilestone(this.selectedStudy.uid, item.uid)
-        .then(() => {
-          this.eventBusEmit('notification', {
-            msg: this.$t('DiseaseMilestoneTable.delete_success'),
-          })
-          this.$refs.table.filterTable()
-        })
-    },
-    async openHistory(item) {
-      this.selectedDiseaseMilestone = item
-      const resp = await study.getStudyDiseaseMilestoneAuditTrail(
-        this.selectedStudy.uid,
-        item.uid
-      )
-      this.historyItems = this.formatItems(resp.data)
-      this.showHistory = true
-    },
-    closeHistory() {
-      this.showHistory = false
-    },
-    submitOrder(value) {
-      study
-        .updateStudyDiseaseMilestoneOrder(
-          this.selectedDiseaseMilestone.study_uid,
-          this.selectedDiseaseMilestone.uid,
-          value
-        )
-        .then(() => {
-          this.$refs.table.filterTable()
-          this.closeOrderForm()
-          this.eventBusEmit('notification', {
-            msg: this.$t('_global.order_updated'),
-          })
-        })
-    },
-    changeOrder(diseaseMilestone) {
-      this.selectedDiseaseMilestone = diseaseMilestone
-      this.showOrderForm = true
-    },
-    closeOrderForm() {
-      this.showOrderForm = false
-    },
+]
+const headers = [
+  { title: '', key: 'actions', width: '1%' },
+  { title: '#', key: 'order', width: '5%' },
+  {
+    title: t('DiseaseMilestone.disease_milestone_type'),
+    key: 'disease_milestone_type_name',
   },
+  {
+    title: t('_global.definition'),
+    key: 'disease_milestone_type_definition',
+  },
+  {
+    title: t('DiseaseMilestone.repetition_indicator'),
+    key: 'repetition_indicator',
+  },
+  { title: t('_global.modified'), key: 'start_date' },
+  { title: t('_global.modified_by'), key: 'author_username' },
+]
+const historyItems = ref([])
+const selectedDiseaseMilestone = ref(null)
+const showForm = ref(false)
+const showHistory = ref(false)
+const total = ref(0)
+const sortMode = ref(false)
+
+const exportDataUrl = computed(() => {
+  return `studies/${studiesGeneralStore.selectedStudy.uid}/study-disease-milestones`
+})
+const diseaseMilestoneHistoryTitle = computed(() => {
+  if (selectedDiseaseMilestone.value) {
+    return t('DiseaseMilestoneTable.item_history_title', {
+      uid: selectedDiseaseMilestone.value.uid,
+    })
+  }
+  return ''
+})
+
+function fetchDiseaseMilestones(filters, options, filtersUpdated) {
+  const params = filteringParameters.prepareParameters(
+    options,
+    filters,
+    filtersUpdated
+  )
+  study
+    .getStudyDiseaseMilestones(studiesGeneralStore.selectedStudy.uid, params)
+    .then((resp) => {
+      diseaseMilestones.value = resp.data.items
+      total.value = resp.data.total
+    })
+}
+
+function formatItems(items) {
+  const result = []
+  for (const item of items) {
+    item.repetition_indicator = dataFormating.yesno(item.repetition_indicator)
+    result.push(item)
+  }
+  return result
+}
+
+async function fetchDiseaseMilestonesHistory() {
+  const resp = await study.getStudyDiseaseMilestonesAuditTrail(
+    studiesGeneralStore.selectedStudy.uid
+  )
+  return formatItems(resp.data)
+}
+
+function createDiseaseMilestone() {
+  selectedDiseaseMilestone.value = null
+  showForm.value = true
+}
+
+function closeForm() {
+  showForm.value = false
+  table.value.filterTable()
+}
+
+function editDiseaseMilestone(item) {
+  selectedDiseaseMilestone.value = item
+  showForm.value = true
+}
+
+async function deleteDiseaseMilestone(item) {
+  const options = { type: 'warning' }
+  const context = { name: item.disease_milestone_type_name }
+  const msg = t('DiseaseMilestoneTable.confirm_delete', context)
+  if (!(await confirm.value.open(msg, options))) {
+    return
+  }
+  study
+    .deleteStudyDiseaseMilestone(
+      studiesGeneralStore.selectedStudy.uid,
+      item.uid
+    )
+    .then(() => {
+      eventBusEmit('notification', {
+        msg: t('DiseaseMilestoneTable.delete_success'),
+      })
+      table.value.filterTable()
+    })
+}
+
+async function openHistory(item) {
+  selectedDiseaseMilestone.value = item
+  const resp = await study.getStudyDiseaseMilestoneAuditTrail(
+    studiesGeneralStore.selectedStudy.uid,
+    item.uid
+  )
+  historyItems.value = formatItems(resp.data)
+  showHistory.value = true
+}
+
+function closeHistory() {
+  showHistory.value = false
+}
+
+function changeOrder(milestoneUid, newOrder) {
+  study
+    .updateStudyDiseaseMilestoneOrder(
+      studiesGeneralStore.selectedStudy.uid,
+      milestoneUid,
+      newOrder
+    )
+    .then(() => {
+      table.value.filterTable()
+    })
+    .catch(() => {
+      table.value.filterTable()
+    })
 }
 </script>
+
+<style scoped>
+tbody tr td {
+  border-left-style: outset;
+  border-bottom-style: outset;
+  border-width: 1px !important;
+  border-color: rgb(var(--v-theme-nnFadedBlue200)) !important;
+}
+</style>

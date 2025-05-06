@@ -180,6 +180,11 @@ class OdmDataExtractor:
                             for item_group in self.odm_item_groups
                             for element in item_group.vendor_elements
                         }
+                        | {
+                            element.uid
+                            for item in self.odm_items
+                            for element in item.vendor_elements
+                        }
                     ),
                     "op": "eq",
                 }

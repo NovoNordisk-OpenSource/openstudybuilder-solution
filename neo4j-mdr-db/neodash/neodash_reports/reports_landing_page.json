@@ -1,0 +1,36 @@
+{
+    "uuid": "dc89042e-346d-4784-ae66-c7a7e60654ec",
+    "title": "**Reports Landing Page**",
+    "version": "2.4",
+    "settings": {
+      "pagenumber": 0,
+      "editable": true,
+      "fullscreenEnabled": false,
+      "parameters": {}
+    },
+    "pages": [
+      {
+        "title": "ReadMe",
+        "reports": [
+          {
+            "id": "218206e7-39f7-4a98-a1d8-6622715211f1",
+            "title": "Guide",
+            "query": "### Welcome!\n\n#### Looking for the Neodash Reports?\n\nClick the arrow/menu icon in the bottom-left of the page, or anywhere on the left sidebar (arrow) to expose the list of reports.\n\n#### <-----\n\n#### Happy Reporting!",
+            "width": 24,
+            "height": 3,
+            "x": 0,
+            "y": 0,
+            "type": "text",
+            "selection": {},
+            "settings": {},
+            "schema": []
+          }
+        ]
+      }
+    ],
+    "parameters": {},
+    "extensions": {
+      "active": true,
+      "activeReducers": []
+    }
+  }

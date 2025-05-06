@@ -7,69 +7,58 @@
         :items="helpItems"
       />
     </div>
-    <v-tabs v-model="tab" bg-color="white">
-      <v-tab v-for="item of tabs" :key="item.tab" :value="item.tab">
-        {{ item.name }}
-      </v-tab>
-    </v-tabs>
-    <v-window v-model="tab">
-      <v-window-item value="activities">
-        <ActivitiesTable
-          :key="`activities-${tabKeys['activities']}`"
-          source="activities"
-        />
-      </v-window-item>
-      <v-window-item value="activity-groups">
-        <ActivitiesTable
-          :key="`activities-${tabKeys['activity-groups']}`"
-          source="activity-groups"
-        />
-      </v-window-item>
-      <v-window-item value="activity-subgroups">
-        <ActivitiesTable
-          :key="`activities-${tabKeys['activity-subgroups']}`"
-          source="activity-sub-groups"
-        />
-      </v-window-item>
-      <v-window-item value="activities-by-grouping">
-        <ActivitiesTable
-          :key="`activities-${tabKeys['activities-by-grouping']}`"
-          source="activities-by-grouping"
-        />
-      </v-window-item>
-      <v-window-item value="activity-instances">
-        <ActivitiesTable
-          :key="`activities-${tabKeys['activity-instances']}`"
-          source="activity-instances"
-        />
-      </v-window-item>
-      <v-window-item value="requested-activities">
-        <ActivitiesTable
-          :key="`activities-${tabKeys['requested-activities']}`"
-          source="activities"
-          requested
-        />
-      </v-window-item>
-    </v-window>
+    <NavigationTabs :tabs="tabs">
+      <template #default="{ tabKeys }">
+        <v-window-item value="activities">
+          <ActivitiesTable
+            :key="`activities-${tabKeys['activities']}`"
+            source="activities"
+          />
+        </v-window-item>
+        <v-window-item value="activity-groups">
+          <ActivitiesTable
+            :key="`activities-${tabKeys['activity-groups']}`"
+            source="activity-groups"
+          />
+        </v-window-item>
+        <v-window-item value="activity-subgroups">
+          <ActivitiesTable
+            :key="`activities-${tabKeys['activity-subgroups']}`"
+            source="activity-sub-groups"
+          />
+        </v-window-item>
+        <v-window-item value="activities-by-grouping">
+          <ActivitiesTable
+            :key="`activities-${tabKeys['activities-by-grouping']}`"
+            source="activities-by-grouping"
+          />
+        </v-window-item>
+        <v-window-item value="activity-instances">
+          <ActivitiesTable
+            :key="`activities-${tabKeys['activity-instances']}`"
+            source="activity-instances"
+          />
+        </v-window-item>
+        <v-window-item value="requested-activities">
+          <ActivitiesTable
+            :key="`activities-${tabKeys['requested-activities']}`"
+            source="activities"
+            requested
+          />
+        </v-window-item>
+      </template>
+    </NavigationTabs>
   </div>
 </template>
 
 <script setup>
 import ActivitiesTable from '@/components/library/ActivitiesTable.vue'
 import HelpButtonWithPanels from '@/components/tools/HelpButtonWithPanels.vue'
-import { useAppStore } from '@/stores/app'
-import { useRoute, useRouter } from 'vue-router'
-import { ref, watch } from 'vue'
+import NavigationTabs from '@/components/tools/NavigationTabs.vue'
 import { useI18n } from 'vue-i18n'
-import { useTabKeys } from '@/composables/tabKeys'
 
-const router = useRouter()
-const route = useRoute()
-const appStore = useAppStore()
 const { t } = useI18n()
-const { tabKeys, updateTabKey } = useTabKeys()
 
-const tab = ref(null)
 const tabs = [
   { tab: 'activities', name: t('ActivityTable.activities') },
   {
@@ -115,22 +104,4 @@ const helpItems = [
   'ActivityTable.is_legacy_usage',
   'ActivityTable.rationale_for_request',
 ]
-
-watch(tab, (newValue) => {
-  const activeTab = newValue || tabs[0].tab
-  router.push({
-    name: 'Activities',
-    params: { tab: newValue },
-  })
-  const tabName = tabs.find((el) => el.tab === activeTab).name
-  appStore.addBreadcrumbsLevel(
-    tabName,
-    { name: 'Activities', params: { tab: tabName } },
-    3,
-    true
-  )
-  updateTabKey(newValue)
-})
-
-tab.value = route.params.tab
 </script>

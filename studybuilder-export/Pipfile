@@ -4,7 +4,8 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-requests = "*"
+httpx = "0.28.1"
+httpx_auth = "0.23.1"
 
 [dev-packages]
 

@@ -9,7 +9,8 @@ class TemplateParameterTerm(BaseModel):
     uid: Annotated[
         str,
         Field(
-            description="The unique id of the template parameter term.", nullable=True
+            description="The unique id of the template parameter term.",
+            json_schema_extra={"nullable": True},
         ),
     ]
 
@@ -17,7 +18,7 @@ class TemplateParameterTerm(BaseModel):
         str | None,
         Field(
             description="The name or the actual value. E.g. 'Lipids', 'Haematology', 'Body Temperature', ...",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ]
 
@@ -25,7 +26,7 @@ class TemplateParameterTerm(BaseModel):
         str | None,
         Field(
             description="the type of template parameter, E.g. 'NumericFinding', 'CategoricFinding'",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ]
 
@@ -35,7 +36,7 @@ class IndexedTemplateParameterTerm(TemplateParameterTerm):
         int | None,
         Field(
             description="The index of the template parameter term in the given template position.",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ]
 
@@ -61,7 +62,7 @@ class MultiTemplateParameterTerm(BaseModel):
         int | None,
         Field(
             description="The position in the template that the template parameter is in.",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ]
     conjunction: Annotated[
@@ -69,7 +70,7 @@ class MultiTemplateParameterTerm(BaseModel):
         Field(
             description="If the selected template parameter term has multiple terms, "
             "the conjunction string to connect them. Available terms are ['and', 'or', ','].",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ]
     terms: Annotated[

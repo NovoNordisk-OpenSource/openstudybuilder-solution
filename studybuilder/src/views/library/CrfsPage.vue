@@ -50,9 +50,7 @@
         />
       </v-window-item>
       <v-window-item value="crf-tree">
-        <CrfTreeMain
-          :key="`crf-tree-${tabKeys['crf-tree']}`"
-        />
+        <CrfTreeMain :key="`crf-tree-${tabKeys['crf-tree']}`" />
       </v-window-item>
       <v-window-item value="odm-viewer">
         <OdmViewer :element-prop="uid" :refresh="tab" @clear-uid="clearUid" />
@@ -147,7 +145,7 @@ watch(tab, (newValue) => {
 watch(
   () => route.params.tab,
   (newValue) => {
-    tab.value = newValue
+    tab.value = newValue || tabs[0].tab
     updateTabKey(newValue)
   }
 )
@@ -159,12 +157,6 @@ onMounted(() => {
   type.value = route.params.type
   uid.value = route.params.uid
 })
-
-function redirectToPage(data) {
-  uid.value = data.uid
-  type.value = data.type
-  tab.value = data.tab
-}
 
 function clearUid() {
   uid.value = null

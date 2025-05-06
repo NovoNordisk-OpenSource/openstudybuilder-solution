@@ -1,8 +1,10 @@
+import datetime
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Any, Sequence
 
 from neomodel.sync_.core import NodeMeta, db
+from neomodel.sync_.match import Collect, NodeNameResolver, Optional, Size
 
 from clinical_mdr_api.domain_repositories.generic_repository import (
     RepositoryClosureData,  # type: ignore
@@ -184,6 +186,217 @@ RETURN
         rs = db.cypher_query(query=query)
 
         return rs
+
+    def get_study_structure_statistics(self, uid: str) -> dict[str, int] | None:
+        result = (
+            StudyValue.nodes.filter(latest_value__uid=uid)
+            .traverse_relations(
+                Optional("has_study_arm"),
+                Optional("has_study_branch_arm"),
+                Optional("has_study_element"),
+                Optional("has_study_cohort"),
+                Optional("has_study_epoch"),
+                Optional("has_study_footnote__references_study_epoch"),
+                Optional("has_study_visit"),
+                Optional("has_study_footnote__references_study_visit"),
+            )
+            .annotate(
+                arm_count=Size(
+                    Collect(NodeNameResolver("has_study_arm"), distinct=True)
+                ),
+                branch_count=Size(
+                    Collect(NodeNameResolver("has_study_branch_arm"), distinct=True)
+                ),
+                element_count=Size(
+                    Collect(NodeNameResolver("has_study_element"), distinct=True)
+                ),
+                cohort_count=Size(
+                    Collect(NodeNameResolver("has_study_cohort"), distinct=True)
+                ),
+                epoch_count=Size(
+                    Collect(NodeNameResolver("has_study_epoch"), distinct=True)
+                ),
+                epoch_footnote_count=Size(
+                    Collect(
+                        NodeNameResolver("has_study_footnote__references_study_epoch"),
+                        distinct=True,
+                    )
+                ),
+                visit_count=Size(
+                    Collect(NodeNameResolver("has_study_visit"), distinct=True)
+                ),
+                visit_footnote_count=Size(
+                    Collect(
+                        NodeNameResolver("has_study_footnote__references_study_visit"),
+                        distinct=True,
+                    )
+                ),
+            )
+            .all()
+        )
+        if not result:
+            return None
+        return {
+            "arm_count": result[0][3],
+            "branch_count": result[0][4],
+            "element_count": result[0][5],
+            "cohort_count": result[0][6],
+            "epoch_count": result[0][7],
+            "epoch_footnote_count": result[0][8],
+            "visit_count": result[0][9],
+            "visit_footnote_count": result[0][10],
+        }
+
+    def copy_study_items(
+        self,
+        study_src_uid: str,
+        study_target_uid: str,
+        list_of_items_to_copy: list[bool],
+        author_id: str,
+    ) -> dict[str, int] | None:
+        exclusions = """
+            NOT EXISTS((selection_src)--(:StudyActivity))
+            AND NOT EXISTS((selection_src)--(:StudyActivitySubGroup))
+            AND NOT EXISTS((selection_src)--(:StudyActivityGroup))
+            AND NOT EXISTS((selection_src:StudySoAFootnote)--(:StudyActivitySchedule))
+            AND NOT EXISTS((selection_src)--(:StudyActivityInstance))
+            AND NOT EXISTS((selection_src)--(:StudySoAGroup))
+        """
+        if (
+            "StudySoAFootnote" in list_of_items_to_copy
+            and "StudyVisit" not in list_of_items_to_copy
+        ):
+            exclusions += """
+            AND NOT EXISTS((selection_src:StudySoAFootnote)--(:StudyVisit))
+        """
+        if (
+            "StudySoAFootnote" in list_of_items_to_copy
+            and "StudyEpoch" not in list_of_items_to_copy
+        ):
+            exclusions += """
+            AND NOT EXISTS((selection_src:StudySoAFootnote)--(:StudyEpoch))
+        """
+
+        # COPY NODES AND OUTBOUND RELATIONSHIPS
+        query = f"""
+WITH $study_src_uid as study_src, $study_target_uid as study_target, $to_copy_labels as to_copy_labels
+with study_src, study_target, apoc.text.join(to_copy_labels, '|') AS to_copy_labels_text
+
+MATCH (sr_src:StudyRoot)-[:LATEST]-(sv_src:StudyValue)
+    WHERE sr_src.uid = study_src
+MATCH (sr_target:StudyRoot)-[:LATEST]-(sv_target:StudyValue)
+    WHERE sr_target.uid = study_target
+
+
+CALL apoc.cypher.run("
+    MATCH path = ((sr_src)--(saction_src:StudyAction)--(selection_src:StudySelection&(" + to_copy_labels_text + "))--(sv_src))
+        WHERE {exclusions}
+    return sr_src, sv_src,collect(path) as paths ", 
+{{sr_src:sr_src, sv_src:sv_src }})
+YIELD value
+
+WITH  sr_target, value.sr_src as sr_src, sv_target, value.sv_src as sv_src,value.paths as paths
+    
+CALL apoc.refactor.cloneSubgraphFromPaths(paths, {{
+    standinNodes:[[sv_src, sv_target], [sr_src,sr_target]]
+}})
+YIELD input, output, error
+SET output:TEMP
+WITH input,output
+MATCH (selection_src:StudySelection)-[r_ext_src]-(ext_src)
+    where ID(selection_src)=input
+    and not "StudySelection" in labels(ext_src)
+    and not "StudyAction" in labels(ext_src)
+    and not "StudyValue" in labels(ext_src)
+call apoc.create.relationship(output, type(r_ext_src), Null, ext_src)
+yield rel
+RETURN rel
+"""
+        parameters = {
+            "study_src_uid": study_src_uid,
+            "study_target_uid": study_target_uid,
+            "to_copy_labels": list_of_items_to_copy,
+        }
+        db.cypher_query(query=query, params=parameters)
+
+        # COPY BETWEEN SELECTIONS RELATIONSHIPS
+        query = """
+WITH $study_src_uid as study_src, $study_target_uid as study_target, $to_copy_labels as to_copy_labels
+
+MATCH (sr_from:StudyRoot)-[:LATEST]-(sv_from:StudyValue)--(selection_src_from:StudySelection)-[r_ext_src]->(selection_src_to:StudySelection)
+    where sr_from.uid = study_src
+WITH selection_src_from.uid as from_uid, type(r_ext_src) AS from_rel_type_to, selection_src_to.uid as to_uid, study_target, to_copy_labels
+match (sr_to:StudyRoot)-[:LATEST]-(sv_to:StudyValue)--(a:StudySelection)
+    where sr_to.uid = study_target
+match (sr_to)-[:LATEST]-(sv_to)--(b:StudySelection) 
+WITH a,b, from_rel_type_to
+    where a.uid = from_uid
+    and b.uid = to_uid
+    AND ANY(label IN labels(a) WHERE label IN to_copy_labels)
+WITH DISTINCT a,b,from_rel_type_to
+
+call apoc.merge.relationship(a, from_rel_type_to, null, Null, b)
+yield rel
+
+
+return *
+"""
+        parameters = {
+            "study_src_uid": study_src_uid,
+            "study_target_uid": study_target_uid,
+            "to_copy_labels": list_of_items_to_copy,
+        }
+        db.cypher_query(query=query, params=parameters)
+
+        # REFACTOR UIDS AND STUDY ACTIONS
+        query = """
+
+
+WITH $study_src_uid as study_src, $study_target_uid as study_target, $to_copy_labels as to_copy_labels, $date as date, $author_id as author_id
+
+unwind to_copy_labels as to_copy_labels_unw
+
+MATCH (sr_target:StudyRoot)-[:LATEST]-(sv_target:StudyValue)--(selection_target:StudySelection)
+    where sr_target.uid = study_target
+
+CALL {
+    WITH to_copy_labels_unw, selection_target
+    WITH to_copy_labels_unw, selection_target
+        WHERE to_copy_labels_unw in labels(selection_target)
+    MATCH (m:Counter{counterId:to_copy_labels_unw+'Counter'})
+    WITH m,to_copy_labels_unw, selection_target
+    CALL apoc.atomic.add(m,'count',1,1) yield oldValue, newValue
+    WITH toInteger(newValue) as uid_number,to_copy_labels_unw, selection_target
+    with to_copy_labels_unw+"_"+apoc.text.lpad(""+(uid_number), 6, "0") as new_uid, selection_target
+    SET selection_target.uid = new_uid
+    REMOVE selection_target:TEMP
+}
+
+WITH $study_src_uid as study_src, $study_target_uid as study_target, $to_copy_labels as to_copy_labels, $date as date, $author_id as author_id
+
+MATCH (sr_target)--(saction:StudyAction:TEMP)
+    where sr_target.uid = study_target
+    and "TEMP" in labels(saction)
+WITH distinct saction, author_id, date
+SET saction.author_id = author_id
+SET saction.date = date
+REMOVE saction:TEMP
+REMOVE saction:Edit
+REMOVE saction:Create
+SET saction:Create
+
+return *
+"""
+        parameters = {
+            "study_src_uid": study_src_uid,
+            "study_target_uid": study_target_uid,
+            "to_copy_labels": list_of_items_to_copy,
+            "date": datetime.datetime.now(datetime.timezone.utc),
+            "author_id": author_id,
+        }
+        result = db.cypher_query(query=query, params=parameters)
+
+        return result
 
     def update_subpart_relationship(
         self,

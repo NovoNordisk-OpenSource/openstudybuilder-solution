@@ -40,6 +40,7 @@ CTTermUID = Path(description="The unique id of the ct term.")
     response_model=CTTerm,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {"description": "Created - The term was successfully created."},
         400: {
             "model": ErrorResponse,
@@ -48,7 +49,6 @@ CTTermUID = Path(description="The unique id of the ct term.")
             "- The library doesn't exist..\n"
             "- The library doesn't allow to add new items.\n",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def create(
@@ -70,8 +70,8 @@ def create(
     response_model_exclude_unset=True,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.allow_exports(
@@ -134,6 +134,12 @@ def get_all_terms(
             description="Boolean value to indicate desired package is a sponsor package. Defaults to False.",
         ),
     ] = False,
+    include_removed_terms: Annotated[
+        bool,
+        Query(
+            description="Boolean value to indicate whether or not to include terms removed from codelists. Defaults to False."
+        ),
+    ] = False,
     sort_by: Annotated[
         Json | None, Query(description=_generic_descriptions.SORT_BY)
     ] = None,
@@ -169,6 +175,7 @@ def get_all_terms(
         library=library_name,
         package=package,
         is_sponsor=is_sponsor,
+        include_removed_terms=include_removed_terms,
         sort_by=sort_by,
         page_number=page_number,
         page_size=page_size,
@@ -190,11 +197,11 @@ def get_all_terms(
     response_model=list[Any],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - Invalid field name specified",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_distinct_values_for_header(
@@ -255,6 +262,7 @@ def get_distinct_values_for_header(
     response_model=CTTerm,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {
             "description": "Created - The term was successfully added as a parent to the term identified by term-uid."
         },
@@ -267,7 +275,6 @@ def get_distinct_values_for_header(
             "model": ErrorResponse,
             "description": "Not Found - The term with the specified 'term-uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def add_parent(
@@ -294,6 +301,7 @@ def add_parent(
     response_model=CTTerm,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {
             "description": "Created - The term was successfully removed as a parent to the term identified by term-uid."
         },
@@ -306,7 +314,6 @@ def add_parent(
             "model": ErrorResponse,
             "description": "Not Found - The term with the specified 'term-uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def remove_parent(
@@ -334,6 +341,7 @@ def remove_parent(
     response_model=CTTerm,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         400: {
             "model": ErrorResponse,
             "description": "Forbidden - Order is larger than the number of selections",
@@ -342,7 +350,6 @@ def remove_parent(
             "model": ErrorResponse,
             "description": "Not Found - When there exist no study endpoint with the study endpoint uid.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def patch_new_term_order(

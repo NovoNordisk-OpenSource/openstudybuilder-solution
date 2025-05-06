@@ -7,9 +7,14 @@ Feature: Library - CT Catalogues
 
 	Scenario: User must be able to navigate to the CT Catalogues page and see it's content
 		Given The '/library' page is opened
+		And Log that step was executed
 		When The 'CT Catalogues' submenu is clicked in the 'Code Lists' section
+		And CT data is loaded
+		And Log that step was executed
 		Then The current URL is '/library/ct_catalogues/All'
+		And Log that step was executed
 		And The 'CT Catalogues' title is visible
+		And Log that step was executed
 		And The following tabs are visible
 			| tabs 			|
 			| ADAM CT       |
@@ -23,16 +28,21 @@ Feature: Library - CT Catalogues
 			| SEND CT       |
 		And The table is visible and not empty
 
-    Scenario: User must be able to select visibility of columns in the table 
+	Scenario: User must be able to select visibility of columns in the table 
         Given The '/library/ct_catalogues/All' page is opened
         When The first column is selected from Select Columns option for table with actions
         Then The table contain only selected column and actions column
-		
+
+    Scenario: User must be able to use table pagination
+        Given The '/library/ct_catalogues/All' page is opened
+        When The user switches pages of the table
+        Then The table page presents correct data
+
 	Scenario: User must be able to open terms for Codelists in CT Catalogue
 		Given The '/library/ct_catalogues/All' page is opened
 		When The 'SEND CT' tab is selected
 		And The 'Show terms' option is clicked from the three dot menu list
-		Then The URL should contain 'C111113' ID
+		Then The URL should contain 'C106482' ID
 
 	Scenario: User must be able to open see the terms for Codelists in CT Catalogue
 		Given The '/library/ct_catalogues/All/C85839/terms' page is opened
@@ -54,7 +64,7 @@ Feature: Library - CT Catalogues
 			| Concept ID         | C66729                                                                                                                               |
 			| Name               | Route of Administration Response                                                                                                     |
 			| Label              | Route of Administration                                                                                                              |
-			| Definition         | A terminology codelist relevant to the course by which a substance is administered in order to reach the site of action in the body. |
+			| Definition	     | A terminology codelist relevant to the pathway by which a substance is administered in order to reach the site of action in the body.|
 			| Library            | CDISC                                                                                                                                |
 			| Template parameter | Yes                                                                                                                                  |
 			| Extensible         | Yes                                                                                                                                  |

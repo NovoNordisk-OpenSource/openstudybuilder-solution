@@ -61,6 +61,7 @@ name='MORE TESTING of the superiority in the efficacy of [Intervention] with [Ac
     response_model=CustomPage[TimeframeTemplate],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {
             "content": {
                 "text/csv": {
@@ -77,7 +78,6 @@ name='MORE TESTING of the superiority in the efficacy of [Intervention] with [Ac
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {},
             }
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.allow_exports(
@@ -169,11 +169,11 @@ def get_timeframe_templates(
     response_model=list[Any],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - Invalid field name specified",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_distinct_values_for_header(
@@ -224,8 +224,8 @@ def get_distinct_values_for_header(
     response_model=CustomPage[TimeframeTemplate],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def retrieve_audit_trail(
@@ -277,11 +277,11 @@ def retrieve_audit_trail(
     response_model=TimeframeTemplateWithCount,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - The timeframe template with the specified 'timeframe_template_uid' (and the specified date/time and/or status) wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_timeframe_template(
@@ -302,6 +302,7 @@ The returned versions are ordered by `start_date` descending (newest entries fir
     response_model=list[TimeframeTemplateVersion],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {
             "content": {
                 "text/csv": {
@@ -322,7 +323,6 @@ The returned versions are ordered by `start_date` descending (newest entries fir
             "model": ErrorResponse,
             "description": "Not Found - The timeframe template with the specified 'timeframe_template_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.allow_exports(
@@ -365,11 +365,11 @@ def get_timeframe_template_versions(
     response_model=TimeframeTemplate,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - The timeframe template with the specified 'timeframe_template_uid' and 'version' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_timeframe_template_version(
@@ -404,6 +404,7 @@ If the request succeeds:
     response_model=TimeframeTemplate,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {
             "description": "Created - The timeframe template was successfully created."
         },
@@ -418,7 +419,6 @@ If the request succeeds:
             "description": "Not Found - The library with the specified 'library_name' could not be found.",
         },
         409: _generic_descriptions.ERROR_409,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def create_timeframe_template(
@@ -449,6 +449,7 @@ Once the timeframe template has been approved, only the surrounding text (exclud
     response_model=TimeframeTemplate,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -462,7 +463,6 @@ Once the timeframe template has been approved, only the surrounding text (exclud
             "model": ErrorResponse,
             "description": "Not Found - The timeframe template with the specified 'timeframe_template_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def edit(
@@ -496,6 +496,7 @@ Only the surrounding text (excluding the parameters) can be changed.
     response_model=TimeframeTemplate,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -508,7 +509,6 @@ Only the surrounding text (excluding the parameters) can be changed.
             "model": ErrorResponse,
             "description": "Not Found - The timeframe template with the specified 'timeframe_template_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def create_new_version(
@@ -540,6 +540,7 @@ If the request succeeds:
     response_model=TimeframeTemplate,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -555,7 +556,6 @@ If the request succeeds:
             "model": ErrorResponse,
             "description": "Conflict - there are timeframes created from template and cascade is false",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def approve(
@@ -586,6 +586,7 @@ If the request succeeds:
     response_model=TimeframeTemplate,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -596,7 +597,6 @@ If the request succeeds:
             "model": ErrorResponse,
             "description": "Not Found - The timeframe template with the specified 'timeframe_template_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def inactivate(
@@ -620,6 +620,7 @@ If the request succeeds:
     response_model=TimeframeTemplate,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -630,7 +631,6 @@ If the request succeeds:
             "model": ErrorResponse,
             "description": "Not Found - The timeframe template with the specified 'timeframe_template_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def reactivate(
@@ -651,6 +651,7 @@ def reactivate(
     response_model=None,
     status_code=204,
     responses={
+        403: _generic_descriptions.ERROR_403,
         204: {
             "description": "No Content - The timeframe template was successfully deleted."
         },
@@ -665,7 +666,6 @@ def reactivate(
             "model": ErrorResponse,
             "description": "Not Found - An timeframe template with the specified uid could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def delete_timeframe_template(
@@ -693,8 +693,8 @@ In that case, the same parameter (with the same values) is included multiple tim
     response_model=list[ComplexTemplateParameter],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_parameters(
@@ -721,6 +721,7 @@ with the same content will succeed.
     + PARAMETERS_NOTE,
     status_code=202,
     responses={
+        403: _generic_descriptions.ERROR_403,
         202: {
             "description": "Accepted. The content is valid and may be submitted in another request."
         },
@@ -730,7 +731,6 @@ with the same content will succeed.
             "- The syntax of the 'name' is not valid.\n"
             "- One of the parameters wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def pre_validate(

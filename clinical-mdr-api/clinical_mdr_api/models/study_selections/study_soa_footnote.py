@@ -37,33 +37,37 @@ class StudySoAFootnote(BaseModel):
         Field(
             title="study version or date information",
             description="Study version number, if specified, otherwise None.",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
     order: Annotated[int, Field()]
     modified: Annotated[
         datetime | None,
         Field(
-            nullable=True,
+            json_schema_extra={"nullable": True},
             description="The most recent point in time when the study soa footnote was edited."
             "The format is ISO 8601 in UTC±0, e.g.: '2020-10-31T16:00:00+00:00' for October 31, 2020 at 6pm in UTC+2 timezone.",
         ),
     ] = None
     referenced_items: Annotated[list[ReferencedItem], Field()] = []
-    footnote: Annotated[Footnote | None, Field(nullable=True)] = None
-    template: Annotated[FootnoteTemplate | None, Field(nullable=True)] = None
+    footnote: Annotated[
+        Footnote | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    template: Annotated[
+        FootnoteTemplate | None, Field(json_schema_extra={"nullable": True})
+    ] = None
     accepted_version: Annotated[
         bool | None,
         Field(
             description="Denotes if user accepted obsolete objective versions",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
     latest_footnote: Annotated[
         Footnote | None,
         Field(
             description="Latest version of footnote selected for study selection.",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
 
@@ -172,7 +176,9 @@ class StudySoAFootnoteHistory(StudySoAFootnote):
         ),
     ]
     start_date: Annotated[datetime, Field()]
-    end_date: Annotated[datetime | None, Field(nullable=True)] = None
+    end_date: Annotated[
+        datetime | None, Field(json_schema_extra={"nullable": True})
+    ] = None
 
     @classmethod
     def from_study_soa_footnote_vo_history(
@@ -214,10 +220,10 @@ class StudySoAFootnoteHistory(StudySoAFootnote):
 
 
 class StudySoAFootnoteVersion(StudySoAFootnoteHistory):
-    changes: dict
+    changes: list[str]
 
 
-class StudySoAFootnoteBatchEditInput(PatchInputModel):
+class StudySoAFootnoteBatchEditInput(StudySoAFootnoteEditInput):
     study_soa_footnote_uid: str
 
 

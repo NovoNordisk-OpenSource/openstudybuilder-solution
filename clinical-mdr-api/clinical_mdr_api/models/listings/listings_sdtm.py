@@ -27,7 +27,7 @@ class StudyVisitListing(BaseModel):
             title="Visit Name",
             description="""1. Protocol-defined description of clinical encounter. 2. May
         be used in addition to VISITNUM and/or VISITDY as a text description of the clinical encounter.""",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
     VISITDY: Annotated[
@@ -35,7 +35,7 @@ class StudyVisitListing(BaseModel):
         Field(
             title="Planned Study Day of Visit",
             description="1. Planned study day of VISIT. 2. Due to its sequential nature, used for sorting.",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
     ARMCD: Annotated[
@@ -50,7 +50,7 @@ class StudyVisitListing(BaseModel):
         for each treatment and separating hyphens, the length of ARMCD values would be 20. 2. If the 
         timing of Visits for a trial does not depend on which ARM a subject is in, then ARMCD should be null.
         """,
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
     ARM: Annotated[
@@ -59,7 +59,7 @@ class StudyVisitListing(BaseModel):
             title="Description of Planned Arm",
             description="""1. Name given to an Arm or Treatment Group. 2. If the timing
         of Visits for a trial does not depend on which Arm a subject is in, then Arm should be left blank.""",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
     TVSTRL: Annotated[
@@ -67,7 +67,7 @@ class StudyVisitListing(BaseModel):
         Field(
             title="Visit Start Rule",
             description="Rule describing when the Visit starts, in relation to the sequence of Elements.",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
     TVENRL: Annotated[
@@ -75,7 +75,7 @@ class StudyVisitListing(BaseModel):
         Field(
             title="Visit End Rule",
             description="Rule describing when the Visit ends, in relation to the sequence of Elements.",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
 
@@ -115,7 +115,7 @@ class StudyArmListing(BaseModel):
         for each treatment and separating hyphens, the length of ARMCD values would be 20. 2. If the 
         timing of Visits for a trial does not depend on which ARM a subject is in, then ARMCD should be null.
         """,
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ]
     ARM: Annotated[
@@ -124,7 +124,7 @@ class StudyArmListing(BaseModel):
             title="Description of Planned Arm",
             description="""1. Name given to an Arm or Treatment Group. 2. If the timing
         of Visits for a trial does not depend on which Arm a subject is in, then Arm should be left blank.""",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
     TAETORD: Annotated[
@@ -132,7 +132,7 @@ class StudyArmListing(BaseModel):
         Field(
             title="Planned Order of Element within Arm",
             description="Number that gives the order of the Element within the Arm",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
     ETCD: Annotated[
@@ -143,7 +143,7 @@ class StudyArmListing(BaseModel):
         ETCD (the companion to ELEMENT) is limited to 8 characters 
         and does not have special character restrictions. These values should be
         """,
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
 
@@ -152,7 +152,7 @@ class StudyArmListing(BaseModel):
         Field(
             title="Description of Element",
             description="The name of the Element. The same Element may occur more than once within an Arm.",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
 
@@ -163,7 +163,7 @@ class StudyArmListing(BaseModel):
         Condition subject met, at a “branch” in the trial design at the end of this Element, 
         to be included in this Arm; (e.g., randomization to DRUG X).
         """,
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
 
@@ -175,7 +175,7 @@ class StudyArmListing(BaseModel):
         to an Element other than the next Element in sequence, 
         then the conditions for transitioning to those other Elements, 
         and the alternative Element sequences, are specified in this rule (e.g., Responders go to washout). """,
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
 
@@ -183,7 +183,7 @@ class StudyArmListing(BaseModel):
         str | None,
         Field(
             description="Name of the Trial Epoch with which this Element of the Arm is associated.",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
 
@@ -194,8 +194,8 @@ class StudyArmListing(BaseModel):
             DOMAIN=query_result["DOMAIN"],
             ARMCD=query_result["ARMCD"],
             ARM=query_result["ARM"],
-            TAETORD=query_result["TAETORD"],
-            ETCD=query_result["ETCD"],
+            TAETORD=str(query_result["TAETORD"]),
+            ETCD=str(query_result["ETCD"]),
             ELEMENT=query_result["ELEMENT"],
             TABRANCH=query_result["TABRANCH"],
             TATRANS=query_result["TATRANS"],
@@ -231,7 +231,7 @@ class StudyCriterionListing(BaseModel):
             description="""
         Full text of the inclusion or exclusion criterion. The prefix "IE" is used to ensure consistency with the IE domain.
         """,
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
     IECAT: Annotated[
@@ -241,7 +241,7 @@ class StudyCriterionListing(BaseModel):
             description="""
         Used for categorization of the inclusion or exclusion criteria.
         """,
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
     IESCAT: Annotated[
@@ -253,7 +253,7 @@ class StudyCriterionListing(BaseModel):
         Can be used to distinguish criteria for a sub-study or for to categorize as
         a major or minor exceptions. Examples: MAJOR, MINOR.
         """,
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
     TIRL: Annotated[
@@ -263,7 +263,7 @@ class StudyCriterionListing(BaseModel):
             description="""
         Rule that expresses the criterion in computer-executable form (see assumption 4 below).
         """,
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
     TIVERS: Annotated[
@@ -271,7 +271,7 @@ class StudyCriterionListing(BaseModel):
         Field(
             title="Protocol Criteria Versions",
             description="The number of this version of the Inclusion/Exclusion criteria. May be omitted if there is only one version.",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
 
@@ -307,7 +307,7 @@ class StudySummaryListing(BaseModel):
         These values should be short for ease of use in programming, but it is not expected that TSPARMCD will need to
         serve as variable names. Examples: AGEMIN, AGEMAX
         """,
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
     TSPARM: Annotated[
@@ -318,7 +318,7 @@ class StudySummaryListing(BaseModel):
         Term for the Trial Summary Parameter. The value in TSPARM cannot be longer than 40 characters.
         Examples Planned Minimum Age of Subjects, Planned Maximum Age of Subjects
         """,
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
     TSVAL: Annotated[
@@ -329,7 +329,7 @@ class StudySummaryListing(BaseModel):
         Value of TSPARM. Example: "ASTHMA" when TSPARM value is "Trial Indication".
         TSVAL can only be null when TSVALNF is populated. Text over 200 characters can be added to additional columns TSVAL1-TSVALn.
         """,
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
     TSVALNF: Annotated[
@@ -339,7 +339,7 @@ class StudySummaryListing(BaseModel):
             description="""
         Null flavor for the value of TSPARM, to be populated if and only if TSVAL is null.
         """,
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
     TSVALCD: Annotated[
@@ -351,7 +351,7 @@ class StudySummaryListing(BaseModel):
         C49488 is the code for Y. The length of this variable can be longer than 8 to accommodate
         the length of the external terminology.
         """,
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
     TSVCDREF: Annotated[
@@ -359,7 +359,7 @@ class StudySummaryListing(BaseModel):
         Field(
             title="Name of the Reference Terminology",
             description="The name of the Reference Terminology from which TSVALCD is taken. For example; CDISC, SNOMED, ISO 8601.",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
     TSVCDVER: Annotated[
@@ -367,7 +367,7 @@ class StudySummaryListing(BaseModel):
         Field(
             title="Version of the Reference Terminology",
             description="The version number of the Reference Terminology, if applicable.",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
 
@@ -378,7 +378,7 @@ class StudySummaryListing(BaseModel):
             DOMAIN=query_result["DOMAIN"],
             TSPARMCD=query_result["TSPARMCD"],
             TSPARM=query_result["TSPARM"],
-            TSVAL=query_result["TSVAL"],
+            TSVAL=str(query_result["TSVAL"]),
             TSVALNF=query_result["TSVALNF"],
             TSVALCD=query_result["TSVALCD"],
             TSVCDREF=query_result["TSVCDREF"],
@@ -403,7 +403,7 @@ class StudyElementListing(BaseModel):
             ETCD (the companion to ELEMENT) is limited to 8 characters 
             and does not have special character restrictions. These values should be
             """,
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
     ELEMENT: Annotated[
@@ -411,7 +411,7 @@ class StudyElementListing(BaseModel):
         Field(
             title="Description of Element",
             description="The name of the Element. The same Element may occur more than once within an Arm.",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
     TESTRL: Annotated[
@@ -419,7 +419,7 @@ class StudyElementListing(BaseModel):
         Field(
             title="Rule for Start of Element",
             description="Rule for Start of Element Char Rule Expresses rule for beginning Element",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
     TEENRL: Annotated[
@@ -428,7 +428,7 @@ class StudyElementListing(BaseModel):
             title="Rule for End of Element",
             description=""" Rule for End of Element Char Rule Expresses rule for ending Element.
         Either TEENRL or TEDUR must be present for each Element """,
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
     TEDUR: Annotated[
@@ -439,7 +439,7 @@ class StudyElementListing(BaseModel):
         Timing Planned Duration of Element in ISO 8601 format. 
         Used when the rule for ending the Element is applied after a fixed duration. 
         """,
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
 
@@ -448,7 +448,7 @@ class StudyElementListing(BaseModel):
         return cls(
             STUDYID=query_result["STUDYID"],
             DOMAIN=query_result["DOMAIN"],
-            ETCD=query_result["ETCD"],
+            ETCD=str(query_result["ETCD"]),
             ELEMENT=query_result["ELEMENT"],
             TESTRL=query_result["TESTRL"],
             TEENRL=query_result["TEENRL"],
@@ -472,7 +472,7 @@ class StudyDiseaseMilestoneListing(BaseModel):
             description="""
         The type of Disease Milestone. Example: "HYPOGLYCEMIC EVENT".
         """,
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
     TMDEF: Annotated[
@@ -480,7 +480,7 @@ class StudyDiseaseMilestoneListing(BaseModel):
         Field(
             title="Disease Milestone Definition",
             description="Definition of the Disease Milestone.",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
     TMRPT: Annotated[
@@ -491,7 +491,7 @@ class StudyDiseaseMilestoneListing(BaseModel):
         Indicates whether this is a Disease Milestone that can occur only once ('N') 
         or a type of Disease Milestone that can occur multiple times ('Y').
         """,
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
 

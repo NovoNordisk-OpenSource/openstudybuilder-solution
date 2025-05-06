@@ -11,6 +11,7 @@ Tests for DDF adapter mappings
 
 import pytest
 from starlette.testclient import TestClient
+from usdm_model import StudyArm, StudyElement, StudyEpoch
 
 from clinical_mdr_api.main import app
 from clinical_mdr_api.models.study_selections.study import (
@@ -82,7 +83,7 @@ def test_ddf_study_arms(ddf_mapper, tst_study, study_arms):
     ddf_arms = ddf_mapper._get_study_arms(tst_study)
     for ddf_arm, sb_arm in zip(ddf_arms, study_arms):
         assert ddf_arm.description == sb_arm.description
-        assert ddf_arm.type.code == sb_arm.arm_type.sponsor_preferred_name
+        assert ddf_arm.type.code == sb_arm.arm_type.term_uid
 
 
 def test_ddf_study_cells(ddf_mapper, tst_study, study_design_cells):
@@ -90,9 +91,17 @@ def test_ddf_study_cells(ddf_mapper, tst_study, study_design_cells):
     for ddf_study_cell, sb_study_design_cell in zip(
         ddf_study_cells, study_design_cells
     ):
-        assert ddf_study_cell.armId == sb_study_design_cell.study_arm_uid
-        assert ddf_study_cell.epochId == sb_study_design_cell.study_epoch_uid
-        assert ddf_study_cell.elementIds == [sb_study_design_cell.study_element_uid]
+        assert ddf_study_cell.armId == ddf_mapper._id_manager.get_id(
+            StudyArm.__name__, sb_study_design_cell.study_arm_uid
+        )
+        assert ddf_study_cell.epochId == ddf_mapper._id_manager.get_id(
+            StudyEpoch.__name__, sb_study_design_cell.study_epoch_uid
+        )
+        assert ddf_study_cell.elementIds == [
+            ddf_mapper._id_manager.get_id(
+                StudyElement.__name__, sb_study_design_cell.study_element_uid
+            )
+        ]
 
 
 def test_ddf_study_description(ddf_mapper, tst_study):

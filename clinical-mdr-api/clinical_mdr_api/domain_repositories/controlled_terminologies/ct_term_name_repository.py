@@ -4,7 +4,13 @@ from clinical_mdr_api.domain_repositories._generic_repository_interface import (
     _AggregateRootType,
 )
 from clinical_mdr_api.domain_repositories.controlled_terminologies.ct_get_all_query_utils import (
+    create_simple_term_instances_from_cypher_result,
     create_term_name_aggregate_instances_from_cypher_result,
+    format_term_filter_sort_keys,
+    list_term_wildcard_properties,
+)
+from clinical_mdr_api.domain_repositories.controlled_terminologies.ct_term_aggregated_repository import (
+    CTTermAggregatedRepository,
 )
 from clinical_mdr_api.domain_repositories.controlled_terminologies.ct_term_generic_repository import (
     CTTermGenericRepository,
@@ -32,12 +38,124 @@ from clinical_mdr_api.domains.versioned_object_aggregate import (
     LibraryItemMetadataVO,
     LibraryVO,
 )
+from clinical_mdr_api.models.controlled_terminologies.ct_term import SimpleTermModel
+from clinical_mdr_api.models.utils import GenericFilteringReturn
+from clinical_mdr_api.repositories._utils import (
+    CypherQueryBuilder,
+    FilterDict,
+    FilterOperator,
+)
 
 
-class CTTermNameRepository(CTTermGenericRepository[CTTermNameAR]):
+class CTTermNameRepository(
+    CTTermGenericRepository[CTTermNameAR], CTTermAggregatedRepository
+):
     root_class = CTTermNameRoot
     value_class = CTTermNameValue
     relationship_from_root = "has_name_root"
+
+    def _create_simple_term_instances_from_cypher_result(
+        self,
+        term_dict: dict,
+    ) -> tuple[SimpleTermModel]:
+        """
+        Method creates a tuple of CTTermNameAR and CTTermAttributesAR objects for one CTTermRoot node.
+        The term_dict is a find_all_aggregated_result method result for one CTTermRoot node.
+
+        :param term_dict:
+        :return (CTTermNameAR, CTTermAttributesAR):
+        """
+
+        return create_simple_term_instances_from_cypher_result(term_dict=term_dict)
+
+    def find_all_name_simple_result(
+        self,
+        codelist_uid: str | None = None,
+        codelist_name: str | None = None,
+        library: str | None = None,
+        package: str | None = None,
+        is_sponsor: bool = False,
+        sort_by: dict | None = None,
+        page_number: int = 1,
+        page_size: int = 0,
+        filter_by: dict | None = None,
+        filter_operator: FilterOperator | None = FilterOperator.AND,
+        total_count: bool = False,
+    ) -> GenericFilteringReturn[SimpleTermModel]:
+        """
+        Method runs a cypher query to fetch all data related to the CTTermName* and CTTermAttributes*.
+        It allows to filter the query output by codelist_uid, codelist_name, library and package.
+        It returns the array of Tuples where each tuple is consists of CTTermNameAR and CTTermAttributesAR objects.
+
+        It uses cypher instead of neomodel as neomodel approach triggered some performance issues, because it is needed
+        to traverse many relationships to fetch all needed data and each traversal is separate database call when using
+        neomodel.
+        :param codelist_uid:
+        :param codelist_name:
+        :param library:
+        :param package:
+        :param sort_by:
+        :param page_number:
+        :param page_size:
+        :param filter_by:
+        :param filter_operator:
+        :param total_count:
+        :return GenericFilteringReturn[tuple[CTTermNameAR, CTTermAttributesAR]]:
+        """
+        # Build match_clause
+        match_clause, filter_query_parameters = (
+            CTTermAggregatedRepository._generate_generic_match_clause(
+                self,
+                codelist_uid=codelist_uid,
+                codelist_name=codelist_name,
+                library_name=library,
+                package=package,
+                is_sponsor=is_sponsor,
+            )
+        )
+
+        # Build alias_clause
+        alias_clause = (
+            self.sponsor_alias_clause
+            if is_sponsor
+            else CTTermAggregatedRepository.generic_alias_clause
+        )
+
+        query = CypherQueryBuilder(
+            match_clause=match_clause,
+            alias_clause=alias_clause,
+            sort_by=sort_by,
+            implicit_sort_by="term_uid",
+            page_number=page_number,
+            page_size=page_size,
+            filter_by=FilterDict(elements=filter_by),
+            filter_operator=filter_operator,
+            total_count=total_count,
+            wildcard_properties_list=list_term_wildcard_properties(),
+            format_filter_sort_keys=format_term_filter_sort_keys,
+        )
+
+        query.parameters.update(filter_query_parameters)
+        result_array, attributes_names = query.execute()
+
+        terms_ars = []
+        for term in result_array:
+            term_dictionary = {}
+            for term_property, attribute_name in zip(term, attributes_names):
+                term_dictionary[attribute_name] = term_property
+            terms_ars.append(
+                self._create_simple_term_instances_from_cypher_result(term_dictionary)
+            )
+
+        total = 0
+        if total_count:
+            count_result, _ = db.cypher_query(
+                query=query.count_query, params=query.parameters
+            )
+            if len(count_result) > 0:
+                total = count_result[0][0]
+
+        return GenericFilteringReturn.create(items=terms_ars, total=total)
 
     def term_specific_exists_by_name_in_codelists(
         self, term_name: str, codelist_uids: list[str]

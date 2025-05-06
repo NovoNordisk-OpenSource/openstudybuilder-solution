@@ -38,7 +38,7 @@ class SystemInformation(BaseModel):
         Field(
             title="VCS commit identifier",
             description="The reference to the repository state: the id of the last commit to the branch at build",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
     branch_name: Annotated[
@@ -46,6 +46,6 @@ class SystemInformation(BaseModel):
         Field(
             title="Repository branch name",
             description="Name of the VCS repository branch the app was built from",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None

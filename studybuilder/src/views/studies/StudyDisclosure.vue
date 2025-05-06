@@ -11,7 +11,6 @@
 
 <script setup>
 import StudyDisclosureTable from '@/components/studies/StudyDisclosureTable.vue'
-
 </script>
 <style>
 .tableDiv {

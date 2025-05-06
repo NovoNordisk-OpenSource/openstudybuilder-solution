@@ -229,8 +229,6 @@ export default {
     async submit() {
       this.form.library_name = libConstants.LIBRARY_REQUESTED
       this.form.is_request_final = true
-      this.form.name_sentence_case =
-        this.form.name.charAt(0).toUpperCase() + this.form.name.slice(1)
       if (!this.isEdit) {
         activities.create(this.form, 'activities').then(
           () => {
@@ -245,7 +243,7 @@ export default {
         )
       } else {
         activities
-          .update(this.editedActivity.uid, this.form, 'activities')
+          .update(this.editedActivity.uid, this.form, {}, 'activities')
           .then(
             () => {
               this.eventBusEmit('notification', {

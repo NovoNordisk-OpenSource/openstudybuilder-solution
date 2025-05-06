@@ -366,7 +366,9 @@ class TimelineAR:
                     visits.append(Subvisit(visit, num))
 
             # derive timing properties in the end when all subvisits are set
-            if visit.timepoint:
+            # for the Visit that is currently being created timepoint will be filled but study_day will be empty as it's
+            # being assigned afterwards
+            if visit.timepoint and visit.study_day:
                 visit.study_day.value = visit.derive_study_day_number()
                 visit.study_duration_days.value = (
                     visit.derive_study_duration_days_number()

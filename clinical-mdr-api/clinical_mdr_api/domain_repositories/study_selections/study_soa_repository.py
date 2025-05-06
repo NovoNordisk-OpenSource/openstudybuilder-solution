@@ -1,5 +1,5 @@
 import datetime
-from enum import StrEnum
+from enum import Enum
 from typing import Iterable
 
 from neomodel import DoesNotExist, RelationshipManager, db
@@ -39,7 +39,7 @@ SOA_ITEM_TYPE_TO_RELATIONSHIP_MODEL_MAME_MAP = {
 }
 
 
-class SoALayout(StrEnum):
+class SoALayout(Enum):
     PROTOCOL = "protocol"
     DETAILED = "detailed"
     OPERATIONAL = "operational"
@@ -188,7 +188,7 @@ class StudySoARepository:
 
     @classmethod
     @trace_calls(
-        args=[0, 2, 3, 4],
+        args=[0, 3, 4, 5],
         kwargs=["study_uid", "study_value_version", "layout", "study_status"],
     )
     @ensure_transaction(db)
@@ -291,7 +291,7 @@ class StudySoARepository:
 
             ref_properties = {
                 k: v
-                for k, v in soa_cell_reference.dict().items()
+                for k, v in soa_cell_reference.model_dump().items()
                 if k in {"row", "column", "span", "is_propagated", "order", "symbol"}
                 and v is not None
             }
@@ -308,7 +308,7 @@ class StudySoARepository:
             date=datetime.datetime.now(datetime.timezone.utc),
             status=study_status.value,
             author_id=user().id(),
-            object_type=f"{layout} SoA",
+            object_type=f"{layout.value} SoA",
         )
         action.save()
         study_root.audit_trail.connect(action)

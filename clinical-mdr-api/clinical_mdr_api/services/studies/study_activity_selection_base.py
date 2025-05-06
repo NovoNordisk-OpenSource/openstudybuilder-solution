@@ -72,7 +72,6 @@ class StudyActivitySelectionBaseService(StudySelectionMixin):
         self,
         study_uid: str,
         specific_selection: _VOType,
-        order: int,
         terms_at_specific_datetime: datetime | None,
         accepted_version: bool | None = None,
     ) -> BaseModel:
@@ -111,6 +110,28 @@ class StudyActivitySelectionBaseService(StudySelectionMixin):
         current_object: _VOType,
     ) -> _VOType:
         raise NotImplementedError
+
+    @abc.abstractmethod
+    def _find_ar_and_validate_new_order(
+        self,
+        study_uid: str,
+        study_selection_uid: str,
+        new_order: int,
+    ) -> tuple[_AggregateRootType, _VOType]:
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def _filter_ars_from_same_parent(
+        self,
+        selection_aggregate: StudySelectionBaseAR,
+        selection_vo: StudySelectionBaseVO,
+    ) -> StudySelectionBaseAR:
+        raise NotImplementedError
+
+    def get_default_sorting(
+        self,
+    ) -> dict | None:
+        return None
 
     def get_all_selections_for_all_studies(
         self,
@@ -182,6 +203,10 @@ class StudyActivitySelectionBaseService(StudySelectionMixin):
                 validate_is_dict("filter_by", filter_by)
             if sort_by is not None:
                 validate_is_dict("sort_by", sort_by)
+            else:
+                if (sort_by := self.get_default_sorting()) is not None:
+                    validate_is_dict("sort_by", sort_by)
+
             simple_filters = build_simple_filters(
                 self._vo_to_ar_filter_map, filter_by, sort_by
             )
@@ -274,7 +299,7 @@ class StudyActivitySelectionBaseService(StudySelectionMixin):
         (
             _,
             new_selection,
-            order,
+            _,
         ) = self._get_specific_activity_selection_by_uids(
             study_uid, study_selection_uid, study_value_version=study_value_version
         )
@@ -285,10 +310,46 @@ class StudyActivitySelectionBaseService(StudySelectionMixin):
         return self._transform_from_vo_to_response_model(
             study_uid=study_uid,
             specific_selection=new_selection,
-            order=order,
             accepted_version=new_selection.accepted_version,
             terms_at_specific_datetime=terms_at_specific_datetime,
         )
+
+    def _find_ar_to_patch(
+        self, study_uid: str, study_selection_uid: str
+    ) -> tuple[StudySelectionBaseAR, StudySelectionBaseVO]:
+        # Load aggregate
+        selection_aggregate = self.repository.find_by_study(
+            study_uid=study_uid, for_update=True
+        )
+
+        assert selection_aggregate is not None
+
+        # Load the current VO for updates
+        current_vo, _ = selection_aggregate.get_specific_object_selection(
+            study_selection_uid=study_selection_uid
+        )
+        selection_aggregate = self._filter_ars_from_same_parent(
+            selection_aggregate=selection_aggregate, selection_vo=current_vo
+        )
+        return selection_aggregate, current_vo
+
+    def _update_aggregate(
+        self,
+        selection_aggregate: _AggregateRootType,
+        # pylint: disable=unused-argument
+        previous_selection: _VOType,
+        updated_selection: _VOType,
+    ) -> bool:
+        # let the aggregate update the value object
+        selection_aggregate.update_selection(
+            updated_study_object_selection=updated_selection,
+            object_exist_callback=self._get_selected_object_exist_check(),
+            ct_term_level_exist_callback=self._repos.ct_term_name_repository.term_specific_exists_by_uid,
+        )
+        selection_aggregate.validate()
+
+        # sync with DB and save the update
+        self.repository.save(selection_aggregate, self.author)
 
     @ensure_transaction(db)
     def patch_selection(
@@ -299,16 +360,8 @@ class StudyActivitySelectionBaseService(StudySelectionMixin):
     ) -> BaseModel:
         repos = self._repos
         try:
-            # Load aggregate
-            selection_aggregate = self.repository.find_by_study(
-                study_uid=study_uid, for_update=True
-            )
-
-            assert selection_aggregate is not None
-
-            # Load the current VO for updates
-            current_vo, order = selection_aggregate.get_specific_object_selection(
-                study_selection_uid=study_selection_uid
+            selection_aggregate, current_vo = self._find_ar_to_patch(
+                study_uid=study_uid, study_selection_uid=study_selection_uid
             )
 
             # merge current with updates
@@ -318,27 +371,20 @@ class StudyActivitySelectionBaseService(StudySelectionMixin):
                 current_object=current_vo,
             )
 
-            # let the aggregate update the value object
-            selection_aggregate.update_selection(
-                updated_study_object_selection=updated_selection,
-                object_exist_callback=self._get_selected_object_exist_check(),
-                ct_term_level_exist_callback=self._repos.ct_term_name_repository.term_specific_exists_by_uid,
+            self._update_aggregate(
+                selection_aggregate=selection_aggregate,
+                previous_selection=current_vo,
+                updated_selection=updated_selection,
             )
-            selection_aggregate.validate()
-
-            # sync with DB and save the update
-            self.repository.save(selection_aggregate, self.author)
 
             # # sync related nodes
             self.update_dependent_objects(
                 study_selection=updated_selection, previous_study_selection=current_vo
             )
 
-            # Fetch the new selection which was just updated
-            (
-                updated_selection,
-                order,
-            ) = selection_aggregate.get_specific_object_selection(study_selection_uid)
+            selection_aggregate, updated_selection = self._find_ar_to_patch(
+                study_uid=study_uid, study_selection_uid=study_selection_uid
+            )
             terms_at_specific_datetime = self._extract_study_standards_effective_date(
                 study_uid=study_uid
             )
@@ -347,7 +393,6 @@ class StudyActivitySelectionBaseService(StudySelectionMixin):
             return self._transform_from_vo_to_response_model(
                 study_uid=selection_aggregate.study_uid,
                 specific_selection=updated_selection,
-                order=order,
                 terms_at_specific_datetime=terms_at_specific_datetime,
             )
         finally:
@@ -394,12 +439,12 @@ class StudyActivitySelectionBaseService(StudySelectionMixin):
     ) -> BaseModel:
         repos = self._repos
         try:
-            # Load aggregate
-            selection_aggregate = self.repository.find_by_study(
-                study_uid=study_uid, for_update=True
+            selection_aggregate = self._find_ar_and_validate_new_order(
+                study_uid=study_uid,
+                study_selection_uid=study_selection_uid,
+                new_order=new_order,
             )
 
-            # remove the connection
             assert selection_aggregate is not None
             selection_aggregate.set_new_order_for_selection(
                 study_selection_uid, new_order, self.author
@@ -408,21 +453,24 @@ class StudyActivitySelectionBaseService(StudySelectionMixin):
             # sync with DB and save the update
             self.repository.save(selection_aggregate, self.author)
 
+            selection_aggregate = self.repository.find_by_study(
+                study_uid=study_uid, for_update=True
+            )
             # Fetch the new selection which was just added
             (
                 specific_selection,
-                order,
+                _,
             ) = selection_aggregate.get_specific_object_selection(study_selection_uid)
             terms_at_specific_datetime = self._extract_study_standards_effective_date(
                 study_uid=study_uid
             )
 
             # add the activity and return
-            return self._transform_from_vo_to_response_model(
+            reordered_item = self._transform_from_vo_to_response_model(
                 study_uid=study_uid,
                 specific_selection=specific_selection,
-                order=order,
                 terms_at_specific_datetime=terms_at_specific_datetime,
             )
+            return reordered_item
         finally:
             repos.close()

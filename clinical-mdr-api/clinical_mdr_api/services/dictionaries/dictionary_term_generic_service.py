@@ -185,7 +185,7 @@ class DictionaryTermGenericService(Generic[_AggregateRootType], ABC):
             versions = [
                 self._transform_aggregate_root_to_pydantic_model(
                     dictionary_term_ar
-                ).dict()
+                ).model_dump()
                 for dictionary_term_ar in all_versions
             ]
             return calculate_diffs(versions, self.version_class)

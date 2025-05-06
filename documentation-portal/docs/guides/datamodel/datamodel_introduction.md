@@ -23,3 +23,4 @@ Below table gives an overview of the different types of data models, their defin
 | **[Logical Data Model](./logicalmodel.md)**      | A high-level description of informational needs underlying the design of a database | Define the scope for the data domain and subject areas the data model should cover |
 | **[Domain Data Model](./domainmodel.md)**      | A domain model is a representation of the data, independent of the way the data is stored in the database | Define the way data can be exchanged between systems e.g. by an API based interface. Can be in various exchange formats like JSON, XML, CSV, etc. |
 | **[Physical Data Model](./physicalmodel.md)**      | A representation of a data design as implemented in a database management system | The technical specification for the design of the data base implementation |
+

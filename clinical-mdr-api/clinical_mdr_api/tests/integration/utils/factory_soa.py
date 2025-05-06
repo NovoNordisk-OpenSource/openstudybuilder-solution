@@ -5,6 +5,9 @@ from clinical_mdr_api.domain_repositories.models.study_selections import (
     StudyActivitySchedule,
     StudySoAFootnote,
 )
+from clinical_mdr_api.domain_repositories.study_selections.study_soa_repository import (
+    SoALayout,
+)
 from clinical_mdr_api.domains.controlled_terminologies.utils import TermParentType
 from clinical_mdr_api.domains.study_selections.study_selection_base import SoAItemType
 from clinical_mdr_api.models.concepts.activities.activity import Activity
@@ -1189,7 +1192,9 @@ def test_soa_test_data(temp_database_populated):
     study_flowchart_service = StudyFlowchartService()
 
     soa_table: TableWithFootnotes = study_flowchart_service.build_flowchart_table(
-        study_uid=test_data.study.uid, operational=True
+        study_uid=test_data.study.uid,
+        study_value_version=None,
+        layout=SoALayout.OPERATIONAL,
     )
     assert (
         len(soa_table.rows)
@@ -1200,7 +1205,9 @@ def test_soa_test_data(temp_database_populated):
     ), "SoA table num cols mismatch"
 
     soa_table: TableWithFootnotes = study_flowchart_service.build_flowchart_table(
-        study_uid=test_data.study.uid, operational=False
+        study_uid=test_data.study.uid,
+        study_value_version=None,
+        layout=SoALayout.DETAILED,
     )
     assert (
         len(soa_table.rows) == test_data.NUM_SOA_ROWS + soa_table.num_header_rows

@@ -142,7 +142,7 @@ def test_get_users_invalid_pattern_length(api_client, mocked_msgraph_service, pa
     assert isinstance(detail0, dict)
     assert detail0.get("type")
     assert isinstance(detail0["type"], str)
-    assert detail0["type"].endswith("_length")
+    assert detail0["type"].startswith("string_too_")
 
 
 @pytest.mark.parametrize(

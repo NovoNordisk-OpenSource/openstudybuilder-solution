@@ -8,7 +8,7 @@
       :editable="template !== undefined && template !== null"
       :help-items="helpItems"
       :extra-step-validation="extraValidation"
-      @close="cancel"
+      @close="close"
       @save="submit"
     >
       <template #[`step.template`]>
@@ -88,7 +88,6 @@
 <script setup>
 import { computed, inject, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import _isEqual from 'lodash/isEqual'
 import ConfirmDialog from '@/components/tools/ConfirmDialog.vue'
 import HorizontalStepperForm from '@/components/tools/HorizontalStepperForm.vue'
 import NNTemplateInputField from '@/components/tools/NNTemplateInputField.vue'
@@ -205,26 +204,6 @@ function close() {
   steps.value = createModeSteps
   parameters.value = []
   emit('close')
-}
-
-function closeWithNoChange() {
-  close()
-  eventBusEmit('notification', { type: 'info', msg: t('_global.no_changes') })
-}
-
-async function cancel() {
-  if (!_isEqual(form.value, originalForm.value)) {
-    const options = {
-      type: 'warning',
-      cancelLabel: t('_global.cancel'),
-      agreeLabel: t('_global.continue'),
-    }
-    if (await confirm.value.open(t('_global.cancel_changes'), options)) {
-      close()
-    }
-  } else {
-    closeWithNoChange()
-  }
 }
 
 function getObserver(step) {
@@ -344,10 +323,6 @@ async function extraValidation(step) {
 }
 
 async function submit() {
-  if (_isEqual(form.value, originalForm.value)) {
-    closeWithNoChange()
-    return
-  }
   try {
     if (!props.template) {
       await addTemplate()

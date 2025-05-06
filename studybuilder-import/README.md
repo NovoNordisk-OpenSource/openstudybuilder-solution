@@ -257,7 +257,7 @@ Set up some mock data to have something to show.
 
 ### Exported data from json: `mockdatajson`
 (TODO rename the script! It's not only used for mockup data)
-This step imports data that is exported by the [studybuilder-export](https://dev.azure.com/novonordiskit/Clinical-MDR/_git/studybuilder-export) script.
+This step imports data that is exported by the [studybuilder-export](https://dev.azure.com/orgremoved/Clinical-MDR/_git/studybuilder-export) script.
 What files to use is configured by a single variable that points to the exported project listing.
 Other files are found via their names that match their corresponding api endpoints. 
 
@@ -538,3 +538,4 @@ Found the CSV with example structure :)
 CSV data loaded successfully
 Result has been written to './output_result.csv'
 ```
+

@@ -14,6 +14,9 @@ import logging
 import pytest
 from fastapi.testclient import TestClient
 
+from clinical_mdr_api.domain_repositories.models.standard_data_model import (
+    SponsorModelDatasetVariableInstance,
+)
 from clinical_mdr_api.main import app
 from clinical_mdr_api.models.standard_data_models.data_model import DataModel
 from clinical_mdr_api.models.standard_data_models.data_model_ig import DataModelIG
@@ -65,11 +68,11 @@ def test_data():
     global dataset_variables
 
     data_model_catalogue_name = TestUtils.create_data_model_catalogue(
-        name="DataModelCatalogue name"
+        name="DataModelCatalogueA"
     )
-    data_model = TestUtils.create_data_model(name="DataModel A")
+    data_model = TestUtils.create_data_model(name="DataModelA")
     data_model_ig = TestUtils.create_data_model_ig(
-        name="DataModelIG A", version_number="1"
+        name="DataModelIGA", version_number="1", implemented_data_model=data_model.uid
     )
     dataset_classes = [
         TestUtils.create_dataset_class(
@@ -120,144 +123,16 @@ def test_post_sponsor_model(api_client):
         json={
             "ig_uid": data_model_ig.uid,
             "ig_version_number": data_model_ig.version_number,
-            "version_number": 1,
+            "version_number": "1",
         },
     )
     res = response.json()
     assert_response_status_code(response, 201)
     assert (
         res["name"]
-        == f"{data_model_ig.uid.lower()}_mastermodel_{data_model_ig.version_number}_NN1"
+        == f"{data_model_ig.uid.lower()}_mastermodel_{data_model_ig.version_number}_NN01"
     )
     assert res["version"] == data_model_ig.version_number
-
-
-def test_post_dataset_class(api_client):
-    url = "/standards/sponsor-models/dataset-classes"
-    sponsor_model = TestUtils.create_sponsor_model(
-        ig_uid=data_model_ig.uid,
-        ig_version_number=data_model_ig.version_number,
-        version_number="1",
-    )
-
-    common_params = {
-        "dataset_class_uid": dataset_classes[0].uid,
-        "sponsor_model_name": sponsor_model.name,
-        "sponsor_model_version_number": sponsor_model.version,
-        "is_basic_std": True,
-    }
-
-    # Making a POST request to create a dataset class with the sponsor model
-    response = api_client.post(
-        url,
-        json=common_params,
-    )
-    res = response.json()
-    assert_response_status_code(response, 201)
-    assert res["uid"] == common_params["dataset_class_uid"]
-
-    # Making another POST request to create a dataset class with a non-existent sponsor model
-    params2 = common_params.copy()
-    params2["sponsor_model_name"] = "non_existent_sponsor_model"
-    response = api_client.post(
-        url,
-        json=params2,
-    )
-
-    assert_response_status_code(response, 400)
-    res = response.json()
-    assert (
-        res["message"]
-        == "Sponsor Model with Name 'non_existent_sponsor_model' doesn't exist."
-    )
-
-    # Making another POST request to create a dataset class with a dataset class which doesn't exist in CDISC
-    params3 = common_params.copy()
-    params3["dataset_class_uid"] = "NewDatasetClass"
-    response = api_client.post(
-        url,
-        json=params3,
-    )
-    res = response.json()
-    assert_response_status_code(response, 201)
-    assert res["uid"] == params3["dataset_class_uid"]
-
-
-def test_post_variable_class(api_client):
-    url = "/standards/sponsor-models/variable-classes"
-
-    # Create a sponsor model
-    sponsor_model = TestUtils.create_sponsor_model(
-        ig_uid=data_model_ig.uid,
-        ig_version_number=data_model_ig.version_number,
-        version_number="1",
-    )
-
-    # Create a sponsor model dataset class
-    dataset_class = TestUtils.create_sponsor_dataset_class(
-        dataset_class_uid=dataset_classes[0].uid,
-        sponsor_model_name=sponsor_model.name,
-        sponsor_model_version_number=sponsor_model.version,
-    )
-
-    common_params = {
-        "dataset_class_uid": dataset_class.uid,
-        "variable_class_uid": variable_classes[0].uid,
-        "sponsor_model_name": sponsor_model.name,
-        "sponsor_model_version_number": sponsor_model.version,
-        "is_basic_std": True,
-        "order": 10,
-    }
-
-    # Making a POST request to create a variable class with the sponsor model
-    response = api_client.post(
-        url,
-        json=common_params,
-    )
-    res = response.json()
-    assert_response_status_code(response, 201)
-    assert res["uid"] == common_params["variable_class_uid"]
-    assert res["order"] == common_params["order"]
-
-    # Making another POST request to create a variable class with a non-existent sponsor model
-    params2 = common_params.copy()
-    params2["sponsor_model_name"] = "non_existent_sponsor_model"
-    response = api_client.post(
-        url,
-        json=params2,
-    )
-
-    assert_response_status_code(response, 400)
-    res = response.json()
-    assert (
-        res["message"]
-        == f"Dataset Class with UID '{common_params['dataset_class_uid']}' isn't instantiated in this version of the sponsor model."
-    )
-
-    # Making another POST request to create a variable class with a dataset class which doesn't exist in CDISC
-    params3 = common_params.copy()
-    params3["dataset_class_uid"] = "NonexistentDatasetClass"
-    response = api_client.post(
-        url,
-        json=params3,
-    )
-    res = response.json()
-    assert_response_status_code(response, 400)
-    assert (
-        res["message"]
-        == f"Dataset Class with UID '{params3['dataset_class_uid']}' isn't instantiated in this version of the sponsor model."
-    )
-
-    # Making another POST request to create a variable class with a variable class which doesn't exist in CDISC
-    params4 = common_params.copy()
-    params4["variable_class_uid"] = "NonexistentVariableClass"
-    response = api_client.post(
-        url,
-        json=params4,
-    )
-    res = response.json()
-    assert_response_status_code(response, 201)
-    assert res["uid"] == params4["variable_class_uid"]
 
 
 def test_post_dataset(api_client):
@@ -269,9 +144,11 @@ def test_post_dataset(api_client):
     )
 
     common_params = {
+        "target_data_model_catalogue": data_model_catalogue_name,
         "dataset_uid": datasets[0].uid,
         "sponsor_model_name": sponsor_model.name,
         "sponsor_model_version_number": sponsor_model.version,
+        "implemented_dataset_class": dataset_classes[0].uid,
         "is_basic_std": True,
         "enrich_build_order": 10,
     }
@@ -286,7 +163,7 @@ def test_post_dataset(api_client):
     assert res["uid"] == common_params["dataset_uid"]
     assert res["enrich_build_order"] == common_params["enrich_build_order"]
 
-    # Making another POST request to create a dataset with a non-existent sponsor model
+    # POST request to create a dataset with a non-existent sponsor model
     params2 = common_params.copy()
     params2["sponsor_model_name"] = "non_existent_sponsor_model"
     response = api_client.post(
@@ -301,7 +178,7 @@ def test_post_dataset(api_client):
         == "Sponsor Model with Name 'non_existent_sponsor_model' doesn't exist."
     )
 
-    # Making another POST request to create a dataset with a dataset that doesn't exist in CDISC
+    # POST request to create a sponsor dataset instantiating a dataset that doesn't exist in CDISC
     params3 = common_params.copy()
     params3["dataset_uid"] = "NewDataset"
     response = api_client.post(
@@ -311,6 +188,22 @@ def test_post_dataset(api_client):
     res = response.json()
     assert_response_status_code(response, 201)
     assert res["uid"] == params3["dataset_uid"]
+
+    # POST request to create a dataset implementing a dataset class which doesn't exist in CDISC
+    params4 = common_params.copy()
+    params4["dataset_uid"] = "DatasetWithNonexistentClass"
+    params4["implemented_dataset_class"] = "NonexistentDatasetClass"
+    response = api_client.post(
+        url,
+        json=params4,
+    )
+
+    assert_response_status_code(response, 400)
+    res = response.json()
+    assert (
+        res["message"]
+        == "Dataset class with uid 'NonexistentDatasetClass' does not exist."
+    )
 
 
 def test_post_dataset_variable(api_client):
@@ -328,13 +221,17 @@ def test_post_dataset_variable(api_client):
         dataset_uid=datasets[0].uid,
         sponsor_model_name=sponsor_model.name,
         sponsor_model_version_number=sponsor_model.version,
+        implemented_dataset_class=dataset_classes[0].uid,
     )
 
     common_params = {
+        "target_data_model_catalogue": data_model_catalogue_name,
         "dataset_uid": dataset.uid,
         "dataset_variable_uid": dataset_variables[0].uid,
         "sponsor_model_name": sponsor_model.name,
         "sponsor_model_version_number": sponsor_model.version,
+        "implemented_variable_class": variable_classes[0].uid,
+        "implemented_parent_dataset_class": dataset_classes[0].uid,
         "is_basic_std": True,
         "order": 20,
     }
@@ -349,7 +246,7 @@ def test_post_dataset_variable(api_client):
     assert res["uid"] == common_params["dataset_variable_uid"]
     assert res["order"] == common_params["order"]
 
-    # Making another POST request to create a dataset variable with a non-existent sponsor model
+    # POST request to create a dataset variable with a non-existent sponsor model
     params2 = common_params.copy()
     params2["sponsor_model_name"] = "non_existent_sponsor_model"
     response = api_client.post(
@@ -360,10 +257,10 @@ def test_post_dataset_variable(api_client):
     res = response.json()
     assert (
         res["message"]
-        == f"Dataset with UID '{common_params['dataset_uid']}' isn't instantiated in this version of the sponsor model."
+        == f"Dataset with UID '{common_params['dataset_uid']}' is not instantiated in this version of the sponsor model."
     )
 
-    # Making another POST request to create a dataset variable with a dataset class which doesn't exist in CDISC
+    # POST request to create a dataset variable with a dataset which doesn't exist in CDISC
     params3 = common_params.copy()
     params3["dataset_uid"] = "NonexistentDataset"
     response = api_client.post(
@@ -374,10 +271,11 @@ def test_post_dataset_variable(api_client):
     assert_response_status_code(response, 400)
     assert (
         res["message"]
-        == f"Dataset with UID '{params3['dataset_uid']}' isn't instantiated in this version of the sponsor model."
+        == f"Dataset with UID '{params3['dataset_uid']}' is not instantiated in this version of the sponsor model."
     )
 
-    # Making another POST request to create a dataset variable with a dataset variable which doesn't exist in CDISC
+    # POST request to create a sponsor dataset variable instantiating a dataset variable
+    # which doesn't exist in CDISC
     params4 = common_params.copy()
     params4["dataset_variable_uid"] = "NonexistentDatasetVariable"
     response = api_client.post(
@@ -387,3 +285,59 @@ def test_post_dataset_variable(api_client):
     res = response.json()
     assert_response_status_code(response, 201)
     assert res["uid"] == params4["dataset_variable_uid"]
+
+    # POST request to create a dataset variable implementing a variable class
+    # which doesn't exist in CDISC
+    params5 = common_params.copy()
+    params5["dataset_variable_uid"] = "DatasetVariableWithNonexistentClass"
+    params5["implemented_parent_dataset_class"] = dataset_classes[0].uid
+    params5["implemented_variable_class"] = "NonexistentVariableClass"
+    response = api_client.post(
+        url,
+        json=params5,
+    )
+
+    assert_response_status_code(response, 201)
+    res = response.json()
+
+    # It should have bee, created, with an inconsistency flag
+    created_instance = SponsorModelDatasetVariableInstance.nodes.filter(
+        is_instance_of__uid=params5["dataset_variable_uid"]
+    ).resolve_subgraph()
+    assert created_instance
+    assert created_instance[0].implemented_variable_class_inconsistency is True
+    assert (
+        created_instance[0].implemented_variable_class_uid
+        == params5["implemented_variable_class"]
+    )
+    assert (
+        created_instance[0].implemented_parent_dataset_class_uid
+        == params5["implemented_parent_dataset_class"]
+    )
+
+    # POST request to create a dataset variable implementing an existing variable class
+    # But the parent dataset class doesn't exist in CDISC
+    params6 = common_params.copy()
+    params6["dataset_variable_uid"] = "DatasetVariableWithNonexistentParentClass"
+    params6["implemented_parent_dataset_class"] = "NonexistentParentDatasetClass"
+    response = api_client.post(
+        url,
+        json=params6,
+    )
+
+    assert_response_status_code(response, 201)
+    res = response.json()
+
+    created_instance = SponsorModelDatasetVariableInstance.nodes.filter(
+        is_instance_of__uid=params6["dataset_variable_uid"]
+    ).resolve_subgraph()
+    assert created_instance
+    assert created_instance[0].implemented_variable_class_inconsistency is True
+    assert (
+        created_instance[0].implemented_variable_class_uid
+        == params6["implemented_variable_class"]
+    )
+    assert (
+        created_instance[0].implemented_parent_dataset_class_uid
+        == params6["implemented_parent_dataset_class"]
+    )

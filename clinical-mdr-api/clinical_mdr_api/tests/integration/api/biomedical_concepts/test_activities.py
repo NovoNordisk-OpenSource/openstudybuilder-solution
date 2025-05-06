@@ -53,6 +53,7 @@ different_activity_group: ActivityGroup
 activity_subgroup: ActivitySubGroup
 different_activity_subgroup: ActivitySubGroup
 activities_all: list[Activity]
+activity_with_multiple_groupings: Activity
 activity_instances_all: list[ActivityInstance]
 activity_instance_classes: list[ActivityInstanceClass]
 activity_items: list[ActivityItem]
@@ -79,19 +80,27 @@ def test_data():
     global activity_group
     activity_group = TestUtils.create_activity_group(name="activity_group")
 
-    global activity_subgroup
-    activity_subgroup = TestUtils.create_activity_subgroup(
-        name="activity_subgroup", activity_groups=[activity_group.uid]
-    )
-
     global different_activity_group
     different_activity_group = TestUtils.create_activity_group(
         name="different activity_group"
     )
+
+    global activity_subgroup
+    activity_subgroup = TestUtils.create_activity_subgroup(
+        name="activity_subgroup",
+        activity_groups=[activity_group.uid, different_activity_group.uid],
+    )
+
     global different_activity_subgroup
     different_activity_subgroup = TestUtils.create_activity_subgroup(
         name="different activity_subgroup",
-        activity_groups=[different_activity_group.uid],
+        activity_groups=[different_activity_group.uid, activity_group.uid],
+    )
+    global activity_with_multiple_groupings
+    activity_with_multiple_groupings = TestUtils.create_activity(
+        name="Activity with multiple groupings",
+        activity_subgroups=[activity_subgroup.uid, different_activity_subgroup.uid],
+        activity_groups=[activity_group.uid, different_activity_group.uid],
     )
 
     global activities_all
@@ -114,6 +123,7 @@ def test_data():
             activity_subgroups=[activity_subgroup.uid],
             activity_groups=[activity_group.uid],
         ),
+        activity_with_multiple_groupings,
     ]
 
     for index in range(5):
@@ -143,24 +153,39 @@ def test_data():
         TestUtils.create_activity_item_class(
             name="Activity Item Class name1",
             order=1,
-            mandatory=True,
-            activity_instance_class_uids=[activity_instance_classes[0].uid],
+            activity_instance_classes=[
+                {
+                    "uid": activity_instance_classes[0].uid,
+                    "mandatory": True,
+                    "is_adam_param_specific_enabled": True,
+                }
+            ],
             role_uid=role_term.term_uid,
             data_type_uid=data_type_term.term_uid,
         ),
         TestUtils.create_activity_item_class(
             name="Activity Item Class name2",
             order=2,
-            mandatory=True,
-            activity_instance_class_uids=[activity_instance_classes[1].uid],
+            activity_instance_classes=[
+                {
+                    "uid": activity_instance_classes[1].uid,
+                    "mandatory": True,
+                    "is_adam_param_specific_enabled": True,
+                }
+            ],
             role_uid=role_term.term_uid,
             data_type_uid=data_type_term.term_uid,
         ),
         TestUtils.create_activity_item_class(
             name="Activity Item Class name3",
             order=3,
-            mandatory=True,
-            activity_instance_class_uids=[activity_instance_classes[2].uid],
+            activity_instance_classes=[
+                {
+                    "uid": activity_instance_classes[2].uid,
+                    "mandatory": True,
+                    "is_adam_param_specific_enabled": True,
+                }
+            ],
             role_uid=role_term.term_uid,
             data_type_uid=data_type_term.term_uid,
         ),
@@ -184,16 +209,22 @@ def test_data():
             "activity_item_class_uid": activity_item_classes[0].uid,
             "ct_term_uids": [ct_terms[0].term_uid],
             "unit_definition_uids": [],
+            "is_adam_param_specific": False,
+            "odm_item_uids": [],
         },
         {
             "activity_item_class_uid": activity_item_classes[1].uid,
             "ct_term_uids": [ct_terms[1].term_uid],
             "unit_definition_uids": [],
+            "is_adam_param_specific": False,
+            "odm_item_uids": [],
         },
         {
             "activity_item_class_uid": activity_item_classes[2].uid,
             "ct_term_uids": [ct_terms[0].term_uid, ct_terms[1].term_uid],
             "unit_definition_uids": [],
+            "is_adam_param_specific": False,
+            "odm_item_uids": [],
         },
     ]
     global activity_instances_all
@@ -323,6 +354,7 @@ ACTIVITY_FIELDS_ALL = [
     "definition",
     "abbreviation",
     "activity_groupings",
+    "activity_instances",
     "request_rationale",
     "is_request_final",
     "is_request_rejected",
@@ -373,6 +405,17 @@ def test_get_activity(api_client):
     assert (
         res["activity_groupings"][0]["activity_subgroup_name"] == activity_subgroup.name
     )
+    assert len(res["activity_instances"]) == 5
+    assert res["activity_instances"][0]["uid"] == activity_instances_all[0].uid
+    assert res["activity_instances"][0]["name"] == activity_instances_all[0].name
+    assert res["activity_instances"][1]["uid"] == activity_instances_all[3].uid
+    assert res["activity_instances"][1]["name"] == activity_instances_all[3].name
+    assert res["activity_instances"][2]["uid"] == activity_instances_all[4].uid
+    assert res["activity_instances"][2]["name"] == activity_instances_all[4].name
+    assert res["activity_instances"][3]["uid"] == activity_instances_all[1].uid
+    assert res["activity_instances"][3]["name"] == activity_instances_all[1].name
+    assert res["activity_instances"][4]["uid"] == activity_instances_all[2].uid
+    assert res["activity_instances"][4]["name"] == activity_instances_all[2].name
 
     assert res["library_name"] == "Sponsor"
     assert res["definition"] is None
@@ -603,6 +646,88 @@ def test_filtering_versions_exact(
         assert len(res["items"]) == 0
 
 
+def test_explicit_filtering_by_activity_subgroup_and_group_uid(api_client):
+    url = "/concepts/activities/activities"
+    response = api_client.get(
+        url,
+        params={
+            "activity_subgroup_uid": different_activity_subgroup.uid,
+            "activity_group_uid": activity_group.uid,
+        },
+    )
+    assert_response_status_code(response, 200)
+    res = response.json()["items"]
+    assert len(res) == 0
+
+    response = api_client.get(
+        url,
+        params={
+            "activity_subgroup_uid": different_activity_subgroup.uid,
+            "activity_group_uid": different_activity_group.uid,
+        },
+    )
+    assert_response_status_code(response, 200)
+    res = response.json()["items"]
+    assert len(res) == 6
+    assert res[0]["uid"] == activity_with_multiple_groupings.uid
+
+    assert (
+        res[0]["activity_groupings"][0]["activity_subgroup_uid"]
+        == activity_subgroup.uid
+    )
+    assert res[0]["activity_groupings"][0]["activity_group_uid"] == activity_group.uid
+    assert (
+        res[0]["activity_groupings"][1]["activity_subgroup_uid"]
+        == different_activity_subgroup.uid
+    )
+    assert (
+        res[0]["activity_groupings"][1]["activity_group_uid"]
+        == different_activity_group.uid
+    )
+
+    response = api_client.get(
+        url,
+        params={
+            "activity_subgroup_uid": activity_subgroup.uid,
+            "activity_group_uid": different_activity_group.uid,
+        },
+    )
+    assert_response_status_code(response, 200)
+    res = response.json()["items"]
+    assert len(res) == 0
+
+
+def test_groupped_groupings_payload_flag(api_client):
+    url = "/concepts/activities/activities"
+    response = api_client.get(
+        url,
+        params={
+            "group_by_groupings": False,
+        },
+    )
+    assert_response_status_code(response, 200)
+    res = response.json()["items"]
+    assert res[0]["activity_groupings"][0]["activity_group_name"] == "activity_group"
+    assert (
+        res[1]["activity_groupings"][0]["activity_group_name"]
+        == "different activity_group"
+    )
+    url = "/concepts/activities/activities"
+    response = api_client.get(
+        url,
+        params={
+            "group_by_groupings": True,
+        },
+    )
+    assert_response_status_code(response, 200)
+    res = response.json()["items"]
+    assert res[0]["activity_groupings"][0]["activity_group_name"] == "activity_group"
+    assert (
+        res[0]["activity_groupings"][1]["activity_group_name"]
+        == "different activity_group"
+    )
+
+
 def test_activity_cosmos_overview(api_client):
     url = f"/concepts/activities/activities/{activities_all[1].uid}/overview.cosmos"
     response = api_client.get(url)
@@ -701,7 +826,7 @@ def test_update_activity_to_new_grouping(api_client):
         f"/concepts/activities/activity-sub-groups/{subgroup.uid}/versions",
         json={},
     )
-    assert response.status_code == 201
+    assert_response_status_code(response, 201)
 
     # Patch the subgroup
     response = api_client.patch(
@@ -712,7 +837,7 @@ def test_update_activity_to_new_grouping(api_client):
             "change_description": "patch group",
         },
     )
-    assert response.status_code == 200
+    assert_response_status_code(response, 200)
 
     # Approve the subgroup
     response = api_client.post(
@@ -724,7 +849,7 @@ def test_update_activity_to_new_grouping(api_client):
         f"/concepts/activities/activity-sub-groups/{subgroup.uid}"
     )
 
-    assert response.status_code == 200
+    assert_response_status_code(response, 200)
     res = response.json()
 
     assert res["name"] == edited_subgroup_name
@@ -743,7 +868,7 @@ def test_update_activity_to_new_grouping(api_client):
         f"/concepts/activities/activities/{activity.uid}/versions",
         json={},
     )
-    assert response.status_code == 201
+    assert_response_status_code(response, 201)
 
     # Patch the activity, no changes
     response = api_client.patch(
@@ -752,17 +877,17 @@ def test_update_activity_to_new_grouping(api_client):
             "change_description": "patch activity",
         },
     )
-    assert response.status_code == 200
+    assert_response_status_code(response, 200)
 
     # Approve the activity
     response = api_client.post(
         f"/concepts/activities/activities/{activity.uid}/approvals"
     )
-    assert response.status_code == 201
+    assert_response_status_code(response, 201)
 
     # Get the activity by uid and assert that it was updated to the new subgroup version
     response = api_client.get(f"/concepts/activities/activities/{activity.uid}")
-    assert response.status_code == 200
+    assert_response_status_code(response, 200)
     res = response.json()
 
     assert res["version"] == "2.0"
@@ -852,13 +977,13 @@ def test_cannot_create_activity_with_non_unique_synonyms(api_client):
             "library_name": "Sponsor",
         },
     )
-    assert response.status_code == 409
+    assert_response_status_code(response, 409)
     res = response.json()
 
     assert res["type"] == "AlreadyExistsException"
     assert (
         res["message"]
-        == "Following Activities already have the provided synonyms: {'Activity_000002': ['name2']}"
+        == "Following Activities already have the provided synonyms: {'Activity_000003': ['name2']}"
     )
 
 
@@ -876,7 +1001,7 @@ def test_cannot_update_activity_with_non_unique_synonyms(api_client):
             "synonyms": ["non_unique1", "non_unique2"],
         },
     )
-    assert response.status_code == 409
+    assert_response_status_code(response, 409)
     res = response.json()
 
     assert res["type"] == "AlreadyExistsException"

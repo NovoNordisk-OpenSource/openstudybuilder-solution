@@ -229,7 +229,7 @@ def test_ta_listing(api_client):
             TABRANCH=None,
             TAETORD="2",
             TATRANS="Transition_Rule_1",
-        ),
+        ).model_dump(),
         # 2
         StudyArmListing(
             ARM="Arm_Name_2",
@@ -242,7 +242,7 @@ def test_ta_listing(api_client):
             TABRANCH="Branch_Arm_Name_1_edit",
             TAETORD="1",
             TATRANS="Transition_Rule_1",
-        ),
+        ).model_dump(),
         # 3
         StudyArmListing(
             ARM="Arm_Name_2",
@@ -255,7 +255,7 @@ def test_ta_listing(api_client):
             TABRANCH="Branch_Arm_Name_1_edit",
             TAETORD="2",
             TATRANS="Transition_Rule_1",
-        ),
+        ).model_dump(),
         # 4
         StudyArmListing(
             ARM="Arm_Name_3",
@@ -268,6 +268,6 @@ def test_ta_listing(api_client):
             TABRANCH=None,
             TAETORD="2",
             TATRANS="Transition_Rule_1",
-        ),
+        ).model_dump(),
     ]
     assert res == expected_output

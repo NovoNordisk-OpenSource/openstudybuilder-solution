@@ -580,13 +580,14 @@ export default {
       await this.createOrUpdateDescription()
       this.form.library_name = constants.LIBRARY_SPONSOR
       if (this.form.oid === 'F.') {
-        this.form.oid = ''
+        this.form.oid = null
       }
       try {
         if (this.isEdit()) {
           this.form.alias_uids = this.form.alias_uids.map((alias) =>
             alias.uid ? alias.uid : alias
           )
+          this.form.scope_uid = null
           await crfs
             .updateForm(this.form, this.selectedForm.uid)
             .then(async () => {
@@ -627,7 +628,9 @@ export default {
       const descArray = []
       this.desc.forEach((e) => {
         if (e.uid) {
-          e.change_description = this.$t('CRFForms.description_change_description')
+          e.change_description = this.$t(
+            'CRFForms.description_change_description'
+          )
           descArray.push(e)
         } else {
           e.library_name = constants.LIBRARY_SPONSOR
@@ -637,7 +640,9 @@ export default {
       if (!this.engDescription.name) {
         this.engDescription.name = this.form.name
       }
-      this.engDescription.change_description = this.$t('CRFForms.description_change_description')
+      this.engDescription.change_description = this.$t(
+        'CRFForms.description_change_description'
+      )
       descArray.push(this.engDescription)
       this.form.descriptions = descArray
     },

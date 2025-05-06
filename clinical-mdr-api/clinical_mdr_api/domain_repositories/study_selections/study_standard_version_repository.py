@@ -75,7 +75,7 @@ class StudyStandardVersionRepository:
             .resolve_subgraph()
         ).distinct()
         all_standard_versions = [
-            StudyStandardVersionOGM.from_orm(standard_version_node)
+            StudyStandardVersionOGM.model_validate(standard_version_node)
             for standard_version_node in nodes
         ]
         all_nodes = 0
@@ -118,7 +118,7 @@ class StudyStandardVersionRepository:
                 "study_value__latest_value__uid": study_uid,
             }
         standard_versions = [
-            StudyStandardVersionOGM.from_orm(sas_node)
+            StudyStandardVersionOGM.model_validate(sas_node)
             for sas_node in ListDistinct(
                 StudyStandardVersion.nodes.fetch_relations(
                     "has_after__audit_trail",
@@ -166,12 +166,12 @@ class StudyStandardVersionRepository:
             msg=f"The StudyStandardVersion with UID '{study_standard_version_uid}' doesn't exist.",
         )
 
-        return StudyStandardVersionOGM.from_orm(standard_version_node[0])
+        return StudyStandardVersionOGM.model_validate(standard_version_node[0])
 
     def get_all_versions(self, uid: str, study_uid):
         return sorted(
             [
-                StudyStandardVersionOGMVer.from_orm(se_node)
+                StudyStandardVersionOGMVer.model_validate(se_node)
                 for se_node in StudyStandardVersion.nodes.fetch_relations(
                     "has_after__audit_trail", "has_ct_package", Optional("has_before")
                 )
@@ -185,7 +185,7 @@ class StudyStandardVersionRepository:
     def get_all_study_version_versions(self, study_uid: str):
         return sorted(
             [
-                StudyStandardVersionOGMVer.from_orm(se_node)
+                StudyStandardVersionOGMVer.model_validate(se_node)
                 for se_node in StudyStandardVersion.nodes.fetch_relations(
                     "has_after__audit_trail", "has_ct_package", Optional("has_before")
                 )

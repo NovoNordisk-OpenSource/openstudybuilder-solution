@@ -1,264 +1,115 @@
+import { apiActivityName, apiGroupName, apiSubgroupName, apiInstanceName } from "./api_library_steps";
 const { Given, When, Then } = require("@badeball/cypress-cucumber-preprocessor");
 
-let activityName 
-let activityInstance 
-let activitygroup 
-let activitysubgroup 
-let nciconceptid = "NCI-ID"
-let nciconceptname = "NCINAME"
-let topiccode = "Totic-code"
-let definition = "DEF"
-let abbreviation = "ABB"
-let adamcode = "Adam-code"
-let approvalConfirmation = 'Activity is now in Final state'
+const clickOnLinkInTable = (name) => cy.get('table tbody tr td').contains(name).click()
+const verifyThatValuesPresent = (values) => values.forEach(value => cy.get('.v-table__wrapper').contains(value))
 
-Given('A test group has been created', () => createGroupAndApprove())
+When('I search for the test activity through the filter field', () => cy.searchAndCheckPresence(apiActivityName, true))
 
-Given('A test subgroup has been created and linked to the test group', () => createSubGroupAndApprove())
+When('I search for the test instance through the filter field', () => cy.searchAndCheckPresence(apiInstanceName, true))
 
-Given('A test activity has been created and linked to the test group', () => createActivityAndApprove())
+When('I search for the test group through the filter field', () => cy.searchAndCheckPresence(apiGroupName, true))
 
-Given('A test activity instance has been created and linked to the test activity', () => createInstanceAndApprove())
-
-When('I search for the test activity through the filter field', () => {
-    cy.searchAndCheckResults(activityName)
-})
-
-When('I search for the test instance through the filter field', () => {
-    cy.searchAndCheckResults(activityInstance)
-})
+When('I search for the test subgroup through the filter field', () => cy.searchAndCheckPresence(apiSubgroupName, true))
 
 Then('The test group, test subgroup and test activity should be displayed in the row of the test instance', () => {
-    cy.checkRowByIndex(0, 'Activity group', activitygroup)
-    cy.checkRowByIndex(0, 'Activity subgroup', activitysubgroup)  
-    cy.checkRowByIndex(0, 'Activity', activityName) 
-})
-
-When('I search for the test group through the filter field', () => {
-    cy.searchAndCheckResults(activitygroup)
-})
-
-When('I search for the test subgroup through the filter field', () => {
-    cy.searchAndCheckResults(activitysubgroup)
+    cy.checkRowByIndex(0, 'Activity group', apiGroupName)
+    cy.checkRowByIndex(0, 'Activity subgroup', apiSubgroupName)  
+    cy.checkRowByIndex(0, 'Activity', apiActivityName) 
 })
 
 Then('The test group should be displayed in the row for the test subgroup', () => {
-    cy.checkRowByIndex(0, 'Activity group', activitygroup)
+    cy.checkRowByIndex(0, 'Activity group', apiGroupName)
 })
 
-When('I click on the link for the test group in the activity page', () => {
-    cy.get('table tbody tr td').contains(activitygroup).click()
-})
+When('I click on the link for the test group in table', () => clickOnLinkInTable(apiGroupName))
 
-Then('The test group overview page should be opened', () => {
-    verifyOverviewPage(activitygroup)
-})
+Then('The test group overview page should be opened', () => verifyOverviewPage(apiGroupName))
 
-When('I click on the link for the test subgroup in the activity page', () => {
-    cy.visit("/library/activities/activities")
-    cy.searchAndCheckResults(activityName)
-    cy.get('table tbody tr td').contains(activitysubgroup).click()
-})
+Then('The test subgroup overview page should be opened', () => verifyOverviewPage(apiSubgroupName))
 
-Then('The test subgroup overview page should be opened', () => {
-    verifyOverviewPage(activitysubgroup)
-})
+Then('The test activity overview page should be opened', () => verifyOverviewPage(apiActivityName))
 
-When('I click on the test activity name in the activity page', () => {
-    cy.visit("/library/activities/activities")
-    cy.searchAndCheckResults(activityName)
-    cy.get('table tbody tr td').contains(activityName).click()
-})
+Then('The test instance overview page should be opened', () => verifyOverviewPage(apiInstanceName))
 
-Then('The test activity overview page should be opened', () => {
-    verifyOverviewPage(activityName)
-})
+When('I click on the link for the test subgroup in the activity page', () => goToPageSearchAndClickLink('activities', apiActivityName, apiSubgroupName))
+
+When('I click on the test activity name in the activity page', () => goToPageSearchAndClickLink('activities', apiActivityName, apiActivityName))
+
+When('I click on the link for the test subgroup in the instance page', () => goToPageSearchAndClickLink('activity-instances', apiInstanceName, apiSubgroupName))
+
+When('I click on the link for the test instance name in the instance page', () => goToPageSearchAndClickLink('activity-instances', apiInstanceName, apiInstanceName))
+
+When('I click on the link for the test subgroup in the subgroup page', () => goToPageSearchAndClickLink('activity-subgroups', apiSubgroupName, apiSubgroupName))
 
 Then('The test group, test subgroup and test instance should be displayed on the test activity overview page', () => {
-    cy.get('.v-table__wrapper').contains(activitygroup)
-    cy.get('.v-table__wrapper').contains(activitysubgroup)
-    cy.get('.v-table__wrapper').contains(activityInstance)
-})
-
-Then('The group overview page can be opened by clicking the group link in the activity overview page', () => {
-    cy.get('.v-table__wrapper').contains('a', activitygroup).click();
-    verifyOverviewPage(activitygroup)   
-    cy.go(-1); // Go back to the previous page
-})
-
-Then('The subgroup overview page can be opened by clicking the subgroup link in the activity overview page', () => {
-    cy.get('.v-table__wrapper').contains('a', activitysubgroup).click();
-    verifyOverviewPage(activitysubgroup) 
-})
-
-When('I search for the test instance in the instance page through the filter field', () => {
-    cy.visit("/library/activities/activity-instances")
-    cy.searchAndCheckResults(activityInstance)
-})
-
-Then('The test group, the test subgroup and the test activity should be displayed in the row for the test instance', () => {
-    cy.checkRowByIndex(0, 'Activity group', activitygroup)
-    cy.checkRowByIndex(0, 'Activity subgroup', activitysubgroup) 
-    cy.checkRowByIndex(0, 'Activity', activityName)  
-})
-
-When('I click on the link for the test group in the instance page', () => {
-    cy.visit("/library/activities/activity-instances")
-    cy.searchAndCheckResults(activityInstance)
-    cy.get('table tbody tr td').contains(activitygroup).click()
-})
-
-When('I click on the link for the test subgroup in the instance page', () => {
-    cy.visit("/library/activities/activity-instances")
-    cy.searchAndCheckResults(activityInstance)
-    cy.get('table tbody tr td').contains(activitysubgroup).click()
-})
-
-When('I click on the link for the test instance name in the instance page', () => {
-    cy.visit("/library/activities/activity-instances")
-    cy.searchAndCheckResults(activityInstance)
-    cy.get('table tbody tr td').contains(activityInstance).click()
-})
-
-Then('The test instance overview page should be opened', () => {
-    verifyOverviewPage(activityInstance)
-})
-
-Then('The test group, test subgroup and test activity should be displayed on the test instance overview page', () => {
-    cy.get('.v-table__wrapper').contains(activitygroup)
-    cy.get('.v-table__wrapper').contains(activitysubgroup)
-    cy.get('.v-table__wrapper').contains(activityName)
-})
-
-Then('The group overview page can be opened by clicking the group link in the instance overview page', () => {
-    cy.get('.v-table__wrapper').contains('a', activitygroup).click();
-    verifyOverviewPage(activitygroup)   
-    cy.go(-1); // Go back to the previous page
-    
-})
-
-Then('The subgroup overview page can be opened by clicking the subgroup link in the instance overview page', () => {
-    cy.get('.v-table__wrapper').contains('a', activitysubgroup).click();
-    verifyOverviewPage(activitysubgroup) 
-    cy.go(-1); // Go back to the previous page
-})
-
-Then('The activity overview page can be opened by clicking the activity link in the instance overview page', () => {
-    cy.get('.v-table__wrapper').contains('a', activityName).click();
-    verifyOverviewPage(activityName) 
-})
-
-When('I click on the link for the test group in the group page', () => {
-    cy.get('table tbody tr td').contains(activitygroup).click()
-})
-
-Then('The test subgroup should be displayed on the group overview page', () => {
-    cy.get('.v-table__wrapper').contains(activitysubgroup)
-})
-
-Then('The subgroup overview page can be opened by clicking the subgroup link in the group overview page', () => {
-    cy.get('.v-table__wrapper').contains('a', activitysubgroup).click();
-    verifyOverviewPage(activitysubgroup) 
-})
-
-When('I click on the link for the test group in the subgroup page', () => {
-    cy.get('table tbody tr td').contains(activitygroup).click()
-})
-
-When('I click on the link for the test subgroup in the subgroup page', () => {
-    cy.visit("/library/activities/activity-subgroups")
-    cy.searchAndCheckResults(activitysubgroup)
-    cy.get('table tbody tr td').contains(activitysubgroup).click()
+    verifyThatValuesPresent([apiGroupName, apiSubgroupName, apiInstanceName])
 })
 
 Then('The test group and test activity should be displayed on the subgroup overview page', () => {
-    cy.get('.v-table__wrapper').contains(activitygroup)
-    cy.get('.v-table__wrapper').contains(activityName)
+    verifyThatValuesPresent([apiGroupName, apiActivityName])
 })
 
-function createGroupAndApprove() {
-    cy.visit("/library/activities/activity-groups")
-    activitygroup = Date.now()
-    cy.clickButton('add-activity')
-    cy.fillInput('groupform-activity-group-field', activitygroup)
-    cy.fillInput('groupform-abbreviation-field', abbreviation)
-    cy.fillInput('groupform-definition-field', definition)
-    cy.clickButton('save-button')
-    cy.searchAndApprove(activitygroup)
-}
+Then('The test group, test subgroup and test activity should be displayed on the test instance overview page', () => {
+    verifyThatValuesPresent([apiGroupName, apiSubgroupName, apiActivityName])
+})
 
-function createSubGroupAndApprove() {
-    cy.visit("/library/activities/activity-subgroups")
-    activitysubgroup = Date.now()
-    cy.clickButton('add-activity')
-    cy.selectAutoComplete('groupform-activity-group-dropdown', activitygroup)
-    cy.fillInput('groupform-activity-group-field', activitysubgroup)
-    cy.fillInput('groupform-abbreviation-field', abbreviation)
-    cy.fillInput('groupform-definition-field', definition) 
-    cy.clickButton('save-button')
-    cy.searchAndApprove(activitysubgroup)
-}
+Then('The test subgroup should be displayed on the group overview page', () => verifyThatValuesPresent([apiSubgroupName]))
 
-function createActivityAndApprove() {
-    cy.visit("/library/activities/activities")
-    cy.clickButton('add-activity', true)
-    fillNewActivityData()
-    saveActivity()
-    cy.searchAndCheckResults(activityName)
-    cy.checkStatusAndVersion('Draft', '0.1')
-    cy.performActionOnSearchedItem('Approve', approvalConfirmation)
-}
+Then('The group overview page can be opened by clicking the group link in overview page', () => openLinkedItemAndGoBack(apiGroupName))
 
-function createInstanceAndApprove() {
-    cy.visit("/library/activities/activity-instances")
-    activityInstance = Date.now()
-    cy.clickButton('add-activity', true)
-    cy.wait(1000)
-    fillInstanceActivityGroupData(activityName)
-    fillInstanceClassData()
-    cy.fillInput('instanceform-instancename-field', activityInstance)
-    cy.fillInput('instanceform-definition-field', definition)
-    cy.fillInput('instanceform-nciconceptid-field', nciconceptid)
-    cy.fillInput('instanceform-topiccode-field', topiccode)
-    cy.fillInput('instanceform-adamcode-field', adamcode)
-    cy.get('[data-cy="instanceform-requiredforactivity-checkbox"] input').check()
-    cy.clickFormActionButton('save')
-}
+Then('The subgroup overview page can be opened by clicking the subgroup link in overview page', () => openLinkedItemAndGoBack(apiSubgroupName))
 
-function fillNewActivityData() {
-    activityName = Date.now()
-    cy.selectAutoComplete('activityform-activity-group-dropdown', activitygroup)
-    cy.selectAutoComplete('activityform-activity-subgroup-dropdown', activitysubgroup)
-    cy.fillInput('activityform-activity-name-field', activityName)
-    cy.fillInput('activityform-nci-concept-id-field', nciconceptid)
-    cy.fillInput('activityform-nci-concept-name-field', nciconceptname)
-    //cy.fillInputNew('activityform-synonyms-field', synonym)
-    cy.fillInput('activityform-abbreviation-field', abbreviation)
-    cy.fillInput('activityform-definition-field', definition)
-}
+Then('The activity overview page can be opened by clicking the activity link in overview page', () => openLinkedItemAndGoBack(apiActivityName))
 
-function saveActivity() {
-    cy.intercept('/api/concepts/activities/activities?page_number=1&page_size=0&total_count=true&filters=%7B%7D').as('getData')
-    cy.clickButton('save-button')
-    cy.checkSnackbarMessage('Activity created')
-    cy.wait('@getData', {timeout: 20000})
-    cy.get('.dialog-title').should('not.exist')
-}
+Then('The test group, the test subgroup and the test activity should be displayed in the row for the test instance', () => {
+    cy.checkRowByIndex(0, 'Activity group', apiGroupName)
+    cy.checkRowByIndex(0, 'Activity subgroup', apiSubgroupName) 
+    cy.checkRowByIndex(0, 'Activity', apiActivityName)  
+})
 
-function fillInstanceActivityGroupData() {
-    cy.get('[data-cy=instanceform-activity-dropdown] input').type(activityName)
-    cy.contains('.v-list-item', activityName).click()
-    cy.get('[data-cy=instanceform-activitygroup-table]').within(() => cy.get('.v-checkbox-btn').first().click())
-    cy.clickFormActionButton('continue')
-}
+Then('The activity instance overview page can be opened by clicking the activity instance link in the instance overview page', () => {
+    cy.get('.v-table__wrapper').contains('a', apiInstanceName).click();
+    verifyOverviewPage(apiInstanceName)
+})
 
-function fillInstanceClassData() {
-    cy.selectFirstVSelect('instanceform-instanceclass-dropdown')
-    cy.clickFormActionButton('continue')
-}
+When('I click on the COSMoS YAML tab', () => cy.get('button.v-btn.v-tab[value="cosmos"]').click())
+
+Then('The COSMoS YAML page should be opened with Download button and Close button displayed', () => {
+    cy.get('button[title="Download YAML content"]').should('be.visible');
+    cy.get('button[title="Close YAML viewer"]').should('be.visible');
+})
+
+Then('The Download YAML content button is clicked', () => cy.get('button[title="Download YAML content"]').click())
+
+When('I click on the Close button in the COSMoS YAML page', () => cy.get('button[title="Close YAML viewer"]').click())
+
+When('I click on the history button', () => cy.get('button[title="History"]').click())
+
+Then('The history page should be opened', () => {
+    cy.get(`[data-cy="version-history-window"]`).should("exist");
+    cy.clickButton('close-button')
+})
+
+Then('The {string} file should be downloaded in {string} format', (filename, format) => {
+    const filePath = `cypress/downloads/${filename}.${format}`
+    cy.readFile(filePath).then((file ) => {cy.log(file)})
+})
 
 function verifyOverviewPage(pageName){
+    cy.get('.d-flex.page-title').invoke('text').should('match', new RegExp(pageName));
     cy.get('button[role="tab"][value="html"]').contains('Overview');
-    cy.get('.v-row').contains(pageName);
 }
 
+function goToPageSearchAndClickLink(endpoint, searchFor, clickOn) {
+    cy.visit(`/library/activities/${endpoint}`)
+    cy.searchAndCheckResults(searchFor)
+    cy.get('table tbody tr td').contains(clickOn).click()
+}
+
+function openLinkedItemAndGoBack(itemName) {
+    cy.get('.v-table__wrapper').contains('a', itemName).click();
+    verifyOverviewPage(itemName) 
+    cy.go(-1); // Go back to the previous page
+    cy.wait(1000)
+}

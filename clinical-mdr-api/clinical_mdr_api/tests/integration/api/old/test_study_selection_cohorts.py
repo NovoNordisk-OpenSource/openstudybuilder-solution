@@ -607,12 +607,14 @@ def test_all_history_of_specific_selection5(api_client):
     assert res[0]["accepted_version"] is False
     assert res[0]["branch_arm_roots_uids"] is None
     assert res[0]["arm_roots_uids"] == ["StudyArm_000001", "StudyArm_000002"]
-    assert res[0]["changes"] == {
-        "name": True,
-        "start_date": True,
-        "end_date": True,
-        "change_type": True,
-    }
+    assert set(res[0]["changes"]) == set(
+        [
+            "name",
+            "start_date",
+            "end_date",
+            "change_type",
+        ]
+    )
     assert res[1]["study_uid"] == "study_root"
     assert res[1]["order"] == 1
     assert res[1]["project_number"] is None
@@ -632,7 +634,7 @@ def test_all_history_of_specific_selection5(api_client):
     assert res[1]["accepted_version"] is False
     assert res[1]["branch_arm_roots_uids"] is None
     assert res[1]["arm_roots_uids"] == ["StudyArm_000001", "StudyArm_000002"]
-    assert res[1]["changes"] == {}
+    assert res[1]["changes"] == []
 
 
 def test_2nd_adding_selection1(api_client):
@@ -1652,11 +1654,13 @@ def test_all_history_of_all_selection_study_cohort(api_client):
     assert res[0]["accepted_version"] is False
     assert res[0]["branch_arm_roots_uids"] is None
     assert res[0]["arm_roots_uids"] == ["StudyArm_000001", "StudyArm_000002"]
-    assert res[0]["changes"] == {
-        "start_date": True,
-        "end_date": True,
-        "change_type": True,
-    }
+    assert set(res[0]["changes"]) == set(
+        [
+            "start_date",
+            "end_date",
+            "change_type",
+        ]
+    )
     assert res[1]["study_uid"] == "study_root"
     assert res[1]["order"] == 1
     assert res[1]["project_number"] is None
@@ -1676,12 +1680,14 @@ def test_all_history_of_all_selection_study_cohort(api_client):
     assert res[1]["accepted_version"] is False
     assert res[1]["branch_arm_roots_uids"] is None
     assert res[1]["arm_roots_uids"] == ["StudyArm_000001", "StudyArm_000002"]
-    assert res[1]["changes"] == {
-        "name": True,
-        "start_date": True,
-        "end_date": True,
-        "change_type": True,
-    }
+    assert set(res[1]["changes"]) == set(
+        [
+            "name",
+            "start_date",
+            "end_date",
+            "change_type",
+        ]
+    )
     assert res[2]["study_uid"] == "study_root"
     assert res[2]["order"] == 1
     assert res[2]["project_number"] is None
@@ -1701,7 +1707,7 @@ def test_all_history_of_all_selection_study_cohort(api_client):
     assert res[2]["accepted_version"] is False
     assert res[2]["branch_arm_roots_uids"] is None
     assert res[2]["arm_roots_uids"] == ["StudyArm_000001", "StudyArm_000002"]
-    assert res[2]["changes"] == {}
+    assert res[2]["changes"] == []
     assert res[3]["study_uid"] == "study_root"
     assert res[3]["order"] == 1
     assert res[3]["project_number"] is None
@@ -1721,12 +1727,14 @@ def test_all_history_of_all_selection_study_cohort(api_client):
     assert res[3]["accepted_version"] is False
     assert res[3]["branch_arm_roots_uids"] is None
     assert res[3]["arm_roots_uids"] == ["StudyArm_000001"]
-    assert res[3]["changes"] == {
-        "order": True,
-        "start_date": True,
-        "end_date": True,
-        "change_type": True,
-    }
+    assert set(res[3]["changes"]) == set(
+        [
+            "order",
+            "start_date",
+            "end_date",
+            "change_type",
+        ]
+    )
     assert res[4]["study_uid"] == "study_root"
     assert res[4]["order"] == 2
     assert res[4]["project_number"] is None
@@ -1746,7 +1754,7 @@ def test_all_history_of_all_selection_study_cohort(api_client):
     assert res[4]["accepted_version"] is False
     assert res[4]["branch_arm_roots_uids"] is None
     assert res[4]["arm_roots_uids"] == ["StudyArm_000001"]
-    assert res[4]["changes"] == {}
+    assert res[4]["changes"] == []
     assert res[5]["study_uid"] == "study_root"
     assert res[5]["order"] == 4
     assert res[5]["project_number"] is None
@@ -1766,12 +1774,14 @@ def test_all_history_of_all_selection_study_cohort(api_client):
     assert res[5]["accepted_version"] is False
     assert res[5]["branch_arm_roots_uids"] is None
     assert res[5]["arm_roots_uids"] == ["StudyArm_000001"]
-    assert res[5]["changes"] == {
-        "order": True,
-        "start_date": True,
-        "end_date": True,
-        "change_type": True,
-    }
+    assert set(res[5]["changes"]) == set(
+        [
+            "order",
+            "start_date",
+            "end_date",
+            "change_type",
+        ]
+    )
     assert res[6]["study_uid"] == "study_root"
     assert res[6]["order"] == 2
     assert res[6]["project_number"] is None
@@ -1791,7 +1801,7 @@ def test_all_history_of_all_selection_study_cohort(api_client):
     assert res[6]["accepted_version"] is False
     assert res[6]["branch_arm_roots_uids"] is None
     assert res[6]["arm_roots_uids"] == ["StudyArm_000001"]
-    assert res[6]["changes"] == {}
+    assert res[6]["changes"] == []
     assert res[7]["study_uid"] == "study_root"
     assert res[7]["order"] == 2
     assert res[7]["project_number"] is None
@@ -1811,12 +1821,14 @@ def test_all_history_of_all_selection_study_cohort(api_client):
     assert res[7]["accepted_version"] is False
     assert res[7]["branch_arm_roots_uids"] is None
     assert res[7]["arm_roots_uids"] == ["StudyArm_000002"]
-    assert res[7]["changes"] == {
-        "order": True,
-        "start_date": True,
-        "end_date": True,
-        "change_type": True,
-    }
+    assert set(res[7]["changes"]) == set(
+        [
+            "order",
+            "start_date",
+            "end_date",
+            "change_type",
+        ]
+    )
     assert res[8]["study_uid"] == "study_root"
     assert res[8]["order"] == 3
     assert res[8]["project_number"] is None
@@ -1836,7 +1848,7 @@ def test_all_history_of_all_selection_study_cohort(api_client):
     assert res[8]["accepted_version"] is False
     assert res[8]["branch_arm_roots_uids"] is None
     assert res[8]["arm_roots_uids"] == ["StudyArm_000002"]
-    assert res[8]["changes"] == {}
+    assert res[8]["changes"] == []
     assert res[9]["study_uid"] == "study_root"
     assert res[9]["order"] == 3
     assert res[9]["project_number"] is None
@@ -1856,12 +1868,14 @@ def test_all_history_of_all_selection_study_cohort(api_client):
     assert res[9]["accepted_version"] is False
     assert res[9]["branch_arm_roots_uids"] is None
     assert res[9]["arm_roots_uids"] is None
-    assert res[9]["changes"] == {
-        "order": True,
-        "start_date": True,
-        "end_date": True,
-        "change_type": True,
-    }
+    assert set(res[9]["changes"]) == set(
+        [
+            "order",
+            "start_date",
+            "end_date",
+            "change_type",
+        ]
+    )
     assert res[10]["study_uid"] == "study_root"
     assert res[10]["order"] == 4
     assert res[10]["project_number"] is None
@@ -1881,7 +1895,7 @@ def test_all_history_of_all_selection_study_cohort(api_client):
     assert res[10]["accepted_version"] is False
     assert res[10]["branch_arm_roots_uids"] is None
     assert res[10]["arm_roots_uids"] is None
-    assert res[10]["changes"] == {}
+    assert res[10]["changes"] == []
     assert res[11]["study_uid"] == "study_root"
     assert res[11]["order"] == 5
     assert res[11]["project_number"] is None
@@ -1901,7 +1915,7 @@ def test_all_history_of_all_selection_study_cohort(api_client):
     assert res[11]["accepted_version"] is False
     assert res[11]["branch_arm_roots_uids"] == ["StudyBranchArm_000001"]
     assert res[11]["arm_roots_uids"] == ["StudyArm_000002"]
-    assert res[11]["changes"] == {}
+    assert res[11]["changes"] == []
     assert res[12]["study_uid"] == "study_root"
     assert res[12]["order"] == 6
     assert res[12]["project_number"] is None
@@ -1929,7 +1943,7 @@ def test_all_history_of_all_selection_study_cohort(api_client):
         "StudyArm_000002",
         "StudyArm_000002",
     ]
-    assert res[12]["changes"] == {}
+    assert res[12]["changes"] == []
 
 
 def test_adding_selection_8_to_ensure_that_the_only_required_fields_are_the_name_and_short_name_fields(

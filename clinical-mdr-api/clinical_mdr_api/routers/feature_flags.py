@@ -27,8 +27,8 @@ service = FeatureFlagService()
     response_model=FeatureFlag,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_serial_number_against_neo4j_max_and_min_int()
@@ -43,9 +43,9 @@ def get_feature_flag(serial_number: Annotated[int, SN]) -> FeatureFlag:
     response_model=FeatureFlag,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
         409: _generic_descriptions.ERROR_409,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def create_feature_flag(
@@ -61,9 +61,9 @@ def create_feature_flag(
     response_model=FeatureFlag,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
         409: _generic_descriptions.ERROR_409,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_serial_number_against_neo4j_max_and_min_int()
@@ -80,8 +80,8 @@ def update_feature_flag(
     summary="Deletes the feature flag identified by the provided Serial Number.",
     status_code=204,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.validate_serial_number_against_neo4j_max_and_min_int()

@@ -37,3 +37,5 @@ The purpose of the logical data model is to define the vocabulary for the main e
 
 ## Dictionaries
   The Dictionaries subject area holds rich and highly specialised medical terminologies that facilitate sharing and exchange of clinical information. This can be e.g. LOINC, MedDRA, SNOMED etc.
+
+

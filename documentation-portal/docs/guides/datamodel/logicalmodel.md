@@ -81,3 +81,4 @@ This document describe the Planned Objectives and the Planned Endpoints of a Stu
 This document describe the Planned Compounds of a Study in the Domain Design Driven approach.
 
 [![Logical Data Model](~@source/images/model/logical_data_model/logical-ddd-model-study-compounds.png)](../../images/model/logical_data_model/logical-ddd-model-study-compounds.png)
+

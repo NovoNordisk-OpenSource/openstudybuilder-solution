@@ -2,6 +2,7 @@ from typing import Annotated, Callable, Self
 
 from pydantic import Field
 
+from clinical_mdr_api.descriptions.general import CHANGES_FIELD_DESC
 from clinical_mdr_api.domains.concepts.compound import CompoundAR
 from clinical_mdr_api.models.concepts.concept import (
     Concept,
@@ -23,8 +24,12 @@ class Compound(Concept):
         ),
     ]
 
-    is_sponsor_compound: bool | None = True
-    external_id: Annotated[str | None, Field(nullable=True)] = None
+    is_sponsor_compound: Annotated[
+        bool | None, Field(json_schema_extra={"nullable": True})
+    ] = True
+    external_id: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
 
     @classmethod
     def from_compound_ar(
@@ -82,19 +87,15 @@ class CompoundCreateInput(ExtendedConceptPostInput):
 
 
 class CompoundEditInput(ExtendedConceptPatchInput):
-    is_sponsor_compound: bool | None
+    is_sponsor_compound: bool | None = None
     external_id: Annotated[str | None, Field(min_length=1)] = None
     change_description: Annotated[str, Field(min_length=1)]
 
 
 class CompoundVersion(Compound):
     changes: Annotated[
-        dict[str, bool] | None,
+        list[str],
         Field(
-            description=(
-                "Denotes whether or not there was a change in a specific field/property compared to the previous version. "
-                "The field names in this object here refer to the field names of the objective (e.g. name, start_date, ..)."
-            ),
-            nullable=True,
+            description=CHANGES_FIELD_DESC,
         ),
-    ] = None
+    ] = []

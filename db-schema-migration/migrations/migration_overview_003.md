@@ -4,13 +4,13 @@
 ## 1. Indexes and Constraints
 -------------------------------------
 ### Change Description
-- Re-create all db indexes and constraints according to [db schema definition](https://novonordiskit.visualstudio.com/Clinical-MDR/_git/neo4j-mdr-db?path=/db_schema.py&version=GBmain&_a=contents).
+- Re-create all db indexes and constraints according to [db schema definition](https://orgremoved.visualstudio.com/Clinical-MDR/_git/neo4j-mdr-db?path=/db_schema.py&version=GBmain&_a=contents).
 
 
 ## 2. CT Config Values (Study Fields Configuration)
 -------------------------------------  
 ### Change Description
-- Re-create all `CTConfigValue` nodes according to values defined in [this file](https://novonordiskit.visualstudio.com/Clinical-MDR/_git/studybuilder-import?path=/datafiles/configuration/study_fields_configuration.csv).
+- Re-create all `CTConfigValue` nodes according to values defined in [this file](https://orgremoved.visualstudio.com/Clinical-MDR/_git/studybuilder-import?path=/datafiles/configuration/study_fields_configuration.csv).
 
 ### Nodes Affected
 - CTConfigValue
@@ -25,7 +25,7 @@
 - Add StudySelection label in StudyDesignCell, StudyActivitySchedule, and StudyActivityInstruction like  
   - :StudySelection:StudyDesignCell:
 
-- [Related PR](https://dev.azure.com/novonordiskit/05875d80-95a5-4739-91f7-409325fd56cc/_git/98bad7d4-14c1-4db1-919e-d350d9fdb535/pullrequest/90262).
+- [Related PR](https://dev.azure.com/orgremoved/05875d80-95a5-4739-91f7-409325fd56cc/_git/98bad7d4-14c1-4db1-919e-d350d9fdb535/pullrequest/90262).
 
 ### Nodes Affected
   - `StudyEpoch`
@@ -42,7 +42,7 @@
 - The Migration will let the Deleted StudySelections remained disconnected from StudyValue node if it's not the case
 
 
-- [Related PR](https://dev.azure.com/novonordiskit/Clinical-MDR/_git/clinical-mdr-api/pullrequest/88129).
+- [Related PR](https://dev.azure.com/orgremoved/Clinical-MDR/_git/clinical-mdr-api/pullrequest/88129).
 
 ### Nodes Affected
   - `StudySelection`
@@ -54,7 +54,7 @@
 - Migrate from StudySelection Switched required relationships to Maintained realationships
 - Migrate from StudySelection:StudyActivitySchedule Cascade Delete from StudyVisit if there's still a required relationship connected to a Deleted StudySelection:StudyVisit
 
-- [Related PR](https://dev.azure.com/novonordiskit/Clinical-MDR/_git/clinical-mdr-api/pullrequest/88129).
+- [Related PR](https://dev.azure.com/orgremoved/Clinical-MDR/_git/clinical-mdr-api/pullrequest/88129).
 
 ### Nodes Affected
   - `StudySelection`
@@ -65,7 +65,7 @@
 - Migrate ActivityValidGroup nodes that are responsible for ActivitySubGroup and ActivityGroup combinations
 - Migrate ActivityGrouping nodes that are responsible for Activity, ActivitySubGroup and ActivityGroup combinations
 
-- [Related PR](https://dev.azure.com/novonordiskit/Clinical-MDR/_git/clinical-mdr-api/pullrequest/95645).
+- [Related PR](https://dev.azure.com/orgremoved/Clinical-MDR/_git/clinical-mdr-api/pullrequest/95645).
 
 ### Nodes Affected
   - `ActivityInstanceValue`, `ActivityValue`, `ActivitySubGroupValue`, `ActivityGroupValue`
@@ -78,8 +78,8 @@
 - Made sequence_id of CriteriaTemplate sequential within the criteria template type
 - Made sequence_id of CriteriaPreInstance sequential within the parent template
 
-- [Related PR](https://dev.azure.com/novonordiskit/Clinical-MDR/_git/clinical-mdr-api/pullrequest/99562).
-- [Related PR](https://dev.azure.com/novonordiskit/Clinical-MDR/_git/clinical-mdr-api/pullrequest/100333).
+- [Related PR](https://dev.azure.com/orgremoved/Clinical-MDR/_git/clinical-mdr-api/pullrequest/99562).
+- [Related PR](https://dev.azure.com/orgremoved/Clinical-MDR/_git/clinical-mdr-api/pullrequest/100333).
 
 ### Nodes Affected
   - `SyntaxTemplateRoot`
@@ -90,7 +90,7 @@
 ### Change Description
 - Migrate StudyActivitySubGroup and StudyActivityGroup selections for each StudyActivity
 
-- [Related PR](https://dev.azure.com/novonordiskit/Clinical-MDR/_git/clinical-mdr-api/pullrequest/100824).
+- [Related PR](https://dev.azure.com/orgremoved/Clinical-MDR/_git/clinical-mdr-api/pullrequest/100824).
 
 ### Nodes Affected
   - `StudyActivity`, `StudyActivitySubGroup`, `StudyActivityGroup`
@@ -100,7 +100,8 @@
 ### Change Description
 - Migrate SimpleConceptValue node to be linked only to one SimpleConceptRoot and not many of them as it is at the moment.
 
-- [Related PR](https://dev.azure.com/novonordiskit/Clinical-MDR/_git/clinical-mdr-api/pullrequest/101847).
+- [Related PR](https://dev.azure.com/orgremoved/Clinical-MDR/_git/clinical-mdr-api/pullrequest/101847).
 
 ### Nodes Affected
   - `SimpleConceptRoot`, `SimpleConceptValue`
+

@@ -2,6 +2,7 @@ from typing import Annotated, Callable, Self
 
 from pydantic import Field
 
+from clinical_mdr_api.descriptions.general import CHANGES_FIELD_DESC
 from clinical_mdr_api.domains.concepts.activities.activity import ActivityAR
 from clinical_mdr_api.domains.concepts.concept_base import ConceptARBase
 from clinical_mdr_api.domains.concepts.odms.alias import OdmAliasAR
@@ -57,7 +58,10 @@ from clinical_mdr_api.models.concepts.odms.odm_vendor_element import (
 from clinical_mdr_api.models.controlled_terminologies.ct_codelist_attributes import (
     CTCodelistAttributesSimpleModel,
 )
-from clinical_mdr_api.models.controlled_terminologies.ct_term import SimpleTermModel
+from clinical_mdr_api.models.controlled_terminologies.ct_term import (
+    SimpleDictionaryTermModel,
+    SimpleTermModel,
+)
 from clinical_mdr_api.models.utils import BaseModel, InputModel, PostInputModel
 from common import config
 
@@ -97,11 +101,15 @@ class OdmItemTermRelationshipModel(BaseModel):
         return simple_term_model
 
     term_uid: Annotated[str, Field()]
-    name: Annotated[str | None, Field(nullable=True)] = None
-    mandatory: Annotated[bool | None, Field(nullable=True)] = None
-    order: Annotated[int | None, Field(nullable=True)] = None
-    display_text: Annotated[str | None, Field(nullable=True)] = None
-    version: Annotated[str | None, Field(nullable=True)] = None
+    name: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    mandatory: Annotated[bool | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
+    order: Annotated[int | None, Field(json_schema_extra={"nullable": True})] = None
+    display_text: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
+    version: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
 
 
 class OdmItemUnitDefinitionWithRelationship(BaseModel):
@@ -169,33 +177,45 @@ class OdmItemUnitDefinitionWithRelationship(BaseModel):
         return simple_unit_definition_model
 
     uid: Annotated[str, Field()]
-    name: Annotated[str | None, Field(nullable=True)] = None
-    mandatory: Annotated[bool | None, Field(nullable=True)] = None
-    order: Annotated[int | None, Field(nullable=True)] = None
-    ucum: Annotated[SimpleTermModel | None, Field(nullable=True)] = None
+    name: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    mandatory: Annotated[bool | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
+    order: Annotated[int | None, Field(json_schema_extra={"nullable": True})] = None
+    ucum: Annotated[
+        SimpleTermModel | SimpleDictionaryTermModel | None,
+        Field(json_schema_extra={"nullable": True}),
+    ] = None
     ct_units: Annotated[list[SimpleTermModel], Field()] = []
 
 
 class OdmItem(ConceptModel):
     oid: str | None
-    prompt: Annotated[str | None, Field(nullable=True)] = None
-    datatype: Annotated[str | None, Field(nullable=True)] = None
-    length: Annotated[int | None, Field(nullable=True)] = None
-    significant_digits: Annotated[int | None, Field(nullable=True)] = None
-    sas_field_name: Annotated[str | None, Field(nullable=True)] = None
-    sds_var_name: Annotated[str | None, Field(nullable=True)] = None
-    origin: Annotated[str | None, Field(nullable=True)] = None
-    comment: Annotated[str | None, Field(nullable=True)] = None
+    prompt: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    datatype: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    length: Annotated[int | None, Field(json_schema_extra={"nullable": True})] = None
+    significant_digits: Annotated[
+        int | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    sas_field_name: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    sds_var_name: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
+    origin: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    comment: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
     descriptions: list[OdmDescriptionSimpleModel]
     aliases: list[OdmAliasSimpleModel]
     unit_definitions: list[OdmItemUnitDefinitionWithRelationship]
     codelist: Annotated[
-        CTCodelistAttributesSimpleModel | None, Field(nullable=True)
+        CTCodelistAttributesSimpleModel | None,
+        Field(json_schema_extra={"nullable": True}),
     ] = None
     terms: list[OdmItemTermRelationshipModel]
-    activity: Annotated[ActivityHierarchySimpleModel | None, Field(nullable=True)] = (
-        None
-    )
+    activity: Annotated[
+        ActivityHierarchySimpleModel | None, Field(json_schema_extra={"nullable": True})
+    ] = None
     vendor_elements: list[OdmVendorElementRelationModel]
     vendor_attributes: list[OdmVendorAttributeRelationModel]
     vendor_element_attributes: list[OdmVendorElementAttributeRelationModel]
@@ -407,18 +427,28 @@ class OdmItemRefModel(BaseModel):
         return odm_item_ref_model
 
     uid: Annotated[str, Field()]
-    oid: Annotated[str | None, Field(nullable=True)] = None
-    name: Annotated[str | None, Field(nullable=True)] = None
-    order_number: Annotated[int | None, Field(nullable=True)] = None
-    mandatory: Annotated[str | None, Field(nullable=True)] = None
-    key_sequence: Annotated[str | None, Field(nullable=True)] = None
-    method_oid: Annotated[str | None, Field(nullable=True)] = None
-    imputation_method_oid: Annotated[str | None, Field(nullable=True)] = None
-    role: Annotated[str | None, Field(nullable=True)] = None
-    role_codelist_oid: Annotated[str | None, Field(nullable=True)] = None
-    collection_exception_condition_oid: Annotated[str | None, Field(nullable=True)] = (
+    oid: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    name: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    order_number: Annotated[int | None, Field(json_schema_extra={"nullable": True})] = (
         None
     )
+    mandatory: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    key_sequence: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
+    method_oid: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
+    imputation_method_oid: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    role: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    role_codelist_oid: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    collection_exception_condition_oid: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
     vendor: Annotated[OdmRefVendor, Field()]
 
 
@@ -436,31 +466,39 @@ class OdmItemUnitDefinitionRelationshipInput(InputModel):
 
 
 class OdmItemPostInput(ConceptPostInput):
-    oid: str | None
+    oid: Annotated[str | None, Field(min_length=1)] = None
     datatype: Annotated[str, Field(min_length=1)]
-    prompt: str | None
-    length: Annotated[int | None, Field(nullable=True, ge=0, lt=config.MAX_INT_NEO4J)]
-    significant_digits: Annotated[
-        int | None, Field(nullable=True, gt=0, lt=config.MAX_INT_NEO4J)
+    prompt: str | None = None
+    length: Annotated[
+        int | None,
+        Field(json_schema_extra={"nullable": True}, ge=0, lt=config.MAX_INT_NEO4J),
     ] = None
-    sas_field_name: str | None
-    sds_var_name: str | None
-    origin: str | None
+    significant_digits: Annotated[
+        int | None,
+        Field(json_schema_extra={"nullable": True}, ge=0, lt=config.MAX_INT_NEO4J),
+    ] = None
+    sas_field_name: str | None = None
+    sds_var_name: str | None = None
+    origin: str | None = None
     comment: str | None = None
     descriptions: list[OdmDescriptionPostInput | str]
     alias_uids: list[str]
-    codelist_uid: Annotated[str | None, Field(min_length=1)]
+    codelist_uid: Annotated[str | None, Field(min_length=1)] = None
     unit_definitions: list[OdmItemUnitDefinitionRelationshipInput] = []
     terms: list[OdmItemTermRelationshipInput] = []
 
 
 class OdmItemPatchInput(ConceptPatchInput):
-    oid: str | None
+    oid: Annotated[str | None, Field(min_length=1)]
     datatype: str | None
     prompt: str | None
-    length: Annotated[int | None, Field(nullable=True, ge=0, lt=config.MAX_INT_NEO4J)]
+    length: Annotated[
+        int | None,
+        Field(json_schema_extra={"nullable": True}, ge=0, lt=config.MAX_INT_NEO4J),
+    ]
     significant_digits: Annotated[
-        int | None, Field(nullable=True, gt=0, lt=config.MAX_INT_NEO4J)
+        int | None,
+        Field(json_schema_extra={"nullable": True}, ge=0, lt=config.MAX_INT_NEO4J),
     ]
     sas_field_name: str | None
     sds_var_name: str | None
@@ -483,12 +521,8 @@ class OdmItemVersion(OdmItem):
     """
 
     changes: Annotated[
-        dict[str, bool] | None,
+        list[str],
         Field(
-            description=(
-                "Denotes whether or not there was a change in a specific field/property compared to the previous version. "
-                "The field names in this object here refer to the field names of the objective (e.g. name, start_date, ..)."
-            ),
-            nullable=True,
+            description=CHANGES_FIELD_DESC,
         ),
-    ] = None
+    ] = []

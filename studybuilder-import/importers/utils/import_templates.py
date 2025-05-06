@@ -10,11 +10,17 @@ project = {
 }
 
 study = {
+    "description": "string",
     "study_number": "string",
     "study_acronym": "string",
     "project_number": "string",
 }
 
+study_subpart = {
+    "description": "string",
+    "study_subpart_acronym": "string",
+    "study_parent_part_uid": "string",
+}
 
 study_patch = {
     "current_metadata": {

@@ -7,52 +7,49 @@
         :items="helpItems"
       />
     </div>
-    <v-tabs v-model="tab" bg-color="white">
-      <v-tab v-for="item of tabs" :key="item.tab" :value="item.tab">
-        {{ item.name }}
-      </v-tab>
-    </v-tabs>
-    <v-window v-model="tab" class="bg-white">
-      <v-window-item value="overview">
-        <StudyStructureOverview :key="`overview-${tabKeys.overview}`" />
-      </v-window-item>
-      <v-window-item value="arms">
-        <StudyArmsTable :key="`arms-${tabKeys.arms}`" />
-      </v-window-item>
-      <v-window-item value="branches">
-        <StudyBranchesTable :key="`branches-${tabKeys.branches}`" />
-      </v-window-item>
-      <v-window-item value="cohorts">
-        <StudyCohortsTable :key="`cohorts-${tabKeys.cohorts}`" />
-      </v-window-item>
-      <v-window-item value="epochs">
-        <StudyEpochTable :key="`epochs-${tabKeys.epochs}`" />
-      </v-window-item>
-      <v-window-item value="elements">
-        <StudyElementsTable :key="`elements-${tabKeys.elements}`" />
-      </v-window-item>
-      <v-window-item value="visits">
-        <StudyVisitTable :key="`visits-${tabKeys.visits}`" />
-      </v-window-item>
-      <v-window-item value="design_matrix">
-        <DesignMatrixTable :key="`design_matrix-${tabKeys.design_matrix}`" />
-      </v-window-item>
-      <v-window-item value="disease_milestones">
-        <DiseaseMilestoneTable
-          :key="`disease_milestones-${tabKeys.disease_milestones}`"
-        />
-      </v-window-item>
-    </v-window>
+    <NavigationTabs :tabs="tabs" @tab-changed="onTabChanged">
+      <template #default="{ tabKeys }">
+        <v-window-item value="overview">
+          <StudyStructureOverview :key="`overview-${tabKeys.overview}`" />
+        </v-window-item>
+        <v-window-item value="arms">
+          <StudyArmsTable :key="`arms-${tabKeys.arms}`" />
+        </v-window-item>
+        <v-window-item value="branches">
+          <StudyBranchesTable :key="`branches-${tabKeys.branches}`" />
+        </v-window-item>
+        <v-window-item value="cohorts">
+          <StudyCohortsTable :key="`cohorts-${tabKeys.cohorts}`" />
+        </v-window-item>
+        <v-window-item value="epochs">
+          <StudyEpochTable :key="`epochs-${tabKeys.epochs}`" />
+        </v-window-item>
+        <v-window-item value="elements">
+          <StudyElementsTable :key="`elements-${tabKeys.elements}`" />
+        </v-window-item>
+        <v-window-item value="visits">
+          <StudyVisitTable :key="`visits-${tabKeys.visits}`" />
+        </v-window-item>
+        <v-window-item value="design_matrix">
+          <DesignMatrixTable :key="`design_matrix-${tabKeys.design_matrix}`" />
+        </v-window-item>
+        <v-window-item value="disease_milestones">
+          <DiseaseMilestoneTable
+            :key="`disease_milestones-${tabKeys.disease_milestones}`"
+          />
+        </v-window-item>
+      </template>
+    </NavigationTabs>
     <!-- <comment-thread-list :topicPath="topicPath" :isTransparent="true"></comment-thread-list> -->
   </div>
 </template>
 
 <script setup>
-import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import DesignMatrixTable from '@/components/studies/DesignMatrixTable.vue'
 import DiseaseMilestoneTable from '@/components/studies/DiseaseMilestoneTable.vue'
 import HelpButtonWithPanels from '@/components/tools/HelpButtonWithPanels.vue'
+import NavigationTabs from '@/components/tools/NavigationTabs.vue'
 import StudyEpochTable from '@/components/studies/StudyEpochTable.vue'
 import StudyArmsTable from '@/components/studies/StudyArmsTable.vue'
 import StudyBranchesTable from '@/components/studies/StudyBranchesTable.vue'
@@ -62,17 +59,10 @@ import StudyCohortsTable from '@/components/studies/StudyCohortsTable.vue'
 import StudyStructureOverview from '@/components/studies/StudyStructureOverview.vue'
 // import CommentThreadList from '@/components/tools/CommentThreadList.vue'
 import { useStudiesGeneralStore } from '@/stores/studies-general'
-import { useAppStore } from '@/stores/app'
-import { computed, onMounted, ref, watch } from 'vue'
-import { useTabKeys } from '@/composables/tabKeys'
+import { computed, ref } from 'vue'
 
 const { t } = useI18n()
-const appStore = useAppStore()
 const studiesGeneralStore = useStudiesGeneralStore()
-const route = useRoute()
-const router = useRouter()
-const { tabKeys, updateTabKey } = useTabKeys()
-
 const selectedStudy = computed(() => studiesGeneralStore.selectedStudy)
 const studyId = computed(() => studiesGeneralStore.studyId)
 
@@ -88,7 +78,6 @@ const helpItems = [
 ]
 
 const topicPath = ref('')
-const tab = ref(null)
 
 const tabs = [
   { tab: 'overview', name: t('_global.overview') },
@@ -105,54 +94,10 @@ const tabs = [
   },
 ]
 
-watch(tab, (newValue) => {
-  if (newValue !== undefined) {
+const onTabChanged = (value) => {
+  if (value !== undefined) {
     topicPath.value =
-      '/studies/' + selectedStudy.value.uid + '/study_structure/' + newValue
+      '/studies/' + selectedStudy.value.uid + '/study_structure/' + value
   }
-  const tabName = newValue
-    ? tabs.find((el) => el.tab === newValue).name
-    : tabs[0].name
-  router.push({
-    name: 'StudyStructure',
-    params: { tab: newValue },
-  })
-  appStore.addBreadcrumbsLevel(
-    tabName,
-    {
-      name: 'StudyStructure',
-      params: { study_id: selectedStudy.value.uid, tab: tabName },
-    },
-    3,
-    true
-  )
-  updateTabKey(newValue)
-})
-
-watch(
-  () => route.params.tab,
-  (newValue) => {
-    tab.value = newValue
-  }
-)
-
-onMounted(() => {
-  if (route.params.tab) {
-    tab.value = route.params.tab
-  }
-  const tabName = tab.value
-    ? tabs.find((el) => el.tab === tab.value).name
-    : tabs[0].name
-  setTimeout(() => {
-    appStore.addBreadcrumbsLevel(
-      tabName,
-      {
-        name: 'StudyStructure',
-        params: { study_id: selectedStudy.value.uid, tab: tabName },
-      },
-      3,
-      true
-    )
-  }, 100)
-})
+}
 </script>

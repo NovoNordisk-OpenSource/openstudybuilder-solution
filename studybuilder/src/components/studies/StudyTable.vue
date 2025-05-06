@@ -18,9 +18,9 @@
           variant="outlined"
           color="nnBaseBlue"
           :title="$t('StudyForm.add_title')"
-          :disabled="!checkPermission($roles.STUDY_WRITE)"
+          :disabled="!accessGuard.checkPermission($roles.STUDY_WRITE)"
           icon="mdi-plus"
-          @click.stop="showForm = true"
+          @click.stop="showCreationForm = true"
         />
       </template>
       <template #[`item.brand_name`]="{ item }">
@@ -72,122 +72,118 @@
       :edited-study="activeStudy"
       @close="closeForm"
     />
+    <v-dialog
+      v-model="showCreationForm"
+      persistent
+      fullscreen
+      content-class="fullscreen-dialog"
+    >
+      <StudyCreationForm @close="showCreationForm = false" />
+    </v-dialog>
   </div>
 </template>
 
-<script>
+<script setup>
+import { computed, ref } from 'vue'
 import NNTable from '@/components/tools/NNTable.vue'
 import StudyForm from '@/components/studies/StudyForm.vue'
+import StudyCreationForm from '@/components/studies/StudyCreationForm.vue'
+import { useI18n } from 'vue-i18n'
 import { useAccessGuard } from '@/composables/accessGuard'
-import { useStudiesGeneralStore } from '@/stores/studies-general'
 import { useStudiesManageStore } from '@/stores/studies-manage'
-export default {
-  components: {
-    NNTable,
-    StudyForm,
-  },
-  props: {
-    readOnly: {
-      type: Boolean,
-      default: false,
-    },
-  },
-  emits: ['refreshStudies'],
-  setup() {
-    const accessGuard = useAccessGuard()
-    const studiesGeneralStore = useStudiesGeneralStore()
-    const studiesManageStore = useStudiesManageStore()
 
-    return {
-      studiesGeneralStore,
-      studiesManageStore,
-      ...accessGuard,
-    }
+const props = defineProps({
+  readOnly: {
+    type: Boolean,
+    default: false,
   },
-  data() {
-    return {
-      headers: [
-        {
-          title: this.$t('StudyTable.clinical_programme'),
-          key: 'current_metadata.identification_metadata.clinical_programme_name',
-        },
-        {
-          title: this.$t('StudyTable.project_id'),
-          key: 'current_metadata.identification_metadata.project_number',
-        },
-        {
-          title: this.$t('StudyTable.project_name'),
-          key: 'current_metadata.identification_metadata.project_name',
-        },
-        { title: this.$t('StudyTable.brand_name'), key: 'brand_name' },
-        {
-          title: this.$t('StudyTable.number'),
-          key: 'current_metadata.identification_metadata.study_number',
-        },
-        {
-          title: this.$t('StudyTable.id'),
-          key: 'current_metadata.identification_metadata.study_id',
-        },
-        {
-          title: this.$t('StudyTable.subpart_id'),
-          key: 'current_metadata.identification_metadata.subpart_id',
-        },
-        {
-          title: this.$t('StudyTable.sub_study_id'),
-          key: 'sub_study_id',
-          filteringName: 'current_metadata.identification_metadata.study_id',
-        },
-        {
-          title: this.$t('StudyTable.acronym'),
-          key: 'current_metadata.identification_metadata.study_acronym',
-        },
-        {
-          title: this.$t('StudyTable.subpart_acronym'),
-          key: 'current_metadata.identification_metadata.study_subpart_acronym',
-        },
-        {
-          title: this.$t('StudyTable.title'),
-          key: 'current_metadata.study_description.study_title',
-        },
-        {
-          title: this.$t('_global.status'),
-          key: 'current_metadata.version_metadata.study_status',
-        },
-        {
-          title: this.$t('_global.modified'),
-          key: 'current_metadata.version_metadata.version_timestamp',
-        },
-        {
-          title: this.$t('_global.modified_by'),
-          key: 'current_metadata.version_metadata.version_author',
-        },
-      ],
-      showForm: false,
-      activeStudy: null,
-    }
+})
+const emit = defineEmits(['refreshStudies'])
+
+const { t } = useI18n()
+const accessGuard = useAccessGuard()
+const studiesManageStore = useStudiesManageStore()
+
+const headers = [
+  {
+    title: t('StudyTable.clinical_programme'),
+    key: 'current_metadata.identification_metadata.clinical_programme_name',
   },
-  computed: {
-    exportDataUrl() {
-      let result = '/studies'
-      if (this.readOnly) {
-        result += '?deleted=true'
-      }
-      return result
-    },
+  {
+    title: t('StudyTable.project_id'),
+    key: 'current_metadata.identification_metadata.project_number',
   },
-  methods: {
-    closeForm() {
-      this.showForm = false
-      this.activeStudy = null
-      this.$refs.table.filterTable()
-      this.$emit('refreshStudies')
-    },
-    getBrandName(study) {
-      const project = this.studiesManageStore.getProjectByNumber(
-        study.current_metadata.identification_metadata.project_number
-      )
-      return project !== undefined ? project.brand_name : ''
-    },
+  {
+    title: t('StudyTable.project_name'),
+    key: 'current_metadata.identification_metadata.project_name',
   },
+  { title: t('StudyTable.brand_name'), key: 'brand_name' },
+  {
+    title: t('StudyTable.number'),
+    key: 'current_metadata.identification_metadata.study_number',
+  },
+  {
+    title: t('StudyTable.id'),
+    key: 'current_metadata.identification_metadata.study_id',
+  },
+  {
+    title: t('StudyTable.subpart_id'),
+    key: 'current_metadata.identification_metadata.subpart_id',
+  },
+  {
+    title: t('StudyTable.sub_study_id'),
+    key: 'sub_study_id',
+    filteringName: 'current_metadata.identification_metadata.study_id',
+  },
+  {
+    title: t('StudyTable.acronym'),
+    key: 'current_metadata.identification_metadata.study_acronym',
+  },
+  {
+    title: t('StudyTable.subpart_acronym'),
+    key: 'current_metadata.identification_metadata.study_subpart_acronym',
+  },
+  {
+    title: t('StudyTable.title'),
+    key: 'current_metadata.study_description.study_title',
+  },
+  {
+    title: t('_global.status'),
+    key: 'current_metadata.version_metadata.study_status',
+  },
+  {
+    title: t('_global.modified'),
+    key: 'current_metadata.version_metadata.version_timestamp',
+  },
+  {
+    title: t('_global.modified_by'),
+    key: 'current_metadata.version_metadata.version_author',
+  },
+]
+
+const showCreationForm = ref(false)
+const showForm = ref(false)
+const activeStudy = ref(null)
+const table = ref()
+
+const exportDataUrl = computed(() => {
+  let result = '/studies'
+  if (props.readOnly) {
+    result += '?deleted=true'
+  }
+  return result
+})
+
+function closeForm() {
+  showForm.value = false
+  activeStudy.value = null
+  table.value.filterTable()
+  emit('refreshStudies')
+}
+function getBrandName(study) {
+  const project = studiesManageStore.getProjectByNumber(
+    study.current_metadata.identification_metadata.project_number
+  )
+  return project !== undefined ? project.brand_name : ''
 }
 </script>

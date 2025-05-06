@@ -50,7 +50,7 @@ Feature: Library - Activities
     Scenario: User must be able to add a new activity
         Given The '/library/activities/activities' page is opened
         When The Add activity button is clicked
-        And The activity item container is filled with data
+        And The activity form is filled with all data
         Then Activity is created and confirmation message is shown
         And The newly added activity is added in the table
 
@@ -59,13 +59,14 @@ Feature: Library - Activities
         When The Add activity button is clicked
         And The Activity group and Activity name fields are not filled with data
         Then The user is not able to save the acitivity
-        And The message is displayed as 'This field is required' in the above mandatory fields
+        And The validation message appears for activity group
+        And The validation message appears for activity name
         When Select a value for Activity group field, but not for Activity subgroup field
-        Then The message is displayed as 'This field is required' in the Activity subgroup field
+        Then The validation message appears for activity subgroup
 
     Scenario: User must not be able to save new activity with already existing synonym
         Given The '/library/activities/activities' page is opened
-        When The activity exists with status as Draft
+        When [API] Activity in status Draft exists
         And The user adds another activity with already existing synonym
         Then The user is not able to save activity with already existing synonym and error message is displayed
 
@@ -74,7 +75,7 @@ Feature: Library - Activities
         When The Add activity button is clicked
         When The user enters a value for Activity name
         And The user clear default value from Sentance case name
-        Then The message is displayed as 'This field is required' in empty Sentance case name field
+        Then The validation message appears for sentance case name
 
     Scenario: System must default value for 'Data collection' to be checked
         Given The '/library/activities/activities' page is opened
@@ -92,96 +93,175 @@ Feature: Library - Activities
         When The Add activity button is clicked
         And The user define a value for Sentence case name and it is not identical to the value of Activity name
         Then The user is not able to save the acitivity
-        And The message is displayed as 'Sentence case name value must be identical to name value' in the Sentence case name field
+        And The validation message appears for sentance case name that it is not identical to name
 
     Scenario: User must be able to add a new version for the approved activity
         Given The '/library/activities/activities' page is opened
-        And The activity exists with status as Final
+        And [API] Activity in status Draft exists
+        And [API] Activity is approved
+        And Activity is found
         When The 'New version' option is clicked from the three dot menu list
-        Then The activity has status 'Draft' and version '1.1'
+        Then The item has status 'Draft' and version '1.1'
 
     Scenario: User must be able to edit and approve new version of activity
         Given The '/library/activities/activities' page is opened
-        And The activity exists with status as Final
+        And [API] Activity in status Draft exists
+        And [API] Activity is approved
+        And Activity is found
         When The 'New version' option is clicked from the three dot menu list
-        Then The activity has status 'Draft' and version '1.1'
+        Then The item has status 'Draft' and version '1.1'
         When The 'Edit' option is clicked from the three dot menu list
         And The activity is edited
-        Then The activity has status 'Draft' and version '1.2'
+        Then The item has status 'Draft' and version '1.2'
         When The 'Approve' option is clicked from the three dot menu list
-        Then The activity has status 'Final' and version '2.0'
+        Then The item has status 'Final' and version '2.0'
 
     Scenario: User must be able to inactivate the approved version of the activity
         Given The '/library/activities/activities' page is opened
-        And The activity exists with status as Final
+        And [API] Activity in status Draft exists
+        And [API] Activity is approved
+        And Activity is found
         When The 'Inactivate' option is clicked from the three dot menu list
-        Then The activity has status 'Retired' and version '1.0' 
+        Then The item has status 'Retired' and version '1.0' 
 
     Scenario: User must be able to reactivate the inactivated version of the activity
         Given The '/library/activities/activities' page is opened
-        And The activity exists with status as Retired
+        And [API] Activity in status Draft exists
+        And [API] Activity is approved
+        And [API] Activity is inactivated
+        And Activity is found
         When The 'Reactivate' option is clicked from the three dot menu list
-        Then The activity has status 'Final' and version '1.0' 
+        Then The item has status 'Final' and version '1.0' 
 
     Scenario: User must be able to edit the Drafted version of the activity
         Given The '/library/activities/activities' page is opened
-        And The activity exists with status as Draft
+        And [API] Activity in status Draft exists
+        And Activity is found
         When The 'Edit' option is clicked from the three dot menu list
         And The activity is edited
-        Then The activity has status 'Draft' and version '0.2'
+        Then The item has status 'Draft' and version '0.2'
 
     Scenario: User must be able to Approve the drafted version of the activity
         Given The '/library/activities/activities' page is opened
-        And The activity exists with status as Draft
+        And [API] Activity in status Draft exists
+        And Activity is found
         When The 'Approve' option is clicked from the three dot menu list
-        Then The activity has status 'Final' and version '1.0'
+        Then The item has status 'Final' and version '1.0'
 
     Scenario: User must be able to Delete the intial created version of the activity
         Given The '/library/activities/activities' page is opened
-        And The activity exists with status as Draft
+        And [API] Activity in status Draft exists
+        And Activity is found
         When The 'Delete' option is clicked from the three dot menu list
         Then The activity is no longer available
 
+    Scenario: User must not be able to create activity linked to Drafted group until it is approved
+        Given The '/library/activities/activities' page is opened
+        And [API] Activity group in status Draft exists
+        And [API] Activity group is approved
+        And [API] Activity subgroup is created
+        And [API] Activity subgroup is approved
+        And [API] Activity group gets new version
+        And Group name created through API is found
+        When The activity form is filled in using group and subgroup created through API
+        And The Activity creation form is saved
+        Then Validation error for GroupingHierarchy is displayed
+        And [API] Activity group is approved
+        And The Activity creation form is saved
+        And Activity can be found in table
+
+    Scenario: User must not be able to create activity linked to Retired group until it is approved
+        Given The '/library/activities/activities' page is opened
+        And [API] Activity group in status Draft exists
+        And [API] Activity group is approved
+        And [API] Activity subgroup is created
+        And [API] Activity subgroup is approved
+        And [API] Activity group is inactivated
+        And Group name created through API is found
+        When The activity form is filled in using group and subgroup created through API
+        And The Activity creation form is saved
+        Then Validation error for GroupingHierarchy is displayed
+        And [API] Activity group is reactivated
+        And The Activity creation form is saved
+        And Activity can be found in table
+
+    Scenario: User must not be able to create activity linked to Draft subgroup until it is approved
+        Given The '/library/activities/activities' page is opened
+        And [API] Activity group in status Draft exists
+        And [API] Activity group is approved
+        And [API] Activity subgroup is created
+        And [API] Activity subgroup is approved
+        And [API] Activity subgroup gets new version
+        And Group name created through API is found
+        When The activity form is filled in using group and subgroup created through API
+        And The Activity creation form is saved
+        Then Validation error for GroupingHierarchy is displayed
+        And [API] Activity subgroup is approved
+        And The Activity creation form is saved
+        And Activity can be found in table
+
+    Scenario: User must not be able to create activity linked to Retired subgroup until it is approved
+        Given The '/library/activities/activities' page is opened
+        And [API] Activity group in status Draft exists
+        And [API] Activity group is approved
+        And [API] Activity subgroup is created
+        And [API] Activity subgroup is approved
+        And [API] Activity subgroup is inactivated
+        And Group name created through API is found
+        When The activity form is filled in using group and subgroup created through API
+        And The Activity creation form is saved
+        Then Validation error for GroupingHierarchy is displayed
+        And [API] Activity subgroup is reactivated
+        And The Activity creation form is saved
+        And Activity can be found in table
+
     Scenario: User must be able to Cancel creation of the activity
         Given The '/library/activities/activities' page is opened
-        And The test activity container is filled with data
+        And The activity form is filled with only mandatory data
         When Modal window form is closed by clicking cancel button
-        And Cancelation is confirmed by clicking continue
+        And Action is confirmed by clicking continue
         Then The form is no longer available
         And The activity is not created
 
     Scenario: User must be able to Cancel edition of the activity
         Given The '/library/activities/activities' page is opened
-        And The activity exists with status as Draft
+        And [API] Activity in status Draft exists
+        And Activity is found
         When The 'Edit' option is clicked from the three dot menu list
         When The activity edition form is filled with data
         And Modal window form is closed by clicking cancel button
-        And Cancelation is confirmed by clicking continue
+        And Action is confirmed by clicking continue
         Then The form is no longer available
         And The activity is not edited
 
     Scenario: User must only have access to aprove, edit, delete, history actions for Drafted version of the activity
         Given The '/library/activities/activities' page is opened
-        When The activity exists with status as Draft
+        When [API] Activity in status Draft exists
+        And Activity is found
         And The item actions button is clicked
         Then Only actions that should be avaiable for the Draft item are displayed
 
     Scenario: User must only have access to new version, inactivate, history actions for Final version of the activity
         Given The '/library/activities/activities' page is opened
-        When The activity exists with status as Final
+        When [API] Activity in status Draft exists
+        And [API] Activity is approved
+        And Activity is found
         And The item actions button is clicked
         Then Only actions that should be avaiable for the Final item are displayed
 
     Scenario: User must only have access to reactivate, history actions for Retired version of the activity
         Given The '/library/activities/activities' page is opened
-        When The activity exists with status as Retired
+        When [API] Activity in status Draft exists
+        And [API] Activity is approved
+        And [API] Activity is inactivated
+        And Activity is found
         And The item actions button is clicked
         Then Only actions that should be avaiable for the Retired item are displayed
 
     Scenario: User must be able to search created activity
         Given The '/library/activities/activities' page is opened
-        When First activity for search test is created
-        And Second activity for search test is created
+        When [API] First activity for search test is created
+        And [API] Second activity for search test is created
         Then One activity is found after performing full name search
         And More than one item is found after performing partial name search 
 
@@ -198,7 +278,11 @@ Feature: Library - Activities
         And The user changes status filter value to 'Draft'
         Then More than one item is found after performing partial name search
 
-    #Followig filters tests require additional data, remaing filters tests are in the seperate file
+    Scenario: User must be able to search item ignoring case sensitivity
+        Given The '/library/activities/activities' page is opened
+        When The existing item in search by lowercased name
+        And More than one result is found
+
     Scenario Outline: User must be able to filter the table by text fields
         Given The '/library/activities/activities' page is opened
         When The user filters field '<name>'
@@ -206,6 +290,22 @@ Feature: Library - Activities
 
         Examples:
         | name               |
+        | Library            |
+        | Activity group     |
+        | Activity subgroup  |
+        | Activity name      |
+        | Sentence case name |
         | Synonyms           |
         | NCI Concept ID     |
         | NCI Concept Name   |
+        | Abbreviation       |
+        | Data collection    |
+        | Legacy usage       |
+        | Modified by        |
+        | Status             |
+        | Version            |
+
+    Scenario: User must be able to use table pagination
+        Given The '/library/activities/activities' page is opened
+        When The user switches pages of the table
+        Then The table page presents correct data

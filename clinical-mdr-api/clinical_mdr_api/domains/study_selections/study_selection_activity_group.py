@@ -97,4 +97,4 @@ class StudySelectionActivityGroupAR(study_selection_base.StudySelectionBaseAR):
     _object_type = "activity_group"
     _object_uid_field = "activity_group_uid"
     _object_name_field = ""
-    _order_field_name = "activity_group_order"
+    _order_field_name = "order"

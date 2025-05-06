@@ -85,3 +85,4 @@ Example of running a specific feature file:
 ```sh
 npx cypress run --spec "cypress/integration/filenameYouWantToRun.feature"
 ```
+

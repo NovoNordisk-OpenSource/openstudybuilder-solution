@@ -2,7 +2,9 @@
   <v-card bg-color="dfltBackground" rounded="xl">
     <v-card-title class="d-flex align-center">
       <span class="dialog-title">{{ $t('StudyActivityEditForm.title') }}</span>
-      <HelpButton :help-text="$t('_help.StudyActivityEditForm.drafted_general')" />
+      <HelpButton
+        :help-text="$t('_help.StudyActivityEditForm.drafted_general')"
+      />
     </v-card-title>
     <v-divider />
     <v-card-text class="mt-4">
@@ -142,7 +144,7 @@ export default {
       groups: [],
       subGroups: [],
       flowchartGroups: [],
-      working: false
+      working: false,
     }
   },
   computed: {

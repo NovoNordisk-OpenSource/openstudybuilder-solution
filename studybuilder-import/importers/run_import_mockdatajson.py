@@ -111,7 +111,7 @@ MDR_MIGRATION_EXPORTED_DICTIONARIES = (
 DUMMY_STUDY_NUMBER = 9999
 
 EXAMPLE_DESIGNS_START = 9000
-EXAMPLE_DESIGNS_END = 9004
+EXAMPLE_DESIGNS_END = 9005
 
 PROJECTS = "Projects"
 CLINICAL_PROGRAMMES = "ClinicalProgrammes"
@@ -263,7 +263,7 @@ class MockdataJson(BaseImporter):
     def lookup_medicinal_product_uid(self, name):
         return self.lookup_concept_uid(name, "medicinal-products")
 
-    def get_study_by_key(self, key, value):
+    def get_study_by_key(self, key, value, silent=False):
         filt = {key: {"v": [value], "op": "eq"}}
         items = self.api.get_all_from_api(
             "/studies", params={"filters": json.dumps(filt)}, items_only=True
@@ -272,11 +272,12 @@ class MockdataJson(BaseImporter):
             uid = items[0]["uid"]
             self.log.debug(f"Found study with '{key}' == '{value}' and uid '{uid}'")
             return items[0]
-        self.log.warning(f"Could not find study with '{key}' == '{value}'")
+        if not silent:
+            self.log.warning(f"Could not find study with '{key}' == '{value}'")
 
     def lookup_study_uid_from_id(self, study_id):
         data = self.get_study_by_key(
-            "current_metadata.identification_metadata.study_id", study_id
+            "current_metadata.identification_metadata.study_id", study_id, silent=True
         )
         try:
             return data["uid"]
@@ -1089,10 +1090,27 @@ class MockdataJson(BaseImporter):
     def handle_study(self, jsonfile):
         import_data = json.load(jsonfile)
         # Create the study
-        data = self._copy_parameters(
-            import_data["current_metadata"]["identification_metadata"],
-            import_templates.study,
-        )
+        parent_study = import_data.get("study_parent_part", None)
+        if parent_study is None:
+            data = self._copy_parameters(
+                import_data["current_metadata"]["identification_metadata"],
+                import_templates.study,
+            )
+        else:
+            data = self._copy_parameters(
+                import_data["current_metadata"]["identification_metadata"],
+                import_templates.study_subpart,
+            )
+            parent_study_number = parent_study["study_number"]
+            parent_study_uid = self.lookup_study_uid_from_number(parent_study_number)
+            if parent_study_uid is None:
+                self.log.error(
+                    f"Unable to find parent study with number '{parent_study_number}'"
+                )
+                return None
+            self.log.info(f"Adding subpart to study with uid '{parent_study_uid}'")
+            data["study_parent_part_uid"] = parent_study_uid
+
         study_nbr = import_data["current_metadata"]["identification_metadata"][
             "study_number"
         ]
@@ -1118,7 +1136,7 @@ class MockdataJson(BaseImporter):
                     f"Importing dummy study as study number: {study_nbr}, id: {study_id}"
                 )
 
-        if self.lookup_study_uid_from_number(study_nbr) is None:
+        if self.lookup_study_uid_from_id(study_id) is None:
             self.log.info(f"Add study '{study_id}' with study number '{study_nbr}'")
             study_data = self.api.simple_post_to_api("/studies", data, "/studies")
             if study_data is None:
@@ -1133,8 +1151,12 @@ class MockdataJson(BaseImporter):
             study_data = self.get_study_by_key(
                 "current_metadata.identification_metadata.study_id", study_id
             )
+        if parent_study is not None:
+            # If this is a subpart, we are done and return early.
+            return study_id
+
         # Patch it to add more data
-        self.log.info(f"Patching study '{study_id}' with study number {study_nbr}")
+        self.log.info(f"Patching study '{study_id}' with study number {study_nbr} and uid '{study_data['uid']}'")
         patch_data = copy.deepcopy(import_templates.study_patch)
 
         data = self._copy_parameters_with_values(
@@ -1328,7 +1350,10 @@ class MockdataJson(BaseImporter):
                 if "flowchart_group" in item:
                     flow_name = item["flowchart_group"]["sponsor_preferred_name"]
                 else:
-                    flow_name = item["study_soa_group"]["soa_group_name"]
+                    if "soa_group_term_name" in item["study_soa_group"]:
+                        flow_name = item["study_soa_group"]["soa_group_term_name"]
+                    else:
+                        flow_name = item["study_soa_group"]["soa_group_name"]
                 data["soa_group_term_uid"] = self.lookup_codelist_term_uid(CODELIST_FLOWCHART_GROUP, flow_name)
                 if data["soa_group_term_uid"] is None:
                     self.log.error(

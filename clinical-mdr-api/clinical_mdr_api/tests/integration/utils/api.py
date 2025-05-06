@@ -297,7 +297,7 @@ class APITest(TestCase):
 
                     request = self.get_request(req_item)
                     url = self.get_url(req_item)
-                    request_headers = {"X-TEST-USER-ID": "unknown-user"}
+                    request_headers = {}
                     request_headers.update(req_item["headers"])
                     if req_item.get("sleep"):
                         time.sleep(req_item.get("sleep"))

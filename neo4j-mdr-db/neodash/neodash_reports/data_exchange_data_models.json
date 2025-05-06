@@ -2,16 +2,16 @@
   "title": "Data Exchange Data Models",
   "version": "2.4",
   "settings": {
-    "pagenumber": 0,
+    "pagenumber": 4,
     "editable": true,
     "fullscreenEnabled": false,
     "parameters": {
       "neodash_model_uid": "SDTM",
       "neodash_model_version": "SDTM v2.0",
       "neodash_class_uid": "Findings",
-      "neodash_ig_uid": "",
-      "neodash_ig_version": "",
-      "neodash_dataset_uid": "",
+      "neodash_ig_uid": "SDTMIG",
+      "neodash_ig_version": "SDTMIG v3.3",
+      "neodash_dataset_uid": "DM",
       "neodash_cdash_ig_uid": "",
       "neodash_cdash_ig_version": "",
       "neodash_cdash_dataset_uid": "",
@@ -21,12 +21,12 @@
       "neodash_sponsormodelvalue_name": "",
       "neodash_sponsormodelvalue_name_display": "",
       "neodash_sponsor_model_value_name": "",
-      "neodash_master_model_variable": "",
-      "neodash_sponsor_model_version_number": "",
-      "neodash_sponsor_model_version_name": "",
-      "neodash_mm_version_number": "",
-      "neodash_mm_version_name": "",
-      "neodash_mm_dataset": "",
+      "neodash_master_model_variable": "USUBJID",
+      "neodash_sponsor_model_version_number": "3",
+      "neodash_sponsor_model_version_name": "sdtmig_mastermodel_3.3_NN03",
+      "neodash_mm_version_number": "3",
+      "neodash_mm_version_name": "sdtmig_mastermodel_3.3_NN03",
+      "neodash_mm_dataset": "DM",
       "neodash_mm_dataset_class": "",
       "neodash_master_model_variable_class": ""
     },
@@ -273,7 +273,7 @@
           "width": 6,
           "height": 5,
           "x": 0,
-          "y": 0,
+          "y": 1,
           "type": "table",
           "selection": {},
           "settings": {
@@ -299,7 +299,7 @@
           "width": 6,
           "height": 5,
           "x": 6,
-          "y": 0,
+          "y": 1,
           "type": "table",
           "selection": {},
           "settings": {
@@ -325,7 +325,7 @@
           "width": 6,
           "height": 5,
           "x": 12,
-          "y": 0,
+          "y": 1,
           "type": "table",
           "selection": {},
           "settings": {
@@ -347,28 +347,19 @@
         },
         {
           "title": "Variable Classes - $neodash_class_uid",
-          "query": "MATCH (model_value:DataModelValue {name: $neodash_model_version})\n-[:HAS_DATASET_CLASS]->(class_value:DatasetClassInstance)<--(:DatasetClass {uid: $neodash_class_uid})\nMATCH (class_value)-[rel:HAS_VARIABLE_CLASS]->(variable_value:VariableClassInstance)<--(variable_root:VariableClass)\nWHERE rel.version_number=model_value.version_number\nOPTIONAL MATCH (variable_value)-[qualified_rel:QUALIFIES_VARIABLE]->(qualified_value:VariableClassInstance)<--(qualified_root:VariableClass)\nWHERE qualified_rel.version_number=model_value.version_number\nWITH variable_root, variable_value, collect(DISTINCT qualified_root.uid) AS qualifies, rel.ordinal AS ordinal ORDER BY toInteger(ordinal)\nRETURN DISTINCT variable_root.uid AS variable, variable_value.label AS label, variable_value.role AS role, variable_value.length AS length, qualifies, $neodash_class_uid AS origin, 'sponsor model' AS sponsormodel\n\nUNION\n\nMATCH (model_root:DataModelRoot)-->(model_value:DataModelValue {name: $neodash_model_version})\n-[:HAS_DATASET_CLASS]->(class_value:DatasetClassInstance)<--(:DatasetClass {uid: $neodash_class_uid})\nMATCH p=(class_value)-[parent_rel:HAS_PARENT_CLASS*..2]->(parent_class_value:DatasetClassInstance)\nWHERE all(parent_rel in relationships(p) where parent_rel.catalogue=model_root.uid AND parent_rel.version_number=model_value.version_number)\nMATCH ()-[parent_has_class_rel:HAS_DATASET_CLASS]->(parent_class_value)<--(parent_class_root:DatasetClass)\nMATCH (parent_class_value)-[rel:HAS_VARIABLE_CLASS]->(variable_value:VariableClassInstance)<--(variable_root:VariableClass)\nWHERE rel.version_number=model_value.version_number\nOPTIONAL MATCH (variable_value)-[qualified_rel:QUALIFIES_VARIABLE]->(qualified_value:VariableClassInstance)<--(qualified_root:VariableClass)\nWHERE qualified_rel.version_number=model_value.version_number\nWITH parent_class_root.uid AS parent_class, parent_has_class_rel.ordinal AS parent_ordinal, variable_root, variable_value, collect(DISTINCT qualified_root.uid) AS qualifies, rel.ordinal AS ordinal ORDER BY parent_ordinal, toInteger(ordinal)\nRETURN DISTINCT variable_root.uid AS variable, variable_value.label AS label, variable_value.role AS role, variable_value.length AS length, qualifies, parent_class AS origin, 'sponsor model' AS sponsormodel",
+          "query": "MATCH (model_value:DataModelValue {name: $neodash_model_version})\n-[:HAS_DATASET_CLASS]->(class_value:DatasetClassInstance)<--(:DatasetClass {uid: $neodash_class_uid})\nMATCH (class_value)-[rel:HAS_VARIABLE_CLASS]->(variable_value:VariableClassInstance)<--(variable_root:VariableClass)\nWHERE rel.version_number=model_value.version_number\nOPTIONAL MATCH (variable_value)-[qualified_rel:QUALIFIES_VARIABLE]->(qualified_value:VariableClassInstance)<--(qualified_root:VariableClass)\nWHERE qualified_rel.version_number=model_value.version_number\nWITH variable_root, variable_value, collect(DISTINCT qualified_root.uid) AS qualifies, rel.ordinal AS ordinal ORDER BY toInteger(ordinal)\nRETURN DISTINCT variable_root.uid AS variable, variable_value.label AS label, variable_value.role AS role, variable_value.length AS length, qualifies, $neodash_class_uid AS origin\n\nUNION\n\nMATCH (model_root:DataModelRoot)-->(model_value:DataModelValue {name: $neodash_model_version})\n-[:HAS_DATASET_CLASS]->(class_value:DatasetClassInstance)<--(:DatasetClass {uid: $neodash_class_uid})\nMATCH p=(class_value)-[parent_rel:HAS_PARENT_CLASS*..2]->(parent_class_value:DatasetClassInstance)\nWHERE all(parent_rel in relationships(p) where parent_rel.catalogue=model_root.uid AND parent_rel.version_number=model_value.version_number)\nMATCH ()-[parent_has_class_rel:HAS_DATASET_CLASS]->(parent_class_value)<--(parent_class_root:DatasetClass)\nMATCH (parent_class_value)-[rel:HAS_VARIABLE_CLASS]->(variable_value:VariableClassInstance)<--(variable_root:VariableClass)\nWHERE rel.version_number=model_value.version_number\nOPTIONAL MATCH (variable_value)-[qualified_rel:QUALIFIES_VARIABLE]->(qualified_value:VariableClassInstance)<--(qualified_root:VariableClass)\nWHERE qualified_rel.version_number=model_value.version_number\nWITH parent_class_root.uid AS parent_class, parent_has_class_rel.ordinal AS parent_ordinal, variable_root, variable_value, collect(DISTINCT qualified_root.uid) AS qualifies, rel.ordinal AS ordinal ORDER BY parent_ordinal, toInteger(ordinal)\nRETURN DISTINCT variable_root.uid AS variable, variable_value.label AS label, variable_value.role AS role, variable_value.length AS length, qualifies, parent_class AS origin",
           "width": 24,
           "height": 4,
           "x": 0,
-          "y": 5,
+          "y": 4,
           "type": "table",
           "selection": {},
           "settings": {
             "nodePositions": {},
-            "actionsRules": [
-              {
-                "condition": "Click",
-                "field": "sponsormodel",
-                "value": "variable",
-                "customization": "set variable",
-                "customizationValue": "master_model_variable_class"
-              }
-            ],
             "compact": true,
             "allowDownload": true,
             "wrapContent": true,
-            "columnWidths": "[4,4,4,4,4,4,3]"
+            "columnWidths": "[4,4,4,4,4,4]"
           },
           "id": "9c3f71aa-a591-4fe9-9d6a-730fe3d774df"
         },
@@ -390,55 +381,6 @@
           },
           "id": "b7435a99-30cf-4aae-a704-3bcf229c9fcb",
           "schema": []
-        },
-        {
-          "id": "13a882b0-54a8-4c8e-a0e1-4e1a8de64cf9",
-          "title": "Sponsor Model",
-          "query": "MATCH (model_value:DataModelIGValue {name: \"SDTMIG v3.2\"})<-[:EXTENDS_VERSION]-(smv:SponsorModelValue)\nMATCH (smv)<-[v:HAS_VERSION]-(:DataModelIGRoot)\nRETURN \"select\" AS select, smv.name AS name, v.version AS version",
-          "width": 6,
-          "height": 3,
-          "x": 18,
-          "y": 2,
-          "type": "table",
-          "selection": {},
-          "settings": {
-            "fontSize": 14,
-            "actionsRules": [
-              {
-                "condition": "Click",
-                "field": "select",
-                "value": "name",
-                "customization": "set variable",
-                "customizationValue": "sponsor_model_version_name"
-              },
-              {
-                "condition": "Click",
-                "field": "select",
-                "value": "version",
-                "customization": "set variable",
-                "customizationValue": "sponsor_model_version_number"
-              }
-            ],
-            "wrapContent": true,
-            "columnWidths": "[2,4,1]",
-            "compact": true
-          },
-          "schema": []
-        },
-        {
-          "id": "0cd48306-48da-429c-add6-923a21a3ade8",
-          "title": "Sponsor Model Version of Dataset Class : $neodash_master_model_variable_class",
-          "query": "MATCH (model_root:DataModelRoot)-->(model_value:DataModelValue {name: $neodash_model_version})\n-[:HAS_DATASET_CLASS]->(dataset_value:DatasetClassInstance)<--(dataset:DatasetClass {uid: $neodash_class_uid})\nMATCH (dataset_value)-[:HAS_VARIABLE_CLASS]->(:VariableClassInstance)<--(variable_root:VariableClass)\nWHERE variable_root.uid=$neodash_master_model_variable_class\nWITH variable_root, dataset\n\nMATCH (sm_model_value:SponsorModelValue)-[:HAS_DATASET_CLASS]->(sm_dataset:SponsorModelDatasetClassInstance)<-[:HAS_INSTANCE]-(dataset)\nMATCH (sm_dataset)-[rel:HAS_VARIABLE_CLASS]->(sm_variable_value:SponsorModelVariableClassInstance)<-[:HAS_INSTANCE]-(variable_root)\nWHERE sm_model_value.name=$neodash_sponsor_model_version_name AND toString(rel.version_number)=$neodash_sponsor_model_version_number\n\nRETURN DISTINCT\n  sm_variable_value.is_basic_std AS basic_std,\n  sm_variable_value.label AS label,\n  sm_variable_value.variable_type AS type,\n  sm_variable_value.length AS length,\n  sm_variable_value.display_format AS displayformat,\n  sm_variable_value.xml_datatype AS xmldatatype,\n  sm_variable_value.xml_codelist AS xmlcodelist,\n  sm_variable_value.core AS core,\n  sm_variable_value.origin AS origin,\n  sm_variable_value.role AS role,\n  sm_variable_value.term AS term,\n  sm_variable_value.qualifiers AS qualifiers,\n  sm_variable_value.ig_comment AS ig_comment,\n  rel.ordinal AS order\n",
-          "width": 24,
-          "height": 3,
-          "x": 0,
-          "y": 9,
-          "type": "table",
-          "selection": {},
-          "settings": {
-            "columnWidths": "[2, 4, 1, 1, 2, 2, 2, 1, 2, 2, 2, 2, 6, 1]",
-            "wrapContent": true
-          }
         }
       ]
     },
@@ -524,7 +466,7 @@
           "id": "565c377c-089c-4fa7-bdeb-ff62792ebdb6"
         },
         {
-          "title": "Variables - $neodash_dataset_uid",
+          "title": "Variables - $neodash_dataset_uid - $neodash_sponsor_model_version_name",
           "query": "MATCH (model_root:DataModelIGRoot)-->(model_value:DataModelIGValue {name: $neodash_ig_version})\n-[:HAS_DATASET]->(dataset_value:DatasetInstance)<--(:Dataset {uid: $neodash_dataset_uid})\nMATCH (dataset_value)-[rel:HAS_DATASET_VARIABLE]->(variable_value:DatasetVariableInstance)<--(variable_root:DatasetVariable)\nWHERE rel.version_number=model_value.version_number\nOPTIONAL MATCH (variable_value)-[:REFERENCES_CODELIST]->(codelist:CTCodelistRoot)\nOPTIONAL MATCH (codelist)-[:HAS_ATTRIBUTES_ROOT]->(codelistattributeroot:CTCodelistAttributesRoot)-[:LATEST]->(codelistattributevalue:CTCodelistAttributesValue)\nOPTIONAL MATCH (variable_value)-[implements:IMPLEMENTS_VARIABLE]->()<-[:HAS_INSTANCE]-(implemented)\nWHERE implements.catalogue = model_root.uid AND implements.version_number = model_value.version_number\nWITH variable_root, variable_value, codelist, codelistattributevalue, implemented, apoc.text.split(rel.ordinal, \"\\.\") AS split_ordinal ORDER BY toInteger(split_ordinal[0]), toInteger(split_ordinal[1])\nRETURN DISTINCT variable_root.uid AS variable, variable_value.label AS label, variable_value.description AS description,\n  variable_value.simple_datatype AS dataType,\n  variable_value.length AS length, variable_value.role AS role,\n  collect(DISTINCT (codelist.uid + ' ' + codelistattributevalue.submission_value)) AS codelist,\n  implemented.uid AS implements,\n  \"Sponsor Model\" AS sponsormodel",
           "width": 24,
           "height": 4,
@@ -551,8 +493,8 @@
           "id": "e68cc67f-41ff-4109-905b-50812a8eff6d"
         },
         {
-          "title": "Sponsor Model",
-          "query": "MATCH (model_value:DataModelIGValue {name: \"SDTMIG v3.2\"})<-[:EXTENDS_VERSION]-(smv:SponsorModelValue)\nMATCH (smv)<-[v:HAS_VERSION]-(:DataModelIGRoot)\nRETURN \"select\" AS select, smv.name AS name, v.version AS version",
+          "title": "$neodash_dataset_uid - Available in Sponsor Models",
+          "query": "MATCH (model_value:DataModelIGValue {name: $neodash_ig_version})<-[:EXTENDS_VERSION]-(smv:SponsorModelValue)\nMATCH (smv)<-[v:HAS_VERSION]-(:DataModelIGRoot)\nWHERE EXISTS ((smv)-[:HAS_DATASET]->(:SponsorModelDatasetInstance)<-[:HAS_INSTANCE]-(:Dataset {uid: $neodash_dataset_uid}))\nRETURN \"select\" AS select, smv.name AS name, v.version AS version ORDER BY name DESC",
           "width": 6,
           "height": 4,
           "x": 18,
@@ -611,8 +553,8 @@
       "reports": [
         {
           "title": "Available Versions",
-          "query": "MATCH (model_value:DataModelIGValue)<-[:EXTENDS_VERSION]-(smv:SponsorModelValue)\n<-[v:HAS_VERSION]-(model_root:DataModelIGRoot)\nWHERE model_root.uid=\"SDTMIG\"\nRETURN \"select\" AS select, v.version AS version, model_value.name AS extends, smv.name AS name\nORDER BY version DESC",
-          "width": 8,
+          "query": "MATCH (model_value:DataModelIGValue)<-[:EXTENDS_VERSION]-(smv:SponsorModelValue)\n<-[v:HAS_VERSION]-(model_root:DataModelIGRoot)\nWHERE model_root.uid=\"SDTMIG\"\nRETURN \"select\" AS select, smv.name AS name, v.version AS __version\nORDER BY name DESC",
+          "width": 5,
           "height": 4,
           "x": 0,
           "y": 0,
@@ -623,7 +565,7 @@
               {
                 "condition": "Click",
                 "field": "select",
-                "value": "version",
+                "value": "__version",
                 "customization": "set variable",
                 "customizationValue": "mm_version_number"
               },
@@ -637,17 +579,17 @@
             ],
             "compact": true,
             "wrapContent": true,
-            "columnWidths": "[2,1,3,3]"
+            "columnWidths": "[2,3,1,3]"
           },
           "id": "80d966e4-c0f0-4f93-bbf2-f1de19fdc7cb"
         },
         {
-          "title": "Datasets - $neodash_mm_version_number - $neodash_mm_version_name",
-          "query": "MATCH (smv:SponsorModelValue)-[rel_smv:HAS_DATASET]->(smdi:SponsorModelDatasetInstance)<-[:HAS_INSTANCE]-(dataset:Dataset)\nWHERE smv.name=$neodash_mm_version_name\nRETURN \"select\" AS select,\ndataset.uid AS uid,\nsmdi.label AS label,\nsmdi.is_basic_std AS basic_std,\nsmdi.purpose AS purpose,\nsmdi.ig_comment AS ig_comment,\nsmdi.xml_path AS xml_path\nORDER BY toInteger(rel_smv.ordinal)\n",
-          "width": 24,
+          "title": "Datasets - $neodash_mm_version_name",
+          "query": "MATCH (smv:SponsorModelValue)-[rel_smv:HAS_DATASET]->(smdi:SponsorModelDatasetInstance)<-[:HAS_INSTANCE]-(dataset:Dataset)\nWHERE smv.name=$neodash_mm_version_name\nRETURN \"select\" AS select,\ndataset.uid AS uid,\nsmdi.label AS label,\nsmdi.is_basic_std AS basic_std,\nsmdi.purpose AS purpose,\nsmdi.ig_comment AS ig_comment,\nsmdi.xml_path AS xml_path,\nrel_smv.ordinal AS order\nORDER BY toInteger(rel_smv.ordinal)\n",
+          "width": 19,
           "height": 4,
-          "x": 0,
-          "y": 4,
+          "x": 5,
+          "y": 0,
           "type": "table",
           "selection": {},
           "settings": {
@@ -660,7 +602,7 @@
                 "customizationValue": "mm_dataset"
               }
             ],
-            "columnWidths": "[1.8, 1, 2, 1, 2, 8, 2]",
+            "columnWidths": "[1.8, 1, 2, 1, 2, 10, 2, 1]",
             "fullscreenEnabled": true,
             "compact": true,
             "allowDownload": true,
@@ -669,62 +611,32 @@
           "id": "d438ba8e-4b9c-4fad-8917-c1368ef2c842"
         },
         {
-          "title": "Variables - $neodash_mm_dataset",
+          "title": "Variables - $neodash_mm_dataset - $neodash_mm_version_name",
           "query": "MATCH (smv:SponsorModelValue)-[rel_smv:HAS_DATASET]->(smdi:SponsorModelDatasetInstance)<-[:HAS_INSTANCE]-(dataset:Dataset)\nWHERE smv.name=$neodash_mm_version_name AND dataset.uid=$neodash_mm_dataset\nMATCH (smdi)-[rel_smdi:HAS_DATASET_VARIABLE]->(sm_variable_value:SponsorModelDatasetVariableInstance)<-[:HAS_INSTANCE]-(variable_root:DatasetVariable)\nWHERE rel_smdi.version_number=$neodash_mm_version_number\nOPTIONAL MATCH (variable_root)<-[key:HAS_KEY]-(smdi)\n\nRETURN DISTINCT\n  variable_root.uid AS uid,\n  sm_variable_value.is_basic_std AS basic_std,\n  key.order AS key,\n  sm_variable_value.label AS label,\n  sm_variable_value.variable_type AS type,\n  sm_variable_value.length AS length,\n  sm_variable_value.display_format AS displayformat,\n  sm_variable_value.xml_datatype AS xmldatatype,\n  sm_variable_value.xml_codelist AS xmlcodelist,\n  sm_variable_value.core AS core,\n  sm_variable_value.origin AS origin,\n  sm_variable_value.role AS role,\n  sm_variable_value.term AS term,\n  sm_variable_value.ig_comment AS ig_comment,\n  sm_variable_value.enrich_rule AS enrich_rule,\n  rel_smdi.ordinal AS order\nORDER BY toInteger(order)",
           "width": 24,
           "height": 4,
           "x": 0,
-          "y": 8,
+          "y": 4,
           "type": "table",
           "selection": {},
           "settings": {
             "columnWidths": "[3, 1.5, 1, 3, 1, 1.2, 2.1, 2, 2, 2, 2, 2.5, 1, 6, 3, 1]",
             "compact": true,
             "allowDownload": true,
-            "wrapContent": true
+            "wrapContent": true,
+            "noDataMessage": "This Dataset probably does not have any Variable with map_var_flag = True => no Variable was imported for this Dataset",
+            "fullscreenEnabled": true,
+            "styleRules": [
+              {
+                "field": "basic_std",
+                "condition": "=",
+                "value": "Boolean.False",
+                "customization": "row color",
+                "customizationValue": "lightblue"
+              }
+            ]
           },
           "id": "192b48f0-743a-410f-9cad-7bef32d8a3f2"
-        },
-        {
-          "id": "7c8762be-05b5-46c9-a2bb-cd038873ac96",
-          "title": "Dataset Classes",
-          "query": "MATCH (smv:SponsorModelValue)-[rel_smv:HAS_DATASET_CLASS]->(smdi:SponsorModelDatasetClassInstance)<-[:HAS_INSTANCE]-(dataset:DatasetClass)\nWHERE smv.name=$neodash_mm_version_name\nRETURN \"select\" AS select,\ndataset.uid AS uid,\nsmdi.is_basic_std AS basic_std\nORDER BY uid\n",
-          "width": 16,
-          "height": 4,
-          "x": 8,
-          "y": 0,
-          "type": "table",
-          "selection": {},
-          "settings": {
-            "actionsRules": [
-              {
-                "condition": "Click",
-                "field": "select",
-                "value": "uid",
-                "customization": "set variable",
-                "customizationValue": "mm_dataset_class"
-              }
-            ],
-            "columnWidths": "[1, 4, 2]",
-            "compact": true,
-            "wrapContent": true
-          }
-        },
-        {
-          "id": "500b7258-9473-42c3-bac0-3d1c10f8179b",
-          "title": "Variable Classes - $neodash_mm_dataset_class",
-          "query": "MATCH (smv:SponsorModelValue)-[rel_smv:HAS_DATASET_CLASS]->(smdi:SponsorModelDatasetClassInstance)<-[:HAS_INSTANCE]-(dataset:DatasetClass)\nWHERE smv.name=$neodash_mm_version_name AND dataset.uid=$neodash_mm_dataset_class\nMATCH (smdi)-[rel_smdi:HAS_VARIABLE_CLASS]->(sm_variable_value:SponsorModelVariableClassInstance)<-[:HAS_INSTANCE]-(variable_root:VariableClass)\nWHERE rel_smdi.version_number=$neodash_mm_version_number\n\nRETURN DISTINCT\n  variable_root.uid AS uid,\n  sm_variable_value.is_basic_std AS basic_std,\n  sm_variable_value.label AS label,\n  sm_variable_value.variable_type AS type,\n  sm_variable_value.length AS length,\n  sm_variable_value.display_format AS displayformat,\n  sm_variable_value.xml_datatype AS xmldatatype,\n  sm_variable_value.xml_codelist AS xmlcodelist,\n  sm_variable_value.core AS core,\n  sm_variable_value.origin AS origin,\n  sm_variable_value.role AS role,\n  sm_variable_value.term AS term,\n  sm_variable_value.ig_comment AS ig_comment,\n  sm_variable_value.incl_cre_domain AS incl_cre_domain,\n  rel_smdi.ordinal AS order\nORDER BY toInteger(order)\n\n\n",
-          "width": 24,
-          "height": 4,
-          "x": 0,
-          "y": 12,
-          "type": "table",
-          "selection": {},
-          "settings": {
-            "columnWidths": "[2, 1.5, 4, 1, 1.2, 2, 2, 2, 1, 2, 2, 2, 6, 3, 1]",
-            "compact": true,
-            "wrapContent": true
-          }
         }
       ]
     },

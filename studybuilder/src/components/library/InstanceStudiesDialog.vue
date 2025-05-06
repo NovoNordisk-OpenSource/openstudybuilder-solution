@@ -51,7 +51,7 @@
     <v-divider />
     <v-card-actions>
       <v-spacer />
-      <v-btn 
+      <v-btn
         color="secondary"
         variant="outlined"
         elevation="0"

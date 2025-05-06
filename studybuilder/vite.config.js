@@ -6,6 +6,13 @@ import vuetify from 'vite-plugin-vuetify'
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  css: {
+    preprocessorOptions: {
+      sass: {
+        api: 'modern-compiler',
+      },
+    },
+  },
   plugins: [
     vue(),
     vuetify({ styles: { configFile: 'src/styles/settings.scss' } }),

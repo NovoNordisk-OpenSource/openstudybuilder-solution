@@ -319,3 +319,5 @@ This is intended to be run periodically to keep these counters up to date.
 
 The script reuses a fair bit of code from the API.
 A future improvement could be to build this update functionality directy into the API.
+
+

@@ -61,3 +61,4 @@ else
 {
     Write-Host "Health check validation success."
 }
+

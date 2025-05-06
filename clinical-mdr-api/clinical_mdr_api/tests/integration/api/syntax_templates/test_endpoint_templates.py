@@ -1405,9 +1405,10 @@ def test_cannot_update_endpoint_template_without_change_description(api_client):
     assert_response_status_code(response, 422)
     assert res["detail"] == [
         {
+            "type": "missing",
             "loc": ["body", "change_description"],
-            "msg": "field required",
-            "type": "value_error.missing",
+            "msg": "Field required",
+            "input": {"name": "Default name with [TextValue]"},
         }
     ]
 
@@ -1469,10 +1470,11 @@ def test_pre_validate_invalid_endpoint_template_name(api_client):
     assert res == {
         "detail": [
             {
+                "type": "string_too_short",
                 "loc": ["body", "name"],
-                "msg": "ensure this value has at least 1 characters",
-                "type": "value_error.any_str.min_length",
-                "ctx": {"limit_value": 1},
+                "msg": "String should have at least 1 character",
+                "input": "",
+                "ctx": {"min_length": 1},
             }
         ]
     }

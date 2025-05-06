@@ -1,7 +1,9 @@
 export let objectName, objectVersion
 let tableRowLocator = 'table tbody tr'
+let tableRowLocatorInPopUp = '.v-sheet table tbody tr'
 let tableHeaderLocator = 'table thead'
 let tableHeaderCellLocator = 'table thead th'
+let tableHeaderCellLocatorInPopUp = '.v-sheet table thead th'
 let expandActionsLocator = 'table-item-action-button'
 let regex = (column) => new RegExp(`^${column}$`, 'g')
 
@@ -29,8 +31,17 @@ Cypress.Commands.add('searchAndCheckResults', (value, uniqueSearchResult = true)
     uniqueSearchResult ? cy.get('table tbody tr').should('have.length', 1) : cy.get('table tbody tr').should('have.length.above', 1)
 })
 
-Cypress.Commands.add('searchFor', (value) => {
-    cy.fillInput('search-field', value)
+Cypress.Commands.add('searchAndCheckPresence', (value, shouldBePresent) => {
+    cy.searchFor(value, false)
+    shouldBePresent ? cy.tableContains(value) : cy.confirmNoResultsFound(value)
+})
+
+Cypress.Commands.add('checkSearchResults', (uniqueSearchResult = true) => {
+    uniqueSearchResult ? cy.get('table tbody tr').should('have.length', 1) : cy.get('table tbody tr').should('have.length.above', 1)
+})
+
+Cypress.Commands.add('searchFor', (value, delay = true) => {
+    delay ? cy.fillInput('search-field', value) : cy.fillInputWithoutDeplay('search-field', value)
     cy.wait(1500)
 })
 
@@ -116,6 +127,10 @@ Cypress.Commands.add('getCellValue', (rowIndex, columnName) => {
     return getCellByName(rowIndex, columnName).invoke('text')
 })
 
+Cypress.Commands.add('getCellValueInPopUp', (rowIndex, columnName) => {
+    return getCellByName(rowIndex, columnName, true).invoke('text')
+})
+
 Cypress.Commands.add('searchAndGetData', (status, columnName) => {
     cy.searchFor(status, false)
     cy.getCellValue(0, 'Version').then(version => objectVersion = parseFloat(version))
@@ -141,14 +156,22 @@ Cypress.Commands.add('confirmItemNotAvailable', (itemName) => {
     cy.contains(itemName).should('not.exist')
 })
 
+Cypress.Commands.add('addTableFilter', (filerName) => {
+    cy.waitForTable()
+    cy.contains(tableHeaderCellLocator, filerName).find('button').click()
+    cy.contains('.v-overlay__content .v-list-item', 'Add to filter').click()
+})
+
 function clickTableActionsButton(rowIndex) {
     cy.get(tableRowLocator).filter(':visible').eq(rowIndex).within(() => cy.clickButton('table-item-action-button', true))
 }
 
-function getCellByName(rowIndex, columnName) {
-    return cy.contains(tableHeaderCellLocator, regex(columnName))
+function getCellByName(rowIndex, columnName, isPopUp = false) {
+    let headerCellLocator = isPopUp ? tableHeaderCellLocatorInPopUp : tableHeaderCellLocator
+    let rowLocator = isPopUp ? tableRowLocatorInPopUp : tableRowLocator 
+    return cy.contains(headerCellLocator, regex(columnName))
             .invoke('index')
-            .then((columnIndex) => cy.get(tableRowLocator).eq(rowIndex).find('td').eq(columnIndex))
+            .then((columnIndex) => cy.get(rowLocator).eq(rowIndex).find('td').eq(columnIndex))
 }
 
 function checkValue(rowIndex, columnName, expected) {

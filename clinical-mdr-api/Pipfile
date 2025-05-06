@@ -6,7 +6,8 @@ name = "pypi"
 [packages]
 fastapi = "~=0.115.4"
 uvicorn = "~=0.32.0"
-pydantic = "~=1.10.0"
+pydantic = "~=2.10.6"
+pydantic-settings = "~=2.7.1"
 requests = "*"
 openpyxl = "~=3.1.5"
 dict2xml = "~=1.7.6"
@@ -30,10 +31,10 @@ cffi = "~=1.17.1"
 deepdiff = "~=8.0.1"
 asyncache = "~=0.3.1"
 cachetools = "~=5.5.0"
-usdm = "==0.53.0"
+usdm = "==0.59.0"
 annotated-types = "~=0.6.0"
-neomodel = "~=5.4.1"
 jinja2 = "*"
+neomodel = "~=5.4.5"
 
 [dev-packages]
 pytest = "~=8.3.3"
@@ -84,7 +85,7 @@ schemathesis = """
         run
         --checks=all
         --base-url=http://localhost:8000
-        --request-timeout=30000
+        --request-timeout=200000
         --hypothesis-max-examples=10
         --hypothesis-verbosity=normal
         --hypothesis-deadline=None

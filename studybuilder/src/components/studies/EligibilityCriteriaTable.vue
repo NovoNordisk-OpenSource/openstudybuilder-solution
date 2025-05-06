@@ -11,11 +11,57 @@
     :history-data-fetcher="fetchAllCriteriaHistory"
     :history-title="$t('EligibilityCriteriaTable.global_history_title')"
     :history-html-fields="historyHtmlFields"
-    :column-data-resource="`studies/${studiesGeneralStore.selectedStudy.uid}/study-criteria`"
+    :column-data-resource="
+      !sortMode
+        ? `studies/${studiesGeneralStore.selectedStudy.uid}/study-criteria`
+        : undefined
+    "
     :items-length="total"
+    :disable-filtering="sortMode"
+    :hide-default-body="sortMode && criteria.length > 0"
     :filters-modify-function="addTypeFilterToHeader"
     @filter="getStudyCriteria"
   >
+    <template #afterSwitches>
+      <div :title="$t('NNTableTooltips.reorder_content')">
+        <v-switch
+          v-model="sortMode"
+          :label="$t('NNTable.reorder_content')"
+          hide-details
+          class="mr-6"
+          color="primary"
+          :disabled="!accessGuard.checkPermission($roles.STUDY_WRITE)"
+        />
+      </div>
+    </template>
+    <template #tbody>
+      <tbody v-show="sortMode" ref="parent">
+        <tr v-for="crit in criteria" :key="crit.study_criteria_uid">
+          <td>
+            <v-icon size="small"> mdi-sort </v-icon>
+          </td>
+          <td>{{ crit.order }}</td>
+          <td>
+            <NNParameterHighlighter
+              :name="
+                crit.template ? crit.template.name_plain : crit.criteria.name
+              "
+              :default-color="crit.template ? 'orange' : 'green'"
+            />
+          </td>
+          <td>
+            {{
+              crit.template
+                ? crit.template.guidance_text
+                : crit.criteria.guidance_text
+            }}
+          </td>
+          <td>{{ $filters.yesno(crit.key_criteria) }}</td>
+          <td>{{ $filters.date(crit.start_date) }}</td>
+          <td>{{ crit.author_username }}</td>
+        </tr>
+      </tbody>
+    </template>
     <template #actions>
       <v-btn
         data-cy="add-study-criteria"
@@ -130,14 +176,6 @@
     />
   </v-dialog>
   <ConfirmDialog ref="confirm" :text-cols="6" :action-cols="5" />
-  <SelectionOrderUpdateForm
-    v-if="selectedStudyCriteria"
-    ref="orderForm"
-    :initial-value="selectedStudyCriteria.order"
-    :open="showOrderForm"
-    @close="closeOrderForm"
-    @submit="submitOrder"
-  />
 </template>
 
 <script setup>
@@ -149,13 +187,13 @@ import EligibilityCriteriaEditForm from './EligibilityCriteriaEditForm.vue'
 import EligibilityCriteriaForm from './EligibilityCriteriaForm.vue'
 import HistoryTable from '@/components/tools/HistoryTable.vue'
 import NNParameterHighlighter from '@/components/tools/NNParameterHighlighter.vue'
-import SelectionOrderUpdateForm from '@/components/studies/SelectionOrderUpdateForm.vue'
 import NNTable from '@/components/tools/NNTable.vue'
 import study from '@/api/study'
 import filteringParameters from '@/utils/filteringParameters'
 import statuses from '@/constants/statuses'
 import { useAccessGuard } from '@/composables/accessGuard'
 import { useStudiesGeneralStore } from '@/stores/studies-general'
+import { useDragAndDrop } from '@formkit/drag-and-drop/vue'
 
 const eventBusEmit = inject('eventBusEmit')
 const roles = inject('roles')
@@ -170,7 +208,15 @@ const studiesGeneralStore = useStudiesGeneralStore()
 const { t } = useI18n()
 const tableRef = ref()
 
-const criteria = ref([])
+const [parent, criteria] = useDragAndDrop([], {
+  onDragend: (event) => {
+    const newOrder =
+      event.draggedNode.data.value.order -
+      (event.state.initialIndex - event.state.targetIndex)
+    changeOrder(event.draggedNode.data.value.study_criteria_uid, newOrder)
+  },
+})
+
 const criteriaHistoryItems = ref([])
 const headers = ref([
   { title: '', key: 'actions', width: '1%' },
@@ -189,13 +235,52 @@ const headers = ref([
   { title: t('_global.modified'), key: 'start_date' },
   { title: t('_global.modified_by'), key: 'author_username' },
 ])
+const actions = ref([
+  {
+    label: t('EligibilityCriteriaTable.update_version_retired_tooltip'),
+    icon: 'mdi-alert-outline',
+    iconColor: 'orange',
+    condition: (item) => isLatestRetired(item),
+    accessRole: roles.STUDY_WRITE,
+  },
+  {
+    label: t('EligibilityCriteriaTable.update_version_tooltip'),
+    icon: 'mdi-bell-ring-outline',
+    iconColorFunc: criteriaUpdateAborted,
+    condition: (item) =>
+      needUpdate(item) && !studiesGeneralStore.selectedStudyVersion,
+    click: updateVersion,
+    accessRole: roles.STUDY_WRITE,
+  },
+  {
+    label: t('_global.edit'),
+    icon: 'mdi-pencil-outline',
+    iconColor: 'primary',
+    condition: () => !studiesGeneralStore.selectedStudyVersion,
+    click: editStudyCriteria,
+    accessRole: roles.STUDY_WRITE,
+  },
+  {
+    label: t('_global.delete'),
+    icon: 'mdi-delete-outline',
+    iconColor: 'error',
+    condition: () => !studiesGeneralStore.selectedStudyVersion,
+    click: deleteStudyCriteria,
+    accessRole: roles.STUDY_WRITE,
+  },
+  {
+    label: t('_global.history'),
+    icon: 'mdi-history',
+    click: openHistory,
+  },
+])
 const selectedStudyCriteria = ref(null)
 const showEditForm = ref(false)
 const showForm = ref(false)
 const showHistory = ref(false)
-const showOrderForm = ref(false)
 const total = ref(0)
 const confirm = ref()
+const sortMode = ref(false)
 
 const historyHtmlFields = [
   'criteria.name',
@@ -331,6 +416,15 @@ async function deleteStudyCriteria(studyCriteria) {
 }
 
 function getStudyCriteria(filters, options, filtersUpdated) {
+  try {
+    filters = JSON.parse(filters)
+    filters['criteria_type.sponsor_preferred_name_sentence_case'] = {
+      v: [props.criteriaType.name.sponsor_preferred_name_sentence_case],
+    }
+  } catch (error) {
+    console.error(error)
+  }
+  filters = JSON.stringify(filters)
   const params = filteringParameters.prepareParameters(
     options,
     filters,
@@ -348,26 +442,19 @@ function getStudyCriteria(filters, options, filtersUpdated) {
     })
 }
 
-function submitOrder(value) {
+function changeOrder(criteriaUid, newOrder) {
   study
     .updateStudyCriteriaOrder(
-      selectedStudyCriteria.value.study_uid,
-      selectedStudyCriteria.value.study_criteria_uid,
-      value
+      studiesGeneralStore.selectedStudy.uid,
+      criteriaUid,
+      newOrder
     )
     .then(() => {
       tableRef.value.filterTable()
-      closeOrderForm()
-      eventBusEmit('notification', { msg: t('_global.order_updated') })
     })
-}
-function changeCriteriaOrder(criteria) {
-  selectedStudyCriteria.value = criteria
-  showOrderForm.value = true
-}
-
-function closeOrderForm() {
-  showOrderForm.value = false
+    .catch(() => {
+      tableRef.value.filterTable()
+    })
 }
 
 function updateKeyCriteria(value, studyCriteriaUid) {
@@ -477,52 +564,12 @@ function addTypeFilterToHeader(jsonFilter, params) {
     params,
   }
 }
-
-const actions = ref([
-  {
-    label: t('EligibilityCriteriaTable.update_version_retired_tooltip'),
-    icon: 'mdi-alert-outline',
-    iconColor: 'orange',
-    condition: (item) => isLatestRetired(item),
-    accessRole: roles.STUDY_WRITE,
-  },
-  {
-    label: t('EligibilityCriteriaTable.update_version_tooltip'),
-    icon: 'mdi-bell-ring-outline',
-    iconColorFunc: criteriaUpdateAborted,
-    condition: (item) =>
-      needUpdate(item) && !studiesGeneralStore.selectedStudyVersion,
-    click: updateVersion,
-    accessRole: roles.STUDY_WRITE,
-  },
-  {
-    label: t('_global.edit'),
-    icon: 'mdi-pencil-outline',
-    iconColor: 'primary',
-    condition: () => !studiesGeneralStore.selectedStudyVersion,
-    click: editStudyCriteria,
-    accessRole: roles.STUDY_WRITE,
-  },
-  {
-    label: t('_global.change_order'),
-    icon: 'mdi-pencil-outline',
-    iconColor: 'primary',
-    condition: () => !studiesGeneralStore.selectedStudyVersion,
-    click: changeCriteriaOrder,
-    accessRole: roles.STUDY_WRITE,
-  },
-  {
-    label: t('_global.delete'),
-    icon: 'mdi-delete-outline',
-    iconColor: 'error',
-    condition: () => !studiesGeneralStore.selectedStudyVersion,
-    click: deleteStudyCriteria,
-    accessRole: roles.STUDY_WRITE,
-  },
-  {
-    label: t('_global.history'),
-    icon: 'mdi-history',
-    click: openHistory,
-  },
-])
 </script>
+<style scoped>
+tbody tr td {
+  border-left-style: outset;
+  border-bottom-style: outset;
+  border-width: 1px !important;
+  border-color: rgb(var(--v-theme-nnFadedBlue200)) !important;
+}
+</style>

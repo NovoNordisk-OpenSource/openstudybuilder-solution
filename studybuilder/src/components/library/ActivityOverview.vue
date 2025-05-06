@@ -1,6 +1,7 @@
 <template>
   <div>
     <BaseActivityOverview
+      ref="overview"
       :transform-func="transformItem"
       :navigate-to-version="changeVersion"
       :history-headers="historyHeaders"
@@ -110,7 +111,10 @@
             {{ $t('ActivityForms.synonyms') }}
           </v-col>
           <v-col cols="10">
-            <v-chip v-for="synonym in itemOverview.activity.synonyms">
+            <v-chip
+              v-for="synonym in itemOverview.activity.synonyms"
+              :key="synonym"
+            >
               {{ synonym }}
             </v-chip>
           </v-col>
@@ -141,11 +145,33 @@
               </thead>
               <tbody>
                 <tr
-                  v-for="grouping in itemOverview.activity_groupings"
-                  :key="grouping.activity_subgroup_name"
+                  v-for="(grouping, index) in itemOverview.activity_groupings"
+                  :key="`grouping-${index}`"
                 >
-                  <td>{{ grouping.activity_group.name }}</td>
-                  <td>{{ grouping.activity_subgroup.name }}</td>
+                  <td>
+                    <router-link
+                      :to="{
+                        name: 'GroupOverview',
+                        params: {
+                          id: grouping.activity_group.uid,
+                        },
+                      }"
+                    >
+                      {{ grouping.activity_group.name }}
+                    </router-link>
+                  </td>
+                  <td>
+                    <router-link
+                      :to="{
+                        name: 'SubgroupOverview',
+                        params: {
+                          id: grouping.activity_subgroup.uid,
+                        },
+                      }"
+                    >
+                      {{ grouping.activity_subgroup.name }}
+                    </router-link>
+                  </td>
                 </tr>
               </tbody>
             </v-table>
@@ -222,19 +248,24 @@
 </template>
 
 <script setup>
+import { onMounted, ref } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
+import { useAppStore } from '@/stores/app'
 import BaseActivityOverview from './BaseActivityOverview.vue'
 import StatusChip from '@/components/tools/StatusChip.vue'
-import NCIConceptLink from '@/components//tools/NCIConceptLink.vue'
-import { useRouter } from 'vue-router'
+import NCIConceptLink from '@/components/tools/NCIConceptLink.vue'
 import { defineAsyncComponent } from 'vue'
-import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
-const emit = defineEmits(['refresh'])
 const router = useRouter()
+const route = useRoute()
+const appStore = useAppStore()
+const overview = ref()
 
-const ActivitiesForm = defineAsyncComponent(() =>
-  import('@/components/library/ActivitiesForm.vue')
+const emit = defineEmits(['refresh'])
+const ActivitiesForm = defineAsyncComponent(
+  () => import('@/components/library/ActivitiesForm.vue')
 )
 
 const historyHeaders = [
@@ -277,14 +308,13 @@ const historyHeaders = [
 ]
 
 function allVersions(item) {
-  var all_versions = [...item.all_versions].sort().reverse()
-  return all_versions
+  return [...item.all_versions].sort().reverse()
 }
 
 async function changeVersion(activity, version) {
   await router.push({
     name: 'ActivityOverview',
-    params: { id: activity.uid, version: version },
+    params: { id: activity.uid, version },
   })
   emit('refresh')
 }
@@ -306,4 +336,40 @@ function transformItem(item) {
     item.item_key = item.uid
   }
 }
+
+onMounted(() => {
+  appStore.addBreadcrumbsLevel(
+    t('Sidebar.library.concepts'),
+    { name: 'Activities' },
+    1,
+    false
+  )
+
+  appStore.addBreadcrumbsLevel(
+    t('Sidebar.library.activities'),
+    { name: 'Activities' },
+    2,
+    true
+  )
+
+  appStore.addBreadcrumbsLevel(
+    t('Sidebar.library.activities'),
+    { name: 'Activities' },
+    3,
+    true
+  )
+
+  const activityName =
+    overview.value?.itemOverview?.activity?.name || t('_global.loading')
+
+  appStore.addBreadcrumbsLevel(
+    activityName,
+    {
+      name: 'ActivityOverview',
+      params: { id: route.params.id },
+    },
+    4,
+    true
+  )
+})
 </script>

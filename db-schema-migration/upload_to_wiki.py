@@ -7,6 +7,7 @@ import urllib
 import base64
 import uuid
 import datetime
+from zipfile import ZipFile, ZIP_DEFLATED
 
 WIKI_PERSONAL_ACCESS_TOKEN = os.environ.get("WIKI_PERSONAL_ACCESS_TOKEN", None)
 WIKI_API_TOKEN = os.environ.get("WIKI_API_TOKEN", None)
@@ -46,11 +47,12 @@ def make_headers(is_json=True):
 def upload_attachment(json_name):
     # Check if the file exists
     json_path = os.path.join(MD_DIR, json_name)
+    json_path_zipped = os.path.join(MD_DIR, json_name + ".zip")
+
     if not os.path.exists(json_path):
         print(f"File '{json_name}' does not exist, skipping upload.")
         return None
-    with open(json_path, "r") as jf:
-        json_text = jf.read()
+
     print(f"Upload attachment '{json_name}'")
     project = urllib.parse.quote(PROJECT.encode("utf-8"))
     wiki_identifier = urllib.parse.quote(WIKI_IDENTIFIER.encode("utf-8"))
@@ -59,23 +61,34 @@ def upload_attachment(json_name):
     # so we need to make sure that the name is unique.
     # Insert the UUID between the name and the json ending.
     base_name, extension = os.path.splitext(json_name)
-    unique_name = f"{base_name}-{RUN_UUID}{extension}"
+    unique_name = f"{base_name}-{RUN_UUID}{extension}.zip"
 
     name = urllib.parse.quote(unique_name.encode("utf-8"))
-    wiki_url = f"https://dev.azure.com/novonordiskit/{project}/_apis/wiki/wikis/{wiki_identifier}/attachments?name={name}&api-version=7.0"
+    wiki_url = f"https://dev.azure.com/orgremoved/{project}/_apis/wiki/wikis/{wiki_identifier}/attachments?name={name}&api-version=7.0"
     headers = make_headers(is_json=False)
-    req = requests.put(
-        wiki_url,
-        headers=headers,
-        data=base64.b64encode(json_text.encode("utf-8")),
-    )
-    if req.ok:
-        reply = req.json()
-        new_link = reply["path"]
-    else:
-        print(f"Error uploading attachment: {req.status_code} {req.reason}")
-        new_link = None
-    return new_link
+    
+    print(f"Zip '{json_path} into '{json_path_zipped}'")
+    json_zipped = ZipFile(json_path_zipped, "w", ZIP_DEFLATED)
+    json_zipped.write(json_path)
+    json_zipped.close()    
+    
+    # Upload zip file
+    with open(json_path_zipped, "rb") as f:
+        data = base64.b64encode(f.read())
+
+        req = requests.put(
+            wiki_url,
+            headers=headers,
+            data=data,
+        )
+
+        if req.ok:
+            reply = req.json()
+            new_link = reply["path"]
+        else:
+            print(f"Error uploading attachment: {req.status_code} {req.reason}")
+            new_link = None
+        return new_link
 
 
 def create_page(data, wiki_path):
@@ -96,7 +109,7 @@ def make_page_url(path):
     project = urllib.parse.quote(PROJECT.encode("utf-8"))
     wiki_identifier = urllib.parse.quote(WIKI_IDENTIFIER.encode("utf-8"))
     encoded_path = urllib.parse.quote(path.encode("utf-8"))
-    return f"https://dev.azure.com/novonordiskit/{project}/_apis/wiki/wikis/{wiki_identifier}/pages?path={encoded_path}&api-version=7.0"
+    return f"https://dev.azure.com/orgremoved/{project}/_apis/wiki/wikis/{wiki_identifier}/pages?path={encoded_path}&api-version=7.0"
 
 
 def create_page_with_full_path(data, wiki_path):
@@ -154,3 +167,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

@@ -13,25 +13,33 @@
         <p>{{ $t('StudyActivityBatchEditForm.note') }}</p>
         <div class="d-flex align-center my-2">
           <div class="font-weight-bold">
-            {{ $t('StudyActivityBatchEditForm.items_selected', {number: selection.length}) }}
+            {{
+              $t('StudyActivityBatchEditForm.items_selected', {
+                number: selection.length,
+              })
+            }}
           </div>
         </div>
-          <div v-for="item in selection" :key="item.name" class="d-flex mb-2 checkbox">
-            <v-checkbox
-              :model-value="true"
-              disabled
-              hide-details
-              :label="item.activity.name"
-            />
-            <v-spacer/>
-            <v-btn
-              color="error"
-              icon="mdi-close"
-              variant="text"
-              class="mt-1"
-              @click="removeItem(item)"
-            />
-          </div>
+        <div
+          v-for="item in selection"
+          :key="item.name"
+          class="d-flex mb-2 checkbox"
+        >
+          <v-checkbox
+            :model-value="true"
+            disabled
+            hide-details
+            :label="item.activity.name"
+          />
+          <v-spacer />
+          <v-btn
+            color="error"
+            icon="mdi-close"
+            variant="text"
+            class="mt-1"
+            @click="removeItem(item)"
+          />
+        </div>
         <slot name="body" />
       </v-form>
     </template>
@@ -94,7 +102,7 @@ export default {
   overflow: auto;
 }
 .checkbox {
-  border-radius: 10px; 
+  border-radius: 10px;
   background-color: rgb(var(--v-theme-nnGraniteGrey1));
 }
 </style>

@@ -33,3 +33,4 @@ MERGE (n1)-[r3:CONTAINS_CONCEPT]->(n2)
 MERGE (n3)-[h:HAS_DESCRIPTION]->(n4:OdmDescription {uid: apoc.create.uuid(), language: 'ENG', description: 'Blood pressure localisation', instruction: 'Please provide the localisation where the blood pressure was taken'})
 MERGE (n3)-[r4:HAS_CODELISTREF]->(n5:CTCodelistRoot)
 RETURN n1, n2, n3, n4, n5
+

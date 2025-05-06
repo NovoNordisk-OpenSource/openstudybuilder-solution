@@ -39,14 +39,14 @@ def test_data():
         timeframe_template
     )
     if isinstance(timeframe_template, BaseModel):
-        timeframe_template = timeframe_template.dict()
+        timeframe_template = timeframe_template.model_dump()
     tt_service.TimeframeTemplateService().approve(timeframe_template["uid"])
     ttdata = template_data.copy()
     ttdata["name"] = "Test [Indication] and [Intervention]"
     timeframe_template = tt_models.TimeframeTemplateCreateInput(**ttdata)
     tt2 = tt_service.TimeframeTemplateService().create(timeframe_template)
     if isinstance(tt2, BaseModel):
-        tt2 = tt2.dict()
+        tt2 = tt2.model_dump()
     tt_service.TimeframeTemplateService().approve(tt2["uid"])
 
     yield

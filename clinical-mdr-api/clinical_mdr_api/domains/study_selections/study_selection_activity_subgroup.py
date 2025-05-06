@@ -22,6 +22,7 @@ class StudySelectionActivitySubGroupVO(study_selection_base.StudySelectionBaseVO
     show_activity_subgroup_in_protocol_flowchart: bool
     order: int | None
     study_activity_group_uid: str | None
+    study_activity_uids: list[str] | None
     # Study selection Versioning
     start_date: datetime.datetime
     author_id: str | None
@@ -38,6 +39,7 @@ class StudySelectionActivitySubGroupVO(study_selection_base.StudySelectionBaseVO
         activity_subgroup_name: str | None = None,
         order: int | None = None,
         study_activity_group_uid: str | None = None,
+        study_activity_uids: list[str] | None = None,
         show_activity_subgroup_in_protocol_flowchart: bool = True,
         study_selection_uid: str | None = None,
         start_date: datetime.datetime | None = None,
@@ -58,6 +60,7 @@ class StudySelectionActivitySubGroupVO(study_selection_base.StudySelectionBaseVO
             show_activity_subgroup_in_protocol_flowchart=show_activity_subgroup_in_protocol_flowchart,
             order=order,
             study_activity_group_uid=study_activity_group_uid,
+            study_activity_uids=study_activity_uids,
             start_date=start_date,
             study_selection_uid=normalize_string(study_selection_uid),
             author_id=normalize_string(author_id),
@@ -94,4 +97,4 @@ class StudySelectionActivitySubGroupAR(study_selection_base.StudySelectionBaseAR
     _object_type = "activity_subgroup"
     _object_uid_field = "activity_subgroup_uid"
     _object_name_field = ""
-    _order_field_name = "activity_subgroup_order"
+    _order_field_name = "order"

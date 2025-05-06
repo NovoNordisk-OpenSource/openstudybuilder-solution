@@ -40,8 +40,8 @@ OdmFormUID = Path(description="The unique id of the ODM Form.")
     response_model=CustomPage[OdmForm],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.allow_exports(
@@ -162,11 +162,11 @@ def get_all_odm_forms(
     response_model=list[Any],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - Invalid field name specified",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_distinct_values_for_header(
@@ -210,8 +210,8 @@ def get_distinct_values_for_header(
     response_model=list[OdmElementWithParentUid],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.allow_exports(
@@ -254,8 +254,8 @@ def get_odm_form_that_belongs_to_study_event(
     response_model=OdmForm,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_odm_form(odm_form_uid: Annotated[str, OdmFormUID]):
@@ -270,8 +270,8 @@ def get_odm_form(odm_form_uid: Annotated[str, OdmFormUID]):
     response_model=dict,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_active_relationships(odm_form_uid: Annotated[str, OdmFormUID]):
@@ -300,11 +300,11 @@ Possible errors:
     response_model=list[OdmForm],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - The ODM Form with the specified 'odm_form_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_odm_form_versions(odm_form_uid: Annotated[str, OdmFormUID]):
@@ -319,6 +319,7 @@ def get_odm_form_versions(odm_form_uid: Annotated[str, OdmFormUID]):
     response_model=OdmForm,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {"description": "Created - The ODM Form was successfully created."},
         400: {
             "model": ErrorResponse,
@@ -327,7 +328,6 @@ def get_odm_form_versions(odm_form_uid: Annotated[str, OdmFormUID]):
             "- The library doesn't allow to add new items.\n",
         },
         409: _generic_descriptions.ERROR_409,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def create_odm_form(
@@ -345,6 +345,7 @@ def create_odm_form(
     response_model=OdmForm,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -357,7 +358,6 @@ def create_odm_form(
             "model": ErrorResponse,
             "description": "Not Found - The ODM Form with the specified 'odm_form_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def edit_odm_form(
@@ -391,6 +391,7 @@ Possible errors:
     response_model=OdmForm,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -403,7 +404,6 @@ Possible errors:
             "- The ODM Form is not in final status.\n"
             "- The ODM Form with the specified 'odm_form_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def create_odm_form_version(odm_form_uid: Annotated[str, OdmFormUID]):
@@ -420,6 +420,7 @@ def create_odm_form_version(odm_form_uid: Annotated[str, OdmFormUID]):
     response_model=OdmForm,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -431,7 +432,6 @@ def create_odm_form_version(odm_form_uid: Annotated[str, OdmFormUID]):
             "model": ErrorResponse,
             "description": "Not Found - The ODM Form with the specified 'odm_form_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def approve_odm_form(odm_form_uid: Annotated[str, OdmFormUID]):
@@ -446,6 +446,7 @@ def approve_odm_form(odm_form_uid: Annotated[str, OdmFormUID]):
     response_model=OdmForm,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -456,7 +457,6 @@ def approve_odm_form(odm_form_uid: Annotated[str, OdmFormUID]):
             "model": ErrorResponse,
             "description": "Not Found - The ODM Form with the specified 'odm_form_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def inactivate_odm_form(odm_form_uid: Annotated[str, OdmFormUID]):
@@ -471,6 +471,7 @@ def inactivate_odm_form(odm_form_uid: Annotated[str, OdmFormUID]):
     response_model=OdmForm,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -481,7 +482,6 @@ def inactivate_odm_form(odm_form_uid: Annotated[str, OdmFormUID]):
             "model": ErrorResponse,
             "description": "Not Found - The ODM Form with the specified 'odm_form_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def reactivate_odm_form(odm_form_uid: Annotated[str, OdmFormUID]):
@@ -498,6 +498,7 @@ def reactivate_odm_form(odm_form_uid: Annotated[str, OdmFormUID]):
     response_model=OdmForm,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {
             "description": "Created - The activity groups were successfully added to the ODM Form."
         },
@@ -509,7 +510,6 @@ def reactivate_odm_form(odm_form_uid: Annotated[str, OdmFormUID]):
             "model": ErrorResponse,
             "description": "Not Found - The activity groups with the specified 'odm_form_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def add_activity_groups_to_odm_form(
@@ -539,6 +539,7 @@ def add_activity_groups_to_odm_form(
     response_model=OdmForm,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {
             "description": "Created - The item groups were successfully added to the ODM Form."
         },
@@ -550,7 +551,6 @@ def add_activity_groups_to_odm_form(
             "model": ErrorResponse,
             "description": "Not Found - The item groups with the specified 'odm_form_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def add_item_groups_to_odm_form(
@@ -578,6 +578,7 @@ def add_item_groups_to_odm_form(
     response_model=OdmForm,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {
             "description": "Created - The ODM Vendor Elements were successfully added to the ODM Form."
         },
@@ -589,7 +590,6 @@ def add_item_groups_to_odm_form(
             "model": ErrorResponse,
             "description": "Not Found - The ODM Vendor Elements with the specified 'odm_form_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def add_vendor_elements_to_odm_form(
@@ -619,6 +619,7 @@ def add_vendor_elements_to_odm_form(
     response_model=OdmForm,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {
             "description": "Created - The ODM Vendor Attributes were successfully added to the ODM Form."
         },
@@ -630,7 +631,6 @@ def add_vendor_elements_to_odm_form(
             "model": ErrorResponse,
             "description": "Not Found - The ODM Vendor Attributes with the specified 'odm_form_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def add_vendor_attributes_to_odm_form(
@@ -659,6 +659,7 @@ def add_vendor_attributes_to_odm_form(
     response_model=OdmForm,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {
             "description": "Created - The ODM Vendor Element attributes were successfully added to the ODM Form."
         },
@@ -670,7 +671,6 @@ def add_vendor_attributes_to_odm_form(
             "model": ErrorResponse,
             "description": "Not Found - The ODM Vendor Element attributes with the specified 'odm_form_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def add_vendor_element_attributes_to_odm_form(
@@ -699,6 +699,7 @@ def add_vendor_element_attributes_to_odm_form(
     response_model=OdmForm,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {
             "description": "Created - The ODM Vendors were successfully added to the ODM Form."
         },
@@ -710,7 +711,6 @@ def add_vendor_element_attributes_to_odm_form(
             "model": ErrorResponse,
             "description": "Not Found - The ODM Vendors with the specified 'odm_form_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def manage_vendors_of_odm_form(
@@ -730,6 +730,7 @@ def manage_vendors_of_odm_form(
     response_model=None,
     status_code=204,
     responses={
+        403: _generic_descriptions.ERROR_403,
         204: {"description": "No Content - The ODM Form was successfully deleted."},
         400: {
             "model": ErrorResponse,
@@ -742,7 +743,6 @@ def manage_vendors_of_odm_form(
             "model": ErrorResponse,
             "description": "Not Found - An ODM Form with the specified 'odm_form_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def delete_odm_form(odm_form_uid: Annotated[str, OdmFormUID]):

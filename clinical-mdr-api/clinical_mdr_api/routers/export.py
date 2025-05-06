@@ -177,7 +177,7 @@ def _export_to_xml(data: dict, headers: list[Any]):
 # pylint: disable=unused-argument
 def _export_to_yaml(data: BaseModel, headers: list[Any]):
     """Export given data to YAML."""
-    return yaml.dump(data.dict())
+    return yaml.dump(data.model_dump())
 
 
 def export(export_format: str, data: dict, export_definition: dict, *args, **kwargs):

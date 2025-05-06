@@ -14,3 +14,5 @@ As this is a very complicated part of the application, this have been structured
 - 11 study-design-cell.feature
 - 12 study-design-catogorisation.feature (to be made)
 - 13 study-cohorts.feature
+
+

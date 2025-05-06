@@ -208,7 +208,9 @@ class CTTermGenericService(Generic[_AggregateRootType], abc.ABC):
             )
 
             versions = [
-                self._transform_aggregate_root_to_pydantic_model(codelist_ar).dict()
+                self._transform_aggregate_root_to_pydantic_model(
+                    codelist_ar
+                ).model_dump()
                 for codelist_ar in all_versions
             ]
             return calculate_diffs(versions, self.version_class)

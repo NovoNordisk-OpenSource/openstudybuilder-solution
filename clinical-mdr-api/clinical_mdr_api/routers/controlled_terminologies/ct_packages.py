@@ -31,8 +31,8 @@ CTCodelistUid = Path(description="The unique id of the CTCodelist")
     response_model=list[CTPackage],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_packages(
@@ -71,8 +71,8 @@ def get_packages(
     response_model=CTPackageChanges,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_packages_changes_between_codelists_and_terms(
@@ -107,8 +107,8 @@ def get_packages_changes_between_codelists_and_terms(
     response_model=CTPackageChangesSpecificCodelist,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_packages_changes_between_codelist_and_all_associated_terms(
@@ -145,8 +145,8 @@ def get_packages_changes_between_codelist_and_all_associated_terms(
     response_model=CTPackageDates,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_package_dates(catalogue_name: str):
@@ -161,6 +161,7 @@ def get_package_dates(catalogue_name: str):
     response_model=CTPackage,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {"description": "Created - The sponsor package was successfully created."},
         400: {
             "model": ErrorResponse,
@@ -171,7 +172,6 @@ def get_package_dates(catalogue_name: str):
             "description": "Entity not found - Reasons include: \n"
             "- The parent package doesn't exist.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def create(

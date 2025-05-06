@@ -14,10 +14,10 @@ from clinical_mdr_api.tests.utils.checks import (
     assert_response_content_type,
     assert_response_status_code,
 )
+from clinical_mdr_api.tests.utils.utils import get_db_name
 from common.config import STUDY_ENDPOINT_TP_NAME
 
-TEST_DB_NAME = __name__.rsplit(".", maxsplit=1)[-1].replace("_", "-")
-
+TEST_DB_NAME = get_db_name(__name__)
 log = logging.getLogger(__name__)
 
 

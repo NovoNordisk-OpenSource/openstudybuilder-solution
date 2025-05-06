@@ -179,14 +179,16 @@ def test_version_display1(api_client):
     }
     assert res[0]["parameter_terms"] == []
     assert res[0]["library"] == {"name": "Test library", "is_editable": True}
-    assert res[0]["changes"] == {
-        "start_date": True,
-        "end_date": True,
-        "status": True,
-        "version": True,
-        "change_description": True,
-        "possible_actions": True,
-    }
+    assert set(res[0]["changes"]) == set(
+        [
+            "start_date",
+            "end_date",
+            "status",
+            "version",
+            "change_description",
+            "possible_actions",
+        ]
+    )
     assert res[1]["uid"] == "Timeframe_000001"
     assert res[1]["name"] == "Test_Name_Template"
     assert res[1]["name_plain"] == "Test_Name_Template"
@@ -207,7 +209,7 @@ def test_version_display1(api_client):
     }
     assert res[1]["parameter_terms"] == []
     assert res[1]["library"] == {"name": "Test library", "is_editable": True}
-    assert res[1]["changes"] == {}
+    assert res[1]["changes"] == []
 
 
 def test_patching_aproved_timeframe_with_missing_field(api_client):
@@ -237,9 +239,27 @@ def test_patching_aproved_timeframe_with_missing_field(api_client):
 
     assert res["detail"] == [
         {
+            "type": "missing",
             "loc": ["body", "change_description"],
-            "msg": "field required",
-            "type": "value_error.missing",
+            "msg": "Field required",
+            "input": {
+                "name": "test{test-uid}",
+                "parameter_terms": [
+                    {
+                        "name": "Intervention",
+                        "terms": [
+                            {
+                                "uid": "TemplateParameter_000003",
+                                "type": "Intervention",
+                                "name": "Intervention",
+                                "value": "diabetes",
+                                "index": 1,
+                            }
+                        ],
+                        "conjunction": "",
+                    }
+                ],
+            },
         }
     ]
 

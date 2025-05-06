@@ -4,14 +4,17 @@
       <span class="dialog-title">{{ title }}</span>
       <v-spacer />
     </v-card-title>
-    <v-card-text style="margin-bottom: 70px;">
+    <v-card-text style="margin-bottom: 70px">
       <v-data-table-server
         :headers="cleanedHeaders"
-        :items="items"
+        :items="historyItems"
+        class="history_headers"
         :items-length="itemsTotal"
+        disable-sort
         data-cy="data-table"
         density="compact"
-        @update:options="(options) => emit('refresh', options)"
+        :loading="loading"
+        @update:options="(options) => refreshHistoryData(options)"
       >
         <template #item="{ item }">
           <tr>
@@ -23,9 +26,9 @@
               <div :class="getCellClasses(header, item)">
                 <span
                   v-if="htmlFields && htmlFields.indexOf(header.key) !== -1"
-                  v-html="getDisplay(item, header.key)"
+                  v-html="getDisplay(item, header)"
                 />
-                <span v-else>{{ getDisplay(item, header.key) }}</span>
+                <span v-else>{{ getDisplay(item, header) }}</span>
               </div>
             </td>
           </tr>
@@ -84,13 +87,17 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import DataTableExportButton from '@/components/tools/DataTableExportButton.vue'
 import { DateTime } from 'luxon'
 
 const { t } = useI18n()
 const props = defineProps({
+  loading: {
+    type: Boolean,
+    default: false,
+  },
   headers: {
     type: Array,
     default: () => [],
@@ -150,6 +157,25 @@ const props = defineProps({
 })
 const emit = defineEmits(['close', 'refresh'])
 
+const historyItems = ref([])
+const dataOptions = ref({ itemsPerPage: 10, page: 1 })
+
+watch(
+  () => props.items,
+  () => {
+    getPaginatedHistoryData()
+  },
+  { immediate: true }
+)
+
+watch(
+  () => dataOptions.value,
+  () => {
+    getPaginatedHistoryData()
+  },
+  { immediate: true }
+)
+
 const cleanedHeaders = computed(() => {
   let result = []
   const excludedHeaders = ['actions', 'author_username', 'start_date']
@@ -195,6 +221,26 @@ const exportFullName = computed(() => {
   return result
 })
 
+function refreshHistoryData(options) {
+  dataOptions.value = options
+  emit('refresh', options)
+}
+
+function getPaginatedHistoryData() {
+  if (props.items.length > dataOptions.value.itemsPerPage) {
+    historyItems.value = JSON.parse(
+      JSON.stringify(
+        props.items.slice(
+          dataOptions.value.itemsPerPage * (dataOptions.value.page - 1),
+          dataOptions.value.itemsPerPage * dataOptions.value.page
+        )
+      )
+    )
+  } else {
+    historyItems.value = props.items
+  }
+}
+
 function getHighlight(header, item) {
   if (item) {
     if (
@@ -203,11 +249,11 @@ function getHighlight(header, item) {
     ) {
       return false
     } else if (item.changes) {
-      if (header.key.indexOf('.') !== -1) {
-        return item.changes[header.key.substring(0, header.key.indexOf('.'))]
-      } else {
-        return item.changes[header.key]
+      let fieldName = header.key
+      if (fieldName.indexOf('.') !== -1) {
+        fieldName = fieldName.substring(0, fieldName.indexOf('.'))
       }
+      return item.changes.indexOf(fieldName) !== -1
     } else {
       return false
     }
@@ -234,7 +280,8 @@ function getTextClass(item) {
     return ''
   }
 }
-function getDisplay(item, accessor) {
+function getDisplay(item, header) {
+  const accessor = header.key
   const accessList = accessor.split('.')
   if (item) {
     let value = item
@@ -250,6 +297,9 @@ function getDisplay(item, accessor) {
           .setLocale('en')
           .toLocaleString(DateTime.DATETIME_MED)
       }
+    }
+    if (header.historyFilter) {
+      value = header.historyFilter(value)
     }
     return value ? value.toString() : value
   }

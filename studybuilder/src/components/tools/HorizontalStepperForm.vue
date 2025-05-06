@@ -62,7 +62,7 @@
           {{ $t('_global.cancel') }}
         </v-btn>
       </v-col>
-      <v-spacer/>
+      <v-spacer />
       <div v-if="currentStep === 1">
         <slot name="actions" />
       </div>
@@ -92,9 +92,7 @@
               {{ $t('_global.continue') }}
             </v-btn>
           </v-col>
-          <v-col
-            v-if="currentStep >= steps.length || saveFromAnyStep"
-          >
+          <v-col v-if="currentStep >= steps.length || saveFromAnyStep">
             <v-btn
               data-cy="save-button"
               color="secondary"
@@ -126,13 +124,14 @@
 </template>
 
 <script setup>
-import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, ref, watch, inject } from 'vue'
 import { useI18n } from 'vue-i18n'
 import HelpButton from '@/components/tools/HelpButton.vue'
 import HelpButtonWithPanels from '@/components/tools/HelpButtonWithPanels.vue'
 import ConfirmDialog from '@/components/tools/ConfirmDialog.vue'
 import { useFormStore } from '@/stores/form'
 
+const eventBusEmit = inject('eventBusEmit')
 const { t } = useI18n()
 const props = defineProps({
   title: {
@@ -221,9 +220,15 @@ onMounted(() => {
 function copyUrl() {
   navigator.clipboard.writeText(props.formUrl)
 }
+
+function closeWithNoChange() {
+  close()
+  eventBusEmit('notification', { type: 'info', msg: t('_global.no_changes') })
+}
+
 async function cancel() {
   if (formStore.isEmpty || formStore.isEqual(props.editData)) {
-    close()
+    closeWithNoChange()
   } else {
     const options = {
       type: 'warning',
@@ -288,6 +293,12 @@ defineExpose({
 </script>
 
 <style lang="scss">
+.v-stepper-header {
+  box-shadow: unset !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 10px;
+  margin: 0 10px;
+}
 .v-stepper-item {
   font-size: large;
   color: rgba(0, 0, 0, 0.6);
@@ -297,7 +308,6 @@ defineExpose({
   }
 
   &--selected {
-    background: rgb(233, 233, 233);
     color: rgb(var(--v-theme-secondary)) !important;
 
     .v-avatar {

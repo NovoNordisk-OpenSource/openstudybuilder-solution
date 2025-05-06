@@ -36,17 +36,17 @@
           {{ $filters.date(item.start_date) }}
         </template>
         <template #[`item.automatically_created`]="{ item }">
-        <div v-if="editMode">
-          <v-checkbox
-            v-model="item.automatically_created"
-            :disabled="item.disabled && itemsDisabled"
-            @update:model-value="disableOthers(item)"
-          />
-        </div>
-        <div v-else>
-          {{ $filters.yesno(item.automatically_created) }}
-        </div>
-      </template>
+          <div v-if="editMode">
+            <v-checkbox
+              v-model="item.automatically_created"
+              :disabled="item.disabled && itemsDisabled"
+              @update:model-value="disableOthers(item)"
+            />
+          </div>
+          <div v-else>
+            {{ $filters.yesno(item.automatically_created) }}
+          </div>
+        </template>
         <template #bottom />
       </v-data-table>
     </v-card-text>

@@ -1098,9 +1098,18 @@ function isStudyActivityRequested(activity) {
 function isStudyActivitySelected(studyActivity) {
   let selected
   if (!selected && studyActivities.value.length) {
-    selected = studyActivities.value.find(
-      (item) => item.activity.uid === studyActivity.activity.uid
-    )
+    try {
+      selected = studyActivities.value.find(
+        (item) =>
+          item.activity.uid === studyActivity.activity.uid &&
+            item.study_activity_group.activity_group_uid ===
+              studyActivity.study_activity_group.activity_group_uid &&
+            item.study_activity_subgroup.activity_subgroup_uid ===
+              studyActivity.study_activity_subgroup.activity_subgroup_uid
+      )
+    } catch (error) {
+      console.error(error)
+    }
   }
   return selected !== undefined
 }
@@ -1149,10 +1158,17 @@ async function batchCreateStudyActivities() {
       content: payload,
     })
   }
-  await study.studyActivityBatchOperations(
+  const resp = await study.studyActivityBatchOperations(
     studiesGeneralStore.selectedStudy.uid,
     operations
   )
+  const errors = []
+  for (const operationResp of resp.data) {
+    if (operationResp.response_code >= 400) {
+      errors.push(operationResp.content.message)
+    }
+  }
+  return errors
 }
 
 async function exchangeStudyActivity() {
@@ -1180,7 +1196,7 @@ async function submit() {
       resetLoading.value += 1
       return
     }
-    if (_isEmpty(form.value.activity_groupings[0])) {
+    if (_isEmpty(form.value.activity_groupings[0]) || !form.value.activity_groupings[0].activity_group_uid) {
       delete form.value.activity_groupings
     }
     const createdActivity = await activitiesApi.create(form.value, 'activities')
@@ -1244,9 +1260,10 @@ async function submit() {
       }
     }
   }
+  let errors = []
   try {
     if (!props.exchangeMode) {
-      await batchCreateStudyActivities()
+      errors = await batchCreateStudyActivities()
     } else {
       await exchangeStudyActivity()
     }
@@ -1254,10 +1271,19 @@ async function submit() {
     stepper.value.loading = false
     return
   }
-  eventBusEmit('notification', {
-    type: 'success',
-    msg: successMessage,
-  })
+  if (errors.length) {
+    eventBusEmit('notification', {
+      type: 'error',
+      timeout: 10000,
+      title: t('_global.multi_error_title'),
+      msg: errors,
+    })
+  } else {
+    eventBusEmit('notification', {
+      type: 'success',
+      msg: successMessage,
+    })
+  }
   emit('added')
   close()
 }

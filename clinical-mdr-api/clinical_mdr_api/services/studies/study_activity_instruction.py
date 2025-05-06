@@ -63,7 +63,7 @@ class StudyActivityInstructionService(StudySelectionMixin):
             "has_after__audit_trail",
         )
         items = [
-            StudyActivityInstruction.from_orm(sai_node)
+            StudyActivityInstruction.model_validate(sai_node)
             for sai_node in ListDistinct(query.resolve_subgraph()).distinct()
         ]
 
@@ -97,7 +97,7 @@ class StudyActivityInstructionService(StudySelectionMixin):
             }
 
         study_activity_instructions_ogm: list[StudyActivityInstruction] = [
-            StudyActivityInstruction.from_orm(sai_node)
+            StudyActivityInstruction.model_validate(sai_node)
             for sai_node in ListDistinct(
                 StudyActivityInstructionNeoModel.nodes.fetch_relations(
                     "study_activity",
@@ -131,7 +131,7 @@ class StudyActivityInstructionService(StudySelectionMixin):
         self, study_uid: str, study_activity_uid: str
     ) -> list[StudyActivityInstruction]:
         return [
-            StudyActivityInstruction.from_orm(sas_node)
+            StudyActivityInstruction.model_validate(sas_node)
             for sas_node in ListDistinct(
                 StudyActivityInstructionNeoModel.nodes.fetch_relations(
                     "study_activity",
@@ -244,11 +244,11 @@ class StudyActivityInstructionService(StudySelectionMixin):
                     raise exceptions.MethodNotAllowedException(method=operation.method)
                 result["response_code"] = response_code
                 if item:
-                    result["content"] = item.dict()
+                    result["content"] = item.model_dump()
                 results.append(StudyActivityInstructionBatchOutput(**result))
             except exceptions.MDRApiBaseException as error:
                 results.append(
-                    StudyActivityInstructionBatchOutput.construct(
+                    StudyActivityInstructionBatchOutput.model_construct(
                         response_code=error.status_code,
                         content=BatchErrorResponse(message=str(error)),
                     )

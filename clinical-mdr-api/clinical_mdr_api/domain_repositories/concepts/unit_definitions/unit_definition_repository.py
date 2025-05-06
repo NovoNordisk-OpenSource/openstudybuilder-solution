@@ -46,7 +46,7 @@ class UnitDefinitionRepository(ConceptGenericRepository[UnitDefinitionAR]):
     return_model = UnitDefinitionModel
 
     def specific_alias_clause(
-        self, only_specific_status: str = ObjectStatus.LATEST.name
+        self, only_specific_status: str = ObjectStatus.LATEST.name, **kwargs
     ) -> str:
         return """
         WITH *,
@@ -437,3 +437,19 @@ class UnitDefinitionRepository(ConceptGenericRepository[UnitDefinitionAR]):
         items, _ = db.cypher_query(cypher_query, {"name": name})
 
         return len(items) > 0
+
+    def get_dimension_names_by_unit_definition_uids(
+        self,
+        unit_definition_uids: list[str],
+    ) -> list[str]:
+        cypher_query = """
+MATCH (udr:UnitDefinitionRoot)-[:LATEST]->(udv:UnitDefinitionValue)
+WHERE udr.uid IN $unit_definition_uids
+MATCH (udv)-[:HAS_CT_DIMENSION]->(:CTTermRoot)-[:HAS_NAME_ROOT]->(CTTermNameRoot)-[:LATEST]->(ctnv:CTTermNameValue)
+RETURN ctnv.name
+"""
+
+        items, _ = db.cypher_query(
+            cypher_query, {"unit_definition_uids": unit_definition_uids}
+        )
+        return [item[0] for item in items]

@@ -3,6 +3,7 @@ from typing import cast
 from neomodel.sync_.match import (
     Collect,
     Last,
+    NodeNameResolver,
     Optional,
     RawCypher,
     RelationNameResolver,
@@ -53,7 +54,7 @@ class CTConfigRepository(LibraryItemRepositoryImplBase[CTConfigAR]):
         return_study_count: bool | None = False,
     ) -> list[CTConfigOGM]:
         all_configurations = [
-            CTConfigOGM.from_orm(sas_node)
+            CTConfigOGM.model_validate(sas_node)
             for sas_node in (
                 self.root_class.nodes.fetch_relations(
                     "has_latest_value",
@@ -77,6 +78,7 @@ class CTConfigRepository(LibraryItemRepositoryImplBase[CTConfigAR]):
                     )
                     .annotate(latest_version=Last(Collect("has_version"))),
                     ["latest_version"],
+                    initial_context=[NodeNameResolver("self")],
                 )
                 .order_by("uid")
                 .resolve_subgraph()

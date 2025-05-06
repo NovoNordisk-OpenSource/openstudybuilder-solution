@@ -39,8 +39,8 @@ OdmItemUID = Path(description="The unique id of the ODM Item.")
     response_model=CustomPage[OdmItem],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.allow_exports(
@@ -177,11 +177,11 @@ def get_all_odm_items(
     response_model=list[Any],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - Invalid field name specified",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_distinct_values_for_header(
@@ -224,8 +224,8 @@ def get_distinct_values_for_header(
     response_model=list[OdmElementWithParentUid],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_odm_items_that_belongs_to_item_group():
@@ -240,8 +240,8 @@ def get_odm_items_that_belongs_to_item_group():
     response_model=OdmItem,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_odm_item(odm_item_uid: Annotated[str, OdmItemUID]):
@@ -256,8 +256,8 @@ def get_odm_item(odm_item_uid: Annotated[str, OdmItemUID]):
     response_model=dict,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_active_relationships(odm_item_uid: Annotated[str, OdmItemUID]):
@@ -286,11 +286,11 @@ Possible errors:
     response_model=list[OdmItem],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - The ODM Item with the specified 'odm_item_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_odm_item_versions(odm_item_uid: Annotated[str, OdmItemUID]):
@@ -305,6 +305,7 @@ def get_odm_item_versions(odm_item_uid: Annotated[str, OdmItemUID]):
     response_model=OdmItem,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {"description": "Created - The ODM Item was successfully created."},
         400: {
             "model": ErrorResponse,
@@ -313,7 +314,6 @@ def get_odm_item_versions(odm_item_uid: Annotated[str, OdmItemUID]):
             "- The library doesn't allow to add new items.\n",
         },
         409: _generic_descriptions.ERROR_409,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def create_odm_item(odm_item_create_input: Annotated[OdmItemPostInput, Body()]):
@@ -328,6 +328,7 @@ def create_odm_item(odm_item_create_input: Annotated[OdmItemPostInput, Body()]):
     response_model=OdmItem,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -340,7 +341,6 @@ def create_odm_item(odm_item_create_input: Annotated[OdmItemPostInput, Body()]):
             "model": ErrorResponse,
             "description": "Not Found - The ODM Item with the specified 'odm_item_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def edit_odm_item(
@@ -374,6 +374,7 @@ Possible errors:
     response_model=OdmItem,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -386,7 +387,6 @@ Possible errors:
             "- The ODM Item is not in final status.\n"
             "- The ODM Item with the specified 'odm_item_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def create_odm_item_version(odm_item_uid: Annotated[str, OdmItemUID]):
@@ -403,6 +403,7 @@ def create_odm_item_version(odm_item_uid: Annotated[str, OdmItemUID]):
     response_model=OdmItem,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -414,7 +415,6 @@ def create_odm_item_version(odm_item_uid: Annotated[str, OdmItemUID]):
             "model": ErrorResponse,
             "description": "Not Found - The ODM Item with the specified 'odm_item_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def approve_odm_item(odm_item_uid: Annotated[str, OdmItemUID]):
@@ -429,6 +429,7 @@ def approve_odm_item(odm_item_uid: Annotated[str, OdmItemUID]):
     response_model=OdmItem,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -439,7 +440,6 @@ def approve_odm_item(odm_item_uid: Annotated[str, OdmItemUID]):
             "model": ErrorResponse,
             "description": "Not Found - The ODM Item with the specified 'odm_item_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def inactivate_odm_item(odm_item_uid: Annotated[str, OdmItemUID]):
@@ -454,6 +454,7 @@ def inactivate_odm_item(odm_item_uid: Annotated[str, OdmItemUID]):
     response_model=OdmItem,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -464,7 +465,6 @@ def inactivate_odm_item(odm_item_uid: Annotated[str, OdmItemUID]):
             "model": ErrorResponse,
             "description": "Not Found - The ODM Item with the specified 'odm_item_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def reactivate_odm_item(odm_item_uid: Annotated[str, OdmItemUID]):
@@ -481,6 +481,7 @@ def reactivate_odm_item(odm_item_uid: Annotated[str, OdmItemUID]):
     response_model=OdmItem,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {
             "description": "Created - The activity was successfully added to the ODM Item."
         },
@@ -492,7 +493,6 @@ def reactivate_odm_item(odm_item_uid: Annotated[str, OdmItemUID]):
             "model": ErrorResponse,
             "description": "Not Found - The activity with the specified 'odm_item_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def add_activity_to_odm_item(
@@ -520,6 +520,7 @@ def add_activity_to_odm_item(
     response_model=OdmItem,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {
             "description": "Created - The ODM Vendor Elements were successfully added to the ODM Item."
         },
@@ -531,7 +532,6 @@ def add_activity_to_odm_item(
             "model": ErrorResponse,
             "description": "Not Found - The ODM Vendor Elements with the specified 'odm_item_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def add_vendor_elements_to_odm_item(
@@ -561,6 +561,7 @@ def add_vendor_elements_to_odm_item(
     response_model=OdmItem,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {
             "description": "Created - The ODM Vendor Attributes were successfully added to the ODM Item."
         },
@@ -572,7 +573,6 @@ def add_vendor_elements_to_odm_item(
             "model": ErrorResponse,
             "description": "Not Found - The ODM Vendor Attributes with the specified 'odm_item_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def add_vendor_attributes_to_odm_item(
@@ -600,6 +600,7 @@ def add_vendor_attributes_to_odm_item(
     response_model=OdmItem,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {
             "description": "Created - The ODM Vendor Element attributes were successfully added to the ODM Item."
         },
@@ -611,7 +612,6 @@ def add_vendor_attributes_to_odm_item(
             "model": ErrorResponse,
             "description": "Not Found - The ODM Vendor Element attributes with the specified 'odm_item_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def add_vendor_element_attributes_to_odm_item(
@@ -639,6 +639,7 @@ def add_vendor_element_attributes_to_odm_item(
     response_model=OdmItem,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {
             "description": "Created - The ODM Vendors were successfully added to the ODM Item."
         },
@@ -650,7 +651,6 @@ def add_vendor_element_attributes_to_odm_item(
             "model": ErrorResponse,
             "description": "Not Found - The ODM Vendors with the specified 'odm_item_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def manage_vendors_of_odm_item_group(
@@ -670,6 +670,7 @@ def manage_vendors_of_odm_item_group(
     response_model=None,
     status_code=204,
     responses={
+        403: _generic_descriptions.ERROR_403,
         204: {"description": "No Content - The ODM Item was successfully deleted."},
         400: {
             "model": ErrorResponse,
@@ -682,7 +683,6 @@ def manage_vendors_of_odm_item_group(
             "model": ErrorResponse,
             "description": "Not Found - An ODM Item with the specified 'odm_item_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def delete_odm_item(odm_item_uid: Annotated[str, OdmItemUID]):

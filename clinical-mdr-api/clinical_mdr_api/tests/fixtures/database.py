@@ -20,6 +20,7 @@ from clinical_mdr_api.models.clinical_programmes.clinical_programme import (
 from clinical_mdr_api.models.projects.project import Project
 from clinical_mdr_api.tests.integration.utils.data_library import inject_base_data
 from clinical_mdr_api.tests.integration.utils.utils import LIBRARY_NAME, TestUtils
+from clinical_mdr_api.tests.utils.utils import get_db_name
 from common import config
 
 __all__ = ["temp_database", "base_data", "temp_database_populated"]
@@ -35,7 +36,7 @@ def temp_database(request) -> str:
     # this import results to cypher queries which I don't want to run on the default database
     from clinical_mdr_api.routers.admin import clear_caches
 
-    db_name = request.module.__name__.rsplit(".", 1)[-1].replace("_", "-")
+    db_name = get_db_name(request.module.__name__)
     log.info(
         "%s fixture: using temporary database: %s",
         request.fixturename,

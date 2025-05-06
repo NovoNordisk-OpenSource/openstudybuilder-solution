@@ -11,12 +11,13 @@ const _axios = axios.create()
 _axios.interceptors.request.use(
   async function (config) {
     const studiesGeneralStore = useStudiesGeneralStore()
-    if(config.method === 'get' && config.url.indexOf('studies/') !== -1) {
+    if (config.method === 'get' && config.url.indexOf('studies/') !== -1) {
       if (config.params) {
-        config.params.study_value_version = studiesGeneralStore.selectedStudyVersion
+        config.params.study_value_version =
+          studiesGeneralStore.selectedStudyVersion
       } else {
         config.params = {
-          study_value_version: studiesGeneralStore.selectedStudyVersion
+          study_value_version: studiesGeneralStore.selectedStudyVersion,
         }
       }
     }

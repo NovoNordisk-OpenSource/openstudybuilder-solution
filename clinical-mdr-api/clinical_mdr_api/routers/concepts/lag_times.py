@@ -39,8 +39,8 @@ Possible errors:
     response_model=CustomPage[LagTime],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_lag_times(
@@ -97,11 +97,11 @@ def get_lag_times(
     response_model=list[Any],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - Invalid field name specified",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_distinct_values_for_header(
@@ -154,8 +154,8 @@ Possible errors:
     response_model=LagTime,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_lag_time(lag_time_uid: Annotated[str, LagTimeUID]):
@@ -180,6 +180,7 @@ Possible errors:
     response_model=LagTime,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {"description": "Created - The lag time was successfully created."},
         400: {
             "model": ErrorResponse,
@@ -187,7 +188,6 @@ Possible errors:
             "- The library doesn't exist.\n"
             "- The library doesn't allow to add new items.\n",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def create(lag_time_create_input: Annotated[LagTimePostInput, Body()]):

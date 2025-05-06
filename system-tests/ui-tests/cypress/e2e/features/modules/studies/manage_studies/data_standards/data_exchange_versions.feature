@@ -1,4 +1,5 @@
-@REQ_ID:<new> @pending_implementation
+@REQ_ID:2866939
+@pending_implementation
 Feature: Studies - Study Data Exchange Standard Versions
 
     Background: User must be logged in

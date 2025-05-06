@@ -4,13 +4,13 @@
 ## 1. Indexes and Constraints
 -------------------------------------
 ### Change Description
-- Re-create all db indexes and constraints according to [db schema definition](https://novonordiskit.visualstudio.com/Clinical-MDR/_git/neo4j-mdr-db?path=/db_schema.py&version=GBmain&_a=contents).
+- Re-create all db indexes and constraints according to [db schema definition](https://orgremoved.visualstudio.com/Clinical-MDR/_git/neo4j-mdr-db?path=/db_schema.py&version=GBmain&_a=contents).
 
 
 ## 2. CT Config Values (Study Fields Configuration)
 -------------------------------------  
 ### Change Description
-- Re-create all `CTConfigValue` nodes according to values defined in [this file](https://novonordiskit.visualstudio.com/Clinical-MDR/_git/studybuilder-import?path=/datafiles/configuration/study_fields_configuration.csv).
+- Re-create all `CTConfigValue` nodes according to values defined in [this file](https://orgremoved.visualstudio.com/Clinical-MDR/_git/studybuilder-import?path=/datafiles/configuration/study_fields_configuration.csv).
 
 ### Nodes Affected
 - CTConfigValue
@@ -22,7 +22,7 @@
 - There was a bug that only StudyEpochs from the same Subtype were reordered when some StudyEpoch got deleted/modified or reordered.
 - Actually all StudyEpochs placed after the StudyEpoch that got changed should be reordered.
 
-- [Related PR](https://dev.azure.com/novonordiskit/Clinical-MDR/_git/clinical-mdr-api/pullrequest/110142).
+- [Related PR](https://dev.azure.com/orgremoved/Clinical-MDR/_git/clinical-mdr-api/pullrequest/110142).
 
 ### Nodes Affected
   - `StudyEpoch`
@@ -34,7 +34,7 @@
 - We added a new step in the data model part of the mdr-standards import : when DatasetVariables have a value_list property, we want to create a relationship to the CTTerms holding each of the values in this list
 - The script goes through several steps to guess which CTTerm to link to ; in the end, all DatasetVariables should be linked with exactly as many CTTermRoot nodes as there are values in its Value List.
 
-- [Related PR](https://dev.azure.com/novonordiskit/Clinical-MDR/_git/mdr-standards-import/pullrequest/110315)
+- [Related PR](https://dev.azure.com/orgremoved/Clinical-MDR/_git/mdr-standards-import/pullrequest/110315)
 
 ### Relationships Created
   - `(:DatasetVariableInstance)-[:REFERENCES_TERM]->(:CTTermRoot)`
@@ -47,7 +47,7 @@
 - If a StudyField Deletion is not leaving a Last Delete node, then the last delete node is added and the StudyAction:Delete is refactored 
 - The Migration will let the Deleted StudyFields remained disconnected from StudyValue node if it's not the case
 
-- [Related PR](https://dev.azure.com/novonordiskit/Clinical-MDR/_git/db-schema-migration/pullrequest/109564).
+- [Related PR](https://dev.azure.com/orgremoved/Clinical-MDR/_git/db-schema-migration/pullrequest/109564).
 
 ### Nodes Affected
   - `StudyField`
@@ -60,7 +60,7 @@
 - This migration adds the missing relationships, to ensure that the latest version for each status
   has a corresponding LATEST_nnnn relationship.
 
-- [Related PR](https://dev.azure.com/novonordiskit/Clinical-MDR/_git/clinical-mdr-api/pullrequest/114648).
+- [Related PR](https://dev.azure.com/orgremoved/Clinical-MDR/_git/clinical-mdr-api/pullrequest/114648).
 
 ### Relationships Created
   - `(:nnnRoot)-[:LATEST_DRAFT]->(:nnnValue)`
@@ -180,3 +180,4 @@ removes incorrectly migrated StudyActivityInstances as these are not used in pro
   - `ActivityInstanceRoot`
   - `ActivityInstanceValue`
   - `ActivityItem`
+

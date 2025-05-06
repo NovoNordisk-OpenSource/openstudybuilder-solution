@@ -31,7 +31,7 @@ class StudySelectionActivityVO(study_selection_base.StudySelectionBaseVO):
     study_soa_group_uid: str
     study_soa_group_order: int | None
     soa_group_term_uid: str
-    activity_order: int | None
+    order: int | None
     show_activity_in_protocol_flowchart: bool
     show_activity_group_in_protocol_flowchart: bool
     show_activity_subgroup_in_protocol_flowchart: bool
@@ -66,7 +66,7 @@ class StudySelectionActivityVO(study_selection_base.StudySelectionBaseVO):
         show_activity_group_in_protocol_flowchart: bool | None = True,
         show_activity_subgroup_in_protocol_flowchart: bool | None = True,
         show_soa_group_in_protocol_flowchart: bool | None = False,
-        activity_order: int | None = 0,
+        order: int | None = 0,
         study_selection_uid: str | None = None,
         start_date: datetime.datetime | None = None,
         accepted_version: bool = False,
@@ -102,7 +102,7 @@ class StudySelectionActivityVO(study_selection_base.StudySelectionBaseVO):
             study_activity_group_order=study_activity_group_order,
             activity_group_uid=normalize_string(activity_group_uid),
             activity_group_name=normalize_string(activity_group_name),
-            activity_order=activity_order,
+            order=order,
             author_id=normalize_string(author_id),
             author_username=UserInfoService.get_author_username_from_id(author_id),
             accepted_version=accepted_version,
@@ -144,7 +144,7 @@ class StudySelectionActivityAR(study_selection_base.StudySelectionBaseAR):
     _object_type = "activity"
     _object_uid_field = "activity_uid"
     _object_name_field = "activity_name"
-    _order_field_name = "activity_order"
+    _order_field_name = "order"
 
     def validate(self):
         objects = []

@@ -1,7 +1,6 @@
 const { Given, When, Then } = require("@badeball/cypress-cucumber-preprocessor");
 import { getCurrStudyUid } from '../../support/helper_functions'
 
-const checkIfValidationAppears = (locator) => cy.elementContain(locator, "This field is required")
 let visitsCount
 
 Given('The epoch exists in selected study', () => {
@@ -50,10 +49,10 @@ When('The type, contact mode, time reference and timing is not selected in new v
 })
 
 Then('The validation appears under given study details fields', () => {
-    checkIfValidationAppears('visit-type')
-    checkIfValidationAppears('contact-mode')
-    checkIfValidationAppears('time-reference')
-    checkIfValidationAppears('visit-timing')
+    cy.checkIfValidationAppears('visit-type')
+    cy.checkIfValidationAppears('contact-mode')
+    cy.checkIfValidationAppears('time-reference')
+    cy.checkIfValidationAppears('visit-timing')
 })
 
 When('The new Anchor Visit is added', () => {

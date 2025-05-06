@@ -1,0 +1,322 @@
+[
+  {
+    "author_username": null,
+    "start_date": "2025-03-27T12:13:08.562456Z",
+    "study_activity_instance_uid": null,
+    "study_activity_schedule_uid": "StudyActivitySchedule_013221",
+    "study_activity_uid": "StudyActivity_002693",
+    "study_uid": "Study_000052",
+    "study_version": "LATEST on 2025-03-27T13:38:26.159852+00:00",
+    "study_visit_uid": "StudyVisit_000606"
+  },
+  {
+    "author_username": null,
+    "start_date": "2025-03-27T12:13:09.679413Z",
+    "study_activity_instance_uid": null,
+    "study_activity_schedule_uid": "StudyActivitySchedule_013222",
+    "study_activity_uid": "StudyActivity_002694",
+    "study_uid": "Study_000052",
+    "study_version": "LATEST on 2025-03-27T13:38:26.159886+00:00",
+    "study_visit_uid": "StudyVisit_000606"
+  },
+  {
+    "author_username": null,
+    "start_date": "2025-03-27T12:13:10.610754Z",
+    "study_activity_instance_uid": null,
+    "study_activity_schedule_uid": "StudyActivitySchedule_013223",
+    "study_activity_uid": "StudyActivity_002693",
+    "study_uid": "Study_000052",
+    "study_version": "LATEST on 2025-03-27T13:38:26.159895+00:00",
+    "study_visit_uid": "StudyVisit_000596"
+  },
+  {
+    "author_username": null,
+    "start_date": "2025-03-27T12:13:13.100416Z",
+    "study_activity_instance_uid": null,
+    "study_activity_schedule_uid": "StudyActivitySchedule_013224",
+    "study_activity_uid": "StudyActivity_002693",
+    "study_uid": "Study_000052",
+    "study_version": "LATEST on 2025-03-27T13:38:26.159901+00:00",
+    "study_visit_uid": "StudyVisit_000604"
+  },
+  {
+    "author_username": null,
+    "start_date": "2025-03-27T12:13:13.893064Z",
+    "study_activity_instance_uid": null,
+    "study_activity_schedule_uid": "StudyActivitySchedule_013225",
+    "study_activity_uid": "StudyActivity_002693",
+    "study_uid": "Study_000052",
+    "study_version": "LATEST on 2025-03-27T13:38:26.159908+00:00",
+    "study_visit_uid": "StudyVisit_000597"
+  },
+  {
+    "author_username": null,
+    "start_date": "2025-03-27T12:13:14.830918Z",
+    "study_activity_instance_uid": null,
+    "study_activity_schedule_uid": "StudyActivitySchedule_013226",
+    "study_activity_uid": "StudyActivity_002693",
+    "study_uid": "Study_000052",
+    "study_version": "LATEST on 2025-03-27T13:38:26.159915+00:00",
+    "study_visit_uid": "StudyVisit_000602"
+  },
+  {
+    "author_username": null,
+    "start_date": "2025-03-27T12:13:15.445677Z",
+    "study_activity_instance_uid": null,
+    "study_activity_schedule_uid": "StudyActivitySchedule_013227",
+    "study_activity_uid": "StudyActivity_002693",
+    "study_uid": "Study_000052",
+    "study_version": "LATEST on 2025-03-27T13:38:26.159922+00:00",
+    "study_visit_uid": "StudyVisit_000605"
+  },
+  {
+    "author_username": null,
+    "start_date": "2025-03-27T12:13:16.584825Z",
+    "study_activity_instance_uid": null,
+    "study_activity_schedule_uid": "StudyActivitySchedule_013228",
+    "study_activity_uid": "StudyActivity_002693",
+    "study_uid": "Study_000052",
+    "study_version": "LATEST on 2025-03-27T13:38:26.159928+00:00",
+    "study_visit_uid": "StudyVisit_000600"
+  },
+  {
+    "author_username": null,
+    "start_date": "2025-03-27T12:13:17.468583Z",
+    "study_activity_instance_uid": null,
+    "study_activity_schedule_uid": "StudyActivitySchedule_013229",
+    "study_activity_uid": "StudyActivity_002693",
+    "study_uid": "Study_000052",
+    "study_version": "LATEST on 2025-03-27T13:38:26.159934+00:00",
+    "study_visit_uid": "StudyVisit_000598"
+  },
+  {
+    "author_username": null,
+    "start_date": "2025-03-27T12:13:18.031732Z",
+    "study_activity_instance_uid": null,
+    "study_activity_schedule_uid": "StudyActivitySchedule_013230",
+    "study_activity_uid": "StudyActivity_002693",
+    "study_uid": "Study_000052",
+    "study_version": "LATEST on 2025-03-27T13:38:26.159941+00:00",
+    "study_visit_uid": "StudyVisit_000599"
+  },
+  {
+    "author_username": null,
+    "start_date": "2025-03-27T12:13:18.610282Z",
+    "study_activity_instance_uid": null,
+    "study_activity_schedule_uid": "StudyActivitySchedule_013231",
+    "study_activity_uid": "StudyActivity_002693",
+    "study_uid": "Study_000052",
+    "study_version": "LATEST on 2025-03-27T13:38:26.159948+00:00",
+    "study_visit_uid": "StudyVisit_000601"
+  },
+  {
+    "author_username": null,
+    "start_date": "2025-03-27T12:13:19.592029Z",
+    "study_activity_instance_uid": null,
+    "study_activity_schedule_uid": "StudyActivitySchedule_013232",
+    "study_activity_uid": "StudyActivity_002693",
+    "study_uid": "Study_000052",
+    "study_version": "LATEST on 2025-03-27T13:38:26.159953+00:00",
+    "study_visit_uid": "StudyVisit_000603"
+  },
+  {
+    "author_username": null,
+    "start_date": "2025-03-27T12:13:22.259166Z",
+    "study_activity_instance_uid": null,
+    "study_activity_schedule_uid": "StudyActivitySchedule_013233",
+    "study_activity_uid": "StudyActivity_002695",
+    "study_uid": "Study_000052",
+    "study_version": "LATEST on 2025-03-27T13:38:26.159960+00:00",
+    "study_visit_uid": "StudyVisit_000603"
+  },
+  {
+    "author_username": null,
+    "start_date": "2025-03-27T12:13:24.581131Z",
+    "study_activity_instance_uid": null,
+    "study_activity_schedule_uid": "StudyActivitySchedule_013234",
+    "study_activity_uid": "StudyActivity_002696",
+    "study_uid": "Study_000052",
+    "study_version": "LATEST on 2025-03-27T13:38:26.159966+00:00",
+    "study_visit_uid": "StudyVisit_000606"
+  },
+  {
+    "author_username": null,
+    "start_date": "2025-03-27T12:13:33.528661Z",
+    "study_activity_instance_uid": null,
+    "study_activity_schedule_uid": "StudyActivitySchedule_013235",
+    "study_activity_uid": "StudyActivity_002696",
+    "study_uid": "Study_000052",
+    "study_version": "LATEST on 2025-03-27T13:38:26.159972+00:00",
+    "study_visit_uid": "StudyVisit_000603"
+  },
+  {
+    "author_username": null,
+    "start_date": "2025-03-27T12:13:35.171229Z",
+    "study_activity_instance_uid": null,
+    "study_activity_schedule_uid": "StudyActivitySchedule_013236",
+    "study_activity_uid": "StudyActivity_002696",
+    "study_uid": "Study_000052",
+    "study_version": "LATEST on 2025-03-27T13:38:26.159978+00:00",
+    "study_visit_uid": "StudyVisit_000605"
+  },
+  {
+    "author_username": null,
+    "start_date": "2025-03-27T12:13:39.498227Z",
+    "study_activity_instance_uid": null,
+    "study_activity_schedule_uid": "StudyActivitySchedule_013237",
+    "study_activity_uid": "StudyActivity_002697",
+    "study_uid": "Study_000052",
+    "study_version": "LATEST on 2025-03-27T13:38:26.159985+00:00",
+    "study_visit_uid": "StudyVisit_000606"
+  },
+  {
+    "author_username": null,
+    "start_date": "2025-03-27T12:13:40.165707Z",
+    "study_activity_instance_uid": null,
+    "study_activity_schedule_uid": "StudyActivitySchedule_013238",
+    "study_activity_uid": "StudyActivity_002698",
+    "study_uid": "Study_000052",
+    "study_version": "LATEST on 2025-03-27T13:38:26.159991+00:00",
+    "study_visit_uid": "StudyVisit_000606"
+  },
+  {
+    "author_username": null,
+    "start_date": "2025-03-27T12:13:44.108682Z",
+    "study_activity_instance_uid": null,
+    "study_activity_schedule_uid": "StudyActivitySchedule_013239",
+    "study_activity_uid": "StudyActivity_002701",
+    "study_uid": "Study_000052",
+    "study_version": "LATEST on 2025-03-27T13:38:26.159997+00:00",
+    "study_visit_uid": "StudyVisit_000606"
+  },
+  {
+    "author_username": null,
+    "start_date": "2025-03-27T12:13:47.970372Z",
+    "study_activity_instance_uid": null,
+    "study_activity_schedule_uid": "StudyActivitySchedule_013240",
+    "study_activity_uid": "StudyActivity_002699",
+    "study_uid": "Study_000052",
+    "study_version": "LATEST on 2025-03-27T13:38:26.160003+00:00",
+    "study_visit_uid": "StudyVisit_000606"
+  },
+  {
+    "author_username": null,
+    "start_date": "2025-03-27T12:13:50.625157Z",
+    "study_activity_instance_uid": null,
+    "study_activity_schedule_uid": "StudyActivitySchedule_013241",
+    "study_activity_uid": "StudyActivity_002699",
+    "study_uid": "Study_000052",
+    "study_version": "LATEST on 2025-03-27T13:38:26.160009+00:00",
+    "study_visit_uid": "StudyVisit_000603"
+  },
+  {
+    "author_username": null,
+    "start_date": "2025-03-27T12:13:52.312835Z",
+    "study_activity_instance_uid": null,
+    "study_activity_schedule_uid": "StudyActivitySchedule_013242",
+    "study_activity_uid": "StudyActivity_002699",
+    "study_uid": "Study_000052",
+    "study_version": "LATEST on 2025-03-27T13:38:26.160015+00:00",
+    "study_visit_uid": "StudyVisit_000599"
+  },
+  {
+    "author_username": null,
+    "start_date": "2025-03-27T12:13:53.470083Z",
+    "study_activity_instance_uid": null,
+    "study_activity_schedule_uid": "StudyActivitySchedule_013243",
+    "study_activity_uid": "StudyActivity_002699",
+    "study_uid": "Study_000052",
+    "study_version": "LATEST on 2025-03-27T13:38:26.160021+00:00",
+    "study_visit_uid": "StudyVisit_000601"
+  },
+  {
+    "author_username": null,
+    "start_date": "2025-03-27T12:13:54.664729Z",
+    "study_activity_instance_uid": null,
+    "study_activity_schedule_uid": "StudyActivitySchedule_013244",
+    "study_activity_uid": "StudyActivity_002699",
+    "study_uid": "Study_000052",
+    "study_version": "LATEST on 2025-03-27T13:38:26.160027+00:00",
+    "study_visit_uid": "StudyVisit_000596"
+  },
+  {
+    "author_username": null,
+    "start_date": "2025-03-27T12:13:55.700360Z",
+    "study_activity_instance_uid": null,
+    "study_activity_schedule_uid": "StudyActivitySchedule_013245",
+    "study_activity_uid": "StudyActivity_002699",
+    "study_uid": "Study_000052",
+    "study_version": "LATEST on 2025-03-27T13:38:26.160032+00:00",
+    "study_visit_uid": "StudyVisit_000604"
+  },
+  {
+    "author_username": null,
+    "start_date": "2025-03-27T12:13:57.023789Z",
+    "study_activity_instance_uid": null,
+    "study_activity_schedule_uid": "StudyActivitySchedule_013246",
+    "study_activity_uid": "StudyActivity_002699",
+    "study_uid": "Study_000052",
+    "study_version": "LATEST on 2025-03-27T13:38:26.160038+00:00",
+    "study_visit_uid": "StudyVisit_000597"
+  },
+  {
+    "author_username": null,
+    "start_date": "2025-03-27T12:13:58.585311Z",
+    "study_activity_instance_uid": null,
+    "study_activity_schedule_uid": "StudyActivitySchedule_013247",
+    "study_activity_uid": "StudyActivity_002699",
+    "study_uid": "Study_000052",
+    "study_version": "LATEST on 2025-03-27T13:38:26.160045+00:00",
+    "study_visit_uid": "StudyVisit_000602"
+  },
+  {
+    "author_username": null,
+    "start_date": "2025-03-27T12:13:59.218955Z",
+    "study_activity_instance_uid": null,
+    "study_activity_schedule_uid": "StudyActivitySchedule_013248",
+    "study_activity_uid": "StudyActivity_002699",
+    "study_uid": "Study_000052",
+    "study_version": "LATEST on 2025-03-27T13:38:26.160050+00:00",
+    "study_visit_uid": "StudyVisit_000605"
+  },
+  {
+    "author_username": null,
+    "start_date": "2025-03-27T12:14:00.384978Z",
+    "study_activity_instance_uid": null,
+    "study_activity_schedule_uid": "StudyActivitySchedule_013249",
+    "study_activity_uid": "StudyActivity_002699",
+    "study_uid": "Study_000052",
+    "study_version": "LATEST on 2025-03-27T13:38:26.160056+00:00",
+    "study_visit_uid": "StudyVisit_000600"
+  },
+  {
+    "author_username": null,
+    "start_date": "2025-03-27T12:14:02.300157Z",
+    "study_activity_instance_uid": null,
+    "study_activity_schedule_uid": "StudyActivitySchedule_013250",
+    "study_activity_uid": "StudyActivity_002699",
+    "study_uid": "Study_000052",
+    "study_version": "LATEST on 2025-03-27T13:38:26.160062+00:00",
+    "study_visit_uid": "StudyVisit_000598"
+  },
+  {
+    "author_username": null,
+    "start_date": "2025-03-27T12:14:06.550393Z",
+    "study_activity_instance_uid": null,
+    "study_activity_schedule_uid": "StudyActivitySchedule_013251",
+    "study_activity_uid": "StudyActivity_002700",
+    "study_uid": "Study_000052",
+    "study_version": "LATEST on 2025-03-27T13:38:26.160068+00:00",
+    "study_visit_uid": "StudyVisit_000606"
+  },
+  {
+    "author_username": null,
+    "start_date": "2025-03-27T12:14:08.695438Z",
+    "study_activity_instance_uid": null,
+    "study_activity_schedule_uid": "StudyActivitySchedule_013252",
+    "study_activity_uid": "StudyActivity_002702",
+    "study_uid": "Study_000052",
+    "study_version": "LATEST on 2025-03-27T13:38:26.160074+00:00",
+    "study_visit_uid": "StudyVisit_000606"
+  }
+]

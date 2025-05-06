@@ -2,12 +2,13 @@ import datetime
 import json
 import re
 from copy import copy
-from typing import Any, Callable, Generic, Iterable, Self, Type, TypeVar
+from types import NoneType, UnionType
+from typing import Annotated, Any, Callable, Generic, Iterable, Self, TypeVar
 
+from annotated_types import MinLen
 from pydantic import BaseModel as PydanticBaseModel
-from pydantic import conint, root_validator
-from pydantic.fields import Undefined
-from pydantic.generics import GenericModel
+from pydantic import ConfigDict, Field, ValidationInfo, field_validator, model_validator
+from pydantic.fields import PydanticUndefined
 from starlette.responses import Response
 
 from clinical_mdr_api.domains.concepts.unit_definitions.unit_definition import (
@@ -15,11 +16,12 @@ from clinical_mdr_api.domains.concepts.unit_definitions.unit_definition import (
 )
 from clinical_mdr_api.services.user_info import UserInfoService
 from common.config import STUDY_TIME_UNIT_SUBSET
+from common.utils import get_field_type, get_sub_fields
 
 EXCLUDE_PROPERTY_ATTRIBUTES_FROM_SCHEMA = {
     "remove_from_wildcard",
     "source",
-    "exclude_from_orm",
+    "exclude_from_model_validate",
     "is_json",
 }
 
@@ -58,8 +60,18 @@ def get_latest_on_datetime_str():
 
 
 class BaseModel(PydanticBaseModel):
+    model_config = ConfigDict(
+        from_attributes=True,
+        # Exclude some custom internal attributes of Fields (properties) from the schema definitions
+        json_schema_extra=lambda schema, _: [
+            prop.pop(attr, None)
+            for prop in schema.get("properties", {}).values()
+            for attr in EXCLUDE_PROPERTY_ATTRIBUTES_FROM_SCHEMA
+        ],
+    )
+
     @classmethod
-    def from_orm(cls, obj):
+    def model_validate(cls, obj):
         """
         We override this method to allow flattening on nested models.
 
@@ -79,11 +91,14 @@ class BaseModel(PydanticBaseModel):
                 return None
             if path not in node_to_extract._relations.keys():
                 # it means that the field is Optional and None was set to be a default value
-                if field.field_info.default is None:
+                if field.default is None:
                     return None
                 raise RuntimeError(
                     f"{path} is not present in node relations (did you forget to fetch it?)"
                 )
+            if node_to_extract._relations[path] == []:
+                return None
+
             return node_to_extract._relations[path]
 
         def _get_value_from_source_field(model_field, db_node, db_field):
@@ -96,17 +111,18 @@ class BaseModel(PydanticBaseModel):
             return value
 
         ret = []
-        for name, field in cls.__fields__.items():
-            source = field.field_info.extra.get("source")
-            if field.field_info.extra.get("exclude_from_orm"):
+        for name, field in cls.model_fields.items():
+            jse = field.json_schema_extra or {}
+            source = jse.get("source")
+            if jse.get("exclude_from_model_validate"):
                 continue
             if not source:
-                if issubclass(field.type_, BaseModel):
+                if issubclass(get_field_type(field.annotation), BaseModel):
                     # get out of recursion
-                    if field.type_ is cls:
+                    if get_field_type(field.annotation) is cls:
                         continue
                     # added copy to not override properties in main obj
-                    value = field.type_.from_orm(copy(obj))
+                    value = get_field_type(field.annotation).model_validate(copy(obj))
                     # if some value of nested model is initialized then set the whole nested object
                     if isinstance(value, list):
                         if value:
@@ -121,7 +137,7 @@ class BaseModel(PydanticBaseModel):
                             setattr(obj, name, None)
                 # Quick fix to provide default None value to fields that allow it
                 # Not the best place to do this...
-                elif field.field_info.default == Undefined and not hasattr(obj, name):
+                elif field.default == PydanticUndefined and not hasattr(obj, name):
                     setattr(obj, name, None)
                 continue
             if "." in source or "|" in source:
@@ -173,7 +189,7 @@ class BaseModel(PydanticBaseModel):
             # if obtained value is a list and field type is not List
             # it means that we are building some list[BaseModel] but its fields are not of list type
 
-            if isinstance(value, list) and not field.sub_fields:
+            if isinstance(value, list) and not get_sub_fields(field):
                 # if ret array is not instantiated
                 # it means that the first property out of the whole list [BaseModel] is being instantiated
                 if not ret:
@@ -189,40 +205,66 @@ class BaseModel(PydanticBaseModel):
                 setattr(obj, name, value)
         # Nothing to return and the value returned by the query
         # is an empty list => return an empty list
-        if not ret and isinstance(value, list):
+        if not ret and isinstance(value, list) and not value:
             return []
         # Returning single BaseModel
-        if not ret and not isinstance(value, list):
-            return super().from_orm(obj)
+        if not ret and (
+            not isinstance(value, list) or (isinstance(value, list) and value)
+        ):
+            return super().model_validate(obj)
         # if ret exists it means that the list of BaseModels is being returned
         objs_to_return = []
         for item in ret:
-            objs_to_return.append(super().from_orm(item))
+            objs_to_return.append(super().model_validate(item))
         return objs_to_return
-
-    class Config:
-        # Configuration applies to all our models #
-
-        @staticmethod
-        def schema_extra(schema: dict[str, Any], _: Type) -> None:
-            """Exclude some custom internal attributes of Fields (properties) from the schema definitions"""
-            for prop in schema.get("properties", {}).values():
-                for attr in EXCLUDE_PROPERTY_ATTRIBUTES_FROM_SCHEMA:
-                    prop.pop(attr, None)
 
 
 class InputModel(BaseModel):
-    @root_validator(pre=True)
-    # pylint: disable=no-self-argument
-    def strip_whitespace(cls, values: dict):
-        for key, value in values.items():
+    @model_validator(mode="before")
+    @classmethod
+    def strip_whitespace(cls, data: Any):
+        def strip_value(value):
             if isinstance(value, str):
-                values[key] = value.strip()
-            elif isinstance(value, list):
-                values[key] = [
-                    elm.strip() if isinstance(elm, str) else elm for elm in value
-                ]
-        return values
+                return value.strip()
+            if isinstance(value, list):
+                return [strip_value(elm) for elm in value]
+            if isinstance(value, dict):
+                return {k: strip_value(v) for k, v in value.items()}
+            return value
+
+        if isinstance(data, dict):
+            return {key: strip_value(value) for key, value in data.items()}
+        if isinstance(data, str):
+            return data.strip()
+        if isinstance(data, list):
+            return [strip_value(value) for value in data]
+        return data
+
+    @field_validator("*", mode="before")
+    @classmethod
+    def empty_string_to_none(cls, value: Any, validation_info: ValidationInfo):
+        """
+        A field validator that converts empty strings to `None` for fields that:
+        - Are annotated with `str` and `None`.
+        - Have `min_length` constraint set.
+
+        This validator is applied to all fields (`*`) in "before" mode, meaning it processes the value before other validations are applied.
+
+        Args:
+            value (Any): The value of the field being validated.
+            validation_info (ValidationInfo): Information about the field being validated, including its name and metadata.
+
+        Returns:
+            Any: The original value if it is not an empty string, or `None` if the value is an empty string and the field meets the specified conditions.
+        """
+        if info := cls.model_fields.get(validation_info.field_name):
+            if (
+                isinstance(info.annotation, UnionType)
+                and NoneType in info.annotation.__args__
+                and any(isinstance(i, MinLen) for i in getattr(info, "metadata", []))
+            ) and value == "":
+                return None
+        return value
 
 
 class PostInputModel(InputModel): ...
@@ -237,7 +279,7 @@ class BatchInputModel(InputModel): ...
 T = TypeVar("T")
 
 
-class CustomPage(GenericModel, Generic[T]):
+class CustomPage(BaseModel, Generic[T]):
     """
     A generic class used as a return type for paginated queries.
 
@@ -249,16 +291,16 @@ class CustomPage(GenericModel, Generic[T]):
     """
 
     items: list[T]
-    total: conint(ge=0)
-    page: conint(ge=0)
-    size: conint(ge=0)
+    total: Annotated[int, Field(ge=0)]
+    page: Annotated[int, Field(ge=0)]
+    size: Annotated[int, Field(ge=0)]
 
     @classmethod
     def create(cls, items: list[T], total: int, page: int, size: int) -> Self:
         return cls(total=total, items=items, page=page, size=size)
 
 
-class GenericFilteringReturn(GenericModel, Generic[T]):
+class GenericFilteringReturn(BaseModel, Generic[T]):
     """
     A generic class used as a return type for filtered queries.
 
@@ -268,11 +310,14 @@ class GenericFilteringReturn(GenericModel, Generic[T]):
     """
 
     items: list[T]
-    total: conint(ge=0)
+    total: Annotated[int, Field(ge=0)]
 
     @classmethod
     def create(cls, items: list[T], total: int) -> Self:
         return cls(items=items, total=total)
+
+
+EmptyGenericFilteringResult = GenericFilteringReturn.create([], 0)
 
 
 class PrettyJSONResponse(Response):

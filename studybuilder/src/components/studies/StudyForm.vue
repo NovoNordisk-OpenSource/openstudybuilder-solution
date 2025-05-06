@@ -58,10 +58,15 @@
               :label="$t('StudyForm.number')"
               :rules="[
                 formRules.numeric,
-                (value) => 
-                  formRules.oneOfTwo(value, form.study_acronym, $t('StudyForm.one_of_two_error_message')),
                 (value) =>
-                  formRules.max(value, appStore.userData.studyNumberLength)]"
+                  formRules.oneOfTwo(
+                    value,
+                    form.study_acronym,
+                    $t('StudyForm.one_of_two_error_message')
+                  ),
+                (value) =>
+                  formRules.max(value, appStore.userData.studyNumberLength),
+              ]"
               density="compact"
               clearable
               data-cy="study-number"
@@ -74,7 +79,14 @@
               id="studyAcronym"
               v-model="form.study_acronym"
               :label="$t('StudyForm.acronym')"
-              :rules="[(value) => formRules.oneOfTwo(value, form.study_number, $t('StudyForm.one_of_two_error_message'))]"
+              :rules="[
+                (value) =>
+                  formRules.oneOfTwo(
+                    value,
+                    form.study_number,
+                    $t('StudyForm.one_of_two_error_message')
+                  ),
+              ]"
               density="compact"
               clearable
               data-cy="study-acronym"

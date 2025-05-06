@@ -44,3 +44,4 @@ MATCH (n2)<-[:HAS_TERM]-(n1:CTCodelistRoot)
 RETURN n2,
     COLLECT(n1) AS Codelist
     ORDER BY size(Codelist) DESC;
+

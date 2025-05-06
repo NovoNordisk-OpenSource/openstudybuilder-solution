@@ -7,7 +7,7 @@
           v-model="data.target_type"
           :items="types"
           :label="$t('OdmViewer.odm_element_type')"
-          density="compact"
+          density="comfortable"
           clearable
           item-title="name"
           item-value="value"
@@ -20,7 +20,7 @@
           v-model="data.target_uid"
           :items="elements"
           :label="$t('OdmViewer.odm_element_name')"
-          density="compact"
+          density="comfortable"
           clearable
           class="mt-2"
           item-title="name"
@@ -30,28 +30,44 @@
       <v-col cols="2">
         <v-select
           v-model="element_status"
-          :items="element_statuses"
+          :items="elementStatuses"
           :label="$t('OdmViewer.element_status')"
-          :default="element_statuses[0]"
-          density="compact"
+          density="comfortable"
           class="mt-2"
         />
       </v-col>
-      <v-col cols="5">
+    </v-row>
+    <v-row v-if="!doc" class="mt-2 ml-2">
+      <v-col cols="2">
+        <v-row>
+          <v-select
+            v-model="selectedNamespaces"
+            :items="allowedNamespaces"
+            :label="$t('OdmViewer.allowed_namespaces')"
+            density="comfortable"
+            clearable
+            multiple
+            chips
+          />
+        </v-row>
+      </v-col>
+      <v-col cols="2">
         <v-row>
           <v-radio-group
             v-model="data.stylesheet"
             :label="$t('OdmViewer.stylesheet')"
+            inline
             row
-            class="mt-7"
           >
             <v-radio :label="$t('OdmViewer.blank')" value="blank" />
             <v-radio :label="$t('OdmViewer.sdtm')" value="sdtm" />
           </v-radio-group>
+        </v-row>
+      </v-col>
+      <v-col cols="2">
+        <v-row justify="center">
           <v-btn
-            v-show="data.target_uid && data.stylesheet"
-            class="mt-7"
-            size="small"
+            :disabled="!data.target_uid"
             color="primary"
             :label="$t('_global.load')"
             @click="loadXml"
@@ -124,6 +140,7 @@
 </template>
 
 <script setup>
+import _isEmpty from 'lodash/isEmpty'
 import crfs from '@/api/crfs'
 import statuses from '@/constants/statuses'
 import exportLoader from '@/utils/exportLoader'
@@ -151,12 +168,16 @@ const route = useRoute()
 const router = useRouter()
 const { t } = useI18n()
 
-const element_statuses = [
+const elementStatuses = [
   statuses.LATEST,
   statuses.FINAL,
   statuses.DRAFT,
   statuses.RETIRED,
 ]
+
+const allowedNamespaces = ref([])
+const selectedNamespaces = ref([])
+
 const elements = ref([])
 let xml = ''
 const doc = ref(null)
@@ -200,9 +221,16 @@ onMounted(() => {
 })
 
 function automaticLoad() {
-  data.value.target_type = route.params.type
+  data.value.target_type = route.params.type || 'study_event'
   data.value.target_uid = route.params.uid
   setElements()
+  if (_isEmpty(allowedNamespaces.value)) {
+    crfs.getAllNamespaces({ page_size: 0 }).then((resp) => {
+      allowedNamespaces.value = resp.data.items.map((item) => item.prefix)
+
+      selectedNamespaces.value = allowedNamespaces.value
+    })
+  }
   if (data.value.target_type && data.value.target_uid) {
     loadXml()
   }
@@ -235,10 +263,25 @@ function setElements() {
   }
 }
 
+function getAllowedNamespaces() {
+  if (_isEmpty(selectedNamespaces.value)) {
+    return ''
+  } else if (
+    allowedNamespaces.value.length == selectedNamespaces.value.length
+  ) {
+    return '&allowed_namespaces=*'
+  } else {
+    return selectedNamespaces.value
+      .map((ns) => `&allowed_namespaces=${encodeURIComponent(ns)}`)
+      .join('')
+  }
+}
+
 async function loadXml() {
   doc.value = ''
   loading.value = true
   data.value.status = element_status.value.toLowerCase()
+  data.value.allowed_namespaces = getAllowedNamespaces()
   crfs.getXml(data.value).then((resp) => {
     const parser = new DOMParser()
     xml = parser.parseFromString(resp.data, 'application/xml')
@@ -274,7 +317,7 @@ async function loadXml() {
 
 function getDownloadFileName() {
   const stylesheet =
-  data.value.stylesheet === 'odm_template_sdtmcrf.xsl'
+    data.value.stylesheet === 'odm_template_sdtmcrf.xsl'
       ? '_sdtm_crf_'
       : '_blank_crf_'
   const templateName = elements.value.filter(
@@ -291,6 +334,7 @@ function downloadHtml() {
 
 function downloadXml() {
   xmlDownloadLoading.value = true
+  data.value.allowed_namespaces = getAllowedNamespaces()
   crfs.getXml(data.value).then((resp) => {
     exportLoader.downloadFile(resp.data, 'text/xml', getDownloadFileName())
     xmlDownloadLoading.value = false
@@ -299,6 +343,7 @@ function downloadXml() {
 
 function downloadPdf() {
   pdfDownloadLoading.value = true
+  data.value.allowed_namespaces = getAllowedNamespaces()
   crfs.getPdf(data.value).then((resp) => {
     exportLoader.downloadFile(
       resp.data,

@@ -18,8 +18,9 @@ Given('The CRF Item Group in {string} status exists', (status) => {
 })
 
 Given('The CRF Item Group in draft status with sub 1 version exists', () => {
-    cy.createCrfItemGroup('itemGroupForDelete')
-    cy.getRowIndexByText('0.1').then(index => rowIndex = index)
+    oidValue = 'itemGroupForDelete'
+    cy.createCrfItemGroup(oidValue)
+    cy.searchFor('itemGroupForDelete')
 })
 
 Given('The CRF Item Group in {string} status and version {string} exists', (status, version) => {
@@ -72,6 +73,4 @@ Then('The CRF Item Group status is changed to {string} and version is rounded up
     cy.checkRowByIndex(rowIndex, 'Version', Math.ceil(newVersion))
 })
 
-Then('The CRF Item Group is no longer available', () => {
-    cy.get('tbody').should('not.contain', oidValue)
-})
+Then('The CRF Item Group is no longer available', () => cy.confirmItemNotAvailable(oidValue))

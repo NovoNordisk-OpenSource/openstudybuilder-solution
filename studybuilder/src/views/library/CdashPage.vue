@@ -4,55 +4,47 @@
       {{ $t('DataModels.cdash') }}
       <HelpButton />
     </div>
-    <v-tabs v-model="tab" bg-color="white">
-      <v-tab v-for="item of tabs" :key="item.tab" :value="item.tab">
-        {{ item.name }}
-      </v-tab>
-    </v-tabs>
-    <v-window v-model="tab" class="bg-white">
-      <v-window-item value="models">
-        <DataExchangeStandardsModelsView
-          :key="`models-${tabKeys.models}`"
-          :headers="modelsHeaders"
-          uid="CDASH"
-          :redirect-model="redirectModel"
-          @redirect-to-guide="redirectToGuide"
-        />
-      </v-window-item>
-      <v-window-item value="guide">
-        <DataExchangeStandardsGuideView
-          :key="`guide-${tabKeys.guide}`"
-          :headers="igHeaders"
-          uid="CDASHIG"
-          :redirect-guide="redirectGuide"
-          @redirect-to-model="redirectToModel"
-        />
-      </v-window-item>
-    </v-window>
+    <NavigationTabs ref="nvTabs" :tabs="tabs">
+      <template #default="{ tabKeys }">
+        <v-window-item value="models">
+          <DataExchangeStandardsModelsView
+            :key="`models-${tabKeys.models}`"
+            :headers="modelsHeaders"
+            uid="CDASH"
+            :redirect-model="redirectModel"
+            @redirect-to-guide="redirectToGuide"
+          />
+        </v-window-item>
+        <v-window-item value="guide">
+          <DataExchangeStandardsGuideView
+            :key="`guide-${tabKeys.guide}`"
+            :headers="igHeaders"
+            uid="CDASHIG"
+            :redirect-guide="redirectGuide"
+            @redirect-to-model="redirectToModel"
+          />
+        </v-window-item>
+      </template>
+    </NavigationTabs>
   </div>
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRoute, useRouter } from 'vue-router'
-import { useAppStore } from '@/stores/app'
-import { useTabKeys } from '@/composables/tabKeys'
 import DataExchangeStandardsModelsView from '@/components/library/DataExchangeStandardsModelsView.vue'
 import DataExchangeStandardsGuideView from '@/components/library/DataExchangeStandardsGuideView.vue'
 import HelpButton from '@/components/tools/HelpButton.vue'
+import NavigationTabs from '@/components/tools/NavigationTabs.vue'
 
-const appStore = useAppStore()
 const { t } = useI18n()
-const router = useRouter()
-const route = useRoute()
-const { tabKeys, updateTabKey } = useTabKeys()
 
-const tab = ref(0)
-const tabs = ref([
+const tabs = [
   { tab: 'models', name: t('DataModels.cdash_models') },
   { tab: 'guide', name: t('DataModels.cdash_ig') },
-])
+]
+
+const nvTabs = ref()
 const redirectModel = ref({})
 const redirectGuide = ref({})
 const modelsHeaders = ref([
@@ -82,31 +74,12 @@ const igHeaders = ref([
   { title: t('DataModels.code_list'), key: 'referenced_codelist.uid' },
 ])
 
-watch(tab, (newValue) => {
-  const tabName = newValue
-    ? tabs.value.find((el) => el.tab === newValue).name
-    : tabs.value[0].name
-  router.push({
-    name: 'Cdash',
-    params: { tab: newValue },
-  })
-  updateTabKey(newValue)
-  appStore.addBreadcrumbsLevel(
-    tabName,
-    { name: 'Cdash', params: { tab: tabName } },
-    3,
-    true
-  )
-})
-
 function redirectToGuide(item) {
   redirectGuide.value = item
-  tab.value = 'guide'
+  nvTabs.value.tab = 'guide'
 }
 function redirectToModel(item) {
   redirectModel.value = item
-  tab.value = 'models'
+  nvTabs.value.tab = 'models'
 }
-
-tab.value = route.params.tab || 'models'
 </script>

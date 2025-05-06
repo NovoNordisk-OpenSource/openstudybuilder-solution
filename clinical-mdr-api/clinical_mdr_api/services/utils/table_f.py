@@ -9,7 +9,7 @@ from openpyxl.styles import NamedStyle
 from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.table import Table, TableStyleInfo
 from openpyxl.worksheet.worksheet import Worksheet
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from clinical_mdr_api.services.utils.docx_builder import DocxBuilder
 from common.telemetry import trace_calls
@@ -103,10 +103,7 @@ CHAR_WIDTHS = {
 class Ref(BaseModel):
     type: Annotated[str | None, Field(title="Referenced item type")]
     uid: Annotated[str, Field(title="Referenced item uid")]
-
-    class Config:
-        # make the model immutable & hashable
-        frozen = True
+    model_config = ConfigDict(frozen=True)
 
     def __init__(self, type_=None, uid=None, **kwargs):
         if type_ is not None:
@@ -120,16 +117,20 @@ class TableCell(BaseModel):
     text: Annotated[str, Field(title="Text contents of cell")] = ""
     span: Annotated[int, Field(title="Horizontal spanning of cell, 1 by default")] = 1
     style: Annotated[
-        str | None, Field(title="Associated style to cell", nullable=True)
+        str | None,
+        Field(title="Associated style to cell", json_schema_extra={"nullable": True}),
     ] = None
     refs: Annotated[
-        list[Ref] | None, Field(title="Reference to item", nullable=True)
+        list[Ref] | None,
+        Field(title="Reference to item", json_schema_extra={"nullable": True}),
     ] = None
     footnotes: Annotated[
-        list[str] | None, Field(title="Referenced footnotes", nullable=True)
+        list[str] | None,
+        Field(title="Referenced footnotes", json_schema_extra={"nullable": True}),
     ] = None
     vertical: Annotated[
-        bool | None, Field(title="Text text direction", nullable=True)
+        bool | None,
+        Field(title="Text text direction", json_schema_extra={"nullable": True}),
     ] = None
 
     def __init__(self, text=None, **kwargs):
@@ -143,6 +144,14 @@ class TableRow(BaseModel):
         list[TableCell], Field(default_factory=list, title="Table cells in the row")
     ]
     hide: Annotated[bool, Field(title="Hide row from display")] = False
+    order: Annotated[
+        int | None,
+        Field(title="Order of a given row inside its parents"),
+    ] = None
+    level: Annotated[
+        int | None,
+        Field(title="Integer that represents SoAItem associated with given row"),
+    ] = None
 
     def __init__(self, cells=None, **kwargs):
         if cells is not None:
@@ -162,15 +171,26 @@ class TableWithFootnotes(BaseModel):
     ]
     footnotes: Annotated[
         dict[str, SimpleFootnote] | None,
-        Field(title="Mapping of symbols and table footnotes", nullable=True),
+        Field(
+            title="Mapping of symbols and table footnotes",
+            json_schema_extra={"nullable": True},
+        ),
     ] = None
     num_header_rows: Annotated[int, Field(title="Number of header rows")] = 0
     num_header_cols: Annotated[int, Field(title="Number of header columns")] = 0
     title: Annotated[
-        str | None, Field(title="Table title (when rendered to HTML)", nullable=True)
+        str | None,
+        Field(
+            title="Table title (when rendered to HTML)",
+            json_schema_extra={"nullable": True},
+        ),
     ] = None
     id: Annotated[
-        str | None, Field(title="Table id (when rendered to HTML)", nullable=True)
+        str | None,
+        Field(
+            title="Table id (when rendered to HTML)",
+            json_schema_extra={"nullable": True},
+        ),
     ] = None
 
 

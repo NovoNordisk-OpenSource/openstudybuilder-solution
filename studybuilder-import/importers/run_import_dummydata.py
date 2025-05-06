@@ -890,7 +890,7 @@ class DummyData(BaseImporter):
         ]
 
         time_reference_uid = self.lookup_ct_term_uid(
-            "Time Point Reference", "Anchor visit in visit group"
+            "Time Point Reference", "Global anchor visit"
         )
 
         filters = {

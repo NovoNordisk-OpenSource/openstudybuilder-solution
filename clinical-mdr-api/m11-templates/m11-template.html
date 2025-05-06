@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>ICH M11 Template - Study {{ study_id }}</title>
+  <title>ICH M11 Template - Study {{ study_name }}</title>
   <!-- <link rel="stylesheet" type="text/css" href="./m11_style.css" /> -->
   <!-- <script type="text/javascript" src="./m11_script.js"></script> -->
   <style type="text/css">
@@ -128,7 +128,7 @@
   </style>
 </head>
 <body>
-  <h1>ICH M11 Template - Study {{ study_name }} {{ study_id }}</h1>
+  <h1>ICH M11 Template - Study {{ study_name }}</h1>
   <div class="float"><button onclick="toggleinstruction()">Show/Hide instructional text</button></br><button onclick="togglesuggested()">Show/Hide suggested text</button></br><button onclick="togglefield()">Show/Hide fields</button></div>
 
   <table width="100%">
@@ -150,7 +150,7 @@
       <tr>
         <th width="30%" class="suggested-text">Protocol Number: </th>
         <td width="70%" class="suggested-text">
-          {{ study_id }} - {{ protocol_version }}</br><span class="metadata-reply">[version]</span>
+          {{ study_name }} - {{ protocol_version }}</br><span class="metadata-reply">[version]</span>
           <div class="instructional-text">A unique alphanumeric identifier for the trial, designated by the Sponsor, is a standard part of trial data, and should be included for most trials.</div>
         </td>
       </tr>
@@ -192,7 +192,7 @@
       <tr>
         <th width="30%" class="suggested-text">Acronym: </th>
         <td width="70%" class="suggested-text">
-          {{ protocol_acronym }}</br><span class="metadata-reply">[Protocol Acronym]</span>
+          {{ study_name }}</br><span class="metadata-reply">[Protocol Acronym]</span>
           <div class="instructional-text">Acronym or abbreviation used publicly to identify the clinical trial, if any. The acronym may include numerals, such as -1, -2, or I, II, III, or IV. Delete this line from the table if not applicable.</div>
         </td>
       </tr>
@@ -424,10 +424,10 @@ manual. /per the options below:}</div>
         </tr>
         {% for primary_objective in primary_objectives %}
         <tr>
-          <td>{{ primary_objective.description|safe }} [{{ primary_objective.name }}]</td>
+          <td>{{ primary_objective.description|safe }} <span class="suggested-text metadata-reply">[{{ primary_objective.name }}]</span></td>
           <td>
             <ul>{% for endpoint in primary_objective.endpoints %}
-              <li>{{ endpoint.description|safe }} [{{ endpoint.name }}]</li>
+              <li>{{ endpoint.description|safe }} <span class="suggested-text metadata-reply">[{{ endpoint.name }}]</span></li>
             {% endfor %}</ul>
           </td>
         </tr>
@@ -437,10 +437,10 @@ manual. /per the options below:}</div>
         </tr>
         {% for secondary_objective in secondary_objectives %}
         <tr>
-          <td>{{ secondary_objective.description|safe }} [{{ secondary_objective.name }}]</td>
+          <td>{{ secondary_objective.description|safe }} <span class="suggested-text metadata-reply">[{{ secondary_objective.name }}]</span></td>
           <td>
             <ul>{% for endpoint in secondary_objective.endpoints %}
-              <li>{{ endpoint.description|safe }} [{{ endpoint.name }}]</li>
+              <li>{{ endpoint.description|safe }} <span class="suggested-text metadata-reply">[{{ endpoint.name }}]</span></li>
             {% endfor %}</ul>
           </td>
         </tr>

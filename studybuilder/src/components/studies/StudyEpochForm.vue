@@ -377,8 +377,12 @@ export default {
     },
     loadFromStudyEpoch(studyEpoch) {
       this.form = { ...studyEpoch }
-      this.form.epoch_type = this.uniqueTypeGroups.find(group => group.type_name === this.form.epoch_type_name)
-      this.form.epoch_subtype = this.subtypeGroups.find(group => group.subtype_name === this.form.epoch_subtype_name).subtype
+      this.form.epoch_type = this.uniqueTypeGroups.find(
+        (group) => group.type_name === this.form.epoch_type_name
+      )
+      this.form.epoch_subtype = this.subtypeGroups.find(
+        (group) => group.subtype_name === this.form.epoch_subtype_name
+      ).subtype
       this.epochDisplay = studyEpoch.epoch_name
       if (studyEpoch.color_hash) {
         this.colorHash = studyEpoch.color_hash

@@ -260,7 +260,11 @@ export default {
           key: 'repeating',
           width: '1%',
         },
-        { title: this.$t('_global.links'), key: 'activity_subgroups', filteringName: 'activity_subgroups.name' },
+        {
+          title: this.$t('_global.links'),
+          key: 'activity_subgroups',
+          filteringName: 'activity_subgroups.name',
+        },
         { title: this.$t('_global.version'), key: 'version', width: '1%' },
         { title: this.$t('_global.status'), key: 'status', width: '1%' },
       ],

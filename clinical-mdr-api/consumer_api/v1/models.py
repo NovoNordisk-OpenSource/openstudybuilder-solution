@@ -24,23 +24,38 @@ class SortByStudies(Enum):
 class Study(BaseModel):
     class StudyVersion(BaseModel):
         version_status: Annotated[
-            str | None, Field(description="Study Status", nullable=True)
+            str | None,
+            Field(description="Study Status", json_schema_extra={"nullable": True}),
         ] = None
         version_number: Annotated[
-            str | None, Field(description="Study Version Number", nullable=True)
+            str | None,
+            Field(
+                description="Study Version Number", json_schema_extra={"nullable": True}
+            ),
         ] = None
         version_started_at: Annotated[
             datetime | None,
-            Field(description="Study Version Start Time", nullable=True),
+            Field(
+                description="Study Version Start Time",
+                json_schema_extra={"nullable": True},
+            ),
         ] = None
         version_ended_at: Annotated[
-            datetime | None, Field(description="Study Version End Time", nullable=True)
+            datetime | None,
+            Field(
+                description="Study Version End Time",
+                json_schema_extra={"nullable": True},
+            ),
         ] = None
         version_author: Annotated[
-            str | None, Field(description="Study Author", nullable=True)
+            str | None,
+            Field(description="Study Author", json_schema_extra={"nullable": True}),
         ] = None
         version_description: Annotated[
-            str | None, Field(description="Study Description", nullable=True)
+            str | None,
+            Field(
+                description="Study Description", json_schema_extra={"nullable": True}
+            ),
         ] = None
 
         @classmethod
@@ -71,11 +86,13 @@ class Study(BaseModel):
     uid: Annotated[str, Field(description="Study UID")]
     id: Annotated[str, Field(description="Study ID")]
     id_prefix: Annotated[str, Field(description="Study ID prefix")]
-    number: Annotated[str | None, Field(description="Study number", nullable=True)] = (
-        None
-    )
+    number: Annotated[
+        str | None,
+        Field(description="Study number", json_schema_extra={"nullable": True}),
+    ] = None
     acronym: Annotated[
-        str | None, Field(description="Study acronym", nullable=True)
+        str | None,
+        Field(description="Study acronym", json_schema_extra={"nullable": True}),
     ] = None
     versions: Annotated[list[StudyVersion], Field(description="Study versions")]
 
@@ -114,35 +131,69 @@ class StudyVisit(BaseModel):
     visit_short_name: Annotated[str, Field(description="Study Visit Visit Short Name")]
     visit_window_min: Annotated[
         int | None,
-        Field(description="Study Visit Min Visit Window Value", nullable=True),
+        Field(
+            description="Study Visit Min Visit Window Value",
+            json_schema_extra={"nullable": True},
+        ),
     ] = None
     visit_window_max: Annotated[
         int | None,
-        Field(description="Study Visit Max Visit Window Value", nullable=True),
+        Field(
+            description="Study Visit Max Visit Window Value",
+            json_schema_extra={"nullable": True},
+        ),
+    ] = None
+    is_global_anchor_visit: Annotated[
+        bool | None,
+        Field(
+            description="Study Visit Global Anchor Visit",
+            json_schema_extra={"nullable": True},
+        ),
     ] = None
     visit_type_uid: Annotated[str, Field(description="Study Visit Visit Type UID")]
     visit_type_name: Annotated[str, Field(description="Study Visit Visit Type Name")]
     visit_window_unit_uid: Annotated[
         str | None,
-        Field(description="Study Visit Visit Window Unit UID", nullable=True),
+        Field(
+            description="Study Visit Visit Window Unit UID",
+            json_schema_extra={"nullable": True},
+        ),
     ] = None
     visit_window_unit_name: Annotated[
         str | None,
-        Field(description="Study Visit Visit Window Unit Name", nullable=True),
+        Field(
+            description="Study Visit Visit Window Unit Name",
+            json_schema_extra={"nullable": True},
+        ),
     ] = None
     study_epoch_uid: Annotated[str, Field(description="Study Visit Study Epoch UID")]
     study_epoch_name: Annotated[str, Field(description="Study Visit Study Epoch Name")]
     time_unit_uid: Annotated[
-        str | None, Field(description="Study Visit Time Unit UID", nullable=True)
+        str | None,
+        Field(
+            description="Study Visit Time Unit UID",
+            json_schema_extra={"nullable": True},
+        ),
     ] = None
     time_unit_name: Annotated[
-        str | None, Field(description="Study Visit Time Unit Name", nullable=True)
+        str | None,
+        Field(
+            description="Study Visit Time Unit Name",
+            json_schema_extra={"nullable": True},
+        ),
     ] = None
     time_value_uid: Annotated[
-        str | None, Field(description="Study Visit Time Value UID", nullable=True)
+        str | None,
+        Field(
+            description="Study Visit Time Value UID",
+            json_schema_extra={"nullable": True},
+        ),
     ] = None
     time_value: Annotated[
-        int | None, Field(description="Study Visit Time Value", nullable=True)
+        int | None,
+        Field(
+            description="Study Visit Time Value", json_schema_extra={"nullable": True}
+        ),
     ] = None
 
     @classmethod
@@ -159,6 +210,7 @@ class StudyVisit(BaseModel):
             visit_short_name=val["visit_short_name"],
             visit_window_min=val["visit_window_min"],
             visit_window_max=val["visit_window_max"],
+            is_global_anchor_visit=val["is_global_anchor_visit"],
             visit_type_uid=val["visit_type_uid"],
             visit_type_name=val["visit_type_name"],
             visit_window_unit_uid=val["visit_window_unit_uid"],
@@ -248,45 +300,79 @@ class SortByStudyOperationalSoA(Enum):
 
 
 class StudyOperationalSoA(BaseModel):
-    study_uid: Annotated[str | None, Field(description="Study UID", nullable=True)]
-    study_id: Annotated[str | None, Field(description="Study ID", nullable=True)]
+    study_uid: Annotated[
+        str | None, Field(description="Study UID", json_schema_extra={"nullable": True})
+    ]
+    study_id: Annotated[
+        str | None, Field(description="Study ID", json_schema_extra={"nullable": True})
+    ]
     study_version_number: Annotated[
-        str | None, Field(description="Study Version Number", nullable=True)
+        str | None,
+        Field(description="Study Version Number", json_schema_extra={"nullable": True}),
     ]
     activity_name: Annotated[
-        str | None, Field(description="Activity Name", nullable=True)
+        str | None,
+        Field(description="Activity Name", json_schema_extra={"nullable": True}),
     ]
     activity_uid: Annotated[
-        str | None, Field(description="Activity UID", nullable=True)
+        str | None,
+        Field(description="Activity UID", json_schema_extra={"nullable": True}),
     ]
     activity_group_name: Annotated[
-        str | None, Field(description="Activity Group Name", nullable=True)
+        str | None,
+        Field(description="Activity Group Name", json_schema_extra={"nullable": True}),
     ]
     activity_group_uid: Annotated[
-        str | None, Field(description="Activity Group UID", nullable=True)
+        str | None,
+        Field(description="Activity Group UID", json_schema_extra={"nullable": True}),
     ]
     activity_subgroup_name: Annotated[
-        str | None, Field(description="Activity Subgroup Name", nullable=True)
+        str | None,
+        Field(
+            description="Activity Subgroup Name", json_schema_extra={"nullable": True}
+        ),
     ]
     activity_subgroup_uid: Annotated[
-        str | None, Field(description="Activity Subgroup UID", nullable=True)
+        str | None,
+        Field(
+            description="Activity Subgroup UID", json_schema_extra={"nullable": True}
+        ),
     ]
     activity_instance_name: Annotated[
-        str | None, Field(description="Activity Instance Name", nullable=True)
+        str | None,
+        Field(
+            description="Activity Instance Name", json_schema_extra={"nullable": True}
+        ),
     ]
     activity_instance_uid: Annotated[
-        str | None, Field(description="Activity Instance UID", nullable=True)
+        str | None,
+        Field(
+            description="Activity Instance UID", json_schema_extra={"nullable": True}
+        ),
     ]
-    epoch_name: Annotated[str | None, Field(description="Epoch Name", nullable=True)]
-    param_code: Annotated[str | None, Field(description="Param Code", nullable=True)]
+    epoch_name: Annotated[
+        str | None,
+        Field(description="Epoch Name", json_schema_extra={"nullable": True}),
+    ]
+    param_code: Annotated[
+        str | None,
+        Field(description="Param Code", json_schema_extra={"nullable": True}),
+    ]
     soa_group_name: Annotated[
-        str | None, Field(description="SoA Group Name", nullable=True)
+        str | None,
+        Field(description="SoA Group Name", json_schema_extra={"nullable": True}),
     ]
-    topic_code: Annotated[str | None, Field(description="Topic Code", nullable=True)]
+    topic_code: Annotated[
+        str | None,
+        Field(description="Topic Code", json_schema_extra={"nullable": True}),
+    ]
     visit_short_name: Annotated[
-        str | None, Field(description="Visit Short Name", nullable=True)
+        str | None,
+        Field(description="Visit Short Name", json_schema_extra={"nullable": True}),
     ]
-    visit_uid: Annotated[str | None, Field(description="Visit UID", nullable=True)]
+    visit_uid: Annotated[
+        str | None, Field(description="Visit UID", json_schema_extra={"nullable": True})
+    ]
 
     @classmethod
     def from_input(cls, val: dict):

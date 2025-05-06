@@ -115,7 +115,7 @@ async function getAvailableInstances() {
       filters: {
         status: { v: [statuses.FINAL] },
       },
-      page_size: 0
+      page_size: 0,
     }
     await activities.get(params, 'activity-instances').then((resp) => {
       instances.value = transformInstances(resp.data.items)
@@ -128,16 +128,22 @@ async function getAvailableInstances() {
         )
       }
     })
-    if(instances.value.length > 1) {
+    if (instances.value.length > 1) {
       const par = {
         filters: {
-          'activity.uid':{ "v": [props.editedActivity.activity.uid], "op": "co"}
-        }
+          'activity.uid': { v: [props.editedActivity.activity.uid], op: 'co' },
+        },
       }
-      study.getStudyActivityInstances(selectedStudy.value.uid, par).then((resp) => {
-        const uidsToRemove = resp.data.items.map(el => el.activity_instance.uid).filter(el => el !== selected.value[0])
-        instances.value = instances.value.filter(instance => uidsToRemove.indexOf(instance.uid) === -1)
-      })
+      study
+        .getStudyActivityInstances(selectedStudy.value.uid, par)
+        .then((resp) => {
+          const uidsToRemove = resp.data.items
+            .map((el) => el.activity_instance.uid)
+            .filter((el) => el !== selected.value[0])
+          instances.value = instances.value.filter(
+            (instance) => uidsToRemove.indexOf(instance.uid) === -1
+          )
+        })
     }
   }
 }
@@ -213,10 +219,7 @@ function setMultipleActivityInstances() {
     study_activity_uid: props.editedActivity.study_activity_uid,
   }
   activitiesStore
-    .batchSelectStudyActivityInstances(
-      selectedStudy.value.uid,
-      data
-    )
+    .batchSelectStudyActivityInstances(selectedStudy.value.uid, data)
     .then(
       () => {
         eventBusEmit('notification', {

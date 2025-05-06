@@ -43,7 +43,9 @@ Possible errors:
 """,
     response_model=CustomPage[SponsorModelDataset],
     status_code=200,
-    responses={500: {"model": ErrorResponse, "description": "Internal Server Error"}},
+    responses={
+        403: _generic_descriptions.ERROR_403,
+    },
 )
 @decorators.allow_exports(
     {
@@ -110,11 +112,11 @@ def get_sponsor_model_datasets(
     response_model=list[Any],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - Invalid field name specified",
         },
-        500: {"model": ErrorResponse, "description": "Internal Server Error"},
     },
 )
 def get_distinct_values_for_header(
@@ -169,6 +171,7 @@ def get_distinct_values_for_header(
     response_model_exclude_unset=True,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {
             "description": "Created - a new version of the sponsor model dataset was successfully created."
         },
@@ -177,7 +180,6 @@ def get_distinct_values_for_header(
             "description": "BusinessLogicException - Reasons include e.g.: \n"
             "- The target parent Sponsor Model version *sponsor_model_version_number* doesn't exist.\n",
         },
-        500: {"model": ErrorResponse, "description": "Internal Server Error"},
     },
 )
 # pylint: disable=unused-argument

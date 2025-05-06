@@ -13,7 +13,6 @@ from clinical_mdr_api.domain_repositories.models.activities import (
 from clinical_mdr_api.domain_repositories.models.study import StudyValue
 from clinical_mdr_api.domain_repositories.models.study_audit_trail import StudyAction
 from clinical_mdr_api.domain_repositories.models.study_selections import (
-    StudyActivity,
     StudyActivitySubGroup,
 )
 from clinical_mdr_api.domain_repositories.study_selections.study_activity_base_repository import (
@@ -36,6 +35,7 @@ class SelectionHistory:
     activity_subgroup_name: str | None
     show_activity_subgroup_in_protocol_flowchart: bool
     study_activity_group_uid: str
+    study_activity_uids: list[str] | None
     order: int | None
     author_id: str
     change_type: str
@@ -48,9 +48,6 @@ class StudySelectionActivitySubGroupRepository(
     StudySelectionActivityBaseRepository[StudySelectionActivitySubGroupAR]
 ):
     _aggregate_root_type = StudySelectionActivitySubGroupAR
-
-    def is_repository_based_on_ordered_selection(self):
-        return False
 
     def _create_value_object_from_repository(
         self, selection: dict, acv: bool
@@ -65,6 +62,7 @@ class StudySelectionActivitySubGroupRepository(
                 "show_activity_subgroup_in_protocol_flowchart"
             ],
             study_activity_group_uid=selection["study_activity_group_uid"],
+            study_activity_uids=selection["study_activity_uids"],
             order=selection["order"],
             start_date=convert_to_datetime(value=selection["start_date"]),
             author_id=selection["author_id"],
@@ -74,17 +72,27 @@ class StudySelectionActivitySubGroupRepository(
     def _additional_match(self) -> str:
         return """
             WITH sr, sv
-            MATCH (sv)-[:HAS_STUDY_ACTIVITY]->(study_activity)-[:STUDY_ACTIVITY_HAS_STUDY_ACTIVITY_SUBGROUP]->
-                (sa:StudyActivitySubGroup)-[:HAS_SELECTED_ACTIVITY_SUBGROUP]->(av:ActivitySubGroupValue)<-[ver:HAS_VERSION]-(ar:ActivitySubGroupRoot)
+            MATCH (sv)-[:HAS_STUDY_ACTIVITY]->(study_activity:StudyActivity)-[:STUDY_ACTIVITY_HAS_STUDY_ACTIVITY_SUBGROUP]->
+                (sa:StudyActivitySubGroup)-[:HAS_SELECTED_ACTIVITY_SUBGROUP]->(av:ActivitySubGroupValue)<-[:HAS_VERSION]-(ar:ActivitySubGroupRoot)
+            MATCH (study_activity_group:StudyActivityGroup)<-[:STUDY_ACTIVITY_HAS_STUDY_ACTIVITY_GROUP]-(study_activity)
+                -[:STUDY_ACTIVITY_HAS_STUDY_SOA_GROUP]->(study_soa_group:StudySoAGroup)
         """
 
     def _filter_clause(self, query_parameters: dict, **kwargs) -> str:
-        return ""
+        filter_query = "WHERE NOT (sa)<-[:BEFORE]-()"
+
+        study_activity_group_uid = kwargs.get("study_activity_group_uid")
+        if study_activity_group_uid is not None:
+            filter_query += "AND study_activity_group.uid=$study_activity_group_uid"
+            query_parameters["study_activity_group_uid"] = study_activity_group_uid
+
+        return filter_query
 
     def _order_by_query(self):
         return """
             WITH DISTINCT *
-            ORDER BY study_activity.order ASC
+            ORDER BY study_soa_group.order, study_activity_group.order, sa.order, study_activity.order ASC
+            WITH DISTINCT sr, sa, ar, av, study_activity_group.uid as study_activity_group_uid, collect(distinct study_activity.uid) as study_activity_uids, hv_ver
             MATCH (sa)<-[:AFTER]-(sac:StudyAction)
         """
 
@@ -96,8 +104,8 @@ class StudySelectionActivitySubGroupRepository(
                 coalesce(sa.show_activity_subgroup_in_protocol_flowchart, false) AS show_activity_subgroup_in_protocol_flowchart,
                 ar.uid AS activity_subgroup_uid,
                 av.name AS activity_subgroup_name,
-                head([(sa)<-[:STUDY_ACTIVITY_HAS_STUDY_ACTIVITY_SUBGROUP]-(:StudyActivity)-[:STUDY_ACTIVITY_HAS_STUDY_ACTIVITY_GROUP]->(study_activity_group:StudyActivityGroup) 
-                    | study_activity_group.uid]) as study_activity_group_uid,
+                study_activity_group_uid,
+                study_activity_uids,
                 sa.order AS order,
                 sac.date AS start_date,
                 sac.author_id AS author_id,
@@ -115,6 +123,7 @@ class StudySelectionActivitySubGroupRepository(
                 "show_activity_subgroup_in_protocol_flowchart"
             ],
             study_activity_group_uid=selection["study_activity_group_uid"],
+            study_activity_uids=selection["study_activity_uids"],
             order=selection["order"],
             author_id=selection["author_id"],
             change_type=change_type,
@@ -162,6 +171,7 @@ class StudySelectionActivitySubGroupRepository(
                         av.name AS activity_subgroup_name,
                         head([(all_sa)<-[:STUDY_ACTIVITY_HAS_STUDY_ACTIVITY_SUBGROUP]-(:StudyActivity)-[:STUDY_ACTIVITY_HAS_STUDY_ACTIVITY_GROUP]->(study_activity_group:StudyActivityGroup) 
                             | study_activity_group.uid]) as study_activity_group_uid,
+                        apoc.coll.toSet([(sa)<-[:STUDY_ACTIVITY_HAS_STUDY_ACTIVITY_SUBGROUP]-(study_activity:StudyActivity) | study_activity.uid]) as study_activity_uids,
                         sa.order AS order,
                         asa.date AS start_date,
                         asa.author_id AS author_id,
@@ -198,7 +208,8 @@ class StudySelectionActivitySubGroupRepository(
         )
         # Create new activity subgroup selection
         study_activity_subgroup_selection_node = StudyActivitySubGroup(
-            show_activity_subgroup_in_protocol_flowchart=selection.show_activity_subgroup_in_protocol_flowchart
+            show_activity_subgroup_in_protocol_flowchart=selection.show_activity_subgroup_in_protocol_flowchart,
+            order=order,
         )
         study_activity_subgroup_selection_node.uid = selection.study_selection_uid
         study_activity_subgroup_selection_node.accepted_version = (
@@ -223,7 +234,6 @@ class StudySelectionActivitySubGroupRepository(
                 previous_item=last_study_selection_node,
                 study_value_node=latest_study_value_node,
                 new_item=study_activity_subgroup_selection_node,
-                exclude_study_selection_relationships=[StudyActivity],
             )
 
     def generate_uid(self) -> str:

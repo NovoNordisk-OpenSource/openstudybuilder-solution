@@ -1,6 +1,6 @@
 from typing import Annotated, Self
 
-from pydantic import Field
+from pydantic import ConfigDict, Field
 
 from clinical_mdr_api.domains.standard_data_models.sponsor_model import SponsorModelAR
 from clinical_mdr_api.models.concepts.concept import VersionProperties
@@ -13,28 +13,31 @@ class SponsorModelBase(BaseModel):
 
 
 class SponsorModel(SponsorModelBase, VersionProperties):
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
     uid: Annotated[
         str | None,
-        Field(source="uid", nullable=True),
+        Field(json_schema_extra={"source": "uid", "nullable": True}),
     ] = None
     name: Annotated[
         str,
         Field(
             description="The name or the sponsor model. E.g. sdtm_sponsormodel_3.2-NN15",
-            source="has_latest_sponsor_model_value.name",
+            json_schema_extra={"source": "has_latest_sponsor_model_value.name"},
         ),
     ]
     extended_implementation_guide: Annotated[
         str | None,
         Field(
-            source="has_latest_sponsor_model_value__extends_version.name", nullable=True
+            json_schema_extra={
+                "source": "has_latest_sponsor_model_value__extends_version.name",
+                "nullable": True,
+            },
         ),
     ] = None
     library_name: Annotated[
-        str | None, Field(source="has_library.name", nullable=True)
+        str | None,
+        Field(json_schema_extra={"source": "has_library.name", "nullable": True}),
     ] = None
 
     @classmethod

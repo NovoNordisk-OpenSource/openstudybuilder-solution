@@ -1,3 +1,4 @@
+import re
 from abc import ABC, abstractmethod
 from datetime import datetime
 from typing import Any, Generic, Sequence, TypeVar
@@ -16,7 +17,13 @@ from clinical_mdr_api.domains.versioned_object_aggregate import (
 from clinical_mdr_api.models.concepts.activities.activity import (
     ActivityHierarchySimpleModel,
 )
-from clinical_mdr_api.models.controlled_terminologies.ct_term import SimpleTermModel
+from clinical_mdr_api.models.concepts.unit_definitions.unit_definition import (
+    UnitDefinitionModel,
+)
+from clinical_mdr_api.models.controlled_terminologies.ct_term import (
+    SimpleCTTermAttributes,
+    SimpleTermModel,
+)
 from clinical_mdr_api.models.utils import GenericFilteringReturn
 from clinical_mdr_api.repositories._utils import FilterOperator
 from clinical_mdr_api.services._meta_repository import MetaRepository
@@ -28,6 +35,7 @@ from clinical_mdr_api.services._utils import (
 from clinical_mdr_api.utils import normalize_string
 from common.auth.user import user
 from common.exceptions import BusinessLogicException, NotFoundException
+from common.utils import get_field_type
 
 _AggregateRootType = TypeVar("_AggregateRootType")
 
@@ -62,7 +70,7 @@ class ConceptGenericService(Generic[_AggregateRootType], ABC):
         :param reference_base_model: BaseModel
         :return None:
         """
-        for field_name in base_model_with_missing_values.__fields_set__:
+        for field_name in base_model_with_missing_values.model_fields_set:
             if isinstance(
                 getattr(base_model_with_missing_values, field_name), BaseModel
             ) and isinstance(getattr(reference_base_model, field_name), BaseModel):
@@ -74,9 +82,9 @@ class ConceptGenericService(Generic[_AggregateRootType], ABC):
                 )
 
         for field_name in (
-            reference_base_model.__fields_set__
-            - base_model_with_missing_values.__fields_set__
-        ).intersection(base_model_with_missing_values.__fields__):
+            reference_base_model.model_fields_set
+            - base_model_with_missing_values.model_fields_set
+        ).intersection(base_model_with_missing_values.model_fields):
             if isinstance(getattr(reference_base_model, field_name), SimpleTermModel):
                 setattr(
                     base_model_with_missing_values,
@@ -84,7 +92,12 @@ class ConceptGenericService(Generic[_AggregateRootType], ABC):
                     getattr(reference_base_model, field_name).term_uid,
                 )
             elif isinstance(getattr(reference_base_model, field_name), Sequence):
-                if reference_base_model.__fields__[field_name].type_ is SimpleTermModel:
+                if (
+                    get_field_type(
+                        reference_base_model.model_fields[field_name].annotation
+                    )
+                    is SimpleTermModel
+                ):
                     setattr(
                         base_model_with_missing_values,
                         field_name,
@@ -94,7 +107,9 @@ class ConceptGenericService(Generic[_AggregateRootType], ABC):
                         ],
                     )
                 elif (
-                    reference_base_model.__fields__[field_name].type_
+                    get_field_type(
+                        reference_base_model.model_fields[field_name].annotation
+                    )
                     is ActivityHierarchySimpleModel
                 ):
                     setattr(
@@ -326,7 +341,9 @@ class ConceptGenericService(Generic[_AggregateRootType], ABC):
             )
 
             versions = [
-                self._transform_aggregate_root_to_pydantic_model(codelist_ar).dict()
+                self._transform_aggregate_root_to_pydantic_model(
+                    codelist_ar
+                ).model_dump()
                 for codelist_ar in all_versions
             ]
             return calculate_diffs(versions, self.version_class)
@@ -369,6 +386,149 @@ class ConceptGenericService(Generic[_AggregateRootType], ABC):
     def create(self, concept_input: BaseModel, preview: bool = False) -> BaseModel:
         return self.non_transactional_create(concept_input, preview)
 
+    def generate_default_name(self, response_model):
+        param_specific_item_classes = {}
+
+        # fetching ct_term data and unit definition data
+        for item in response_model.activity_items:
+            if item.is_adam_param_specific:
+                activity_class_vo = (
+                    self._repos.activity_item_class_repository.find_by_uid_2(
+                        item.activity_item_class.uid
+                    ).activity_item_class_vo
+                )
+                lower_activity_item_class_name_lower = activity_class_vo.name.lower()
+
+                if item.ct_terms:
+                    param_specific_item_classes[
+                        lower_activity_item_class_name_lower
+                    ] = SimpleTermModel.from_ct_code(
+                        item.ct_terms[0].uid,
+                        self._repos.ct_term_name_repository.find_by_uid,
+                    ).name
+                elif item.unit_definitions:
+                    param_specific_item_classes[
+                        lower_activity_item_class_name_lower
+                    ] = UnitDefinitionModel.from_unit_definition_ar(
+                        self._repos.unit_definition_repository.find_by_uid_2(
+                            item.unit_definitions[0].uid
+                        ),
+                        find_term_by_uid=self._repos.ct_term_name_repository.find_by_uid,
+                        find_dictionary_term_by_uid=self._repos.dictionary_term_generic_repository.find_by_uid,
+                    ).name
+        activity_item_classes_order = [
+            "location",
+            "laterality",
+            "directionality",
+            "position",
+            "specimen",
+            "method",
+            "analysis_method",
+            "fasting_status",
+            "standard_unit",
+        ]
+
+        param_names = [
+            param_specific_item_classes[cls]
+            for cls in activity_item_classes_order
+            if cls in param_specific_item_classes and cls != "standard_unit"
+        ]
+        standard_unit_suffix = (
+            f" ({param_specific_item_classes['standard_unit']})"
+            if "standard_unit" in param_specific_item_classes
+            else ""
+        )
+        name_parts = [
+            item.activity.name
+            for item in response_model.activity_groupings
+            if item.activity and item.activity.name
+        ] + param_names
+
+        generated_name = " ".join(name_parts).strip()
+        activity_sequence_number = 0
+        final_generated_name = f"{generated_name}{standard_unit_suffix}"
+        while self.repository.exists_by("name", final_generated_name, False):
+            activity_sequence_number += 1
+            final_generated_name = (
+                f"{generated_name} {activity_sequence_number}{standard_unit_suffix}"
+            )
+        return final_generated_name
+
+    def generate_default_topic_code(self, response_model):
+        without_special_characters = "".join(
+            re.findall(r"[a-zA-Z0-9 ]+", response_model.name)
+        )
+        final_topic_code = "_".join(without_special_characters.upper().split(" "))
+        return final_topic_code
+
+    def generate_default_name_sentence_case(self, response_model):
+
+        current_name: str = response_model.name
+        split = re.split(r"(\(.*\))", current_name)
+        standard_unit = ""
+        name_without_standard_unit = ""
+        if len(split) > 1:
+            name_without_standard_unit = split[0]
+            standard_unit = split[1]
+        else:
+            name_without_standard_unit = current_name
+        final_name = name_without_standard_unit.lower() + standard_unit
+        return final_name.strip()
+
+    def generate_default_adam_code(self, response_model):
+        adam_initial_4 = ""
+        param_param_cd_list = [
+            "--LOC",
+            "--LAT",
+            "--DIR",
+            "--POS",
+            "--SPEC",
+            "--METHOD",
+            "--ANMETH",
+            "--FAST",
+        ]
+        param_param_cd_ctterm_list = []
+        # fetching ct_term data and unit definition data
+        for item in response_model.activity_items:
+            activity_class_vo = (
+                self._repos.activity_item_class_repository.find_by_uid_2(
+                    item.activity_item_class.uid
+                ).activity_item_class_vo
+            )
+            # variable_class_uid = activity_class_vo.variable_class_uids[0]
+            if activity_class_vo.name == "test_code" and item.ct_terms:
+                ct_attribute = SimpleCTTermAttributes.from_term_uid(
+                    uid=item.ct_terms[0].uid,
+                    find_term_by_uid=self._repos.ct_term_attributes_repository.find_by_uid,
+                )
+                ct_code_submission_value = ct_attribute.code_submission_value
+                adam_initial_4 = "".join(ct_code_submission_value[:4]).upper()
+
+            if (
+                activity_class_vo.variable_class_uids
+                and activity_class_vo.variable_class_uids[0] in param_param_cd_list
+                and item.ct_terms
+            ):
+                for ct_term in item.ct_terms:
+                    param_param_cd_ctterm_list.append(
+                        SimpleTermModel.from_ct_code(
+                            ct_term.uid, self._repos.ct_term_name_repository.find_by_uid
+                        ).name[0]
+                    )
+        adam_final4 = "".join(param_param_cd_ctterm_list).strip()
+
+        adam_final = adam_initial_4 + "".join(adam_final4[:4]).upper()
+        activity_sequence_number = 0
+        final_generated_name = adam_final
+        while self.repository.exists_by("adam_param_code", final_generated_name, False):
+            activity_sequence_number += 1
+            final_generated_name = f"{adam_final}{activity_sequence_number}"
+            number_of_letters_to_remove = 0
+            while len(final_generated_name) > 8:
+                number_of_letters_to_remove += 1
+                final_generated_name = f"{adam_final[:7-number_of_letters_to_remove]}{activity_sequence_number}"
+        return final_generated_name
+
     def non_transactional_create(
         self, concept_input: BaseModel, preview: bool = False
     ) -> BaseModel:
@@ -385,6 +545,7 @@ class ConceptGenericService(Generic[_AggregateRootType], ABC):
         )
 
         if preview:
+            # Generate the preview uid
             concept_ar = self._create_aggregate_root(
                 concept_input=concept_input,
                 library=library_vo,
@@ -396,7 +557,21 @@ class ConceptGenericService(Generic[_AggregateRootType], ABC):
                 library=library_vo,
             )
             self.repository.save(concept_ar)
-        return self._transform_aggregate_root_to_pydantic_model(concept_ar)
+        response_model = self._transform_aggregate_root_to_pydantic_model(concept_ar)
+        # generate default name if not specified by the user
+        if preview and not concept_input.name:
+            response_model.name = self.generate_default_name(response_model)
+        if preview and not concept_input.name_sentence_case:
+            response_model.name_sentence_case = (
+                self.generate_default_name_sentence_case(response_model)
+            )
+        if preview and not concept_input.topic_code:
+            response_model.topic_code = self.generate_default_topic_code(response_model)
+        if preview and not concept_input.adam_param_code:
+            response_model.adam_param_code = self.generate_default_adam_code(
+                response_model
+            )
+        return response_model
 
     @db.transaction
     def approve(self, uid: str, cascade_edit_and_approve: bool = False) -> BaseModel:

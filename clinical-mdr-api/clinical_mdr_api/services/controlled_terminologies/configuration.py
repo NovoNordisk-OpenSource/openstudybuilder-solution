@@ -176,7 +176,7 @@ class CTConfigService:
     def _fill_missing_values_in_base_model_from_reference_base_model(
         *, base_model_with_missing_values: BaseModel, reference_base_model: BaseModel
     ) -> None:
-        for field_name in base_model_with_missing_values.__fields_set__:
+        for field_name in base_model_with_missing_values.model_fields_set:
             if isinstance(
                 getattr(base_model_with_missing_values, field_name), BaseModel
             ) and isinstance(getattr(reference_base_model, field_name), BaseModel):
@@ -188,9 +188,9 @@ class CTConfigService:
                 )
 
         for field_name in (
-            reference_base_model.__fields_set__
-            - base_model_with_missing_values.__fields_set__
-        ).intersection(base_model_with_missing_values.__fields__):
+            reference_base_model.model_fields_set
+            - base_model_with_missing_values.model_fields_set
+        ).intersection(base_model_with_missing_values.model_fields):
             setattr(
                 base_model_with_missing_values,
                 field_name,

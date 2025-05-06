@@ -3,6 +3,7 @@ from typing import Annotated, Any, Callable, Self
 
 from pydantic import Field
 
+from clinical_mdr_api.descriptions.general import CHANGES_FIELD_DESC
 from clinical_mdr_api.domains.dictionaries.dictionary_term import DictionaryTermAR
 from clinical_mdr_api.domains.dictionaries.dictionary_term_substance import (
     DictionaryTermSubstanceAR,
@@ -44,8 +45,12 @@ class DictionaryTerm(BaseModel):
     dictionary_id: str
     name: str
     name_sentence_case: str
-    abbreviation: Annotated[str | None, Field(nullable=True)] = None
-    definition: Annotated[str | None, Field(nullable=True)] = None
+    abbreviation: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
+    definition: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
 
     possible_actions: Annotated[
         list[str],
@@ -58,12 +63,20 @@ class DictionaryTerm(BaseModel):
     ]
 
     library_name: str
-    start_date: Annotated[datetime | None, Field(nullable=True)] = None
-    end_date: Annotated[datetime | None, Field(nullable=True)] = None
-    status: Annotated[str | None, Field(nullable=True)] = None
-    version: Annotated[str | None, Field(nullable=True)] = None
-    change_description: Annotated[str | None, Field(nullable=True)] = None
-    author_username: Annotated[str | None, Field(nullable=True)] = None
+    start_date: Annotated[
+        datetime | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    end_date: Annotated[
+        datetime | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    status: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    version: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    change_description: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    author_username: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
 
 
 class DictionaryTermEditInput(PatchInputModel):
@@ -86,7 +99,9 @@ class DictionaryTermCreateInput(PostInputModel):
 
 
 class DictionaryTermSubstance(DictionaryTerm):
-    pclass: Annotated[SimpleDictionaryTermModel | None, Field(nullable=True)] = None
+    pclass: Annotated[
+        SimpleDictionaryTermModel | None, Field(json_schema_extra={"nullable": True})
+    ] = None
 
     @classmethod
     def from_dictionary_term_ar(
@@ -124,9 +139,9 @@ class CompoundSubstance(BaseModel):
     substance_term_uid: str
     substance_name: str
     substance_unii: str
-    pclass_term_uid: str | None
-    pclass_name: str | None
-    pclass_id: str | None
+    pclass_term_uid: str | None = None
+    pclass_name: str | None = None
+    pclass_id: str | None = None
 
     @classmethod
     def from_term_uid(
@@ -173,12 +188,8 @@ class DictionaryTermVersion(DictionaryTerm):
     """
 
     changes: Annotated[
-        dict[str, bool] | None,
+        list[str],
         Field(
-            description=(
-                "Denotes whether or not there was a change in a specific field/property compared to the previous version. "
-                "The field names in this object here refer to the field names of the objective (e.g. name, start_date, ..)."
-            ),
-            nullable=True,
+            description=CHANGES_FIELD_DESC,
         ),
-    ] = None
+    ] = []

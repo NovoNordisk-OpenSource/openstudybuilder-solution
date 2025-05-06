@@ -76,7 +76,7 @@ def test_adam_listing_mdvisit(api_client, test_data):
         AVISIT1="Day 1",
         AVISIT2="Week 1",
         AVISIT2N="1",
-    )
+    ).model_dump()
     assert res[0] == expected_output
 
     # headers endpoint testing

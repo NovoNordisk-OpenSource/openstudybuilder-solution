@@ -22,9 +22,7 @@
           <template #prepend-item>
             <v-list-item :title="$t('_global.view_all')" @click="toggle">
               <template #prepend>
-                <v-checkbox-btn
-                  :model-value="selectAll"
-                />
+                <v-checkbox-btn :model-value="selectAll" />
               </template>
             </v-list-item>
           </template>
@@ -49,7 +47,8 @@
         {{ i.title }}
       </div>
       <div v-if="i.value === 'arms'" class="text-h6 font-weight-bold ml-4 mb-1">
-        {{ $t('StudyDisclosure.intervention_type') }}: {{ data.intervention_type }}
+        {{ $t('StudyDisclosure.intervention_type') }}:
+        {{ data.intervention_type }}
       </div>
       <v-data-table
         :headers="dataArray[i.index].headers"
@@ -61,7 +60,7 @@
         <template #bottom />
       </v-data-table>
     </div>
-</div>
+  </div>
 </template>
 
 <script setup>
@@ -90,26 +89,26 @@ const downloadLoading = ref(false)
 const defaultHeaders = [
   { title: t('StudyDisclosure.sb_term'), key: 'sbLabel' },
   { title: t('StudyDisclosure.pharma_term'), key: 'pharmaLabel' },
-  { title: t('_global.values'), key: 'value' }
+  { title: t('_global.values'), key: 'value' },
 ]
 const idsHeaders = [
   { title: t('StudyDisclosure.secondary_id'), key: 'secondary_id' },
   { title: t('StudyDisclosure.secondary_id_type'), key: 'id_type' },
-  { title: t('StudyDisclosure.registry_id'), key: 'description' }
+  { title: t('StudyDisclosure.registry_id'), key: 'description' },
 ]
 const armsHeaders = [
-  { title: t('StudyDisclosure.arm_title'), key: 'arm_title' },  
+  { title: t('StudyDisclosure.arm_title'), key: 'arm_title' },
   { title: t('_global.type'), key: 'arm_type' },
-  { title: t('_global.description'), key: 'arm_description' }
+  { title: t('_global.description'), key: 'arm_description' },
 ]
 const measuresHeaders = [
   { title: t('StudyDisclosure.outcome_measure'), key: 'title' },
   { title: t('StudyDisclosure.timeframe'), key: 'timeframe' },
-  { title: t('_global.description'), key: 'description' }
+  { title: t('_global.description'), key: 'description' },
 ]
 const eligibilityHeaders = [
-  { title:  t('_global.title'), key: 'title' },
-  { title:  t('_global.values'), key: 'value' }
+  { title: t('_global.title'), key: 'title' },
+  { title: t('_global.values'), key: 'value' },
 ]
 
 const identificationParams = ref([
@@ -218,9 +217,7 @@ function toggle() {
 
 function getPharmaCm() {
   loading.value = true
-  study.getPharmaCm(
-    studiesGeneralStore.selectedStudy.uid
-  ).then(resp => {
+  study.getPharmaCm(studiesGeneralStore.selectedStudy.uid).then((resp) => {
     data.value = resp.data
     setTableData()
   })
@@ -228,31 +225,41 @@ function getPharmaCm() {
 
 function getPharmaCmXml() {
   downloadLoading.value = true
-  study.getPharmaCmXml(
-    studiesGeneralStore.selectedStudy.uid
-  ).then(resp => {
-      exportLoader.downloadFile(
-        resp.data,
-        'text/xml',
-        t('StudyDisclosure.study_disclosure') + ' ' + studiesGeneralStore.selectedStudy.uid
-      )
-      downloadLoading.value = false
-    }
-  )
+  study.getPharmaCmXml(studiesGeneralStore.selectedStudy.uid).then((resp) => {
+    exportLoader.downloadFile(
+      resp.data,
+      'text/xml',
+      t('StudyDisclosure.study_disclosure') +
+        ' ' +
+        studiesGeneralStore.selectedStudy.current_metadata
+          .identification_metadata.study_id
+    )
+    downloadLoading.value = false
+  })
 }
 
 function setTableData() {
   setParams(identificationParams.value)
   setParams(designParams.value)
   setParams(eligibilityParams.value)
-  conditionsParams.value[0].value = data.value.primary_disease_or_condition_being_studied.join(', ')
+  conditionsParams.value[0].value =
+    data.value.primary_disease_or_condition_being_studied.join(', ')
 
-  dataArray.value[0] = { data: identificationParams.value, headers: defaultHeaders }
+  dataArray.value[0] = {
+    data: identificationParams.value,
+    headers: defaultHeaders,
+  }
   dataArray.value[1] = { data: data.value.secondary_ids, headers: idsHeaders }
   dataArray.value[2] = { data: designParams.value, headers: defaultHeaders }
   dataArray.value[3] = { data: data.value.study_arms, headers: armsHeaders }
-  dataArray.value[4] = { data: data.value.outcome_measures, headers: measuresHeaders }
-  dataArray.value[5] = { data: eligibilityParams.value, headers: eligibilityHeaders }
+  dataArray.value[4] = {
+    data: data.value.outcome_measures,
+    headers: measuresHeaders,
+  }
+  dataArray.value[5] = {
+    data: eligibilityParams.value,
+    headers: eligibilityHeaders,
+  }
   dataArray.value[6] = { data: conditionsParams.value, headers: defaultHeaders }
 
   loading.value = false
@@ -260,18 +267,19 @@ function setTableData() {
 
 function setParams(params) {
   params.forEach((param, index) => {
-    if (data.value[param.value] && typeof data.value[param.value] === 'object') {
+    if (
+      data.value[param.value] &&
+      typeof data.value[param.value] === 'object'
+    ) {
       params[index].value = data.value[param.value].join(', ')
     } else {
       params[index].value = data.value[param.value]
     }
   })
 }
-
 </script>
 <style>
 .table {
   width: auto !important;
 }
 </style>
-  

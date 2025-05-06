@@ -114,7 +114,7 @@ def example_correction(db_driver, log, run_label):
     This correction adds the missing `is_dummy` property on the `HAS_DUMMY_VALUE` relationship
     between `DummyRoot` and `DummyValue` nodes.
 
-    - [Related PR](https://dev.azure.com/novonordiskit/Clinical-MDR/_git/neo4j-mdr-db/pullrequest/123456)
+    - [Related PR](https://dev.azure.com/orgremoved/Clinical-MDR/_git/neo4j-mdr-db/pullrequest/123456)
 
     ### Nodes and relationships affected
     - `HAS_DUMMY_VALUE` between `DummyRoot` and `DummyValue` nodes.
@@ -319,3 +319,4 @@ TEST_DATA = "\n".join(
     ]
 )
 ```
+

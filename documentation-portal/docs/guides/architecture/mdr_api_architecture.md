@@ -400,10 +400,10 @@ or run the following command to save the report to a file:
 ```
 pipenv run lint > linting_report.txt
 ```
-[Build pipeline](https://novonordiskit.visualstudio.com/Clinical-MDR/_git/clinical-mdr-api?path=/azurebuild.yml&version=GBmain&_a=contents) is running this linting check as one of the first steps, and the whole build job will fail if Pylint reports any issues.
+[Build pipeline](https://orgremoved.visualstudio.com/Clinical-MDR/_git/clinical-mdr-api?path=/azurebuild.yml&version=GBmain&_a=contents) is running this linting check as one of the first steps, and the whole build job will fail if Pylint reports any issues.
 
 ### pyproject.toml
-[`pyproject.toml`](https://novonordiskit.visualstudio.com/Clinical-MDR/_git/clinical-mdr-api?path=/pyproject.toml&version=GBmain&_a=contents) is the file where we define custom settings for Pylint and other tools used in our project. 
+[`pyproject.toml`](https://orgremoved.visualstudio.com/Clinical-MDR/_git/clinical-mdr-api?path=/pyproject.toml&version=GBmain&_a=contents) is the file where we define custom settings for Pylint and other tools used in our project. 
 
 Sections related to Pylint are marked with `[tool.pylint.'<setting>']`, where `'<setting>'` refers to a Pylint setting that we wish to customize.
 
@@ -525,3 +525,4 @@ Usual Data Objects Properties
 #### Common Services
 ### Repository
 ### Domain
+

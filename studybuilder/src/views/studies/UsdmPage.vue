@@ -73,7 +73,7 @@ onMounted(() => {
   loading.value = true
   const preElement = document.getElementById('json-data')
   study.getDdfUsdmJson(studiesGeneralStore.selectedStudy.uid).then((resp) => {
-    preElement.innerHTML = JSON.stringify(resp.data.study, null, 2)
+    preElement.innerText = JSON.stringify(resp.data.study, null, 2)
     version.value = resp.data.usdmVersion
     loading.value = false
   })

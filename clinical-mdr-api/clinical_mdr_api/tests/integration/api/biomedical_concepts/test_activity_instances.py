@@ -27,6 +27,7 @@ from clinical_mdr_api.models.concepts.activities.activity_item import ActivityIt
 from clinical_mdr_api.models.concepts.activities.activity_sub_group import (
     ActivitySubGroup,
 )
+from clinical_mdr_api.models.concepts.odms.odm_item import OdmItem
 from clinical_mdr_api.models.controlled_terminologies.ct_term import CTTerm
 from clinical_mdr_api.tests.integration.utils.api import (
     inject_and_clear_db,
@@ -55,6 +56,7 @@ activity_instance_classes: list[ActivityInstanceClass]
 activity_items: list[ActivityItem]
 activity_item_classes: list[ActivityItemClass]
 ct_terms: list[CTTerm]
+odm_items: list[OdmItem]
 role_term: CTTerm
 data_type_term: CTTerm
 
@@ -103,9 +105,27 @@ def test_data():
 
     global activity_instance_classes
     activity_instance_classes = [
-        TestUtils.create_activity_instance_class(name="Activity instance class 1"),
-        TestUtils.create_activity_instance_class(name="Activity instance class 2"),
-        TestUtils.create_activity_instance_class(name="Activity instance class 3"),
+        TestUtils.create_activity_instance_class(
+            name="Activity instance class 1",
+            definition="def Activity instance class 1",
+            is_domain_specific=True,
+            level=1,
+        ),
+        TestUtils.create_activity_instance_class(
+            name="Activity instance class 2",
+            definition="def Activity instance class 2",
+            is_domain_specific=True,
+            level=2,
+            parent_uid="ActivityInstanceClass_000001",
+        ),
+        TestUtils.create_activity_instance_class(
+            name="Activity instance class 3",
+            definition="def Activity instance class 3",
+            is_domain_specific=True,
+            level=3,
+            parent_uid="ActivityInstanceClass_000002",
+        ),
+        TestUtils.create_activity_instance_class(name="NumericFindings"),
     ]
     global activity_item_classes
     global data_type_term
@@ -116,29 +136,45 @@ def test_data():
         TestUtils.create_activity_item_class(
             name="Activity Item Class name1",
             order=1,
-            mandatory=True,
-            activity_instance_class_uids=[activity_instance_classes[0].uid],
+            activity_instance_classes=[
+                {
+                    "uid": activity_instance_classes[0].uid,
+                    "mandatory": True,
+                    "is_adam_param_specific_enabled": True,
+                }
+            ],
             role_uid=role_term.term_uid,
             data_type_uid=data_type_term.term_uid,
         ),
         TestUtils.create_activity_item_class(
             name="Activity Item Class name2",
             order=2,
-            mandatory=True,
-            activity_instance_class_uids=[activity_instance_classes[1].uid],
+            activity_instance_classes=[
+                {
+                    "uid": activity_instance_classes[1].uid,
+                    "mandatory": True,
+                    "is_adam_param_specific_enabled": True,
+                }
+            ],
             role_uid=role_term.term_uid,
             data_type_uid=data_type_term.term_uid,
         ),
         TestUtils.create_activity_item_class(
             name="Activity Item Class name3",
             order=3,
-            mandatory=True,
-            activity_instance_class_uids=[activity_instance_classes[2].uid],
+            activity_instance_classes=[
+                {
+                    "uid": activity_instance_classes[2].uid,
+                    "mandatory": True,
+                    "is_adam_param_specific_enabled": False,
+                }
+            ],
             role_uid=role_term.term_uid,
             data_type_uid=data_type_term.term_uid,
         ),
     ]
     global ct_terms
+    global odm_items
 
     codelist = TestUtils.create_ct_codelist(extensible=True, approve=True)
     ct_terms = [
@@ -150,6 +186,11 @@ def test_data():
             codelist_uid=codelist.codelist_uid,
             sponsor_preferred_name="Activity item term2",
         ),
+    ]
+    odm_items = [
+        TestUtils.create_odm_item(name="ODM Item 1"),
+        TestUtils.create_odm_item(name="ODM Item 2"),
+        TestUtils.create_odm_item(name="ODM Item 3"),
     ]
     global activity_items
     activity_items = [
@@ -165,16 +206,22 @@ def test_data():
                     ).term_uid,
                 ).uid
             ],
+            "is_adam_param_specific": True,
+            "odm_item_uids": [odm_items[0].uid],
         },
         {
             "activity_item_class_uid": activity_item_classes[1].uid,
             "ct_term_uids": [ct_terms[1].term_uid],
             "unit_definition_uids": [],
+            "is_adam_param_specific": False,
+            "odm_item_uids": [odm_items[1].uid],
         },
         {
             "activity_item_class_uid": activity_item_classes[2].uid,
             "ct_term_uids": [ct_terms[0].term_uid, ct_terms[1].term_uid],
             "unit_definition_uids": [],
+            "is_adam_param_specific": False,
+            "odm_item_uids": [odm_items[0].uid, odm_items[2].uid],
         },
     ]
     global activity_instances_all
@@ -188,7 +235,7 @@ def test_data():
             name_sentence_case="name A",
             topic_code="topic code A",
             is_research_lab=True,
-            molecular_weight=13,
+            molecular_weight=None,
             is_required_for_activity=True,
             activities=[activities[0].uid],
             activity_subgroups=[activity_subgroup.uid],
@@ -241,6 +288,17 @@ def test_data():
             activity_items=[activity_items[0], activity_items[1]],
         ),
     ]
+    TestUtils.create_activity_instance(
+        activity_instance_class_uid=activity_instance_classes[0].uid,
+        nci_concept_id="C-ZZZ",
+        topic_code="topic code ZZZ",
+        is_required_for_activity=True,
+        activities=[activities[0].uid],
+        activity_subgroups=[activity_subgroup.uid],
+        activity_groups=[activity_group.uid],
+        activity_items=[activity_items[0], activity_items[1], activity_items[2]],
+        preview=True,
+    )
 
     for index in range(5):
         activity_instances_all.append(
@@ -359,7 +417,7 @@ def test_get_activity_instance(api_client):
     assert res["name_sentence_case"] == "name A"
     assert res["topic_code"] == "topic code A"
     assert res["is_research_lab"] is True
-    assert res["molecular_weight"] == 13
+    assert res["molecular_weight"] is None
     assert len(res["activity_groupings"]) == 1
     assert res["activity_groupings"][0]["activity"]["uid"] == activities[0].uid
     assert res["activity_groupings"][0]["activity"]["name"] == activities[0].name
@@ -376,6 +434,7 @@ def test_get_activity_instance(api_client):
     assert res["activity_instance_class"]["uid"] == activity_instance_classes[0].uid
     assert res["activity_instance_class"]["name"] == activity_instance_classes[0].name
     assert len(res["activity_items"]) == 1
+    assert res["activity_items"][0]["is_adam_param_specific"] is True
     assert (
         res["activity_items"][0]["activity_item_class"]["uid"]
         == activity_item_classes[0].uid
@@ -395,6 +454,13 @@ def test_get_activity_instance(api_client):
         res["activity_items"][0]["unit_definitions"][0]["dimension_name"]
         == "Unit Dimension term"
     )
+    expected_odm_item_uids = set(
+        unit_uid for unit_uid in activity_items[0]["odm_item_uids"]
+    )
+    actual_odm_item_uids = set(
+        unit["uid"] for unit in res["activity_items"][0]["odm_items"]
+    )
+    assert expected_odm_item_uids == actual_odm_item_uids
 
     assert res["library_name"] == "Sponsor"
     assert res["definition"] is None
@@ -761,12 +827,41 @@ def test_filtering_versions_exact(
 
 
 def test_edit_activity_instance(api_client):
+    activity_instance_preview = TestUtils.create_activity_instance(
+        activity_instance_class_uid=activity_instance_classes[0].uid,
+        nci_concept_id="C-123",
+        activities=[activities[0].uid],
+        activity_subgroups=[activity_subgroup.uid],
+        activity_groups=[activity_group.uid],
+        activity_items=[activity_items[0]],
+        approve=False,
+        preview=True,
+    )
+    assert activity_instance_preview.adam_param_code == ""
+    assert activity_instance_preview.name == "Activity"
+    assert activity_instance_preview.name_sentence_case == "activity"
+    assert activity_instance_preview.topic_code == "ACTIVITY"
+    activity_instance_preview = TestUtils.create_activity_instance(
+        name="Activity (BU)",
+        activity_instance_class_uid=activity_instance_classes[0].uid,
+        nci_concept_id="C-123",
+        activities=[activities[0].uid],
+        activity_subgroups=[activity_subgroup.uid],
+        activity_groups=[activity_group.uid],
+        activity_items=[activity_items[0]],
+        approve=False,
+        preview=True,
+    )
+    assert activity_instance_preview.adam_param_code == ""
+    assert activity_instance_preview.name == "Activity (BU)"
+    assert activity_instance_preview.name_sentence_case == "activity (BU)"
+    assert activity_instance_preview.topic_code == "ACTIVITY_BU"
     activity_instance = TestUtils.create_activity_instance(
         name="Activity Instance",
         activity_instance_class_uid=activity_instance_classes[0].uid,
         name_sentence_case="activity instance",
         nci_concept_id="C-123",
-        topic_code="activity instance tc",
+        topic_code="activity instance tc 2",
         activities=[activities[0].uid],
         activity_subgroups=[activity_subgroup.uid],
         activity_groups=[activity_group.uid],
@@ -781,7 +876,7 @@ def test_edit_activity_instance(api_client):
     assert res["name"] == "Activity Instance"
     assert res["name_sentence_case"] == "activity instance"
     assert res["nci_concept_id"] == "C-123"
-    assert res["topic_code"] == "activity instance tc"
+    assert res["topic_code"] == "activity instance tc 2"
     assert len(res["activity_groupings"]) == 1
     assert res["activity_groupings"][0]["activity"]["uid"] == activities[0].uid
     assert res["activity_groupings"][0]["activity"]["name"] == activities[0].name
@@ -797,6 +892,7 @@ def test_edit_activity_instance(api_client):
     assert res["activity_groupings"][0]["activity_group"]["name"] == activity_group.name
     assert res["activity_instance_class"]["uid"] == activity_instance_classes[0].uid
     assert len(res["activity_items"]) == 1
+    assert res["activity_items"][0]["is_adam_param_specific"] is True
     assert res["version"] == "0.1"
     assert res["status"] == "Draft"
     assert res["possible_actions"] == ["approve", "delete", "edit"]
@@ -826,7 +922,7 @@ def test_edit_activity_instance(api_client):
                     "activity_group_uid": activity_group.uid,
                 }
             ],
-            "activity_instance_class_uid": activity_instance_classes[1].uid,
+            "activity_instance_class_uid": activity_instance_classes[0].uid,
             "activity_items": [activity_items[0], activity_items[1]],
             "change_description": "modifying activity instance",
         },
@@ -836,7 +932,7 @@ def test_edit_activity_instance(api_client):
     assert res["name"] == "new name"
     assert res["name_sentence_case"] == "new name"
     assert res["nci_concept_id"] == "C-123NEW"
-    assert res["topic_code"] == "activity instance tc"
+    assert res["topic_code"] == "activity instance tc 2"
     assert len(res["activity_groupings"]) == 1
     assert res["activity_groupings"][0]["activity"]["uid"] == activities[1].uid
     assert res["activity_groupings"][0]["activity"]["name"] == activities[1].name
@@ -850,9 +946,12 @@ def test_edit_activity_instance(api_client):
     )
     assert res["activity_groupings"][0]["activity_group"]["uid"] == activity_group.uid
     assert res["activity_groupings"][0]["activity_group"]["name"] == activity_group.name
-    assert res["activity_instance_class"]["uid"] == activity_instance_classes[1].uid
+    assert res["activity_instance_class"]["uid"] == activity_instance_classes[0].uid
     items = res["activity_items"]
     assert len(items) == 2
+    assert items[0]["is_adam_param_specific"] is True
+    assert items[1]["is_adam_param_specific"] is False
+
     items = sorted(items, key=lambda x: x["activity_item_class"]["uid"])
 
     assert items[0]["activity_item_class"]["uid"] == activity_item_classes[0].uid
@@ -864,6 +963,11 @@ def test_edit_activity_instance(api_client):
     )
     actual_unit_uids = set(unit["uid"] for unit in items[0]["unit_definitions"])
     assert expected_unit_uids == actual_unit_uids
+    expected_odm_item_uids = set(
+        odm_item_uid for odm_item_uid in activity_items[0]["odm_item_uids"]
+    )
+    actual_odm_item_uids = set(unit["uid"] for unit in items[0]["odm_items"])
+    assert expected_odm_item_uids == actual_odm_item_uids
 
     assert items[1]["activity_item_class"]["uid"] == activity_item_classes[1].uid
     expected_term_uids = set(term_uid for term_uid in activity_items[1]["ct_term_uids"])
@@ -874,6 +978,11 @@ def test_edit_activity_instance(api_client):
     )
     actual_unit_uids = set(unit["uid"] for unit in items[1]["unit_definitions"])
     assert expected_unit_uids == actual_unit_uids
+    expected_odm_item_uids = set(
+        odm_item_uid for odm_item_uid in activity_items[1]["odm_item_uids"]
+    )
+    actual_odm_item_uids = set(unit["uid"] for unit in items[1]["odm_items"])
+    assert expected_odm_item_uids == actual_odm_item_uids
 
     assert res["version"] == "0.3"
     assert res["status"] == "Draft"
@@ -922,6 +1031,7 @@ def test_post_activity_instance(api_client):
     assert res["activity_groupings"][0]["activity_group"]["name"] == activity_group.name
     assert res["activity_instance_class"]["uid"] == activity_instance_classes[0].uid
     assert len(res["activity_items"]) == 1
+    assert res["activity_items"][0]["is_adam_param_specific"] is False
     assert (
         res["activity_items"][0]["activity_item_class"]["uid"]
         == activity_item_classes[1].uid
@@ -937,6 +1047,13 @@ def test_post_activity_instance(api_client):
         unit["uid"] for unit in res["activity_items"][0]["unit_definitions"]
     )
     assert expected_unit_uids == actual_unit_uids
+    expected_odm_item_uids = set(
+        odm_item_uid for odm_item_uid in item_to_post["odm_item_uids"]
+    )
+    actual_odm_item_uids = set(
+        unit["uid"] for unit in res["activity_items"][0]["odm_items"]
+    )
+    assert expected_odm_item_uids == actual_odm_item_uids
 
     assert res["name_sentence_case"] == "activity instance name"
     assert res["topic_code"] is None
@@ -1079,27 +1196,37 @@ def verify_instance_overview_content(res: dict):
     # activity items
     items = res["activity_items"]
     assert len(items) == 3
+    assert items[0]["is_adam_param_specific"] is False
+    assert items[1]["is_adam_param_specific"] is False
+    assert items[2]["is_adam_param_specific"] is True
+
     items = sorted(items, key=lambda item: item["activity_item_class"]["name"])
 
     assert len(items[0]["ct_terms"]) == 1
     assert items[0]["ct_terms"][0]["uid"] == ct_terms[0].term_uid
     assert items[0]["ct_terms"][0]["name"] == ct_terms[0].sponsor_preferred_name
     assert len(items[0]["unit_definitions"]) == 1
+    assert len(items[0]["odm_items"]) == 1
+    assert items[0]["odm_items"][0]["uid"] == odm_items[0].uid
+    assert items[0]["odm_items"][0]["oid"] == odm_items[0].oid
+    assert items[0]["odm_items"][0]["name"] == odm_items[0].name
     assert items[0]["activity_item_class"]["name"] == "Activity Item Class name1"
     assert items[0]["activity_item_class"]["role_name"] == "Role"
     assert items[0]["activity_item_class"]["data_type_name"] == "Data type"
     assert items[0]["activity_item_class"]["order"] == 1
-    assert items[0]["activity_item_class"]["mandatory"] is True
 
     assert len(items[0]["ct_terms"]) == 1
     assert items[1]["ct_terms"][0]["uid"] == ct_terms[1].term_uid
     assert items[1]["ct_terms"][0]["name"] == ct_terms[1].sponsor_preferred_name
-    assert len(items[0]["unit_definitions"]) == 1
+    assert len(items[1]["unit_definitions"]) == 0
+    assert len(items[0]["odm_items"]) == 1
+    assert items[1]["odm_items"][0]["uid"] == odm_items[1].uid
+    assert items[1]["odm_items"][0]["oid"] == odm_items[1].oid
+    assert items[1]["odm_items"][0]["name"] == odm_items[1].name
     assert items[1]["activity_item_class"]["name"] == "Activity Item Class name2"
     assert items[1]["activity_item_class"]["role_name"] == "Role"
     assert items[1]["activity_item_class"]["data_type_name"] == "Data type"
     assert items[1]["activity_item_class"]["order"] == 2
-    assert items[1]["activity_item_class"]["mandatory"] is True
 
     assert len(items[2]["ct_terms"]) == 2
     terms = items[2]["ct_terms"]
@@ -1109,11 +1236,17 @@ def verify_instance_overview_content(res: dict):
     assert terms[1]["uid"] == ct_terms[1].term_uid
     assert terms[1]["name"] == ct_terms[1].sponsor_preferred_name
     assert len(items[0]["unit_definitions"]) == 1
+    assert len(items[0]["odm_items"]) == 1
+    assert items[2]["odm_items"][0]["uid"] == odm_items[0].uid
+    assert items[2]["odm_items"][0]["oid"] == odm_items[0].oid
+    assert items[2]["odm_items"][0]["name"] == odm_items[0].name
+    assert items[2]["odm_items"][1]["uid"] == odm_items[2].uid
+    assert items[2]["odm_items"][1]["oid"] == odm_items[2].oid
+    assert items[2]["odm_items"][1]["name"] == odm_items[2].name
     assert items[2]["activity_item_class"]["name"] == "Activity Item Class name3"
     assert items[2]["activity_item_class"]["role_name"] == "Role"
     assert items[2]["activity_item_class"]["data_type_name"] == "Data type"
     assert items[2]["activity_item_class"]["order"] == 3
-    assert items[2]["activity_item_class"]["mandatory"] is True
 
 
 def test_activity_instance_overview_export_to_yaml(api_client):
@@ -1381,7 +1514,7 @@ def test_updating_parents(api_client):
         activity_instance_class_uid=activity_instance_classes[0].uid,
         name_sentence_case=original_instance_name,
         nci_concept_id="C-1234",
-        topic_code="cascade activity instance tc",
+        topic_code="cascade activity instance tc 2",
         activities=[activity.uid],
         activity_subgroups=[subgroup.uid],
         activity_groups=[group.uid],
@@ -1637,7 +1770,7 @@ def test_updating_instance_to_new_activity(api_client):
         activity_instance_class_uid=activity_instance_classes[0].uid,
         name_sentence_case=instance_name,
         nci_concept_id="C-1234",
-        topic_code="cascade activity instance tc",
+        topic_code="cascade activity instance tc 3",
         activities=[activity.uid],
         activity_subgroups=[subgroup.uid],
         activity_groups=[group.uid],
@@ -1832,3 +1965,116 @@ def test_instance_to_activity_without_data_collection(api_client):
             approve=True,
         )
     assert "tried to connect to Activity without data collection" in exc.value.msg
+
+
+def test_create_activity_instance_with_molecular_weight(
+    api_client,
+):
+    response = api_client.post(
+        "/concepts/activities/activity-instances",
+        json={
+            "name": "activity instance name with molecular weight",
+            "name_sentence_case": "activity instance name with molecular weight",
+            "molecular_weight": 123.45,
+            "activity_groupings": [
+                {
+                    "activity_uid": activities[0].uid,
+                    "activity_subgroup_uid": activity_subgroup.uid,
+                    "activity_group_uid": activity_group.uid,
+                }
+            ],
+            "activity_instance_class_uid": activity_instance_classes[3].uid,
+            "activity_items": [
+                {
+                    "activity_item_class_uid": activity_item_classes[0].uid,
+                    "ct_term_uids": [ct_terms[0].term_uid],
+                    "unit_definition_uids": [
+                        TestUtils.create_unit_definition(
+                            name="new test unit",
+                            unit_dimension=TestUtils.create_ct_term(
+                                sponsor_preferred_name="Unit Dimension concentration term",
+                            ).term_uid,
+                        ).uid
+                    ],
+                    "odm_item_uids": [],
+                    "is_adam_param_specific": False,
+                }
+            ],
+            "is_required_for_activity": True,
+            "is_derived": True,
+            "library_name": "Sponsor",
+        },
+    )
+    assert_response_status_code(response, 201)
+    res = response.json()
+    assert res["name"] == "activity instance name with molecular weight"
+    assert res["name_sentence_case"] == "activity instance name with molecular weight"
+    assert res["molecular_weight"] == pytest.approx(123.45)
+
+
+def test_cannot_provide_molecular_weight_when_connecting_to_non_numeric_or_doesnt_have_concentration_unit_dimension(
+    api_client,
+):
+    item_to_post = activity_items[1]
+    response = api_client.post(
+        "/concepts/activities/activity-instances",
+        json={
+            "name": "activity instance name test",
+            "name_sentence_case": "activity instance name test",
+            "nci_concept_id": "C-456",
+            "molecular_weight": 123.45,
+            "activity_groupings": [
+                {
+                    "activity_uid": activities[0].uid,
+                    "activity_subgroup_uid": activity_subgroup.uid,
+                    "activity_group_uid": activity_group.uid,
+                }
+            ],
+            "activity_instance_class_uid": activity_instance_classes[0].uid,
+            "activity_items": [item_to_post],
+            "is_required_for_activity": True,
+            "is_derived": True,
+            "library_name": "Sponsor",
+        },
+    )
+    assert_response_status_code(response, 422)
+    res = response.json()
+    assert res["type"] == "ValidationException"
+    assert (
+        res["message"]
+        == "Molecular Weight can only be set for NumericFindings that has concentration units."
+    )
+
+
+def test_cannot_provide_is_adam_param_specific_if_is_adam_param_specific_enabled_is_false(
+    api_client,
+):
+    response = api_client.post(
+        "/concepts/activities/activity-instances",
+        json={
+            "name": "local activity instance name",
+            "name_sentence_case": "local activity instance name",
+            "activity_groupings": [],
+            "activity_instance_class_uid": activity_instance_classes[2].uid,
+            "activity_items": [
+                {
+                    "activity_item_class_uid": activity_item_classes[2].uid,
+                    "ct_term_uids": [ct_terms[1].term_uid],
+                    "unit_definition_uids": [],
+                    "is_adam_param_specific": True,
+                    "odm_item_uids": [],
+                }
+            ],
+            "is_required_for_activity": True,
+            "is_derived": True,
+            "library_name": "Sponsor",
+        },
+    )
+    assert_response_status_code(response, 400)
+    res = response.json()
+
+    assert res["type"] == "BusinessLogicException"
+    assert (
+        res["message"]
+        == "Activity Item's 'is_adam_param_specific' cannot be 'True' when the Activity Item Class' 'is_adam_param_specific_enabled' is 'False'."
+    )

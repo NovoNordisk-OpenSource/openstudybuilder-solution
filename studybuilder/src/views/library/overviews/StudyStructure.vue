@@ -2,9 +2,7 @@
   <div class="px-4">
     <div class="page-title d-flex align-center">
       {{ $t('StudyStructuresOverview.title') }}
-      <HelpButton
-        :help-text="$t('_help.StudyStructuresOverview.general')"
-      />
+      <HelpButton :help-text="$t('_help.StudyStructuresOverview.general')" />
     </div>
     <NNTable
       ref="table"

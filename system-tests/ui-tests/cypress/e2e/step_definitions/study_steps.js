@@ -34,10 +34,6 @@ Given('A study in locked status with defined study number and study title is sel
     cy.selectTestStudy('Study_000007')
 })
 
-Given('A study exists in the database', () => {
-    cy.checkStudyExists()
-})
-
 When('A new study is added', () => {
     cy.waitForTable()
     cy.clickButton('add-study')

@@ -23,7 +23,7 @@ Given('The CRF Item in {string} status exists', (status) => {
 Given('The CRF Item in draft status with sub 1 version exists', () => {
     oidValue = 'oidForDelete'
     cy.createCrfItem(oidValue)
-    cy.getRowIndexByText(oidValue).then(rowIndex => elementIndex = rowIndex)
+    cy.searchFor(oidValue)
 })
 
 Given('The CRF Item with linked Activity exists', () => {
@@ -60,6 +60,7 @@ When('The CRF Item metadata are updated and saved', () => {
         cy.clickFormActionButton('continue')
         cy.clickFormActionButton('continue')
         cy.clickFormActionButton('continue')
+        cy.clickFormActionButton('continue')
         cy.fillInput('item-change-description', 'Test Change Description')
         cy.clickFormActionButton('save')
         cy.waitForTable()
@@ -89,7 +90,4 @@ Then('The CRF Item status is changed to {string} and version is rounded up to fu
     cy.checkRowByIndex(elementIndex, 'Version', Math.ceil(newVersion))
 })
 
-Then('The CRF Item is no longer available', () => {
-    cy.wait(4000)
-    cy.contains(oidValue).should('not.exist')
-})
+Then('The CRF Item is no longer available', () => cy.confirmItemNotAvailable(oidValue))

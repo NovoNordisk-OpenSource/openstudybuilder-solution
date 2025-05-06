@@ -3,6 +3,7 @@ from typing import Annotated, Self
 
 from pydantic import Field
 
+from clinical_mdr_api.descriptions.general import CHANGES_FIELD_DESC
 from clinical_mdr_api.domains.syntax_templates.endpoint_template import (
     EndpointTemplateAR,
 )
@@ -22,28 +23,30 @@ class EndpointTemplateName(BaseModel):
         str | None,
         Field(
             description="The actual value/content. It may include parameters referenced by simple strings in square brackets [].",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ]
     name_plain: Annotated[
         str | None,
         Field(
             description="The plain text version of the name property, stripped of HTML tags",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ]
     guidance_text: Annotated[
         str | None,
         Field(
             description="Optional guidance text for using the template.",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
 
 
 class EndpointTemplateNameUid(EndpointTemplateName):
     uid: Annotated[str, Field(description="The unique id of the endpoint template.")]
-    sequence_id: Annotated[str | None, Field(nullable=True)] = None
+    sequence_id: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
 
 
 class EndpointTemplateNameUidLibrary(EndpointTemplateNameUid):
@@ -57,7 +60,7 @@ class EndpointTemplate(EndpointTemplateNameUid):
             default_factory=datetime.utcnow,
             description="Part of the metadata: The point in time when the (version of the) endpoint template was created. "
             "The format is ISO 8601 in UTC±0, e.g.: '2020-10-31T16:00:00+00:00' for October 31, 2020 at 6pm in UTC+2 timezone.",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ]
     end_date: Annotated[
@@ -66,7 +69,7 @@ class EndpointTemplate(EndpointTemplateNameUid):
             default_factory=datetime.utcnow,
             description="Part of the metadata: The point in time when the version of the endpoint template was closed (and a new one was created). "
             "The format is ISO 8601 in UTC±0, e.g.: '2020-10-31T16:00:00+00:00' for October 31, 2020 at 6pm in UTC+2 timezone.",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ]
     status: Annotated[
@@ -74,7 +77,7 @@ class EndpointTemplate(EndpointTemplateNameUid):
         Field(
             description="The status in which the (version of the) endpoint template is in. "
             "Possible values are: 'Final', 'Draft' or 'Retired'.",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ]
     version: Annotated[
@@ -82,20 +85,20 @@ class EndpointTemplate(EndpointTemplateNameUid):
         Field(
             description="The version number of the (version of the) endpoint template. "
             "The format is: <major>.<minor> where <major> and <minor> are digits. E.g. '0.1', '0.2', '1.0', ...",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
     change_description: Annotated[
         str | None,
         Field(
             description="A short description about what has changed compared to the previous version.",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
     author_username: Annotated[
         str | None,
         Field(
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
     possible_actions: Annotated[
@@ -115,7 +118,7 @@ class EndpointTemplate(EndpointTemplateNameUid):
         Library | None,
         Field(
             description="The library to which the endpoint template belongs.",
-            nullable=True,
+            json_schema_extra={"nullable": True},
         ),
     ] = None
 
@@ -173,7 +176,10 @@ class EndpointTemplate(EndpointTemplateNameUid):
 class EndpointTemplateWithCount(EndpointTemplate):
     counts: Annotated[
         ItemCounts | None,
-        Field(description="Optional counts of objective instantiations", nullable=True),
+        Field(
+            description="Optional counts of objective instantiations",
+            json_schema_extra={"nullable": True},
+        ),
     ] = None
 
     @classmethod
@@ -193,15 +199,11 @@ class EndpointTemplateWithCount(EndpointTemplate):
 
 class EndpointTemplateVersion(EndpointTemplate):
     changes: Annotated[
-        dict[str, bool] | None,
+        list[str],
         Field(
-            description=(
-                "Denotes whether or not there was a change in a specific field/property compared to the previous version. "
-                "The field names in this object here refer to the field names of the endpoint template (e.g. name, start_date, ..)."
-            ),
-            nullable=True,
+            description=CHANGES_FIELD_DESC,
         ),
-    ] = None
+    ] = []
 
 
 class EndpointTemplatePreValidateInput(PostInputModel):

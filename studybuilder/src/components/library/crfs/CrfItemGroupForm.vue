@@ -689,7 +689,7 @@ export default {
       await this.createOrUpdateDescription()
       this.form.library_name = libraries.LIBRARY_SPONSOR
       if (this.form.oid === 'G.') {
-        this.form.oid = ''
+        this.form.oid = null
       }
       try {
         if (this.isEdit()) {
@@ -763,7 +763,9 @@ export default {
       const descArray = []
       this.desc.forEach((e) => {
         if (e.uid) {
-          e.change_description = this.$t('CRFItemGroups.description_change_description')
+          e.change_description = this.$t(
+            'CRFItemGroups.description_change_description'
+          )
           descArray.push(e)
         } else {
           e.library_name = libraries.LIBRARY_SPONSOR
@@ -773,7 +775,9 @@ export default {
       if (!this.engDescription.name) {
         this.engDescription.name = this.form.name
       }
-      this.engDescription.change_description = this.$t('CRFItemGroups.description_change_description')
+      this.engDescription.change_description = this.$t(
+        'CRFItemGroups.description_change_description'
+      )
       descArray.push(this.engDescription)
       this.form.descriptions = descArray
     },

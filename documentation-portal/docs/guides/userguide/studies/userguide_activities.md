@@ -9,19 +9,16 @@ Defining the SoA consists of several parts and is used for multiple purposes in 
 The Study Activities menu consists of:
 
 - **Study Activities** Select the activities to be used in the study (to be further reused in data specifications, data collection specifications, data processing and data analysis). The activities can be selected from the library, from other studies or activity placeholders can be created for requesting new activities.
-- **Detailed SoA** Define scheduling of activities by visits, control the level of details to be displayed in the protocol SoA overview table and add footnotes to activities, epochs, visits and collection schedules (the X’s). You also have the option to expand and collapse the view to support navigation as well as downloads in various file formats.
-- **SoA Footnotes** Select or create footnotes to be used in the study protocol SoA. Footnotes can be selected from library, other studies or created from scratch.
-- **Protocol SoA** Here you can preview the SoA at multiple levels, the high-level overview for protocol section 2, the detailed view corresponding to definitions in section 8 and appendixes as well as the operational data specification view corresponding to the expected data in SDTM and ADaM.
-- **Activity Instructions** Linking the selected activities with activity instructions for protocol section 8. NOTE, this is experimental and not yet ready for use neither can the data be transferred to the protocol template.
-
-> Note: This user guide currently only describes parts of the study activity capabilities. Additions will be made on an ongoing basis.
-
+- **Schedule of Activities:** 
+1. **Detailed SoA** Define scheduling of activities by visits, control the level of details to be displayed in the protocol SoA overview table and add footnotes to activities, epochs, visits and collection schedules (the X’s). You also have the option to expand and collapse the view to support navigation as well as downloads in various file formats.
+1. **Protocol SoA** Here you can preview the Protocol SoA that can be later exported to protocol template (section 1.2) using StudyBuilder Word ribbon. 
+1. **Operational SoA** It summarizes all study activities and activity instances and their linkage with visits, displaying corresponding Topic Codes and ADaM Param Codes.
 
 ## SoA Settings
 
 On the top of the Study Activities page you can open the SoA Settings form by selecting the settings icon.
 
-[![SoA settings](~@source/images/user_guides/guide_activities_03.png)](../../../images/user_guides/guide_activities_03.png)
+[![SoA settings](~@source/images/user_guides/guide_activities_soa_settings.png)](../../../images/user_guides/guide_activities_soa_settings.png)
 
 On SoA Settings form you control the time display for the SoA header row. Select to use days or weeks as time unit and select if baseline time is to be shown as time 0 or 1.
 
@@ -32,7 +29,7 @@ If baseline shown as time 0 is selected then the study visit duration time is us
 
 Study activities can be added to a study from the library standards, from other studies or they can be added as an activity placeholder that also will act as an activity request.
 
-[![Study Activities](~@source/images/user_guides/guide_activities_04.png)](../../../images/user_guides/guide_activities_04.png)
+[![Study Activities](~@source/images/user_guides/guide_activities_study activities.png)](../../../images/user_guides/guide_activities_study activities.png)
 
 In the library definition of an activity, the activity can exist within a possible set of activity groups and activity subgroups, and the display of these groupings can be controlled for the protocol SoA. Unfortunately, the groupings can only be selected when you add an activity to a study, it is currently not possible to change the grouping (this we will change in a coming release).
 
@@ -70,12 +67,11 @@ Activity placeholders are marked as ‘Requested’ in your study activities and
 
 To create an activity placeholder, follow these steps:
 1. Go to the "Study Activities" tab in your study.
-1. Click on the "Add Activity" button and select Create Placeholder for new Activity Request.
+1. Click on the "Add Activity" button and select Create Placeholder for new Activity Request. Then select Request Activity to immediately submit it to approval or Create a Placeholder Activity if you want to create a placeholder without submitting it for approval. 
 1. Select the most meaningful grouping for the activity placeholder.
 1. Enter a name for your activity placeholder in the "Activity Name" field. You can use any name that helps you identify the activity, but avoid using names that are too vague. You cannot submit an Activity placeholder Request for an activity that already exists.
 1. Enter a rationale for your activity placeholder in the "Rationale for Activity Request" field. You can explain why you need this activity, what it measures, and how it relates to your study objectives.
-1. Leave the "Final" slider as "No". This indicates that your activity placeholder is not ready for library approval.
-1. Click on the "Save" button. Your activity placeholder will be added to your study activities and schedule of assessments and will be highlighted in yellow.
+1. Click on the "Save" button. Your activity placeholder will be added to your study activities and schedule of assessments and will be highlighted in orange or yellow, depending if the request has been submited or not.
 
 **How to edit or delete an activity placeholder not yet submitted?**
 
@@ -92,10 +88,10 @@ To finalize an activity placeholder, follow these steps:
 1. Go to the "Study Activities" tab in your study.
 1. Find the activity placeholder in orange that you want to finalize. You can use the filter or search function to locate it.
 1. Click on the "Edit" button next to the activity placeholder name.
-1. Change the "Submit Request" slider to green. This indicates that your activity placeholder is ready for library approval.
+1. Change the "Submit Request" slider to indicate that your activity placeholder is ready for library approval.
 1. Click on the "Save" button. Your activity placeholder will turn yellow in the study activities list and be sent to the library under the "Requested Activities" tab, where the library users can review, approve, or reject it.
 
-[![Study activities](~@source/images/user_guides/guide_activities_01.png)](../../../images/user_guides/guide_activities_01.png)
+[![Study activities](~@source/images/user_guides/guide_activities_placeholders.png)](../../../images/user_guides/guide_activities_placeholders.png)
 
 *<p style="text-align: center;">Draft (not submitted) and submitted activity placeholders with legends</p>*
 
@@ -125,12 +121,12 @@ On the Detailed SoA page you define the following:
 - Control the level of details to be displayed in the protocol SoA overview table by simply enabling or disabling the eye icon control for each activity row.
 - Add footnotes to activities, epochs, visits and collection schedules (the X’s).
  1. At the bottom of the page you can see the currently defined footnotes by exspanding the SoA footnote box.
- 1. Simply click on the add footnote action icon, the display will change to be in adding footnote mode. In this mode each SoA item that can refer to a footnote will get a small (+) icon - select these for the locations the footnote should be attached to.
+ 1. Simply click on the add footnote action icon, and the display will change to the adding footnote mode. In this mode, each SoA item that can refer to a footnote will have a small (+) icon - select these for the locations to which the footnote should be attached. Another option for adding a footnote is by placing the cursor in SoA on the 'X' that links a specific activity with a visit. Then, a small (+) icon will appear next to 'X', which when clicked, will initiate the footnote mode.
  1. In the same view you can also remove footnotes.
  1. The footnotes will automatically be assigned a letter from a-z depending on the order in the SoA table from top left to bottom right.
  1. Complete the footnote asingment by clicking the save icon in the floating 'Select SoA items linked to footnote' window.
 
-[![Detailed SoA](~@source/images/user_guides/guide_activities_06.png)](../../../images/user_guides/guide_activities_06.png)
+[![Detailed SoA](~@source/images/user_guides/guide_activities_detailed_soa.png)](../../../images/user_guides/guide_activities_detailed_soa.png)
 
 You also have the option to expand and collapse the view to support navigation, either by using the Expand table control to expand the full SoA table, or by using the '>' controls to exspand individual section.     
 
@@ -150,12 +146,9 @@ The SoA footnote text is defined and managed from this page, but are linked to i
 
 The footnotes will automatically be assigned a letter from a-z depending on the order in the SoA table from top left to bottom right.
 
-[![Detailed SoA](~@source/images/user_guides/guide_activities_07.png)](../../../images/user_guides/guide_activities_07.png)
-
-
 ## Protocol SoA
 
-On the Protocol SoA page you can preview the SoA at multiple levels, the high-level overview for protocol section 2, the detailed view corresponding to definitions in section 8 and appendixes as well as the operational data specification view corresponding to the expected data in SDTM and ADaM.
+On the Protocol SoA page you can preview the SoA at multiple levels, the high-level overview for protocol section 1.2, the detailed view corresponding to definitions in section 8 and appendixes as well as the operational data specification view corresponding to the expected data in SDTM and ADaM.
 
 [![SoA levels](~@source/images/user_guides/soa_levels.png)](../../../images/user_guides/soa_levels.png)
 
@@ -172,15 +165,10 @@ On the Protocol SoA page you can preview the SoA at multiple levels, the high-le
 - Correspond to Activity Instances being the Biomedical Concept definition in StudyBuilder as well as our legacy Topic Codes.
 - Will also related to specific ADaM PARAM/PARAMCD.
 
-[![Protocol SoA](~@source/images/user_guides/guide_activities_08.png)](../../../images/user_guides/guide_activities_08.png)
+[![Protocol SoA](~@source/images/user_guides/guide_activities_operational_soa.png)](../../../images/user_guides/guide_activities_operational_soa.png)
 
 > The time unit used for the SoA header row is specified on the [Settings](#Settings) form on the top of the Study Activities page.
 
 This page also support downloads of the SoA data in various file formats.
 
 
-## Activity Instructions
-
-Linking the selected activities with activity instructions for protocol section 8.
-
-> NOTE, this is experimental and not yet ready for use neither can the data be transferred to the protocol template.

@@ -74,7 +74,7 @@ Feature: Library - CRF Items
     Scenario: User must be able to delete CRF Item in draft status
         Given The 'library/crfs/items' page is opened
         And The CRF Item in draft status with sub 1 version exists
-        When The 'Delete' action is clicked for the CRF Item
+        When The 'Delete' option is clicked from the three dot menu list
         Then The CRF Item is no longer available
 
     @manual_test    

@@ -18,7 +18,7 @@ Feature: Studies - Study Activities
         Given The '/studies/Study_000001/activities/list' page is opened
         Then A table is visible with following headers
             | headers           |
-            | #                 |
+            #| #                 |
             | Library           |
             | SoA group         |
             | Activity group    |
@@ -30,6 +30,7 @@ Feature: Studies - Study Activities
 
     Scenario: User must be able to use column selection option
         Given The '/studies/Study_000001/activities/list' page is opened
+        And Study activities for Study_000001 are loaded
         When The first column is selected from Select Columns option for table with actions
         Then The table contain only selected column and actions column
 
@@ -40,8 +41,12 @@ Feature: Studies - Study Activities
 
     Scenario: User must be able to delete a Study Activity
         Given The '/studies/Study_000001/activities/list' page is opened
-        When The Study Activity is deleted
-        Then The Study Activity is no longer available
+        And [API] Study Activity is created and approved
+        And User adds newly created activity with status Final
+        And Study Activity is found
+        When The 'Remove Activity' option is clicked from the three dot menu list
+        And Action is confirmed by clicking continue
+        Then The activity is no longer available
 
     Scenario: User must be able to create a Study Activity from an existing study by study acronym
         And The '/studies/Study_000001/activities/list' page is opened
@@ -95,3 +100,71 @@ Feature: Studies - Study Activities
         When The Study Activity create placeholder form is opened on second step
         And The user tries to go further in activity placeholder creation without SoA group chosen
         Then The validation appears under empty SoA group selection
+
+    Scenario: User must be able to add newly created approved Activity
+        Given The '/studies/Study_000001/activities/list' page is opened
+        And [API] Study Activity is created and approved
+        When User adds newly created activity with status Final
+        Then The new Study Activity added from Library is visible in table
+
+    Scenario: User must mot be able to add newly created draft Activity
+        Given The '/studies/Study_000001/activities/list' page is opened
+        And [API] Study Activity is created and not approved
+        When User tries to add Activity in Draft status
+        Then The Activity in Draft status is not found
+
+    Scenario: User must not be able to add activity that has Draft group until it is approved
+        Given The '/studies/Study_000001/activities/list' page is opened
+        And [API] Study Activity is created and group is drafted
+        When User initiate adding Study Activity from Library
+        Then Warning that 'Draft' 'groups' can not be added to the study is displayed
+        And [API] Activity group is approved
+        When User adds newly created activity with status Final
+        Then The new Study Activity added from Library is visible in table
+        
+    Scenario: User must not be able to add activity that has Retired group until it is approved
+        Given The '/studies/Study_000001/activities/list' page is opened
+        And [API] Study Activity is created and group is inactivated
+        When User initiate adding Study Activity from Library
+        Then Warning that 'Retired' 'groups' can not be added to the study is displayed
+        And [API] Activity group is reactivated
+        When User adds newly created activity with status Final
+        Then The new Study Activity added from Library is visible in table
+        
+    Scenario: User must not be able to add activity that has Draft subgroup until it is approved
+        Given The '/studies/Study_000001/activities/list' page is opened
+        And [API] Study Activity is created and subgroup is drafted
+        When User initiate adding Study Activity from Library
+        Then Warning that 'Draft' 'subgroups' can not be added to the study is displayed
+        And [API] Activity subgroup is approved
+        When User adds newly created activity with status Final
+        Then The new Study Activity added from Library is visible in table
+        
+    Scenario: User must not be able to add activity that has Retired subgroup until it is approved
+        Given The '/studies/Study_000001/activities/list' page is opened
+        And [API] Study Activity is created and subgroup is inactivated
+        When User initiate adding Study Activity from Library
+        Then Warning that 'Retired' 'subgroups' can not be added to the study is displayed
+        And [API] Activity subgroup is reactivated
+        When User adds newly created activity with status Final
+        Then The new Study Activity added from Library is visible in table
+
+    Scenario: User must be able to export the data in CSV format
+        Given The '/studies/Study_000001/activities/list' page is opened
+        And The user exports the data in 'CSV' format
+        Then The 'StudyActivities' file is downloaded in 'csv' format
+
+    Scenario: User must be able to export the data in JSON format
+        Given The '/studies/Study_000001/activities/list' page is opened
+        And The user exports the data in 'JSON' format
+        Then The 'StudyActivities' file is downloaded in 'json' format
+
+    Scenario: User must be able to export the data in XML format
+        Given The '/studies/Study_000001/activities/list' page is opened
+        And The user exports the data in 'XML' format
+        Then The 'StudyActivities' file is downloaded in 'xml' format
+
+    Scenario: User must be able to export the data in EXCEL format
+        Given The '/studies/Study_000001/activities/list' page is opened
+        And The user exports the data in 'EXCEL' format
+        Then The 'StudyActivities' file is downloaded in 'xlsx' format

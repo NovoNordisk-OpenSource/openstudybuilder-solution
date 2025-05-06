@@ -171,6 +171,7 @@ class ActivityRoot(ConceptRoot):
 
 
 class ActivityItem(ClinicalMdrNode):
+    is_adam_param_specific = BooleanProperty(False)
     has_activity_item_class = RelationshipFrom(
         ActivityItemClassRoot,
         "HAS_ACTIVITY_ITEM",
@@ -184,6 +185,12 @@ class ActivityItem(ClinicalMdrNode):
         "HAS_UNIT_DEFINITION",
         model=ClinicalMdrRel,
         cardinality=ZeroOrMore,
+    )
+
+    from clinical_mdr_api.domain_repositories.models.odm import OdmItemRoot
+
+    has_odm_item = RelationshipTo(
+        OdmItemRoot, "HAS_ODM_ITEM", model=ClinicalMdrRel, cardinality=ZeroOrMore
     )
 
 

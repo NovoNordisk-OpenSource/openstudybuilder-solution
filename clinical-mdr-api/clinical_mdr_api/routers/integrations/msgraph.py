@@ -3,7 +3,7 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Query
-from pydantic import constr
+from pydantic import StringConstraints
 
 from clinical_mdr_api.models.integrations import msgraph as msgraph_model
 from clinical_mdr_api.routers import _generic_descriptions
@@ -25,14 +25,15 @@ router = APIRouter()
     response_model_by_alias=False,
     response_model_exclude_none=True,
     responses={
-        500: _generic_descriptions.ERROR_500,
+        403: _generic_descriptions.ERROR_403,
     },
 )
 async def get_users(
     search: Annotated[
-        constr(strip_whitespace=True, min_length=2, max_length=255) | None,
+        str | None,
+        StringConstraints(strip_whitespace=True, min_length=2, max_length=255),
         Query(title="Filter users by name or initials"),
-    ] = None,
+    ] = None
 ):
     if msgraph.service:
         return await msgraph.service.search_all_group_direct_member_users(search)

@@ -1,10 +1,15 @@
+[[_TOC_]]
+
 # Reports and Dashboards
+
+[[_TOC_]]
 
 Beside the table listing and download option generally available in the StudyBuilder application the system also support NeoDash reports and dashboards.
 
 ## Open NeoDash
 
 To open NeoDash reports:
+v
 1. Click on the Reports button placed on the main StudyBuilder page <br>
 ![Reports button](~@source/images/user_guides/neodash_button.png) <br>
 2. The NeoDash login page should be displayed <br>
@@ -16,8 +21,8 @@ To open NeoDash reports:
 4. If requested to select a browser account, select your Microsoft identity account you use for the application.
 5. The NeoDash report should open
 
-> Note: The URL to access the NeoDash report will follow this pattern, where text in '[ ]' is optional and *italic* text is replaced by environment specific values:
-> [open]studybuilder[.*environment*].*domain*/neodash/
+> Note: The URL to access the NeoDash report will follow this pattern, where text in '[ ]' is optional and _italic_ text is replaced by environment specific values:
+> [open]studybuilder[._environment_]._domain_/neodash/
 
 ### Select Neodash report
 
@@ -175,9 +180,16 @@ packageDate: 2023-04-30
 
 This provides a view of where specific activities are utilized across different studies. This feature allows you to track the usage of activities.
 
-In the selection box (A), you can choose one or more activities. Upon selection, the dashboard dynamically displays the studies in which these activities are used (B).
+In the selection box (A), you can choose one or more activities. Upon selection, the dashboard dynamically displays the studies in which these activities are used (B). Selecting AND or OR in the operator (C) will allow for AND or OR in the search for more than one Activity and change the list displayed in (B). The Y or N in (D) will allow for the study list only to show the latest version of the study or show all versions. Select a study by clicking the Trial ID blue button in (B).
 
-[![Screenshot for Activities used in Studies](~@source/images/user_guides/guide_bc_dash_14.png)](../../../images/user_guides/guide_bc_dash_14.png)
+[![Activities used in Studies - Selection area](~@source/images/user_guides/neodash_study_activity_top_selection.png)](../../../images/user_guides/neodash_study_activity_top_selection.png)
+
+The study details will be displayed in the panels (E-H)
+
+[![Activities used in Studies - Display](~@source/images/user_guides/neodash_activity_library_study_activity_display.png)](../../../images/user_guides/neodash_activity_library_study_activity_display.png)
+
+The panel (E) displays the study being selected in (B).
+The panel in (F) displays the overall study descriptions. The panel in (G) displays the study objectives and the panel (H) displays at which visits the selected activities occur (displayed by the Activity Instance topic code selected in the SoA).
 
 #### Search Activity Instance
 
@@ -258,7 +270,7 @@ you can
 
 ### Study fields
 
-On the Study fields tab, the list of differences in various study fields are displayed. 
+On the Study fields tab, the list of differences in various study fields are displayed.
 [![Difference in Study Fields](~@source/images/user_guides/neodash_study_compare_2.png)](../../../images/user_guides/neodash_study_compare_2.png)
 
 If you choose 'Differences Only' as 'No' on the Select studies tab then also similarities are displayed
@@ -282,7 +294,8 @@ On the Criteria tab, the differences in Inclusion and Exclusion criteria are lis
 To show similarities, you need to select 'Differences Only' as 'No' on the Select studies tab.
 
 ### Planned visits
-On the planned visits you can se differences in visits. 
+
+On the planned visits you can se differences in visits.
 [![Difference in Planned Visits](~@source/images/user_guides/neodash_study_compare_7.png)](../../../images/user_guides/neodash_study_compare_7.png)
 
 To allow for the timeline view to display, you need to select a date in the Planned Study Start Date.
@@ -303,6 +316,7 @@ On the Collections tab you can see the differences in planned collections, i.e. 
 >Note This report isn't controlled by the 'Differences Only' selection on the Select studies tab. Is will show **Added**, **Deleted** and **No change**
 
 ### Activities
+
 On the Activities tab you can see the differences in planned activities and if they have been moved in flowchart hierarchy.
 [![Differences in Activities](~@source/images/user_guides/neodash_study_compare_11.png)](../../../images/user_guides/neodash_study_compare_11.png)
 
@@ -326,7 +340,7 @@ On this tab you can list and search in all available template parameters as well
 
 [![Select parameters and values](~@source/images/user_guides/neodash_syntaxtemplates_1.png)](../../../images/user_guides/neodash_syntaxtemplates_1.png)
 
-*<p style="text-align: center;">In this example the 'day' and 'days' is selected as template parameter values, the template parameters holding one of these are listed in the left report panel.</p>*
+_<p style="text-align: center;">In this example the 'day' and 'days' is selected as template parameter values, the template parameters holding one of these are listed in the left report panel.</p>_
 
 > Note, the selections of Template Parameters or Template Parameter Values from the two top report panels will be applied on all following tabs.
 
@@ -337,7 +351,7 @@ The display is filtered to parent syntax templates that refer to currently selec
 
 [![Parent templates](~@source/images/user_guides/neodash_syntaxtemplates_2.png)](../../../images/user_guides/neodash_syntaxtemplates_2.png)
 
-*<p style="text-align: center;">In this example the 'Activity' template parameter value is selected and the listing shows 3 syntax templates referring to the Activity parameter, each of different type and in different libraries.</p>*
+_<p style="text-align: center;">In this example the 'Activity' template parameter value is selected and the listing shows 3 syntax templates referring to the Activity parameter, each of different type and in different libraries.</p>_
 
 > Note, A user defined syntax template is technically also a parent template and will show up on the list. These can be removed by additional filtering on the library.
 
@@ -348,7 +362,7 @@ The display is filtered to pre-instance syntax templates that refer to currently
 
 [![Pre-instance templates](~@source/images/user_guides/neodash_syntaxtemplates_3.png)](../../../images/user_guides/neodash_syntaxtemplates_3.png)
 
-*<p style="text-align: center;">In this example the 'ActivityInstance' template parameter value is selected and the listing shows 1 syntax templates referring to the ActivityInstance parameter.</p>*
+_<p style="text-align: center;">In this example the 'ActivityInstance' template parameter value is selected and the listing shows 1 syntax templates referring to the ActivityInstance parameter.</p>_
 
 > Note, A pre-instance syntax template is made only to support selection of syntax templates with pre-selected values for template parameters.
 
@@ -359,7 +373,7 @@ The display is filtered to syntax templates that refer to currently selected tem
 
 [![All templates](~@source/images/user_guides/neodash_syntaxtemplates_4.png)](../../../images/user_guides/neodash_syntaxtemplates_4.png)
 
-*<p style="text-align: center;">In this example both the 'Activity' and 'ActivityInstance' template parameter value is selected and the listing shows a number of syntax templates referring to these two parameters.</p>*
+_<p style="text-align: center;">In this example both the 'Activity' and 'ActivityInstance' template parameter value is selected and the listing shows a number of syntax templates referring to these two parameters.</p>_
 
 ### Template Instantiations
 
@@ -368,7 +382,7 @@ The display is filtered to syntax templates that refer to currently selected tem
 
 [![Template Instantiations](~@source/images/user_guides/neodash_syntaxtemplates_5.png)](../../../images/user_guides/neodash_syntaxtemplates_5.png)
 
-*<p style="text-align: center;">In this example both the 'Activity' and 'ActivityInstance' template parameter value is selected and the listing shows a number of syntax template instantiations referring to these two parameters.</p>*
+_<p style="text-align: center;">In this example both the 'Activity' and 'ActivityInstance' template parameter value is selected and the listing shows a number of syntax template instantiations referring to these two parameters.</p>_
 
 > Note, the list of template instantiations includes instantiations of user defined templates including their template parameter values. These can be removed by additional filtering on the library.
 > Note, next tab list details on the studies using these template instantiations.
@@ -380,7 +394,7 @@ The display is filtered to syntax templates that refer to currently selected tem
 
 [![Study usage](~@source/images/user_guides/neodash_syntaxtemplates_6.png)](../../../images/user_guides/neodash_syntaxtemplates_6.png)
 
-*<p style="text-align: center;">In this example both the 'Activity' and 'ActivityInstance' template parameter value is selected and the listing shows the studies using syntax templates referring to these two parameters.</p>*
+_<p style="text-align: center;">In this example both the 'Activity' and 'ActivityInstance' template parameter value is selected and the listing shows the studies using syntax templates referring to these two parameters.</p>_
 
 > Note, the list of template instantiations includes instantiations of user defined templates including their template parameter values. These can be removed by additional filtering on the library.
 > Note, previous tab list more details for these template instantiations.
@@ -392,4 +406,90 @@ You can change the layout of the bar chart by field selections below the chart.
 
 [![Study usage](~@source/images/user_guides/neodash_syntaxtemplates_7.png)](../../../images/user_guides/neodash_syntaxtemplates_7.png)
 
-*<p style="text-align: center;">In this example each bar represent a template type with colour coding by library</p>*
+_<p style="text-align: center;">In this example each bar represent a template type with colour coding by library</p>_
+
+## Activity Metadata Check
+
+The activity metadata check report is a dashboard aimed for the user who maintains the definition of activities and activity instances in the Study  Builder Library. The two main things this dashboard focus on are:
+
+* to check if an activity instances have the required items
+* to check if the activities and activity instances are assigned to valid groupings
+
+<a id="tabs_in_report"></a>
+
+[![Tabs in report](~@source/images/user_guides/neodash_activity_metadata_check_tabs.png)](../../../images/user_guides/neodash_activity_metadata_check_tabs.png)
+
+Some of the tabs goes in pairs and indicated by by the yellow underline in the [`Tabs in report`](#tabs_in_report)
+
+### ReadMe
+
+Provides a short summary of the reports's scope and functionality.
+
+### Search bottom-up
+
+This tab has been included for general display for groupings of activities and activity instances.  
+Please see [Activity Lib (search bottom-up)](#activity-lib-search-bottom-up) for how that panel works.
+
+### List of Missing Activity Items for Activity Instances
+
+The tabs _Activity Lib (search top-down)_ and the _List of Missing Mandatory Items for Instances_ goes hand in hand.  
+
+#### Search top-down
+
+To limit the number of activities shown in the _List of Missing Mandatory Items for Instances_ the user can make a top-down search. Please see [Activity Lib (search top-down)](#activity-lib-search-top-down) for how that panel works.
+
+#### Display missing items
+
+On the _List of Missing Mandatory Items for Instances_ tab a list of Activities that has missing mandatory items are displayed.
+
+Having made the following filter on the _Activity Lib (search top-down)_ tab
+
+[![Filter](~@source/images/user_guides/neodash_search_filter_metadata_check_example_1.png)](../../../images/user_guides/neodash_search_filter_metadata_check_example_1.png)
+
+will display the filtered list of activity instances having missing mandatory items:
+
+[![Missing Items](~@source/images/user_guides/neodash_missing_mandatory_items_filter_example_1.png)](../../../images/user_guides/neodash_missing_mandatory_items_filter_example_1.png)
+
+Note: The data displayed depends on the database content.
+
+#### Full Path of Missing Items
+
+The instances and their items follow a Activity Instance Class model, see [`Class Model`](#class_model)
+
+<a id="class_model"></a>
+[![Class Model](~@source/images/user_guides/neodash_activity_class_model.png)](../../../images/user_guides/neodash_activity_class_model.png)
+
+In this this tab, activity instances with missing items belonging to other classes than the immediate parent are added in listing of missing item. For the filter example above:
+
+[![Missing Items - Full path](~@source/images/user_guides/neodash_missing_mandatory_items_filter_example_1_full_path.png)](../../../images/user_guides/neodash_missing_mandatory_items_filter_example_1_full_path.png)
+
+Note that this tab has filter buttons. These are prefilled with values from the _Activity Lib (search top-down)_ tab, but can be changed on this page as well.
+
+### Grouping Check
+
+This tab provides status of activities groupings.
+The top part displays any activities that do not have a grouping assigned.
+
+The bottom part provides a list of the activities /activity instances and count of their grouping
+
+[![Activity Grouping Count](~@source/images/user_guides/neodash_activity_grouping_overview.png)](../../../images/user_guides/neodash_activity_grouping_overview.png)
+
+It also displays if there are activities with an activity instance related to it that are not used any more, i.e. activity has no latest version, but has an activity instance with latest version related to it.
+
+The display for outdated activity instances is listing any latest activity that doesn't have an activity instance related to it that is latest version.
+
+### Display missing groupings
+
+The activities and their instances are related via a grouping:
+
+[![Grouping structure - example](~@source/images/user_guides/neodash_grouping_structure_example.png)](../../../images/user_guides/neodash_grouping_structure_example.png)
+
+This tab displays different counts for the activities and activity instances.
+
+* count the number of latests activities
+* count the number of activity instances with a grouping
+* count the number of activity instances with a grouping and a valid group
+* count the activities where all the above is present
+
+[![Missing grouping - counts](~@source/images/user_guides/neodash_activity_missing_grouping_count.png)](../../../images/user_guides/neodash_activity_missing_grouping_count.png)
+

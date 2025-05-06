@@ -171,7 +171,7 @@ class TestStudyEpochManagement(unittest.TestCase):
             ep3.epoch_ctterm.sponsor_preferred_name, ep_epoch_subtype_name + " 3"
         )
 
-        epoch_service.reorder(ep3.uid, study_uid=ep3.study_uid, new_order=0)
+        epoch_service.reorder(ep3.uid, study_uid=ep3.study_uid, new_order=1)
 
         ep_after1 = epoch_service.find_by_uid(ep1.uid, study_uid=ep1.study_uid)
         ep_after2 = epoch_service.find_by_uid(ep2.uid, study_uid=ep2.study_uid)
@@ -190,7 +190,7 @@ class TestStudyEpochManagement(unittest.TestCase):
             ep_after3.epoch_ctterm.sponsor_preferred_name, ep_epoch_subtype_name + " 1"
         )
 
-        epoch_service.reorder(ep1.uid, study_uid=ep1.study_uid, new_order=2)
+        epoch_service.reorder(ep1.uid, study_uid=ep1.study_uid, new_order=3)
 
         ep_after1 = epoch_service.find_by_uid(ep1.uid, study_uid=ep1.study_uid)
         ep_after2 = epoch_service.find_by_uid(ep2.uid, study_uid=ep2.study_uid)
@@ -225,7 +225,7 @@ class TestStudyEpochManagement(unittest.TestCase):
         )
         self.assertEqual(ep3.order, 5)
         self.assertEqual(ep3.epoch_ctterm.sponsor_preferred_name, epoch_subtype_name3)
-        epoch_service.reorder(ep3.uid, study_uid=ep3.study_uid, new_order=3)
+        epoch_service.reorder(ep3.uid, study_uid=ep3.study_uid, new_order=4)
         ep2 = epoch_service.find_by_uid(
             epoch_subtype_2.uid, study_uid=epoch_subtype_2.study_uid
         )
@@ -379,11 +379,22 @@ class TestStudyEpochManagement(unittest.TestCase):
 
         current_epoch = epoch_versions[0]
         previous_epoch = epoch_versions[1]
-        self.assertEqual(current_epoch.changes["start_rule"], True)
+        self.assertEqual(
+            set(current_epoch.changes),
+            set(
+                [
+                    "start_rule",
+                    "study_version",
+                    "start_date",
+                    "end_date",
+                    "end_rule",
+                    "change_type",
+                ]
+            ),
+        )
         self.assertEqual(current_epoch.start_rule, start_rule)
-        self.assertEqual(current_epoch.changes["end_rule"], True)
         self.assertEqual(current_epoch.end_rule, end_rule)
-        self.assertEqual(previous_epoch.changes, {})
+        self.assertEqual(previous_epoch.changes, [])
         self.assertEqual(previous_epoch.change_type, "Create")
         self.assertEqual(current_epoch.change_type, "Edit")
         self.assertIsNotNone(previous_epoch.end_date)
@@ -413,17 +424,39 @@ class TestStudyEpochManagement(unittest.TestCase):
         previous_epoch = epoch_versions[1]
         current_epoch_2 = epoch_versions[2]
         previous_epoch_2 = epoch_versions[3]
-        self.assertEqual(current_epoch.changes["start_rule"], True)
+        self.assertEqual(
+            set(current_epoch.changes),
+            set(
+                [
+                    "start_rule",
+                    "study_version",
+                    "start_date",
+                    "end_date",
+                    "end_rule",
+                    "change_type",
+                ]
+            ),
+        )
         self.assertEqual(current_epoch.start_rule, start_rule)
-        self.assertEqual(current_epoch.changes["end_rule"], True)
         self.assertEqual(current_epoch.end_rule, end_rule)
-        self.assertEqual(previous_epoch.changes, {})
+        self.assertEqual(previous_epoch.changes, [])
 
-        self.assertEqual(current_epoch_2.changes["start_rule"], True)
+        self.assertEqual(
+            set(current_epoch_2.changes),
+            set(
+                [
+                    "start_rule",
+                    "study_version",
+                    "start_date",
+                    "end_date",
+                    "end_rule",
+                    "change_type",
+                ]
+            ),
+        )
         self.assertEqual(current_epoch_2.start_rule, start_rule)
-        self.assertEqual(current_epoch_2.changes["end_rule"], True)
         self.assertEqual(current_epoch_2.end_rule, end_rule)
-        self.assertEqual(previous_epoch_2.changes, {})
+        self.assertEqual(previous_epoch_2.changes, [])
 
     def test__delete_study_epoch__epochs_are_recalculated(self):
         epoch_service = StudyEpochService()

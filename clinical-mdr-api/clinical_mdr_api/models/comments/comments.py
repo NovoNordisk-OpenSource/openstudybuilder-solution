@@ -23,7 +23,9 @@ class CommentReply(BaseModel):
     author_id: Annotated[str, Field()]
     author_display_name: Annotated[str, Field()]
     created_at: Annotated[datetime, Field()]
-    modified_at: Annotated[datetime | None, Field(nullable=True)] = None
+    modified_at: Annotated[
+        datetime | None, Field(json_schema_extra={"nullable": True})
+    ] = None
 
     @classmethod
     def from_uid(
@@ -76,9 +78,15 @@ class CommentThread(BaseModel):
     author_display_name: Annotated[str, Field()]
     status: Annotated[CommentThreadStatus, Field()]
     created_at: Annotated[datetime, Field()]
-    modified_at: Annotated[datetime | None, Field(nullable=True)] = None
-    status_modified_at: Annotated[datetime | None, Field(nullable=True)] = None
-    status_modified_by: Annotated[str | None, Field(nullable=True)] = None
+    modified_at: Annotated[
+        datetime | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    status_modified_at: Annotated[
+        datetime | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    status_modified_by: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
     replies: Annotated[list[CommentReply], Field()] = []
 
     @classmethod

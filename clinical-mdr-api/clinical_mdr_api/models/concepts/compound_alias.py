@@ -2,6 +2,7 @@ from typing import Annotated, Callable, Self
 
 from pydantic import Field
 
+from clinical_mdr_api.descriptions.general import CHANGES_FIELD_DESC
 from clinical_mdr_api.domains.concepts.compound import CompoundAR
 from clinical_mdr_api.domains.concepts.compound_alias import CompoundAliasAR
 from clinical_mdr_api.models.concepts.compound import SimpleCompound
@@ -71,12 +72,8 @@ class CompoundAliasEditInput(ExtendedConceptPatchInput):
 
 class CompoundAliasVersion(CompoundAlias):
     changes: Annotated[
-        dict[str, bool] | None,
+        list[str],
         Field(
-            description=(
-                "Denotes whether or not there was a change in a specific field/property compared to the previous version. "
-                "The field names in this object here refer to the field names of the objective (e.g. name, start_date, ..)."
-            ),
-            nullable=True,
+            description=CHANGES_FIELD_DESC,
         ),
-    ] = None
+    ] = []

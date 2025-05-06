@@ -85,7 +85,7 @@ def test_tv_listing(api_client):
             ARM=None,
             TVSTRL="START_RULE",
             TVENRL="END_RULE",
-        ),
+        ).model_dump(),
         StudyVisitListing(
             STUDYID="SOME_ID-0",
             DOMAIN="TV",
@@ -96,7 +96,7 @@ def test_tv_listing(api_client):
             ARM=None,
             TVSTRL="START_RULE",
             TVENRL="END_RULE",
-        ),
+        ).model_dump(),
         StudyVisitListing(
             STUDYID="SOME_ID-0",
             DOMAIN="TV",
@@ -107,7 +107,7 @@ def test_tv_listing(api_client):
             ARM=None,
             TVSTRL="START_RULE",
             TVENRL="END_RULE",
-        ),
+        ).model_dump(),
         StudyVisitListing(
             STUDYID="SOME_ID-0",
             DOMAIN="TV",
@@ -118,18 +118,18 @@ def test_tv_listing(api_client):
             ARM=None,
             TVSTRL="START_RULE",
             TVENRL="END_RULE",
-        ),
+        ).model_dump(),
         StudyVisitListing(
             STUDYID="SOME_ID-0",
             DOMAIN="TV",
             VISITNUM=410,
             VISIT="VISIT 4",
-            VISITDY=32,
+            VISITDY=62,
             ARMCD=None,
             ARM=None,
             TVSTRL="START_RULE",
             TVENRL="END_RULE",
-        ),
+        ).model_dump(),
         StudyVisitListing(
             STUDYID="SOME_ID-0",
             DOMAIN="TV",
@@ -140,7 +140,7 @@ def test_tv_listing(api_client):
             ARM=None,
             TVSTRL="START_RULE",
             TVENRL="END_RULE",
-        ),
+        ).model_dump(),
     ]
     assert res == expected_output
 

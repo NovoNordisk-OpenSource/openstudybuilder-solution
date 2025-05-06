@@ -1101,7 +1101,7 @@ def test__unit_definition_service__patch__result(
 ):
     assume(
         unit_definition_ar.concept_vo.ct_units == []
-        or "unit_ct" not in unit_definition_patch_input.__fields_set__
+        or "unit_ct" not in unit_definition_patch_input.model_fields_set
         or unit_definition_patch_input.ct_units
         == unit_definition_ar.concept_vo.ct_units
     )
@@ -1150,7 +1150,7 @@ def test__unit_definition_service__patch__result(
         find_term_by_uid=get_mock_ct_item,
         find_dictionary_term_by_uid=get_mock_dictionary_item,
     )
-    for field in unit_definition_patch_input.__fields_set__:
+    for field in unit_definition_patch_input.model_fields_set:
         if isinstance(getattr(service_result, field), SimpleTermModel):
             assert (
                 str(getattr(service_result, field).term_uid).strip()
@@ -1171,8 +1171,8 @@ def test__unit_definition_service__patch__result(
             )
 
     for field in (
-        set(unit_definition_patch_input.__fields__)
-        - unit_definition_patch_input.__fields_set__
+        set(unit_definition_patch_input.model_fields)
+        - unit_definition_patch_input.model_fields_set
     ):
         assert getattr(service_result, field) == getattr(model_before, field)
 
@@ -1207,7 +1207,7 @@ def test__unit_definition_service__patch_to_non_unique_name__result(
     # given
     assume(
         unit_definition_ar.concept_vo.ct_units == []
-        or "unit_ct" not in unit_definition_patch_input.__fields_set__
+        or "unit_ct" not in unit_definition_patch_input.model_fields_set
         or unit_definition_patch_input.ct_units
         == unit_definition_ar.concept_vo.ct_units
     )
@@ -1289,7 +1289,7 @@ def test__unit_definition_service__patch_to_non_unique_legacy_code__result(
 
     assume(
         unit_definition_ar.concept_vo.ct_units == []
-        or "unit_ct" not in unit_definition_patch_input.__fields_set__
+        or "unit_ct" not in unit_definition_patch_input.model_fields_set
         or unit_definition_patch_input.ct_units
         == unit_definition_ar.concept_vo.ct_units
     )
@@ -1376,7 +1376,7 @@ def test__unit_definition_service__patch_to_another_master_unit__result(
 
     assume(
         unit_definition_ar.concept_vo.ct_units == []
-        or "unit_ct" not in unit_definition_patch_input.__fields_set__
+        or "unit_ct" not in unit_definition_patch_input.model_fields_set
         or unit_definition_patch_input.ct_units
         == unit_definition_ar.concept_vo.ct_units
     )

@@ -25,14 +25,26 @@ class UnitDefinitionModel(ConceptModel):
     use_complex_unit_conversion: bool
     ct_units: list[SimpleTermModel]
     unit_subsets: list[SimpleTermModel]
-    ucum: Annotated[SimpleTermModel | None, Field(nullable=True)] = None
-    unit_dimension: Annotated[SimpleTermModel | None, Field(nullable=True)] = None
-    legacy_code: Annotated[str | None, Field(nullable=True)] = None
-    use_molecular_weight: Annotated[bool | None, Field(nullable=True)] = None
-    conversion_factor_to_master: Annotated[float | None, Field(nullable=True)] = None
-    comment: Annotated[str | None, Field(nullable=True)] = None
-    order: Annotated[int | None, Field(nullable=True)] = None
-    definition: Annotated[str | None, Field(nullable=True)] = None
+    ucum: Annotated[
+        SimpleTermModel | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    unit_dimension: Annotated[
+        SimpleTermModel | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    legacy_code: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
+    use_molecular_weight: Annotated[
+        bool | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    conversion_factor_to_master: Annotated[
+        float | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    comment: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    order: Annotated[int | None, Field(json_schema_extra={"nullable": True})] = None
+    definition: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
     template_parameter: bool
 
     @classmethod
@@ -131,14 +143,14 @@ class UnitDefinitionPostInput(ConceptPostInput):
     use_complex_unit_conversion: bool = False
     ct_units: list[str]
     unit_subsets: list[str] | None = []
-    ucum: str | None
-    unit_dimension: str | None
-    legacy_code: str | None
-    use_molecular_weight: bool | None
-    conversion_factor_to_master: float | None
-    comment: str | None
-    order: int | None
-    definition: str | None
+    ucum: str | None = None
+    unit_dimension: str | None = None
+    legacy_code: str | None = None
+    use_molecular_weight: bool | None = None
+    conversion_factor_to_master: float | None = None
+    comment: str | None = None
+    order: int | None = None
+    definition: str | None = None
     template_parameter: bool = False
 
 
@@ -164,5 +176,7 @@ class UnitDefinitionPatchInput(ConceptPatchInput):
 
 class UnitDefinitionSimpleModel(BaseModel):
     uid: Annotated[str, Field()]
-    name: Annotated[str | None, Field(nullable=True)] = None
-    dimension_name: Annotated[str | None, Field(nullable=True)] = None
+    name: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    dimension_name: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None

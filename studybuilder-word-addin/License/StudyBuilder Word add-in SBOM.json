@@ -1,0 +1,1537 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.5",
+  "serialNumber": "urn:uuid:df979cf6-fcee-4de9-8dc9-e2eb8be6e57d",
+  "version": 1,
+  "metadata": {
+    "timestamp": "2025-03-12T13:35:16Z",
+    "tools": [
+      {
+        "vendor": "CycloneDX",
+        "name": "CycloneDX module for .NET",
+        "version": "3.0.8.0"
+      }
+    ],
+    "component": {
+      "type": "application",
+      "bom-ref": "NN-Studybuilder-Protocol@0.0.0",
+      "name": "NN-Studybuilder-Protocol",
+      "version": "0.0.0"
+    }
+  },
+  "components": [
+    {
+      "type": "library",
+      "bom-ref": "pkg:nuget/Azure.Core@1.44.1",
+      "author": "Microsoft",
+      "name": "Azure.Core",
+      "version": "1.44.1",
+      "description": "This is the implementation of the Azure Client Pipeline",
+      "scope": "required",
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "E79F76D96CF4EA6885D9768A8E3BCD57A2DF59218CC0BC5E9466C88CD72576875E69C344BCE88F139CB70A50F68FA6255A0BD91117D4CD16FA354095DB1E5CCB"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
+      "purl": "pkg:nuget/Azure.Core@1.44.1",
+      "externalReferences": [
+        {
+          "url": "https://github.com/Azure/azure-sdk-for-net/blob/Azure.Core_1.44.1/sdk/core/Azure.Core/README.md",
+          "type": "website"
+        },
+        {
+          "url": "https://github.com/Azure/azure-sdk-for-net",
+          "type": "vcs"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:nuget/JsonSubTypes@2.0.1",
+      "author": "Emmanuel Counasse",
+      "name": "JsonSubTypes",
+      "version": "2.0.1",
+      "description": "Discriminated Json Subtypes Converter implementation for .NET",
+      "scope": "required",
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "98661212DC8D5D37E887DDEBEF234625360B74B194FA5B796AD692A82F5AB5636C20BF32F8D75E053F53F82593810836B71C87179021FBADC184124EDBDB2DB5"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "copyright": "manuc66",
+      "purl": "pkg:nuget/JsonSubTypes@2.0.1",
+      "externalReferences": [
+        {
+          "url": "https://github.com/manuc66/JsonSubTypes",
+          "type": "website"
+        },
+        {
+          "url": "https://github.com/manuc66/JsonSubTypes",
+          "type": "vcs"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:nuget/Microsoft.Bcl.AsyncInterfaces@7.0.0",
+      "author": "Microsoft",
+      "name": "Microsoft.Bcl.AsyncInterfaces",
+      "version": "7.0.0",
+      "description": "Provides the IAsyncEnumerable\u003CT\u003E and IAsyncDisposable interfaces and helper types for .NET Standard 2.0. This package is not required starting with .NET Standard 2.1 and .NET Core 3.0.\n\nCommonly Used Types:\nSystem.IAsyncDisposable\nSystem.Collections.Generic.IAsyncEnumerable\nSystem.Collections.Generic.IAsyncEnumerator",
+      "scope": "required",
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "35BF41D65C4269BD0B662D228CD2C4A70E21830B745A5F1040CD43C488494B6A2D0A102D21531FC86AD89776337528ECA6F0583E588996BD240AD8B334055EDF"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
+      "purl": "pkg:nuget/Microsoft.Bcl.AsyncInterfaces@7.0.0",
+      "externalReferences": [
+        {
+          "url": "https://dot.net/",
+          "type": "website"
+        },
+        {
+          "url": "https://github.com/dotnet/runtime",
+          "type": "vcs"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:nuget/Microsoft.Identity.Client@4.58.1",
+      "author": "Microsoft",
+      "name": "Microsoft.Identity.Client",
+      "version": "4.58.1",
+      "description": "This package contains the binaries of the Microsoft Authentication Library for .NET (MSAL.NET).\n      MSAL.NET makes it easy to obtain tokens from the Microsoft identity platform for developers (formally Azure AD v2.0) signing-in users with work \u0026 school accounts, Microsoft personal accounts, and social identities via Azure AD B2C. These tokens provide access to Microsoft Cloud API and any other API secured by the Microsoft identity platform. This version supports adding authentication functionality to your .NET based clients - .NET, .NET Framework, .NET MAUI, Xamarin iOS, Xamarin Android and UWP",
+      "scope": "required",
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "635DAEAA8F35359507204F1824027B4BDA6C9CC537E5BFB62B87DD5513489BCD933B94938AA22BC897DC9CF2474F7DF11C547563AC6AB45764107516D3C52A8C"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
+      "purl": "pkg:nuget/Microsoft.Identity.Client@4.58.1",
+      "externalReferences": [
+        {
+          "url": "https://go.microsoft.com/fwlink/?linkid=844761",
+          "type": "website"
+        },
+        {
+          "url": "https://github.com/AzureAD/microsoft-authentication-library-for-dotnet",
+          "type": "vcs"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:nuget/Microsoft.Identity.Client.Extensions.Msal@4.58.1",
+      "author": "Microsoft",
+      "name": "Microsoft.Identity.Client.Extensions.Msal",
+      "version": "4.58.1",
+      "description": "This package contains the public client (desktop) caching to Microsoft Authentication Library for .NET (MSAL.NET)",
+      "scope": "required",
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "E4E0ACFD88B5410985B40C8CC009032F9DFB4FB8B0C463D82FDC189BB9B9CD0D3958DE141020B40E6437FBA0275099B598F7A2B4E9CA01301134A5BC124C6527"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
+      "purl": "pkg:nuget/Microsoft.Identity.Client.Extensions.Msal@4.58.1",
+      "externalReferences": [
+        {
+          "url": "https://go.microsoft.com/fwlink/?linkid=844761",
+          "type": "website"
+        },
+        {
+          "url": "https://github.com/AzureAD/microsoft-authentication-library-for-dotnet",
+          "type": "vcs"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:nuget/Microsoft.IdentityModel.Abstractions@7.0.3",
+      "author": "Microsoft",
+      "name": "Microsoft.IdentityModel.Abstractions",
+      "version": "7.0.3",
+      "description": "A package containing thin abstractions for Microsoft.IdentityModel.",
+      "scope": "required",
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "9EA8FD427C7984BFADAC6B1695B175492B3E9F29883A5D7C691795168270FEA0D2A14DD44F281B556840AAF6A86B674B4C1269DE20F4CBDB0F1E048429E2DBCE"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
+      "purl": "pkg:nuget/Microsoft.IdentityModel.Abstractions@7.0.3",
+      "externalReferences": [
+        {
+          "url": "https://github.com/AzureAD/azure-activedirectory-identitymodel-extensions-for-dotnet",
+          "type": "website"
+        },
+        {
+          "url": "https://github.com/AzureAD/azure-activedirectory-identitymodel-extensions-for-dotnet",
+          "type": "vcs"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:nuget/Microsoft.NETCore.Platforms@7.0.4",
+      "author": "Microsoft",
+      "name": "Microsoft.NETCore.Platforms",
+      "version": "7.0.4",
+      "description": "Provides runtime information required to resolve target framework, platform, and runtime specific implementations of .NETCore packages.",
+      "scope": "required",
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "9DDAA9E5B4C59093441EF3B6C85471A490F13627442C4086C94BB3112F655A7063867C6DFF06200DDE8483934A19CB9B16EB5E8F07097E3A5897EB23AB354308"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
+      "purl": "pkg:nuget/Microsoft.NETCore.Platforms@7.0.4",
+      "externalReferences": [
+        {
+          "url": "https://dot.net/",
+          "type": "website"
+        },
+        {
+          "url": "https://github.com/dotnet/runtime",
+          "type": "vcs"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:nuget/Microsoft.NETCore.Targets@3.1.0",
+      "author": "Microsoft",
+      "name": "Microsoft.NETCore.Targets",
+      "version": "3.1.0",
+      "description": "Provides supporting infrastructure for portable projects: support identifiers that define framework and runtime for support targets and packages that reference the minimum supported package versions when targeting these. \nWhen using NuGet 3.x this package requires at least version 3.4.",
+      "scope": "required",
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "6AC5F1A40C74E3FA983C208C92FA9CA6B9EAAA7172C73A67B7EAB0AD65E2D3E763DBDABC054C5C19A85C076369CED042D1BA3F86E3DAA310DFCDA9E97FA57D38"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
+      "purl": "pkg:nuget/Microsoft.NETCore.Targets@3.1.0",
+      "externalReferences": [
+        {
+          "url": "https://github.com/dotnet/corefx",
+          "type": "website"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:nuget/Newtonsoft.Json@13.0.3",
+      "author": "James Newton-King",
+      "name": "Newtonsoft.Json",
+      "version": "13.0.3",
+      "description": "Json.NET is a popular high-performance JSON framework for .NET",
+      "scope": "required",
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "99B252BC77D1C5F5F7B51FD4EA7D5653E9961D7B3061CF9207F8643A9C7CC9965EEBC84D6467F2989BB4723B1A244915CC232A78F894E8B748CA882A7C89FB92"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "copyright": "Copyright \u00A9 James Newton-King 2008",
+      "purl": "pkg:nuget/Newtonsoft.Json@13.0.3",
+      "externalReferences": [
+        {
+          "url": "https://www.newtonsoft.com/json",
+          "type": "website"
+        },
+        {
+          "url": "https://github.com/JamesNK/Newtonsoft.Json",
+          "type": "vcs"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:nuget/Polly@8.0.0",
+      "author": "Michael Wolfenden, App vNext",
+      "name": "Polly",
+      "version": "8.0.0",
+      "description": "Package Description",
+      "scope": "required",
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "F2083F3D765E50FD7B7349C0EDCF5D81121F7E3EAEF68DB77721DF9499946FAE4633A7C0C1E40EE2597410C59CEDD58F7E543E963D9AE92A0D663A326FE60D7F"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
+      "copyright": "Copyright (c) 2023, App vNext",
+      "purl": "pkg:nuget/Polly@8.0.0",
+      "externalReferences": [
+        {
+          "url": "https://github.com/App-vNext/Polly",
+          "type": "website"
+        },
+        {
+          "url": "https://github.com/App-vNext/Polly",
+          "type": "vcs"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:nuget/Polly.Core@8.0.0",
+      "author": "Michael Wolfenden, App vNext",
+      "name": "Polly.Core",
+      "version": "8.0.0",
+      "description": "Package Description",
+      "scope": "required",
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "CE60E205E644D8B48E0079AE5663EB71A840BDDECCD28CD93578797F8176B65143D86DE883E9969898F4849842AB49EB836C1BB71E798AC05BDC2544C3313BDF"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
+      "copyright": "Copyright (c) 2023, App vNext",
+      "purl": "pkg:nuget/Polly.Core@8.0.0",
+      "externalReferences": [
+        {
+          "url": "https://github.com/App-vNext/Polly",
+          "type": "website"
+        },
+        {
+          "url": "https://github.com/App-vNext/Polly",
+          "type": "vcs"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:nuget/RestSharp@110.2.0",
+      "author": ".NET Foundation and Contributors",
+      "name": "RestSharp",
+      "version": "110.2.0",
+      "description": "Simple REST and HTTP API Client",
+      "scope": "required",
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "A450F6410AB8C8AF0306FB6835E3B5AB7888A04E35EC54CEF148277D6DFF045BCDF63B73B8EC900F376AC77899263A9E9B4FBD60A426470628967210054174D5"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ],
+      "purl": "pkg:nuget/RestSharp@110.2.0",
+      "externalReferences": [
+        {
+          "url": "https://restsharp.dev/",
+          "type": "website"
+        },
+        {
+          "url": "https://github.com/restsharp/RestSharp.git",
+          "type": "vcs"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:nuget/SimpleInjector@5.4.1",
+      "author": "Simple Injector Contributors",
+      "name": "SimpleInjector",
+      "version": "5.4.1",
+      "description": "Simple Injector is an easy-to-use Dependency Injection (DI) library for .NET 4\u002B that supports .NET Core, UWP and Mono.",
+      "scope": "required",
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "FD1983AEABF57F9B57332B006CE2A8A483030C908E7568F0D869FBFB25BE45D0F19864D9C209ADFB5A1D1850BA43049EC8E82D797D20A2B340F62533161364A5"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "copyright": "Simple Injector Contributors 2010 - 2022",
+      "purl": "pkg:nuget/SimpleInjector@5.4.1",
+      "externalReferences": [
+        {
+          "url": "https://simpleinjector.org/",
+          "type": "website"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:nuget/System.Buffers@4.5.1",
+      "author": "Microsoft",
+      "name": "System.Buffers",
+      "version": "4.5.1",
+      "description": "Provides resource pooling of any type for performance-critical applications that allocate and deallocate objects frequently.\n\nCommonly Used Types:\nSystem.Buffers.ArrayPool\u003CT\u003E\n \n7601f4f6225089ffb291dc7d58293c7bbf5c5d4f \nWhen using NuGet 3.x this package requires at least version 3.4.",
+      "scope": "required",
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "80DA6158E55B9BCF7E0B5E6379B9CF45A632914F037B53C5BF5609576E3CD7821F7861956B73D74470D2D0C2E56DD235A5EF4CA6FFE7E192B820DC2D023AAFF2"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "name": "Unknown - See URL",
+            "url": "https://github.com/dotnet/corefx/blob/master/LICENSE.TXT"
+          }
+        }
+      ],
+      "copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
+      "purl": "pkg:nuget/System.Buffers@4.5.1",
+      "externalReferences": [
+        {
+          "url": "https://dot.net/",
+          "type": "website"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:nuget/System.ClientModel@1.1.0",
+      "author": "Microsoft",
+      "name": "System.ClientModel",
+      "version": "1.1.0",
+      "description": "Contains building blocks for clients that call cloud services.",
+      "scope": "required",
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "BD4FDC3D6BFB1DC864B2EDA9304229206A5D2013E0F517C0B4666A8395C0FC0664E8CDA6A0A18D404A2A22D2CFAA47D308E5AE5C5EB8EA3DDEFF3D750063AE8C"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
+      "purl": "pkg:nuget/System.ClientModel@1.1.0",
+      "externalReferences": [
+        {
+          "url": "https://github.com/Azure/azure-sdk-for-net/blob/System.ClientModel_1.1.0/sdk/core/System.ClientModel/README.md",
+          "type": "website"
+        },
+        {
+          "url": "https://github.com/Azure/azure-sdk-for-net",
+          "type": "vcs"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:nuget/System.ComponentModel.Annotations@5.0.0",
+      "author": "Microsoft",
+      "name": "System.ComponentModel.Annotations",
+      "version": "5.0.0",
+      "description": "Provides attributes that are used to define metadata for objects used as data sources.\n\nCommonly Used Types:\nSystem.ComponentModel.DataAnnotations.ValidationResult\nSystem.ComponentModel.DataAnnotations.IValidatableObject\nSystem.ComponentModel.DataAnnotations.ValidationAttribute\nSystem.ComponentModel.DataAnnotations.RequiredAttribute\nSystem.ComponentModel.DataAnnotations.StringLengthAttribute\nSystem.ComponentModel.DataAnnotations.DisplayAttribute\nSystem.ComponentModel.DataAnnotations.RegularExpressionAttribute\nSystem.ComponentModel.DataAnnotations.DataTypeAttribute\nSystem.ComponentModel.DataAnnotations.RangeAttribute\nSystem.ComponentModel.DataAnnotations.KeyAttribute\n \nWhen using NuGet 3.x this package requires at least version 3.4.",
+      "scope": "required",
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "589AAC4C669701CE7910F1A327294F15788D3ECFF1D6DF5D9255651E5201C5411C2312286FAB111A6F549FB4DE864C8414CFAF2A365DEEB6F068C1FFCE7C353C"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
+      "purl": "pkg:nuget/System.ComponentModel.Annotations@5.0.0",
+      "externalReferences": [
+        {
+          "url": "https://github.com/dotnet/runtime",
+          "type": "website"
+        },
+        {
+          "url": "git://github.com/dotnet/runtime",
+          "type": "vcs"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:nuget/System.Diagnostics.DiagnosticSource@7.0.2",
+      "author": "Microsoft",
+      "name": "System.Diagnostics.DiagnosticSource",
+      "version": "7.0.2",
+      "description": "Provides Classes that allow you to decouple code logging rich (unserializable) diagnostics/telemetry (e.g. framework) from code that consumes it (e.g. tools)\n\nCommonly Used Types:\nSystem.Diagnostics.DiagnosticListener\nSystem.Diagnostics.DiagnosticSource",
+      "scope": "required",
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "1D346C423DC811AAA04F31436B48711659F7F0C87599758F842C10C3BEB2779C40B028B9D4718C75EDA7F9D9E40F341C05F267F863AA9357237B5EDD95E3C2A8"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
+      "purl": "pkg:nuget/System.Diagnostics.DiagnosticSource@7.0.2",
+      "externalReferences": [
+        {
+          "url": "https://dot.net/",
+          "type": "website"
+        },
+        {
+          "url": "https://github.com/dotnet/runtime",
+          "type": "vcs"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:nuget/System.IO@4.3.0",
+      "author": "Microsoft",
+      "name": "System.IO",
+      "version": "4.3.0",
+      "description": "Provides base input and output (I/O) types, including System.IO.Stream, System.IO.StreamReader and System.IO.StreamWriter, that allow reading and writing to data streams\n\nCommonly Used Types:\nSystem.IO.Stream\nSystem.IO.EndOfStreamException\nSystem.IO.MemoryStream\nSystem.IO.StreamReader\nSystem.IO.StreamWriter\nSystem.IO.StringWriter\nSystem.IO.TextWriter\nSystem.IO.TextReader\n \nWhen using NuGet 3.x this package requires at least version 3.4.",
+      "scope": "required",
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "BFCA5A21E3E1986B9765B13DC6FBCD6F8B89E4C1383855D1D7EF256BF1BF2F51889769DB5365859DD7606FBF6454ADD4DAEB3BAB56994FFB98FD1D03FE8BC1E6"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "name": "Unknown - See URL",
+            "url": "http://go.microsoft.com/fwlink/?LinkId=329770"
+          }
+        }
+      ],
+      "copyright": "\u00A9 Microsoft Corporation.  All rights reserved.",
+      "purl": "pkg:nuget/System.IO@4.3.0",
+      "externalReferences": [
+        {
+          "url": "https://dot.net/",
+          "type": "website"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:nuget/System.IO.FileSystem.AccessControl@5.0.0",
+      "author": "Microsoft",
+      "name": "System.IO.FileSystem.AccessControl",
+      "version": "5.0.0",
+      "description": "Provides types for managing access and audit control lists for files and directories.\n\nCommonly Used Types:\nSystem.Security.AccessControl.DirectoryObjectSecurity\nSystem.Security.AccessControl.DirectorySecurity\nSystem.Security.AccessControl.FileSecurity\nSystem.Security.AccessControl.FileSystemAccessRule\nSystem.Security.AccessControl.FileSystemAuditRule\nSystem.Security.AccessControl.FileSystemRights\nSystem.Security.AccessControl.FileSystemSecurity\n \nWhen using NuGet 3.x this package requires at least version 3.4.",
+      "scope": "required",
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "45A6B5446FAA06612E90974BD7D542D9A1480C0583C0237E8732FFBCEFF1B70A6E12C23792145E7613BD00041BDA26745B83D73008EE71A46DA5C7A40A4568D3"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
+      "purl": "pkg:nuget/System.IO.FileSystem.AccessControl@5.0.0",
+      "externalReferences": [
+        {
+          "url": "https://github.com/dotnet/runtime",
+          "type": "website"
+        },
+        {
+          "url": "git://github.com/dotnet/runtime",
+          "type": "vcs"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:nuget/System.IO.FileSystem.Primitives@4.3.0",
+      "author": "Microsoft",
+      "name": "System.IO.FileSystem.Primitives",
+      "version": "4.3.0",
+      "description": "Provides common enumerations and exceptions for path-based I/O libraries.\n\nCommonly Used Types:\nSystem.IO.DirectoryNotFoundException\nSystem.IO.FileAccess\nSystem.IO.FileLoadException\nSystem.IO.PathTooLongException\nSystem.IO.FileMode\nSystem.IO.FileShare\nSystem.IO.FileAttributes\n \nWhen using NuGet 3.x this package requires at least version 3.4.",
+      "scope": "required",
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "5885953D09582CFFD973D23A21A929064D72F2BC9518AF3732D671FFFCC628A8B686F1D058A001EE6A114023B3E48B3FC0D0E4B22629A1C7F715E03795EE9EE5"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "name": "Unknown - See URL",
+            "url": "http://go.microsoft.com/fwlink/?LinkId=329770"
+          }
+        }
+      ],
+      "copyright": "\u00A9 Microsoft Corporation.  All rights reserved.",
+      "purl": "pkg:nuget/System.IO.FileSystem.Primitives@4.3.0",
+      "externalReferences": [
+        {
+          "url": "https://dot.net/",
+          "type": "website"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:nuget/System.IO.Packaging@7.0.0",
+      "author": "Microsoft",
+      "name": "System.IO.Packaging",
+      "version": "7.0.0",
+      "description": "Provides classes that support storage of multiple data objects in a single container.",
+      "scope": "required",
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "9613FE257B6FC0CA3C4D67B2619B1B90B55C0B7D8E7B822870C829899F06324EFCCFAE8A53E86D9E7C85706EFB953D45D933BC89324ECA998F8191EEB14373B8"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
+      "purl": "pkg:nuget/System.IO.Packaging@7.0.0",
+      "externalReferences": [
+        {
+          "url": "https://dot.net/",
+          "type": "website"
+        },
+        {
+          "url": "https://github.com/dotnet/runtime",
+          "type": "vcs"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:nuget/System.Memory@4.5.5",
+      "author": "Microsoft",
+      "name": "System.Memory",
+      "version": "4.5.5",
+      "description": "Provides types for efficient representation and pooling of managed, stack, and native memory segments and sequences of such segments, along with primitives to parse and format UTF-8 encoded text stored in those memory segments.\n\nCommonly Used Types:\nSystem.Span\nSystem.ReadOnlySpan\nSystem.Memory\nSystem.ReadOnlyMemory\nSystem.Buffers.MemoryPool\nSystem.Buffers.ReadOnlySequence\nSystem.Buffers.Text.Utf8Parser\nSystem.Buffers.Text.Utf8Formatter\n \n32b491939fbd125f304031c35038b1e14b4e3958 \nWhen using NuGet 3.x this package requires at least version 3.4.",
+      "scope": "required",
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "E8C8E536C97B94AC3443C940B30DAD43CF6E97DC7A8C3D989371048FE74E168606384F5E0143BDC0D86F7783BF9FDEE8417964CB3A8A5D752713E90B125172DC"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "name": "Unknown - See URL",
+            "url": "https://github.com/dotnet/corefx/blob/master/LICENSE.TXT"
+          }
+        }
+      ],
+      "copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
+      "purl": "pkg:nuget/System.Memory@4.5.5",
+      "externalReferences": [
+        {
+          "url": "https://dot.net/",
+          "type": "website"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:nuget/System.Memory.Data@6.0.0",
+      "author": "Microsoft",
+      "name": "System.Memory.Data",
+      "version": "6.0.0",
+      "description": "A lightweight abstraction for a payload of bytes. Provides methods for converting between strings, streams, JSON, and bytes.\n\nCommonly Used Types:\nSystem.BinaryData",
+      "scope": "required",
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "C3DBC50255C502373A324211AABDA2726F28985E10226D0A436578527568853F423B8CFBF237C288D021AD0C37D320491E0018FDB5685518C3A0154D93DAB48D"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
+      "purl": "pkg:nuget/System.Memory.Data@6.0.0",
+      "externalReferences": [
+        {
+          "url": "https://dot.net/",
+          "type": "website"
+        },
+        {
+          "url": "https://github.com/dotnet/runtime",
+          "type": "vcs"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:nuget/System.Net.Http@4.3.4",
+      "author": "Microsoft",
+      "name": "System.Net.Http",
+      "version": "4.3.4",
+      "description": "Provides a programming interface for modern HTTP applications, including HTTP client components that allow applications to consume web services over HTTP and HTTP components that can be used by both clients and servers for parsing HTTP headers.\n\nCommonly Used Types:\nSystem.Net.Http.HttpResponseMessage\nSystem.Net.Http.DelegatingHandler\nSystem.Net.Http.HttpRequestException\nSystem.Net.Http.HttpClient\nSystem.Net.Http.MultipartContent\nSystem.Net.Http.Headers.HttpContentHeaders\nSystem.Net.Http.HttpClientHandler\nSystem.Net.Http.StreamContent\nSystem.Net.Http.FormUrlEncodedContent\nSystem.Net.Http.HttpMessageHandler\n \nWhen using NuGet 3.x this package requires at least version 3.4.",
+      "scope": "required",
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "163EDEEF734D1F0A1FF7B8053D326EABC82FE86F3DE72C6466DD780D59D974487882F2A5F16AE4B02C0D8C8A7F25E617FF2BBFAB133F88EBFD6A2F99637169ED"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "name": "Unknown - See URL",
+            "url": "http://go.microsoft.com/fwlink/?LinkId=329770"
+          }
+        }
+      ],
+      "copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
+      "purl": "pkg:nuget/System.Net.Http@4.3.4",
+      "externalReferences": [
+        {
+          "url": "https://dot.net/",
+          "type": "website"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:nuget/System.Numerics.Vectors@4.5.0",
+      "author": "Microsoft",
+      "name": "System.Numerics.Vectors",
+      "version": "4.5.0",
+      "description": "Provides hardware-accelerated numeric types, suitable for high-performance processing and graphics applications.\n\nCommonly Used Types:\nSystem.Numerics.Matrix3x2\nSystem.Numerics.Matrix4x4\nSystem.Numerics.Plane\nSystem.Numerics.Quaternion\nSystem.Numerics.Vector2\nSystem.Numerics.Vector3\nSystem.Numerics.Vector4\nSystem.Numerics.Vector\nSystem.Numerics.Vector\u003CT\u003E\n \n30ab651fcb4354552bd4891619a0bdd81e0ebdbf",
+      "scope": "required",
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "9C04EC0530F608AAF801837A791B33857E2CA6D2265A6049C01FD4E972825967E709CAD3070F174829B7400F608E9A641D3AFC3A45D4636D4C47DD43DD0657B3"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "name": "Unknown - See URL",
+            "url": "https://github.com/dotnet/corefx/blob/master/LICENSE.TXT"
+          }
+        }
+      ],
+      "copyright": "\u00A9 Microsoft Corporation.  All rights reserved.",
+      "purl": "pkg:nuget/System.Numerics.Vectors@4.5.0",
+      "externalReferences": [
+        {
+          "url": "https://dot.net/",
+          "type": "website"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:nuget/System.Private.Uri@4.3.2",
+      "author": "Microsoft",
+      "name": "System.Private.Uri",
+      "version": "4.3.2",
+      "description": "Internal implementation package not meant for direct consumption.  Please do not reference directly.  Provides implementation of System.Uri. \nWhen using NuGet 3.x this package requires at least version 3.4.",
+      "scope": "required",
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "3F45BB80C0C97684778CAAA2A6CC690B875AEBC186845ABE47DF8165F7C38C98682FF0E057349C0D92C162157AA286CFBFDDF695632868DCBBBB9585AA6E2C05"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "name": "Unknown - See URL",
+            "url": "http://go.microsoft.com/fwlink/?LinkId=329770"
+          }
+        }
+      ],
+      "copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
+      "purl": "pkg:nuget/System.Private.Uri@4.3.2",
+      "externalReferences": [
+        {
+          "url": "https://dot.net/",
+          "type": "website"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:nuget/System.Runtime@4.3.1",
+      "author": "Microsoft",
+      "name": "System.Runtime",
+      "version": "4.3.1",
+      "description": "Provides the fundamental primitives, classes and base classes that define commonly-used value and reference data types, events and event handlers, interfaces, attributes, and exceptions. This packages represents the core package, and provides the minimal set of types required to build a managed application.\n\nCommonly Used Types:\nSystem.Object\nSystem.Exception\nSystem.Int16\nSystem.Int32\nSystem.Int64\nSystem.Enum\nSystem.String\nSystem.Char\nSystem.Boolean\nSystem.SByte\nSystem.Byte\nSystem.DateTime\nSystem.DateTimeOffset\nSystem.Single\nSystem.Double\nSystem.UInt16\nSystem.UInt32\nSystem.UInt64\nSystem.IDisposable\nSystem.Uri\n \nWhen using NuGet 3.x this package requires at least version 3.4.",
+      "scope": "required",
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "025EBD98F0DFCDD0FE6CA18AD8701F07E94D14E1C5AA792ACCD9D42669AF51ED7FA843CAF4CEC48934F8CEEC9C2833F2EDEBF5D71CFC5D580958A3F4866ECD20"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "name": "Unknown - See URL",
+            "url": "http://go.microsoft.com/fwlink/?LinkId=329770"
+          }
+        }
+      ],
+      "copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
+      "purl": "pkg:nuget/System.Runtime@4.3.1",
+      "externalReferences": [
+        {
+          "url": "https://dot.net/",
+          "type": "website"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:nuget/System.Runtime.CompilerServices.Unsafe@6.0.0",
+      "author": "Microsoft",
+      "name": "System.Runtime.CompilerServices.Unsafe",
+      "version": "6.0.0",
+      "description": "Provides the System.Runtime.CompilerServices.Unsafe class, which provides generic, low-level functionality for manipulating pointers.\n\nCommonly Used Types:\nSystem.Runtime.CompilerServices.Unsafe",
+      "scope": "required",
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "D4057301BE4EC4936F24B9CE003B5EC4D99681AB6D9B65D5393DD38D04CDEC37784AAA12C1A8B50AC3767ED878DAE425749490773FEC01E734F93CF1045822B3"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
+      "purl": "pkg:nuget/System.Runtime.CompilerServices.Unsafe@6.0.0",
+      "externalReferences": [
+        {
+          "url": "https://dot.net/",
+          "type": "website"
+        },
+        {
+          "url": "https://github.com/dotnet/runtime",
+          "type": "vcs"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:nuget/System.Security.AccessControl@6.0.0",
+      "author": "Microsoft",
+      "name": "System.Security.AccessControl",
+      "version": "6.0.0",
+      "description": "Provides base classes that enable managing access and audit control lists on securable objects.\n\nCommonly Used Types:\nSystem.Security.AccessControl.AccessRule\nSystem.Security.AccessControl.AuditRule\nSystem.Security.AccessControl.ObjectAccessRule\nSystem.Security.AccessControl.ObjectAuditRule\nSystem.Security.AccessControl.ObjectSecurity",
+      "scope": "required",
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "64A36A103B954AB4B7E8A76C0E876579BD484C308E444C2D915FB9A0FD05AD63614501ED235C544AFC9B431CB8A4CF0F0715B8ED414E85958E6D68579168FB45"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
+      "purl": "pkg:nuget/System.Security.AccessControl@6.0.0",
+      "externalReferences": [
+        {
+          "url": "https://dot.net/",
+          "type": "website"
+        },
+        {
+          "url": "https://github.com/dotnet/runtime",
+          "type": "vcs"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:nuget/System.Security.Cryptography.Algorithms@4.3.1",
+      "author": "Microsoft",
+      "name": "System.Security.Cryptography.Algorithms",
+      "version": "4.3.1",
+      "description": "Provides base types for cryptographic algorithms, including hashing, encryption, and signing operations.\n\nCommonly Used Types:\nSystem.Security.Cryptography.Aes\nSystem.Security.Cryptography.RSA\nSystem.Security.Cryptography.RSAParameters\nSystem.Security.Cryptography.HMACSHA1\nSystem.Security.Cryptography.SHA256\nSystem.Security.Cryptography.SHA1\nSystem.Security.Cryptography.SHA512\nSystem.Security.Cryptography.SHA384\nSystem.Security.Cryptography.HMACSHA256\nSystem.Security.Cryptography.MD5\nSystem.Security.Cryptography.HMACSHA384\nSystem.Security.Cryptography.HMACSHA512\n \nWhen using NuGet 3.x this package requires at least version 3.4.",
+      "scope": "required",
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "34B02B60B69A54E1310B511512E3210A49BFB0584C50F80B59C586D7180AD973E3B5419F7A55783837884395460DB3E0DB13C8FB27DE6D170B8D2DAB1C90ADCF"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "name": "Unknown - See URL",
+            "url": "http://go.microsoft.com/fwlink/?LinkId=329770"
+          }
+        }
+      ],
+      "copyright": "\u00A9 Microsoft Corporation.  All rights reserved.",
+      "purl": "pkg:nuget/System.Security.Cryptography.Algorithms@4.3.1",
+      "externalReferences": [
+        {
+          "url": "https://dot.net/",
+          "type": "website"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:nuget/System.Security.Cryptography.Encoding@4.3.0",
+      "author": "Microsoft",
+      "name": "System.Security.Cryptography.Encoding",
+      "version": "4.3.0",
+      "description": "Provides types for representing Abstract Syntax Notation One (ASN.1)-encoded data.\n\nCommonly Used Types:\nSystem.Security.Cryptography.AsnEncodedData\nSystem.Security.Cryptography.Oid\nSystem.Security.Cryptography.OidCollection\n \nWhen using NuGet 3.x this package requires at least version 3.4.",
+      "scope": "required",
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "5C26ADD23E63542F37506F5FA1F72E8980F03743D529CD8E583D1054B8D8A579FB773FA035A00D9073DB84DB6BE4F47CAC340D1EBC6D23DD761DBDBD600075E0"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "name": "Unknown - See URL",
+            "url": "http://go.microsoft.com/fwlink/?LinkId=329770"
+          }
+        }
+      ],
+      "copyright": "\u00A9 Microsoft Corporation.  All rights reserved.",
+      "purl": "pkg:nuget/System.Security.Cryptography.Encoding@4.3.0",
+      "externalReferences": [
+        {
+          "url": "https://dot.net/",
+          "type": "website"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:nuget/System.Security.Cryptography.Primitives@4.3.0",
+      "author": "Microsoft",
+      "name": "System.Security.Cryptography.Primitives",
+      "version": "4.3.0",
+      "description": "Provides common types for the cryptographic libraries.\n\nCommonly Used Types:\nSystem.Security.Cryptography.ICryptoTransform\nSystem.Security.Cryptography.AsymmetricAlgorithm\nSystem.Security.Cryptography.SymmetricAlgorithm\nSystem.Security.Cryptography.HashAlgorithm\nSystem.Security.Cryptography.KeyedHashAlgorithm\nSystem.Security.Cryptography.HMAC\nSystem.Security.Cryptography.KeySizes\nSystem.Security.Cryptography.CryptographicException\nSystem.Security.Cryptography.CipherMode\nSystem.Security.Cryptography.PaddingMode\nSystem.Security.Cryptography.CryptoStream\nSystem.Security.Cryptography.CryptoStreamMode\n \nWhen using NuGet 3.x this package requires at least version 3.4.",
+      "scope": "required",
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "5AD8273F998EBB9CCA2F7BD03143D3F6D57B5D560657B26D6F4E78D038010FB30C379A23A27C08730F15C9B66F4BA565A06984EC246DFC79ACF1A741B0DD4347"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "name": "Unknown - See URL",
+            "url": "http://go.microsoft.com/fwlink/?LinkId=329770"
+          }
+        }
+      ],
+      "copyright": "\u00A9 Microsoft Corporation.  All rights reserved.",
+      "purl": "pkg:nuget/System.Security.Cryptography.Primitives@4.3.0",
+      "externalReferences": [
+        {
+          "url": "https://dot.net/",
+          "type": "website"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:nuget/System.Security.Cryptography.ProtectedData@4.5.0",
+      "author": "Microsoft",
+      "name": "System.Security.Cryptography.ProtectedData",
+      "version": "4.5.0",
+      "description": "Provides access to Windows Data Protection Api.\n\nCommonly Used Types:\nSystem.Security.Cryptography.DataProtectionScope\nSystem.Security.Cryptography.ProtectedData\n \n30ab651fcb4354552bd4891619a0bdd81e0ebdbf \nWhen using NuGet 3.x this package requires at least version 3.4.",
+      "scope": "required",
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "B3F3052BC06F82D7A3663E5AF2A00F0D710606D5A4A455FDF2AC103FFC2A55AF428080BB2EB287C4315D94DE71E9A7C601BD195415462199427412E73B642367"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "name": "Unknown - See URL",
+            "url": "https://github.com/dotnet/corefx/blob/master/LICENSE.TXT"
+          }
+        }
+      ],
+      "copyright": "\u00A9 Microsoft Corporation.  All rights reserved.",
+      "purl": "pkg:nuget/System.Security.Cryptography.ProtectedData@4.5.0",
+      "externalReferences": [
+        {
+          "url": "https://dot.net/",
+          "type": "website"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:nuget/System.Security.Cryptography.X509Certificates@4.3.2",
+      "author": "Microsoft",
+      "name": "System.Security.Cryptography.X509Certificates",
+      "version": "4.3.2",
+      "description": "Provides types for reading, exporting and verifying Authenticode X.509 v3 certificates. These certificates are signed with a private key that uniquely and positively identifies the holder of the certificate.\n\nCommonly Used Types:\nSystem.Security.Cryptography.X509Certificates.X509Certificate2\nSystem.Security.Cryptography.X509Certificates.X509Certificate\nSystem.Security.Cryptography.X509Certificates.X509ContentType\nSystem.Security.Cryptography.X509Certificates.StoreLocation\nSystem.Security.Cryptography.X509Certificates.StoreName\nSystem.Security.Cryptography.X509Certificates.X509FindType\nSystem.Security.Cryptography.X509Certificates.X509ChainStatus\nSystem.Security.Cryptography.X509Certificates.X509Certificate2Collection\nSystem.Security.Cryptography.X509Certificates.X509EnhancedKeyUsageExtension\nSystem.Security.Cryptography.X509Certificates.X509Chain\n \nWhen using NuGet 3.x this package requires at least version 3.4.",
+      "scope": "required",
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "9127481F8C695840227FA3069325D7C6C3030732D0711B79C329F7D17825F902E06A4EE16F1CCEC07DD7CF41F920C186C19E6656CE0DEDF3CB507BC445F288AF"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "name": "Unknown - See URL",
+            "url": "http://go.microsoft.com/fwlink/?LinkId=329770"
+          }
+        }
+      ],
+      "copyright": "\u00A9 Microsoft Corporation.  All rights reserved.",
+      "purl": "pkg:nuget/System.Security.Cryptography.X509Certificates@4.3.2",
+      "externalReferences": [
+        {
+          "url": "https://dot.net/",
+          "type": "website"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:nuget/System.Security.Permissions@7.0.0",
+      "author": "Microsoft",
+      "name": "System.Security.Permissions",
+      "version": "7.0.0",
+      "description": "Provides types supporting Code Access Security (CAS).",
+      "scope": "required",
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "5CD553990F49B824704574530E838713312DD30990791B9D1FD95384FD25DCE0636B83F78E6447ABFD07D0DF4DB35383EA03662A98CB74E787090117BF8895AC"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
+      "purl": "pkg:nuget/System.Security.Permissions@7.0.0",
+      "externalReferences": [
+        {
+          "url": "https://dot.net/",
+          "type": "website"
+        },
+        {
+          "url": "https://github.com/dotnet/runtime",
+          "type": "vcs"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:nuget/System.Security.Principal.Windows@5.0.0",
+      "author": "Microsoft",
+      "name": "System.Security.Principal.Windows",
+      "version": "5.0.0",
+      "description": "Provides classes for retrieving the current Windows user and for interacting with Windows users and groups.\n\nCommonly Used Types:\nSystem.Security.Principal.WindowsIdentity\nSystem.Security.Principal.SecurityIdentifier\nSystem.Security.Principal.NTAccount\nSystem.Security.Principal.WindowsPrincipal\nSystem.Security.Principal.IdentityReference\nSystem.Security.Principal.IdentityNotMappedException\nSystem.Security.Principal.WindowsBuiltInRole\nSystem.Security.Principal.WellKnownSidType\n \nWhen using NuGet 3.x this package requires at least version 3.4.",
+      "scope": "required",
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "44A920AAAF22B2172D41319BB57AB2B8E1A4531D5F02192A6F53A81D875125195B60BA0B5A44A45981D137FD7B0F3A65B12959B5FD97AFC0578CD84EF27467CD"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
+      "purl": "pkg:nuget/System.Security.Principal.Windows@5.0.0",
+      "externalReferences": [
+        {
+          "url": "https://github.com/dotnet/runtime",
+          "type": "website"
+        },
+        {
+          "url": "git://github.com/dotnet/runtime",
+          "type": "vcs"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:nuget/System.Text.Encodings.Web@7.0.0",
+      "author": "Microsoft",
+      "name": "System.Text.Encodings.Web",
+      "version": "7.0.0",
+      "description": "Provides types for encoding and escaping strings for use in JavaScript, HyperText Markup Language (HTML), and uniform resource locators (URL).\n\nCommonly Used Types:\nSystem.Text.Encodings.Web.HtmlEncoder\nSystem.Text.Encodings.Web.UrlEncoder\nSystem.Text.Encodings.Web.JavaScriptEncoder",
+      "scope": "required",
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "D164C15DF021A99D18ED0C39B6B7C0290B7F948D8F09BF07140B47BAE6403F1CB9A822C1504AABD7A6094367AD9FCF8CED1EA186B0662A51815EBBB37A3B0434"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
+      "purl": "pkg:nuget/System.Text.Encodings.Web@7.0.0",
+      "externalReferences": [
+        {
+          "url": "https://dot.net/",
+          "type": "website"
+        },
+        {
+          "url": "https://github.com/dotnet/runtime",
+          "type": "vcs"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:nuget/System.Text.Json@7.0.3",
+      "author": "Microsoft",
+      "name": "System.Text.Json",
+      "version": "7.0.3",
+      "description": "Provides high-performance and low-allocating types that serialize objects to JavaScript Object Notation (JSON) text and deserialize JSON text to objects, with UTF-8 support built-in. Also provides types to read and write JSON text encoded as UTF-8, and to create an in-memory document object model (DOM), that is read-only, for random access of the JSON elements within a structured view of the data.\n\nThe System.Text.Json library is built-in as part of the shared framework in .NET Runtime. The package can be installed when you need to use it in other target frameworks.",
+      "scope": "required",
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "0EA3FECCA3DD4C84F8D9AFDDD6D3EEFB0FE1AB5E1067CFBAB5BA6EBF61ACCAB8E1A81A9BB071FB98DB5AFEC4AF3A41777C1FB23FB3D6AF62236082E29DF4FA55"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
+      "purl": "pkg:nuget/System.Text.Json@7.0.3",
+      "externalReferences": [
+        {
+          "url": "https://dot.net/",
+          "type": "website"
+        },
+        {
+          "url": "https://github.com/dotnet/runtime",
+          "type": "vcs"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:nuget/System.Threading.Tasks.Extensions@4.5.4",
+      "author": "Microsoft",
+      "name": "System.Threading.Tasks.Extensions",
+      "version": "4.5.4",
+      "description": "Provides additional types that simplify the work of writing concurrent and asynchronous code.\n\nCommonly Used Types:\nSystem.Threading.Tasks.ValueTask\u003CTResult\u003E\n \n7601f4f6225089ffb291dc7d58293c7bbf5c5d4f",
+      "scope": "required",
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "68052086E77D3C7198737A3DA163D67740B7C44F93250C39659B3BF21B6547A9ABF64CBF40481F5C78F24361AF3AAF47D52D188B371554A0928A7F7665C1FC14"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "name": "Unknown - See URL",
+            "url": "https://github.com/dotnet/corefx/blob/master/LICENSE.TXT"
+          }
+        }
+      ],
+      "copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
+      "purl": "pkg:nuget/System.Threading.Tasks.Extensions@4.5.4",
+      "externalReferences": [
+        {
+          "url": "https://dot.net/",
+          "type": "website"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:nuget/System.ValueTuple@4.5.0",
+      "author": "Microsoft",
+      "name": "System.ValueTuple",
+      "version": "4.5.0",
+      "description": "Provides the System.ValueTuple structs, which implement the underlying types for tuples in C# and Visual Basic.\n\nCommonly Used Types:\nSystem.ValueTuple\nSystem.ValueTuple\u003CT1\u003E\nSystem.ValueTuple\u003CT1, T2\u003E\nSystem.ValueTuple\u003CT1, T2, T3\u003E\nSystem.ValueTuple\u003CT1, T2, T3, T4\u003E\nSystem.ValueTuple\u003CT1, T2, T3, T4, T5\u003E\nSystem.ValueTuple\u003CT1, T2, T3, T4, T5, T6\u003E\nSystem.ValueTuple\u003CT1, T2, T3, T4, T5, T6, T7\u003E\nSystem.ValueTuple\u003CT1, T2, T3, T4, T5, T6, T7, TRest\u003E\n \n30ab651fcb4354552bd4891619a0bdd81e0ebdbf \nWhen using NuGet 3.x this package requires at least version 3.4.",
+      "scope": "required",
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "FA00EBB5045D12C51274F64411C551981BECEB1266A8606A4731063109B95EA1F15939197BF3D2BA899DB61E593DC39BFCE876908BBA34286823525093AE3D8E"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "name": "Unknown - See URL",
+            "url": "https://github.com/dotnet/corefx/blob/master/LICENSE.TXT"
+          }
+        }
+      ],
+      "copyright": "\u00A9 Microsoft Corporation.  All rights reserved.",
+      "purl": "pkg:nuget/System.ValueTuple@4.5.0",
+      "externalReferences": [
+        {
+          "url": "https://dot.net/",
+          "type": "website"
+        }
+      ]
+    }
+  ],
+  "dependencies": [
+    {
+      "ref": "NN-Studybuilder-Protocol@0.0.0",
+      "dependsOn": [
+        "pkg:nuget/Azure.Core@1.44.1",
+        "pkg:nuget/JsonSubTypes@2.0.1",
+        "pkg:nuget/Microsoft.Bcl.AsyncInterfaces@7.0.0",
+        "pkg:nuget/Microsoft.Identity.Client@4.58.1",
+        "pkg:nuget/Microsoft.Identity.Client.Extensions.Msal@4.58.1",
+        "pkg:nuget/Microsoft.IdentityModel.Abstractions@7.0.3",
+        "pkg:nuget/Microsoft.NETCore.Platforms@7.0.4",
+        "pkg:nuget/Microsoft.NETCore.Targets@3.1.0",
+        "pkg:nuget/Newtonsoft.Json@13.0.3",
+        "pkg:nuget/Polly@8.0.0",
+        "pkg:nuget/Polly.Core@8.0.0",
+        "pkg:nuget/RestSharp@110.2.0",
+        "pkg:nuget/SimpleInjector@5.4.1",
+        "pkg:nuget/System.Buffers@4.5.1",
+        "pkg:nuget/System.ClientModel@1.1.0",
+        "pkg:nuget/System.ComponentModel.Annotations@5.0.0",
+        "pkg:nuget/System.Diagnostics.DiagnosticSource@7.0.2",
+        "pkg:nuget/System.IO@4.3.0",
+        "pkg:nuget/System.IO.FileSystem.AccessControl@5.0.0",
+        "pkg:nuget/System.IO.FileSystem.Primitives@4.3.0",
+        "pkg:nuget/System.IO.Packaging@7.0.0",
+        "pkg:nuget/System.Memory@4.5.5",
+        "pkg:nuget/System.Memory.Data@6.0.0",
+        "pkg:nuget/System.Net.Http@4.3.4",
+        "pkg:nuget/System.Numerics.Vectors@4.5.0",
+        "pkg:nuget/System.Private.Uri@4.3.2",
+        "pkg:nuget/System.Runtime@4.3.1",
+        "pkg:nuget/System.Runtime.CompilerServices.Unsafe@6.0.0",
+        "pkg:nuget/System.Security.AccessControl@6.0.0",
+        "pkg:nuget/System.Security.Cryptography.Algorithms@4.3.1",
+        "pkg:nuget/System.Security.Cryptography.Encoding@4.3.0",
+        "pkg:nuget/System.Security.Cryptography.Primitives@4.3.0",
+        "pkg:nuget/System.Security.Cryptography.ProtectedData@4.5.0",
+        "pkg:nuget/System.Security.Cryptography.X509Certificates@4.3.2",
+        "pkg:nuget/System.Security.Permissions@7.0.0",
+        "pkg:nuget/System.Security.Principal.Windows@5.0.0",
+        "pkg:nuget/System.Text.Encodings.Web@7.0.0",
+        "pkg:nuget/System.Text.Json@7.0.3",
+        "pkg:nuget/System.Threading.Tasks.Extensions@4.5.4",
+        "pkg:nuget/System.ValueTuple@4.5.0"
+      ]
+    },
+    {
+      "ref": "pkg:nuget/Azure.Core@1.44.1",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:nuget/JsonSubTypes@2.0.1",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:nuget/Microsoft.Bcl.AsyncInterfaces@7.0.0",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:nuget/Microsoft.Identity.Client.Extensions.Msal@4.58.1",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:nuget/Microsoft.Identity.Client@4.58.1",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:nuget/Microsoft.IdentityModel.Abstractions@7.0.3",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:nuget/Microsoft.NETCore.Platforms@7.0.4",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:nuget/Microsoft.NETCore.Targets@3.1.0",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:nuget/Newtonsoft.Json@13.0.3",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:nuget/Polly.Core@8.0.0",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:nuget/Polly@8.0.0",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:nuget/RestSharp@110.2.0",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:nuget/SimpleInjector@5.4.1",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:nuget/System.Buffers@4.5.1",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:nuget/System.ClientModel@1.1.0",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:nuget/System.ComponentModel.Annotations@5.0.0",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:nuget/System.Diagnostics.DiagnosticSource@7.0.2",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:nuget/System.IO.FileSystem.AccessControl@5.0.0",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:nuget/System.IO.FileSystem.Primitives@4.3.0",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:nuget/System.IO.Packaging@7.0.0",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:nuget/System.IO@4.3.0",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:nuget/System.Memory.Data@6.0.0",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:nuget/System.Memory@4.5.5",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:nuget/System.Net.Http@4.3.4",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:nuget/System.Numerics.Vectors@4.5.0",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:nuget/System.Private.Uri@4.3.2",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:nuget/System.Runtime.CompilerServices.Unsafe@6.0.0",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:nuget/System.Runtime@4.3.1",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:nuget/System.Security.AccessControl@6.0.0",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:nuget/System.Security.Cryptography.Algorithms@4.3.1",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:nuget/System.Security.Cryptography.Encoding@4.3.0",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:nuget/System.Security.Cryptography.Primitives@4.3.0",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:nuget/System.Security.Cryptography.ProtectedData@4.5.0",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:nuget/System.Security.Cryptography.X509Certificates@4.3.2",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:nuget/System.Security.Permissions@7.0.0",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:nuget/System.Security.Principal.Windows@5.0.0",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:nuget/System.Text.Encodings.Web@7.0.0",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:nuget/System.Text.Json@7.0.3",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:nuget/System.Threading.Tasks.Extensions@4.5.4",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:nuget/System.ValueTuple@4.5.0",
+      "dependsOn": []
+    }
+  ]
+}

@@ -9,7 +9,7 @@ Later on, other imports like UNII, SNOMED, etc. might be added.
 ## Setup python virtual environment
 
 * Make sure Python 3.13.0 and Pipenv is installed on your machine. Installation guide can be found
- [here](https://dev.azure.com/novonordiskit/Clinical-MDR/_git/neo4j-mdr-db?path=/README.md&version=GBUpdate_README) under section Python Getting Started.
+ [here](https://dev.azure.com/orgremoved/Clinical-MDR/_git/neo4j-mdr-db?path=/README.md&version=GBUpdate_README) under section Python Getting Started.
 * Run `pipenv install`
 ---
 ## Setup environment variables
@@ -59,7 +59,7 @@ The CDISC DB will be created automatically including the index configuration. No
 ### MDR DB
 
 The MDR DB needs to be present and have the correct index configuration. See the instructions in the `neo4j-mdr-db` repository 
-[README](https://dev.azure.com/novonordiskit/Clinical-MDR/_git/neo4j-mdr-db?path=/README.md&_a=preview) 
+[README](https://dev.azure.com/orgremoved/Clinical-MDR/_git/neo4j-mdr-db?path=/README.md&_a=preview) 
 , after the step of `Initiate neo4j database` should do the trick basically.
 
 ## CDISC Data
@@ -190,3 +190,4 @@ DROP DATABASE `cdisc` IF EXISTS
 :auto MATCH ()-[r]-() CALL { WITH r DELETE r } IN TRANSACTIONS OF 50000 ROWS;
 :auto MATCH (n) CALL { WITH n DELETE n } IN TRANSACTIONS OF 50000 ROWS;
 ```
+

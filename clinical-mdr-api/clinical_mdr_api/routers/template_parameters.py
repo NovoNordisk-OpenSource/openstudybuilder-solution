@@ -22,8 +22,8 @@ router = APIRouter()
     response_model=list[TemplateParameter],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_all_template_parameters():
@@ -37,8 +37,8 @@ def get_all_template_parameters():
     response_model=list[TemplateParameterTerm],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_template_parameter_terms(

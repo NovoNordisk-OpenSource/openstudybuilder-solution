@@ -25,11 +25,14 @@ Feature: Library - Objective templates
     When The first column is selected from Select Columns option for table with actions
     Then The table contain only selected column and actions column
 
-  @api_specification
-  Scenario: System must generated sequence number for Objective Parent Templates when they are created
-    Given an Objective Parent Template is created
-    # This could be with a reference to the API POST Endpoint and a following API GET Endpoint - or just formulated as a functional requrement
-    Then the attribute for 'Sequence number' will hold an automatic generated number as 'OT'+[Order of Objective Parent Template]
+  Scenario: System must generate sequence number for Objective Parent Templates when they are created
+    Given The '/library/objective_templates' page is opened
+    And [API] Create objective template
+    And The objective template is found
+    When The latest objective sequence number is saved
+    And [API] Create objective template
+    And The objective template is found
+    Then Objective sequence number is incremented
 
   # If approval is for version +1.0 and any instantiations exist then a cascade update and approval is needed
   @pending_implementation
@@ -42,29 +45,36 @@ Feature: Library - Objective templates
   Scenario: User must be able to add a new Parent Objective template in Parent Templates tab
     Given The 'library/objective_templates' page is opened
     When The new objective is added in the library
-    Then The new Objective is visible in the Objective Templates Table
+    Then The item has status 'Draft' and version '0.1'
+    And The objective template name is displayed in the table
 
   Scenario: User must be able to add a new Parent Objective template with NA indexes in Sponsor standards tab
     Given The 'library/objective_templates' page is opened
     When The new Objective is added in the library with not applicable for indexes
-    Then The new Objective is visible with Not Applicable indexes in the Objective Templates Table
+    And The item has status 'Draft' and version '0.1'
+    And The 'Edit' option is clicked from the three dot menu list
+    Then The template has not applicable selected for all indexes
 
   Scenario: User must be able to edit draft version of the Parent Objective template
     Given The 'library/objective_templates' page is opened
-    And The new objective is added in the library
-    When The 'Edit' action is clicked for the created objective
+    And [API] Create objective template
+    And The objective template is found
+    When The 'Edit' option is clicked from the three dot menu list
     And The objective metadata is updated
-    Then The updated Objective Template is visible within the table
+    Then The item has status 'Draft' and version '0.2'
+    And The 'Edit' option is clicked from the three dot menu list
+    And The objective template name is checked and user goes to indexes
+    And The updated indexes in objective template are visible in the form
 
   Scenario: User must not be able to create a new Parent Objective template without Template Text populated
     Given The 'library/objective_templates' page is opened
     When The new Objective template is added without template text
-    Then The validation appears for Template Text field
+    Then The validation appears for Template name
     And The form is not closed
 
   Scenario: User must not be able to create a new Parent Objective template with not unique Template Text
     Given The 'library/objective_templates' page is opened
-    When The new objective is added in the library
+    And [API] Create objective template
     And The second objective is added with the same template text
     Then The pop up displays 'already exists'
     And The form is not closed
@@ -101,60 +111,85 @@ Feature: Library - Objective templates
 
   Scenario: User must be able to delete the drafted version of Parent Objective template in version below 1.0
     Given The 'library/objective_templates' page is opened
-    And The new objective is added in the library
-    When The 'Delete' action is clicked for the created objective
+    And [API] Create objective template
+    And The objective template is found
+    When The 'Delete' option is clicked from the three dot menu list
     Then The pop up displays "Template deleted"
     And The objective is no longer available
 
   Scenario: User must be able to approve the drafted version of Parent Objective template
     Given The 'library/objective_templates' page is opened
-    And The new objective is added in the library
-    When The 'Approve' action is clicked for the created objective
+    And [API] Create objective template
+    And The objective template is found
+    When The 'Approve' option is clicked from the three dot menu list
     Then The pop up displays 'Template is now in Final state'
-    And The status of the parent objective template displayed as Final with a version rounded up to full number
+    And The item has status 'Final' and version '1.0'
 
   Scenario: User must be able to edit indexing for final version of the templates
     Given The 'library/objective_templates' page is opened
-    And The objective template exists with a status as 'Final'
-    When The 'Edit indexing' action is clicked for the objective
+    And [API] Create objective template
+    And [API] Approve objective template
+    And The objective template is found
+    When The 'Edit indexing' option is clicked from the three dot menu list
     And The indexing is updated for the Objective Template
-    And The 'Edit indexing' action is clicked for the objective
+    And The 'Edit indexing' option is clicked from the three dot menu list
     Then The updated indexes in objective template are visible in the form
 
   Scenario: User must not be able to save the edited version of the draft Parent Objective template without filled in mandatory field 'Change description'
     Given The 'library/objective_templates' page is opened
-    And The new objective is added in the library
-    When The 'Edit' action is clicked for the created objective
-    And The created objective template is edited without change description provided
-    Then The validation appears for objective change description field
+    And [API] Create objective template
+    And The objective template is found
+    When The 'Edit' option is clicked from the three dot menu list
+    And The template is edited witout providing mandatory change description
+    Then The validation appears for template change description field
     And The form is not closed
 
   Scenario: User must be able to add a new version for the Parent Objective template with a status as 'Final'
     Given The 'library/objective_templates' page is opened
-    And The objective template exists with a status as 'Final'
-    When The 'New version' action is clicked for the objective
+    And [API] Create objective template
+    And [API] Approve objective template
+    And The objective template is found
+    When The 'New version' option is clicked from the three dot menu list
     Then The pop up displays 'New version created'
-    And The objective template is updated to draft with version incremented by 0.1
+    And The item has status 'Draft' and version '1.1'
+
+  Scenario: User must be able to edit and approve new version of objective
+    Given The 'library/objective_templates' page is opened
+    And [API] Create objective template
+    And [API] Approve objective template
+    And The objective template is found
+    When The 'New version' option is clicked from the three dot menu list
+    Then The item has status 'Draft' and version '1.1'
+    When The 'Edit' option is clicked from the three dot menu list
+    And The objective metadata is updated
+    Then The item has status 'Draft' and version '1.2'
+    When The 'Approve' option is clicked from the three dot menu list
+    Then The item has status 'Final' and version '2.0'
 
   Scenario: User must be able to inactivate the Parent Objective template with a status as 'Final'
     Given The 'library/objective_templates' page is opened
-    And The objective template exists with a status as Final
-    When The 'Inactivate' action is clicked for the objective
+    And [API] Create objective template
+    And [API] Approve objective template
+    And The objective template is found
+    When The 'Inactivate' option is clicked from the three dot menu list
     Then The pop up displays 'Template inactivated'
-    And The objective template is displayed with a status as Retired with the same version as before
+    And The item has status 'Retired' and version '1.0'
 
   Scenario: User must be able to reactivate the Parent Objective template with a status as 'Retired'
     Given The 'library/objective_templates' page is opened
-    And The objective template exists with a status as 'Retired'
-    When The 'Reactivate' action is clicked for the objective
+    And [API] Create objective template
+    And [API] Approve objective template
+    And [API] Objective template is inactivated
+    And The objective template is found
+    When The 'Reactivate' option is clicked from the three dot menu list
     Then The pop up displays 'Template is now in Final state'
-    And The objective template is displayed with a status as Final with the same version as before
+    And The item has status 'Final' and version '1.0'
 
   @pending_implementation @manual_test
   Scenario: User must be able to view the history for the Parent Objective template
     Given The 'library/objective_templates' page is opened
     And The objective template exists
-    When The 'History' action is clicked for the objective
+    When The 'History' option is clicked from the three dot menu list
     Then The 'History for template' window is displayed with the following column list with values
       | Column | Header                 |
       | 1      | Sequence number        |
@@ -183,6 +218,98 @@ Feature: Library - Objective templates
     Then The user is presented with history of changes for that element
     And The history contains timestamps and usernames
 
+  Scenario: User must be able to Cancel creation of the objective
+    Given The 'library/objective_templates' page is opened
+    And The objective template form is filled with data
+    When Fullscreen wizard is closed by clicking cancel button
+    And Action is confirmed by clicking continue
+    Then The form is no longer available
+    And The objective template is not created
+
+  Scenario: User must be able to Cancel edition of the objective
+    Given The 'library/objective_templates' page is opened
+    And [API] Create objective template
+    And The objective template is found
+    When The 'Edit' option is clicked from the three dot menu list
+    When The objective template edition form is filled with data
+    And Fullscreen wizard is closed by clicking cancel button
+    And Action is confirmed by clicking continue
+    Then The form is no longer available
+    And The objective template is found
+    When The 'Edit' option is clicked from the three dot menu list
+    And The objective template is not updated
+
+  Scenario: User must be able to Cancel indexes edition of the objective
+    Given The 'library/objective_templates' page is opened
+    And [API] Create objective template
+    And [API] Approve objective template
+    And The objective template is found
+    When The 'Edit indexing' option is clicked from the three dot menu list
+    When The objective indexes edition is initiated
+    And Modal window form is closed by clicking cancel button
+    Then The form is no longer available
+    When The 'Edit indexing' option is clicked from the three dot menu list
+    And The objective indexes are not updated
+
+  Scenario: User must only have access to aprove, edit, delete, history actions for Drafted version of the objective
+    Given The 'library/objective_templates' page is opened
+    And [API] Create objective template
+    And The objective template is found
+    When The item actions button is clicked
+    Then Only actions that should be avaiable for the Draft item are displayed
+
+  Scenario: User must only have access to new version, inactivate, history actions for Final version of the objective
+    Given The 'library/objective_templates' page is opened
+    And [API] Create objective template
+    And [API] Approve objective template
+    And The objective template is found
+    When The item actions button is clicked
+    Then Only actions that should be avaiable for the Final item are displayed
+
+  Scenario: User must have access to edit indexing, create pre-instantiation actions for Final version of the objective
+    Given The 'library/objective_templates' page is opened
+    And [API] Create objective template
+    And [API] Approve objective template
+    And The objective template is found
+    When The item actions button is clicked
+    Then 'Edit indexing' action is available
+    And 'Create pre-instantiation' action is available
+
+  Scenario: User must only have access to reactivate, history actions for Retired version of the objective
+    Given The 'library/objective_templates' page is opened
+    And [API] Create objective template
+    And [API] Approve objective template
+    And [API] Objective template is inactivated
+    And The objective template is found
+    And The item actions button is clicked
+    Then Only actions that should be avaiable for the Retired item are displayed
+
+  Scenario: User must be able to search created objective
+    Given The 'library/objective_templates' page is opened
+    When [API] Search Test - Create first objective template
+    And [API] Search Test - Create second objective template
+    Then The objective template is found
+    And More than one item is found after performing partial name search 
+
+  Scenario: User must be able to search not existing objective and table will correctly filtered
+    Given The 'library/objective_templates' page is opened
+    When The not existing item is searched for
+    Then The item is not found and table is correctly filtered
+
+  Scenario: User must be able to search item ignoring case sensitivity
+    Given The 'library/objective_templates' page is opened
+    When The existing item in search by lowercased name
+    And More than one result is found
+
+  Scenario: User must be able to combine search and filters to narrow table results
+    Given The 'library/objective_templates' page is opened
+    When The user adds status to filters
+    And The user changes status filter value to 'Final'
+    And The existing item in status Draft is searched for
+    And The item is not found and table is correctly filtered
+    And The user changes status filter value to 'Draft'
+    Then More than one item is found after performing partial name search
+
   Scenario Outline: User must be able to filter the table by text fields
     Given The 'library/objective_templates' page is opened
     When The user filters field '<name>'
@@ -193,3 +320,8 @@ Feature: Library - Objective templates
       | Indication or disorder |
       | Objective category     |
       | Confirmatory testing   |
+
+  Scenario: User must be able to use table pagination
+      Given The '/library/objective_templates' page is opened
+      When The user switches pages of the table
+      Then The table page presents correct data

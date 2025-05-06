@@ -30,8 +30,8 @@ OdmMethodUID = Path(description="The unique id of the ODM Method.")
     response_model=CustomPage[OdmMethod],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_all_odm_methods(
@@ -88,11 +88,11 @@ def get_all_odm_methods(
     response_model=list[Any],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - Invalid field name specified",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_distinct_values_for_header(
@@ -135,8 +135,8 @@ def get_distinct_values_for_header(
     response_model=OdmMethod,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_odm_method(odm_method_uid: Annotated[str, OdmMethodUID]):
@@ -151,8 +151,8 @@ def get_odm_method(odm_method_uid: Annotated[str, OdmMethodUID]):
     response_model=dict,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_active_relationships(odm_method_uid: Annotated[str, OdmMethodUID]):
@@ -181,11 +181,11 @@ Possible errors:
     response_model=list[OdmMethod],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - The ODM Method with the specified 'odm_method_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_odm_method_versions(odm_method_uid: Annotated[str, OdmMethodUID]):
@@ -200,6 +200,7 @@ def get_odm_method_versions(odm_method_uid: Annotated[str, OdmMethodUID]):
     response_model=OdmMethod,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {"description": "Created - The ODM Method was successfully created."},
         400: {
             "model": ErrorResponse,
@@ -208,7 +209,6 @@ def get_odm_method_versions(odm_method_uid: Annotated[str, OdmMethodUID]):
             "- The library doesn't allow to add new items.\n",
         },
         409: _generic_descriptions.ERROR_409,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def create_odm_method(
@@ -227,6 +227,7 @@ def create_odm_method(
     response_model=OdmMethod,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -240,7 +241,6 @@ def create_odm_method(
             "description": "Not Found - The ODM Method with the specified 'odm_method_uid' wasn't found.",
         },
         409: _generic_descriptions.ERROR_409,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def edit_odm_method(
@@ -274,6 +274,7 @@ Possible errors:
     response_model=OdmMethod,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -286,7 +287,6 @@ Possible errors:
             "- The ODM Method is not in final status.\n"
             "- The ODM Method with the specified 'odm_method_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def create_odm_method_version(odm_method_uid: Annotated[str, OdmMethodUID]):
@@ -303,6 +303,7 @@ def create_odm_method_version(odm_method_uid: Annotated[str, OdmMethodUID]):
     response_model=OdmMethod,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -314,7 +315,6 @@ def create_odm_method_version(odm_method_uid: Annotated[str, OdmMethodUID]):
             "model": ErrorResponse,
             "description": "Not Found - The ODM Method with the specified 'odm_method_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def approve_odm_method(odm_method_uid: Annotated[str, OdmMethodUID]):
@@ -329,6 +329,7 @@ def approve_odm_method(odm_method_uid: Annotated[str, OdmMethodUID]):
     response_model=OdmMethod,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -339,7 +340,6 @@ def approve_odm_method(odm_method_uid: Annotated[str, OdmMethodUID]):
             "model": ErrorResponse,
             "description": "Not Found - The ODM Method with the specified 'odm_method_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def inactivate_odm_method(odm_method_uid: Annotated[str, OdmMethodUID]):
@@ -356,6 +356,7 @@ def inactivate_odm_method(odm_method_uid: Annotated[str, OdmMethodUID]):
     response_model=OdmMethod,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -366,7 +367,6 @@ def inactivate_odm_method(odm_method_uid: Annotated[str, OdmMethodUID]):
             "model": ErrorResponse,
             "description": "Not Found - The ODM Method with the specified 'odm_method_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def reactivate_odm_method(odm_method_uid: Annotated[str, OdmMethodUID]):
@@ -383,6 +383,7 @@ def reactivate_odm_method(odm_method_uid: Annotated[str, OdmMethodUID]):
     response_model=None,
     status_code=204,
     responses={
+        403: _generic_descriptions.ERROR_403,
         204: {"description": "No Content - The ODM Method was successfully deleted."},
         400: {
             "model": ErrorResponse,
@@ -395,7 +396,6 @@ def reactivate_odm_method(odm_method_uid: Annotated[str, OdmMethodUID]):
             "model": ErrorResponse,
             "description": "Not Found - An ODM Method with the specified 'odm_method_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def delete_odm_method(odm_method_uid: Annotated[str, OdmMethodUID]):

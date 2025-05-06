@@ -3,6 +3,8 @@
 import re
 from datetime import datetime, timezone
 
+from pydantic import ValidationInfo
+
 from clinical_mdr_api.domains._utils import get_iso_lang_data
 from common.exceptions import ValidationException
 
@@ -10,15 +12,14 @@ FLOAT_REGEX = "^[0-9]+\\.?[0-9]*$"
 
 
 # pylint: disable=unused-argument
-def validate_string_represents_boolean(cls, value, values, field):
+def validate_string_represents_boolean(cls, value, info: ValidationInfo):
     """
     Validates whether a string value represents a boolean value.
 
     Args:
         cls: The class to which the field belongs.
         value: The value to validate.
-        values: The values of all the fields.
-        field: The field to validate.
+        info: ValidationInfo
 
     Returns:
         str: The validated value.
@@ -34,21 +35,20 @@ def validate_string_represents_boolean(cls, value, values, field):
 
     ValidationException.raise_if(
         value.lower() not in (truthy + falsy),
-        msg=f"Unsupported boolean value '{value}' for field '{field.name}'. Allowed values are: {truthy + falsy}.",
+        msg=f"Unsupported boolean value '{value}' for field '{info.field_name}'. Allowed values are: {truthy + falsy}.",
     )
 
     return value
 
 
-def validate_name_only_contains_letters(cls, value, values, field):
+def validate_name_only_contains_letters(cls, value, info: ValidationInfo):
     """
     Validates whether a string value contains only letters.
 
     Args:
         cls: The class to which the field belongs.
         value: The value to validate.
-        values: The values of all the fields.
-        field: The field to validate.
+        info: ValidationInfo
 
     Returns:
         str: The validated value.
@@ -58,20 +58,19 @@ def validate_name_only_contains_letters(cls, value, values, field):
     """
     if re.search("[^a-zA-Z]", value):
         raise ValueError(
-            f"Provided value '{value}' for '{field.name}' is invalid. Must only contain letters."
+            f"Provided value '{value}' for '{info.field_name}' is invalid. Must only contain letters."
         )
     return value
 
 
-def validate_regex(cls, value, values, field):
+def validate_regex(cls, value, info: ValidationInfo):
     """
     Validates whether a string value is a valid regular expression.
 
     Args:
         cls: The class to which the field belongs.
         value: The value to validate.
-        values: The values of all the fields.
-        field: The field to validate.
+        info: ValidationInfo
 
     Returns:
         str: The validated regular expression.
@@ -85,13 +84,13 @@ def validate_regex(cls, value, values, field):
             return value
         except re.error as exc:
             raise ValueError(
-                f"Provided regex value '{value}' for field '{field.name}' is invalid."
+                f"Provided regex value '{value}' for field '{info.field_name}' is invalid."
             ) from exc
     return value
 
 
 # pylint: disable=unused-argument
-def transform_to_utc(cls, value: datetime | None, values, field):
+def transform_to_utc(cls, value: datetime | None, info: ValidationInfo):
     if not value:
         return None
 
@@ -101,7 +100,7 @@ def transform_to_utc(cls, value: datetime | None, values, field):
         return value.astimezone(timezone.utc)
     except OverflowError as exc:
         raise ValueError(
-            f"Provided value '{value}' for '{field.name}' is invalid. {exc}"
+            f"Provided value '{value}' for '{info.field_name}' is invalid. {exc}"
         ) from exc
 
 

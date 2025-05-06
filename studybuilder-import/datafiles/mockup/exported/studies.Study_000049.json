@@ -1,0 +1,63 @@
+{
+  "current_metadata": {
+    "identification_metadata": {
+      "clinical_programme_name": "CDISC Development programme",
+      "description": null,
+      "project_name": "CDISC Dev",
+      "project_number": "CDISC DEV",
+      "registry_identifiers": {
+        "civ_id_sin_number": null,
+        "civ_id_sin_number_null_value_code": null,
+        "ct_gov_id": null,
+        "ct_gov_id_null_value_code": null,
+        "eu_trial_number": null,
+        "eu_trial_number_null_value_code": null,
+        "eudamed_srn_number": null,
+        "eudamed_srn_number_null_value_code": null,
+        "eudract_id": null,
+        "eudract_id_null_value_code": null,
+        "investigational_device_exemption_ide_number": null,
+        "investigational_device_exemption_ide_number_null_value_code": null,
+        "investigational_new_drug_application_number_ind": null,
+        "investigational_new_drug_application_number_ind_null_value_code": null,
+        "japanese_trial_registry_id_japic": null,
+        "japanese_trial_registry_id_japic_null_value_code": null,
+        "japanese_trial_registry_number_jrct": null,
+        "japanese_trial_registry_number_jrct_null_value_code": null,
+        "national_clinical_trial_number": null,
+        "national_clinical_trial_number_null_value_code": null,
+        "national_medical_products_administration_nmpa_number": null,
+        "national_medical_products_administration_nmpa_number_null_value_code": null,
+        "universal_trial_number_utn": null,
+        "universal_trial_number_utn_null_value_code": null
+      },
+      "study_acronym": "Demo sub-parts",
+      "study_id": "CDISC DEV-9005",
+      "study_number": "9005",
+      "study_subpart_acronym": null,
+      "subpart_id": null
+    },
+    "study_description": {
+      "study_short_title": null,
+      "study_title": null
+    },
+    "version_metadata": {
+      "study_status": "DRAFT",
+      "version_author": "study.setup@b2bfv7zbjhkehgyw.onmicrosoft.com",
+      "version_description": null,
+      "version_number": null,
+      "version_timestamp": "2025-03-27T08:05:34.955766Z"
+    }
+  },
+  "possible_actions": [
+    "delete",
+    "lock",
+    "release"
+  ],
+  "study_parent_part": null,
+  "study_subpart_uids": [
+    "Study_000051",
+    "Study_000052"
+  ],
+  "uid": "Study_000049"
+}

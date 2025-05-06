@@ -47,6 +47,7 @@ CriteriaUID = Path(description="The unique id of the criteria.")
     response_model=CustomPage[CriteriaWithType],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {
             "content": {
                 "text/csv": {
@@ -80,7 +81,6 @@ CriteriaUID = Path(description="The unique id of the criteria.")
                 },
             }
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 @decorators.allow_exports(
@@ -163,11 +163,11 @@ def get_all(
     response_model=list[Any],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - Invalid field name specified",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_distinct_values_for_header(
@@ -218,8 +218,8 @@ def get_distinct_values_for_header(
     response_model=CustomPage[Criteria],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def retrieve_audit_trail(
@@ -271,11 +271,11 @@ def retrieve_audit_trail(
     response_model=CriteriaWithType | None,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - The criteria with the specified 'criteria_uid' (and the specified date/time and/or status) wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get(
@@ -293,11 +293,11 @@ def get(
     response_model=list[CriteriaVersion],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - The criteria with the specified 'criteria_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_versions(criteria_uid: Annotated[str, CriteriaUID]):
@@ -322,6 +322,7 @@ If the request succeeds:
     response_model=Criteria,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {"description": "Created - The criteria was successfully created."},
         400: {
             "model": ErrorResponse,
@@ -337,7 +338,6 @@ If the request succeeds:
             "- The library with the specified 'library_name' could not be found.\n"
             "- The criteria template with the specified 'template_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def create(
@@ -364,6 +364,7 @@ If the request succeeds:
     response_model=Criteria,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "Success - The criteria is able to be created."},
         400: {
             "model": ErrorResponse,
@@ -378,7 +379,6 @@ If the request succeeds:
             "- The library with the specified 'library_name' could not be found.\n"
             "- The criteria template with the specified 'template_uid' could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def preview(
@@ -405,6 +405,7 @@ If the request succeeds:
     response_model=CriteriaWithType,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -419,7 +420,6 @@ If the request succeeds:
             "model": ErrorResponse,
             "description": "Not Found - The criteria with the specified 'criteria_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def edit(
@@ -450,6 +450,7 @@ If the request succeeds:
     response_model=CriteriaWithType,
     status_code=201,
     responses={
+        403: _generic_descriptions.ERROR_403,
         201: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -461,7 +462,6 @@ If the request succeeds:
             "model": ErrorResponse,
             "description": "Not Found - The criteria with the specified 'criteria_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def approve(criteria_uid: Annotated[str, CriteriaUID]):
@@ -483,6 +483,7 @@ If the request succeeds:
     response_model=CriteriaWithType,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -493,7 +494,6 @@ If the request succeeds:
             "model": ErrorResponse,
             "description": "Not Found - The criteria with the specified 'criteria_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def inactivate(criteria_uid: Annotated[str, CriteriaUID]):
@@ -515,6 +515,7 @@ If the request succeeds:
     response_model=CriteriaWithType,
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         200: {"description": "OK."},
         400: {
             "model": ErrorResponse,
@@ -525,7 +526,6 @@ If the request succeeds:
             "model": ErrorResponse,
             "description": "Not Found - The criteria with the specified 'criteria_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def reactivate(criteria_uid: Annotated[str, CriteriaUID]):
@@ -543,6 +543,7 @@ def reactivate(criteria_uid: Annotated[str, CriteriaUID]):
     response_model=None,
     status_code=204,
     responses={
+        403: _generic_descriptions.ERROR_403,
         204: {"description": "No Content - The criteria was successfully deleted."},
         400: {
             "model": ErrorResponse,
@@ -554,7 +555,6 @@ def reactivate(criteria_uid: Annotated[str, CriteriaUID]):
             "model": ErrorResponse,
             "description": "Not Found - An criteria with the specified uid could not be found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def delete(criteria_uid: Annotated[str, CriteriaUID]):
@@ -568,11 +568,11 @@ def delete(criteria_uid: Annotated[str, CriteriaUID]):
     response_model=list[Study],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: {
             "model": ErrorResponse,
             "description": "Not Found - The criteria with the specified 'criteria_uid' wasn't found.",
         },
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_studies(
@@ -616,8 +616,8 @@ In that case, the same parameter (with the same values) is included multiple tim
     response_model=list[TemplateParameter],
     status_code=200,
     responses={
+        403: _generic_descriptions.ERROR_403,
         404: _generic_descriptions.ERROR_404,
-        500: _generic_descriptions.ERROR_500,
     },
 )
 def get_parameters(

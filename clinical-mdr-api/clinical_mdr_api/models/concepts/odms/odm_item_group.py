@@ -1,7 +1,8 @@
 from typing import Annotated, Callable, Self
 
-from pydantic import Field, validator
+from pydantic import Field, field_validator
 
+from clinical_mdr_api.descriptions.general import CHANGES_FIELD_DESC
 from clinical_mdr_api.domains.concepts.activities.activity_sub_group import (
     ActivitySubGroupAR,
 )
@@ -62,12 +63,16 @@ from common.utils import booltostr
 
 class OdmItemGroup(ConceptModel):
     oid: str | None
-    repeating: Annotated[str | None, Field(nullable=True)] = None
-    is_reference_data: Annotated[str | None, Field(nullable=True)] = None
-    sas_dataset_name: Annotated[str | None, Field(nullable=True)] = None
-    origin: Annotated[str | None, Field(nullable=True)] = None
-    purpose: Annotated[str | None, Field(nullable=True)] = None
-    comment: Annotated[str | None, Field(nullable=True)] = None
+    repeating: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    is_reference_data: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    sas_dataset_name: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    origin: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    purpose: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    comment: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
     descriptions: list[OdmDescriptionSimpleModel]
     aliases: list[OdmAliasSimpleModel]
     sdtm_domains: list[SimpleCTTermAttributes]
@@ -78,8 +83,8 @@ class OdmItemGroup(ConceptModel):
     vendor_element_attributes: list[OdmVendorElementAttributeRelationModel]
     possible_actions: list[str]
 
-    _validate_string_represents_boolean = validator(
-        "repeating", "is_reference_data", pre=True, allow_reuse=True
+    _validate_string_represents_boolean = field_validator(
+        "repeating", "is_reference_data", mode="before"
     )(validate_string_represents_boolean)
 
     @classmethod
@@ -269,35 +274,37 @@ class OdmItemGroupRefModel(BaseModel):
         return odm_item_group_ref_model
 
     uid: Annotated[str, Field()]
-    oid: Annotated[str | None, Field(nullable=True)] = None
-    name: Annotated[str | None, Field(nullable=True)] = None
-    order_number: Annotated[int | None, Field(nullable=True)] = None
-    mandatory: Annotated[str | None, Field(nullable=True)] = None
-    collection_exception_condition_oid: Annotated[str | None, Field(nullable=True)] = (
+    oid: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    name: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    order_number: Annotated[int | None, Field(json_schema_extra={"nullable": True})] = (
         None
     )
+    mandatory: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    collection_exception_condition_oid: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
     vendor: Annotated[OdmRefVendor, Field()]
 
 
 class OdmItemGroupPostInput(ConceptPostInput):
-    oid: str | None
+    oid: Annotated[str | None, Field(min_length=1)] = None
     repeating: Annotated[str, Field(min_length=1)]
-    is_reference_data: str | None
-    sas_dataset_name: str | None
-    origin: str | None
-    purpose: str | None
+    is_reference_data: str | None = None
+    sas_dataset_name: str | None = None
+    origin: str | None = None
+    purpose: str | None = None
     comment: str | None = None
     descriptions: list[OdmDescriptionPostInput | str]
     alias_uids: list[str]
     sdtm_domain_uids: list[str]
 
-    _validate_string_represents_boolean = validator(
-        "repeating", "is_reference_data", pre=True, allow_reuse=True
+    _validate_string_represents_boolean = field_validator(
+        "repeating", "is_reference_data", mode="before"
     )(validate_string_represents_boolean)
 
 
 class OdmItemGroupPatchInput(ConceptPatchInput):
-    oid: str | None
+    oid: Annotated[str | None, Field(min_length=1)]
     repeating: str | None
     is_reference_data: str | None
     sas_dataset_name: str | None
@@ -308,8 +315,8 @@ class OdmItemGroupPatchInput(ConceptPatchInput):
     alias_uids: list[str]
     sdtm_domain_uids: list[str]
 
-    _validate_string_represents_boolean = validator(
-        "repeating", "is_reference_data", pre=True, allow_reuse=True
+    _validate_string_represents_boolean = field_validator(
+        "repeating", "is_reference_data", mode="before"
     )(validate_string_represents_boolean)
 
 
@@ -319,14 +326,14 @@ class OdmItemGroupActivitySubGroupPostInput(PostInputModel):
 
 class OdmItemGroupItemPostInput(PostInputModel):
     uid: Annotated[str, Field(min_length=1)]
-    order_number: Annotated[int, Field(gt=0, lt=config.MAX_INT_NEO4J)]
+    order_number: Annotated[int, Field(lt=config.MAX_INT_NEO4J)]
     mandatory: str
     key_sequence: str
-    method_oid: str | None
+    method_oid: str | None = None
     imputation_method_oid: str
     role: str
     role_codelist_oid: str
-    collection_exception_condition_oid: str | None
+    collection_exception_condition_oid: str | None = None
     vendor: OdmRefVendorPostInput
 
 
@@ -336,12 +343,8 @@ class OdmItemGroupVersion(OdmItemGroup):
     """
 
     changes: Annotated[
-        dict[str, bool] | None,
+        list[str],
         Field(
-            description=(
-                "Denotes whether or not there was a change in a specific field/property compared to the previous version. "
-                "The field names in this object here refer to the field names of the objective (e.g. name, start_date, ..)."
-            ),
-            nullable=True,
+            description=CHANGES_FIELD_DESC,
         ),
-    ] = None
+    ] = []

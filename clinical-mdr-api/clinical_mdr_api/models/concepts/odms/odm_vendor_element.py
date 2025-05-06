@@ -1,7 +1,8 @@
 from typing import Annotated, Callable, Self
 
-from pydantic import Field, conlist, validator
+from pydantic import Field, field_validator
 
+from clinical_mdr_api.descriptions.general import CHANGES_FIELD_DESC
 from clinical_mdr_api.domains.concepts.odms.vendor_attribute import OdmVendorAttributeAR
 from clinical_mdr_api.domains.concepts.odms.vendor_element import (
     OdmVendorElementAR,
@@ -26,7 +27,7 @@ from clinical_mdr_api.models.validators import validate_name_only_contains_lette
 
 
 class OdmVendorElement(ConceptModel):
-    compatible_types: Annotated[list[str], Field(is_json=True)]
+    compatible_types: Annotated[list[str], Field(json_schema_extra={"is_json": True})]
     vendor_namespace: OdmVendorNamespaceSimpleModel
     vendor_attributes: list[OdmVendorAttributeSimpleModel]
     possible_actions: list[str]
@@ -101,21 +102,21 @@ class OdmVendorElementRelationModel(BaseModel):
         return odm_vendor_element_ref_model
 
     uid: Annotated[str, Field()]
-    name: Annotated[str | None, Field(nullable=True)] = None
-    value: Annotated[str | None, Field(nullable=True)] = None
+    name: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    value: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
 
 
 class OdmVendorElementPostInput(ConceptPostInput):
-    compatible_types: conlist(VendorElementCompatibleType, min_items=1)
+    compatible_types: Annotated[list[VendorElementCompatibleType], Field(min_length=1)]
     vendor_namespace_uid: Annotated[str, Field(min_length=1)]
 
-    _validate_name_only_contains_letters = validator(
-        "name", pre=True, allow_reuse=True
-    )(validate_name_only_contains_letters)
+    _validate_name_only_contains_letters = field_validator("name", mode="before")(
+        validate_name_only_contains_letters
+    )
 
 
 class OdmVendorElementPatchInput(ConceptPatchInput):
-    compatible_types: conlist(VendorElementCompatibleType, min_items=1)
+    compatible_types: Annotated[list[VendorElementCompatibleType], Field(min_length=1)]
 
 
 class OdmVendorElementVersion(OdmVendorElement):
@@ -124,12 +125,8 @@ class OdmVendorElementVersion(OdmVendorElement):
     """
 
     changes: Annotated[
-        dict[str, bool] | None,
+        list[str],
         Field(
-            description=(
-                "Denotes whether or not there was a change in a specific field/property compared to the previous version. "
-                "The field names in this object here refer to the field names of the objective (e.g. name, start_date, ..)."
-            ),
-            nullable=True,
+            description=CHANGES_FIELD_DESC,
         ),
-    ] = None
+    ] = []

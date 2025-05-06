@@ -36,3 +36,5 @@ Additionally, two resource groups exist for handling DNS and networking of the s
 
 [![System Integrations](~@source/images/documentation/Clinical-MDR-Azure-Resources.png)](../../images/documentation/Clinical-MDR-Azure-Resources.png)
 
+
+

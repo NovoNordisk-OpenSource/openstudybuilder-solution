@@ -27,3 +27,4 @@ contact with us to discuss possible collaboration. We will work on processes for
 
 Due to the modular structure and API support of the OpenStudyBuilder it is highly encouraged to develop additional components. These could be hosted as stand alone
 projects. We would love to link your components - so please get in touch.
+

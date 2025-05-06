@@ -785,9 +785,10 @@ def test_cannot_update_objective_without_change_description(api_client):
     assert_response_status_code(response, 422)
     assert res["detail"] == [
         {
+            "type": "missing",
             "loc": ["body", "change_description"],
-            "msg": "field required",
-            "type": "value_error.missing",
+            "msg": "Field required",
+            "input": {"name": "Default name with [TextValue]", "parameter_terms": []},
         }
     ]
 

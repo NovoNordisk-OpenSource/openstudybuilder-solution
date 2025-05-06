@@ -16,6 +16,15 @@ MDR_MIGRATION_ODM_FORMS = load_env("MDR_MIGRATION_ODM_FORMS")
 MDR_MIGRATION_ODM_ITEMGROUPS = load_env("MDR_MIGRATION_ODM_ITEMGROUPS")
 MDR_MIGRATION_ODM_ITEMS = load_env("MDR_MIGRATION_ODM_ITEMS")
 MDR_MIGRATION_ODM_ALIAS = load_env("MDR_MIGRATION_ODM_ALIAS")
+MDR_MIGRATION_ODM_TEMPLATE_TO_FORM_RELATIONSHIP = load_env(
+    "MDR_MIGRATION_ODM_TEMPLATE_TO_FORM_RELATIONSHIP"
+)
+MDR_MIGRATION_ODM_FORM_TO_ITEMGROUP_RELATIONSHIP = load_env(
+    "MDR_MIGRATION_ODM_FORM_TO_ITEMGROUP_RELATIONSHIP"
+)
+MDR_MIGRATION_ODM_ITEMGROUP_TO_ITEM_RELATIONSHIP = load_env(
+    "MDR_MIGRATION_ODM_ITEMGROUP_TO_ITEM_RELATIONSHIP"
+)
 
 
 # name, prefix, namespace
@@ -47,7 +56,7 @@ def odm_vendor_attribute(data, vendor_namespace_uid):
 # library,oid,name,effectivedate,retireddate
 def odm_template(data):
     return {
-        "path": "/concepts/odms/templates",
+        "path": "/concepts/odms/study-events",
         "body": {
             "name": data["name"],
             "library_name": data["library"],
@@ -93,11 +102,6 @@ def odm_form(data, alias_uids):
             "alias_uids": alias_uids,
         },
     }
-
-
-# not used:
-#        "sdtmVersion": "string",
-#        "scope_uid": "string",
 
 
 # library,oid,name,prompt,repeating,isreferencedata,sasdatasetname,domain,origin,purpose,comment,language,description,instruction
@@ -165,6 +169,65 @@ def odm_item(data, alias_uids, units, terms):
             "unit_definitions": units,
             "terms": terms,
         },
+    }
+
+
+def odm_template_to_form_relationship(uid, data):
+    return {
+        "path": f"/concepts/odms/study-events/{uid}/forms",
+        "body": [
+            {
+                "uid": data["uid"],
+                "order_number": data["order_number"],
+                "mandatory": data["mandatory"],
+                "locked": data["locked"],
+                "collection_exception_condition_oid": data[
+                    "collection_exception_condition_oid"
+                ]
+                or None,
+            }
+        ],
+    }
+
+
+def odm_form_to_itemgroup_relationship(uid, data):
+    return {
+        "path": f"/concepts/odms/forms/{uid}/item-groups",
+        "body": [
+            {
+                "uid": data["uid"],
+                "order_number": data["order_number"],
+                "mandatory": data["mandatory"],
+                "collection_exception_condition_oid": data[
+                    "collection_exception_condition_oid"
+                ]
+                or None,
+                "vendor": {"attributes": []},
+            }
+        ],
+    }
+
+
+def odm_itemgroup_to_item_relationship(uid, data):
+    return {
+        "path": f"/concepts/odms/item-groups/{uid}/items",
+        "body": [
+            {
+                "uid": data["uid"],
+                "order_number": data["order_number"],
+                "mandatory": data["mandatory"],
+                "key_sequence": data["key_sequence"] or None,
+                "method_oid": data["method_oid"] or None,
+                "imputation_method_oid": data["imputation_method_oid"] or None,
+                "role": data["role"] or None,
+                "role_codelist_oid": data["role_codelist_oid"] or None,
+                "collection_exception_condition_oid": data[
+                    "collection_exception_condition_oid"
+                ]
+                or None,
+                "vendor": {"attributes": []},
+            }
+        ],
     }
 
 
@@ -346,6 +409,118 @@ class Crfs(BaseImporter):
             # TODO check if it exists before posting?
             res = self.api.post_to_api(data)
 
+    @open_file()
+    def handle_odm_template_to_form_relationship(self, csvfile):
+        csvdata = csv.DictReader(csvfile)
+        odm_forms = self.api.get_all_from_api("/concepts/odms/forms")
+        odm_templates = self.api.get_all_from_api("/concepts/odms/study-events")
+
+        all_forms = {}
+        for form in odm_forms:
+            all_forms[form["oid"]] = form["uid"]
+
+        all_templates = {}
+        for template in odm_templates:
+            all_templates[template["oid"]] = template["uid"]
+
+        for row in csvdata:
+            if len(row) == 0:
+                continue
+            self.log.info(
+                f"Adding odm form '{row['oid_form']}' to template '{row['oid_template']}'"
+            )
+
+            if row["oid_form"] not in all_forms:
+                self.log.warning(f"form '{row['oid_form']}' not found, skipping")
+                continue
+            if row["oid_template"] not in all_templates:
+                self.log.warning(
+                    f"Template '{row['oid_template']}' not found, skipping"
+                )
+                continue
+
+            row["uid"] = all_forms[row["oid_form"]]
+
+            data = odm_template_to_form_relationship(
+                all_templates[row["oid_template"]], row
+            )
+
+            self.api.post_to_api(data)
+
+    @open_file()
+    def handle_odm_form_to_itemgroup_relationship(self, csvfile):
+        csvdata = csv.DictReader(csvfile)
+        odm_itemgroups = self.api.get_all_from_api("/concepts/odms/item-groups")
+        odm_forms = self.api.get_all_from_api("/concepts/odms/forms")
+
+        all_itemgroups = {}
+        for itemgroup in odm_itemgroups:
+            all_itemgroups[itemgroup["oid"]] = itemgroup["uid"]
+
+        all_forms = {}
+        for form in odm_forms:
+            all_forms[form["oid"]] = form["uid"]
+
+        for row in csvdata:
+            if len(row) == 0:
+                continue
+            self.log.info(
+                f"Adding odm item group '{row['oid_itemgroup']}' to form '{row['oid_form']}'"
+            )
+
+            if row["oid_itemgroup"] not in all_itemgroups:
+                self.log.warning(
+                    f"Item group '{row['oid_itemgroup']}' not found, skipping"
+                )
+                continue
+            if row["oid_form"] not in all_forms:
+                self.log.warning(f"Form '{row['oid_form']}' not found, skipping")
+                continue
+
+            row["uid"] = all_itemgroups[row["oid_itemgroup"]]
+
+            data = odm_form_to_itemgroup_relationship(all_forms[row["oid_form"]], row)
+
+            self.api.post_to_api(data)
+
+    @open_file()
+    def handle_odm_itemgroup_to_item_relationship(self, csvfile):
+        csvdata = csv.DictReader(csvfile)
+        odm_items = self.api.get_all_from_api("/concepts/odms/items")
+        odm_itemgroups = self.api.get_all_from_api("/concepts/odms/item-groups")
+
+        all_items = {}
+        for item in odm_items:
+            all_items[item["oid"]] = item["uid"]
+
+        all_itemgroups = {}
+        for itemgroup in odm_itemgroups:
+            all_itemgroups[itemgroup["oid"]] = itemgroup["uid"]
+
+        for row in csvdata:
+            if len(row) == 0:
+                continue
+            self.log.info(
+                f"Adding odm item '{row['oid_item']}' to item group '{row['oid_itemgroup']}'"
+            )
+
+            if row["oid_item"] not in all_items:
+                self.log.warning(f"Item '{row['oid_item']}' not found, skipping")
+                continue
+            if row["oid_itemgroup"] not in all_itemgroups:
+                self.log.warning(
+                    f"Item group '{row['oid_itemgroup']}' not found, skipping"
+                )
+                continue
+
+            row["uid"] = all_items[row["oid_item"]]
+
+            data = odm_itemgroup_to_item_relationship(
+                all_itemgroups[row["oid_itemgroup"]], row
+            )
+
+            self.api.post_to_api(data)
+
     def run(self):
         self.log.info("Importing CRFs")
         vendor_namespace_res = self.handle_odm_vendor_namespaces(
@@ -365,6 +540,15 @@ class Crfs(BaseImporter):
         self.handle_odm_itemgroups(MDR_MIGRATION_ODM_ITEMGROUPS)
         self.handle_odm_items(MDR_MIGRATION_ODM_ITEMS)
         self.handle_odm_aliases(MDR_MIGRATION_ODM_ALIAS)
+        self.handle_odm_template_to_form_relationship(
+            MDR_MIGRATION_ODM_TEMPLATE_TO_FORM_RELATIONSHIP
+        )
+        self.handle_odm_form_to_itemgroup_relationship(
+            MDR_MIGRATION_ODM_FORM_TO_ITEMGROUP_RELATIONSHIP
+        )
+        self.handle_odm_itemgroup_to_item_relationship(
+            MDR_MIGRATION_ODM_ITEMGROUP_TO_ITEM_RELATIONSHIP
+        )
         self.log.info("Done importing CRFs")
 
 

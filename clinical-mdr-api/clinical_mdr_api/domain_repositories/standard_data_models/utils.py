@@ -3,31 +3,9 @@ from typing import Sequence
 from clinical_mdr_api.domain_repositories.models.generic import VersionRelationship
 from clinical_mdr_api.domain_repositories.models.standard_data_model import (
     DataModelIGRoot,
-    SponsorModelDatasetClassInstance,
     SponsorModelDatasetInstance,
     SponsorModelValue,
 )
-
-
-def get_sponsor_model_info_from_dataset_class(
-    dataset_class_node: SponsorModelDatasetClassInstance,
-) -> tuple[str, str]:
-    sponsor_model: SponsorModelValue = (
-        dataset_class_node.has_dataset_class.get_or_none()
-    )
-    sponsor_model_name = None
-    sponsor_model_version = None
-    if sponsor_model is not None:
-        data_model_ig: DataModelIGRoot = (
-            sponsor_model.has_sponsor_model_version.single()
-        )
-        sponsor_model_name = sponsor_model.name
-        rels: Sequence[VersionRelationship] = (
-            sponsor_model.has_sponsor_model_version.all_relationships(data_model_ig)
-        )
-        sponsor_model_version = rels[0].version
-
-    return sponsor_model_name, sponsor_model_version
 
 
 def get_sponsor_model_info_from_dataset(

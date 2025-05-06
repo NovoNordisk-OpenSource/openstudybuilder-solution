@@ -56,9 +56,9 @@ class TestServiceUtils(unittest.TestCase):
 
     @parameterized.expand(
         [
-            ({"x": 1, "y": 2}, {"x": 1, "y": 3}, {"y": True}),
-            ({"x": 1, "y": 2}, {"x": 1, "y": 2}, {}),
-            ({"x": 1, "y": 2}, None, {}),
+            ({"x": 1, "y": 2}, {"x": 1, "y": 3}, ["y"]),
+            ({"x": 1, "y": 2}, {"x": 1, "y": 2}, []),
+            ({"x": 1, "y": 2}, None, []),
         ]
     )
     def test_object_diff(self, obj1, obj2, expected):

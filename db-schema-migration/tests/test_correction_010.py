@@ -1,4 +1,4 @@
-""" Data corrections for PROD January 2025. This must be run AFTER the migration script has been succesfully run. """
+""" Data corrections for PROD January 2025. This must be run AFTER the migration script has been successfully run. """
 
 import os
 
@@ -48,5 +48,11 @@ def test_remove_user_initials_field_from_all_relations(correction):
     correction_verification_010.test_remove_user_initials_field_from_all_relations()
 
 
-def test_remove_relationship_between_intervention_and_activity_instance_template_parameters(correction):
+def test_create_qphm_user(correction):
+    correction_verification_010.test_create_qphm_user()
+
+
+def test_remove_relationship_between_intervention_and_activity_instance_template_parameters(
+    correction,
+):
     correction_verification_010.test_remove_relationship_between_intervention_and_activity_instance_template_parameters()

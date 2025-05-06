@@ -24,6 +24,8 @@ Then('The table is filtered correctly', () => {
     })
 })
 
+When('The user adds status to filters', () => cy.addTableFilter('Status'))
+
 function filterByText() {
     cy.get('.v-overlay__content .v-list').filter(':visible').should('not.contain', 'No data available')
     cy.get('.v-overlay__content .v-list').filter(':visible').within(() => {

@@ -1,0 +1,54 @@
+[[source]]
+url = "https://pypi.python.org/simple"
+verify_ssl = false
+name = "pypi"
+
+[packages]
+requests = "~=2.33.0"
+neomodel = "~=5.4.1"
+aiohttp = "~=3.14.0"
+pyyaml = "~=6.0"
+pytest-order = "*"
+jinja2 = "~=3.1.2"
+httpx = "~=0.28.1"
+authlib = "~=1.7.0"
+cryptography = ">=50.0.0"
+starlette = "~=1.0"
+opencensus = "~=0.11.4"
+opencensus-ext-azure = "~=1.1.15"
+pydantic = "~=1.10.0"
+
+[dev-packages]
+pytest = "~=9.0.3"
+pytest-cov = "~=3.0.0"
+pytest-order = "*"
+pylint = "~=3.3.2"
+isort = "~=5.10.1"
+black = "~=26.3.0"
+pip-audit = "~=2.10.0"
+
+[requires]
+python_version = "3.14"
+
+[scripts]
+# Use --cov-report=type:path (equals form). Pipenv treats ":" as a script separator
+# when a space precedes it (e.g. "--cov-report html:dir"), which strips the value and
+# leaves pytest with bare "--cov-report" args (unrecognized arguments error).
+build-sbom = "pipenv run python3 ../_tools/build_sbom.py --pipfile --fallback-dir doc/licenses --level 2 --output sbom.md"
+test = "python -m pytest -s --cov-report=html:test_coverage --cov-report=xml:reports/coverage.xml --cov-append --cov --junitxml=reports/test_report.xml tests/test_migration_024.py"
+verify = "python -m pytest -s --cov-report=html:test_coverage --cov-report=xml:reports/coverage.xml --cov-append --cov --junitxml=reports/test_report.xml verifications/verification_024.py"
+migrate = "python -m migrations.migration_024"
+test_corrections = "python -m pytest -s --cov-report=html:test_coverage --cov-report=xml:reports/coverage.xml --cov-append --cov --junitxml=reports/test_report.xml tests/test_correction_022.py"
+verify_corrections = "python -m pytest -s --cov-report=html:test_coverage --cov-report=xml:reports/coverage.xml --cov-append --cov --junitxml=reports/test_report.xml verifications/correction_verification_022.py"
+apply_corrections = "python -m data_corrections.correction_022"
+wipe_single_study = "python -m data_corrections.correction_wipe_study"
+token = "python -m migrations.auth"
+lint = "pylint migrations tests verifications data_corrections"
+black = "python -m black migrations tests verifications data_corrections"
+isort = "python -m isort migrations tests verifications data_corrections"
+format = """sh -c "
+    python -m black migrations tests verifications data_corrections \
+    && python -m isort migrations tests verifications data_corrections \
+"
+"""
+audit = "python -m pip_audit"

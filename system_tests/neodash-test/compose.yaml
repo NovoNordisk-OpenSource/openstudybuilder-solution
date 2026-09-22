@@ -1,0 +1,48 @@
+services:
+
+  cypress:
+    build:
+      args:
+        CYPRESS_IMAGE: "${CYPRESS_IMAGE:-cypress/browsers:node-20.18.0-chrome-130.0.6723.69-1-ff-131.0.3-edge-130.0.2849.52-1}"
+        UID: "${UID:-1000}"
+        WORKDIR: /tests
+      context: ./
+      dockerfile: cypress.Dockerfile
+    environment:
+      CYPRESS_NEODASH_CLIENT_ID: "${CYPRESS_NEODASH_CLIENT_ID:-}"
+      CYPRESS_NEODASH_CLIENT_SECRET: "${CYPRESS_NEODASH_CLIENT_SECRET:-}"
+      CYPRESS_NEODASH_TENANT_ID: "${CYPRESS_NEODASH_TENANT_ID:-}"
+      CYPRESS_NEODASH_USERNAME: "${CYPRESS_NEODASH_USERNAME:-}"
+      CYPRESS_NEODASH_PASSWORD: "${CYPRESS_NEODASH_PASSWORD:-}"
+      CYPRESS_BASE_URL: "${CYPRESS_BASE_URL:-}"
+    profiles:
+      - build
+    network_mode: host
+    user: "${UID-:1000}"
+    volumes:
+      - type: bind
+        source: ./results
+        target: /tests/results
+
+  allure:
+    command: allure generate --clean --output /results/allure-report /results/allure
+    image: "${ALLURE_IMAGE:-novo-allure}"
+    profiles:
+      - allure
+    user: "${UID-:1000}"
+    volumes:
+      - type: bind
+        source: ./results
+        target: /results
+
+  report:
+    build:
+      args:
+        NGINX_IMAGE: "${NGINX_IMAGE:-nginx:alpine}"
+      context: ./
+      dockerfile: report.Dockerfile
+    image: "${REPORT_IMAGE:-}"
+    profiles:
+      - report
+    ports:
+      - "127.0.0.1:5007:5007"

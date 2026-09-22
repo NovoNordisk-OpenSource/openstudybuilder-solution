@@ -1,0 +1,139 @@
+name: Verifications — build validation
+
+# Invoked by .github/workflows/pr-required-checks.yml when a PR touches
+# verifications/ (or api/ — see below) or this workflow file. Not
+# triggered directly by `pull_request:` — the coordinator handles path
+# detection, so a direct trigger here would just duplicate the work and
+# burn runner minutes. `workflow_dispatch:` stays for manual runs.
+#
+# The source pipeline had a block that installed a deploy key from a
+# SUBMODULE_SSH_KEY secret and ran `git submodule update` to pull the
+# clinical-mdr-api sources into place. That never actually worked here:
+# this org does not permit that repository secret, so the key was empty and
+# the submodule fetch could not run. It is also no longer needed — the
+# submodule is gone (removed in 3a32eac554) and verifications resolves
+# `clinical_mdr_api` from the in-tree ../api via pyproject.toml (pythonpath /
+# pylint init-hook / pyright extraPaths). A plain monorepo checkout puts api/
+# right there, so the whole SSH/deploy-key block is dropped.
+#
+# The source pipeline's own `concurrency:` group is dropped — the
+# coordinator cancels the whole PR run on force-push.
+on:
+  workflow_call:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: verifications
+    steps:
+      # Checks out the whole monorepo, so ../api (which pylint adds to
+      # sys.path to resolve clinical_mdr_api) is present alongside
+      # verifications/.
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6
+        with:
+          python-version: "3.14"
+
+      - name: Install pipenv
+        run: pip install --upgrade pip pipenv wheel
+
+      - name: Install runtime dependencies
+        run: pipenv sync
+
+      - name: Verify Pipfile.lock is up to date
+        id: verify-lock
+        run: |
+          if pipenv verify; then
+            echo "outdated=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "outdated=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Regenerate Pipfile.lock
+        if: steps.verify-lock.outputs.outdated == 'true'
+        run: pipenv lock
+
+      - name: Publish updated Pipfile.lock artifact
+        if: steps.verify-lock.outputs.outdated == 'true'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: verifications-pipfile-lock
+          path: verifications/Pipfile.lock
+          if-no-files-found: error
+
+      - name: Fail if Pipfile.lock is outdated
+        if: steps.verify-lock.outputs.outdated == 'true'
+        run: |
+          echo "::error::Pipfile.lock is out of date. Download the 'verifications-pipfile-lock' artifact from this run,"
+          echo "::error::replace verifications/Pipfile.lock with it, and commit the change:"
+          echo "::error::  ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          exit 1
+
+      # ---- SBOM check ------------------------------------------------------
+      - name: Generate SBOM
+        id: sbom
+        run: |
+          pipenv run build-sbom
+          if git diff --exit-code sbom.md; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Publish SBOM artifact
+        if: steps.sbom.outputs.changed == 'true'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: verifications-sbom
+          path: verifications/sbom.md
+          if-no-files-found: warn
+
+      - name: Fail if SBOM changed
+        if: steps.sbom.outputs.changed == 'true'
+        run: |
+          echo "::error::SBOM (sbom.md) is out of date. Regenerate it locally and commit the changes."
+          git --no-pager diff sbom.md
+          exit 1        
+
+      - name: Install dependencies (incl. dev)
+        run: pipenv sync --dev
+
+      - name: Black format check
+        run: pipenv run black --check .
+
+      - name: Isort format check
+        run: pipenv run isort . --check
+
+      - name: Pylint
+        run: pipenv run lint
+
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # Independent job: runs in parallel and isn't required by other jobs,
+    # so a failure here (e.g. known unfixed vulnerabilities) doesn't block
+    # the rest of the workflow from reporting results.
+    defaults:
+      run:
+        working-directory: verifications
+    steps:
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6
+        with:
+          python-version: "3.14"
+
+      - name: Install pipenv and dev dependencies
+        run: |
+          pip install --upgrade pip pipenv wheel
+          pipenv sync --dev
+
+      - name: Check for vulnerable packages
+        run: pipenv run audit

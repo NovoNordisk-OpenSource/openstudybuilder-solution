@@ -1,0 +1,23 @@
+dataset,variable,activity_item_class,activity_instance_name,activity_instance_topic_code,activity_instance_target_relationship,primary_item_variable
+VS,VSORRES_DIABPMEA,original_result,Diastolic Blood Pressure,BP_DIASTOLIC,1,Y
+VS,VSORRES_DIABPMEA_UOM,original_unit,Diastolic Blood Pressure,BP_DIASTOLIC,1,
+VS,VSORRES_DIABP_REPNUM1,original_result,Diastolic Blood Pressure,BP_DIASTOLIC,2,Y
+VS,VSORRES_DIABP_REPNUM1_UOM,original_unit,Diastolic Blood Pressure,BP_DIASTOLIC,2,
+VS,VSORRES_DIABP_REPNUM2,original_result,Diastolic Blood Pressure,BP_DIASTOLIC,3,Y
+VS,VSORRES_DIABP_REPNUM2_UOM,original_unit,Diastolic Blood Pressure,BP_DIASTOLIC,3,
+VS,VSORRES_SYSBPMEA,original_result,Systolic Blood Pressure,BP_SYSTOLIC,4,Y
+VS,VSORRES_SYSBPMEA_UOM,original_unit,Systolic Blood Pressure,BP_SYSTOLIC,4,
+VS,VSORRES_SYSBP_REPNUM1,original_result,Systolic Blood Pressure,BP_SYSTOLIC,5,Y
+VS,VSORRES_SYSBP_REPNUM1_UOM,original_unit,Systolic Blood Pressure,BP_SYSTOLIC,5,
+VS,VSORRES_SYSBP_REPNUM2,original_result,Systolic Blood Pressure,BP_SYSTOLIC,6,Y
+VS,VSORRES_SYSBP_REPNUM2_UOM,original_unit,Systolic Blood Pressure,BP_SYSTOLIC,6,
+VS,VSDAT_RAW,collection_datetime,Diastolic Blood Pressure,BP_DIASTOLIC,1,
+VS,VSDAT_RAW,collection_datetime,Diastolic Blood Pressure,BP_DIASTOLIC,2,
+VS,VSDAT_RAW,collection_datetime,Diastolic Blood Pressure,BP_DIASTOLIC,3,
+VS,VSDAT_RAW,collection_datetime,Systolic Blood Pressure,BP_SYSTOLIC,4,
+VS,VSDAT_RAW,collection_datetime,Systolic Blood Pressure,BP_SYSTOLIC,5,
+VS,VSDAT_RAW,collection_datetime,Systolic Blood Pressure,BP_SYSTOLIC,6,
+VS,VSLOC_REPNUM1,location,Diastolic Blood Pressure,BP_DIASTOLIC,2,
+VS,VSLOC_REPNUM2,location,Diastolic Blood Pressure,BP_DIASTOLIC,3,
+VS,VSLOC_REPNUM1,location,Systolic Blood Pressure,BP_SYSTOLIC,5,
+VS,VSLOC_REPNUM2,location,Systolic Blood Pressure,BP_SYSTOLIC,6,

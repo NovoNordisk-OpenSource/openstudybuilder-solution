@@ -1,0 +1,314 @@
+name: Db schema migration — build validation
+
+# Invoked by .github/workflows/pr-required-checks.yml when a PR touches
+# db_schema_migration/ (or api/ — the compose stack builds the in-tree api
+# image) or this workflow file. Not triggered directly by `pull_request:` —
+# the coordinator handles path detection. `workflow_dispatch:` stays for
+# manual runs.
+#
+# The source pipeline had a block that installed five per-submodule deploy
+# keys from SSH_KEY_* secrets and ran `git submodule update` to pull sibling
+# repos (clinical-mdr-api, neo4j-mdr-db, mdr-standards-import,
+# studybuilder-import, migration-data). That never actually worked here:
+# this org does not permit those repository secrets, so the SSH_KEY_* values
+# were empty and the submodule fetch (and therefore the whole test half of
+# this job) could not run. This move is the first time the job runs green.
+# In the monorepo there are no submodules (.gitmodules is gone, so that step
+# would no-op regardless), and it is not needed:
+#   - The compose `api` service now builds from the in-tree ../api (see
+#     compose.yaml), not a ./clinical_mdr_api submodule.
+#   - The migration/correction tests this job runs (test_migration_024,
+#     test_correction_022) drive the API over HTTP and seed Neo4j from
+#     in-tree fixtures (tests/data/*), so they need neither the sibling
+#     source repos nor the external, sponsor-private migration-data repo.
+#     The MDR_MIGRATION_* compound-file env vars the ADO pipeline set are
+#     read nowhere in the exercised code path and have been dropped.
+#
+# The source pipeline's own `concurrency:` group is dropped — the
+# coordinator cancels the whole PR run on force-push.
+on:
+  workflow_call:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      PYTHON_VERSION: "3.14"
+    defaults:
+      run:
+        working-directory: db_schema_migration
+    steps:
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install pipenv
+        # Pinned to avoid surprise toolchain upgrades on CI. Bump deliberately.
+        run: pip install --upgrade pip==26.0.1 pipenv==2025.0.4 wheel==0.47.0
+
+      - name: Install runtime dependencies
+        run: pipenv sync
+
+      - name: Verify Pipfile.lock is up to date
+        id: verify-lock
+        run: |
+          if pipenv verify; then
+            echo "outdated=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "outdated=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Regenerate Pipfile.lock
+        if: steps.verify-lock.outputs.outdated == 'true'
+        run: pipenv lock
+
+      - name: Publish updated Pipfile.lock artifact
+        if: steps.verify-lock.outputs.outdated == 'true'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: db-schema-migration-pipfile-lock
+          path: db_schema_migration/Pipfile.lock
+          if-no-files-found: error
+
+      - name: Fail if Pipfile.lock is outdated
+        if: steps.verify-lock.outputs.outdated == 'true'
+        run: |
+          echo "::error::Pipfile.lock is out of date. Download the 'db-schema-migration-pipfile-lock' artifact from this run,"
+          echo "::error::replace db_schema_migration/Pipfile.lock with it, and commit the change:"
+          echo "::error::  ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          exit 1
+
+      # ---- SBOM check ------------------------------------------------------
+      - name: Generate SBOM
+        id: sbom
+        run: |
+          pipenv run build-sbom
+          if git diff --exit-code sbom.md; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Publish SBOM artifact
+        if: steps.sbom.outputs.changed == 'true'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: db-schema-migration-sbom
+          path: db_schema_migration/sbom.md
+          if-no-files-found: warn
+
+      - name: Fail if SBOM changed
+        if: steps.sbom.outputs.changed == 'true'
+        run: |
+          echo "::error::SBOM (sbom.md) is out of date. Regenerate it locally and commit the changes."
+          git --no-pager diff sbom.md
+          exit 1
+
+      - name: Install dev dependencies
+        run: pipenv sync --dev
+
+      - name: Pylint
+        run: pipenv run lint
+
+      - name: Black formatting check
+        run: pipenv run black --check
+
+      - name: Isort import ordering check
+        run: pipenv run isort --check
+
+      - name: Set UID to runner user
+        # The runner host user is UID 1001 on ubuntu-latest, not 1000.
+        # Propagates to compose build-args and the runtime container user.
+        run: echo "UID=$(id -u)" >> "$GITHUB_ENV"
+
+      - name: Generate ephemeral NEO4J_PASSWORD
+        id: generate-neo4j-password
+        # The compose stack and the test suite both connect to a throwaway Neo4j
+        # spun up for this job and torn down at the end. We generate a fresh
+        # random password per run so no credential is hardcoded in the repo or
+        # the workflow. `::add-mask::` keeps it out of any subsequent log lines.
+        # We also build DATABASE_URL here so the password literal is never
+        # passed through `${{ }}` expression interpolation downstream.
+        run: |
+          NEO4J_PASSWORD="$(openssl rand -hex 24)"
+          echo "::add-mask::${NEO4J_PASSWORD}"
+          {
+            echo "NEO4J_PASSWORD=${NEO4J_PASSWORD}"
+            echo "DATABASE_URL=bolt://neo4j:${NEO4J_PASSWORD}@localhost:7687"
+          } >> "$GITHUB_ENV"
+
+      - name: Free up runner disk space
+        # Neo4j enterprise + the api image + Pipenv caches comfortably exceed
+        # the ~14 GB free on a stock ubuntu-latest runner.
+        # NOTE: do NOT delete "$AGENT_TOOLSDIRECTORY" here — that's where
+        # actions/setup-python lives, and we run `pipenv run test` natively
+        # on the host (not inside a container). Removing it makes pipenv
+        # disappear mid-job and the test steps fail with "pipenv: command
+        # not found". Toolcache stays; only the non-Python toolchains go.
+        run: |
+          df -h /
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc \
+                      /usr/local/share/boost /usr/local/lib/heroku \
+                      /usr/local/share/powershell /usr/local/share/chromium \
+                      || true
+          df -h /
+
+      - name: Create reports directory
+        run: mkdir -p reports
+
+      - name: Build API docker image
+        run: docker compose build api
+
+      - name: Start docker services (database + api)
+        # `--wait` blocks on compose healthchecks. The database service has one;
+        # api does not, so we add an explicit curl-based readiness loop below.
+        run: docker compose up --detach --renew-anon-volumes --wait --wait-timeout 120 database api
+
+      - name: Wait for API availability
+        id: wait-for-api
+        # Replaces the ADO PowerShell `InvokeRequestWithRetry.ps1` step.
+        run: |
+          for i in $(seq 1 20); do
+            if curl -fsS --max-time 10 http://localhost:8000/system/information > /dev/null; then
+              echo "API is up after ${i} attempt(s)."
+              exit 0
+            fi
+            echo "API not ready (attempt ${i}/20); sleeping 10s…"
+            sleep 10
+          done
+          echo "::error::API did not become healthy at http://localhost:8000/system/information"
+          docker compose logs --no-color --no-log-prefix api | tail -n 200 || true
+          exit 1
+
+      - name: Test migrations
+        # Mirrors ADO `condition: always()` — run even if the migration
+        # tests above failed (the two suites are independent). Scoped to
+        # generate-neo4j-password's outcome (not bare always()): if an
+        # earlier required step (lint/format/isort, Pipfile.lock check, SBOM
+        # check) fails, every step from "Generate ephemeral NEO4J_PASSWORD"
+        # onward — including this one's DATABASE_URL/NEO4J_PASSWORD source —
+        # gets skipped. A bare always() would still run this step and fail
+        # on a confusing "DATABASE_URL is not set" instead of surfacing the
+        # real (lint/lock/sbom) failure.
+        if: steps.generate-neo4j-password.outcome == 'success' && steps.wait-for-api.outcome == 'success'
+        env:
+          # Tests run fully against the local docker-compose stack — no OAuth
+          # required. DATABASE_URL is set in $GITHUB_ENV by the "Generate
+          # ephemeral NEO4J_PASSWORD" step above; no override needed here.
+          # The migration_024 suite seeds Neo4j from in-tree fixtures
+          # (tests/data/db_before_migration_024.py) and drives the API over
+          # HTTP — it does not read the external migration-data repo, so the
+          # MDR_MIGRATION_* compound-file vars from the ADO pipeline are gone.
+          DATABASE_NAME: ""
+          API_BASE_URL: http://localhost:8000
+          API_AUTH_TOKEN: ""
+        run: pipenv run test
+
+      - name: Test corrections
+        # Mirrors ADO `condition: always()` — run even if the migration
+        # tests above failed (the two suites are independent). Scoped to
+        # generate-neo4j-password's outcome (not bare always()): if an
+        # earlier required step (lint/format/isort, Pipfile.lock check, SBOM
+        # check) fails, every step from "Generate ephemeral NEO4J_PASSWORD"
+        # onward — including this one's DATABASE_URL/NEO4J_PASSWORD source —
+        # gets skipped. A bare always() would still run this step and fail
+        # on a confusing "DATABASE_URL is not set" instead of surfacing the
+        # real (lint/lock/sbom) failure.
+        if: steps.generate-neo4j-password.outcome == 'success' && steps.wait-for-api.outcome == 'success'
+        env:
+          # DATABASE_URL is set in $GITHUB_ENV by the "Generate ephemeral
+          # NEO4J_PASSWORD" step above; no override needed here.
+          DATABASE_NAME: neo4j
+          API_BASE_URL: http://localhost:8000
+          API_AUTH_TOKEN: ""
+        run: pipenv run test_corrections
+
+      - name: Collect container logs
+        # Same scoping as "Test corrections": docker compose interpolates
+        # NEO4J_PASSWORD/NEO4J_AUTH here too, so this must not run unless
+        # that variable actually exists.
+        if: always() && steps.generate-neo4j-password.outcome == 'success'
+        run: |
+          mkdir -p reports/logs
+          docker compose logs --no-color --no-log-prefix database > reports/logs/database.logs.txt || true
+          docker compose logs --no-color --no-log-prefix api > reports/logs/api.logs.txt || true
+          # Defence in depth: `::add-mask::` only redacts the live Actions log
+          # stream — files written to disk are not touched. Neo4j and the API
+          # can both print the bolt URL on errors, so scrub the ephemeral
+          # NEO4J_PASSWORD from captured logs before they leave the runner.
+          if [ -n "${NEO4J_PASSWORD:-}" ]; then
+            sed -i "s|${NEO4J_PASSWORD}|***|g" \
+              reports/logs/database.logs.txt reports/logs/api.logs.txt || true
+          fi
+
+      - name: Upload container logs
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: db-schema-migration-container-logs
+          path: db_schema_migration/reports/logs
+          if-no-files-found: warn
+          # Belt-and-braces against the (already-scrubbed) ephemeral password
+          # lingering in artifact storage; these logs are only useful for
+          # triaging the run that produced them.
+          retention-days: 1
+
+      - name: Upload test report
+        # Replaces ADO `PublishTestResults@2`. GitHub Actions has no built-in
+        # JUnit renderer; the XML is uploaded as an artifact. If inline test
+        # annotations are wanted later, add `dorny/test-reporter` (separate PR).
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: db-schema-migration-test-report
+          path: db_schema_migration/reports/test_report.xml
+          if-no-files-found: warn
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: db-schema-migration-coverage-xml
+          path: db_schema_migration/reports/coverage.xml
+          if-no-files-found: warn
+
+      - name: Shut down docker services
+        # Scoped the same way as "Test corrections" above: `docker compose
+        # down` also interpolates NEO4J_PASSWORD (via NEO4J_AUTH), so it must
+        # not run unless "Generate ephemeral NEO4J_PASSWORD" actually ran and
+        # produced a value — otherwise this fails with "required variable
+        # NEO4J_PASSWORD is missing a value" on top of whatever earlier
+        # failure skipped that step.
+        if: always() && steps.generate-neo4j-password.outcome == 'success'
+        run: docker compose down --volumes
+
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # Independent job: runs in parallel and isn't required by other jobs,
+    # so a failure here (e.g. known unfixed vulnerabilities) doesn't block
+    # the rest of the workflow from reporting results.
+    defaults:
+      run:
+        working-directory: db_schema_migration
+    steps:
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6
+        with:
+          python-version: "3.14"
+
+      - name: Install pipenv and dev dependencies
+        run: |
+          pip install --upgrade pip pipenv wheel
+          pipenv sync --dev
+
+      - name: Check for vulnerable packages
+        run: pipenv run audit

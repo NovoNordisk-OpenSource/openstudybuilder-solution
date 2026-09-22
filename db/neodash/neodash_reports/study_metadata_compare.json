@@ -1,0 +1,822 @@
+{
+  "title": "Study Metadata Comparison",
+  "version": "2.4",
+  "settings": {
+    "pagenumber": 0,
+    "editable": true,
+    "fullscreenEnabled": false,
+    "parameters": {
+      "neodash_project": [],
+      "neodash_project_display": [],
+      "neodash_studya": {},
+      "neodash_studya_display": "",
+      "neodash_studyb": {},
+      "neodash_studyb_display": "",
+      "neodash_versiondate_studya": "",
+      "neodash_versiondate_studya_display": "",
+      "neodash_versiondate_studyb": "",
+      "neodash_versiondate_studyb_display": "",
+      "neodash_differences_only": "No",
+      "neodash_differences_only_display": "No"
+    },
+    "theme": "light",
+    "disableRowLimiting": true
+  },
+  "pages": [
+    {
+      "title": "ReadMe",
+      "reports": [
+        {
+          "id": "c4dbd4e3-579c-49e5-88a7-f563c2a659d8",
+          "title": "Guide",
+          "query": "This report is for comparing study metadata. \n\nYou can choose to compare two different studies or two versions of a study.\n\nTo compare select the studies to compare in the first tab - **Select Studies**.\n\nOn the **Select Studies** tab, in the first panel you can choose to only show differences (Yes) or all (default: No). \n\n\n",
+          "width": 24,
+          "height": 4,
+          "x": 0,
+          "y": 0,
+          "type": "text",
+          "selection": {},
+          "settings": {},
+          "schema": []
+        }
+      ]
+    },
+    {
+      "title": "Select studies",
+      "reports": [
+        {
+          "id": "0b6746fc-65e9-4971-8913-7530beb60206",
+          "title": "Select Project(s)",
+          "query": "MATCH (p:Project)-[:HAS_FIELD]->(:StudyProjectField)<-[:HAS_PROJECT]-(s:StudyValue)\nWHERE toLower(toString(p.`project_number`)) CONTAINS toLower($input) \nRETURN DISTINCT p.`project_number` as value,  p.`project_number` as display ORDER BY size(toString(value)) ASC LIMIT 10",
+          "width": 19,
+          "height": 2,
+          "x": 5,
+          "y": 0,
+          "type": "select",
+          "selection": {},
+          "settings": {
+            "type": "Custom Query",
+            "multiSelector": true,
+            "ignoreNonDefinedParams": false,
+            "entityType": "Project",
+            "parameterName": "neodash_project"
+          },
+          "schema": []
+        },
+        {
+          "id": "5e333e2c-6067-4875-95a0-d6e239821fdd",
+          "title": "Select Base",
+          "query": "CALL apoc.when(size($neodash_project)=0,\"match(sr:StudyRoot)-[r0:HAS_VERSION]->(s:StudyValue)\nwith r0, s, CASE WHEN s.subpart_id is not null THEN s.study_id_prefix+'-'+s.study_number+'-'+s.subpart_id ELSE s.study_id_prefix+'-'+s.study_number END as trialid\nwith s, trialid\nmatch (sr:StudyRoot)-[r0:HAS_VERSION]->(s)\nOPTIONAL MATCH (sr)-[r1:LATEST]->(s)\noptional match(s)<-[r_b:BEFORE]-(sact_before:StudyAction)\noptional match(s)<-[r_a:AFTER]-(sact_after:StudyAction)\nwith distinct s,trialid,sr.uid as StudyRoot, collect(r0.status) as statuses ,collect(r0.version) as versions, type(r1) as Latest,coalesce(sact_before.date,sact_after.date) as date order by StudyRoot, date, Latest DESC\nwith s,StudyRoot, s.study_acronym as acronym, trialid, split(apoc.temporal.format(date, 'iso_local_date_time'),'.')[0] as Date, case when 'LOCKED' in statuses then 'LOCKED' else 'DRAFT' END as Status,\napoc.text.join(apoc.coll.toSet(versions),'') as Version,Latest\nreturn StudyRoot, trialid as TrialID, acronym as Acronym, Date, Version, Latest,Status, 'Base' as Select, id(s) as id_a\",\n\"match(p:Project)-[:HAS_FIELD]->(:StudyProjectField)<-[:HAS_PROJECT]-(s:StudyValue) \nwhere p.project_number in $a\nmatch(sr:StudyRoot)-[r0:HAS_VERSION]->(s:StudyValue)\nwith r0, s, CASE WHEN s.subpart_id is not null THEN s.study_id_prefix+'-'+s.study_number+'-'+s.subpart_id ELSE s.study_id_prefix+'-'+s.study_number END as trialid\nwith s, trialid\nmatch (sr:StudyRoot)-[r0:HAS_VERSION]->(s)\nOPTIONAL MATCH (sr)-[r1:LATEST]->(s)\noptional match(s)<-[r_b:BEFORE]-(sact_before:StudyAction)\noptional match(s)<-[r_a:AFTER]-(sact_after:StudyAction)\nwith distinct s,trialid,sr.uid as StudyRoot, collect(r0.status) as statuses ,collect(r0.version) as versions, type(r1) as Latest,coalesce(sact_before.date,sact_after.date) as date order by StudyRoot, date, Latest DESC\nwith s,StudyRoot, s.study_acronym as acronym, trialid, split(apoc.temporal.format(date, 'iso_local_date_time'),'.')[0] as Date, case when 'LOCKED' in statuses then 'LOCKED' else 'DRAFT' END as Status,\napoc.text.join(apoc.coll.toSet(versions),'') as Version,Latest\nreturn StudyRoot, trialid as TrialID, acronym as Acronym, Date, Version, Latest,Status, 'Base' as Select, id(s) as id_a\",{a:$neodash_project}) YIELD value \nRETURN  value.StudyRoot as StudyRoot, \nvalue.TrialID as `Trial ID`,\nvalue.Acronym as Acronym,\nvalue.Date as Date,\nvalue.Version as Version,\nvalue.Status as Status,\nvalue.Latest as Latest, \nvalue.Select as Select,\nvalue.id_a as __id_a order by `Trial ID`, Date",
+          "width": 24,
+          "height": 4,
+          "x": 0,
+          "y": 2,
+          "type": "table",
+          "selection": {},
+          "settings": {
+            "actionsRules": [
+              {
+                "condition": "Click",
+                "field": "Select",
+                "value": "__id_a",
+                "customization": "set variable",
+                "customizationValue": "studya"
+              }
+            ],
+            "refreshButtonEnabled": true,
+            "compact": true,
+            "columnWidths": "[2,2,2,2,1,1,1,2]",
+            "ignoreNonDefinedParams": false,
+            "wrapContent": true
+          }
+        },
+        {
+          "id": "232befa7-93ac-49d8-a73f-ae5bc308b011",
+          "title": "Select Compare",
+          "query": "CALL apoc.when(size($neodash_project)=0,\"match(sr:StudyRoot)-[r0:HAS_VERSION]->(s:StudyValue)\nwith r0, s, CASE WHEN s.subpart_id is not null THEN s.study_id_prefix+'-'+s.study_number+'-'+s.subpart_id ELSE s.study_id_prefix+'-'+s.study_number END as trialid\nwith s, trialid\nmatch (sr:StudyRoot)-[r0:HAS_VERSION]->(s)\nOPTIONAL MATCH (sr)-[r1:LATEST]->(s)\noptional match(s)<-[r_b:BEFORE]-(sact_before:StudyAction)\noptional match(s)<-[r_a:AFTER]-(sact_after:StudyAction)\nwith distinct s,trialid,sr.uid as StudyRoot, collect(r0.status) as statuses ,collect(r0.version) as versions, type(r1) as Latest,coalesce(sact_before.date,sact_after.date) as date order by StudyRoot, date, Latest DESC\nwith s,StudyRoot, s.study_acronym as acronym, trialid, split(apoc.temporal.format(date, 'iso_local_date_time'),'.')[0] as Date, case when 'LOCKED' in statuses then 'LOCKED' else 'DRAFT' END as Status,\napoc.text.join(apoc.coll.toSet(versions),'') as Version,Latest\nreturn StudyRoot, trialid as TrialID, acronym as Acronym, Date, Version, Latest,Status, 'Compare' as Select, id(s) as id_b\",\n\"match(p:Project)-[:HAS_FIELD]->(:StudyProjectField)<-[:HAS_PROJECT]-(s:StudyValue) \nwhere p.project_number in $a\nmatch(sr:StudyRoot)-[r0:HAS_VERSION]->(s:StudyValue)\nwith r0, s, CASE WHEN s.subpart_id is not null THEN s.study_id_prefix+'-'+s.study_number+'-'+s.subpart_id ELSE s.study_id_prefix+'-'+s.study_number END as trialid\nwith s, trialid\nmatch (sr:StudyRoot)-[r0:HAS_VERSION]->(s)\nOPTIONAL MATCH (sr)-[r1:LATEST]->(s)\noptional match(s)<-[r_b:BEFORE]-(sact_before:StudyAction)\noptional match(s)<-[r_a:AFTER]-(sact_after:StudyAction)\nwith distinct s,trialid,sr.uid as StudyRoot, collect(r0.status) as statuses ,collect(r0.version) as versions, type(r1) as Latest,coalesce(sact_before.date,sact_after.date) as date order by StudyRoot, date, Latest DESC\nwith s,StudyRoot, s.study_acronym as acronym, trialid, split(apoc.temporal.format(date, 'iso_local_date_time'),'.')[0] as Date, case when 'LOCKED' in statuses then 'LOCKED' else 'DRAFT' END as Status,\napoc.text.join(apoc.coll.toSet(versions),'') as Version,Latest\nreturn StudyRoot, trialid as TrialID, acronym as Acronym, Date, Version, Latest,Status, 'Compare' as Select, id(s) as id_b\",{a:$neodash_project}) YIELD value \nRETURN  value.StudyRoot as StudyRoot, \nvalue.TrialID as `Trial ID`,\nvalue.Acronym as Acronym,\nvalue.Date as Date,\nvalue.Version as Version,\nvalue.Status as Status,\nvalue.Latest as Latest, \nvalue.Select as Select,\nvalue.id_b as __id_b order by `Trial ID`, Date",
+          "width": 24,
+          "height": 4,
+          "x": 0,
+          "y": 6,
+          "type": "table",
+          "selection": {},
+          "settings": {
+            "actionsRules": [
+              {
+                "condition": "Click",
+                "field": "Select",
+                "value": "__id_b",
+                "customization": "set variable",
+                "customizationValue": "studyb"
+              }
+            ],
+            "refreshButtonEnabled": true,
+            "columnWidths": "[2,2,2,2,1,1,1,2]",
+            "compact": true,
+            "wrapContent": true
+          }
+        },
+        {
+          "id": "b2cda169-8f28-48c2-b83b-718696fad031",
+          "title": "Selected Studies",
+          "query": "MATCH (sr:StudyRoot)-[r0:HAS_VERSION]->(s:StudyValue)\nWHERE id(s) IN [toInteger($neodash_studya), toInteger($neodash_studyb)]\nWITH\n  CASE\n    WHEN count(distinct sr) > 1 THEN 'Across Study'\n    ELSE 'Within Study'\n  END AS compare_type\nWITH compare_type\nmatch(sr:StudyRoot)-[r0:HAS_VERSION]->(s:StudyValue) where id(s) in[toInteger($neodash_studya),toInteger($neodash_studyb)]\nwith compare_type,r0, s, sr, CASE WHEN s.subpart_id is not null THEN s.study_id_prefix+'-'+s.study_number+'-'+s.subpart_id ELSE s.study_id_prefix+'-'+s.study_number END as trialid, \nCASE when id(s)=toInteger($neodash_studya) then 'Base' ELSE 'Compare' END as Study\nwith compare_type,s, sr, trialid, Study\nmatch (sr:StudyRoot)-[r0:HAS_VERSION]->(s)\nOPTIONAL MATCH (sr)-[r1:LATEST]->(s)\noptional match(s)<-[r_b:BEFORE]-(sact_before:StudyAction)\noptional match(s)<-[r_a:AFTER]-(sact_after:StudyAction)\nwith distinct compare_type,s,sr.uid as StudyRoot,Study, trialid, collect(r0.status) as statuses ,collect(r0.version) as versions, type(r1) as Latest,coalesce(sact_before.date,sact_after.date) as date order by trialid, date, Latest DESC\nwith compare_type,s,StudyRoot,Study, trialid, split(apoc.temporal.format(date, 'iso_local_date_time'),'.')[0] as Date, case when 'LOCKED' in statuses then 'LOCKED' else 'DRAFT' END as Status,\napoc.text.join(apoc.coll.toSet(versions),'') as Version,Latest \nreturn Study,\ntrialid as TrialID, Date, Version, Latest, Status, compare_type as `Compare Type`, StudyRoot order by Study, Version",
+          "width": 24,
+          "height": 3,
+          "x": 0,
+          "y": 10,
+          "type": "table",
+          "selection": {},
+          "settings": {
+            "refreshButtonEnabled": true,
+            "noDataMessage": "Please select BASE and COMPARE above",
+            "transposed": true,
+            "compact": true,
+            "actionsRules": [
+              {
+                "condition": "Click",
+                "field": "",
+                "value": "",
+                "customization": "set variable",
+                "customizationValue": ""
+              }
+            ]
+          }
+        },
+        {
+          "id": "b7a4cf91-c135-484a-a220-75538b366efe",
+          "title": "Show Only Differences",
+          "query": "WITH ['Yes','No'] as diffs UNWIND diffs as diff\nWITH diff WHERE toLower(diff) CONTAINS toLower($input) \nRETURN DISTINCT diff as value,  diff as display ORDER BY display DESC\n\n\n\n",
+          "width": 5,
+          "height": 2,
+          "x": 0,
+          "y": 0,
+          "type": "select",
+          "selection": {},
+          "settings": {
+            "type": "Custom Query",
+            "entityType": "Differences only",
+            "parameterName": "neodash_differences_only",
+            "autoSelectFirstValue": true
+          },
+          "schema": []
+        }
+      ]
+    },
+    {
+      "title": "Study Fields",
+      "reports": [
+        {
+          "id": "221091c9-0b4e-4e34-a821-92a1fcf443c9",
+          "title": "Study Field Comparison",
+          "query": "call apoc.when($neodash_differences_only contains \"Yes\",\"match(s:StudyValue) where id(s) in[$neodash_studya,$neodash_studyb]\nwith s, s.study_id_prefix+'-'+s.study_number as trialid,  CASE when id(s)=toInteger($neodash_studya) then 'Base' ELSE 'Compare' END as study\nwith s, trialid, study \nmatch (s)-[r1]->(txt:StudyField) where txt.field_name is not null \noptional match (txt)-[r2]->(:CTTermRoot)-[r3:HAS_NAME_ROOT]->(:CTTermNameRoot)-[r4:LATEST]->(term)\noptional match (txt)-[r5]->(x)-[:LATEST]->(term2)\nwith distinct study, trialid, term, term2, apoc.text.capitalize(apoc.text.join(split(txt.field_name,'_'),' ')) as field ,txt.value as value\nwith study, trialid, field, value, term, collect(term2.name) as term2\nwith study, trialid, field, CASE WHEN term is not null then term.name else CASE WHEN size(term2)>0 then apoc.text.join(term2,',') ELSE value END END as value\nwith study, trialid,field,value where not field contains 'null value code'\nwith distinct study, trialid, field,value\nwith field, apoc.map.fromPairs(collect([study,value])) as map\nwith field as StudyField,map[toString('Base')] as Base, map['Compare'] as Compare\nWITH StudyField,Base, Compare,\nCASE WHEN Base = Compare THEN 'no' ELSE CASE WHEN Base is null and Compare is null THEN 'no' ELSE 'yes' END END as Diff \nWITH StudyField,Base, Compare, Diff where Diff='yes'\nreturn StudyField, Base, Compare, Diff \"\n,\"match(s:StudyValue) where id(s) in[$neodash_studya,$neodash_studyb]\nwith s, s.study_id_prefix+'-'+s.study_number as trialid,  CASE when id(s)=toInteger($neodash_studya) then 'Base' ELSE 'Compare' END as study\nwith s, trialid, study \nmatch (s)-[r1]->(txt:StudyField) where txt.field_name is not null \noptional match (txt)-[r2]->(:CTTermRoot)-[r3:HAS_NAME_ROOT]->(:CTTermNameRoot)-[r4:LATEST]->(term)\noptional match (txt)-[r5]->(x)-[:LATEST]->(term2)\nwith distinct study, trialid, term, term2, apoc.text.capitalize(apoc.text.join(split(txt.field_name,'_'),' ')) as field ,txt.value as value\nwith study, trialid, field, value, term, collect(term2.name) as term2\nwith study, trialid, field, CASE WHEN term is not null then term.name else CASE WHEN size(term2)>0 then apoc.text.join(term2,',') ELSE value END END as value\nwith study, trialid,field,value where not field contains 'null value code'\nwith distinct study, trialid, field,value\nwith field, apoc.map.fromPairs(collect([study,value])) as map\nwith field as StudyField,map[toString('Base')] as Base, map['Compare'] as Compare\nWITH StudyField,Base, Compare,\nCASE WHEN Base = Compare THEN 'no' ELSE CASE WHEN Base is null and Compare is null THEN 'no' ELSE 'yes' END END as Diff \nWITH StudyField,Base, Compare, Diff \nreturn StudyField, Base, Compare, Diff\",{neodash_studya:$neodash_studya, neodash_studyb:$neodash_studyb}) YIELD value\nreturn value.StudyField as `Study Field`,\nvalue.Base as Base,\nvalue.Compare as Compare, \nvalue.Diff as __Diff order by `Study Field`",
+          "width": 24,
+          "height": 4,
+          "x": 0,
+          "y": 3,
+          "type": "table",
+          "selection": {},
+          "settings": {
+            "styleRules": [
+              {
+                "field": "__Diff",
+                "condition": "=",
+                "value": "no",
+                "customization": "row color",
+                "customizationValue": "#5FE8866E"
+              },
+              {
+                "field": "__Diff",
+                "condition": "=",
+                "value": "yes",
+                "customization": "row color",
+                "customizationValue": "#FF11116E"
+              }
+            ],
+            "refreshButtonEnabled": true,
+            "fullscreenEnabled": true,
+            "columnWidths": "[3,5,5,1]",
+            "noDataMessage": "No differences found",
+            "compact": true,
+            "allowDownload": true,
+            "wrapContent": true
+          }
+        },
+        {
+          "id": "8d648671-d1eb-458a-8b09-90b8cf10ed4d",
+          "title": "Current Study Selection",
+          "query": "MATCH (sr:StudyRoot)-[r0:HAS_VERSION]->(s:StudyValue)\nWHERE id(s) IN [toInteger($neodash_studya), toInteger($neodash_studyb)]\nWITH\n  CASE\n    WHEN count(distinct sr) > 1 THEN 'Across Study'\n    ELSE 'Within Study'\n  END AS compare_type\nWITH compare_type\nmatch(sr:StudyRoot)-[r0:HAS_VERSION]->(s:StudyValue) where id(s) in[toInteger($neodash_studya),toInteger($neodash_studyb)]\nwith compare_type,r0, s, sr, CASE WHEN s.subpart_id is not null THEN s.study_id_prefix+'-'+s.study_number+'-'+s.subpart_id ELSE s.study_id_prefix+'-'+s.study_number END as trialid, \nCASE when id(s)=toInteger($neodash_studya) then 'Base' ELSE 'Compare' END as Study\nwith compare_type,s, sr, trialid, Study\nmatch (sr:StudyRoot)-[r0:HAS_VERSION]->(s)\nOPTIONAL MATCH (sr)-[r1:LATEST]->(s)\noptional match(s)<-[r_b:BEFORE]-(sact_before:StudyAction)\noptional match(s)<-[r_a:AFTER]-(sact_after:StudyAction)\nwith distinct compare_type,s,sr.uid as StudyRoot,Study, trialid, collect(r0.status) as statuses ,collect(r0.version) as versions, type(r1) as Latest,coalesce(sact_before.date,sact_after.date) as date order by trialid, date, Latest DESC\nwith compare_type,s,StudyRoot,Study, trialid, split(apoc.temporal.format(date, 'iso_local_date_time'),'.')[0] as Date, case when 'LOCKED' in statuses then 'LOCKED' else 'DRAFT' END as Status,\napoc.text.join(apoc.coll.toSet(versions),'') as Version,Latest \nreturn Study,\ntrialid as TrialID, Date, Version, Latest, Status, compare_type as `Compare Type`, StudyRoot order by Study, Version",
+          "width": 24,
+          "height": 3,
+          "x": 0,
+          "y": 0,
+          "type": "table",
+          "selection": {},
+          "settings": {
+            "transposed": true,
+            "compact": true,
+            "fontSize": 12
+          },
+          "schema": []
+        }
+      ]
+    },
+    {
+      "title": "Objectives/Endpoints",
+      "reports": [
+        {
+          "id": "9fddd824-7a71-4ad5-a73b-389c94f87dc1",
+          "title": "Current Study Selection",
+          "query": "MATCH (sr:StudyRoot)-[r0:HAS_VERSION]->(s:StudyValue)\nWHERE id(s) IN [toInteger($neodash_studya), toInteger($neodash_studyb)]\nWITH\n  CASE\n    WHEN count(distinct sr) > 1 THEN 'Across Study'\n    ELSE 'Within Study'\n  END AS compare_type\nWITH compare_type\nmatch(sr:StudyRoot)-[r0:HAS_VERSION]->(s:StudyValue) where id(s) in[toInteger($neodash_studya),toInteger($neodash_studyb)]\nwith compare_type,r0, s, sr, CASE WHEN s.subpart_id is not null THEN s.study_id_prefix+'-'+s.study_number+'-'+s.subpart_id ELSE s.study_id_prefix+'-'+s.study_number END as trialid, \nCASE when id(s)=toInteger($neodash_studya) then 'Base' ELSE 'Compare' END as Study\nwith compare_type,s, sr, trialid, Study\nmatch (sr:StudyRoot)-[r0:HAS_VERSION]->(s)\nOPTIONAL MATCH (sr)-[r1:LATEST]->(s)\noptional match(s)<-[r_b:BEFORE]-(sact_before:StudyAction)\noptional match(s)<-[r_a:AFTER]-(sact_after:StudyAction)\nwith distinct compare_type,s,sr.uid as StudyRoot,Study, trialid, collect(r0.status) as statuses ,collect(r0.version) as versions, type(r1) as Latest,coalesce(sact_before.date,sact_after.date) as date order by trialid, date, Latest DESC\nwith compare_type,s,StudyRoot,Study, trialid, split(apoc.temporal.format(date, 'iso_local_date_time'),'.')[0] as Date, case when 'LOCKED' in statuses then 'LOCKED' else 'DRAFT' END as Status,\napoc.text.join(apoc.coll.toSet(versions),'') as Version,Latest \nreturn Study,\ntrialid as TrialID, Date, Version, Latest, Status, compare_type as `Compare Type`, StudyRoot order by Study, Version",
+          "width": 24,
+          "height": 3,
+          "x": 0,
+          "y": 0,
+          "type": "table",
+          "selection": {},
+          "settings": {
+            "compact": true,
+            "transposed": true,
+            "fontSize": 12
+          },
+          "schema": []
+        },
+        {
+          "id": "b1f62a4c-c432-44de-b9b5-92d7a3f072f3",
+          "title": "Endpoints (by Objective)",
+          "query": "call apoc.when($neodash_differences_only contains 'Yes',\"match(s:StudyValue) where id(s) in[toInteger($neodash_studya),toInteger($neodash_studyb)]\nwith s, CASE when id(s)=toInteger($neodash_studya) then 'Base' ELSE 'Compare' END as study\noptional match (s)-[r3]->(endp:StudyEndpoint)-[r3_1]->(endp_val:EndpointValue)\noptional match (s)-[r4]->(obj:StudyObjective)-[r4_1]->(obj_val:ObjectiveValue)\nmatch(endp)-[:STUDY_ENDPOINT_HAS_STUDY_OBJECTIVE]->(obj)\nwith study, obj, obj_val, endp, endp_val,\n'Obj '+toString(obj.order) + ' - Endp '+toString(endp.order) as Number,\nobj_val.name_plain as Objective, \nendp_val.name_plain as Endpoint\nwith Number, Objective, apoc.map.fromPairs(collect([study,Endpoint])) as map\nwith Number , Objective,map['Base'] as `Base - Endpoint`, map['Compare'] as `Compare - Endpoint`,\nCASE WHEN map['Base'] = map['Compare'] THEN 'no' ELSE CASE WHEN map['Base'] is null and map['Compare'] is null THEN 'no' ELSE 'yes' END END as Diff order by Number\nwith Number, Objective, `Base - Endpoint`,`Compare - Endpoint`, Diff where Diff='yes'\nreturn Number, Objective, `Base - Endpoint`,`Compare - Endpoint`, Diff\",\"match(s:StudyValue) where id(s) in[toInteger($neodash_studya),toInteger($neodash_studyb)]\nwith s, CASE when id(s)=toInteger($neodash_studya) then 'Base' ELSE 'Compare' END as study\noptional match (s)-[r3]->(endp:StudyEndpoint)-[r3_1]->(endp_val:EndpointValue)\noptional match (s)-[r4]->(obj:StudyObjective)-[r4_1]->(obj_val:ObjectiveValue)\nmatch(endp)-[:STUDY_ENDPOINT_HAS_STUDY_OBJECTIVE]->(obj)\nwith study, obj, obj_val, endp, endp_val,\n'Obj '+toString(obj.order) + ' - Endp '+toString(endp.order) as Number,\nobj_val.name_plain as Objective, \nendp_val.name_plain as Endpoint\nwith Number, Objective, apoc.map.fromPairs(collect([study,Endpoint])) as map\nwith Number , Objective,map['Base'] as `Base - Endpoint`, map['Compare'] as `Compare - Endpoint`,\nCASE WHEN map['Base'] = map['Compare'] THEN 'no' ELSE CASE WHEN map['Base'] is null and map['Compare'] is null THEN 'no' ELSE 'yes' END END as Diff order by Number\nreturn Number, Objective, `Base - Endpoint`,`Compare - Endpoint`, Diff\",{neodash_studya:$neodash_studya, neodash_studyb:$neodash_studyb}) YIELD value\nreturn value.Number as Number, \nvalue.Objective as Objective, \nvalue.`Base - Endpoint` as `Base - Endpoint`,\nvalue.`Compare - Endpoint` as `Compare - Endpoint`, \nvalue.Diff as Diff",
+          "width": 24,
+          "height": 4,
+          "x": 0,
+          "y": 7,
+          "type": "table",
+          "selection": {},
+          "settings": {
+            "fullscreenEnabled": true,
+            "refreshButtonEnabled": true,
+            "columnWidths": "[1,4,5,5,1]",
+            "styleRules": [
+              {
+                "field": "Diff",
+                "condition": "=",
+                "value": "no",
+                "customization": "row color",
+                "customizationValue": "#5FE8866E"
+              },
+              {
+                "field": "Diff",
+                "condition": "=",
+                "value": "yes",
+                "customization": "row color",
+                "customizationValue": "#FF11116E"
+              }
+            ],
+            "compact": true,
+            "allowDownload": true,
+            "noDataMessage": "No differences found",
+            "wrapContent": true
+          }
+        },
+        {
+          "id": "fcedd5a2-3c97-4709-96ad-856485ef2608",
+          "title": "Objectives",
+          "query": "call apoc.when($neodash_differences_only contains 'Yes',\"match(s:StudyValue) where id(s) in[toInteger($neodash_studya),toInteger($neodash_studyb)]\nwith s, CASE when id(s)=toInteger($neodash_studya) then 'Base' ELSE 'Compare' END as study\noptional match (s)-[r3]->(endp:StudyEndpoint)-[r3_1]->(endp_val:EndpointValue)\noptional match (s)-[r4]->(obj:StudyObjective)-[r4_1]->(obj_val:ObjectiveValue)\noptional match(endp)-[:STUDY_ENDPOINT_HAS_STUDY_OBJECTIVE]->(obj)\nwith study, obj, obj_val, endp, endp_val, \n'Obj '+toString(obj.order) as Number,\nobj_val.name_plain as Objective order by obj_val.name_plain,endp_val.name_plain\nwith Number, apoc.map.fromPairs(collect([study,Objective])) as map\nwith Number , map['Base'] as `Base - Objective`, map['Compare'] as `Compare - Objective`,\nCASE WHEN map['Base'] = map['Compare'] THEN 'no' ELSE CASE WHEN map['Base'] is null and map['Compare'] is null THEN 'no' ELSE 'yes' END END as Diff order by Number\nWITH Number, `Base - Objective`,`Compare - Objective`, Diff where Diff='yes'\nreturn Number, `Base - Objective`,`Compare - Objective`, Diff\",\"match(s:StudyValue) where id(s) in[toInteger($neodash_studya),toInteger($neodash_studyb)]\nwith s, CASE when id(s)=toInteger($neodash_studya) then 'Base' ELSE 'Compare' END as study\noptional match (s)-[r3]->(endp:StudyEndpoint)-[r3_1]->(endp_val:EndpointValue)\noptional match (s)-[r4]->(obj:StudyObjective)-[r4_1]->(obj_val:ObjectiveValue)\noptional match(endp)-[:STUDY_ENDPOINT_HAS_STUDY_OBJECTIVE]->(obj)\nwith study, obj, obj_val, endp, endp_val, \n'Obj '+toString(obj.order) as Number,\nobj_val.name_plain as Objective order by obj_val.name_plain,endp_val.name_plain\nwith Number, apoc.map.fromPairs(collect([study,Objective])) as map\nwith Number , map['Base'] as `Base - Objective`, map['Compare'] as `Compare - Objective`,\nCASE WHEN map['Base'] = map['Compare'] THEN 'no' ELSE CASE WHEN map['Base'] is null and map['Compare'] is null THEN 'no' ELSE 'yes' END END as Diff order by Number\nReturn Number, `Base - Objective`,`Compare - Objective`, Diff\",{neodash_studya:$neodash_studya, neodash_studyb:$neodash_studyb}) YIELD value\nreturn value.Number as Number,\nvalue.`Base - Objective` as `Base - Objective`,\nvalue.`Compare - Objective` as `Compare - Objective`, \nvalue.Diff as __Diff",
+          "width": 24,
+          "height": 4,
+          "x": 0,
+          "y": 3,
+          "type": "table",
+          "selection": {},
+          "settings": {
+            "styleRules": [
+              {
+                "field": "__Diff",
+                "condition": "=",
+                "value": "no",
+                "customization": "row color",
+                "customizationValue": "#5FE8866E"
+              },
+              {
+                "field": "__Diff",
+                "condition": "=",
+                "value": "yes",
+                "customization": "row color",
+                "customizationValue": "#FF11116E"
+              }
+            ],
+            "refreshButtonEnabled": true,
+            "fullscreenEnabled": true,
+            "allowDownload": true,
+            "compact": true,
+            "columnWidths": "[1,7,7,1]",
+            "noDataMessage": "No differences found",
+            "wrapContent": true
+          }
+        }
+      ]
+    },
+    {
+      "title": "Criteria",
+      "reports": [
+        {
+          "id": "a27b17d9-032d-4bd9-939b-09099d10b49c",
+          "title": "Current Study Selection",
+          "query": "MATCH (sr:StudyRoot)-[r0:HAS_VERSION]->(s:StudyValue)\nWHERE id(s) IN [toInteger($neodash_studya), toInteger($neodash_studyb)]\nWITH\n  CASE\n    WHEN count(distinct sr) > 1 THEN 'Across Study'\n    ELSE 'Within Study'\n  END AS compare_type\nWITH compare_type\nmatch(sr:StudyRoot)-[r0:HAS_VERSION]->(s:StudyValue) where id(s) in[toInteger($neodash_studya),toInteger($neodash_studyb)]\nwith compare_type,r0, s, sr, CASE WHEN s.subpart_id is not null THEN s.study_id_prefix+'-'+s.study_number+'-'+s.subpart_id ELSE s.study_id_prefix+'-'+s.study_number END as trialid, \nCASE when id(s)=toInteger($neodash_studya) then 'Base' ELSE 'Compare' END as Study\nwith compare_type,s, sr, trialid, Study\nmatch (sr:StudyRoot)-[r0:HAS_VERSION]->(s)\nOPTIONAL MATCH (sr)-[r1:LATEST]->(s)\noptional match(s)<-[r_b:BEFORE]-(sact_before:StudyAction)\noptional match(s)<-[r_a:AFTER]-(sact_after:StudyAction)\nwith distinct compare_type,s,sr.uid as StudyRoot,Study, trialid, collect(r0.status) as statuses ,collect(r0.version) as versions, type(r1) as Latest,coalesce(sact_before.date,sact_after.date) as date order by trialid, date, Latest DESC\nwith compare_type,s,StudyRoot,Study, trialid, split(apoc.temporal.format(date, 'iso_local_date_time'),'.')[0] as Date, case when 'LOCKED' in statuses then 'LOCKED' else 'DRAFT' END as Status,\napoc.text.join(apoc.coll.toSet(versions),'') as Version,Latest \nreturn Study,\ntrialid as TrialID, Date, Version, Latest, Status, compare_type as `Compare Type`, StudyRoot order by Study, Version",
+          "width": 24,
+          "height": 3,
+          "x": 0,
+          "y": 0,
+          "type": "table",
+          "selection": {},
+          "settings": {
+            "fontSize": 12,
+            "transposed": true,
+            "compact": true
+          },
+          "schema": []
+        },
+        {
+          "id": "fd6d2fa7-8639-4db1-ada2-fce7103a0739",
+          "title": "Study Criteria",
+          "query": "call apoc.when($neodash_differences_only contains 'Yes',\"match(s:StudyValue) where id(s) in[toInteger($neodash_studya),toInteger($neodash_studyb)]\nwith s, CASE when id(s)=toInteger($neodash_studya) then 'Base' ELSE 'Compare' END as study\noptional match (s)-[r3]->(endp:StudyCriteria)-[r3_1]->(crit_val:CriteriaValue)\nOPTIONAL MATCH(crit_val)<-[x1]-(crit_root:CriteriaRoot)<-[x2]-(crit_temp_root:CriteriaTemplateRoot)-[x3:HAS_TYPE]->(context:CTTermContext)-[x4]->(term_root:CTTermRoot)<-[x5]-(crit_cat:CTCodelistTerm)<-[x6]-(cl_root:CTCodelistRoot)<-[x7]-(catalog:CTCatalogue{name:'PROTOCOL CT'})\nwith study, crit_cat, endp.order as crit_order, crit_val.name_plain as Criteria order by crit_order\nwith crit_cat, crit_order, Criteria, apoc.map.fromPairs(collect([study,Criteria])) as map\nwith crit_cat, crit_order, map['Base'] as `Base - Criteria`, map['Compare'] as `Compare - Criteria`,\nCASE WHEN map['Base'] = map['Compare'] THEN 'no' ELSE CASE WHEN map['Base'] is null and map['Compare'] is null THEN 'no' ELSE 'yes' END END as Diff\nwith crit_cat, crit_order, `Base - Criteria`,`Compare - Criteria`, Diff where Diff='yes'\nreturn crit_cat.submission_value as Category, `Base - Criteria`,`Compare - Criteria`, Diff order by crit_order\",\n\"match(s:StudyValue) where id(s) in[toInteger($neodash_studya),toInteger($neodash_studyb)]\nwith s, CASE when id(s)=toInteger($neodash_studya) then 'Base' ELSE 'Compare' END as study\noptional match (s)-[r3]->(endp:StudyCriteria)-[r3_1]->(crit_val:CriteriaValue)\nOPTIONAL MATCH(crit_val)<-[x1]-(crit_root:CriteriaRoot)<-[x2]-(crit_temp_root:CriteriaTemplateRoot)-[x3:HAS_TYPE]->(context:CTTermContext)-[x4]->(term_root:CTTermRoot)<-[x5]-(crit_cat:CTCodelistTerm)<-[x6]-(cl_root:CTCodelistRoot)<-[x7]-(catalog:CTCatalogue{name:'PROTOCOL CT'})\nwith study, crit_cat, endp.order as crit_order, crit_val.name_plain as Criteria\nwith crit_cat, crit_order,Criteria, apoc.map.fromPairs(collect([study,Criteria])) as map\nwith crit_cat, crit_order, map['Base'] as `Base - Criteria`, map['Compare'] as `Compare - Criteria`,\nCASE WHEN map['Base'] = map['Compare'] THEN 'no' ELSE CASE WHEN map['Base'] is null and map['Compare'] is null THEN 'no' ELSE 'yes' END END as Diff\nwith crit_cat, crit_order, `Base - Criteria`,`Compare - Criteria`, Diff\nreturn crit_cat.submission_value as Category, crit_order, `Base - Criteria`,`Compare - Criteria`, Diff order by crit_order\",{neodash_studya:$neodash_studya, neodash_studyb:$neodash_studyb}) YIELD value\nreturn value.Category as Category, \nvalue.crit_order as `#`,\nvalue.`Base - Criteria` as `Base - Criteria`,\nvalue.`Compare - Criteria` as `Compare - Criteria`, \nvalue.Diff as __Diff order by Category desc",
+          "width": 24,
+          "height": 4,
+          "x": 0,
+          "y": 3,
+          "type": "table",
+          "selection": {},
+          "settings": {
+            "styleRules": [
+              {
+                "field": "__Diff",
+                "condition": "=",
+                "value": "no",
+                "customization": "row color",
+                "customizationValue": "#5FE8866E"
+              },
+              {
+                "field": "__Diff",
+                "condition": "=",
+                "value": "yes",
+                "customization": "row color",
+                "customizationValue": "#FF11116E"
+              }
+            ],
+            "allowDownload": true,
+            "compact": true,
+            "fullscreenEnabled": true,
+            "refreshButtonEnabled": true,
+            "noDataMessage": "No differences found",
+            "columnWidths": "[1,1,8,8,1]",
+            "wrapContent": true
+          }
+        }
+      ]
+    },
+    {
+      "title": "Planned Visits",
+      "reports": [
+        {
+          "id": "405fb205-c5e2-4e1d-841a-bfb85182e7cf",
+          "title": "Change Type",
+          "query": "with [\"Added\", \"No Change\", \"Deleted\", \"Changed\"] as list\nunwind(list) as Status\nreturn Status\n\n",
+          "width": 6,
+          "height": 3,
+          "x": 0,
+          "y": 0,
+          "type": "table",
+          "selection": {},
+          "settings": {
+            "compact": true,
+            "styleRules": [
+              {
+                "field": "Status",
+                "condition": "=",
+                "value": "Added",
+                "customization": "row color",
+                "customizationValue": "#00B5FF6E"
+              },
+              {
+                "field": "Status",
+                "condition": "=",
+                "value": "No Change",
+                "customization": "row color",
+                "customizationValue": "#5FE8866E"
+              },
+              {
+                "field": "Status",
+                "condition": "=",
+                "value": "Deleted",
+                "customization": "row color",
+                "customizationValue": "#FF11116E"
+              },
+              {
+                "field": "Status",
+                "condition": "=",
+                "value": "Changed",
+                "customization": "row color",
+                "customizationValue": "#FFA4006E"
+              }
+            ]
+          }
+        },
+        {
+          "id": "f7b1ef51-afc4-4baf-a7fb-7b4a5a9becba",
+          "title": "Visit Attribute Changes",
+          "query": "CALL\n  apoc.when(\n    $neodash_differences_only CONTAINS 'Yes',\n    //First\n    \"match(s:StudyValue) where id(s) in[toInteger($neodash_studya),toInteger($neodash_studyb)]\nwith s, CASE when id(s)=toInteger($neodash_studya) then 'Base' ELSE 'Compare' END as study\noptional match (s)-[:HAS_STUDY_VISIT]->(vis)\noptional match(vis)-[:HAS_VISIT_NAME]->(vis_name_root)-[:HAS_VERSION]->(vis_name:VisitNameValue)\noptional match(vis)-[r]->(x_r)-[:HAS_VERSION]->(x) where not type(r)='HAS_VISIT_NAME' \nwith study, x, [k in keys(vis) where not k='uid']  as vis_keys, properties(vis) as vis_props, vis.unique_visit_number as `Unique #`, vis_name.name as `Visit Name`, vis.short_visit_label as `Short Name`,vis.visit_number as `Visit Number`, [i in labels(x) where not (i contains 'ConceptValue' or i contains 'Template' or i contains 'Numeric' or i contains 'VisitName') ][0] as types\nwith study, `Unique #`,`Visit Name`, `Short Name`, `Visit Number`, substring(types,0, size(types)-5) as type, x, vis_keys, vis_props, CASE when not vis_keys is null THEN  range(0,size(vis_keys)-1,1) else [0] END AS coll_size \nwith study, `Unique #`, `Visit Name`, `Short Name`, `Visit Number`, type, CASE when x.value is null then x.name ELSE x.value+' ('+x.name+')' END as value, vis_keys, vis_props, coll_size \nwith study, `Unique #`, `Visit Name`, `Short Name`, `Visit Number`, collect(apoc.map.fromPairs([[type,value]])) as map, [k in vis_keys | apoc.map.fromPairs([[apoc.text.capitalize(replace(k,'_',' ')),apoc.text.capitalize(toLower(replace(toString(vis_props[k]),'_',' ')))]])] as add_maps\nwith study, `Unique #`, `Visit Name`, `Short Name`, `Visit Number`, CASE WHEN not add_maps is null THEN apoc.map.mergeList(apoc.coll.flatten([map,add_maps])) ELSE apoc.map.mergeList(map) END as map \nwith study, `Unique #`, `Visit Name`, `Short Name`, `Visit Number`, map,  CASE when not map is null THEN range(0,size(keys(map))-1,1) ELSE [0] END AS coll_size \nUNWIND coll_size AS idx\nwith study, `Unique #`, `Visit Name`, `Short Name`,`Visit Number`, \nCASE WHEN not isEmpty(map) THEN keys(map)[idx] ElSE null END as type, CASE WHEN not isEmpty(map) THEN map[keys(map)[idx]] ELSE null END as value\nwith `Unique #`, `Visit Name`, `Short Name`,`Visit Number`, type,  apoc.map.fromPairs(collect([study,value]))  as visit_info_map\nWITH `Unique #`,\n`Visit Name`, \n`Short Name`,\n`Visit Number`, \ntype as `Visit Property Type`, \nvisit_info_map['Base'] as Base, \nvisit_info_map['Compare'] as Compare,\nCASE WHEN visit_info_map['Base'] IS NULL AND visit_info_map['Compare'] IS NOT NULL THEN 'Added' WHEN visit_info_map['Base'] IS NOT NULL AND visit_info_map['Compare'] IS NULL THEN 'Deleted' WHEN visit_info_map['Base'] = visit_info_map['Compare'] THEN 'No Change' ELSE 'Changed' END as `Change Type` order by  `Visit Number`,`Visit Property Type` \nWITH `Unique #`, `Visit Name`, `Short Name`, `Visit Number`,`Visit Property Type`, Base, Compare, `Change Type` where `Change Type`<>'No Change'\nreturn `Unique #`, `Visit Name`, `Short Name`, `Visit Number`,`Visit Property Type`, Base, Compare, `Change Type`\",\n    //second\n    \"\nmatch(s:StudyValue) where id(s) in[toInteger($neodash_studya),toInteger($neodash_studyb)]\nwith s, CASE when id(s)=toInteger($neodash_studya) then 'Base' ELSE 'Compare' END as study\noptional match (s)-[:HAS_STUDY_VISIT]->(vis)\noptional match(vis)-[:HAS_VISIT_NAME]->(vis_name_root)-[:HAS_VERSION]->(vis_name:VisitNameValue)\noptional match(vis)-[r]->(x_r)-[:HAS_VERSION]->(x) where not type(r)='HAS_VISIT_NAME' \nwith study, x, [k in keys(vis) where not k='uid']  as vis_keys, properties(vis) as vis_props, vis.unique_visit_number as `Unique #`,vis_name.name as `Visit Name`, vis.short_visit_label as `Short Name`,vis.visit_number as `Visit Number`, [i in labels(x) where not (i contains 'ConceptValue' or i contains 'Template' or i contains 'Numeric' or i contains 'VisitName') ][0] as types\nwith study, `Unique #`,`Visit Name`, `Short Name`, `Visit Number`, substring(types,0, size(types)-5) as type, x, vis_keys, vis_props, CASE when not vis_keys is null THEN  range(0,size(vis_keys)-1,1) else [0] END AS coll_size \nwith study, `Unique #`,`Visit Name`, `Short Name`, `Visit Number`, type, CASE when x.value is null then x.name ELSE x.value+' ('+x.name+')' END as value, vis_keys, vis_props, coll_size \nwith study, `Unique #`,`Visit Name`, `Short Name`, `Visit Number`, collect(apoc.map.fromPairs([[type,value]])) as map, [k in vis_keys | apoc.map.fromPairs([[apoc.text.capitalize(replace(k,'_',' ')),apoc.text.capitalize(toLower(replace(toString(vis_props[k]),'_',' ')))]])] as add_maps\nwith study, `Unique #`,`Visit Name`, `Short Name`, `Visit Number`, CASE WHEN not add_maps is null THEN apoc.map.mergeList(apoc.coll.flatten([map,add_maps])) ELSE apoc.map.mergeList(map) END as map \nwith study, `Unique #`,`Visit Name`, `Short Name`, `Visit Number`, map,  CASE when not map is null THEN range(0,size(keys(map))-1,1) ELSE [0] END AS coll_size \nUNWIND coll_size AS idx\nwith study, `Unique #`,`Visit Name`, `Short Name`,`Visit Number`, \nCASE WHEN not isEmpty(map) THEN keys(map)[idx] ElSE null END as type, CASE WHEN not isEmpty(map) THEN map[keys(map)[idx]] ELSE null END as value\nwith `Unique #`,`Visit Name`, `Short Name`,`Visit Number`, type,  apoc.map.fromPairs(collect([study,value]))  as visit_info_map\nWITH `Unique #`,\n`Visit Name`, \n`Short Name`,\n`Visit Number`, \ntype as `Visit Property Type`, \nvisit_info_map['Base'] as Base, \nvisit_info_map['Compare'] as Compare,\nCASE WHEN visit_info_map['Base'] IS NULL AND visit_info_map['Compare'] IS NOT NULL THEN 'Added' WHEN visit_info_map['Base'] IS NOT NULL AND visit_info_map['Compare'] IS NULL THEN 'Deleted' WHEN visit_info_map['Base'] = visit_info_map['Compare'] THEN 'No Change' ELSE 'Changed' END as `Change Type` order by  `Visit Number`,`Visit Property Type` \nWITH `Unique #`, `Visit Name`, `Short Name`, `Visit Number`,`Visit Property Type`, Base, Compare, `Change Type` \nreturn `Unique #`, `Visit Name`, `Short Name`, `Visit Number`,`Visit Property Type`, Base, Compare, `Change Type`\",\n    {neodash_studya: $neodash_studya, neodash_studyb: $neodash_studyb}\n  )\n  YIELD value\nRETURN\n  value.`Unique #` as `Unique #`,\n  value.`Visit Name` AS `Visit Name`,\n  value.`Short Name` AS `Short Name`,\n  value.`Visit Number` AS `Visit Number`,\n  value.`Visit Property Type` AS `Visit Property Type`,\n  value.Base AS Base,\n  value.Compare AS Compare,\n  value.`Change Type` AS __Diff\nORDER BY toInteger(`Unique #`), `Visit Number`, `Short Name`, `Visit Property Type`",
+          "width": 24,
+          "height": 3,
+          "x": 0,
+          "y": 3,
+          "type": "table",
+          "selection": {},
+          "settings": {
+            "refreshButtonEnabled": true,
+            "columnWidths": "[0.5,1,1,0.7,2,2,2]",
+            "styleRules": [
+              {
+                "field": "__Diff",
+                "condition": "=",
+                "value": "Added",
+                "customization": "row color",
+                "customizationValue": "#00B5FF6E"
+              },
+              {
+                "field": "__Diff",
+                "condition": "=",
+                "value": "Deleted",
+                "customization": "row color",
+                "customizationValue": "#FF11116E"
+              },
+              {
+                "field": "__Diff",
+                "condition": "=",
+                "value": "Changed",
+                "customization": "row color",
+                "customizationValue": "#FFA4006E"
+              },
+              {
+                "field": "__Diff",
+                "condition": "=",
+                "value": "No Change",
+                "customization": "row color",
+                "customizationValue": "#5FE8866E"
+              }
+            ],
+            "allowDownload": true,
+            "fullscreenEnabled": true,
+            "compact": true,
+            "wrapContent": true
+          }
+        },
+        {
+          "id": "71058c94-7543-428d-b272-b6befaea92f8",
+          "title": "Current Study Selection",
+          "query": "MATCH (sr:StudyRoot)-[r0:HAS_VERSION]->(s:StudyValue)\nWHERE id(s) IN [toInteger($neodash_studya), toInteger($neodash_studyb)]\nWITH\n  CASE\n    WHEN count(distinct sr) > 1 THEN 'Across Study'\n    ELSE 'Within Study'\n  END AS compare_type\nWITH compare_type\nmatch(sr:StudyRoot)-[r0:HAS_VERSION]->(s:StudyValue) where id(s) in[toInteger($neodash_studya),toInteger($neodash_studyb)]\nwith compare_type,r0, s, sr, CASE WHEN s.subpart_id is not null THEN s.study_id_prefix+'-'+s.study_number+'-'+s.subpart_id ELSE s.study_id_prefix+'-'+s.study_number END as trialid, \nCASE when id(s)=toInteger($neodash_studya) then 'Base' ELSE 'Compare' END as Study\nwith compare_type,s, sr, trialid, Study\nmatch (sr:StudyRoot)-[r0:HAS_VERSION]->(s)\nOPTIONAL MATCH (sr)-[r1:LATEST]->(s)\noptional match(s)<-[r_b:BEFORE]-(sact_before:StudyAction)\noptional match(s)<-[r_a:AFTER]-(sact_after:StudyAction)\nwith distinct compare_type,s,sr.uid as StudyRoot,Study, trialid, collect(r0.status) as statuses ,collect(r0.version) as versions, type(r1) as Latest,coalesce(sact_before.date,sact_after.date) as date order by trialid, date, Latest DESC\nwith compare_type,s,StudyRoot,Study, trialid, split(apoc.temporal.format(date, 'iso_local_date_time'),'.')[0] as Date, case when 'LOCKED' in statuses then 'LOCKED' else 'DRAFT' END as Status,\napoc.text.join(apoc.coll.toSet(versions),'') as Version,Latest \nreturn Study,\ntrialid as TrialID, Date, Version, Latest, Status, compare_type as `Compare Type`, StudyRoot order by Study, Version",
+          "width": 18,
+          "height": 3,
+          "x": 6,
+          "y": 0,
+          "type": "table",
+          "selection": {},
+          "settings": {
+            "refreshButtonEnabled": true,
+            "transposed": true,
+            "compact": true
+          }
+        }
+      ]
+    },
+    {
+      "title": "Collections",
+      "reports": [
+        {
+          "id": "391cb06a-924b-4a56-b5fd-0e12a4429340",
+          "title": "Planned Collections at Visits",
+          "query": "MATCH (sr:StudyRoot)-[:HAS_VERSION]->(s:StudyValue)\nWHERE id(s) IN [toInteger($neodash_studya), toInteger($neodash_studyb)]\nWITH\n  sr,\n  s,\n  id(s) AS sid,\n  CASE\n    WHEN id(s) = toInteger($neodash_studya) THEN 'Base'\n    ELSE 'Compare'\n  END AS study\nOPTIONAL MATCH\n  (s)-[:HAS_STUDY_ACTIVITY]->\n  (act)-[:HAS_SELECTED_ACTIVITY]->\n  (act_val:ActivityValue)\nOPTIONAL MATCH\n  (s)-[:HAS_STUDY_ACTIVITY_SCHEDULE]->\n  (schedule)<-[:STUDY_ACTIVITY_HAS_SCHEDULE]-\n  (act:StudyActivity)\nOPTIONAL MATCH\n  (s)-->\n  (act)<-[:AFTER]-\n  (action:StudyAction)-[:BEFORE]->\n  (act_prev)<--\n  (sx:StudyValue),\n  (act_prev)-->(prev_act_val:ActivityValue)\nWHERE id(sx) IN [toInteger($neodash_studya), toInteger($neodash_studyb)]\nOPTIONAL MATCH (s)-[:HAS_STUDY_VISIT]->(vis:StudyVisit)\nOPTIONAL MATCH\n  (vis)-[:HAS_VISIT_NAME]->\n  (vis_name_root)-[:HAS_VERSION]->\n  (vis_name:VisitNameValue)\nOPTIONAL MATCH\n  (vis)-[:STUDY_VISIT_HAS_SCHEDULE]->(schedule:StudyActivitySchedule)\nWITH DISTINCT\n  vis.visit_number AS `Visit ID`,\n  vis.short_visit_label AS `Visit Short Label`,\n  prev_act_val.name as `Previous Activity`,\n  act_val.name AS Activity,\n  apoc.map.fromPairs(collect([study, 'x'])) AS map\nWHERE Activity IS NOT NULL\nWITH\n  `Visit ID`,\n  `Visit Short Label`,\n  Activity,\n  `Previous Activity`,\n  map['Base'] AS `Base - collection`,\n  map['Compare'] AS `Compare - collection`\nORDER BY `Visit ID`, Activity\nWITH\n  `Visit ID`,\n  `Visit Short Label`,\n  Activity,\n  `Previous Activity`,\n  `Base - collection`,\n  `Compare - collection`,\n  CASE\n    WHEN\n      `Base - collection` = 'x' AND `Compare - collection` IS NULL\n      THEN \n        CASE \n          WHEN `Previous Activity` IS NOT NULL THEN 'Replaced'\n          ELSE 'Added'\n        END\n    ELSE\n      CASE\n        WHEN\n          `Base - collection` IS NULL AND `Compare - collection` = 'x'\n          THEN \n            CASE \n              WHEN `Previous Activity` IS NOT NULL THEN 'Replaced'\n              ELSE 'Deleted'\n            END\n        ELSE \n          CASE \n            WHEN `Previous Activity` IS NOT NULL THEN 'Replaced'\n            ELSE 'No change'\n          END\n      END\n  END AS `Change Type`\nWHERE\n  $neodash_differences_only = 'No' OR `Change Type` <> 'No change'\nRETURN DISTINCT\n  `Visit ID`,\n  `Visit Short Label`,\n  Activity,\n  `Previous Activity`,\n  `Base - collection`,\n  `Compare - collection`,\n  `Change Type`",
+          "width": 24,
+          "height": 4,
+          "x": 0,
+          "y": 3,
+          "type": "table",
+          "selection": {},
+          "settings": {
+            "noDataMessage": "No collections were specified.",
+            "allowDownload": true,
+            "compact": true,
+            "styleRules": [
+              {
+                "field": "Change Type",
+                "condition": "=",
+                "value": "Deleted",
+                "customization": "row color",
+                "customizationValue": "#FF11116E"
+              },
+              {
+                "field": "Change Type",
+                "condition": "=",
+                "value": "Added",
+                "customization": "row color",
+                "customizationValue": "#00B5FF6E"
+              },
+              {
+                "field": "Change Type",
+                "condition": "=",
+                "value": "No change",
+                "customization": "row color",
+                "customizationValue": "#5FE8866E"
+              },
+              {
+                "field": "Change Type",
+                "condition": "=",
+                "value": "Replaced",
+                "customization": "row color",
+                "customizationValue": "#CDA5E84D"
+              }
+            ],
+            "fullscreenEnabled": true,
+            "refreshButtonEnabled": true,
+            "wrapContent": true
+          }
+        },
+        {
+          "id": "a25cbf27-c432-4b66-a6ab-103b7358087c",
+          "title": "Current Study Selection",
+          "query": "MATCH (sr:StudyRoot)-[r0:HAS_VERSION]->(s:StudyValue)\nWHERE id(s) IN [toInteger($neodash_studya), toInteger($neodash_studyb)]\nWITH\n  CASE\n    WHEN count(distinct sr) > 1 THEN 'Across Study'\n    ELSE 'Within Study'\n  END AS compare_type\nWITH compare_type\nmatch(sr:StudyRoot)-[r0:HAS_VERSION]->(s:StudyValue) where id(s) in[toInteger($neodash_studya),toInteger($neodash_studyb)]\nwith compare_type,r0, s, sr, CASE WHEN s.subpart_id is not null THEN s.study_id_prefix+'-'+s.study_number+'-'+s.subpart_id ELSE s.study_id_prefix+'-'+s.study_number END as trialid, \nCASE when id(s)=toInteger($neodash_studya) then 'Base' ELSE 'Compare' END as Study\nwith compare_type,s, sr, trialid, Study\nmatch (sr:StudyRoot)-[r0:HAS_VERSION]->(s)\nOPTIONAL MATCH (sr)-[r1:LATEST]->(s)\noptional match(s)<-[r_b:BEFORE]-(sact_before:StudyAction)\noptional match(s)<-[r_a:AFTER]-(sact_after:StudyAction)\nwith distinct compare_type,s,sr.uid as StudyRoot,Study, trialid, collect(r0.status) as statuses ,collect(r0.version) as versions, type(r1) as Latest,coalesce(sact_before.date,sact_after.date) as date order by trialid, date, Latest DESC\nwith compare_type,s,StudyRoot,Study, trialid, split(apoc.temporal.format(date, 'iso_local_date_time'),'.')[0] as Date, case when 'LOCKED' in statuses then 'LOCKED' else 'DRAFT' END as Status,\napoc.text.join(apoc.coll.toSet(versions),'') as Version,Latest \nreturn Study,\ntrialid as TrialID, Date, Version, Latest, Status, compare_type as `Compare Type`, StudyRoot order by Study, Version",
+          "width": 18,
+          "height": 3,
+          "x": 6,
+          "y": 0,
+          "type": "table",
+          "selection": {},
+          "settings": {
+            "compact": true,
+            "transposed": true
+          }
+        },
+        {
+          "id": "b92da453-42d4-4afd-bc74-b292775def5f",
+          "title": "Change Type",
+          "query": "with [\"Added\", \"No Change\", \"Deleted\",\"Replaced\"] as list\nunwind(list) as Status\nreturn Status",
+          "width": 6,
+          "height": 3,
+          "x": 0,
+          "y": 0,
+          "type": "table",
+          "selection": {},
+          "settings": {
+            "transposed": false,
+            "styleRules": [
+              {
+                "field": "Status",
+                "condition": "=",
+                "value": "Added",
+                "customization": "row color",
+                "customizationValue": "#00B5FF6E"
+              },
+              {
+                "field": "Status",
+                "condition": "=",
+                "value": "No Change",
+                "customization": "row color",
+                "customizationValue": "#5FE8866E"
+              },
+              {
+                "field": "Status",
+                "condition": "=",
+                "value": "Deleted",
+                "customization": "row color",
+                "customizationValue": "#FF11116E"
+              },
+              {
+                "field": "Status",
+                "condition": "=",
+                "value": "Replaced",
+                "customization": "row color",
+                "customizationValue": "#CDA5E84D"
+              }
+            ],
+            "wrapContent": true,
+            "compact": true
+          }
+        }
+      ]
+    },
+    {
+      "title": "Activities",
+      "reports": [
+        {
+          "id": "6e9939bc-8d0b-47d2-9528-8dca019895bb",
+          "title": "Detailed Flowchart Compare Between Base and Compare Study",
+          "query": "//Activites compare\nMATCH (sr:StudyRoot)-[r0:HAS_VERSION]->(s:StudyValue)\nWHERE id(s) IN [toInteger($neodash_studya), toInteger($neodash_studyb)]\nWITH sr, s, r0.start_date as start_date\nWITH\n  CASE\n    WHEN count(distinct sr) > 1 THEN 'Across Study'\n    ELSE 'Within Study'\n  END AS compare_type,\n  apoc.map.fromPairs(\n    collect(\n      CASE\n        WHEN id(s) = toInteger($neodash_studya) THEN ['Base', start_date]\n        ELSE ['Compare', start_date]\n      END\n    )\n  ) AS version_dates\nWITH compare_type,version_dates\nMATCH (:StudyRoot)-[r0:HAS_VERSION]->(s:StudyValue)\nWHERE id(s) IN [toInteger($neodash_studya), toInteger($neodash_studyb)]\nWITH\ncompare_type,\nversion_dates,\n  r0,\n  s,\n  id(s) AS sid,\n  CASE\n    WHEN id(s) = toInteger($neodash_studya) THEN 'Base'\n    ELSE 'Compare'\n  END AS study\nMATCH\n  (s)-[r3:HAS_STUDY_ACTIVITY]->\n  (act)-[l1:HAS_SELECTED_ACTIVITY]->\n  (act_val:ActivityValue)\n// Match the specific groups for THIS activity\nOPTIONAL MATCH\n  (act)-[:STUDY_ACTIVITY_HAS_STUDY_SOA_GROUP]->(fl_group)\nOPTIONAL MATCH\n  (act)-[:STUDY_ACTIVITY_HAS_STUDY_ACTIVITY_GROUP]->(s_act_grp)\nOPTIONAL MATCH\n  (act)-[:STUDY_ACTIVITY_HAS_STUDY_ACTIVITY_SUBGROUP]->(s_act_s_grp)\nOPTIONAL MATCH\n  (s)-->\n  (act)<-[:AFTER]-\n  (action:StudyAction)-[:BEFORE]->\n  (act_prev)<--\n  (sx:StudyValue),\n  (act_prev)-->(prev_act_val:ActivityValue)\nWHERE id(sx) IN [toInteger($neodash_studya), toInteger($neodash_studyb)]\nOPTIONAL MATCH\n  (s)-[:HAS_STUDY_ACTIVITY_SCHEDULE]->(schedule),\n  (schedule)<-[:STUDY_ACTIVITY_HAS_SCHEDULE]-(act:StudyActivity),\n  (act)-[:HAS_SELECTED_ACTIVITY]->(act_val:ActivityValue),\n  (act)-[:STUDY_ACTIVITY_HAS_STUDY_ACTIVITY_INSTANCE]->\n  (ai_s:StudyActivityInstance)-[:HAS_SELECTED_ACTIVITY_INSTANCE]-\n  (ai:ActivityInstanceValue),\n  (ai)-[r1]->(g)<-[r2]-(act_val)\nWITH version_dates, compare_type, study, act, act_val,prev_act_val,fl_group,s_act_grp,s_act_s_grp\nOPTIONAL MATCH\n  (fl_group)-[:HAS_FLOWCHART_GROUP]->\n  (ct_root:CTTermContext)-[:HAS_SELECTED_TERM]->\n  (ct_name_root:CTTermRoot)-[:HAS_NAME_ROOT]->(name_root:CTTermNameRoot)-[:LATEST]->\n  (flowchart_grp:CTTermNameValue)\nOPTIONAL MATCH\n  (s_act_grp)-[:HAS_SELECTED_ACTIVITY_GROUP]->\n  (group:ActivityGroupValue)\nOPTIONAL MATCH\n  (s_act_s_grp)-[:HAS_SELECTED_ACTIVITY_SUBGROUP]->\n  (s_group:ActivitySubGroupValue)\nWITH DISTINCT\n  version_dates,\n  compare_type,\n  study,\n  flowchart_grp.name AS flowchart_grp,\n  group.name AS group,\n  s_group.name AS s_group,\n  act_val.name + '(Data collection: ' + act_val.is_data_collected + ')' AS act_detail,\n  prev_act_val.name as prev_activity\n// Create a unique key for each activity + group + subgroup combination\nWITH\n  version_dates,\n  compare_type,\n  act_detail,\n  prev_activity,\n  coalesce(flowchart_grp, 'NULL') + '|' + coalesce(group, 'NULL') + '|' + coalesce(s_group, 'NULL') AS group_key,\n  study,\n  flowchart_grp,\n  group,\n  s_group\n// Now aggregate by activity detail AND group combination\nWITH\n  version_dates,\n  compare_type,\n  act_detail,\n  prev_activity,\n  group_key,\n  apoc.map.fromPairs(collect(DISTINCT [study, flowchart_grp])) AS flowchart_grp,\n  apoc.map.fromPairs(collect(DISTINCT [study, group])) AS group,\n  apoc.map.fromPairs(collect(DISTINCT [study, s_group])) AS s_group\nWITH\n  compare_type,\n  version_dates['Base'] AS base_version_date,\n  flowchart_grp['Base'] AS `SoA Group (Base)`,\n  group['Base'] AS `Activity Group (Base)`,\n  s_group['Base'] AS `Activity Subgroup (Base)`,\n  version_dates['Compare'] AS compare_version_date,\n  flowchart_grp['Compare'] AS `SoA Group (Compare)`,\n  group['Compare'] AS `Activity Group (Compare)`,\n  s_group['Compare'] AS `Activity Subgroup (Compare)`,\n  act_detail AS `Activity Detail`,\n  prev_activity AS `Previous Activity`\nWHERE `Activity Detail` IS NOT NULL\nWITH\n  compare_type,\n  base_version_date,\n  `SoA Group (Base)`,\n  `Activity Group (Base)`,\n  `Activity Subgroup (Base)`,\n  compare_version_date,\n  `SoA Group (Compare)`,\n  `Activity Group (Compare)`,\n  `Activity Subgroup (Compare)`,\n  `Activity Detail`,\n  `Previous Activity`,\n  CASE\n    WHEN\n      compare_type = 'Within Study'\n      THEN\n        CASE\n          WHEN\n            base_version_date <= compare_version_date AND\n            `SoA Group (Base)` IS NOT NULL AND\n            `SoA Group (Compare)` IS NULL\n            THEN\n              CASE\n                WHEN `Previous Activity` IS NOT NULL THEN 'Replaced'\n                ELSE 'Activity deleted'\n              END\n          ELSE\n            CASE\n              WHEN\n                base_version_date <= compare_version_date AND\n                `SoA Group (Base)` IS NULL AND\n                `SoA Group (Compare)` IS NOT NULL\n                THEN\n                  CASE\n                    WHEN `Previous Activity` IS NOT NULL THEN 'Replaced'\n                    ELSE 'Activity added'\n                  END\n              ELSE\n                CASE\n                  WHEN\n                    base_version_date >= compare_version_date AND\n                    `SoA Group (Base)` IS NOT NULL AND\n                    `SoA Group (Compare)` IS NULL\n                    THEN\n                      CASE\n                        WHEN `Previous Activity` IS NOT NULL THEN 'Replaced'\n                        ELSE 'Activity added'\n                      END\n                  ELSE\n                    CASE\n                      WHEN\n                        base_version_date >= compare_version_date AND\n                        `SoA Group (Base)` IS NULL AND\n                        `SoA Group (Compare)` IS NOT NULL\n                        THEN\n                          CASE\n                            WHEN `Previous Activity` IS NOT NULL THEN 'Replaced'\n                            ELSE 'Activity deleted'\n                          END\n                      ELSE\n                        CASE\n                          WHEN\n                            (coalesce(`SoA Group (Base)`, '') <> coalesce(`SoA Group (Compare)`, '')) OR\n                            (coalesce(`Activity Group (Base)`, '') <> coalesce(`Activity Group (Compare)`, '')) OR\n                            (coalesce(`Activity Subgroup (Base)`, '') <> coalesce(`Activity Subgroup (Compare)`, ''))\n                            THEN\n                              CASE\n                                WHEN `Previous Activity` IS NOT NULL THEN 'Replaced'\n                                ELSE 'Activity moved'\n                              END\n                          ELSE\n                            CASE\n                              WHEN `Previous Activity` IS NOT NULL THEN 'Replaced'\n                              ELSE 'No change'\n                            END\n                        END\n                    END\n                END\n            END\n        END\n    ELSE\n      CASE\n        WHEN\n          `SoA Group (Base)` IS NOT NULL AND `SoA Group (Compare)` IS NULL\n          THEN\n            CASE\n              WHEN `Previous Activity` IS NOT NULL THEN 'Replaced'\n              ELSE 'Activity deleted'\n            END\n        ELSE\n          CASE\n            WHEN\n              `SoA Group (Base)` IS NULL AND `SoA Group (Compare)` IS NOT NULL\n              THEN\n                CASE\n                  WHEN `Previous Activity` IS NOT NULL THEN 'Replaced'\n                  ELSE 'Activity added'\n                END\n            ELSE\n              CASE\n                WHEN\n                  (coalesce(`SoA Group (Base)`, '') <> coalesce(`SoA Group (Compare)`, '')) OR\n                  (coalesce(`Activity Group (Base)`, '') <> coalesce(`Activity Group (Compare)`, '')) OR\n                  (coalesce(`Activity Subgroup (Base)`, '') <> coalesce(`Activity Subgroup (Compare)`, ''))\n                  THEN\n                    CASE\n                      WHEN `Previous Activity` IS NOT NULL THEN 'Replaced'\n                      ELSE 'Activity moved'\n                    END\n                ELSE\n                  CASE\n                    WHEN `Previous Activity` IS NOT NULL THEN 'Replaced'\n                    ELSE 'No change'\n                  END\n              END\n          END\n      END\nEND AS `Change Type`\nWITH\n  `Change Type`,\n  `SoA Group (Base)`,\n  `Activity Group (Base)`,\n  `Activity Subgroup (Base)`,\n  `SoA Group (Compare)`,\n  `Activity Group (Compare)`,\n  `Activity Subgroup (Compare)`,\n  `Activity Detail`,\n  `Previous Activity`\nWHERE\n  $neodash_differences_only = 'No' OR `Change Type` <> 'No change'\nRETURN\n  `Change Type`,\n  `SoA Group (Base)`,\n  `Activity Group (Base)`,\n  `Activity Subgroup (Base)`,\n  `SoA Group (Compare)`,\n  `Activity Group (Compare)`,\n  `Activity Subgroup (Compare)`,\n  `Activity Detail`,\n  `Previous Activity`",
+          "width": 24,
+          "height": 6,
+          "x": 0,
+          "y": 3,
+          "type": "table",
+          "selection": {},
+          "settings": {
+            "noDataMessage": "No assessments were specified.",
+            "styleRules": [
+              {
+                "field": "Change Type",
+                "condition": "=",
+                "value": "Activity added",
+                "customization": "row color",
+                "customizationValue": "#00B5FF6E"
+              },
+              {
+                "field": "Change Type",
+                "condition": "=",
+                "value": "Activity deleted",
+                "customization": "row color",
+                "customizationValue": "#FF11116E"
+              },
+              {
+                "field": "Change Type",
+                "condition": "=",
+                "value": "Activity moved",
+                "customization": "row color",
+                "customizationValue": "#FFA4006E"
+              },
+              {
+                "field": "Change Type",
+                "condition": "=",
+                "value": "No change",
+                "customization": "row color",
+                "customizationValue": "#5FE8866E"
+              },
+              {
+                "field": "Change Type",
+                "condition": "=",
+                "value": "Replaced",
+                "customization": "row color",
+                "customizationValue": "#CDA5E84D"
+              }
+            ],
+            "compact": true,
+            "allowDownload": true,
+            "columnWidths": "[0.7,1,1,1,1,1,1,1]",
+            "fullscreenEnabled": true,
+            "refreshButtonEnabled": true,
+            "wrapContent": true
+          }
+        },
+        {
+          "id": "07ad5bb7-ad85-4d87-b56b-838995557506",
+          "title": "Current Study Selection",
+          "query": "MATCH (sr:StudyRoot)-[r0:HAS_VERSION]->(s:StudyValue)\nWHERE id(s) IN [toInteger($neodash_studya), toInteger($neodash_studyb)]\nWITH\n  CASE\n    WHEN count(distinct sr) > 1 THEN 'Across Study'\n    ELSE 'Within Study'\n  END AS compare_type\nWITH compare_type\nmatch(sr:StudyRoot)-[r0:HAS_VERSION]->(s:StudyValue) where id(s) in[toInteger($neodash_studya),toInteger($neodash_studyb)]\nwith compare_type,r0, s, sr, CASE WHEN s.subpart_id is not null THEN s.study_id_prefix+'-'+s.study_number+'-'+s.subpart_id ELSE s.study_id_prefix+'-'+s.study_number END as trialid, \nCASE when id(s)=toInteger($neodash_studya) then 'Base' ELSE 'Compare' END as Study\nwith compare_type,s, sr, trialid, Study\nmatch (sr:StudyRoot)-[r0:HAS_VERSION]->(s)\nOPTIONAL MATCH (sr)-[r1:LATEST]->(s)\noptional match(s)<-[r_b:BEFORE]-(sact_before:StudyAction)\noptional match(s)<-[r_a:AFTER]-(sact_after:StudyAction)\nwith distinct compare_type,s,sr.uid as StudyRoot,Study, trialid, collect(r0.status) as statuses ,collect(r0.version) as versions, type(r1) as Latest,coalesce(sact_before.date,sact_after.date) as date order by trialid, date, Latest DESC\nwith compare_type,s,StudyRoot,Study, trialid, split(apoc.temporal.format(date, 'iso_local_date_time'),'.')[0] as Date, case when 'LOCKED' in statuses then 'LOCKED' else 'DRAFT' END as Status,\napoc.text.join(apoc.coll.toSet(versions),'') as Version,Latest \nreturn Study,\ntrialid as TrialID, Date, Version, Latest, Status, compare_type as `Compare Type`, StudyRoot order by Study, Version",
+          "width": 18,
+          "height": 3,
+          "x": 6,
+          "y": 0,
+          "type": "table",
+          "selection": {},
+          "settings": {
+            "transposed": true,
+            "compact": true
+          }
+        },
+        {
+          "id": "89e64ef6-c2b6-431d-824d-d74750a056ec",
+          "title": "Change Type",
+          "query": "with [\"Added\", \"No Change\", \"Moved\", \"Deleted\", \"Replaced\"] as list\nunwind(list) as Status\nreturn Status\n\n\n",
+          "width": 6,
+          "height": 3,
+          "x": 0,
+          "y": 0,
+          "type": "table",
+          "selection": {},
+          "settings": {
+            "compact": true,
+            "styleRules": [
+              {
+                "field": "Status",
+                "condition": "=",
+                "value": "Added",
+                "customization": "row color",
+                "customizationValue": "#00B5FF6E"
+              },
+              {
+                "field": "Status",
+                "condition": "=",
+                "value": "No Change",
+                "customization": "row color",
+                "customizationValue": "#5FE8866E"
+              },
+              {
+                "field": "Status",
+                "condition": "=",
+                "value": "Moved",
+                "customization": "row color",
+                "customizationValue": "#FFA4006E"
+              },
+              {
+                "field": "Status",
+                "condition": "=",
+                "value": "Deleted",
+                "customization": "row color",
+                "customizationValue": "#FF11116E"
+              },
+              {
+                "field": "Status",
+                "condition": "=",
+                "value": "Replaced",
+                "customization": "row color",
+                "customizationValue": "#CDA5E84D"
+              }
+            ]
+          }
+        },
+        {
+          "id": "0c998b38-c055-4aea-b921-c2f2702049a9",
+          "title": "SoA L1 - Protocol SoA view - grey is showing not displayed",
+          "query": "//Activites compare - FIXED\nMATCH (sr:StudyRoot)-[r0:HAS_VERSION]->(s:StudyValue)\nWHERE id(s) IN [toInteger($neodash_studya), toInteger($neodash_studyb)]\nWITH sr, s, r0.start_date as start_date\nWITH\n  CASE\n    WHEN count(distinct sr) > 1 THEN 'Across Study'\n    ELSE 'Within Study'\n  END AS compare_type,\n  apoc.map.fromPairs(\n    collect(\n      CASE\n        WHEN id(s) = toInteger($neodash_studya) THEN ['Base', start_date]\n        ELSE ['Compare', start_date]\n      END\n    )\n  ) AS version_dates\nWITH compare_type,version_dates\nMATCH (:StudyRoot)-[r0:HAS_VERSION]->(s:StudyValue)\nWHERE id(s) IN [toInteger($neodash_studya), toInteger($neodash_studyb)]\nWITH\ncompare_type,\nversion_dates,\n  r0,\n  s,\n  id(s) AS sid,\n  CASE\n    WHEN id(s) = toInteger($neodash_studya) THEN 'Base'\n    ELSE 'Compare'\n  END AS study\nMATCH\n  (s)-[r3:HAS_STUDY_ACTIVITY]->\n  (act)-[l1:HAS_SELECTED_ACTIVITY]->\n  (act_val:ActivityValue)\n// Match the specific groups for THIS activity\n MATCH\n  (act)-[:STUDY_ACTIVITY_HAS_STUDY_SOA_GROUP]->(fl_group)<--(s)\n MATCH\n  (act)-[:STUDY_ACTIVITY_HAS_STUDY_ACTIVITY_GROUP]->(s_act_grp)<--(s)\n MATCH\n  (act)-[:STUDY_ACTIVITY_HAS_STUDY_ACTIVITY_SUBGROUP]->(s_act_s_grp)<--(s)\nOPTIONAL MATCH\n  (s)-->\n  (act)<-[:AFTER]-\n  (action:StudyAction)-[:BEFORE]->\n  (act_prev)<--\n  (sx:StudyValue),\n  (act_prev)-->(prev_act_val:ActivityValue)\nWHERE id(sx) IN [toInteger($neodash_studya), toInteger($neodash_studyb)]\nOPTIONAL MATCH\n  (s)-[:HAS_STUDY_ACTIVITY_SCHEDULE]->(schedule),\n  (schedule)<-[:STUDY_ACTIVITY_HAS_SCHEDULE]-(act:StudyActivity),\n  (act)-[:HAS_SELECTED_ACTIVITY]->(act_val:ActivityValue),\n  (act)-[:STUDY_ACTIVITY_HAS_STUDY_ACTIVITY_INSTANCE]->\n  (ai_s:StudyActivityInstance)-[:HAS_SELECTED_ACTIVITY_INSTANCE]-\n  (ai:ActivityInstanceValue),\n  (ai)-[r1]->(g)<-[r2]-(act_val)\nWITH version_dates, compare_type, study, act, act_val,prev_act_val,fl_group,s_act_grp,s_act_s_grp\nOPTIONAL MATCH\n  (fl_group)-[:HAS_FLOWCHART_GROUP]->\n  (ct_root:CTTermContext)-[:HAS_SELECTED_TERM]->\n  (ct_name_root:CTTermRoot)-[:HAS_NAME_ROOT]->(name_root:CTTermNameRoot)-[:LATEST]->\n  (flowchart_grp:CTTermNameValue)\nOPTIONAL MATCH\n  (s_act_grp)-[:HAS_SELECTED_ACTIVITY_GROUP]->\n  (group:ActivityGroupValue)\nOPTIONAL MATCH\n  (s_act_s_grp)-[:HAS_SELECTED_ACTIVITY_SUBGROUP]->\n  (s_group:ActivitySubGroupValue)\nWITH DISTINCT\n  version_dates,\n  compare_type,\n  study,\n  flowchart_grp.name AS flowchart_grp,\n  group.name AS group,\n  s_group.name AS s_group,\n  act_val.name + '(Data collection: ' + act_val.is_data_collected + ')' AS act_detail,\n  prev_act_val.name as prev_activity,\n  fl_group.show_soa_group_in_protocol_flowchart AS fl_group_display_raw,\n  s_act_grp.show_activity_group_in_protocol_flowchart AS s_act_grp_display_raw,\n  s_act_s_grp.show_activity_subgroup_in_protocol_flowchart AS s_act_s_grp_display_raw\n// Create a unique key for each activity + group + subgroup combination\nWITH\n  version_dates,\n  compare_type,\n  act_detail,\n  prev_activity,\n  coalesce(flowchart_grp, 'NULL') + '|' + coalesce(group, 'NULL') + '|' + coalesce(s_group, 'NULL') AS group_key,\n  study,\n  flowchart_grp,\n  group,\n  s_group,\n  // Convert boolean to display string HERE, per row\n  CASE WHEN coalesce(fl_group_display_raw, false) THEN 'display' ELSE 'not-display' END AS fl_group_display,\n  CASE WHEN coalesce(s_act_grp_display_raw, false) THEN 'display' ELSE 'not-display' END AS s_act_grp_display,\n  CASE WHEN coalesce(s_act_s_grp_display_raw, false) THEN 'display' ELSE 'not-display' END AS s_act_s_grp_display\n// Now aggregate by activity detail AND group combination\nWITH\n  version_dates,\n  compare_type,\n  act_detail,\n  prev_activity,\n  group_key,\n  apoc.map.fromPairs(collect(DISTINCT [study, flowchart_grp])) AS flowchart_grp,\n  apoc.map.fromPairs(collect(DISTINCT [study, group])) AS group,\n  apoc.map.fromPairs(collect(DISTINCT [study, s_group])) AS s_group,\n  // Use MAX or MIN to pick one value (they should all be the same per study)\n  apoc.map.fromPairs(collect(DISTINCT [study, fl_group_display])) AS fl_group_display,\n  apoc.map.fromPairs(collect(DISTINCT [study, s_act_grp_display])) AS s_act_grp_display,\n  apoc.map.fromPairs(collect(DISTINCT [study, s_act_s_grp_display])) AS s_act_s_grp_display\nWITH\n  compare_type,\n  version_dates['Base'] AS base_version_date,\n  flowchart_grp['Base'] AS `SoA Group (Base)`,\n  group['Base'] AS `Activity Group (Base)`,\n  s_group['Base'] AS `Activity Subgroup (Base)`,\n  version_dates['Compare'] AS compare_version_date,\n  flowchart_grp['Compare'] AS `SoA Group (Compare)`,\n  group['Compare'] AS `Activity Group (Compare)`,\n  s_group['Compare'] AS `Activity Subgroup (Compare)`,\n  act_detail AS `Activity Detail`,\n  prev_activity AS `Previous Activity`,\n  fl_group_display['Base'] AS `SoA Display (Base)`,\n  fl_group_display['Compare'] AS `SoA Display (Compare)`,\n  s_act_grp_display['Base'] AS `Activity Group Display (Base)`,\n  s_act_grp_display['Compare'] AS `Activity Group Display (Compare)`,\n  s_act_s_grp_display['Base'] AS `Activity Subgroup Display (Base)`,\n  s_act_s_grp_display['Compare'] AS `Activity Subgroup Display (Compare)`\nWHERE `Activity Detail` IS NOT NULL\nWITH\n  compare_type,\n  base_version_date,\n  `SoA Group (Base)`,\n  `Activity Group (Base)`,\n  `Activity Subgroup (Base)`,\n  compare_version_date,\n  `SoA Group (Compare)`,\n  `Activity Group (Compare)`,\n  `Activity Subgroup (Compare)`,\n  `Activity Detail`,\n  `Previous Activity`,\n  `SoA Display (Base)`,\n  `SoA Display (Compare)`,\n  `Activity Group Display (Base)`,\n  `Activity Group Display (Compare)`,\n  `Activity Subgroup Display (Base)`,\n  `Activity Subgroup Display (Compare)`,\n  // Calculate display change indicators\n  CASE\n    WHEN coalesce(`SoA Display (Base)`, 'not-display') <> coalesce(`SoA Display (Compare)`, 'not-display')\n    THEN 'Changed'\n    ELSE 'No change'\n  END AS `SoA Display Change`,\n  CASE\n    WHEN coalesce(`Activity Group Display (Base)`, 'not-display') <> coalesce(`Activity Group Display (Compare)`, 'not-display')\n    THEN 'Changed'\n    ELSE 'No change'\n  END AS `Activity Group Display Change`,\n  CASE\n    WHEN coalesce(`Activity Subgroup Display (Base)`, 'not-display') <> coalesce(`Activity Subgroup Display (Compare)`, 'not-display')\n    THEN 'Changed'\n    ELSE 'No change'\n  END AS `Activity Subgroup Display Change`,\n   CASE\n    WHEN\n      compare_type = 'Within Study'\n      THEN\n        CASE\n          WHEN\n            base_version_date <= compare_version_date AND\n            `SoA Group (Base)` IS NOT NULL AND\n            `SoA Group (Compare)` IS NULL\n            THEN\n              CASE\n                WHEN `Previous Activity` IS NOT NULL THEN 'Replaced'\n                ELSE 'Activity deleted'\n              END\n          ELSE\n            CASE\n              WHEN\n                base_version_date <= compare_version_date AND\n                `SoA Group (Base)` IS NULL AND\n                `SoA Group (Compare)` IS NOT NULL\n                THEN\n                  CASE\n                    WHEN `Previous Activity` IS NOT NULL THEN 'Replaced'\n                    ELSE 'Activity added'\n                  END\n              ELSE\n                CASE\n                  WHEN\n                    base_version_date >= compare_version_date AND\n                    `SoA Group (Base)` IS NOT NULL AND\n                    `SoA Group (Compare)` IS NULL\n                    THEN\n                      CASE\n                        WHEN `Previous Activity` IS NOT NULL THEN 'Replaced'\n                        ELSE 'Activity added'\n                      END\n                  ELSE\n                    CASE\n                      WHEN\n                        base_version_date >= compare_version_date AND\n                        `SoA Group (Base)` IS NULL AND\n                        `SoA Group (Compare)` IS NOT NULL\n                        THEN\n                          CASE\n                            WHEN `Previous Activity` IS NOT NULL THEN 'Replaced'\n                            ELSE 'Activity deleted'\n                          END\n                      ELSE\n                        CASE\n                          WHEN\n                            (coalesce(`SoA Group (Base)`, '') <> coalesce(`SoA Group (Compare)`, '')) OR\n                            (coalesce(`Activity Group (Base)`, '') <> coalesce(`Activity Group (Compare)`, '')) OR\n                            (coalesce(`Activity Subgroup (Base)`, '') <> coalesce(`Activity Subgroup (Compare)`, '')) OR\n                            (coalesce(`SoA Display (Base)`, 'not-display') <> coalesce(`SoA Display (Compare)`, 'not-display')) OR\n                            (coalesce(`Activity Group Display (Base)`, 'not-display') <> coalesce(`Activity Group Display (Compare)`, 'not-display')) OR\n                            (coalesce(`Activity Subgroup Display (Base)`, 'not-display') <> coalesce(`Activity Subgroup Display (Compare)`, 'not-display'))\n                            THEN\n                              CASE\n                                WHEN `Previous Activity` IS NOT NULL THEN 'Replaced'\n                                ELSE 'Activity moved'\n                              END\n                          ELSE\n                            CASE\n                              WHEN `Previous Activity` IS NOT NULL THEN 'Replaced'\n                              ELSE 'No change'\n                            END\n                        END\n                    END\n                END\n            END\n        END\n    ELSE\n      CASE\n        WHEN\n          `SoA Group (Base)` IS NOT NULL AND `SoA Group (Compare)` IS NULL\n          THEN\n            CASE\n              WHEN `Previous Activity` IS NOT NULL THEN 'Replaced'\n              ELSE 'Activity deleted'\n            END\n        ELSE\n          CASE\n            WHEN\n              `SoA Group (Base)` IS NULL AND `SoA Group (Compare)` IS NOT NULL\n              THEN\n                CASE\n                  WHEN `Previous Activity` IS NOT NULL THEN 'Replaced'\n                  ELSE 'Activity added'\n                END\n            ELSE\n              CASE\n                WHEN\n                  (coalesce(`SoA Group (Base)`, '') <> coalesce(`SoA Group (Compare)`, '')) OR\n                  (coalesce(`Activity Group (Base)`, '') <> coalesce(`Activity Group (Compare)`, '')) OR\n                  (coalesce(`Activity Subgroup (Base)`, '') <> coalesce(`Activity Subgroup (Compare)`, '')) OR\n                  (coalesce(`SoA Display (Base)`, 'not-display') <> coalesce(`SoA Display (Compare)`, 'not-display')) OR\n                  (coalesce(`Activity Group Display (Base)`, 'not-display') <> coalesce(`Activity Group Display (Compare)`, 'not-display')) OR\n                  (coalesce(`Activity Subgroup Display (Base)`, 'not-display') <> coalesce(`Activity Subgroup Display (Compare)`, 'not-display'))\n                  THEN\n                    CASE\n                      WHEN `Previous Activity` IS NOT NULL THEN 'Replaced'\n                      ELSE 'Activity moved'\n                    END\n                ELSE\n                  CASE\n                    WHEN `Previous Activity` IS NOT NULL THEN 'Replaced'\n                    ELSE 'No change'\n                  END\n              END\n          END\n      END\nEND AS `Change Type`\nWITH\n  `Change Type`,\n  `SoA Display Change`,\n  `Activity Group Display Change`,\n  `Activity Subgroup Display Change`,\n  `SoA Group (Base)`,\n  `Activity Group (Base)`,\n  `Activity Subgroup (Base)`,\n  `SoA Group (Compare)`,\n  `Activity Group (Compare)`,\n  `Activity Subgroup (Compare)`,\n  `Activity Detail`,\n  `Previous Activity`,\n  `SoA Display (Base)`,\n  `SoA Display (Compare)`,\n  `Activity Group Display (Base)`,\n  `Activity Group Display (Compare)`,\n  `Activity Subgroup Display (Base)`,\n  `Activity Subgroup Display (Compare)`\nWHERE\n  $neodash_differences_only = 'No' //OR `Change Type` <> 'No change'\nRETURN\n  `Change Type`,\n  `SoA Group (Base)`,\n  `Activity Group (Base)`,\n  `Activity Subgroup (Base)`,\n  `SoA Group (Compare)`,\n  `Activity Group (Compare)`,\n  `Activity Subgroup (Compare)`,\n  `Activity Detail`,\n  `Previous Activity`,\n  `SoA Display (Base)` as __soa_base_disp,\n  `SoA Display (Compare)` as __soa_comp_disp,\n  `Activity Group Display (Base)` as __grp_base_disp,\n  `Activity Group Display (Compare)` as __grp_comp_disp ,\n  `Activity Subgroup Display (Base)` as __sgrp_base_disp,\n  `Activity Subgroup Display (Compare)` as __sgrp_comp_disp",
+          "width": 24,
+          "height": 6,
+          "x": 0,
+          "y": 9,
+          "type": "table",
+          "selection": {},
+          "settings": {
+            "styleRules": [
+              {
+                "field": "__soa_base_disp",
+                "condition": "=",
+                "value": "not-display",
+                "customization": "cell text color",
+                "customizationValue": "lightgrey",
+                "targetField": "SoA Group (Base)"
+              },
+              {
+                "field": "__soa_comp_disp",
+                "condition": "=",
+                "value": "not-display",
+                "customization": "cell text color",
+                "customizationValue": "lightgrey",
+                "targetField": "SoA Group (Compare)"
+              },
+              {
+                "field": "__grp_base_disp",
+                "condition": "=",
+                "value": "not-display",
+                "customization": "cell text color",
+                "customizationValue": "lightgrey",
+                "targetField": "Activity Group (Base)"
+              },
+              {
+                "field": "__grp_comp_disp",
+                "condition": "=",
+                "value": "not-display",
+                "customization": "cell text color",
+                "customizationValue": "lightgrey",
+                "targetField": "Activity Group (Compare)"
+              },
+              {
+                "field": "__sgrp_base_disp",
+                "condition": "=",
+                "value": "not-display",
+                "customization": "cell text color",
+                "customizationValue": "lightgrey",
+                "targetField": "Activity Subgroup (Base)"
+              },
+              {
+                "field": "__sgrp_comp_disp",
+                "condition": "=",
+                "value": "not-display",
+                "customization": "cell text color",
+                "customizationValue": "lightgrey",
+                "targetField": "Activity Subgroup (Compare)"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "parameters": {},
+  "extensions": {
+    "active": true,
+    "activeReducers": [
+      "DASHBOARD/EXTENSIONS/QUERY_TRANSLATOR/"
+    ],
+    "advanced-charts": {
+      "active": true
+    },
+    "styling": {
+      "active": true
+    },
+    "actions": {
+      "active": true
+    },
+    "query-translator": {
+      "active": true
+    },
+    "forms": {
+      "active": true
+    },
+    "access-control-management": {
+      "active": true
+    }
+  },
+  "uuid": "13122d0c-00c1-4a57-a028-41a6c1cd78bb"
+}

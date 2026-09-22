@@ -1,4 +1,0 @@
-# Solution Strategy
-
-TODO
-

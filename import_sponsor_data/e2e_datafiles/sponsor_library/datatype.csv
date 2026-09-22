@@ -1,0 +1,34 @@
+CODELIST_SUBMVAL,PARENT_CODELIST_SUBMVAL__TERM_SUBMVAL__TYPE,TERM_SUBMVAL,SPONSOR_NAME,SPONSOR_NAME_SENTENCE_CASE,NCI_PREFERRED_NAME,ORDER,CONCEPT_ID,CATALOGUES,DEFINITION
+DATATYPE|SMIPLEDT,,char,Char,char,Char,1,,,Character
+DATATYPE|SMIPLEDT,,num,Num,num,Num,2,,,Number
+DATATYPE|CODMDT20|SEMTCDT|NSVXMLDT,DATATYPE:char:specialization,text,Text,text,Text,3,,,Text data type (free text)
+DATATYPE|HL7FHRDT|CODMDT|CODMDT13|CODMDT20|SEMTCDT|NSVXMLDT,DATATYPE:num:specialization,integer,Integer,integer,Integer,4,,,Integer data type (please specify the length)
+DATATYPE|CODMDT|CODMDT13|CODMDT20|SEMTCDT|NSVXMLDT,DATATYPE:num:specialization,float,Float,float,Float,5,,,Float data type (please specify the length and the number of digit after the floating separator)
+DATATYPE|HL7FHRDT|CODMDT|CODMDT13|CODMDT20|SEMTCDT|NSVXMLDT,DATATYPE:string:specialization|DATATYPE:integer:specialization,datetime,Date Time,date time,Date time,6,,,Date time data type (yy-mm-dd hh:mm)
+DATATYPE|HL7FHRDT|CODMDT|CODMDT13|CODMDT20,DATATYPE:datetime:specialization,date,Date,date,Date,7,,,Date data type (yyyy-mm-dd)
+DATATYPE|HL7FHRDT|CODMDT|CODMDT13|CODMDT20,DATATYPE:datetime:specialization,time,Time,time,Time,8,,,Time data type (hh:mm)
+DATATYPE|HL7FHRDT|CODMDT|CODMDT13|CODMDT20,DATATYPE:text:specialization,string,String,string,String,9,,,String data type
+DATATYPE|HL7FHRDT|CODMDT|CODMDT13|CODMDT20|SEMTCDT,DATATYPE:string:specialization,boolean,Boolean,boolean,Boolean,10,,,Boolean data type
+DATATYPE|CODMDT|CODMDT13|CODMDT20,DATATYPE:num:specialization,double,Double,double,Double,11,,,Double data type
+DATATYPE|CODMDT|CODMDT13|CODMDT20,DATATYPE:num:specialization,hexBinary,Hex Binary,hex binary,Hex binary,12,,,Hex Binary data type
+DATATYPE|CODMDT|CODMDT13|CODMDT20,DATATYPE:num:specialization,base64Binary,Base 64 Binary,base 64 binary,Base 64 binary,13,,,Base 64 Binary data type
+DATATYPE|CODMDT|CODMDT13|CODMDT20,DATATYPE:num:specialization,hexFloat,Hex Float,hex float,Hex float,14,,,Hex Float data type
+DATATYPE|HL7FHRDT|CODMDT|CODMDT13|CODMDT20,DATATYPE:num:specialization,base64Float,Base 64 Float,base 64 float,Base64 float,15,,,Base 64 Float data type
+DATATYPE|CODMDT|CODMDT13|CODMDT20,DATATYPE:date:specialization,partialDate,Partial Date,partial date,Partial date,16,,,Partial Date data type
+DATATYPE|CODMDT|CODMDT13|CODMDT20,DATATYPE:time:specialization,partialTime,Partial Time,partial time,Partial time,17,,,Partial Time data type
+DATATYPE|CODMDT|CODMDT13|CODMDT20,DATATYPE:datetime:specialization,partialDatetime,Partial Date Time,partial date time,Partial date time,18,,,Partial Date Time data type
+DATATYPE|CODMDT|CODMDT13|CODMDT20|SEMTCDT|NSVXMLDT,DATATYPE:datetime:specialization,durationDatetime,Duration Date Time,duration date time,Duration date time,19,,,Duration Date Time data type
+DATATYPE|CODMDT|CODMDT13|CODMDT20,DATATYPE:datetime:specialization,intervalDatetime,Intervale Date Time,interval date time,Intervale date time,20,,,Interval Date Time data type
+DATATYPE|CODMDT|CODMDT13|CODMDT20,DATATYPE:datetime:specialization,incompleteDatetime,Incomplete Date Time,incomplete date time,Incomplete date time,21,,,Incomplete Date Time data type
+DATATYPE|CODMDT|CODMDT13|CODMDT20,DATATYPE:date:specialization,incompleteDate,Incomplete Date,incomplete date,Incomplete date,22,,,Incomplete Date data type
+DATATYPE|CODMDT|CODMDT13|CODMDT20,DATATYPE:time:specialization,incompleteTime,Incomplete Time,incomplete time,Incomplete time,23,,,Incomplete Time data type
+DATATYPE|HL7FHRDT|CODMDT|CODMDT13|CODMDT20|SEMTCDT,DATATYPE:string:specialization,uri,URI,uri,Uri,24,,,URI data type
+DATATYPE,DATATYPE:text:specialization,comment,Comment,comment,Comment (not ODM specified),25,,,Term to describe an ODM ItemDef as a Comment
+DATATYPE,DATATYPE:string:specialization,bit,BIT,bit,BIT (Sponsor Term),26,,,Term to describe a BIT that can only have 0 and 1
+DATATYPE|HL7FHRDT|CODMDT|CODMDT20,DATATYPE:float:specialization,decimal,Decimal,decimal,Decimal,27,,,Decimal data type
+DATATYPE|HL7FHRDT|SEMTCDT,DATATYPE:string:specialization,code,Code,code,Code,28,,,TBD
+DATATYPE|SEMTCDT,DATATYPE:code:specialization,ctTerm,CT Term,ct term,CTTerm,29,,,CTTerm data type
+DATATYPE,DATATYPE:code:specialization,dictionaryTerm,Dictionary Term,dictionary term,Dictionary Term,30,,,TBD
+DATATYPE|SEMTCDT,DATATYPE:dictionaryTerm:specialization,unii,UNII,unii,UNII,31,,,TBD
+DATATYPE|SEMTCDT,DATATYPE:dictionaryTerm:specialization,snomed,SNOMED,snomed,SNOMED,32,,,TBD
+DATATYPE|SEMTCDT,DATATYPE:dictionaryTerm:specialization,medrt,MED-RT,med-rt,MED-RT,33,,,TBD

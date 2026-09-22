@@ -1,0 +1,62 @@
+[[source]]
+url = "https://pypi.python.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[requires]
+python_version = "3.14"
+
+[packages]
+requests = ">=2.33.0"
+neomodel = "~=6.1.0"
+httpx-auth = "~=0.23.1"
+# Required for Pipfile [scripts] that pass --cov-* (not installed with pipenv install if only dev-packages)
+pytest-cov = "~=7.0.0"
+# Bumped from 0.131.0: 0.137.0 removes the starlette<1.0.0 cap, required for starlette>=1.0.1 security fix
+fastapi = "~=0.137.0"
+pydantic = "~=2.12.5"
+beautifulsoup4 = "~=4.12.3"
+Mako = ">=1.3.12"
+urllib3 = ">=2.7.0"
+idna = ">=3.15"
+starlette = ">=1.0.1"
+
+[dev-packages]
+pytest = ">=9.1.0"
+pylint = "~=4.0.5"
+isort = "~=8.0.1"
+black = ">=26.3.1"
+pytest-bdd = "~=8.1.0"
+jupyter = "~=1.1.1"
+python-dotenv = "~=1.2.2"
+deepdiff = "~=8.6.1"
+allure-pytest = "~=2.15.3"
+jsonpath-ng = "~=1.8.0"
+ipykernel = "~=7.2.0"
+Mako = ">=1.3.12"
+mistune = ">=3.2.1"
+notebook = ">=7.5.6"
+jupyterlab = ">=4.5.7"
+jupyter-server = ">=2.20.0"
+pip-audit = "~=2.10.0"
+
+[scripts]
+# Use --cov-report=type:path (equals form). Pipenv treats ":" as a script separator
+# when a space precedes it (e.g. "--cov-report html:dir"), which breaks pytest-cov.
+test = "python -m pytest -s --cov-report=html:test_coverage --cov-report=xml:coverage.xml --cov=utils --junitxml=test_report.xml tests --cucumberjson=cucumber.json"
+test-only-endpoints = "python -m pytest -s --cov-report=html:test_coverage --cov-report=xml:coverage.xml --cov=utils --junitxml=test_report.xml -m \"impact:api or impact:consumer_api or impact:api_soa\" tests --cucumberjson=cucumber.json"
+test-only-endpoints-allure = "python -m pytest -s --cov-report=html:test_coverage --cov-report=xml:coverage.xml --cov=utils --junitxml=test_report.xml --alluredir reports/allure-results -m \"impact:api or impact:consumer_api or impact:api_soa\" tests --cucumberjson=cucumber.json"
+test-only-db = "python -m pytest -s --cov-report=html:test_coverage --cov-report=xml:coverage.xml --cov=utils --junitxml=test_report.xml -m \"impact:library_quality or impact:data_schema or impact:performance or impact:business_rules\" tests --cucumberjson=cucumber.json"
+test-only-db-allure = "python -m pytest -s --cov-report=html:test_coverage --cov-report=xml:coverage.xml --cov=utils --junitxml=test_report.xml --alluredir reports/allure-results -m \"impact:data_schema or impact:performance or impact:business_rules\" tests --cucumberjson=cucumber.json"
+test-allure = "python -m pytest -s --cov-report=html:test_coverage --cov-report=xml:coverage.xml --cov=utils --junitxml=test_report.xml --alluredir reports/allure-results tests --cucumberjson=cucumber.json"
+token = "python -m utils.auth"
+lint = "python -m pylint utils tests"
+black = "python -m black utils tests"
+isort = "python -m isort utils tests"
+format = """sh -c "
+    python -m isort utils tests \
+    && python -m black utils tests \
+"
+"""
+audit = "python -m pip_audit"
+build-sbom = "pipenv run python3 ../_tools/build_sbom.py --pipfile --fallback-dir doc/licenses --level 2 --output sbom.md"

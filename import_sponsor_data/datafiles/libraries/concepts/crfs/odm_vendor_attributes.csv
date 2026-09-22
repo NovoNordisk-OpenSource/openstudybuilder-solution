@@ -1,0 +1,16 @@
+namespace,name,compatible_types,data_type,value_regex,element_name
+OpenStudyBuilder,displayAsTable,ItemGroupRef,string,^(Yes|No)$,
+OpenStudyBuilder,instruction,FormDef||ItemGroupDef||ItemDef||ItemGroupRef||ItemRef,string,,
+OpenStudyBuilder,sdv,FormDef||ItemGroupDef||ItemDef,string,,
+OpenStudyBuilder,locked,ItemGroupRef||ItemRef,string,,
+OpenStudyBuilder,version,FormDef||ItemGroupDef||ItemDef||Codelist||CodelistItem||MeasurementUnit,string,,
+OpenStudyBuilder,name,CodelistItem,string,,
+OpenStudyBuilder,OID,CodelistItem,string,,
+OpenStudyBuilder,sponsorInstruction,ItemDef,string,,
+OpenStudyBuilder,mandatory,CodelistItem,string,,
+OpenStudyBuilder,DomainColor,ItemGroupDef,string,,
+OpenStudyBuilder,allowMultipleChoice,Codelist,string,,
+OpenStudyBuilder,indentLevel,ItemRef,integer,^[1-6]$,
+OpenStudyBuilder,topicCode,,string,,ActivityInstance
+OpenStudyBuilder,adamCode,,string,,ActivityInstance
+OpenStudyBuilder,optionalQuestion,ItemRef,string,^(Yes|No)$,

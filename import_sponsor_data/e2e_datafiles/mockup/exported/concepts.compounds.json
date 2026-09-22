@@ -1,0 +1,234 @@
+[
+  {
+    "abbreviation": "abbv",
+    "analyte_number": null,
+    "brands": [],
+    "change_description": "Approved version",
+    "definition": "compound_definition",
+    "delivery_devices": [
+      {
+        "name": "Insulin pump",
+        "term_uid": "CTTerm_000128"
+      },
+      {
+        "name": "Pre-filled pen",
+        "term_uid": "CTTerm_000127"
+      },
+      {
+        "name": "Syringe",
+        "term_uid": "CTTerm_000129"
+      }
+    ],
+    "dispensers": [
+      {
+        "name": "Blister",
+        "term_uid": "CTTerm_000125"
+      },
+      {
+        "name": "Cartridge",
+        "term_uid": "CTTerm_000126"
+      }
+    ],
+    "dosage_forms": [],
+    "dose_frequencies": [],
+    "dose_values": [
+      {
+        "uid": "NumericValueWithUnit_000001",
+        "unit_definition_uid": "UnitDefinition_000226",
+        "unit_label": "mg",
+        "value": 0.25
+      },
+      {
+        "uid": "NumericValueWithUnit_000002",
+        "unit_definition_uid": "UnitDefinition_000226",
+        "unit_label": "mg",
+        "value": 0.5
+      },
+      {
+        "uid": "NumericValueWithUnit_000003",
+        "unit_definition_uid": "UnitDefinition_000226",
+        "unit_label": "mg",
+        "value": 0.75
+      }
+    ],
+    "end_date": null,
+    "half_life": {
+      "uid": "NumericValueWithUnit_000007",
+      "unit_definition_uid": "UnitDefinition_000153",
+      "unit_label": "hours",
+      "value": 12.0
+    },
+    "is_name_inn": true,
+    "lag_times": [
+      {
+        "sdtm_domain_label": "Adverse Event Domain",
+        "sdtm_domain_uid": "C49562_AE",
+        "unit_definition_uid": "UnitDefinition_000154",
+        "unit_label": "days",
+        "value": 7.0
+      }
+    ],
+    "library_name": "Sponsor",
+    "name": "Metformin",
+    "name_sentence_case": "Metformin",
+    "nnc_long_number": null,
+    "nnc_short_number": null,
+    "possible_actions": [
+      "inactivate",
+      "newVersion"
+    ],
+    "projects": [],
+    "routes_of_administration": [],
+    "start_date": "2022-06-15T15:18:12.599216",
+    "status": "Final",
+    "strength_values": [
+      {
+        "uid": "NumericValueWithUnit_000004",
+        "unit_definition_uid": "UnitDefinition_000135",
+        "unit_label": "U/Kg",
+        "value": 10.0
+      },
+      {
+        "uid": "NumericValueWithUnit_000005",
+        "unit_definition_uid": "UnitDefinition_000135",
+        "unit_label": "U/Kg",
+        "value": 20.0
+      },
+      {
+        "uid": "NumericValueWithUnit_000006",
+        "unit_definition_uid": "UnitDefinition_000135",
+        "unit_label": "U/Kg",
+        "value": 50.0
+      }
+    ],
+    "substances": [
+      {
+        "pclass_id": "N0000029185",
+        "pclass_name": "ORAL HYPOGLYCEMIC AGENTS",
+        "pclassterm_uid": "DictionaryTerm_000057",
+        "substance_name": "METFORMIN",
+        "substanceterm_uid": "DictionaryTerm_000918",
+        "substance_unii": "9100L32L2N"
+      }
+    ],
+    "uid": "Compound_000001",
+    "author_username": "unknown-user@example.com",
+    "version": "1.0"
+  },
+  {
+    "abbreviation": "abbv",
+    "analyte_number": null,
+    "brands": [],
+    "change_description": "Approved version",
+    "definition": "compound_definition",
+    "delivery_devices": [
+      {
+        "name": "Insulin pump",
+        "term_uid": "CTTerm_000128"
+      },
+      {
+        "name": "Pre-filled pen",
+        "term_uid": "CTTerm_000127"
+      },
+      {
+        "name": "Syringe",
+        "term_uid": "CTTerm_000129"
+      }
+    ],
+    "dispensers": [
+      {
+        "name": "Blister",
+        "term_uid": "CTTerm_000125"
+      },
+      {
+        "name": "Cartridge",
+        "term_uid": "CTTerm_000126"
+      }
+    ],
+    "dosage_forms": [],
+    "dose_frequencies": [],
+    "dose_values": [
+      {
+        "uid": "NumericValueWithUnit_000001",
+        "unit_definition_uid": "UnitDefinition_000226",
+        "unit_label": "mg",
+        "value": 0.25
+      },
+      {
+        "uid": "NumericValueWithUnit_000002",
+        "unit_definition_uid": "UnitDefinition_000226",
+        "unit_label": "mg",
+        "value": 0.5
+      },
+      {
+        "uid": "NumericValueWithUnit_000003",
+        "unit_definition_uid": "UnitDefinition_000226",
+        "unit_label": "mg",
+        "value": 0.75
+      }
+    ],
+    "end_date": null,
+    "half_life": {
+      "uid": "NumericValueWithUnit_000007",
+      "unit_definition_uid": "UnitDefinition_000153",
+      "unit_label": "hours",
+      "value": 12.0
+    },
+    "is_name_inn": true,
+    "lag_times": [
+      {
+        "sdtm_domain_label": "Adverse Event Domain",
+        "sdtm_domain_uid": "C49562_AE",
+        "unit_definition_uid": "UnitDefinition_000154",
+        "unit_label": "days",
+        "value": 7.0
+      }
+    ],
+    "library_name": "Sponsor",
+    "name": "NPH Insulin",
+    "name_sentence_case": "NPH Insulin",
+    "nnc_long_number": null,
+    "nnc_short_number": null,
+    "possible_actions": [
+      "inactivate",
+      "newVersion"
+    ],
+    "projects": [],
+    "routes_of_administration": [],
+    "start_date": "2022-06-15T15:18:13.476500",
+    "status": "Final",
+    "strength_values": [
+      {
+        "uid": "NumericValueWithUnit_000004",
+        "unit_definition_uid": "UnitDefinition_000135",
+        "unit_label": "U/Kg",
+        "value": 10.0
+      },
+      {
+        "uid": "NumericValueWithUnit_000005",
+        "unit_definition_uid": "UnitDefinition_000135",
+        "unit_label": "U/Kg",
+        "value": 20.0
+      },
+      {
+        "uid": "NumericValueWithUnit_000006",
+        "unit_definition_uid": "UnitDefinition_000135",
+        "unit_label": "U/Kg",
+        "value": 50.0
+      }
+    ],
+    "substances": [
+      {
+        "pclass_id": "N0000175944",
+        "pclass_name": "Insulin",
+        "pclassterm_uid": "DictionaryTerm_000054",
+        "substance_name": "INSULIN HUMAN",
+        "substanceterm_uid": "DictionaryTerm_000916",
+        "substance_unii": "1Y17CTI5SR"
+      }
+    ],
+    "uid": "Compound_000002",
+    "author_username": "unknown-user@example.com",
+    "version": "1.0"
+  }
+]

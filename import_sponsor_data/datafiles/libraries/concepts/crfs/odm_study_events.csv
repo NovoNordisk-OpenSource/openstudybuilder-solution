@@ -1,0 +1,12 @@
+oid,name,effective_date,retired_date,description,display_in_tree
+T.ODM-1-3-2-V1,ODM version 1.3.2 with DoB,2021-01-01,2022-12-31,description for ODM version 1.3.2 with DoB,True
+T.ODM-1-3-2-V2,ODM version 1.3.2 with Age,2021-02-01,2022-06-30,description for ODM version 1.3.2 with Age,True
+T.ODM.FINDING.ECG,Finding ECG Template,2022-06-17,2022-06-30,description for Finding ECG Template,True
+192169_OP9000000002001,NN Veeva Standards Library_TRN1,2025-07-14,,Created by Library Importer,True
+Randomisation,Randomisation,,,,True
+T.JHNE_OLCIN.1767877066,JOHANNES_COLLECTION,,,,True
+Consent to Biosamples for Future Research,Consent to Biosamples for Future Research,,,,True
+T.VS,Vital Signs Forms Collection,,,,True
+T.LAB,Lab Collections,,,,True
+T.BODY_COLL,Body Measures Collection,,,,True
+imported_activity_instances,Activity Instance import,,,,True

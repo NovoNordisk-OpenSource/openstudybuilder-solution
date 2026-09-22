@@ -1,0 +1,242 @@
+name: Frontend — build validation
+
+# Invoked by .github/workflows/pr-required-checks.yml when a PR touches
+# frontend/ or this workflow file. Not triggered directly by
+# `pull_request:` — the coordinator handles path detection, so a direct
+# trigger here would just duplicate the work and burn runner minutes.
+# `workflow_dispatch:` stays so you can still fire manually from the
+# Actions UI (useful when investigating a flaky Playwright run).
+on:
+  workflow_call:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Install modules and build app
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      # ---- Install deps (needed for SBOM + lint/format/build) --------------
+      - name: Install all packages
+        run: npm ci
+
+      # ---- SBOM check ------------------------------------------------------
+      - name: Generate SBOM
+        id: sbom
+        run: |
+          python3 ../_tools/build_sbom.py --npm --fallback-dir doc/licenses --level 2 --output sbom.md
+          if git diff --exit-code sbom.md; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Publish SBOM artifact
+        if: steps.sbom.outputs.changed == 'true'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: frontend-sbom
+          path: frontend/sbom.md
+          if-no-files-found: warn
+
+      - name: Fail if SBOM changed
+        if: steps.sbom.outputs.changed == 'true'
+        run: |
+          echo "::error::SBOM (sbom.md) is out of date. Regenerate it locally and commit the changes."
+          git --no-pager diff sbom.md
+          exit 1
+
+      - name: Check formatting
+        id: format
+        run: |
+          npm run format
+          if git diff --exit-code --quiet src; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            git diff src > format.patch
+          fi
+
+      - name: Publish formatting patch artifact
+        if: steps.format.outputs.changed == 'true'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: frontend-format-patch
+          path: frontend/format.patch
+          if-no-files-found: error
+
+      - name: Fail if formatting changed
+        if: steps.format.outputs.changed == 'true'
+        run: |
+          echo "::error::npm run format detected files that need to be reformatted. Run 'npm run format' locally and commit the changes,"
+          echo "::error::or download the 'frontend-format-patch' artifact from this run and apply it with 'git apply format.patch':"
+          echo "::error::  ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          git --no-pager diff src
+          exit 1
+
+      - name: Run linter
+        run: npm run lint
+
+      # Unit tests are disabled in the source pipeline (`enabled: false`).
+      # Re-enable here once they pass cleanly.
+      # - name: Run unit tests
+      #   run: npm run test:unit
+
+      - name: Build files
+        run: npm run build
+
+      # ---- Dev-server import-analysis smoke --------------------------------
+      # Boots `vite dev` (non-demo) and fetches /src/main.js so Vite's
+      # import-analysis plugin actually runs. Catches dev-only resolution
+      # failures that the production build hides via DCE — e.g. a virtual
+      # module registered only in `--mode demo` while a dynamic-import
+      # branch in main.js still references it. The build path DCE-prunes
+      # the branch and stays green; the dev path 500s on every page load.
+      - name: Dev-server import-analysis smoke
+        run: |
+          set -euo pipefail
+          npx vite dev --port 5179 > /tmp/vite-dev.log 2>&1 &
+          PID=$!
+          trap 'kill $PID 2>/dev/null || true' EXIT
+          # Wait up to ~20s for the dev server to start listening.
+          UP=
+          for _ in $(seq 1 40); do
+            if curl -fsS -o /dev/null http://localhost:5179/; then
+              UP=1
+              break
+            fi
+            sleep 0.5
+          done
+          if [ -z "$UP" ]; then
+            echo "::error::vite dev did not start on :5179"
+            tail -50 /tmp/vite-dev.log
+            exit 1
+          fi
+          # Don't pass -f: a transform failure is HTTP 500 with the error
+          # message in the body, and -f would discard the body. We want both.
+          HTTP=$(curl -sS -o /tmp/main.js -w "%{http_code}" \
+            http://localhost:5179/src/main.js)
+          if [ "$HTTP" != "200" ]; then
+            echo "::error::vite dev returned HTTP $HTTP for /src/main.js"
+            head -80 /tmp/main.js
+            exit 1
+          fi
+          # Belt-and-braces: Vite occasionally serves 200 with an error
+          # overlay payload as the module body. Catch that too.
+          if grep -qE "Failed to resolve import|Internal server error" /tmp/main.js; then
+            echo "::error::vite dev failed import-analysis on /src/main.js"
+            head -50 /tmp/main.js
+            exit 1
+          fi
+
+      # ---- Docker build validation -----------------------------------------
+      - name: Validate docker build
+        run: docker build .
+
+  smoke:
+    # Playwright smoke tests driven by the in-browser demo backend.
+    # The demo build reads the API's in-repo OpenAPI spec (api/openapi.json),
+    # so this job also runs when that spec changes — see the `frontend`
+    # filter in pr-required-checks.yml.
+    name: Smoke tests (demo build)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install packages
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run smoke tests
+        run: npm run test:smoke
+
+      - name: Publish Playwright report on failure
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: frontend-playwright-report
+          path: frontend/playwright-report
+          if-no-files-found: ignore
+
+      - name: Publish smoke test results on failure
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: frontend-smoke-test-results
+          path: frontend/test-results
+          if-no-files-found: ignore
+
+  audit:
+    # Separate job so a failure is visible on the PR (red X) without blocking
+    # merge. Do NOT add this job to branch protection's required checks until
+    # the existing high/critical findings have been cleaned up — at that point
+    # the gate becomes meaningful.
+    name: npm audit (advisory)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install runtime packages
+        run: npm ci --ignore-scripts
+
+      - name: npm audit (full report)
+        run: npm audit | tee npm_audit_report.txt || true
+
+      - name: Publish npm audit report
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: frontend-npm-vulnerabilities
+          path: frontend/npm_audit_report.txt
+          if-no-files-found: warn
+
+      - name: Fail on high/critical findings
+        # Once existing vulnerabilities are fixed, add `audit` to branch
+        # protection's required checks so this gate actually blocks merges.
+        run: npm audit --audit-level=high
+
+      # TODO: WhiteSource (Mend) scan — was `WhiteSource@21` in ADO.
+      # TODO: SonarQube prepare/analyze/publish — needs SONAR_TOKEN +
+      #       SONAR_HOST_URL secrets configured at the repo/org level.
+      # TODO: Snyk open-source + code scans — needs SNYK_TOKEN configured.
+      #       Original ADO pipeline ran:
+      #         snyk test
+      #         snyk code test
+      #         snyk test --severity-threshold=high --fail-on=all   (blocking)
+      #         snyk code test --severity-threshold=high --fail-on=all  (blocking)

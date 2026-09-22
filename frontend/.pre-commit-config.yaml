@@ -1,0 +1,13 @@
+repos:
+  - repo: local
+    hooks:
+      - id: prettier
+        name: prettier
+        entry: npx prettier --write
+        language: node
+        types_or: [javascript, jsx, ts, tsx, vue]
+      - id: eslint
+        name: eslint
+        language: node
+        types_or: [javascript, jsx, ts, tsx, vue]
+        entry: npx eslint --fix

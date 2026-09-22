@@ -1,0 +1,42 @@
+[
+  {
+    "external_id": "METFORMIN",
+    "analyte_number": null,
+    "short_number": null,
+    "long_number": null,
+    "inn": "Metformin",
+    "unii": {
+      "substance_unii": "9100L32L2N"
+    }
+  },
+  {
+    "external_id": "NPH INSULIN",
+    "analyte_number": "AN000045",
+    "short_number": "NLABZ4D",
+    "long_number": "NLABZ4D-0000-0308",
+    "inn": "NPH Insulin",
+    "unii": {
+      "substance_unii": "1Y17CTI5SR"
+    }
+  },
+  {
+    "external_id": "glibenclamide",
+    "analyte_number": "AN000028",
+    "short_number": "SZ52-J5LS",
+    "long_number": "SZ52-0000-J5LS",
+    "inn": "glibenclamide",
+    "unii": {
+      "substance_unii": "53AXN4NNHX"
+    }
+  },
+  {
+    "external_id": "generic",
+    "analyte_number": "AN000070",
+    "short_number": "TI7V-U5YP",
+    "long_number": "TI7V-0000-U5YP",
+    "inn": "generic",
+    "unii": {
+      "substance_unii": "AO43BIF1U8"
+    }
+  }
+]

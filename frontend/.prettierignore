@@ -1,0 +1,5 @@
+**/*.md
+**/*.json
+**/*.html
+**/.yaml
+.github/

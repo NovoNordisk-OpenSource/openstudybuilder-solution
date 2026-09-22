@@ -1,0 +1,278 @@
+{
+  "title": "ActivityItemClass - SDTM - Codelists",
+  "version": "2.4",
+  "settings": {
+    "pagenumber": 0,
+    "editable": true,
+    "fullscreenEnabled": false,
+    "parameters": {
+      "undefined": [],
+      "undefined_display": [],
+      "neodash_activityitemclassvalue_name": [],
+      "neodash_activityitemclassvalue_name_display": [],
+      "neodash_sdtm_domain": [],
+      "neodash_sdtm_domain_display": [ ],
+      "neodash_activity_instance_class": [],
+      "neodash_activity_instance_class_display": [],
+      "neodash_activity_item_class": [],
+      "neodash_activity_item_class_display": [],
+      "neodash_sdtm_domain_select": [],
+      "neodash_sdtm_domain_select_display": [],
+      "neodash_codelists": [
+        ],
+      "neodash_codelists_display": [
+       ],
+      "neodash_codelists_activity_item": [
+      ],
+      "neodash_codelists_activity_item_display": [
+     
+      ]
+    },
+    "theme": "light",
+    "disableRowLimiting": true
+  },
+  "pages": [
+    {
+      "title": "ReadMe",
+      "reports": [
+        {
+          "id": "8462335d-a682-4701-9b21-d308404827f8",
+          "title": "Guide",
+          "query": "##### Audience\nThis report is intended for standards developers who define ActivityInstances.\n\nThis report allows for searching for SDTM information related to an ActivityIntanceClass and which codelist apply - or the other way around.\n\nDomains marked with * are sponsor defined domains.\n\n\n",
+          "width": 11,
+          "height": 5,
+          "x": 0,
+          "y": 0,
+          "type": "text",
+          "selection": {},
+          "settings": {},
+          "schema": []
+        }
+      ]
+    },
+    {
+      "title": "ItemClass - SDTM",
+      "reports": [
+        {
+          "id": "ad1fbc50-da9b-4fdc-971f-5fd3e27d4c1e",
+          "title": "SDTM information for $neodash_activityitemclassvalue_name",
+          "query": "MATCH\n  (dataset:Dataset)-[r:HAS_INSTANCE]->\n  (dataset_instance:DatasetInstance|SponsorModelDatasetInstance)-\n    [r2:IMPLEMENTS_DATASET_CLASS]->\n  (dataset_class_instance:DatasetClassInstance|SponsorModelDatasetInstance)\nWHERE size(coalesce( $neodash_sdtm_domain, [])) = 0\n   OR dataset.uid IN  $neodash_sdtm_domain\nMATCH\n  (dataset_class_instance)-[r3:HAS_PARENT_CLASS*0..]->\n  (dataset_class_instance:DatasetClassInstance)-[r4:HAS_INSTANCE]-\n  (dataset_class:DatasetClass)<-[r5:MAPS_DATASET_CLASS]-\n  (activity_instance_class:ActivityInstanceClassRoot)-[:LATEST]->\n  (activity_instance_class_value)\n\nMATCH\n  (dataset_instance:DatasetInstance|SponsorModelDatasetInstance)-\n    [hdv:HAS_DATASET_VARIABLE]->\n  (dataset_variable_instance:DatasetVariableInstance\n    |SponsorModelDatasetVariableInstance)<-\n    [:HAS_INSTANCE]-\n  (dataset_variable:DatasetVariable)\n\n// FROM DATASET VARIABLE INSTANCE TO ACTIVITY ITEM CLASS\nMATCH\n  (dataset_variable_instance)-\n    [i:IMPLEMENTS_VARIABLE|IMPLEMENTS_VARIABLE_CLASS]->\n  (variable_class_instance:VariableClassInstance)<-[d2:HAS_INSTANCE]-\n  (variable_class:VariableClass)<-[c:MAPS_VARIABLE_CLASS]-\n  (activity_item_class_root:ActivityItemClassRoot)-[r6:LATEST]->\n  (activity_item_class_value:ActivityItemClassValue)\n\nWHERE\n  activity_item_class_value.name IN  $neodash_activity_item_class AND\n  EXISTS((activity_item_class_root)--(activity_instance_class))\n\nMATCH\n  (activity_instance_class:ActivityInstanceClassRoot)-[k1:PARENT_CLASS]->\n  (parentRoot:ActivityInstanceClassRoot)\nMATCH (parentRoot)-[k2:LATEST]->(parentVal:ActivityInstanceClassValue)\nOPTIONAL MATCH\n  (activity_instance_class)-[k3:HAS_ITEM_CLASS]->\n  (m)-[k4:LATEST]->\n  (activity_item_class_value:ActivityItemClassValue)\n\n// FROM DATASET VARIABLE INSTANCE TO CODELIST\nOPTIONAL MATCH\n  (dataset_variable_instance)-[:REFERENCES_CODELIST]->\n  (aux_ctcr:CTCodelistRoot)-[aux_r:HAS_ATTRIBUTES_ROOT]->\n  (aux_ctatr:CTCodelistAttributesRoot)-[aux_r2:LATEST_FINAL]->\n  (clattr:CTCodelistAttributesValue)\n\nWITH DISTINCT\n  activity_item_class_value.name AS `Activity Item Class`,\n   CASE WHEN NOT (dataset)-[:HAS_INSTANCE]->(:DatasetInstance) THEN dataset.uid+'*' ELSE dataset.uid END AS `SDTM Domain`,\n  dataset_variable.uid AS `SDTM Variable`,\n  hdv.ordinal as var_order,\n  clattr.submission_value AS xmlcodelist\nORDER BY `Activity Item Class`,`SDTM Domain`, var_order\nRETURN distinct `Activity Item Class`, `SDTM Domain`, `SDTM Variable`, xmlcodelist\n\n\n",
+          "width": 19,
+          "height": 8,
+          "x": 0,
+          "y": 2,
+          "type": "table",
+          "selection": {},
+          "settings": {
+            "noDataMessage": "Select one or more Activity Item Classes above"
+          }
+        },
+        {
+          "id": "4d781dd0-adcc-4878-a391-86ea06df4d4e",
+          "title": "Select one (or more) Activity Item Classes - required",
+          "query": "MATCH\n  (activity_instance_class:ActivityInstanceClassRoot)-[r]->(activity_instance_class_value:ActivityInstanceClassValue) \n   WHERE (size(coalesce( $neodash_activity_instance_class, [])) = 0\n   OR activity_instance_class_value.name IN  $neodash_activity_instance_class)\nMATCH\n  (activity_instance_class)-[k3:HAS_ITEM_CLASS]->\n  (m)-[k4:LATEST]->\n  (n:ActivityItemClassValue)\nWHERE toLower(toString(n.`name`)) CONTAINS toLower($input) \nRETURN DISTINCT n.`name` as value,  n.`name` as display ORDER BY value ASC LIMIT 1000",
+          "width": 10,
+          "height": 2,
+          "x": 9,
+          "y": 0,
+          "type": "select",
+          "selection": {},
+          "settings": {
+            "type": "Custom Query",
+            "refreshButtonEnabled": true,
+            "multiSelector": true,
+            "suggestionLimit": 1000,
+            "multiSelectLimit": 10,
+            "entityType": "Activity Item Class",
+            "parameterName": "neodash_activity_item_class"
+          },
+          "schema": []
+        },
+        {
+          "id": "95998225-5f0b-4882-bd12-a9950c5a7032",
+          "title": "Filter on (or more) Instance Class - optional",
+          "query": "MATCH (n:`ActivityInstanceClassValue`)<-[r]-(root:ActivityInstanceClassRoot) where not (root)<-[:PARENT_CLASS]-()\nAND toLower(toString(n.`name`)) CONTAINS toLower($input)\nRETURN DISTINCT n.`name` as value,  n.`name` as display ORDER BY value ASC LIMIT 100",
+          "width": 9,
+          "height": 2,
+          "x": 0,
+          "y": 0,
+          "type": "select",
+          "selection": {},
+          "settings": {
+            "type": "Custom Query",
+            "refreshButtonEnabled": true,
+            "multiSelector": true,
+            "suggestionLimit": 100,
+            "multiSelectLimit": 10,
+            "clearParameterOnFieldClear": false,
+            "entityType": "Activity Instance Class",
+            "parameterName": "neodash_activity_instance_class"
+          },
+          "schema": []
+        },
+        {
+          "id": "a62a3910-ae09-453e-9b47-98c92218f113",
+          "title": "Possible domains",
+          "query": "MATCH\n  (dataset:Dataset)-[r:HAS_INSTANCE]->\n  (dataset_instance:DatasetInstance|SponsorModelDatasetInstance)-\n    [r2:IMPLEMENTS_DATASET_CLASS]->\n  (dataset_class_instance:DatasetClassInstance|SponsorModelDatasetInstance)\nMATCH\n  (dataset_class_instance)-[r3:HAS_PARENT_CLASS*0..]->\n  (dataset_class_instance:DatasetClassInstance)-[r4:HAS_INSTANCE]-\n  (dataset_class:DatasetClass)<-[r5:MAPS_DATASET_CLASS]-\n  (activity_instance_class:ActivityInstanceClassRoot)-[:LATEST]->\n  (activity_instance_class_value)\nMATCH\n  (dataset_instance:DatasetInstance|SponsorModelDatasetInstance)-\n    [hdv:HAS_DATASET_VARIABLE]->\n  (dataset_variable_instance:DatasetVariableInstance\n    |SponsorModelDatasetVariableInstance)<-\n    [:HAS_INSTANCE]-\n  (dataset_variable:DatasetVariable)\nMATCH\n  (dataset_variable_instance)-\n    [i:IMPLEMENTS_VARIABLE|IMPLEMENTS_VARIABLE_CLASS]->\n  (variable_class_instance:VariableClassInstance)<-[d2:HAS_INSTANCE]-\n  (variable_class:VariableClass)<-[c:MAPS_VARIABLE_CLASS]-\n  (activity_item_class_root:ActivityItemClassRoot)-[r6:LATEST]->\n  (activity_item_class_value:ActivityItemClassValue)\nWHERE\n  activity_item_class_value.name IN $neodash_activity_item_class AND\n  EXISTS((activity_item_class_root)--(activity_instance_class))\nWITH COLLECT(DISTINCT dataset.uid) AS domains\nUNWIND domains AS domain\nRETURN domain AS `SDTM Domains`, size(domains) AS `Total Domains`\nORDER BY `SDTM Domains`",
+          "width": 4,
+          "height": 10,
+          "x": 19,
+          "y": 0,
+          "type": "table",
+          "selection": {},
+          "settings": {
+            "actionsRules": [
+              {
+                "condition": "rowCheck",
+                "field": "",
+                "value": "SDTM Domains",
+                "customization": "set variable",
+                "customizationValue": "sdtm_domain"
+              }
+            ],
+            "refreshButtonEnabled": true,
+            "columnWidths": "[1,0.6]",
+            "noDataMessage": "Select one or more Activity Item Classes"
+          }
+        },
+        {
+          "id": "b19a9c6c-8a85-4d1f-af7e-97d151a8fbd3",
+          "title": "Codelists",
+          "query": "WITH\n  [x IN $neodash_sdtm_domain | replace(x, '*', '')] AS neodash_sdtm_domain_select_clean\n\nMATCH\n  (dataset:Dataset)-[r1:HAS_INSTANCE]->\n  (dataset_instance:DatasetInstance|SponsorModelDatasetInstance)-\n    [r2:IMPLEMENTS_DATASET_CLASS]->\n  (dataset_class_instance:DatasetClassInstance|SponsorModelDatasetInstance)\nWHERE\n  size(coalesce(neodash_sdtm_domain_select_clean, [])) = 0 OR\n  dataset.uid IN neodash_sdtm_domain_select_clean\nMATCH\n  (dataset_class_instance)-[r3:HAS_PARENT_CLASS*0..]->\n  (dataset_class_instance:DatasetClassInstance)-[r4:HAS_INSTANCE]-\n  (dataset_class:DatasetClass)<-[r5:MAPS_DATASET_CLASS]-\n  (activity_instance_class:ActivityInstanceClassRoot)-[r6:LATEST]->\n  (activity_instance_class_value)\n\nMATCH\n  (dataset_instance:DatasetInstance|SponsorModelDatasetInstance)-\n    [hdv:HAS_DATASET_VARIABLE]->\n  (dataset_variable_instance:DatasetVariableInstance\n    |SponsorModelDatasetVariableInstance)<-\n    [r7:HAS_INSTANCE]-\n  (dataset_variable:DatasetVariable)\n\n// FROM DATASET VARIABLE INSTANCE TO ACTIVITY ITEM CLASS\nMATCH\n  (dataset_variable_instance)-\n    [r8:IMPLEMENTS_VARIABLE|IMPLEMENTS_VARIABLE_CLASS]->\n  (variable_class_instance:VariableClassInstance)<-[d2:HAS_INSTANCE]-\n  (variable_class:VariableClass)<-[c:MAPS_VARIABLE_CLASS]-\n  (activity_item_class_root:ActivityItemClassRoot)-[r9:LATEST]->\n  (activity_item_class_value:ActivityItemClassValue)\n\nWHERE\n  activity_item_class_value.name IN  $neodash_activity_item_class AND\n  EXISTS((activity_item_class_root)--(activity_instance_class))\nWITH DISTINCT dataset_variable_instance\n// FROM DATASET VARIABLE INSTANCE TO CODELIST\nMATCH\n  (dataset_variable_instance)-[m1:REFERENCES_CODELIST]->\n  (cl:CTCodelistRoot)-[m2:HAS_ATTRIBUTES_ROOT]->\n  (cl_att_root:CTCodelistAttributesRoot)-[m3:LATEST_FINAL]->\n  (cl_val:CTCodelistAttributesValue)\n  \nRETURN DISTINCT\n  cl_val.concept_id AS `Codelist ID`,\n  cl_val.submission_value AS `Codelist Submission Value`,\n  cl_val.preferred_term AS `Codelist Preferred Term`\n  \n\n\n",
+          "width": 6,
+          "height": 4,
+          "x": 0,
+          "y": 10,
+          "type": "table",
+          "selection": {},
+          "settings": {
+            "actionsRules": [
+              {
+                "condition": "rowCheck",
+                "field": "",
+                "value": "Codelist ID",
+                "customization": "set variable",
+                "customizationValue": "codelists_activity_item"
+              }
+            ]
+          }
+        },
+        {
+          "id": "c31a7a61-c24a-42d7-8af3-ab8663ef8ebe",
+          "title": "Terms in selected codelist",
+          "query": "MATCH (cl:CTCodelistRoot)-[m2:HAS_ATTRIBUTES_ROOT]->\n  (cl_att_root:CTCodelistAttributesRoot)-[m3:LATEST_FINAL]->\n  (cl_val:CTCodelistAttributesValue) \nWHERE  cl_val.concept_id IN  $neodash_codelists_activity_item\nMATCH\n  (cl)-[m4:HAS_TERM]->\n  (cl_term:CTCodelistTerm)-[m5:HAS_TERM_ROOT]->\n  (term_root:CTTermRoot)-[m6:HAS_ATTRIBUTES_ROOT]->\n  (term_att_root:CTTermAttributesRoot)-[m7:LATEST]->\n  (term_value)\nRETURN DISTINCT\n  cl_val.concept_id AS `Codelist ID`,\n  cl_val.submission_value AS `Codelist Submission Value`,\n  cl_val.preferred_term AS `Codelist Preferred Term`,\n  term_value.concept_id AS `Term ID`,\n  cl_term.submission_value AS `Term Submission Value`,\n  term_value.preferred_term AS `Term Preferred Term`\n\n\n",
+          "width": 6,
+          "height": 4,
+          "x": 6,
+          "y": 10,
+          "type": "table",
+          "selection": {},
+          "settings": {
+            "refreshButtonEnabled": true,
+            "noDataMessage": "Select one or more codelists",
+            "compact": true,
+            "wrapContent": true
+          }
+        }
+      ]
+    },
+    {
+      "title": "SDTM - ItemClasses",
+      "reports": [
+        {
+          "id": "631cc30f-9a99-48ba-b71f-71dd04c86ad2",
+          "title": "Select SDTM domain(s)",
+          "query": "MATCH\n  (dataset:Dataset)-[r:HAS_INSTANCE]->\n  (dataset_instance:DatasetInstance|SponsorModelDatasetInstance)-\n    [r2:IMPLEMENTS_DATASET_CLASS]->\n  (dataset_class_instance:DatasetClassInstance|SponsorModelDatasetInstance)\nWITH dataset,\nCASE WHEN NOT (dataset)-[:HAS_INSTANCE]->(:DatasetInstance) THEN dataset.uid+'*' ELSE dataset.uid END AS domain\nWITH COLLECT(DISTINCT domain) AS domains\nUNWIND domains AS domain\nRETURN domain AS `SDTM Domains`, size(domains) AS `Total Domains`\nORDER BY `SDTM Domains`\n",
+          "width": 4,
+          "height": 7,
+          "x": 0,
+          "y": 0,
+          "type": "table",
+          "selection": {},
+          "settings": {
+            "actionsRules": [
+              {
+                "condition": "rowCheck",
+                "field": "",
+                "value": "SDTM Domains",
+                "customization": "set variable",
+                "customizationValue": "sdtm_domain_select"
+              }
+            ]
+          }
+        },
+        {
+          "id": "e0410d71-5af1-4c4d-afaf-aad12c39a784",
+          "title": "",
+          "query": "WITH [x in $neodash_sdtm_domain_select | replace(x,'*','')] as neodash_sdtm_domain_select_clean\n\nMATCH\n  (dataset:Dataset)-[r:HAS_INSTANCE]->\n  (dataset_instance:DatasetInstance|SponsorModelDatasetInstance)-\n    [r2:IMPLEMENTS_DATASET_CLASS]->\n  (dataset_class_instance:DatasetClassInstance|SponsorModelDatasetInstance)\nWHERE size(coalesce(neodash_sdtm_domain_select_clean, [])) = 0\n   OR dataset.uid IN  neodash_sdtm_domain_select_clean\nMATCH\n  (dataset_class_instance)-[r3:HAS_PARENT_CLASS*0..]->\n  (dataset_class_instance:DatasetClassInstance)-[r4:HAS_INSTANCE]-\n  (dataset_class:DatasetClass)<-[r5:MAPS_DATASET_CLASS]-\n  (activity_instance_class:ActivityInstanceClassRoot)-[:LATEST]->\n  (activity_instance_class_value)\n\nMATCH\n  (dataset_instance:DatasetInstance|SponsorModelDatasetInstance)-\n    [hdv:HAS_DATASET_VARIABLE]->\n  (dataset_variable_instance:DatasetVariableInstance\n    |SponsorModelDatasetVariableInstance)<-\n    [:HAS_INSTANCE]-\n  (dataset_variable:DatasetVariable)\n\n// FROM DATASET VARIABLE INSTANCE TO ACTIVITY ITEM CLASS\nMATCH\n  (dataset_variable_instance)-\n    [i:IMPLEMENTS_VARIABLE|IMPLEMENTS_VARIABLE_CLASS]->\n  (variable_class_instance:VariableClassInstance)<-[d2:HAS_INSTANCE]-\n  (variable_class:VariableClass)<-[c:MAPS_VARIABLE_CLASS]-\n  (activity_item_class_root:ActivityItemClassRoot)-[r6:LATEST]->\n  (activity_item_class_value:ActivityItemClassValue)\n\nWHERE\nEXISTS((activity_item_class_root)--(activity_instance_class))\n\nMATCH\n  (activity_instance_class:ActivityInstanceClassRoot)-[k1:PARENT_CLASS]->\n  (parentRoot:ActivityInstanceClassRoot)\nMATCH (parentRoot)-[k2:LATEST]->(parentVal:ActivityInstanceClassValue)\nOPTIONAL MATCH\n  (activity_instance_class)-[k3:HAS_ITEM_CLASS]->\n  (m)-[k4:LATEST]->\n  (activity_item_class_value:ActivityItemClassValue)\n\n// FROM DATASET VARIABLE INSTANCE TO CODELIST\nOPTIONAL MATCH\n  (dataset_variable_instance)-[:REFERENCES_CODELIST]->\n  (aux_ctcr:CTCodelistRoot)-[aux_r:HAS_ATTRIBUTES_ROOT]->\n  (aux_ctatr:CTCodelistAttributesRoot)-[aux_r2:LATEST_FINAL]->\n  (clattr:CTCodelistAttributesValue)\n\nWITH DISTINCT\n  activity_item_class_value.name AS `Activity Item Class`,\n   CASE WHEN NOT (dataset)-[:HAS_INSTANCE]->(:DatasetInstance) THEN dataset.uid+'*' ELSE dataset.uid END AS `SDTM Domain`,\n  dataset_variable.uid AS `SDTM Variable`,\n  hdv.ordinal as var_order,\n  clattr.submission_value AS xmlcodelist\nORDER BY `SDTM Domain`, var_order, `Activity Item Class`\nRETURN distinct `SDTM Domain`, `SDTM Variable`, xmlcodelist, `Activity Item Class`\n\n\n\n\n\n",
+          "width": 14,
+          "height": 7,
+          "x": 4,
+          "y": 0,
+          "type": "table",
+          "selection": {},
+          "settings": {}
+        },
+        {
+          "id": "74e77ec2-4e30-4c7d-b6da-51f32740dc80",
+          "title": "Codelists",
+          "query": "WITH\n  [x IN $neodash_sdtm_domain_select | replace(x, '*', '')] AS neodash_sdtm_domain_select_clean\n\nMATCH\n  (dataset:Dataset)-[r1:HAS_INSTANCE]->\n  (dataset_instance:DatasetInstance|SponsorModelDatasetInstance)-\n    [r2:IMPLEMENTS_DATASET_CLASS]->\n  (dataset_class_instance:DatasetClassInstance|SponsorModelDatasetInstance)\nWHERE\n  size(coalesce(neodash_sdtm_domain_select_clean, [])) = 0 OR\n  dataset.uid IN neodash_sdtm_domain_select_clean\nMATCH\n  (dataset_class_instance)-[r3:HAS_PARENT_CLASS*0..]->\n  (dataset_class_instance:DatasetClassInstance)-[r4:HAS_INSTANCE]-\n  (dataset_class:DatasetClass)<-[r5:MAPS_DATASET_CLASS]-\n  (activity_instance_class:ActivityInstanceClassRoot)-[r6:LATEST]->\n  (activity_instance_class_value)\n\nMATCH\n  (dataset_instance:DatasetInstance|SponsorModelDatasetInstance)-\n    [hdv:HAS_DATASET_VARIABLE]->\n  (dataset_variable_instance:DatasetVariableInstance\n    |SponsorModelDatasetVariableInstance)<-\n    [r7:HAS_INSTANCE]-\n  (dataset_variable:DatasetVariable)\n\n// FROM DATASET VARIABLE INSTANCE TO ACTIVITY ITEM CLASS\nMATCH\n  (dataset_variable_instance)-\n    [r8:IMPLEMENTS_VARIABLE|IMPLEMENTS_VARIABLE_CLASS]->\n  (variable_class_instance:VariableClassInstance)<-[d2:HAS_INSTANCE]-\n  (variable_class:VariableClass)<-[c:MAPS_VARIABLE_CLASS]-\n  (activity_item_class_root:ActivityItemClassRoot)-[r9:LATEST]->\n  (activity_item_class_value:ActivityItemClassValue)\n\nWHERE EXISTS((activity_item_class_root)--(activity_instance_class))\nWITH DISTINCT dataset_variable_instance\n// FROM DATASET VARIABLE INSTANCE TO CODELIST\nMATCH\n  (dataset_variable_instance)-[m1:REFERENCES_CODELIST]->\n  (cl:CTCodelistRoot)-[m2:HAS_ATTRIBUTES_ROOT]->\n  (cl_att_root:CTCodelistAttributesRoot)-[m3:LATEST_FINAL]->\n  (cl_val:CTCodelistAttributesValue)\n  \nRETURN DISTINCT\n  cl_val.concept_id AS `Codelist ID`,\n  cl_val.submission_value AS `Codelist Submission Value`,\n  cl_val.preferred_term AS `Codelist Preferred Term`\n  ",
+          "width": 8,
+          "height": 5,
+          "x": 0,
+          "y": 7,
+          "type": "table",
+          "selection": {},
+          "settings": {
+            "refreshButtonEnabled": true,
+            "compact": true,
+            "wrapContent": true,
+            "allowDownload": true,
+            "actionsRules": [
+              {
+                "condition": "rowCheck",
+                "field": "",
+                "value": "Codelist ID",
+                "customization": "set variable",
+                "customizationValue": "codelists"
+              }
+            ]
+          }
+        },
+        {
+          "id": "c174b236-b1c6-46aa-903a-39e382f6cfba",
+          "title": "Terms in selected codelist",
+          "query": "MATCH (cl:CTCodelistRoot)-[m2:HAS_ATTRIBUTES_ROOT]->\n  (cl_att_root:CTCodelistAttributesRoot)-[m3:LATEST_FINAL]->\n  (cl_val:CTCodelistAttributesValue) \nWHERE size(coalesce($neodash_codelists, [])) = 0\n   OR cl_val.concept_id IN  $neodash_codelists\nMATCH\n  (cl)-[m4:HAS_TERM]->\n  (cl_term:CTCodelistTerm)-[m5:HAS_TERM_ROOT]->\n  (term_root:CTTermRoot)-[m6:HAS_ATTRIBUTES_ROOT]->\n  (term_att_root:CTTermAttributesRoot)-[m7:LATEST]->\n  (term_value)\nRETURN DISTINCT\n  cl_val.concept_id AS `Codelist ID`,\n  cl_val.submission_value AS `Codelist Submission Value`,\n  cl_val.preferred_term AS `Codelist Preferred Term`,\n  term_value.concept_id AS `Term ID`,\n  cl_term.submission_value AS `Term Submission Value`,\n  term_value.preferred_term AS `Term Preferred Term`",
+          "width": 10,
+          "height": 5,
+          "x": 8,
+          "y": 7,
+          "type": "table",
+          "selection": {},
+          "settings": {
+            "refreshButtonEnabled": true,
+            "compact": true,
+            "wrapContent": true,
+            "allowDownload": true,
+            "noDataMessage": "Select one or more codelists"
+          }
+        }
+      ]
+    }
+  ],
+  "parameters": {},
+  "extensions": {
+    "active": true,
+    "activeReducers": [],
+    "advanced-charts": {
+      "active": true
+    },
+    "styling": {
+      "active": true
+    },
+    "actions": {
+      "active": true
+    }
+  },
+  "uuid": "a1e98e40-50bc-49bb-9fb7-aa72c31125a0"
+}

@@ -1,0 +1,274 @@
+# Sponsor library field schema - version 1.
+# Full reference for this file's structure and how to customize it:
+#   doc/how_to_customize_sponsor_model.md
+
+schema_version: 1
+library_name: Sponsor
+
+# Base schema, matching the SDTMIG 3.2 master model header set.
+# v2 adds fields introduced in SDTMIG 3.3 (see sponsor.v2.yaml).
+
+entities:
+
+  # ---------------------------------------------------------------------------
+  # sponsor_model
+  # ---------------------------------------------------------------------------
+  # Built entirely from model_info.json (no CSV). All fields are injected.
+  sponsor_model:
+    structural:
+      - { api_field: ig_uid, source: injected }
+      - { api_field: ig_version_number, source: injected }
+      - { api_field: version_number, source: injected }
+      - { api_field: library_name, source: injected }
+    extensible:
+      # Optional: only sent when present in model_info.json.
+      - { api_field: name_qualifier, source: injected }
+
+  # ---------------------------------------------------------------------------
+  # dataset
+  # ---------------------------------------------------------------------------
+  dataset:
+    structural:
+      # Injected from model_info.json common params (no PropertyDefinition).
+      - { api_field: target_data_model_catalogue, source: injected }
+      - { api_field: sponsor_model_name, source: injected }
+      - { api_field: sponsor_model_version_number, source: injected }
+      - { api_field: library_name, source: injected }
+      # CSV-mapped structural fields.
+      - api_field: dataset_uid
+        source_field: Table
+        type: string
+        required: true
+      - api_field: label
+        source_field: Label
+        type: string
+        required: true
+        ui: { column_title: sponsor_model.dataset.label, default_visible: true, order: 10 }
+      - api_field: implemented_dataset_class
+        source_field: Class
+        type: custom
+        required: false
+        # parse_dataset_class_name(value, row_context["Table"])
+        transformer: dataset_class_with_table
+      - api_field: is_basic_std
+        source_field: basic_std
+        type: boolean
+        required: true
+      # SDTMIG 3.2 has no isnotcdiscstd column, so is_cdisc_std is always derived
+      # from basic_std. (v2 makes this conditional on the isnotcdiscstd column.)
+      - api_field: is_cdisc_std
+        source_field: basic_std
+        type: boolean
+
+    extensible:
+      - api_field: enrich_build_order
+        source_field: enrich_build_order
+        type: integer
+        required: true
+        default: 0
+        ui: { column_title: sponsor_model.dataset.enrich_build_order, default_visible: false, order: 20 }
+      - api_field: comment
+        source_field: comment
+        type: string
+        required: true
+        ui: { column_title: sponsor_model.dataset.comment, default_visible: true, order: 30 }
+      - api_field: xml_path
+        source_field: XmlPath
+        type: string
+        ui: { column_title: sponsor_model.dataset.xml_path, default_visible: false, order: 40 }
+      - api_field: xml_title
+        source_field: XmlTitle
+        type: string
+        ui: { column_title: sponsor_model.dataset.xml_title, default_visible: false, order: 50 }
+      - api_field: structure
+        source_field: Structure
+        type: string
+        ui: { column_title: sponsor_model.dataset.structure, default_visible: true, order: 60 }
+      - api_field: purpose
+        source_field: Purpose
+        type: string
+        ui: { column_title: sponsor_model.dataset.purpose, default_visible: true, order: 70 }
+      - api_field: keys
+        source_field: Keys
+        type: list_space_separated
+        ui: { column_title: sponsor_model.dataset.keys, default_visible: true, order: 80 }
+      - api_field: sort_keys
+        source_field: SortKeys
+        type: list_space_separated
+        ui: { column_title: sponsor_model.dataset.sort_keys, default_visible: false, order: 90 }
+      - api_field: state
+        source_field: State
+        type: string
+        ui: { column_title: sponsor_model.dataset.state, default_visible: false, order: 100 }
+      - api_field: standard_ref
+        source_field: Standardref
+        type: string
+        ui: { column_title: sponsor_model.dataset.standard_ref, default_visible: false, order: 110 }
+      - api_field: ig_comment
+        source_field: IGcomment
+        type: string
+        ui: { column_title: sponsor_model.dataset.ig_comment, default_visible: false, order: 120 }
+      - api_field: extended_domain
+        source_field: extended_domain
+        type: string
+        ui: { column_title: sponsor_model.dataset.extended_domain, default_visible: false, order: 130 }
+      - api_field: map_domain_flag
+        source_field: map_domain_flag
+        type: boolean
+        ui: { column_title: sponsor_model.dataset.map_domain_flag, default_visible: false, order: 140 }
+      - api_field: suppl_qual_flag
+        source_field: suppl_qual_flag
+        type: boolean
+        ui: { column_title: sponsor_model.dataset.suppl_qual_flag, default_visible: false, order: 150 }
+      - api_field: include_in_raw
+        source_field: include_in_raw
+        type: boolean
+        ui: { column_title: sponsor_model.dataset.include_in_raw, default_visible: false, order: 160 }
+      - api_field: gen_raw_seqno_flag
+        source_field: gen_raw_seqno_flag
+        type: boolean
+        ui: { column_title: sponsor_model.dataset.gen_raw_seqno_flag, default_visible: false, order: 170 }
+
+  # ---------------------------------------------------------------------------
+  # dataset_variable
+  # ---------------------------------------------------------------------------
+  dataset_variable:
+    structural:
+      # Injected from model_info.json common params (no PropertyDefinition).
+      - { api_field: target_data_model_catalogue, source: injected }
+      - { api_field: sponsor_model_name, source: injected }
+      - { api_field: sponsor_model_version_number, source: injected }
+      # CSV-mapped structural fields.
+      - api_field: dataset_uid
+        source_field: table
+        type: string
+        required: true
+      - api_field: dataset_variable_uid
+        source_field: column
+        type: string
+        required: true
+      - api_field: label
+        source_field: label
+        type: string
+        required: true
+        ui: { column_title: sponsor_model.dataset_variable.label, default_visible: true, order: 40 }
+      - api_field: is_basic_std
+        source_field: basic_std
+        type: boolean
+        required: true
+
+    extensible:
+      - api_field: implemented_parent_dataset_class
+        source_field: class_table
+        type: custom
+        required: false
+        # parse_dataset_class_name(class_name=value)
+        transformer: dataset_class
+        ui: { column_title: sponsor_model.dataset_variable.implemented_parent_dataset_class, default_visible: false, order: 10 }
+      - api_field: implemented_variable_class
+        source_field: class_column
+        type: custom
+        required: false
+        # parse_variable_class_name(value)
+        transformer: variable_class
+        ui: { column_title: sponsor_model.dataset_variable.implemented_variable_class, default_visible: false, order: 20 }
+      - api_field: order
+        source_field: order
+        type: integer
+        required: true
+        ui: { column_title: sponsor_model.dataset_variable.order, default_visible: true, order: 30 }
+      - api_field: variable_type
+        source_field: type
+        type: string
+        ui: { column_title: sponsor_model.dataset_variable.variable_type, default_visible: true, order: 50 }
+      - api_field: length
+        source_field: length
+        type: string
+        ui: { column_title: sponsor_model.dataset_variable.length, default_visible: true, order: 60 }
+      - api_field: display_format
+        source_field: displayformat
+        type: string
+        ui: { column_title: sponsor_model.dataset_variable.display_format, default_visible: false, order: 70 }
+      - api_field: xml_datatype
+        source_field: xmldatatype
+        type: string
+        ui: { column_title: sponsor_model.dataset_variable.xml_datatype, default_visible: false, order: 80 }
+      - api_field: core
+        source_field: core
+        type: string
+        ui: { column_title: sponsor_model.dataset_variable.core, default_visible: true, order: 90 }
+      - api_field: origin
+        source_field: origin
+        type: string
+        ui: { column_title: sponsor_model.dataset_variable.origin, default_visible: true, order: 100 }
+      - api_field: role
+        source_field: role
+        type: string
+        ui: { column_title: sponsor_model.dataset_variable.role, default_visible: true, order: 130 }
+      - api_field: term
+        source_field: term
+        type: string
+        ui: { column_title: sponsor_model.dataset_variable.term, default_visible: true, order: 140 }
+      - api_field: algorithm
+        source_field: algorithm
+        type: string
+        ui: { column_title: sponsor_model.dataset_variable.algorithm, default_visible: false, order: 150 }
+      - api_field: qualifiers
+        source_field: qualifiers
+        type: list_space_separated
+        ui: { column_title: sponsor_model.dataset_variable.qualifiers, default_visible: false, order: 160 }
+      - api_field: comment
+        source_field: comment
+        type: string
+        ui: { column_title: sponsor_model.dataset_variable.comment, default_visible: true, order: 170 }
+      - api_field: ig_comment
+        source_field: IGcomment
+        type: string
+        ui: { column_title: sponsor_model.dataset_variable.ig_comment, default_visible: false, order: 180 }
+      - api_field: map_var_flag
+        source_field: map_var_flag
+        type: string
+        ui: { column_title: sponsor_model.dataset_variable.map_var_flag, default_visible: false, order: 190 }
+      - api_field: fixed_mapping
+        source_field: fixed_mapping
+        type: string
+        ui: { column_title: sponsor_model.dataset_variable.fixed_mapping, default_visible: false, order: 200 }
+      - api_field: include_in_raw
+        source_field: include_in_raw
+        type: boolean
+        ui: { column_title: sponsor_model.dataset_variable.include_in_raw, default_visible: false, order: 210 }
+      - api_field: nn_internal
+        source_field: nn_internal
+        type: boolean
+        ui: { column_title: sponsor_model.dataset_variable.nn_internal, default_visible: false, order: 220 }
+      - api_field: value_lvl_where_cols
+        source_field: value_lvl_where_cols
+        type: string
+        ui: { column_title: sponsor_model.dataset_variable.value_lvl_where_cols, default_visible: false, order: 230 }
+      - api_field: value_lvl_label_col
+        source_field: value_lvl_label_col
+        type: string
+        ui: { column_title: sponsor_model.dataset_variable.value_lvl_label_col, default_visible: false, order: 240 }
+      - api_field: value_lvl_collect_ct_val
+        source_field: value_lvl_collect_ct_val
+        type: string
+        ui: { column_title: sponsor_model.dataset_variable.value_lvl_collect_ct_val, default_visible: false, order: 250 }
+      - api_field: value_lvl_ct_codelist_id_col
+        source_field: value_lvl_ct_cdlist_id_col
+        type: string
+        ui: { column_title: sponsor_model.dataset_variable.value_lvl_ct_codelist_id_col, default_visible: false, order: 260 }
+      - api_field: enrich_build_order
+        source_field: enrich_build_order
+        type: integer
+        default: 0
+        ui: { column_title: sponsor_model.dataset_variable.enrich_build_order, default_visible: false, order: 270 }
+      - api_field: enrich_rule
+        source_field: enrich_rule
+        type: string
+        ui: { column_title: sponsor_model.dataset_variable.enrich_rule, default_visible: false, order: 280 }
+      # SDTMIG 3.2 has no isnotcdiscstd column, so is_cdisc_std is always derived
+      # from basic_std. (v2 makes this conditional on the isnotcdiscstd column.)
+      - api_field: is_cdisc_std
+        source_field: basic_std
+        type: boolean
+        ui: { column_title: sponsor_model.dataset_variable.is_cdisc_std, default_visible: false, order: 290 }

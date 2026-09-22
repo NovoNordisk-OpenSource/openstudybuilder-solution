@@ -1,1 +1,0 @@
-const { Given, When, Then, DataTable } = require('@badeball/cypress-cucumber-preprocessor');

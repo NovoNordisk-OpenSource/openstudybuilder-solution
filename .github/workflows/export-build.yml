@@ -1,0 +1,64 @@
+name: Export — build validation
+
+# Invoked by .github/workflows/pr-required-checks.yml when a PR touches
+# export/ or this workflow file. Not triggered directly by `pull_request:` —
+# the coordinator handles path detection, so a direct trigger here would
+# just duplicate the work and burn runner minutes. `workflow_dispatch:`
+# stays so you can still fire it manually from the Actions UI.
+on:
+  workflow_call:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Install modules and build app
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: export
+    steps:
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+
+      - name: Setup Python (for build_sbom.py)
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6
+        with:
+          python-version: "3.14"
+
+      - name: Install pipenv
+        run: pip install --upgrade pip pipenv wheel
+
+      - name: Install dependencies
+        run: pipenv sync --dev
+
+      # ---- SBOM check ------------------------------------------------------
+      - name: Generate SBOM
+        id: sbom
+        run: |
+          pipenv run build-sbom
+          if git diff --exit-code sbom.md; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Publish SBOM artifact
+        if: steps.sbom.outputs.changed == 'true'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: export-sbom
+          path: export/sbom.md
+          if-no-files-found: warn
+
+      - name: Fail if SBOM changed
+        if: steps.sbom.outputs.changed == 'true'
+        run: |
+          echo "::error::SBOM (sbom.md) is out of date. Regenerate it locally and commit the changes."
+          git --no-pager diff sbom.md
+          exit 1
+
+      # ---- Docker build validation -----------------------------------------
+      - name: Validate docker build
+        run: docker build .

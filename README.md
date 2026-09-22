@@ -1,248 +1,213 @@
-[[_TOC_]]
+# OpenStudyBuilder — Public Mono-Repo
 
+OpenStudyBuilder is a clinical trial metadata management solution. This
+repository holds the open-source components: the API, the web frontend, the
+Neo4j database setup, the data importers and exporter, the schema migrations,
+and the test suites.
 
-# Status quo of the OpenStudyBuilder
+## Repository layout
 
-The OpenStudyBuilder solution introduces a new approach for working with studies that once fully implemented will drive end-to-end consistency and more efficient processes - all the way from protocol development and CRF design - to creation of datasets, analysis, reporting, submission to health authorities and public disclosure of study information.
+| Directory | Purpose | Stack |
+|---|---|---|
+| `api/` | REST API. Hosts three FastAPI apps off one codebase: `clinical_mdr_api` (port 8000), `consumer_api` (8008), `extensions` (8009) | Python, FastAPI, Neo4j |
+| `frontend/` | OpenStudyBuilder web application | Vue 3, Vite, npm |
+| `db/` | Neo4j database setup, initialisation, backup and restore | Docker, Python |
+| `db_schema_migration/` | Numbered schema migrations and data corrections | Python |
+| `import_standards/` | CDISC controlled terminology and data model import | Python |
+| `import_sponsor_data/` | Sponsor codelists, dictionaries and mock study data import | Python |
+| `export/` | Study data export | Python |
+| `documentation_portal/` | Documentation site | VitePress, npm |
+| `system_tests/` | End-to-end tests: `ui-tests/` (web application) and `neodash-test/` (NeoDash reports) | Cypress, npm |
+| `verifications/` | Database and API verification suite | Python, pytest-bdd |
+| `load_tests/` | Load tests | Python, Locust |
+| `_tools/` | Shared tooling. `build_sbom.py` backs every component's `build-sbom` script | Python |
 
-OpenStudyBuilder is a next generation end-to-end clinical data standards and study specification solution, enabling clinical study data solutions to use linked metadata for higher degree of automation, limiting manual document driven work processes, enabling a Digital Data Flow approach.
+Each directory has its own README covering what is specific to it. Setup that
+several components share is documented here and linked from there.
 
-OpenStudyBuilder is the open source version of the internal StudyBuilder solution at Novo Nordisk. Not all titles or logos in the application are yet changed to be 'OpenStudyBuilder' - when the term 'StudyBuilder' is used, it is therefore a synonym for 'OpenStudyBuilder'. This will be changed in coming updates.
+## Prerequisites
 
-For further information on the OpenStudyBuilder solution, please refer to the [OpenStudyBuilder homepage](https://openstudybuilder.com).
+Install these once, before setting up any component.
 
-## Related Repositories
+| Tool | Version | Needed by |
+|---|---|---|
+| [Docker](https://docs.docker.com/engine/install/) | any recent | `db`, full-stack runs |
+| Python | 3.14 | `api`, `db`, `db_schema_migration`, `import_standards`, `import_sponsor_data`, `export`, `verifications`, `load_tests` |
+| [Pipenv](https://pipenv.pypa.io/en/latest/) | 2023.3.20 or later | all Python components |
+| Node.js | 20 | `frontend`, `documentation_portal`, `system_tests` |
 
-The following repositories are related to OpenStudyBuilder
+Notes:
 
-- [OpenStudyBuilder-Word-Add-In](https://github.com/NovoNordisk-OpenSource/openstudybuilder-word-addin)
-- [OpenStudyBuilder-accelerators](https://github.com/NovoNordisk-OpenSource/openstudybuilder-accelerators)
+- On Windows, run the shell scripts under WSL/WSL2, or run a Neo4j Desktop
+  database and point the environment variables at it.
+- Verify your user is in the `docker` group before starting.
+- Every Python component is a separate Pipenv project with its own `Pipfile`.
+  Install its dependencies from inside that directory, not from the repo root.
 
+## Local development setup
 
-# Introduction
+Each Python component follows the same three steps. Run them from inside the
+component directory.
 
-StudyBuilder consists of a few main components, that are all included as subdirectories in this repository.
-
-- neo4j-mdr-db: Configuration files and initialization scripts for the Neo4j database.
-- mdr-standards-import: Scripts for populating the database with clinical standards.
-- clinical-mdr-api: The Python/FastAPI backend.
-- studybuilder-import: Python scripts for populating the database with sponsor standards and codelists.
-- studybuilder-export: Python scripts for exporting the database.
-- studybuilder: The Vue.js frontend.
-- documentation-portal: Solution documentation.
-- system-tests/ui-tests: End-to-end tests for the OpenStudyBuilder solution with Gherkin and Cypress.
-- osb-neodash: Configuration for NeoDash in OpenStudyBuilder style.
-
-Each directory contains a more detailed ReadMe for that component.
-
-The OpenStudyBuilder landscape has connected tools available. You can find the following:
-
-- [OpenStudyBuilder Word-Addin](https://github.com/NovoNordisk-OpenSource/openstudybuilder-word-addin) - a Microsoft Word Add-in to support the creation of clinical protocols, using the OpenStudyBuilder study definitions.
-
-# System Requirements
-
-A Docker environment with at least 6GB of memory allocated is required.
-
-The solution is tested on Ubuntu and Windows (WSL 2).
-For alternative platforms, please refer to [Platform architecture notes](platform-architecture-notes).
-
-The Docker environment can be either Docker Desktop or Docker Engine 
-(community version), with Compose V2 integrated as a CLI plugin. 
-
-OpenStudyBuilder has been tested on the following Docker environments:
-
-- Windows 11 (WSL 2)
-- Ubuntu 20.04 Focal - Docker Engine community version 23.0.1 
-
-To see versions of the installed Docker engine, run: `docker version`
-
-To check if the Docker Compose V2 is also included, run: `docker compose version`
-
-Windows installation link: [Windows installation](https://docs.docker.com/desktop/install/windows-install/)
-
-Ubuntu installation link: [Ubuntu installation](https://docs.docker.com/engine/install/ubuntu/)
-
-To test your local docker installation run the following command
-in a non administrator or root shell: `docker run hello-world`
-
-If this is not working see this link for Ubuntu rootless configuration:
-[Docker Rootless](https://docs.docker.com/engine/security/rootless/)
-
-For low-end systems, the database container may fail for low-on-memory 
-reasons. In that case, update the following values in `compose.yaml`
-```
-        NEO4J_server_memory_heap_initial__size: "1G"
-        NEO4J_server_memory_heap_max__size: "1G"
-        NEO4J_server_memory_pagecache_size: "500M"
+```sh
+cd <component>
+pipenv sync --dev              # install dependencies
+cp .env.example .env           # then edit the values
+pipenv run <script>            # see the component README for its scripts
 ```
 
-Mind that this will choke the performance of the Neo4j database,
-which leads to increased building time of the database component,
-up to a few hours.
+Not every component ships a `.env.example`:
 
-On Windows installations the WSL engine can take up all system resources.
-It is recommended to configure limits. Create a `.wslconfig` file in the user directory, typically `C:\Users\username\`.
-Put the following content in the `.wslconfig` file, and change `memory` to a suitable value for the given system. Half the physical RAM is a good starting point.
-```
-[wsl2]
-processors=2
-memory=6GB
-```
-See [Advanced settings configuration in WSL](https://docs.microsoft.com/en-us/windows/wsl/wsl-config)
-for all available options.
+| Component | Environment file |
+|---|---|
+| `api` | `.env.example` |
+| `frontend` | `.env.example` |
+| `db_schema_migration` | `.env.example` |
+| `verifications` | `.env.example` |
+| `import_sponsor_data` | `.env.import` |
+| `db` | none — see [`db/README.md`](db/README.md) for the contents to create |
+| `import_standards` | none — see [`import_standards/README.md`](import_standards/README.md) |
+| `export`, `load_tests` | none |
 
-Also on Windows installations where GIT for Windows is used to clone the repository, errors with correct line endings in the WSL engine can occure.  
+Node components use npm, not yarn:
 
-to avoid this use either of these commands before the cloning of repository.
-
-`git config --global core.autocrlf input`
-
-`git config --global core.autocrlf false`
-
-See [Configuring Git to handle line endings](https://docs.github.com/en/get-started/getting-started-with-git/configuring-git-to-handle-line-endings?platform=windows) and [Resolving Git line ending issues in Docker containers](https://gist.github.com/jonlabelle/70a87e6871a1138ac3031f5e8e39f294)
-for more information.
-
-## Known Issues with Dockerfiles on ARM64 Architecture
-
-There have been reports of issues when running the Dockerfiles on ARM64 architecture. Recent updates have resolved these problems on several ARM64 machines. If you encounter any other issues, please refer to the following link for more information and to report the inconvenience: [GitLab Issues](https://gitlab.com/Novo-Nordisk/nn-public/openstudybuilder/OpenStudyBuilder-Solution/-/issues).
-
-
-# Using the preview environment
-
-Your folder structure should look like this:
-
-```
-─ OpenStudyBuilder-Solution
-  ├─ clinical-mdr-api
-  ├─ db-schema-migration
-  ├─ documentation-portal
-  ├─ mdr-standards-import
-  ├─ neo4j-mdr-db
-  ├─ osb-neodash
-  ├─ studybuilder
-  ├─ studybuilder-export
-  ├─ studybuilder-import
-  └─ system-tests
+```sh
+cd <component>
+npm ci
 ```
 
-The Docker Compose configuration is `compose.yaml` for the preview 
-environment and building containers in pipelines.
+`system_tests/` is the exception: it has no top-level `package.json`. Its two
+suites, `ui-tests/` and `neodash-test/`, are separate npm projects — run
+`npm ci` from inside a suite directory.
 
-The following services are part of this Docker Compose environment.
+## Start the Neo4j database
 
-- _database_ (A Neo4j graph database container including initial data)
-- _api_ (A FastAPI container hosting the clinical-mdr-api backend application)
-- _consumerapi_ (A FastAPI container hosting API for additional integrations)
-- _neodash_ (Container for NeoDash, holding dashboards for OpenStudyBuilder)
-- _frontend_ (A Nginx container hosting Vue.js StudyBuilder UI application)
-- _documentation_ (A Nginx container hosting Vue.js Study Builder documentation portal)
+Every backend component talks to the same Neo4j instance. Start it once.
 
-
-## Building the Docker images
-
-The Docker container images has to be built before the first use,
-and rebuilt on each subsequent release:
-
-```shell
-docker compose build
+```sh
+cd db
+# create .env — see db/README.md for the full variable list
+./create_neo4j_local.sh
+pipenv sync --dev
+pipenv run init_neo4j
 ```
 
-Building the Docker images may take 30 minutes or more to complete, 
-especially for the database image.
+The script has no port defaults of its own — it reads them from the `.env` you
+create. The values `db/README.md` documents for a local Docker setup:
 
+| Port | Purpose |
+|---|---|
+| 5074 | Neo4j Browser (HTTP) |
+| 5078 | Bolt |
 
-## Starting the services
+If you run Neo4j Desktop instead, the defaults are 7474 (HTTP) and 7687
+(Bolt); set `NEO4J_MDR_HTTP_PORT` and `NEO4J_MDR_BOLT_PORT` accordingly.
 
-To start up the services for a local evaluation environment, use:
+Full detail, including how the init script handles clearing and backing up an
+existing database: [`db/README.md`](db/README.md).
 
-```shell
-docker compose up
+## Populate the database
+
+The steps below are order-dependent. Each one assumes the previous has
+completed.
+
+1. **Initialise the schema** — [`db/`](db/README.md). Creates constraints and
+   indexes on an empty database.
+2. **Import CDISC standards** — [`import_standards/`](import_standards/README.md).
+   Writes directly to Neo4j; the API does not need to be running.
+3. **Start the API** — [`api/`](api/README.md). `pipenv run dev` serves on
+   port 8000. `NEO4J_DSN` in `api/.env` must carry the Bolt port from step 1:
+   the shipped `.env.example` has `7687`, the Docker setup above uses `5078`.
+4. **Import sponsor data** — [`import_sponsor_data/`](import_sponsor_data/README.md).
+   Imports through the API, so step 3 must be running.
+
+Once the database is populated, start the frontend:
+
+```sh
+cd frontend
+npm ci
+npm run dev        # http://localhost:5173
 ```
 
-If you add the `-d` option to the command, it will bring up the services to 
-run in the background, detached from the terminal.
+## Running the full stack in Docker
 
-To validate that the environment is running, inspect the output of this command:
+Compose orchestration that brings every component up together is maintained
+separately and is not part of this repository. The local setup above is the
+supported path for development here.
 
-```shell
-docker compose ps
+Individual components ship their own `compose.yaml`, used by their build
+pipelines — `api/`, `frontend/`, `documentation_portal/`, `db_schema_migration/`,
+`export/`, `import_standards/` and `import_sponsor_data/`. Those build and run
+one component at a time rather than the whole solution; see the component
+README for what each expects.
+
+## Component documentation
+
+| Component | README |
+|---|---|
+| API | [`api/README.md`](api/README.md) |
+| API extensions | [`api/extensions/README.md`](api/extensions/README.md) |
+| Frontend | [`frontend/README.md`](frontend/README.md) |
+| Database | [`db/README.md`](db/README.md) |
+| Schema migrations | [`db_schema_migration/README.md`](db_schema_migration/README.md) |
+| CDISC standards import | [`import_standards/README.md`](import_standards/README.md) |
+| Sponsor data import | [`import_sponsor_data/README.md`](import_sponsor_data/README.md) |
+| Export | [`export/README.md`](export/README.md) |
+| Documentation portal | [`documentation_portal/README.md`](documentation_portal/README.md) |
+| System tests | [`system_tests/README.md`](system_tests/README.md) |
+| Verifications | [`verifications/README.md`](verifications/README.md) |
+| Load tests | [`load_tests/README.md`](load_tests/README.md) |
+
+## Tests and quality gates
+
+Each component defines its own scripts. Check the component's `Pipfile`
+`[scripts]` block or `package.json` `scripts` object rather than guessing.
+
+The most-used ones:
+
+```sh
+cd api
+pipenv run testunit          # unit tests
+pipenv run testint           # integration tests, needs Neo4j
+pipenv run lint              # pylint
+pipenv run mypy
+pipenv run format            # isort then black
+pipenv run openapi           # regenerate openapi.json after route changes
+
+cd frontend
+npm run lint
+npm run test:smoke
 ```
 
-The output should look like this:
+Continuous integration is defined in [`.github/workflows/`](.github/workflows).
+`pr-required-checks.yml` detects which paths a pull request touches and
+dispatches the matching per-component workflow.
 
-```
-NAME                          IMAGE                       COMMAND                  SERVICE         CREATED        STATUS                            PORTS
-OpenStudyBuilder-Solution-api-1             build-tools-api             "pipenv run uvicorn"     api             21 hours ago   Up 38 seconds (healthy)           8000/tcp
-OpenStudyBuilder-Solution-consumerapi-1     build-tools-consumerapi     "pipenv run uvicorn"     consumerapi     21 hours ago   Up 38 seconds (healthy)           8000/tcp
-OpenStudyBuilder-Solution-database-1        build-tools-database        "tini -g -- /startup…"   database        21 hours ago   Up 59 seconds (healthy)           7473/tcp, 127.0.0.1:5001->7474/tcp, 127.0.0.1:5002->7687/tcp
-OpenStudyBuilder-Solution-documentation-1   build-tools-documentation   "/docker-entrypoint.…"   documentation   21 hours ago   Up 59 seconds (healthy)           80/tcp, 5006/tcp
-OpenStudyBuilder-Solution-frontend-1        build-tools-frontend        "/docker-entrypoint.…"   frontend        21 hours ago   Up 7 seconds (health: starting)   80/tcp, 127.0.0.1:5005->5005/tcp
-OpenStudyBuilder-Solution-neodash-1         build-tools-neodash         "/docker-entrypoint.…"   neodash         21 hours ago   Up 38 seconds (healthy)           80/tcp, 5005/tcp, 127.0.0.1:5007->5007/tcp
-```
+## Security
 
+See [`SECURITY.md`](SECURITY.md).
 
-## Accessing the application
+Licence and contribution terms are per component: where a component directory
+contains a `LICENSE.md` or `CONTRIBUTING.md`, that file governs the component.
 
-- StudyBuilder main application: <http://localhost:5005/>
+## AI-agent skills
 
-- StudyBuilder documentation: <http://localhost:5005/doc/>
+This repository includes AI-agent skills for common development and review
+workflows. Invoke a skill in a supported AI-agent chat by entering its name,
+for example `/summarize-pr`.
 
-  It can also be accessed from main web application from the ? sign in top right corner.
+| Skill | Use it for |
+|---|---|
+| `/develop-main-api` | Implement or change endpoints in the main Clinical MDR API. |
+| `/develop-consumer-api` | Implement or change Consumer API endpoints. |
+| `/develop-extensions-api` | Implement or change Extensions API endpoints. |
+| `/develop-frontend` | Implement or change the OpenStudyBuilder Vue frontend. |
+| `/review-api` | Review API branch changes against `origin/main`. |
+| `/review-frontend` | Review frontend branch changes against `origin/main`. |
+| `/summarize-pr` | Create one PR description covering all changed components. |
+| `/summarize-pr-api` | Create a detailed PR description for changes under `api/`. |
+| `/summarize-pr-frontend` | Create a detailed PR description for changes under `frontend/`. |
+| `/neodash-ai-documentation` | Create NeoDash report documentation with annotated screenshots. |
 
-- StudyBuilder API (backend application): <http://localhost:5005/api/docs>
-
-- StudyBuilder Consumer API (backend application): <http://localhost:5005/consumer-api/docs/>
-
-- Neo4j dashboard web client: <http://localhost:5005/neodash/>
-
-- Neo4j database web client: <http://localhost:5001/browser/>
-
-  The default username is `neo4j` and the default password is `changeme1234`
-
-
-## Stopping the services
-
-This command will stop the docker containers, but keep the contents of the 
-database for the next start.
-
-```shell
-docker compose down --remove-orphans
-```
-
-
-## Updating to a new release
-
-When checking out a new release, the Docker images has to be rebuilt.
-Usually the database schema gets changed between releases, so
-**the old database has to be destroyed**.
-A new database will be initialized when starting the  _database_ service
-from the recently rebuilt Docker image.
-(The OpenStudyBuilder release does not come with a database migration tool.)
-
-```shell
-docker compose build --no-cache  # rebuilds the docker images
-docker compose down --remove-orphans --volumes # DESTROYS THE DATABASE volume 
-docker compose up -d  # the database service re-creates the database volume on the first start 
-```
-
-For hosted environments with database migrations and sequential upgrades,
-see the [Environment Update Process](./update_process.md).
-
-## Cleaning up the Docker environment
-
-To clean up the entire Docker environment use the following commands:
-
-**Will delete volumes and cache NOT restricted for the OpenStudyBuilder components.**
-
-```shell
-docker compose down --remove-orphans --volumes
-docker rmi $(docker images --filter=reference="*_database" -q) -f
-docker rmi $(docker images --filter=reference="*_api" -q) -f
-docker rmi $(docker images --filter=reference="*_ui" -q) -f
-docker rmi $(docker images --filter=reference="*_docs" -q) -f
-docker rmi $(docker images --filter=reference="*_sonarqube" -q) -f
-docker volume prune # (Will delete all volumes not used, only needed if -v was not used on docker-compose down command)
-docker builder prune --all # (Will clean all docker cache files)
-```
-
-
+The API and frontend component directories also contain implementation details
+and conventions for their respective skills.

@@ -1,0 +1,381 @@
+name: PR required checks
+
+# Coordinator that dispatches per-project build workflows based on which
+# paths a PR touches. Each per-project workflow declares `workflow_call:`
+# in its own `on:` block and is invoked below via `uses:`.
+#
+# ONE required-status-check context: `required` (the final job in this
+# file). Branch protection binds only to that. It runs `if: always()`
+# after every project job, and fails iff any upstream failed or was
+# cancelled. Skipped and success both count as OK. So a project whose
+# `if:` skipped is fine, and the aggregator still resolves — required
+# check is never stuck pending.
+#
+# Adding a project:
+#   1. Add a filter entry under `changes.steps.filter`.
+#   2. Add a dispatch block that `needs: changes` + `if:` + `uses:`.
+#   3. Add its job key to the `needs:` list of `required` at the bottom.
+# No branch-protection change ever needed.
+#
+# Note: `secret_scan` is deliberately NOT path-filtered — it runs on
+# every PR. See its block below for why. Don't copy its shape when
+# adding a normal per-project build.
+
+on:
+  pull_request:
+    branches: [main, "release/*"]
+
+permissions:
+  contents: read
+
+# One coordinator run per PR head. Cancels in-flight runs when the PR
+# force-pushes.
+concurrency:
+  group: pr-required-checks-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  # Path-change detection. Emits one boolean output per project.
+  #
+  # Implemented with plain git diff rather than a third-party action so
+  # nothing new needs security review. `github.event.pull_request.base.sha`
+  # is the tip of the base branch when the PR event fired; a three-dot
+  # diff (BASE...HEAD) against it resolves the merge base internally, so
+  # the result is exactly the file set the PR would merge — unaffected by
+  # how far the branch has fallen behind the base.
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      import_standards: ${{ steps.filter.outputs.import_standards }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+      db: ${{ steps.filter.outputs.db }}
+      documentation_portal: ${{ steps.filter.outputs.documentation_portal }}
+      export: ${{ steps.filter.outputs.export }}
+      import_sponsor_data: ${{ steps.filter.outputs.import_sponsor_data }}
+      load_tests: ${{ steps.filter.outputs.load_tests }}
+      system_tests: ${{ steps.filter.outputs.system_tests }}
+      api: ${{ steps.filter.outputs.api }}
+      verifications: ${{ steps.filter.outputs.verifications }}
+      db_schema_migration: ${{ steps.filter.outputs.db_schema_migration }}
+      shared_tools: ${{ steps.filter.outputs.shared_tools }}
+    steps:
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+        with:
+          # Need enough history to reach the PR base commit.
+          fetch-depth: 0
+
+      - id: filter
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+
+          # File set that this PR would merge. Three-dot (BASE...HEAD) diffs
+          # HEAD against the merge-base of the two commits — i.e. only what
+          # the PR actually introduces. A two-dot diff (BASE HEAD) would also
+          # report files that changed on the base branch since the branch
+          # forked, so a PR that is merely behind `main` would spuriously
+          # trigger every project whose files moved on `main` in the meantime.
+          # base.sha is the tip of the base branch, NOT the merge base.
+          CHANGED=$(git diff --name-only "$BASE_SHA...$HEAD_SHA")
+          echo "Changed files:"
+          # shellcheck disable=SC2001  # sed for indentation is fine here
+          echo "$CHANGED" | sed 's/^/  /'
+          echo
+
+          # Match a project if any changed file is under its directory,
+          # OR the shared _tools/ script changed (affects SBOM in every
+          # project), OR the project's own workflow file changed.
+          match() {
+            local re="$1"
+            echo "$CHANGED" | grep -qE "$re"
+          }
+
+          if match '^_tools/'; then
+            shared_tools=true
+          else
+            shared_tools=false
+          fi
+
+          if match '^import_standards/' \
+            || match '^\.github/workflows/import-standards-(build|bootstrap-requirements)\.' \
+            || [ "$shared_tools" = "true" ]; then
+            import_standards=true
+          else
+            import_standards=false
+          fi
+
+          # The demo build (smoke tests) reads api/openapi.json to generate
+          # mock responses, so a spec change must re-run the frontend job.
+          if match '^frontend/' \
+            || match '^api/openapi\.json$' \
+            || match '^\.github/workflows/frontend-(build|dependency-review)\.' \
+            || [ "$shared_tools" = "true" ]; then
+            frontend=true
+          else
+            frontend=false
+          fi
+
+          if match '^db/' \
+            || match '^\.github/workflows/db-build\.' \
+            || [ "$shared_tools" = "true" ]; then
+            db=true
+          else
+            db=false
+          fi
+
+          if match '^documentation_portal/' \
+            || match '^\.github/workflows/documentation-portal-build\.' \
+            || [ "$shared_tools" = "true" ]; then
+            documentation_portal=true
+          else
+            documentation_portal=false
+          fi
+
+          if match '^export/' \
+            || match '^\.github/workflows/export-build\.' \
+            || [ "$shared_tools" = "true" ]; then
+            export_=true
+          else
+            export_=false
+          fi
+
+          if match '^import_sponsor_data/' \
+            || match '^\.github/workflows/import-sponsor-data-build\.' \
+            || [ "$shared_tools" = "true" ]; then
+            import_sponsor_data=true
+          else
+            import_sponsor_data=false
+          fi
+
+          # load_tests has no SBOM step, so a shared _tools/ change does
+          # NOT force it to rebuild — only its own dir or workflow file.
+          if match '^load_tests/' \
+            || match '^\.github/workflows/load-tests-build\.'; then
+            load_tests=true
+          else
+            load_tests=false
+          fi
+
+          if match '^system_tests/' \
+            || match '^\.github/workflows/system-tests-build\.' \
+            || [ "$shared_tools" = "true" ]; then
+            system_tests=true
+          else
+            system_tests=false
+          fi
+
+          # api-dependency-review is a standalone workflow (not dispatched
+          # here), so only api-build matters for this filter.
+          if match '^api/' \
+            || match '^\.github/workflows/api-build\.' \
+            || [ "$shared_tools" = "true" ]; then
+            api=true
+          else
+            api=false
+          fi
+
+          # verifications lints against clinical_mdr_api resolved from the
+          # in-tree ../api (pyproject.toml pythonpath / pylint init-hook),
+          # so an api/ change can affect its pylint result — trigger it too.
+          if match '^verifications/' \
+            || match '^api/' \
+            || match '^\.github/workflows/verifications-build\.'; then
+            verifications=true
+          else
+            verifications=false
+          fi
+
+          # db_schema_migration's compose stack builds the in-tree api image
+          # (compose.yaml context: ../api) and its tests drive that API, so
+          # an api/ change can affect this build — trigger it too. Uses the
+          # shared SBOM script, so _tools/ changes trigger it as well.
+          if match '^db_schema_migration/' \
+            || match '^api/' \
+            || match '^\.github/workflows/db-schema-migration-build\.' \
+            || [ "$shared_tools" = "true" ]; then
+            db_schema_migration=true
+          else
+            db_schema_migration=false
+          fi
+
+          # NB: a change to this coordinator file (pr-required-checks.yml)
+          # deliberately does NOT force every project to rebuild. Editing
+          # the dispatch logic doesn't change what any project's code
+          # would build — the per-project filters below already flag
+          # projects whose own workflow files changed. Verify coordinator
+          # edits with a follow-up PR that touches a project, not by
+          # burning every project's CI on every workflow-tweak PR.
+
+          {
+            echo "shared_tools=$shared_tools"
+            echo "import_standards=$import_standards"
+            echo "frontend=$frontend"
+            echo "db=$db"
+            echo "documentation_portal=$documentation_portal"
+            echo "export=$export_"
+            echo "import_sponsor_data=$import_sponsor_data"
+            echo "load_tests=$load_tests"
+            echo "system_tests=$system_tests"
+            echo "api=$api"
+            echo "verifications=$verifications"
+            echo "db_schema_migration=$db_schema_migration"
+          } >> "$GITHUB_OUTPUT"
+
+          echo "Dispatch decisions:"
+          echo "  shared_tools:         $shared_tools"
+          echo "  import_standards:     $import_standards"
+          echo "  frontend:             $frontend"
+          echo "  db:                   $db"
+          echo "  documentation_portal: $documentation_portal"
+          echo "  export:               $export_"
+          echo "  import_sponsor_data:  $import_sponsor_data"
+          echo "  load_tests:           $load_tests"
+          echo "  system_tests:         $system_tests"
+          echo "  api:                  $api"
+          echo "  verifications:        $verifications"
+          echo "  db_schema_migration:  $db_schema_migration"
+
+  import_standards:
+    needs: changes
+    if: needs.changes.outputs.import_standards == 'true'
+    uses: ./.github/workflows/import-standards-build.yml
+    permissions:
+      contents: read
+
+  frontend:
+    needs: changes
+    if: needs.changes.outputs.frontend == 'true'
+    uses: ./.github/workflows/frontend-build.yml
+    permissions:
+      contents: read
+
+  db:
+    needs: changes
+    if: needs.changes.outputs.db == 'true'
+    uses: ./.github/workflows/db-build.yml
+    permissions:
+      contents: read
+
+  documentation_portal:
+    needs: changes
+    if: needs.changes.outputs.documentation_portal == 'true'
+    uses: ./.github/workflows/documentation-portal-build.yml
+    permissions:
+      contents: read
+
+  export:
+    needs: changes
+    if: needs.changes.outputs.export == 'true'
+    uses: ./.github/workflows/export-build.yml
+    permissions:
+      contents: read
+
+  import_sponsor_data:
+    needs: changes
+    if: needs.changes.outputs.import_sponsor_data == 'true'
+    uses: ./.github/workflows/import-sponsor-data-build.yml
+    permissions:
+      contents: read
+
+  load_tests:
+    needs: changes
+    if: needs.changes.outputs.load_tests == 'true'
+    uses: ./.github/workflows/load-tests-build.yml
+    permissions:
+      contents: read
+
+  system_tests:
+    needs: changes
+    if: needs.changes.outputs.system_tests == 'true'
+    uses: ./.github/workflows/system-tests-build.yml
+    permissions:
+      contents: read
+
+  api:
+    needs: changes
+    if: needs.changes.outputs.api == 'true'
+    uses: ./.github/workflows/api-build.yml
+    permissions:
+      contents: read
+
+  verifications:
+    needs: changes
+    if: needs.changes.outputs.verifications == 'true'
+    uses: ./.github/workflows/verifications-build.yml
+    permissions:
+      contents: read
+
+  db_schema_migration:
+    needs: changes
+    if: needs.changes.outputs.db_schema_migration == 'true'
+    uses: ./.github/workflows/db-schema-migration-build.yml
+    permissions:
+      contents: read
+
+  # Secret scan. Unlike the per-project builds above, this has no path
+  # filter and no `needs: changes` gate — a leaked credential can hide
+  # in ANY file (docs, tests, configs, unrelated projects), so we can't
+  # skip it just because the PR doesn't touch a "real" project dir.
+  # Runs on every PR.
+  #
+  # Scope is `changed_files`: the current content of every file this PR
+  # adds or modifies, judged at HEAD rather than commit by commit. A
+  # secret committed earlier in the branch and deleted before review
+  # does not block the merge; one that is still in the tree does, no
+  # matter which commit introduced it. Files the PR doesn't touch are
+  # out of scope — the scheduled `tree` run in secret-scan-main.yml
+  # covers the rest of the repo.
+  secret_scan:
+    uses: ./.github/workflows/secret-scan-build.yml
+    permissions:
+      contents: read
+    # Forward the ruleset from an Actions VARIABLE (not a secret) so
+    # security can update it in the UI without a code change. If the
+    # variable is not defined at the repo/org level the value is
+    # empty and the scan falls back to the committed
+    # .betterleaks.toml/.gitleaks.toml or the embedded defaults —
+    # see the callee's header for the precedence rules and for the
+    # note about variables NOT being log-masked.
+    with:
+      scan_scope: changed_files
+      betterleaks_config_toml: ${{ vars.BETTERLEAKS_CONFIG_TOML }}
+
+  # Single aggregated required-status-check context. Branch protection
+  # requires ONLY this one. Runs even when upstream jobs skip.
+  #
+  # A job's `needs.<job>.result` is one of: success, failure, cancelled,
+  # skipped. We treat success and skipped as OK; failure and cancelled
+  # (the latter happens when concurrency preempts, or explicit cancel)
+  # as bad — the superseding run's `required` will still resolve, but a
+  # cancelled-during-review is worth blocking on so the reviewer notices.
+  required:
+    if: always()
+    needs:
+      - changes
+      - import_standards
+      - frontend
+      - db
+      - documentation_portal
+      - export
+      - import_sponsor_data
+      - load_tests
+      - system_tests
+      - api
+      - verifications
+      - db_schema_migration
+      - secret_scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: All required jobs succeeded or skipped
+        env:
+          RESULTS: ${{ toJSON(needs.*.result) }}
+        run: |
+          set -euo pipefail
+          echo "Upstream results: $RESULTS"
+          if echo "$RESULTS" | grep -qE '"(failure|cancelled)"'; then
+            echo "::error::One or more upstream jobs failed or were cancelled."
+            exit 1
+          fi
+          echo "All upstream jobs succeeded or were skipped."

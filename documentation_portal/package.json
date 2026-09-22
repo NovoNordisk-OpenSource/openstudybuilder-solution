@@ -1,0 +1,26 @@
+{
+  "name": "MdrUserGuide",
+  "version": "1.0.0",
+  "description": "MDR Study Builder Application Documentation Portal",
+  "main": "index.js",
+  "author": "Nicolas de Saint Jorre",
+  "license": "MIT",
+  "private": true,
+  "devDependencies": {
+    "@jamescoyle/vue-icon": "^0.1.2",
+    "@mdi/js": "^7.4.47",
+    "viewerjs": "^1.11.8",
+    "vitepress": "^2.0.0-alpha.17",
+    "vue": "^3.5.27"
+  },
+  "scripts": {
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs",
+    "update-config": "node scripts/update-config.js",
+    "build-sbom": "python3 ../_tools/build_sbom.py --npm --fallback-dir doc/licenses --level 2 --output sbom.md"
+  },
+  "overrides": {
+    "esbuild": "^0.28.1"
+  }
+}

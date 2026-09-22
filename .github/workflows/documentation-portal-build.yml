@@ -1,0 +1,185 @@
+name: Documentation portal — build validation
+
+# Invoked by .github/workflows/pr-required-checks.yml when a PR touches
+# documentation_portal/ or this workflow file. Not triggered directly by
+# `pull_request:` — the coordinator handles path detection, so a direct
+# trigger here would just duplicate the work and burn runner minutes.
+# `workflow_dispatch:` stays so you can still fire it manually from the
+# Actions UI.
+on:
+  workflow_call:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Install modules and build app
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: documentation_portal
+    steps:
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: documentation_portal/package-lock.json
+
+      - name: Setup Python (for build_sbom.py)
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6
+        with:
+          python-version: "3.14"
+
+      # ---- Lockfile completeness check -------------------------------------
+      # `npm ci` only verifies the lockfile SATISFIES package.json. It exits 0
+      # on a lockfile whose platform-specific optional deps have been pruned —
+      # which is what happens when you run `npm install` on macOS or Windows,
+      # and what then breaks the Linux build at rollup/esbuild load time.
+      # Reconciling the lockfile catches both that and ordinary desync.
+      #
+      # This does NOT float versions: run against an existing lockfile it
+      # respects the pinned resolutions, and is a no-op when nothing is wrong.
+      # npm 10.x (bundled with Node 20) CANNOT repair a lockfile whose
+      # platform-specific optional deps were pruned — it treats the pruned tree
+      # as satisfiable and leaves it alone. npm 11+ restores the full set.
+      # Verified: on this repo's broken lockfile npm 10.8.2 is a no-op, npm
+      # 11.17.0 restores all 51 entries. Only the reconcile step needs it; the
+      # rest of the job keeps using the Node-bundled npm.
+      - name: Verify package-lock.json is complete
+        id: verify-lock
+        run: |
+          npx -y npm@11 install --package-lock-only --no-audit --no-fund
+          if git diff --exit-code --quiet package-lock.json; then
+            echo "outdated=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "outdated=true" >> "$GITHUB_OUTPUT"
+            echo "::warning::package-lock.json is incomplete or out of sync; see diff below."
+            git --no-pager diff --stat package-lock.json
+          fi
+
+      - name: Publish updated package-lock.json artifact
+        if: steps.verify-lock.outputs.outdated == 'true'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: documentation-portal-package-lock
+          path: documentation_portal/package-lock.json
+          if-no-files-found: error
+
+      # ---- Install deps (needed for SBOM + build) --------------------------
+      # Deliberately installs from the RECONCILED lockfile, not the committed
+      # one, so the SBOM and build steps below still produce usable output on a
+      # broken lockfile. Both corrected files then come from a single run
+      # instead of needing two round trips. The job still fails at the end.
+      - name: Install all packages
+        run: npm ci
+
+      # ---- SBOM check ------------------------------------------------------
+      - name: Generate SBOM
+        id: sbom
+        run: |
+          python3 ../_tools/build_sbom.py --npm --fallback-dir doc/licenses --level 2 --output sbom.md
+          if git diff --exit-code sbom.md; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Publish SBOM artifact
+        if: steps.sbom.outputs.changed == 'true'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: documentation-portal-sbom
+          path: documentation_portal/sbom.md
+          if-no-files-found: error
+
+      # Note: no `exit 1` here — the failure is deferred to the end of the job
+      # so that a drifting SBOM doesn't stop the build steps below from running
+      # and validating the corrected files.
+      - name: Show SBOM diff
+        if: steps.sbom.outputs.changed == 'true'
+        run: git --no-pager diff sbom.md
+
+      # ---- Build the app ---------------------------------------------------
+      # Creates docs/.vitepress/dist containing html, js, css and img files.
+      - name: Build files
+        run: npm run docs:build
+
+      # ---- Docker build validation -----------------------------------------
+      - name: Validate docker build
+        run: docker build .
+
+      # ---- Deferred failure for generated files ----------------------------
+      # Runs last so the artifacts above are produced from a validated build.
+      # Both files are machine-generated: take CI's copies, don't hand-edit.
+      - name: Fail if generated files are outdated
+        if: steps.verify-lock.outputs.outdated == 'true' || steps.sbom.outputs.changed == 'true'
+        run: |
+          if [ "${{ steps.verify-lock.outputs.outdated }}" = "true" ]; then
+            echo "::error::package-lock.json is incomplete or out of sync. This includes"
+            echo "::error::platform-specific optional deps pruned by running npm install on"
+            echo "::error::macOS/Windows — npm ci does NOT detect that, but the build breaks."
+            echo "::error::Download the 'documentation-portal-package-lock' artifact."
+          fi
+          if [ "${{ steps.sbom.outputs.changed }}" = "true" ]; then
+            echo "::error::sbom.md is out of date. It can only be generated correctly on"
+            echo "::error::Linux, so use CI's copy rather than regenerating locally:"
+            echo "::error::download the 'documentation-portal-sbom' artifact."
+          fi
+          echo "::error::  ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          exit 1
+
+  audit:
+    # Separate job so a failure is visible on the PR (red X) without blocking
+    # merge. Do NOT add this job to branch protection's required checks until
+    # the existing high/critical findings have been cleaned up — at that point
+    # the gate becomes meaningful.
+    name: npm audit (advisory)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: documentation_portal
+    steps:
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: documentation_portal/package-lock.json
+
+      - name: Install runtime packages
+        run: npm ci --ignore-scripts
+
+      - name: npm audit (full report)
+        run: npm audit | tee npm_audit_report.txt || true
+
+      - name: Publish npm audit report
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: documentation-portal-npm-vulnerabilities
+          path: documentation_portal/npm_audit_report.txt
+          if-no-files-found: warn
+
+      - name: Fail on high/critical findings
+        # Once existing vulnerabilities are fixed, add `audit` to branch
+        # protection's required checks so this gate actually blocks merges.
+        run: npm audit --audit-level=high
+
+      # TODO: WhiteSource (Mend) scan — was `WhiteSource@21` in ADO.
+      # TODO: SonarQube prepare/analyze/publish — needs SONAR_TOKEN +
+      #       SONAR_HOST_URL secrets configured at the repo/org level.
+      #       Original ADO project key/name: documentation-portal,
+      #       sources: ./docs/.vitepress/dist
+      # TODO: Snyk open-source + code scans — needs SNYK_TOKEN configured.
+      #       Original ADO pipeline ran:
+      #         snyk test
+      #         snyk code test
+      #         snyk test --severity-threshold=high --fail-on=all      (blocking)
+      #         snyk code test --severity-threshold=high --fail-on=all (blocking)

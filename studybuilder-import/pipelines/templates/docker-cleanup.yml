@@ -1,7 +1,0 @@
-steps:
-
-  # Shut down Docker services and clean up local images
-  - script: >-
-      docker compose down --remove-orphans --rmi all --volumes
-    condition: always() # this step will always run, even if the pipeline is canceled
-    displayName: "Docker cleanup"

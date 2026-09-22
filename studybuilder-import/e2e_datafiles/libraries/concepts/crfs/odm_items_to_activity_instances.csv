@@ -1,9 +1,0 @@
-item_oid,activity_instance_name,activity_item_class_name,order,primary,preset_response_value,value_condition,value_dependent_map
-I.SYSBP,Systolic Blood Pressure,test_name,1,No,,,
-I.SYSBP,Systolic Blood Pressure,test_code,2,No,,,
-I.SYSBP,Systolic Blood Pressure,standard_unit,3,No,,,
-I.LATERALITY,Systolic Blood Pressure,laterality,4,No,,,
-I.DIABP,Diastolic Blood Pressure,test_name,1,No,,,
-I.DIABP,Diastolic Blood Pressure,test_code,2,No,,,
-I.DIABP,Diastolic Blood Pressure,standard_unit,3,No,,,
-I.LATERALITY,Diastolic Blood Pressure,laterality,4,No,,,

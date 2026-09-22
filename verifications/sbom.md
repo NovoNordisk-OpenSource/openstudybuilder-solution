@@ -1,21 +1,21 @@
-﻿
+
 ## Installed packages
 
 | Package            | Version      | License                                  |
 |--------------------|--------------|------------------------------------------|
 | annotated-doc      | 0.0.5        | [MIT](#annotated-doc)                    |
 | annotated-types    | 0.8.0        | [MIT](#annotated-types)                  |
-| anyio              | 4.14.2       | [MIT](#anyio)                            |
+| anyio              | 4.15.1       | [MIT](#anyio)                            |
 | beautifulsoup4     | 4.12.3       | [MIT License](#beautifulsoup4)           |
 | certifi            | 2026.7.22    | [MPL-2.0](#certifi)                      |
 | charset-normalizer | 3.5.1        | [MIT](#charset-normalizer)               |
-| coverage           | 7.15.4       | [Apache-2.0](#coverage)                  |
+| coverage           | 7.16.1       | [Apache-2.0](#coverage)                  |
 | fastapi            | 0.137.2      | [MIT](#fastapi)                          |
 | h11                | 0.16.0       | [MIT](#h11)                              |
 | httpcore           | 1.0.9        | [BSD-3-Clause](#httpcore)                |
 | httpx              | 0.28.1       | [BSD-3-Clause](#httpx)                   |
 | httpx_auth         | 0.23.1       | [see below](#httpx_auth)                 |
-| idna               | 3.19         | [BSD-3-Clause](#idna)                    |
+| idna               | 3.20         | [BSD-3-Clause](#idna)                    |
 | iniconfig          | 2.3.0        | [MIT](#iniconfig)                        |
 | Mako               | 1.4.1        | [MIT](#mako)                             |
 | MarkupSafe         | 3.0.3        | [BSD-3-Clause](#markupsafe)              |
@@ -34,7 +34,7 @@
 | starlette          | 1.6.0        | [BSD-3-Clause](#starlette)               |
 | typing_extensions  | 4.16.0       | [PSF-2.0](#typing_extensions)            |
 | typing-inspection  | 0.4.4        | [MIT](#typing-inspection)                |
-| urllib3            | 2.7.0        | [MIT](#urllib3)                          |
+| urllib3            | 2.8.0        | [MIT](#urllib3)                          |
 
 
 ## Third-party package licenses

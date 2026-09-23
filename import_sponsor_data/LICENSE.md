@@ -1,6 +1,6 @@
 ## NOTICE
 
-This license information is applicable to all files for the component "Data Import" located in this folder (studybuilder-import).
+This license information is applicable to all files for the component "Data Import" located in this folder (import_sponsor_data).
 
 ## License Terms (MIT)
 

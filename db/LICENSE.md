@@ -1,6 +1,6 @@
 ## NOTICE
 
-This license information is applicable to all files for the component "Clinical MDR" located in this folder (neo4j-mdr-db).
+This license information is applicable to all files for the component "Clinical MDR" located in this folder (db).
 
 ## License Terms (MIT)
 

@@ -1,6 +1,6 @@
 ## NOTICE
 
-This license information is applicable to all files for the component "Data Export" located in this folder (studybuilder-export).
+This license information is applicable to all files for the component "Data Export" located in this folder (export).
 
 ## License Terms (MIT)
 

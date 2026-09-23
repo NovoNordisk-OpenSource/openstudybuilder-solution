@@ -1,6 +1,6 @@
 ## NOTICE
 
-This license information is applicable to all files for the component "Standards Import" located in this folder (mdr-standards-import).
+This license information is applicable to all files for the component "Standards Import" located in this folder (import_standards).
 
 **License Terms**
 

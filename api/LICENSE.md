@@ -1,6 +1,6 @@
 ## NOTICE
 
-This license information is applicable to all files for the component OpenStudyBuilder API located in this folder (clinical-mdr-api).
+This license information is applicable to all files for the component OpenStudyBuilder API located in this folder (api).
 
 The GPLv3 license is applicable to all, but the Swagger API documentation (openapi.json). The Swagger API documentation is using the MIT license (see header of this file).
 

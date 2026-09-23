@@ -1,6 +1,6 @@
 ## NOTICE
 
-This license information is applicable to all files for the component "OpenStudyBuilder Documentation Portal" located in this folder (documentation-portal), except for the folder `azure-icons` and all of its contained material. OpenStudyBuilder team have only added a `README.md` for internal descriptive purposes. Azure icons are used for certain cloud diagrams. The icons are published and owned by Microsoft. See the files `azure-icons/Azure_Icons_FAQ.pdf` and `azure-icons/Microsoft_Terms_of_Use.pdf` for further information.
+This license information is applicable to all files for the component "OpenStudyBuilder Documentation Portal" located in this folder (documentation_portal), except for the folder `azure-icons` and all of its contained material. OpenStudyBuilder team have only added a `README.md` for internal descriptive purposes. Azure icons are used for certain cloud diagrams. The icons are published and owned by Microsoft. See the files `azure-icons/Azure_Icons_FAQ.pdf` and `azure-icons/Microsoft_Terms_of_Use.pdf` for further information.
 
 The MIT license is applicable to all source code parts.
 

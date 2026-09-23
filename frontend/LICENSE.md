@@ -1,6 +1,6 @@
 ## NOTICE
 
-This license information is applicable to all files for the component OpenStudyBuilder App located in this folder (studybuilder).
+This license information is applicable to all files for the component OpenStudyBuilder App located in this folder (frontend).
 
 **License Terms**
 

@@ -1,0 +1,6 @@
+CODELIST_SUBMVAL,TERM_SUBMVAL,SPONSOR_NAME,SPONSOR_NAME_SENTENCE_CASE,NCI_PREFERRED_NAME,ORDER,CONCEPT_ID,CATALOGUES,DEFINITION
+COMPDISP,DISPENSED IN BLISTER,Blister,blister,Blister,1,,,Blister
+COMPDISP,DISPENSED IN CARTRIDGE,Cartridge,cartridge,Cartridge,2,,,Cartridge
+COMPDISP,DISPENSED IN PREFILLED PEN,Pre-filled pen,pre-filled pen,Pre-filled pen,3,,,Pre-filled pen
+COMPDISP,DISPENSED IN VIAL,Vial,vial,Vial,4,,,Vial
+COMPDISP,DISPENSED IN PREFILLED SYRINGE,Pre-filled syringe,pre-filled syringe,Pre-filled Syringe,5,,,Pre-filled syringe

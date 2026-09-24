@@ -1,0 +1,26 @@
+repos:
+  - repo: https://github.com/psf/black
+    rev: 26.3.1
+    hooks:
+      - id: black
+  - repo: https://github.com/PyCQA/isort
+    rev: 8.0.1
+    hooks:
+      - id: isort
+  - repo: local
+    hooks:
+      - id: pylint
+        name: pylint
+        entry: pipenv
+        language: system
+        types: [python]
+        require_serial: true
+        args:
+          [
+            "run",
+            "pylint",
+            "-rn", # Only display messages
+            "-sn", # Don't display the score
+          ]
+default_language_version:
+  python: python3.14

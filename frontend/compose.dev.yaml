@@ -1,0 +1,31 @@
+services:
+  # UI service for local development
+  ui:
+    image: ${NODE_IMAGE:-node:lts-alpine}
+    entrypoint: ['/bin/sh', '-cx']
+    command:
+      [
+        'npm install && npm run update-config && npm run dev -- --host --port ${UI_PORT:-8080}',
+      ]
+    environment:
+      HOME: /tmp
+      API_BASE_URL: 'http://127.0.0.1:8000'
+      DOC_BASE_URL: 'http://127.0.0.1:8081'
+
+    expose:
+      - ${UI_PORT:-8080}
+    ports:
+      - '${BIND_ADDRESS:-127.0.0.1}:${UI_PORT:-8080}:${UI_PORT:-8080}'
+      - '127.0.0.1:9229:9229'
+    user: '${UID:-1000}:${GID:-1000}'
+    volumes:
+      - type: bind
+        source: ./
+        target: /ui
+    working_dir: /ui
+
+networks:
+  default:
+    driver: external
+    name: studybuilder_dev-env
+    external: true

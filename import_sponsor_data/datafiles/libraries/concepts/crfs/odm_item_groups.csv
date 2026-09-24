@@ -1,0 +1,215 @@
+oid,name,repeating,is_reference_data,sas_dataset_name,origin,purpose,comment,sdtm_domains,translated_texts,aliases
+G.DM.IC,Informed Consent,No,No,DEMOG,Collected Value,Tabulation,,DM||DS,Description::en::Informed Consent item group||osb:CompletionInstructions::en::Please complete the Informed Consent item group  before any other information||osb:DisplayText::en::Informed Consent (Inf Cons),"Sdtm::Note: If multiple Informed Consent dates are availables, then the latest date is RFICDTC||Sdtm::Note: [SUbJECT_INFO_2] - Non-repeating||Sdtm::DS:DSCAT=PROTOCOL MILESTONE||Sdtm::DS:DSDECOD=INFORMED CONSENT OBTAINED"
+G.DM.DM,General Demography,No,No,DEMOG,Collected Value,Tabulation,,DM,Description::en::General Demographic item group||osb:CompletionInstructions::en::Please complete this General Demographic item group  at the very beginning of the study,
+G.MH.NS,Any conditions / illnesses,No,No,MEDHIS,Collected Value,Tabulation,,MH,Description::en::Any conditions / illnesses ?||osb:CompletionInstructions::en::Please state if there was any conditions / Illnesses,
+G.MH.CM,Medical History / Concomitant Illness,Yes,No,MEDHIS,Collected Value,Tabulation,,MH,Description::en::Medical History item group||osb:CompletionInstructions::en::Please complete this Medical History item group before starting the treatment,
+G.VS.VS,Vital Signs,Yes,No,VITALSIGNS,Collected Value,Tabulation,,VS,Description::en::Vital signs||osb:CompletionInstructions::en::Please complete the Vital Signs item group at each expected time point,
+G.VS.BPP,Blood pressure and pulse,No,No,VITALSIGNSBPP,Collected Value,Tabulation,,VS,Description::en::Blood pressure and pulse||osb:CompletionInstructions::en::Please complete the Blood pressure and Pulse item group at each expected time point,
+G.EG.ECGSTATUS,Is teh ECG,No,No,ECGSTATUS,Collected Value,Tabulation,,EG,Description::en::ECG Test Results||osb:CompletionInstructions::en::Please complete the ECG Test Results item group at each expected time point,
+ImportedInstance_G_1,Acute Kidney Injury - Acute Urinary Tract Infection,No,No,,Collected Value,Tabulation,,FA,,a::Group aliases
+ImportedInstance_G_2,Acute Kidney Injury -  Aminoglycoside(s),No,No,,Collected Value,Tabulation,,FA,,a::Group aliases
+ImportedInstance_G_3,Acute Kidney Injury - Chronic Urinary Tract Infection,No,No,,Collected Value,Tabulation,,FA,,a::Group aliases
+ImportedInstance_G_4,Acute Kidney Injury - Conditions,No,No,,Collected Value,Tabulation,,FA,,a::Group aliases
+ImportedInstance_G_5,Acute Kidney Injury - Conditions Other,No,No,,Collected Value,Tabulation,,FA,,a::Group aliases
+ImportedInstance_G_6,Acute Kidney Injury - Connective Tissue Disease or Vasculitis,No,No,,Collected Value,Tabulation,,FA,,a::Group aliases
+ImportedInstance_G_7,Acute Kidney Injury - CT Scan Performed,No,No,,Collected Value,Tabulation,,FA,,a::Group aliases
+ImportedInstance_G_8,Acute Kidney Injury - Family History of Kidney Disease,No,No,,Collected Value,Tabulation,,FA,,a::Group aliases
+ImportedInstance_G_9,Acute Kidney Injury - Hypertension,No,No,,Collected Value,Tabulation,,FA,,a::Group aliases
+ImportedInstance_G_10,Acute Kidney Injury - Other Imaging Performed,No,No,,Collected Value,Tabulation,,FA,,a::Group aliases
+ImportedInstance_G_11,Acute Kidney Injury - Imaging Performed,No,No,,Collected Value,Tabulation,,FA,,a::Group aliases
+ImportedInstance_G_12,Acute Kidney Injury - Summary of Imaging Results,No,No,,Collected Value,Tabulation,,FA,,a::Group aliases
+ImportedInstance_G_13,Acute Kidney Injury - Increase Serum Creat >= 0.3 mg/dL Within 48 Hours,No,No,,Collected Value,Tabulation,,FA,,a::Group aliases
+ImportedInstance_G_14,Acute Kidney Injury - Increase Serum Creat >= 1.5 Times Baseline Within 7 Days,No,No,,Collected Value,Tabulation,,FA,,a::Group aliases
+ImportedInstance_G_15,Acute Kidney Injury - Initiation of RAS Blockade,No,No,,Collected Value,Tabulation,,FA,,a::Group aliases
+ImportedInstance_G_16,Acute Kidney Injury - IV Contrast,No,No,,Collected Value,Tabulation,,FA,,a::Group aliases
+ImportedInstance_G_17,Acute Kidney Injury - Summary of Biopsy Histology Results,No,No,,Collected Value,Tabulation,,FA,,a::Group aliases
+ImportedInstance_G_18,Acute Kidney Injury - Kidney Biopsy Performed,No,No,,Collected Value,Tabulation,,FA,,a::Group aliases
+ImportedInstance_G_19,Acute Kidney Injury - Nephrotoxic Treatment Received Within Last 3 Months,No,No,,Collected Value,Tabulation,,FA,,a::Group aliases
+ImportedInstance_G_20,Acute Kidney Injury - Nephrotoxic Treatment Other,No,No,,Collected Value,Tabulation,,FA,,a::Group aliases
+ImportedInstance_G_21,Acute Kidney Injury - NSAIDs,No,No,,Collected Value,Tabulation,,FA,,a::Group aliases
+ImportedInstance_G_22,Acute Kidney Injury - Post-Renal Obstructive Disease,No,No,,Collected Value,Tabulation,,FA,,a::Group aliases
+ImportedInstance_G_23,Acute Kidney Injury - Present Other,No,No,,Collected Value,Tabulation,,FA,,a::Group aliases
+ImportedInstance_G_24,Acute Kidney Injury - Primary Glomerulonephritis,No,No,,Collected Value,Tabulation,,FA,,a::Group aliases
+ImportedInstance_G_25,Acute Kidney Injury - Progression of Chronic Kidney Disease,No,No,,Collected Value,Tabulation,,FA,,a::Group aliases
+ImportedInstance_G_26,Acute Kidney Injury - Recent Streptococcal Infection,No,No,,Collected Value,Tabulation,,FA,,a::Group aliases
+ImportedInstance_G_27,Acute Kidney Injury - Renal Angio-Imaging Performed,No,No,,Collected Value,Tabulation,,FA,,a::Group aliases
+ImportedInstance_G_28,Acute Kidney Injury - Renal Artery Stenosis,No,No,,Collected Value,Tabulation,,FA,,a::Group aliases
+ImportedInstance_G_29,Acute Kidney Injury - Renal Vein Thrombosis,No,No,,Collected Value,Tabulation,,FA,,a::Group aliases
+ImportedInstance_G_30,Acute Kidney Injury - Systemic Autoimmune Disease,No,No,,Collected Value,Tabulation,,FA,,a::Group aliases
+ImportedInstance_G_31,Acute Kidney Injury - Ultrasound Performed,No,No,,Collected Value,Tabulation,,FA,,a::Group aliases
+ImportedInstance_G_32,Acute Kidney Injury - Urine Volume < 0.5 mL/kg/h for 6 Hours,No,No,,Collected Value,Tabulation,,FA,,a::Group aliases
+ImportedInstance_G_33,Adjudication Outcome,No,No,,Collected Value,Tabulation,,ZA,,a::Group aliases
+ImportedInstance_G_34,"Albumin, AE Requiring Additional Data",No,No,,Collected Value,Tabulation,,LB,"Description::en::Not all activity items included, see design notes||osb:DesignNotes::en::Unused activity items: molecular_weight  ",a::Group aliases
+ImportedInstance_G_35,Urinary Albumin Excretion,No,No,,Collected Value,Tabulation,,LB,,a::Group aliases
+ImportedInstance_G_36,Albumin/Creatinine,No,No,,Collected Value,Tabulation,,LB,,a::Group aliases
+ImportedInstance_G_37,Albumin/Creatinine Ratio,No,No,,Collected Value,Tabulation,,LB,"Description::en::Not all activity items included, see design notes||osb:DesignNotes::en::Unused activity items: loinc  ",a::Group aliases
+ImportedInstance_G_38,Albumin Urine,No,No,,Collected Value,Tabulation,,LB,"Description::en::Not all activity items included, see design notes||osb:DesignNotes::en::Unused activity items: molecular_weight  , loinc  ",a::Group aliases
+ImportedInstance_G_39,"Albumin, g/dL",No,No,,Collected Value,Tabulation,,LB,"Description::en::Not all activity items included, see design notes||osb:DesignNotes::en::Unused activity items: molecular_weight  , loinc  ",a::Group aliases
+ImportedInstance_G_40,"Alkaline Phosphatase, AE Requiring Additional Data",No,No,,Collected Value,Tabulation,,LB,,a::Group aliases
+ImportedInstance_G_41,"Alanine Aminotransferase, AE Requiring Additional Data",No,No,,Collected Value,Tabulation,,LB,,a::Group aliases
+ImportedInstance_G_42,"Alanine Aminotransferase, Biochemistry",No,No,,Collected Value,Tabulation,,LB,"Description::en::Not all activity items included, see design notes||osb:DesignNotes::en::Unused activity items: loinc  ",a::Group aliases
+ImportedInstance_G_43,"Amylase, AE Requiring Additional Data",No,No,,Collected Value,Tabulation,,LB,,a::Group aliases
+ImportedInstance_G_44,"Amylase, Biochemistry",No,No,,Collected Value,Tabulation,,LB,"Description::en::Not all activity items included, see design notes||osb:DesignNotes::en::Unused activity items: loinc  ",a::Group aliases
+ImportedInstance_G_45,"Alkaline Phosphatase, Biochemistry",No,No,,Collected Value,Tabulation,,LB,"Description::en::Not all activity items included, see design notes||osb:DesignNotes::en::Unused activity items: loinc  ",a::Group aliases
+ImportedInstance_G_46,"Aspartate Aminotransferase, AE Requiring Additional Data",No,No,,Collected Value,Tabulation,,LB,,a::Group aliases
+ImportedInstance_G_47,"Aspartate Aminotransferase, Biochemistry",No,No,,Collected Value,Tabulation,,LB,"Description::en::Not all activity items included, see design notes||osb:DesignNotes::en::Unused activity items: loinc  ",a::Group aliases
+ImportedInstance_G_48,BG Super GL Analyzer,No,No,,Collected Value,Tabulation,,LB,"Description::en::Not all activity items included, see design notes||osb:DesignNotes::en::Unused activity items: molecular_weight  ",a::Group aliases
+ImportedInstance_G_49,"Direct Bilirubin, AE Requiring Additional Data",No,No,,Collected Value,Tabulation,,LB,"Description::en::Not all activity items included, see design notes||osb:DesignNotes::en::Unused activity items: molecular_weight  ",a::Group aliases
+ImportedInstance_G_50,"Bilirubin, AE Requiring Additional Data",No,No,,Collected Value,Tabulation,,LB,"Description::en::Not all activity items included, see design notes||osb:DesignNotes::en::Unused activity items: molecular_weight  ",a::Group aliases
+ImportedInstance_G_51,"Indirect Bilirubin, AE Requiring Additional Data",No,No,,Collected Value,Tabulation,,LB,"Description::en::Not all activity items included, see design notes||osb:DesignNotes::en::Unused activity items: molecular_weight  ",a::Group aliases
+ImportedInstance_G_52,"Bilirubin, Biochemistry",No,No,,Collected Value,Tabulation,,LB,"Description::en::Not all activity items included, see design notes||osb:DesignNotes::en::Unused activity items: molecular_weight  , loinc  ",a::Group aliases
+ImportedInstance_G_53,Bilirubin Urine,No,No,,Collected Value,Tabulation,,LB,,a::Group aliases
+ImportedInstance_G_54,Have All Blood Samples Been Taken,No,No,,Collected Value,Tabulation,,LB,,a::Group aliases
+ImportedInstance_G_55,Urea Nitrogen,No,No,,Collected Value,Tabulation,,LB,"Description::en::Not all activity items included, see design notes||osb:DesignNotes::en::Unused activity items: molecular_weight  ",a::Group aliases
+ImportedInstance_G_56,Body Temperature,No,No,,Collected Value,Tabulation,,VS,,a::Group aliases
+ImportedInstance_G_57,Body Weight,No,No,,Collected Value,Tabulation,,VS,,a::Group aliases
+ImportedInstance_G_58,Diastolic Blood Pressure,No,No,,Collected Value,Tabulation,,VS,"Description::en::Not all activity items included, see design notes||osb:DesignNotes::en::Unused activity items: time_point  , repitition_number  ",a::Group aliases
+ImportedInstance_G_59,Systolic Blood Pressure,No,No,,Collected Value,Tabulation,,VS,"Description::en::Not all activity items included, see design notes||osb:DesignNotes::en::Unused activity items: time_point  , repitition_number  ",a::Group aliases
+ImportedInstance_G_60,Cause of Death,No,No,,Collected Value,Tabulation,,ZA,,a::Group aliases
+ImportedInstance_G_61,CGM - Sensor Value,No,No,,Collected Value,Tabulation,,LB,"Description::en::Not all activity items included, see design notes||osb:DesignNotes::en::Unused activity items: molecular_weight  ",a::Group aliases
+ImportedInstance_G_62,Imaging Findings Characteristic of Pancreatitis,No,No,,Collected Value,Tabulation,,ZA,,a::Group aliases
+ImportedInstance_G_63,Is the Subject of Childbearing Potential,No,No,,Collected Value,Tabulation,,RP,,a::Group aliases
+ImportedInstance_G_64,Classification of Myocardial Infarction,No,No,,Collected Value,Tabulation,,ZA,,a::Group aliases
+ImportedInstance_G_65,Creatinine Clearance,No,No,,Collected Value,Tabulation,,LB,,a::Group aliases
+ImportedInstance_G_66,"Creatinine, Biochemistry",No,No,,Collected Value,Tabulation,,LB,"Description::en::Not all activity items included, see design notes||osb:DesignNotes::en::Unused activity items: molecular_weight  , loinc  ",a::Group aliases
+ImportedInstance_G_67,C-Reactive Protein,No,No,,Collected Value,Tabulation,,LB,"Description::en::Not all activity items included, see design notes||osb:DesignNotes::en::Unused activity items: molecular_weight  ",a::Group aliases
+ImportedInstance_G_68,High Sensitive C-Reactive Protein,No,No,,Collected Value,Tabulation,,LB,"Description::en::Not all activity items included, see design notes||osb:DesignNotes::en::Unused activity items: molecular_weight  , loinc  ",a::Group aliases
+ImportedInstance_G_69,Cystatin C,No,No,,Collected Value,Tabulation,,LB,"Description::en::Not all activity items included, see design notes||osb:DesignNotes::en::Unused activity items: molecular_weight  ",a::Group aliases
+ImportedInstance_G_70,C-Peptide,No,No,,Collected Value,Tabulation,,LB,"Description::en::Not all activity items included, see design notes||osb:DesignNotes::en::Unused activity items: molecular_weight  ",a::Group aliases
+ImportedInstance_G_71,C-Reactive Protein Plasma,No,No,,Collected Value,Tabulation,,LB,,a::Group aliases
+ImportedInstance_G_72,Location of Death Occurrence,No,No,,Collected Value,Tabulation,,ZA,,a::Group aliases
+ImportedInstance_G_73,eGFR Using CKD-EPI Formula,No,No,,Collected Value,Tabulation,,LB,"Description::en::Not all activity items included, see design notes||osb:DesignNotes::en::Unused activity items: loinc  ",a::Group aliases
+ImportedInstance_G_74,"Elevated Blood Levels of Pancreatic Enzymes (Lipase, Amylase) >=3xUNL",No,No,,Collected Value,Tabulation,,ZA,,a::Group aliases
+ImportedInstance_G_75,Eosinophils Blood,No,No,,Collected Value,Tabulation,,LB,"Description::en::Not all activity items included, see design notes||osb:DesignNotes::en::Unused activity items: loinc  ",a::Group aliases
+ImportedInstance_G_76,Eosinophils Cell Count (AE),No,No,,Collected Value,Tabulation,,LB,,a::Group aliases
+ImportedInstance_G_77,Erythrocytes,No,No,,Collected Value,Tabulation,,LB,"Description::en::Not all activity items included, see design notes||osb:DesignNotes::en::Unused activity items: loinc  ",a::Group aliases
+ImportedInstance_G_78,Estimated GFR,No,No,,Collected Value,Tabulation,,LB,,a::Group aliases
+ImportedInstance_G_79,Ethnicity,No,No,,Collected Value,Tabulation,,,,a::Group aliases
+ImportedInstance_G_80,Evaluated Event Onset Date,No,No,,Collected Value,Tabulation,,ZA,,a::Group aliases
+ImportedInstance_G_81,Event Confirmation,No,No,,Collected Value,Tabulation,,ZA,,a::Group aliases
+ImportedInstance_G_82,Fasting Plasma Glucose,No,No,,Collected Value,Tabulation,,LB,"Description::en::Not all activity items included, see design notes||osb:DesignNotes::en::Unused activity items: molecular_weight  , loinc  ",a::Group aliases
+ImportedInstance_G_83,Fasting Serum Glucose,No,No,,Collected Value,Tabulation,,LB,"Description::en::Not all activity items included, see design notes||osb:DesignNotes::en::Unused activity items: molecular_weight  ",a::Group aliases
+ImportedInstance_G_84,Insulin Serum-Fasting,No,No,,Collected Value,Tabulation,,LB,"Description::en::Not all activity items included, see design notes||osb:DesignNotes::en::Unused activity items: molecular_weight  , loinc  ",a::Group aliases
+ImportedInstance_G_85,Gamma Glutamyl Transferase,No,No,,Collected Value,Tabulation,,LB,,a::Group aliases
+ImportedInstance_G_86,GGT,No,No,,Collected Value,Tabulation,,LB,"Description::en::Not all activity items included, see design notes||osb:DesignNotes::en::Unused activity items: loinc  ",a::Group aliases
+ImportedInstance_G_87,Plasma Glucagon,No,No,,Collected Value,Tabulation,,LB,"Description::en::Not all activity items included, see design notes||osb:DesignNotes::en::Unused activity items: molecular_weight  ",a::Group aliases
+ImportedInstance_G_88,Serum Glucagon,No,No,,Collected Value,Tabulation,,LB,"Description::en::Not all activity items included, see design notes||osb:DesignNotes::en::Unused activity items: molecular_weight  ",a::Group aliases
+ImportedInstance_G_89,Glucose,No,No,,Collected Value,Tabulation,,LB,"Description::en::Not all activity items included, see design notes||osb:DesignNotes::en::Unused activity items: molecular_weight  ",a::Group aliases
+ImportedInstance_G_90,Blood Glucose,No,No,,Collected Value,Tabulation,,LB,"Description::en::Not all activity items included, see design notes||osb:DesignNotes::en::Unused activity items: molecular_weight  ",a::Group aliases
+ImportedInstance_G_91,Glucose Urine,No,No,,Collected Value,Tabulation,,LB,,a::Group aliases
+ImportedInstance_G_92,"Glucose, Plasma, Glucose Metabolism",No,No,,Collected Value,Tabulation,,LB,"Description::en::Not all activity items included, see design notes||osb:DesignNotes::en::Unused activity items: molecular_weight  ",a::Group aliases
+ImportedInstance_G_93,"Glucose, Serum",No,No,,Collected Value,Tabulation,,LB,"Description::en::Not all activity items included, see design notes||osb:DesignNotes::en::Unused activity items: molecular_weight  ",a::Group aliases
+ImportedInstance_G_94,Glucose Dipstick,No,No,,Collected Value,Tabulation,,LB,"Description::en::Not all activity items included, see design notes||osb:DesignNotes::en::Unused activity items: loinc  ",a::Group aliases
+ImportedInstance_G_95,HbA1c,No,No,,Collected Value,Tabulation,,LB,"Description::en::Not all activity items included, see design notes||osb:DesignNotes::en::Unused activity items: loinc  ",a::Group aliases
+ImportedInstance_G_96,Heart Failure Classification,No,No,,Collected Value,Tabulation,,ZA,,a::Group aliases
+ImportedInstance_G_97,Height,No,No,,Collected Value,Tabulation,,VS,,a::Group aliases
+ImportedInstance_G_98,Hip Circumference,No,No,,Collected Value,Tabulation,,VS,,a::Group aliases
+ImportedInstance_G_99,Did the Subject Feel Better After the Treatment,No,No,,Collected Value,Tabulation,,ZA,,a::Group aliases
+ImportedInstance_G_100,International Normalized Ratio,No,No,,Collected Value,Tabulation,,LB,,a::Group aliases
+ImportedInstance_G_101,INR,No,No,,Collected Value,Tabulation,,LB,"Description::en::Not all activity items included, see design notes||osb:DesignNotes::en::Unused activity items: loinc  ",a::Group aliases
+ImportedInstance_G_102,Human Insulin,No,No,,Collected Value,Tabulation,,LB,"Description::en::Not all activity items included, see design notes||osb:DesignNotes::en::Unused activity items: molecular_weight  ",a::Group aliases
+ImportedInstance_G_103,Insulin Serum,No,No,,Collected Value,Tabulation,,LB,"Description::en::Not all activity items included, see design notes||osb:DesignNotes::en::Unused activity items: molecular_weight  , loinc  ",a::Group aliases
+ImportedInstance_G_104,"Lipase, AE Requiring Additional Data",No,No,,Collected Value,Tabulation,,LB,,a::Group aliases
+ImportedInstance_G_105,"Lipase, Biochemistry",No,No,,Collected Value,Tabulation,,LB,"Description::en::Not all activity items included, see design notes||osb:DesignNotes::en::Unused activity items: loinc  ",a::Group aliases
+ImportedInstance_G_106,Glomerular Filtration Rate,No,No,,Collected Value,Tabulation,,LB,,a::Group aliases
+ImportedInstance_G_107,Method of Coronary Revascularisation,No,No,,Collected Value,Tabulation,,ZA,,a::Group aliases
+ImportedInstance_G_108,"Nitrite, AE Requiring Additional Data",No,No,,Collected Value,Tabulation,,LB,,a::Group aliases
+ImportedInstance_G_109,Urine Nitrite,No,No,,Collected Value,Tabulation,,LB,,a::Group aliases
+ImportedInstance_G_110,"Nitrite, Urinalysis",No,No,,Collected Value,Tabulation,,LB,,a::Group aliases
+ImportedInstance_G_111,Other Adjudicated Event Type,No,No,,Collected Value,Tabulation,,ZA,,a::Group aliases
+ImportedInstance_G_112,Oxygen Saturation,No,No,,Collected Value,Tabulation,,VS,,a::Group aliases
+ImportedInstance_G_113,Pain Rating - How Would You Rate the Pain at Its Worst in Your Target Knee,No,No,,Collected Value,Tabulation,,QS,,a::Group aliases
+ImportedInstance_G_114,Significant Upper Abdominal Pain,No,No,,Collected Value,Tabulation,,FA,,a::Group aliases
+ImportedInstance_G_115,Any Acute Complications,No,No,,Collected Value,Tabulation,,FA,,a::Group aliases
+ImportedInstance_G_116,Other Acute Pancreatitis Symptom,No,No,,Collected Value,Tabulation,,FA,,a::Group aliases
+ImportedInstance_G_117,Risk Factor - Alcohol Consumption,No,No,,Collected Value,Tabulation,,FA,,a::Group aliases
+ImportedInstance_G_118,Atrophy of the Pancreas,No,No,,Collected Value,Tabulation,,FA,,a::Group aliases
+ImportedInstance_G_119,Calcification of Pancreas,No,No,,Collected Value,Tabulation,,FA,,a::Group aliases
+ImportedInstance_G_120,Other Chronic Pancreatitis Symptom,No,No,,Collected Value,Tabulation,,FA,,a::Group aliases
+ImportedInstance_G_121,Imaging Method - CT Scan,No,No,,Collected Value,Tabulation,,FA,,a::Group aliases
+ImportedInstance_G_122,Dilatation of Pancreatic Ducts,No,No,,Collected Value,Tabulation,,FA,,a::Group aliases
+ImportedInstance_G_123,Dilated Common Bile Duct,No,No,,Collected Value,Tabulation,,FA,,a::Group aliases
+ImportedInstance_G_124,Risk Factor -Family Hist of Pancreatitis,No,No,,Collected Value,Tabulation,,FA,,a::Group aliases
+ImportedInstance_G_125,Fever as Symptom,No,No,,Collected Value,Tabulation,,FA,,a::Group aliases
+ImportedInstance_G_126,Acute Complications - GI Haemorrhage,No,No,,Collected Value,Tabulation,,FA,,a::Group aliases
+ImportedInstance_G_127,Risk Factor - History of Gallstones,No,No,,Collected Value,Tabulation,,FA,,a::Group aliases
+ImportedInstance_G_128,Risk Factor - Hyper-Calcaemia,No,No,,Collected Value,Tabulation,,FA,,a::Group aliases
+ImportedInstance_G_129,Risk Factor - Hyper-Triglyceridemia,No,No,,Collected Value,Tabulation,,FA,,a::Group aliases
+ImportedInstance_G_130,Imaging Consistent with Acute Pan,No,No,,Collected Value,Tabulation,,FA,,a::Group aliases
+ImportedInstance_G_131,Imaging Consistent with Chronic Pan,No,No,,Collected Value,Tabulation,,FA,,a::Group aliases
+ImportedInstance_G_132,Imaging Consistent with Gallstone,No,No,,Collected Value,Tabulation,,FA,,a::Group aliases
+ImportedInstance_G_133,Was Imaging Performed,No,No,,Collected Value,Tabulation,,FA,,a::Group aliases
+ImportedInstance_G_134,Imaging Method - MRI,No,No,,Collected Value,Tabulation,,FA,,a::Group aliases
+ImportedInstance_G_135,Nausea as Symptom,No,No,,Collected Value,Tabulation,,FA,,a::Group aliases
+ImportedInstance_G_136,Necrotising Pancreatitis,No,No,,Collected Value,Tabulation,,FA,,a::Group aliases
+ImportedInstance_G_137,Obstructive Gall-Stone,No,No,,Collected Value,Tabulation,,FA,,a::Group aliases
+ImportedInstance_G_138,Oedematous or Interstitial Pancreatitis,No,No,,Collected Value,Tabulation,,FA,,a::Group aliases
+ImportedInstance_G_139,Imaging Method - Other,No,No,,Collected Value,Tabulation,,FA,,a::Group aliases
+ImportedInstance_G_140,Acute Complications - Other,No,No,,Collected Value,Tabulation,,FA,,a::Group aliases
+ImportedInstance_G_141,Risk Factor - Other,No,No,,Collected Value,Tabulation,,FA,,a::Group aliases
+ImportedInstance_G_142,Other Symptom,No,No,,Collected Value,Tabulation,,FA,,a::Group aliases
+ImportedInstance_G_143,Peri-Pancreatic Fluid,No,No,,Collected Value,Tabulation,,FA,,a::Group aliases
+ImportedInstance_G_144,Pseudocysts,No,No,,Collected Value,Tabulation,,FA,,a::Group aliases
+ImportedInstance_G_145,Acute Complications - Renal Failure,No,No,,Collected Value,Tabulation,,FA,,a::Group aliases
+ImportedInstance_G_146,Acute Complications -Respiratory Failure,No,No,,Collected Value,Tabulation,,FA,,a::Group aliases
+ImportedInstance_G_147,Pancreatitis Risk Factors,No,No,,Collected Value,Tabulation,,FA,,a::Group aliases
+ImportedInstance_G_148,Acute Complications - Sepsis,No,No,,Collected Value,Tabulation,,FA,,a::Group aliases
+ImportedInstance_G_149,Symptoms Present During Event,No,No,,Collected Value,Tabulation,,FA,,a::Group aliases
+ImportedInstance_G_150,Risk Factor - Trauma to the Pancreas,No,No,,Collected Value,Tabulation,,FA,,a::Group aliases
+ImportedInstance_G_151,Treatment Type,No,No,,Collected Value,Tabulation,,FA,,a::Group aliases
+ImportedInstance_G_152,Imaging Method - Ultrasound,No,No,,Collected Value,Tabulation,,FA,,a::Group aliases
+ImportedInstance_G_153,Vomiting as Symptom,No,No,,Collected Value,Tabulation,,FA,,a::Group aliases
+ImportedInstance_G_154,PH Dipstick,No,No,,Collected Value,Tabulation,,LB,,a::Group aliases
+ImportedInstance_G_155,Urine pH,No,No,,Collected Value,Tabulation,,LB,"Description::en::Not all activity items included, see design notes||osb:DesignNotes::en::Unused activity items: loinc  ",a::Group aliases
+ImportedInstance_G_156,Platelets,No,No,,Collected Value,Tabulation,,LB,,a::Group aliases
+ImportedInstance_G_157,"Potassium, AE Requiring Additional Data",No,No,,Collected Value,Tabulation,,LB,"Description::en::Not all activity items included, see design notes||osb:DesignNotes::en::Unused activity items: molecular_weight  ",a::Group aliases
+ImportedInstance_G_158,"Potassium, Biochemistry",No,No,,Collected Value,Tabulation,,LB,"Description::en::Not all activity items included, see design notes||osb:DesignNotes::en::Unused activity items: molecular_weight  , loinc  ",a::Group aliases
+ImportedInstance_G_159,Protein,No,No,,Collected Value,Tabulation,,LB,,a::Group aliases
+ImportedInstance_G_160,"Prothrombin Time, AE Requiring Additional Data",No,No,,Collected Value,Tabulation,,LB,,a::Group aliases
+ImportedInstance_G_161,"Protein Urine, Stick",No,No,,Collected Value,Tabulation,,LB,"Description::en::Not all activity items included, see design notes||osb:DesignNotes::en::Unused activity items: loinc  ",a::Group aliases
+ImportedInstance_G_162,"Prothrombin Time, Plasma",No,No,,Collected Value,Tabulation,,LB,"Description::en::Not all activity items included, see design notes||osb:DesignNotes::en::Unused activity items: loinc  ",a::Group aliases
+ImportedInstance_G_163,Pulse,No,No,,Collected Value,Tabulation,,VS,,a::Group aliases
+ImportedInstance_G_164,Race,No,No,,Collected Value,Tabulation,,,,a::Group aliases
+ImportedInstance_G_165,"Erythrocytes in Urine, AE Requiring Additional Data",No,No,,Collected Value,Tabulation,,LB,,a::Group aliases
+ImportedInstance_G_166,"Erythrocytes in Urine, Urinalysis",No,No,,Collected Value,Tabulation,,LB,,a::Group aliases
+ImportedInstance_G_167,Reason for Undetermined Death Cause 1,No,No,,Collected Value,Tabulation,,ZA,,a::Group aliases
+ImportedInstance_G_168,Respiratory Rate,No,No,,Collected Value,Tabulation,,VS,,a::Group aliases
+ImportedInstance_G_169,Seizure,No,No,,Collected Value,Tabulation,,ZA,,a::Group aliases
+ImportedInstance_G_170,"Creatinine, AE Requiring Additional Data",No,No,,Collected Value,Tabulation,,LB,"Description::en::Not all activity items included, see design notes||osb:DesignNotes::en::Unused activity items: molecular_weight  ",a::Group aliases
+ImportedInstance_G_171,Severe Acute Upper Abdominal Pain,No,No,,Collected Value,Tabulation,,ZA,,a::Group aliases
+ImportedInstance_G_172,Severity of Pancreatitis,No,No,,Collected Value,Tabulation,,ZA,,a::Group aliases
+ImportedInstance_G_173,Sex,No,No,,Collected Value,Tabulation,,,,a::Group aliases
+ImportedInstance_G_174,"Sodium, AE Requiring Additional Data",No,No,,Collected Value,Tabulation,,LB,"Description::en::Not all activity items included, see design notes||osb:DesignNotes::en::Unused activity items: molecular_weight  ",a::Group aliases
+ImportedInstance_G_175,"Sodium, Biochemistry",No,No,,Collected Value,Tabulation,,LB,"Description::en::Not all activity items included, see design notes||osb:DesignNotes::en::Unused activity items: molecular_weight  , loinc  ",a::Group aliases
+ImportedInstance_G_176,Source of Adjudicated Event,No,No,,Collected Value,Tabulation,,ZA,,a::Group aliases
+ImportedInstance_G_177,Subject Fasting,No,No,,Collected Value,Tabulation,,LB,,a::Group aliases
+ImportedInstance_G_178,Subject Died,No,No,,Collected Value,Tabulation,,ZA,,a::Group aliases
+ImportedInstance_G_179,Symptom of Pancreatitis 1,No,No,,Collected Value,Tabulation,,ZA,,a::Group aliases
+ImportedInstance_G_180,Symptom of Pancreatitis 2,No,No,,Collected Value,Tabulation,,ZA,,a::Group aliases
+ImportedInstance_G_181,Symptom of Pancreatitis 3,No,No,,Collected Value,Tabulation,,ZA,,a::Group aliases
+ImportedInstance_G_182,Symptom of Unstable Angina Pectoris 1,No,No,,Collected Value,Tabulation,,ZA,,a::Group aliases
+ImportedInstance_G_183,Symptom of Unstable Angina Pectoris 2,No,No,,Collected Value,Tabulation,,ZA,,a::Group aliases
+ImportedInstance_G_184,Symptom of Unstable Angina Pectoris 3,No,No,,Collected Value,Tabulation,,ZA,,a::Group aliases
+ImportedInstance_G_185,Symptom of Unstable Angina Pectoris 4,No,No,,Collected Value,Tabulation,,ZA,,a::Group aliases
+ImportedInstance_G_186,Thrombocytes,No,No,,Collected Value,Tabulation,,LB,"Description::en::Not all activity items included, see design notes||osb:DesignNotes::en::Unused activity items: loinc  ",a::Group aliases
+ImportedInstance_G_187,Treadmill - Pain-Free Walking Distance on Flat Treadmill,No,No,,Collected Value,Tabulation,,FT,,a::Group aliases
+ImportedInstance_G_188,Treadmill - Pain-Free Walking Distance on Inclined Treadmill,No,No,,Collected Value,Tabulation,,FT,,a::Group aliases
+ImportedInstance_G_189,Treadmill - Max Walking Distance on Inclined Treadmill,No,No,,Collected Value,Tabulation,,FT,,a::Group aliases
+ImportedInstance_G_190,TOAST Classification,No,No,,Collected Value,Tabulation,,ZA,,a::Group aliases
+ImportedInstance_G_191,"Total Protein, g/dL",No,No,,Collected Value,Tabulation,,LB,,a::Group aliases
+ImportedInstance_G_192,Type of Heart Failure,No,No,,Collected Value,Tabulation,,ZA,,a::Group aliases
+ImportedInstance_G_193,Type of Myocardial Infarction,No,No,,Collected Value,Tabulation,,ZA,,a::Group aliases
+ImportedInstance_G_194,Type of Stroke,No,No,,Collected Value,Tabulation,,ZA,,a::Group aliases
+ImportedInstance_G_195,Leukocytes,No,No,,Collected Value,Tabulation,,LB,"Description::en::Not all activity items included, see design notes||osb:DesignNotes::en::Unused activity items: loinc  ",a::Group aliases
+ImportedInstance_G_196,Unconscious/Coma,No,No,,Collected Value,Tabulation,,ZA,,a::Group aliases
+ImportedInstance_G_197,Undetermined Etiology Reason,No,No,,Collected Value,Tabulation,,ZA,,a::Group aliases
+ImportedInstance_G_198,Details in Source Data,No,No,,Collected Value,Tabulation,,ZA,,a::Group aliases
+ImportedInstance_G_199,Urine Culture,No,No,,Collected Value,Tabulation,,LB,,a::Group aliases
+ImportedInstance_G_200,Urine Microscopy,No,No,,Collected Value,Tabulation,,LB,,a::Group aliases
+ImportedInstance_G_201,Have All Urine Samples Been Taken,No,No,,Collected Value,Tabulation,,LB,,a::Group aliases
+ImportedInstance_G_202,Urobilinogen,No,No,,Collected Value,Tabulation,,LB,,a::Group aliases
+ImportedInstance_G_203,Urobilinogen Urine,No,No,,Collected Value,Tabulation,,LB,,a::Group aliases
+ImportedInstance_G_204,Waist Circumference,No,No,,Collected Value,Tabulation,,VS,,a::Group aliases
+ImportedInstance_G_205,White Blood Cells,No,No,,Collected Value,Tabulation,,LB,,a::Group aliases
+ImportedInstance_G_206,"Leukocytes in Urine, AE Requiring Additional Data",No,No,,Collected Value,Tabulation,,LB,,a::Group aliases
+ImportedInstance_G_207,"Leukocytes in Urine, Urinalysis",No,No,,Collected Value,Tabulation,,LB,"Description::en::Not all activity items included, see design notes||osb:DesignNotes::en::Unused activity items: loinc  ",a::Group aliases

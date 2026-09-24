@@ -1,0 +1,1071 @@
+{
+  "title": "Laboratory Data Specification",
+  "version": "2.4",
+  "settings": {
+    "pagenumber": 0,
+    "editable": true,
+    "fullscreenEnabled": false,
+    "parameters": {
+      "neodash_studyroot_uid": "",
+      "neodash_studyroot_uid_display": "",
+      "neodash_studyref": "",
+      "neodash_document_version": "",
+      "neodash_supplier_name": "",
+      "neodash_lab_specification_version": "",
+      "neodash_lab_specification_version_display": "",
+      "neodash_lab_spec_dataset": "PK",
+      "neodash_lab_spec_dataset_display": "PK",
+      "neodash_pharmacology_type": "PK",
+      "neodash_pharmacology_type_display": "PK",
+      "neodash_project_name": [],
+      "neodash_project_name_display": [],
+      "neodash_study_name": "",
+      "neodash_": "",
+      "neodash_studyvalue_study_number": "",
+      "neodash_studyvalue_study_number_display": "",
+      "neodash_study_id": "",
+      "neodash_study_id_display": "",
+      "neodash_visit_class": [],
+      "neodash_visit_class_display": [],
+      "neodash_removed_activity": [],
+      "neodash_removed_activity_display": [],
+      "neodash_spec_type": [],
+      "neodash_spec_type_display": [],
+      "neodash_remove_activity_instances": [],
+      "neodash_remove_activity_instances_display": [],
+      "neodash_remove_pk_activity_instances_": [],
+      "neodash_remove_pk_activity_instances__display": [],
+      "neodash_remove_pk_activity_instances": [],
+      "neodash_remove_pk_activity_instances_display": [],
+      "neodash_remove_ab_activity_instances": [],
+      "neodash_remove_ab_activity_instances_display": []
+    },
+    "theme": "light",
+    "darkLuma": 200,
+    "queryTimeLimit": 100000,
+    "disableRowLimiting": false
+  },
+  "pages": [
+    {
+      "title": "Lab Data Spec Metadata ",
+      "reports": [
+        {
+          "id": "35d3ecb0-d59f-4762-9020-928e712031ca",
+          "title": "Instructions",
+          "query": "##### Lab Data Spec Metadata\nSelect Lab Specification version under **Select lab specification version (required)**\n\nSelect the Study in **Select Study (required)** table - click on the SELECT button.\n\nYou can also filter on Project Name & Study ID to limit the rows under **Search for a Project** and **Search for a Study**.\n\n\n##### Visit tab\n\nWill list the visits where activities are in the Laboratory Assessment group - as specified in the Study SoA\n\n##### Contents tab\nWill list the assessments to be collected for the study. Note, it requires that an Activity Instance has been chosen for the Activity.",
+          "width": 8,
+          "height": 6,
+          "x": 16,
+          "y": 0,
+          "type": "text",
+          "selection": {},
+          "settings": {},
+          "schema": []
+        },
+        {
+          "id": "97f4e6dc-3d60-41cd-b031-52640443e669",
+          "title": "Select Study (required)",
+          "query": "MATCH (n1)-[:LATEST]->(n2)-[:HAS_PROJECT]->(sp:StudyProjectField)<-[:HAS_FIELD]-(proj:Project)\nWHERE\n  // Scenario 1: No filters - show all studies\n  (size($neodash_project_name) = 0 AND $neodash_study_id = '')\n  OR\n  // Scenario 2: Only project selected - show all studies in those projects\n  (size($neodash_project_name) > 0 AND proj.name IN $neodash_project_name AND $neodash_study_id = '')\n  OR\n  // Scenario 3: Both project and study selected - show only that study\n  (proj.name IN $neodash_project_name AND $neodash_study_id <> '' AND \n   CASE \n     WHEN n2.subpart_id IS NOT NULL \n     THEN toString(proj.name + '-' + n2.study_number + '-' + n2.subpart_id)\n     ELSE toString(proj.name + '-' + n2.study_number)\n   END STARTS WITH $neodash_study_id)\n  OR\n  // Scenario 4: Only study selected - show only that study\n  (size($neodash_project_name) = 0 AND $neodash_study_id <> '' AND \n   CASE \n     WHEN n2.subpart_id IS NOT NULL \n     THEN toString(proj.name + '-' + n2.study_number + '-' + n2.subpart_id)\n     ELSE toString(proj.name + '-' + n2.study_number)\n   END STARTS WITH $neodash_study_id)\nWITH n1, proj, n2,\n  CASE\n    WHEN n2.subpart_id IS NOT NULL THEN\n      CASE\n        WHEN n2.study_acronym IS NOT NULL\n        THEN toString(proj.name + '-' + n2.study_number + '-' + n2.subpart_id) + ' [' + n2.study_acronym + ']'\n        ELSE toString(proj.name + '-' + n2.study_number + '-' + n2.subpart_id)\n      END\n    WHEN (n2.study_number IS NOT NULL AND n2.study_acronym IS NOT NULL)\n    THEN toString(proj.name + '-' + n2.study_number) + ' [' + n2.study_acronym + ']'\n    ELSE toString(proj.name + '-' + n2.study_number)\n  END AS StudyRef\nRETURN DISTINCT 'Select' AS Click, StudyRef, n1.uid AS __uid\nORDER BY StudyRef",
+          "width": 9,
+          "height": 6,
+          "x": 7,
+          "y": 0,
+          "type": "table",
+          "selection": {},
+          "settings": {
+            "type": "Custom Query",
+            "entityType": "StudyRef",
+            "parameterName": "neodash_studyref",
+            "actionsRules": [
+              {
+                "condition": "Click",
+                "field": "Click",
+                "value": "__uid",
+                "customization": "set variable",
+                "customizationValue": "studyroot_uid"
+              },
+              {
+                "condition": "Click",
+                "field": "Click",
+                "value": "StudyRef",
+                "customization": "set variable",
+                "customizationValue": "study_name"
+              }
+            ],
+            "compact": true,
+            "columnWidths": "[1,4,1]",
+            "refreshButtonEnabled": true,
+            "wrapContent": true
+          },
+          "schema": []
+        },
+        {
+          "id": "ea153084-1574-440a-8606-650cba4ef02f",
+          "title": "Select lab specification version(required)",
+          "query": "MATCH (model_root:DataModelIGRoot)-->(n:DataModelIGValue)\n-[:HAS_DATASET]->(dataset_value:DatasetInstance)<--(:Dataset {uid: \"LAB\"})\nWHERE toLower(apoc.text.join([n.`description`,' - V',n.version_number],\"\")) CONTAINS toLower($input) \nRETURN DISTINCT apoc.text.join([n.`description`,' - V',n.version_number],\"\") as value, apoc.text.join([n.`description`,' - V',n.version_number],\"\") as display ORDER BY size(toString(value)) ASC LIMIT 5\n\n\n",
+          "width": 7,
+          "height": 2,
+          "x": 0,
+          "y": 0,
+          "type": "select",
+          "selection": {},
+          "settings": {
+            "type": "Custom Query",
+            "entityType": "Lab Specification Version",
+            "parameterName": "neodash_lab_specification_version",
+            "refreshButtonEnabled": true,
+            "suggestionLimit": 100,
+            "backgroundColor": " #90EE9020"
+          },
+          "schema": []
+        },
+        {
+          "id": "fadd3be4-f9f1-40c3-b172-f0d2f79fb96e",
+          "title": "Search for a Project",
+          "query": "MATCH (:`StudyValue`)-[:HAS_PROJECT]->(sp:StudyProjectField)<-[:HAS_FIELD]-(n:Project)\nWHERE toLower(toString(n.`name`)) CONTAINS toLower($input) \nRETURN DISTINCT n.`name` as value,  n.`name` as display ORDER BY size(toString(value))",
+          "width": 7,
+          "height": 2,
+          "x": 0,
+          "y": 2,
+          "type": "select",
+          "selection": {},
+          "settings": {
+            "type": "Custom Query",
+            "refreshButtonEnabled": true,
+            "multiSelector": true,
+            "entityType": "Project Name",
+            "parameterName": "neodash_project_name"
+          },
+          "schema": []
+        },
+        {
+          "id": "d4ae8789-06a2-404b-8fb2-dc00b8e65edb",
+          "title": "Search for a Study",
+          "query": "MATCH (n:`StudyValue`)-[:HAS_PROJECT]->(sp:StudyProjectField)<-[:HAS_FIELD]-(proj:Project) WHERE (size($neodash_project_name)>0 AND proj.name IN $neodash_project_name) OR size($neodash_project_name)=0\nWITH n, proj\nWHERE toLower(toString(proj.name+'-' + n.study_number)) CONTAINS toLower($input) \nRETURN DISTINCT toString(proj.name+'-'+n.study_number) as value,  toString(proj.name +'-' + n.study_number) as display ORDER BY size(toString(value)) ASC LIMIT 100",
+          "width": 7,
+          "height": 2,
+          "x": 0,
+          "y": 4,
+          "type": "select",
+          "selection": {},
+          "settings": {
+            "type": "Custom Query",
+            "entityType": "study_id",
+            "parameterName": "neodash_study_id"
+          },
+          "schema": []
+        }
+      ]
+    },
+    {
+      "title": "Visit",
+      "reports": [
+        {
+          "id": "63faa4fe-04b0-4f6a-be95-c765df55d6af",
+          "title": "Visits - $neodash_study_name",
+          "query": "MATCH (n:StudyRoot {uid: $neodash_studyroot_uid})-[:LATEST]->(s:StudyValue)\nWITH s\nMATCH (s)-[:HAS_STUDY_VISIT]->(visit:StudyVisit)\nWHERE\n  // Default: show scheduled visits only\n  NOT visit.visit_class IN ['NON_VISIT', 'UNSCHEDULED_VISIT']\n  OR\n  // Include non-standard types only when explicitly selected\n  (size($neodash_visit_class) > 0 AND visit.visit_class IN $neodash_visit_class)\n// Fetch visit name (explicit typed path)\nMATCH (visit)-[:HAS_VISIT_NAME]->(:VisitNameRoot)-[:LATEST]->(n4:VisitNameValue)\nMATCH (visit)-[:HAS_STUDY_DAY]->(:StudyDayRoot)-[:LATEST]->(visit_day:StudyDayValue)\n// Keep visit if it belongs to an explicitly included class\n// OR if at least one qualifying scheduled activity exists (EXISTS short-circuits)\nWHERE\n  visit.visit_class IN $neodash_visit_class\n  OR EXISTS {\n    MATCH (visit)-[:STUDY_VISIT_HAS_SCHEDULE]->(sch:StudyActivitySchedule)\n    WHERE NOT (sch)<--(:Delete)\n    MATCH (sch)<-[:STUDY_ACTIVITY_HAS_SCHEDULE]-(sact:StudyActivity)\n    MATCH (sact)-[:STUDY_ACTIVITY_HAS_STUDY_ACTIVITY_SUBGROUP]->\n          (:StudyActivitySubGroup)-[:HAS_SELECTED_ACTIVITY_SUBGROUP]->\n          (asgv:ActivitySubGroupValue)<-[:HAS_SELECTED_SUBGROUP]-\n          (:ActivityGrouping)-[:HAS_SELECTED_GROUP]->(agv:ActivityGroupValue)\n    WHERE\n      // LAB: Laboratory Assessments excluding Antibodies and PK Sampling\n      ('LAB' IN $neodash_spec_type AND agv.name = \"Laboratory Assessments\"\n        AND asgv.name <> \"Antibodies\" AND asgv.name <> \"PK Sampling\")\n      OR\n      // PK: PK/PD related groups\n      ('PK' IN $neodash_spec_type AND (\n        toLower(agv.name) IN ['pk sampling', 'pk parameters', 'pd sampling']\n        OR (toLower(agv.name) = 'laboratory assessments' AND toLower(asgv.name) = 'pharmacodynamics')\n      ))\n      OR\n      // AB: Antibodies only\n      ('AB' IN $neodash_spec_type AND asgv.name = \"Antibodies\")\n  }\n// Resolve the referenced (anchor) visit's study day, when this visit is a sub-visit.\n// Placed AFTER the filtering WHERE so it is a true optional lookup, not part of the filter.\nOPTIONAL MATCH (s)-[:HAS_STUDY_VISIT]->(ref_visit:StudyVisit {uid: visit.visit_sublabel_reference})\n              -[:HAS_STUDY_DAY]->(:StudyDayRoot)-[:LATEST]->(ref_day:StudyDayValue)\nWITH DISTINCT\n  visit,\n  visit_day,\n  ref_day,\n  n4,\n  toInteger(visit.unique_visit_number) AS visit_order\n// Count distinct study days per visit name, then fan back out\nWITH n4.name AS visit_name,\n     COUNT(DISTINCT visit.short_visit_label) AS day_count,\n     COLLECT({visit: visit, visit_day: visit_day, ref_day: ref_day, visit_order: visit_order}) AS rows\nUNWIND rows AS row\nWITH row.visit AS visit,\n     row.visit_day AS visit_day,\n     row.ref_day AS ref_day,\n     visit_name,\n     row.visit_order AS visit_order,\n     day_count\nORDER BY visit_order\nRETURN DISTINCT\n  CASE WHEN visit.visit_class IN $neodash_visit_class\n    THEN apoc.text.capitalize(toLower(replace(visit.visit_class, '_', ' ')))\n    ELSE CASE\n              // Anchor visit of a sub-visit group => Day 1\n              WHEN visit.visit_subclass = 'ANCHOR_VISIT_IN_GROUP_OF_SUBV'\n              THEN visit_name + ' Day 1'\n              // Sub-visit: label relative to its anchor visit's study day => (visit_day - ref_day) + 1\n              WHEN ref_day IS NOT NULL\n              THEN visit_name + ' Day ' +\n                   toString(toInteger(visit_day.value) - toInteger(ref_day.value) + 1)\n              WHEN day_count > 1\n              THEN visit_name + ' ' + visit_day.name\n              ELSE visit_name\n         END\n  END AS `Visit label in protocol`,\n  \" \" AS `Visit label in supplier database`,\n  CASE WHEN visit.visit_class IN $neodash_visit_class\n    THEN CASE WHEN visit.visit_class = 'UNSCHEDULED_VISIT'\n              THEN split(visit.visit_class, \"_\")[0]\n              ELSE replace(toUpper(visit.visit_class), '_', '-')\n         END\n    ELSE visit.short_visit_label\n  END AS `Visit in data file`",
+          "width": 15,
+          "height": 10,
+          "x": 0,
+          "y": 0,
+          "type": "table",
+          "selection": {},
+          "settings": {
+            "compact": true,
+            "allowDownload": true,
+            "styleRules": [
+              {
+                "field": "Visit label in protocol",
+                "condition": "!=",
+                "value": "$",
+                "customization": "cell color",
+                "customizationValue": "#D6DCE4"
+              },
+              {
+                "field": "Visit in data file",
+                "condition": "!=",
+                "value": "$",
+                "customization": "cell color",
+                "customizationValue": "#A9D08E"
+              },
+              {
+                "field": "Visit label in supplier database",
+                "condition": "!=",
+                "value": "$",
+                "customization": "cell color",
+                "customizationValue": "#BDD7EE"
+              }
+            ],
+            "refreshButtonEnabled": true,
+            "description": "Visits for Laboratory Assessments (excluding visits for Antibodies and PK Sampling) ",
+            "noDataMessage": "Select one or more Spec Type to the right"
+          }
+        },
+        {
+          "id": "1b48d0d4-b64d-4959-b10e-e91472617e32",
+          "title": "Reminder",
+          "query": "By default, rows per page is set to 5. Please select the appropriate number of rows per page to display all required records.\n\n\n",
+          "width": 9,
+          "height": 2,
+          "x": 15,
+          "y": 0,
+          "type": "text",
+          "selection": {},
+          "settings": {
+            "backgroundColor": "#90EE9020"
+          },
+          "schema": []
+        },
+        {
+          "id": "7e95f560-0407-471a-a533-0900b23367f7",
+          "title": "Types of visits",
+          "query": "Consider if **UNSCHEDULED** and/or **NON-VISIT** options should be included in the Visits sheet. \n\nData from unscheduled samples (see section 1.2.1 in Laboratory Process Guideline for Data Management V.2.0) allowed per protocol can be received from the laboratory with “VISIT = UNSCHEDULED” or ”VISIT = NON-VISIT”. \n\nIt is recommended that “VISIT = NON-VISIT” is used for data from samples that is taken due to AE requiring additional data collection or similar, e.g., a systemic hypersensitivity sample or an extra blood test in case of suspected pregnancy. \n\n”VISIT = NON-VISIT” will serve as an identifier for these special cases, also in cases where a parameter is analysed for both via a scheduled sample and an unscheduled sample, if topiccd (and therefore also CAT and SUBCAT) is the same. \n\nAn example of this could be an AB that should be analysed for both on a normal visit and also in case of hypersensitivity.\n\nFor phase 2-4 it should also be considered to include “VISIT = UNSCHEDULED”, to enable transfer of samples where the CL cannot assign it to a specific visit (e.g., site forgot to mark at which visit sample was taken).\n\n\n",
+          "width": 9,
+          "height": 6,
+          "x": 15,
+          "y": 6,
+          "type": "text",
+          "selection": {},
+          "settings": {},
+          "schema": []
+        },
+        {
+          "id": "52fcd048-2fea-4355-88aa-38c2115c639b",
+          "title": "Include non - scheduled visit types",
+          "query": "MATCH (n:StudyRoot {uid: $neodash_studyroot_uid})-[:LATEST]->(s:StudyValue)-->(v:StudyVisit)\nWHERE v.visit_class IN ['NON_VISIT','UNSCHEDULED_VISIT'] \n  AND toLower(toString(v.visit_class)) CONTAINS toLower($input)\nWITH collect(DISTINCT v.visit_class) as classes\nWITH CASE WHEN size(classes) = 0 THEN [null] ELSE classes END as final_classes\nUNWIND final_classes as vc\nRETURN vc as value, vc as display\nORDER BY size(toString(value)) ASC\nLIMIT 5",
+          "width": 9,
+          "height": 2,
+          "x": 15,
+          "y": 4,
+          "type": "select",
+          "selection": {},
+          "settings": {
+            "type": "Custom Query",
+            "entityType": "visit_class",
+            "parameterName": "neodash_visit_class",
+            "multiSelector": true
+          },
+          "schema": []
+        },
+        {
+          "id": "aed8ec1c-894e-4e4e-9f90-2e1a76f31de8",
+          "title": "Select Spec Type",
+          "query": "WITH [\"LAB\",\"PK\",\"AB\"] as visit_types\nunwind visit_types as visit_type\nWITH visit_type\nWHERE toLower(visit_type) CONTAINS toLower($input) \nRETURN DISTINCT visit_type as value,  visit_type as display ORDER BY display DESC\n\n\n",
+          "width": 9,
+          "height": 2,
+          "x": 15,
+          "y": 2,
+          "type": "select",
+          "selection": {},
+          "settings": {
+            "type": "Custom Query",
+            "entityType": "Spec Type",
+            "parameterName": "neodash_spec_type",
+            "refreshButtonEnabled": true,
+            "multiSelector": true
+          },
+          "schema": []
+        }
+      ]
+    },
+    {
+      "title": "LAB Content",
+      "reports": [
+        {
+          "id": "05474e92-e761-4dff-b9d1-844ee119147f",
+          "title": "LAB Content - $neodash_study_name -TABLE 1: REMOVE unwanted lab assessments by selecting in the dropdown to the right",
+          "query": "MATCH\n  (:StudyRoot {uid: $neodash_studyroot_uid})-[:LATEST]->\n  (s:StudyValue)\nWITH s\nMATCH(s)-->\n  (s_act:StudyActivity)-[:STUDY_ACTIVITY_HAS_STUDY_ACTIVITY_SUBGROUP]->\n  (:StudyActivitySubGroup)-[:HAS_SELECTED_ACTIVITY_SUBGROUP]->\n  (asgv:ActivitySubGroupValue)<-[:HAS_SELECTED_SUBGROUP]-\n  (:ActivityGrouping)-[:HAS_SELECTED_GROUP]->\n  (:ActivityGroupValue {name: \"Laboratory Assessments\"})\nWHERE asgv.name <> \"Antibodies\" AND asgv.name <> \"PK Sampling\"  AND asgv.name <> \"Pharmacodynamics\"\nWITH DISTINCT s, s_act\nMATCH (s)-[:HAS_STUDY_ACTIVITY]->(s_act)-[:HAS_SELECTED_ACTIVITY]->(act:ActivityValue),\n(s_act)\nMATCH(s_act)-[:STUDY_ACTIVITY_HAS_SCHEDULE]->(s_act_sch:StudyActivitySchedule)<-[:STUDY_VISIT_HAS_SCHEDULE]-(visit:StudyVisit)<--(s)\nwhere not (s_act_sch)<--(:Delete)\nMATCH (ai:ActivityInstanceValue)<-[:HAS_SELECTED_ACTIVITY_INSTANCE]-\n  (s_ai:StudyActivityInstance)<-[:HAS_STUDY_ACTIVITY_INSTANCE]-\n  (s),(s_act)-->(s_ai)\nWITH DISTINCT s, act, ai\nCALL {\n  WITH s, act, ai\n  OPTIONAL MATCH (ai)-[:CONTAINS_ACTIVITY_ITEM]->(aitm1:ActivityItem)\n  WITH DISTINCT aitm1\n  OPTIONAL MATCH\n    (aitm1)-[:HAS_UNIT_DEFINITION]->\n    (:UnitDefinitionRoot)-[:LATEST]->\n    (p_unitdef:UnitDefinitionValue)-[:HAS_CT_DIMENSION]->(context:CTTermContext)\n    with context\n    MATCH(context)<-[:HAS_CT_DIMENSION]-(possible_units:UnitDefinitionValue)-[r1:HAS_CT_UNIT]->(x:CTTermContext)-[r2:HAS_SELECTED_TERM]->     (y:CTTermRoot)<-[r3:HAS_TERM_ROOT]-(cdisc_unit:CTCodelistTerm),\n  (x)-[:HAS_SELECTED_CODELIST]->(:CTCodelistRoot)-[:HAS_TERM]->(cdisc_unit)\n  WITH distinct x, possible_units.name as pos_unit, CASE WHEN possible_units.convertible_unit THEN '*' ELSE ''  END as convertible,  cdisc_unit.submission_value as sub_vals \n  WITH x, apoc.text.join(collect(pos_unit+convertible),';') as pos_units, sub_vals\n  return  apoc.text.join(collect(pos_units+'['+sub_vals+']'),\" | \") as possible_units\n}\nCALL {\n WITH s, act, ai\nOPTIONAL MATCH\n    (ai)-[:CONTAINS_ACTIVITY_ITEM]->\n    (aitm1:ActivityItem)<--\n    (:ActivityItemClassRoot)-[:LATEST]->\n    (:ActivityItemClassValue {name: \"standard_unit\"})\nWITH DISTINCT aitm1\nOPTIONAL MATCH\n  (aitm1)-[:HAS_UNIT_DEFINITION]->\n  (:UnitDefinitionRoot)-[:LATEST]->\n  (std_unit:UnitDefinitionValue)-[:HAS_CT_UNIT]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(:CTTermRoot)<-[:HAS_TERM_ROOT]-(cdisc_std_unit:CTCodelistTerm)\nRETURN std_unit, cdisc_std_unit\n}\nCALL {\n  WITH s, act, ai\n  OPTIONAL MATCH\n    (ai)-[:CONTAINS_ACTIVITY_ITEM]->\n    (aitm1:ActivityItem)<--\n    (:ActivityItemClassRoot)-[:LATEST]->\n    (:ActivityItemClassValue {name: \"specimen\"})\n  WITH DISTINCT aitm1\n  OPTIONAL MATCH\n  (aitm1)-[:HAS_CT_TERM]->\n  (:CTTermContext)-[:HAS_SELECTED_TERM]->\n  (:CTTermRoot)<-[:HAS_TERM_ROOT]-(subm_val1:CTCodelistTerm)\n  RETURN collect(DISTINCT subm_val1.submission_value) AS lbspec\n}\nCALL {\n  WITH s, act, ai\n  OPTIONAL MATCH\n    (ai)-[:CONTAINS_ACTIVITY_ITEM]->\n    (aitm2:ActivityItem)<--\n    (:ActivityItemClassRoot)-[:LATEST]->\n    (:ActivityItemClassValue {name: \"method\"})\n  WITH DISTINCT aitm2\n  OPTIONAL MATCH\n    (aitm2)-[:HAS_CT_TERM]->\n    (:CTTermContext)-[:HAS_SELECTED_TERM]->\n    (:CTTermRoot)<-[:HAS_TERM_ROOT]-(subm_val2:CTCodelistTerm)\n  RETURN collect(DISTINCT subm_val2.submission_value) AS lbmethod\n}\nCALL {\n  WITH s, act, ai\n  OPTIONAL MATCH\n    (ai)-[:CONTAINS_ACTIVITY_ITEM]->\n    (aitm3:ActivityItem)<--\n    (:ActivityItemClassRoot)-[:LATEST]->\n    (:ActivityItemClassValue {name: \"original_result\"})\n  WITH DISTINCT aitm3\n  OPTIONAL MATCH\n    (aitm3)-[:HAS_CT_TERM]->\n    (:CTTermContext)-[:HAS_SELECTED_TERM]->\n    (:CTTermRoot)<-[:HAS_TERM_ROOT]-(subm_val3:CTCodelistTerm)\n  RETURN collect(DISTINCT subm_val3.submission_value) AS lbstresc\n}\nWITH\n  act,\n  ai,\n  CASE\n    WHEN size(lbmethod) > 0 THEN apoc.text.join(lbmethod,\";\")\n    ELSE ' '\n  END AS lbmethod,\n  CASE\n    WHEN size(lbspec) > 0 THEN apoc.text.join(lbspec,\";\") \n    ELSE ' '\n  END AS lbspec,\n  CASE\n    WHEN possible_units='' THEN ' '\n    ELSE possible_units\n  END AS possible_units,\n  CASE\n    WHEN size(lbstresc) > 0 THEN apoc.text.join(lbstresc,\";\") \n    ELSE ' '\n  END AS lbstresc,\n  CASE WHEN std_unit.name is null THEN ' ' ELSE std_unit.name END AS `Standard unit`\n  RETURN DISTINCT\n  CASE WHEN ai.topic_code in $neodash_remove_activity_instances THEN '❌' ELSE  '✅' END AS `In/Excluded`,\n  act.name AS `Assessment description based on protocol`,\n  ' ' AS `Supplier Assessment`,\n  ' ' AS `Supplier Unit`,\n  ' ' AS `Supplier Method Name`,\n  ' ' as UNITCOLL,\n  lbspec AS LBSPEC,\n  ai.topic_code AS TOPICCD,\n   lbstresc AS `Valid LBSTRESC values for categorical results`,\n  lbmethod AS LBMETHOD,\n  ' ' AS LBANMETH,\n`Standard unit`,\npossible_units as `Units in units dimension[CDISC Submission Value]`",
+          "width": 19,
+          "height": 7,
+          "x": 0,
+          "y": 0,
+          "type": "table",
+          "selection": {},
+          "settings": {
+            "allowDownload": true,
+            "compact": true,
+            "styleRules": [
+              {
+                "field": "Assessment description based on protocol",
+                "condition": "!=",
+                "value": " $",
+                "customization": "cell color",
+                "customizationValue": "#D6DCE4"
+              },
+              {
+                "field": "Supplier Assessment",
+                "condition": "!=",
+                "value": " $",
+                "customization": "cell color",
+                "customizationValue": "#BDD7EE"
+              },
+              {
+                "field": "Supplier Unit",
+                "condition": "!=",
+                "value": " $",
+                "customization": "cell color",
+                "customizationValue": "#BDD7EE"
+              },
+              {
+                "field": "Supplier Method Name",
+                "condition": "!=",
+                "value": " $",
+                "customization": "cell color",
+                "customizationValue": "#BDD7EE"
+              },
+              {
+                "field": "UNITCOLL",
+                "condition": "!=",
+                "value": "$",
+                "customization": "cell color",
+                "customizationValue": "#A9D08E"
+              },
+              {
+                "field": "LBSPEC",
+                "condition": "!=",
+                "value": "$",
+                "customization": "cell color",
+                "customizationValue": "#A9D08E"
+              },
+              {
+                "field": "TOPICCD",
+                "condition": "!=",
+                "value": "$",
+                "customization": "cell color",
+                "customizationValue": "#A9D08E"
+              },
+              {
+                "field": "Valid LBSTRESC values for categorical results",
+                "condition": "!=",
+                "value": "$",
+                "customization": "cell color",
+                "customizationValue": "#A9D08E"
+              },
+              {
+                "field": "LBMETHOD",
+                "condition": "!=",
+                "value": "$",
+                "customization": "cell color",
+                "customizationValue": "#A9D08E"
+              },
+              {
+                "field": "LBANMETH",
+                "condition": "!=",
+                "value": "$",
+                "customization": "cell color",
+                "customizationValue": "#A9D08E"
+              },
+              {
+                "field": "Standard unit",
+                "condition": "!=",
+                "value": "$",
+                "customization": "cell color",
+                "customizationValue": "red"
+              },
+              {
+                "field": "Units in units dimension[CDISC Submission Value]",
+                "condition": "!=",
+                "value": "$",
+                "customization": "cell color",
+                "customizationValue": "red"
+              }
+            ],
+            "wrapContent": true,
+            "columnWidths": "[1,2.5,1,1,1,2,1,1,1,1,1,1,1,1,1,1]",
+            "refreshButtonEnabled": true,
+            "transposed": false,
+            "fullscreenEnabled": true
+          }
+        },
+        {
+          "id": "1b48d0d4-b64d-4959-b10e-e91472617e32",
+          "title": "Reminder",
+          "query": "By default, rows per page is set to 5. Please select the appropriate number of rows per page to display all required records.\n\nIf assessments are removed the resulting table to export is the lower one.\n\nNOTE: unit marked * is convertible unit\n",
+          "width": 5,
+          "height": 3,
+          "x": 19,
+          "y": 0,
+          "type": "text",
+          "selection": {},
+          "settings": {
+            "backgroundColor": "#90EE9020"
+          },
+          "schema": []
+        },
+        {
+          "id": "0b18aa27-5d0e-4e35-be9a-ffe9b5104e16",
+          "title": "LAB Content - $neodash_study_name -TABLE 2 : The final list of assessments that can be exported",
+          "query": "MATCH\n  (:StudyRoot {uid: $neodash_studyroot_uid})-[:LATEST]->\n  (s:StudyValue)\nWITH s\nMATCH(s)-->\n  (s_act:StudyActivity)-[:STUDY_ACTIVITY_HAS_STUDY_ACTIVITY_SUBGROUP]->\n  (:StudyActivitySubGroup)-[:HAS_SELECTED_ACTIVITY_SUBGROUP]->\n  (asgv:ActivitySubGroupValue)<-[:HAS_SELECTED_SUBGROUP]-\n  (:ActivityGrouping)-[:HAS_SELECTED_GROUP]->\n  (:ActivityGroupValue {name: \"Laboratory Assessments\"})\nWHERE asgv.name <> \"Antibodies\" AND asgv.name <> \"PK Sampling\"  AND asgv.name <> \"Pharmacodynamics\"\nWITH DISTINCT s, s_act\nMATCH (s)-[:HAS_STUDY_ACTIVITY]->(s_act)-[:HAS_SELECTED_ACTIVITY]->(act:ActivityValue),\n(s_act)\nMATCH(s_act)-[:STUDY_ACTIVITY_HAS_SCHEDULE]->(s_act_sch:StudyActivitySchedule)<-[:STUDY_VISIT_HAS_SCHEDULE]-(visit:StudyVisit)<--(s)\nwhere not (s_act_sch)<--(:Delete)\nMATCH (ai:ActivityInstanceValue)<-[:HAS_SELECTED_ACTIVITY_INSTANCE]-\n  (s_ai:StudyActivityInstance)<-[:HAS_STUDY_ACTIVITY_INSTANCE]-\n  (s),(s_act)-->(s_ai)\nWITH DISTINCT s, act, ai WHERE size($neodash_remove_activity_instances ) = 0  OR NOT ai.topic_code IN $neodash_remove_activity_instances\nCALL {\n  WITH s, act, ai\n  OPTIONAL MATCH (ai)-[:CONTAINS_ACTIVITY_ITEM]->(aitm1:ActivityItem)\n  WITH DISTINCT aitm1\n  OPTIONAL MATCH\n    (aitm1)-[:HAS_UNIT_DEFINITION]->\n    (:UnitDefinitionRoot)-[:LATEST]->\n    (p_unitdef:UnitDefinitionValue)-[:HAS_CT_DIMENSION]->(context:CTTermContext)\n    with context\n    MATCH(context)<-[:HAS_CT_DIMENSION]-(possible_units:UnitDefinitionValue)-[r1:HAS_CT_UNIT]->(x:CTTermContext)-[r2:HAS_SELECTED_TERM]->     (y:CTTermRoot)<-[r3:HAS_TERM_ROOT]-(cdisc_unit:CTCodelistTerm),\n  (x)-[:HAS_SELECTED_CODELIST]->(:CTCodelistRoot)-[:HAS_TERM]->(cdisc_unit)\n  WITH distinct x, possible_units.name as pos_unit, CASE WHEN possible_units.convertible_unit THEN '*' ELSE ''  END as convertible,  cdisc_unit.submission_value as sub_vals \n  WITH x, apoc.text.join(collect(pos_unit+convertible),';') as pos_units, sub_vals\n  return  apoc.text.join(collect(pos_units+'['+sub_vals+']'),\" | \") as possible_units\n}\nCALL {\n WITH s, act, ai\nOPTIONAL MATCH\n    (ai)-[:CONTAINS_ACTIVITY_ITEM]->\n    (aitm1:ActivityItem)<--\n    (:ActivityItemClassRoot)-[:LATEST]->\n    (:ActivityItemClassValue {name: \"standard_unit\"})\nWITH DISTINCT aitm1\nOPTIONAL MATCH\n  (aitm1)-[:HAS_UNIT_DEFINITION]->\n  (:UnitDefinitionRoot)-[:LATEST]->\n  (std_unit:UnitDefinitionValue)-[:HAS_CT_UNIT]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(:CTTermRoot)<-[:HAS_TERM_ROOT]-(cdisc_std_unit:CTCodelistTerm)\nRETURN std_unit, cdisc_std_unit\n}\nCALL {\n  WITH s, act, ai\n  OPTIONAL MATCH\n    (ai)-[:CONTAINS_ACTIVITY_ITEM]->\n    (aitm1:ActivityItem)<--\n    (:ActivityItemClassRoot)-[:LATEST]->\n    (:ActivityItemClassValue {name: \"specimen\"})\n  WITH DISTINCT aitm1\n  OPTIONAL MATCH\n  (aitm1)-[:HAS_CT_TERM]->\n  (:CTTermContext)-[:HAS_SELECTED_TERM]->\n  (:CTTermRoot)<-[:HAS_TERM_ROOT]-(subm_val1:CTCodelistTerm)\n  RETURN collect(DISTINCT subm_val1.submission_value) AS lbspec\n}\nCALL {\n  WITH s, act, ai\n  OPTIONAL MATCH\n    (ai)-[:CONTAINS_ACTIVITY_ITEM]->\n    (aitm2:ActivityItem)<--\n    (:ActivityItemClassRoot)-[:LATEST]->\n    (:ActivityItemClassValue {name: \"method\"})\n  WITH DISTINCT aitm2\n  OPTIONAL MATCH\n    (aitm2)-[:HAS_CT_TERM]->\n    (:CTTermContext)-[:HAS_SELECTED_TERM]->\n    (:CTTermRoot)<-[:HAS_TERM_ROOT]-(subm_val2:CTCodelistTerm)\n  RETURN collect(DISTINCT subm_val2.submission_value) AS lbmethod\n}\nCALL {\n  WITH s, act, ai\n  OPTIONAL MATCH\n    (ai)-[:CONTAINS_ACTIVITY_ITEM]->\n    (aitm3:ActivityItem)<--\n    (:ActivityItemClassRoot)-[:LATEST]->\n    (:ActivityItemClassValue {name: \"original_result\"})\n  WITH DISTINCT aitm3\n  OPTIONAL MATCH\n    (aitm3)-[:HAS_CT_TERM]->\n    (:CTTermContext)-[:HAS_SELECTED_TERM]->\n    (:CTTermRoot)<-[:HAS_TERM_ROOT]-(subm_val3:CTCodelistTerm)\n  RETURN collect(DISTINCT subm_val3.submission_value) AS lbstresc\n}\nWITH\n  act,\n  ai,\n  CASE\n    WHEN size(lbmethod) > 0 THEN apoc.text.join(lbmethod,\";\")\n    ELSE ' '\n  END AS lbmethod,\n  CASE\n    WHEN size(lbspec) > 0 THEN apoc.text.join(lbspec,\";\") \n    ELSE ' '\n  END AS lbspec,\n  CASE\n    WHEN possible_units='' THEN ' '\n    ELSE possible_units\n  END AS possible_units,\n  CASE\n    WHEN size(lbstresc) > 0 THEN apoc.text.join(lbstresc,\";\") \n    ELSE ' '\n  END AS lbstresc,\n  CASE WHEN std_unit.name is null THEN ' ' ELSE std_unit.name END AS `Standard unit`\n  RETURN DISTINCT\n  act.name AS `Assessment description based on protocol`,\n  ' ' AS `Supplier Assessment`,\n  ' ' AS `Supplier Unit`,\n  ' ' AS `Supplier Method Name`,\n  ' ' as UNITCOLL,\n  lbspec AS LBSPEC,\n  ai.topic_code AS TOPICCD,\n   lbstresc AS `Valid LBSTRESC values for categorical results`,\n  lbmethod AS LBMETHOD,\n  ' ' AS LBANMETH,\n`Standard unit`,\npossible_units as `Units in units dimension[CDISC Submission Value]`\n\n",
+          "width": 19,
+          "height": 5,
+          "x": 0,
+          "y": 7,
+          "type": "table",
+          "selection": {},
+          "settings": {
+            "allowDownload": true,
+            "compact": true,
+            "styleRules": [
+              {
+                "field": "Assessment description based on protocol",
+                "condition": "!=",
+                "value": " $",
+                "customization": "cell color",
+                "customizationValue": "#D6DCE4"
+              },
+              {
+                "field": "Supplier Assessment",
+                "condition": "!=",
+                "value": " $",
+                "customization": "cell color",
+                "customizationValue": "#BDD7EE"
+              },
+              {
+                "field": "Supplier Unit",
+                "condition": "!=",
+                "value": " $",
+                "customization": "cell color",
+                "customizationValue": "#BDD7EE"
+              },
+              {
+                "field": "Supplier Method Name",
+                "condition": "!=",
+                "value": " $",
+                "customization": "cell color",
+                "customizationValue": "#BDD7EE"
+              },
+              {
+                "field": "UNITCOLL",
+                "condition": "!=",
+                "value": "$",
+                "customization": "cell color",
+                "customizationValue": "#A9D08E"
+              },
+              {
+                "field": "LBSPEC",
+                "condition": "!=",
+                "value": "$",
+                "customization": "cell color",
+                "customizationValue": "#A9D08E"
+              },
+              {
+                "field": "TOPICCD",
+                "condition": "!=",
+                "value": "$",
+                "customization": "cell color",
+                "customizationValue": "#A9D08E"
+              },
+              {
+                "field": "Valid LBSTRESC values for categorical results",
+                "condition": "!=",
+                "value": "$",
+                "customization": "cell color",
+                "customizationValue": "#A9D08E"
+              },
+              {
+                "field": "LBMETHOD",
+                "condition": "!=",
+                "value": "$",
+                "customization": "cell color",
+                "customizationValue": "#A9D08E"
+              },
+              {
+                "field": "LBANMETH",
+                "condition": "!=",
+                "value": "$",
+                "customization": "cell color",
+                "customizationValue": "#A9D08E"
+              },
+              {
+                "field": "Standard unit",
+                "condition": "!=",
+                "value": "$",
+                "customization": "cell color",
+                "customizationValue": "red"
+              },
+              {
+                "field": "CDISC Submission unit",
+                "condition": "!=",
+                "value": "$",
+                "customization": "cell color",
+                "customizationValue": "red"
+              },
+              {
+                "field": "Units in units dimension[CDISC Submission Value]",
+                "condition": "!=",
+                "value": "$",
+                "customization": "cell color",
+                "customizationValue": "red"
+              }
+            ],
+            "wrapContent": true,
+            "columnWidths": "[2.5,1,1,1,2,1,1,1,1,1,1,1]",
+            "refreshButtonEnabled": true,
+            "transposed": false
+          }
+        },
+        {
+          "id": "fba58b77-b393-49c9-8dce-e0c2b916338d",
+          "title": "Removed Activity Instance",
+          "query": "WITH $neodash_remove_activity_instances as topic_codes\nUNWIND topic_codes as topic_code\nReturn topic_code as `Assessments`\n\n\n",
+          "width": 5,
+          "height": 4,
+          "x": 19,
+          "y": 5,
+          "type": "table",
+          "selection": {},
+          "settings": {
+            "noDataMessage": "Select above to remove assessments"
+          }
+        },
+        {
+          "id": "ceec002d-fb89-4d61-90e9-336d10d0cf53",
+          "title": "Select assessments to REMOVE",
+          "query": "MATCH\n  (:StudyRoot {uid: $neodash_studyroot_uid})-[:LATEST]->\n  (s:StudyValue)\nWITH s\nMATCH(s)-->\n  (s_act:StudyActivity)-[:STUDY_ACTIVITY_HAS_STUDY_ACTIVITY_SUBGROUP]->\n  (:StudyActivitySubGroup)-[:HAS_SELECTED_ACTIVITY_SUBGROUP]->\n  (asgv:ActivitySubGroupValue)<-[:HAS_SELECTED_SUBGROUP]-\n  (:ActivityGrouping)-[:HAS_SELECTED_GROUP]->\n  (:ActivityGroupValue {name: \"Laboratory Assessments\"})\nWHERE asgv.name <> \"Antibodies\" AND asgv.name <> \"PK Sampling\"  AND asgv.name <> \"Pharmacodynamics\"\nWITH DISTINCT s, s_act\nMATCH (s)-[:HAS_STUDY_ACTIVITY]->(s_act)-[:HAS_SELECTED_ACTIVITY]->(act:ActivityValue),\n(s_act)\nMATCH(s_act)-[:STUDY_ACTIVITY_HAS_SCHEDULE]->(s_act_sch:StudyActivitySchedule)<-[:STUDY_VISIT_HAS_SCHEDULE]-(visit:StudyVisit)<--(s)\nwhere not (s_act_sch)<--(:Delete)\nMATCH (n:ActivityInstanceValue)<-[:HAS_SELECTED_ACTIVITY_INSTANCE]-\n  (s_ai:StudyActivityInstance)<-[:HAS_STUDY_ACTIVITY_INSTANCE]-\n  (s),(s_act)-->(s_ai)\nWHERE toLower(toString(n.topic_code)) CONTAINS toLower($input) \nRETURN DISTINCT n.topic_code as value,  n.topic_code as display ORDER BY size(toString(value)) ASC LIMIT 100",
+          "width": 5,
+          "height": 2,
+          "x": 19,
+          "y": 3,
+          "type": "select",
+          "selection": {},
+          "settings": {
+            "type": "Custom Query",
+            "entityType": "Remove Activity Instances",
+            "refreshButtonEnabled": true,
+            "fullscreenEnabled": true,
+            "multiSelector": true,
+            "multiSelectLimit": 100,
+            "helperText": "One or more if applicable",
+            "parameterName": "neodash_remove_activity_instances"
+          },
+          "schema": []
+        }
+      ]
+    },
+    {
+      "title": "PK Content",
+      "reports": [
+        {
+          "id": "05474e92-e761-4dff-b9d1-844ee119147f",
+          "title": "PK Content - $neodash_study_name -TABLE 1: REMOVE unwanted PK assessments by selecting in the dropdown to the right",
+          "query": "MATCH\n  (:StudyRoot {uid: $neodash_studyroot_uid})-[:LATEST]->\n  (s:StudyValue)\nWITH s\nMATCH(s)-->\n  (s_act:StudyActivity)-[:STUDY_ACTIVITY_HAS_STUDY_ACTIVITY_SUBGROUP]->\n  (:StudyActivitySubGroup)-[:HAS_SELECTED_ACTIVITY_SUBGROUP]->\n  (asgv:ActivitySubGroupValue)<-[:HAS_SELECTED_SUBGROUP]-\n  (:ActivityGrouping)-[:HAS_SELECTED_GROUP]->\n  (agv:ActivityGroupValue)\nWITH DISTINCT s, s_act, agv, asgv \nwhere ((toLower(agv.name) in ['pk sampling','pk parameters']) OR (toLower(agv.name) in ['pd sampling']) OR (toLower(agv.name)='laboratory assessments' AND toLower(asgv.name)='pharmacodynamics')) AND (NOT toLower(asgv.name) contains 'collection of samples')\nWITH DISTINCT s, s_act  \nMATCH (s)-[:HAS_STUDY_ACTIVITY]->(s_act)-[:HAS_SELECTED_ACTIVITY]->(act:ActivityValue),\n(s_act)\nMATCH(s_act)-[:STUDY_ACTIVITY_HAS_SCHEDULE]->(s_act_sch:StudyActivitySchedule)<-[:STUDY_VISIT_HAS_SCHEDULE]-(visit:StudyVisit)<--(s)\nwhere not (s_act_sch)<--(:Delete)\nMATCH (ai:ActivityInstanceValue)<-[:HAS_SELECTED_ACTIVITY_INSTANCE]-\n  (s_ai:StudyActivityInstance)<-[:HAS_STUDY_ACTIVITY_INSTANCE]-\n  (s),(s_act)-->(s_ai)\nWITH DISTINCT s, act, ai\nCALL {\n  WITH s, act, ai\n  OPTIONAL MATCH (ai)-[:CONTAINS_ACTIVITY_ITEM]->(aitm1:ActivityItem)\n  WITH DISTINCT aitm1\n  OPTIONAL MATCH\n    (aitm1)-[:HAS_UNIT_DEFINITION]->\n    (:UnitDefinitionRoot)-[:LATEST]->\n    (p_unitdef:UnitDefinitionValue)-[:HAS_CT_DIMENSION]->(context:CTTermContext)\n    with context\n    MATCH(context)<-[:HAS_CT_DIMENSION]-(possible_units:UnitDefinitionValue)-[r1:HAS_CT_UNIT]->(x:CTTermContext)-[r2:HAS_SELECTED_TERM]->     (y:CTTermRoot)<-[r3:HAS_TERM_ROOT]-(cdisc_unit:CTCodelistTerm),\n  (x)-[:HAS_SELECTED_CODELIST]->(:CTCodelistRoot)-[:HAS_TERM]->(cdisc_unit)\n  WITH distinct x, possible_units.name as pos_unit, CASE WHEN possible_units.convertible_unit THEN '*' ELSE ''  END as convertible,  cdisc_unit.submission_value as sub_vals \n  WITH x, apoc.text.join(collect(pos_unit+convertible),';') as pos_units, sub_vals\n  return  apoc.text.join(collect(pos_units+'['+sub_vals+']'),\" | \") as possible_units\n}\nCALL {\n WITH s, act, ai\nOPTIONAL MATCH\n    (ai)-[:CONTAINS_ACTIVITY_ITEM]->\n    (aitm1:ActivityItem)<--\n    (:ActivityItemClassRoot)-[:LATEST]->\n    (:ActivityItemClassValue {name: \"standard_unit\"})\nWITH DISTINCT aitm1\nOPTIONAL MATCH\n  (aitm1)-[:HAS_UNIT_DEFINITION]->\n  (:UnitDefinitionRoot)-[:LATEST]->\n  (std_unit:UnitDefinitionValue)-[:HAS_CT_UNIT]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(:CTTermRoot)<-[:HAS_TERM_ROOT]-(cdisc_std_unit:CTCodelistTerm)\nRETURN std_unit, cdisc_std_unit\n}\nCALL {\n  WITH s, act, ai\n  OPTIONAL MATCH\n    (ai)-[:CONTAINS_ACTIVITY_ITEM]->\n    (aitm1:ActivityItem)<--\n    (:ActivityItemClassRoot)-[:LATEST]->\n    (:ActivityItemClassValue {name: \"specimen\"})\n  WITH DISTINCT aitm1\n  OPTIONAL MATCH\n  (aitm1)-[:HAS_CT_TERM]->\n  (:CTTermContext)-[:HAS_SELECTED_TERM]->\n  (:CTTermRoot)<-[:HAS_TERM_ROOT]-(subm_val1:CTCodelistTerm)\n  RETURN collect(DISTINCT subm_val1.submission_value) AS lbspec\n}\nCALL {\n  WITH s, act, ai\n  OPTIONAL MATCH\n    (ai)-[:CONTAINS_ACTIVITY_ITEM]->\n    (aitm2:ActivityItem)<--\n    (:ActivityItemClassRoot)-[:LATEST]->\n    (:ActivityItemClassValue {name: \"method\"})\n  WITH DISTINCT aitm2\n  OPTIONAL MATCH\n    (aitm2)-[:HAS_CT_TERM]->\n    (:CTTermContext)-[:HAS_SELECTED_TERM]->\n    (:CTTermRoot)<-[:HAS_TERM_ROOT]-(subm_val2:CTCodelistTerm)\n  RETURN collect(DISTINCT subm_val2.submission_value) AS lbmethod\n}\nCALL {\n  WITH s, act, ai\n  OPTIONAL MATCH\n    (ai)-[:CONTAINS_ACTIVITY_ITEM]->\n    (aitm3:ActivityItem)<--\n    (:ActivityItemClassRoot)-[:LATEST]->\n    (:ActivityItemClassValue {name: \"original_result\"})\n  WITH DISTINCT aitm3\n  OPTIONAL MATCH\n    (aitm3)-[:HAS_CT_TERM]->\n    (:CTTermContext)-[:HAS_SELECTED_TERM]->\n    (:CTTermRoot)<-[:HAS_TERM_ROOT]-(subm_val3:CTCodelistTerm)\n  RETURN collect(DISTINCT subm_val3.submission_value) AS lbstresc\n}\nWITH\n  act,\n  ai,\n  CASE\n    WHEN size(lbmethod) > 0 THEN apoc.text.join(lbmethod,\";\")\n    ELSE ' '\n  END AS lbmethod,\n  CASE\n    WHEN size(lbspec) > 0 THEN apoc.text.join(lbspec,\";\") \n    ELSE ' '\n  END AS lbspec,\n  CASE\n    WHEN possible_units='' THEN ' '\n    ELSE possible_units\n  END AS possible_units,\n  CASE\n    WHEN size(lbstresc) > 0 THEN apoc.text.join(lbstresc,\";\") \n    ELSE ' '\n  END AS lbstresc,\n  CASE WHEN std_unit.name is null THEN ' ' ELSE std_unit.name END AS `Standard unit`\n  RETURN DISTINCT\n  CASE WHEN ai.topic_code in $neodash_remove_pk_activity_instances THEN '❌' ELSE  '✅' END AS `In/Excluded`,\n  act.name AS `Assessment description based on protocol`,\n  ' ' AS `Supplier Assessment`,\n  ' ' AS `Supplier Unit`,\n  ' ' AS `Supplier Method Name`,\n  ' ' as UNITCOLL,\n  lbspec AS PCSPEC,\nai.topic_code AS TOPICCD,\n lbmethod as PCMETHOD,\n`Standard unit`,\npossible_units as `Units in units dimension[CDISC Submission Value]`\n",
+          "width": 19,
+          "height": 7,
+          "x": 0,
+          "y": 0,
+          "type": "table",
+          "selection": {},
+          "settings": {
+            "allowDownload": true,
+            "compact": true,
+            "styleRules": [
+              {
+                "field": "Assessment description based on protocol",
+                "condition": "!=",
+                "value": " $",
+                "customization": "cell color",
+                "customizationValue": "#D6DCE4"
+              },
+              {
+                "field": "Supplier Assessment",
+                "condition": "!=",
+                "value": " $",
+                "customization": "cell color",
+                "customizationValue": "#BDD7EE"
+              },
+              {
+                "field": "Supplier Unit",
+                "condition": "!=",
+                "value": " $",
+                "customization": "cell color",
+                "customizationValue": "#BDD7EE"
+              },
+              {
+                "field": "Supplier Method Name",
+                "condition": "!=",
+                "value": " $",
+                "customization": "cell color",
+                "customizationValue": "#BDD7EE"
+              },
+              {
+                "field": "UNITCOLL",
+                "condition": "!=",
+                "value": "$",
+                "customization": "cell color",
+                "customizationValue": "#A9D08E"
+              },
+              {
+                "field": "PCSPEC",
+                "condition": "!=",
+                "value": "$",
+                "customization": "cell color",
+                "customizationValue": "#A9D08E"
+              },
+              {
+                "field": "TOPICCD",
+                "condition": "!=",
+                "value": "$",
+                "customization": "cell color",
+                "customizationValue": "#A9D08E"
+              },
+              {
+                "field": "PCMETHOD",
+                "condition": "!=",
+                "value": "$",
+                "customization": "cell color",
+                "customizationValue": "#A9D08E"
+              },
+              {
+                "field": "Standard unit",
+                "condition": "!=",
+                "value": "$",
+                "customization": "cell color",
+                "customizationValue": "red"
+              },
+              {
+                "field": "Units in units dimension[CDISC Submission Value]",
+                "condition": "!=",
+                "value": "$",
+                "customization": "cell color",
+                "customizationValue": "red"
+              }
+            ],
+            "wrapContent": true,
+            "columnWidths": "[1,2.5,1,1,1,2,1,1,1,1,1,1,1,1,1,1]",
+            "refreshButtonEnabled": true,
+            "transposed": false,
+            "fullscreenEnabled": true
+          }
+        },
+        {
+          "id": "1b48d0d4-b64d-4959-b10e-e91472617e32",
+          "title": "Reminder",
+          "query": "By default, rows per page is set to 5. Please select the appropriate number of rows per page to display all required records.\n\nIf assessments are removed the resulting table to export is the lower one.\n\nNOTE: unit marked * is convertible unit\n",
+          "width": 5,
+          "height": 3,
+          "x": 19,
+          "y": 0,
+          "type": "text",
+          "selection": {},
+          "settings": {
+            "backgroundColor": "#90EE9020"
+          },
+          "schema": []
+        },
+        {
+          "id": "0b18aa27-5d0e-4e35-be9a-ffe9b5104e16",
+          "title": "PK Content - $neodash_study_name -TABLE 2 : The final list of assessments that can be exported",
+          "query": "MATCH\n  (:StudyRoot {uid: $neodash_studyroot_uid})-[:LATEST]->\n  (s:StudyValue)\nWITH s\nMATCH(s)-->\n  (s_act:StudyActivity)-[:STUDY_ACTIVITY_HAS_STUDY_ACTIVITY_SUBGROUP]->\n  (:StudyActivitySubGroup)-[:HAS_SELECTED_ACTIVITY_SUBGROUP]->\n  (asgv:ActivitySubGroupValue)<-[:HAS_SELECTED_SUBGROUP]-\n  (:ActivityGrouping)-[:HAS_SELECTED_GROUP]->\n  (agv:ActivityGroupValue)\nWITH DISTINCT s, s_act, agv, asgv \nWHERE (\n    toLower(agv.name) IN ['pk sampling', 'pk parameters']\n    OR toLower(agv.name) IN ['pd sampling']\n    OR (\n        toLower(agv.name) = 'laboratory assessments'\n        AND toLower(asgv.name) = 'pharmacodynamics'\n    )\n)\nAND NOT toLower(asgv.name) CONTAINS 'collection of samples'\nWITH DISTINCT s, s_act\nMATCH (s)-[:HAS_STUDY_ACTIVITY]->(s_act)-[:HAS_SELECTED_ACTIVITY]->(act:ActivityValue),\n(s_act)\nMATCH(s_act)-[:STUDY_ACTIVITY_HAS_SCHEDULE]->(s_act_sch:StudyActivitySchedule)<-[:STUDY_VISIT_HAS_SCHEDULE]-(visit:StudyVisit)<--(s)\nwhere not (s_act_sch)<--(:Delete)\nMATCH (ai:ActivityInstanceValue)<-[:HAS_SELECTED_ACTIVITY_INSTANCE]-\n  (s_ai:StudyActivityInstance)<-[:HAS_STUDY_ACTIVITY_INSTANCE]-\n  (s),(s_act)-->(s_ai)\nWITH DISTINCT s, act, ai WHERE size($neodash_remove_pk_activity_instances) = 0  OR NOT ai.topic_code IN $neodash_remove_pk_activity_instances\nCALL {\n  WITH s, act, ai\n  OPTIONAL MATCH (ai)-[:CONTAINS_ACTIVITY_ITEM]->(aitm1:ActivityItem)\n  WITH DISTINCT aitm1\n  OPTIONAL MATCH\n    (aitm1)-[:HAS_UNIT_DEFINITION]->\n    (:UnitDefinitionRoot)-[:LATEST]->\n    (p_unitdef:UnitDefinitionValue)-[:HAS_CT_DIMENSION]->(context:CTTermContext)\n    with context\n    MATCH(context)<-[:HAS_CT_DIMENSION]-(possible_units:UnitDefinitionValue)-[r1:HAS_CT_UNIT]->(x:CTTermContext)-[r2:HAS_SELECTED_TERM]->     (y:CTTermRoot)<-[r3:HAS_TERM_ROOT]-(cdisc_unit:CTCodelistTerm),\n  (x)-[:HAS_SELECTED_CODELIST]->(:CTCodelistRoot)-[:HAS_TERM]->(cdisc_unit)\n  WITH distinct x, possible_units.name as pos_unit, CASE WHEN possible_units.convertible_unit THEN '*' ELSE ''  END as convertible,  cdisc_unit.submission_value as sub_vals \n  WITH x, apoc.text.join(collect(pos_unit+convertible),';') as pos_units, sub_vals\n  return  apoc.text.join(collect(pos_units+'['+sub_vals+']'),\" | \") as possible_units\n}\nCALL {\n WITH s, act, ai\nOPTIONAL MATCH\n    (ai)-[:CONTAINS_ACTIVITY_ITEM]->\n    (aitm1:ActivityItem)<--\n    (:ActivityItemClassRoot)-[:LATEST]->\n    (:ActivityItemClassValue {name: \"standard_unit\"})\nWITH DISTINCT aitm1\nOPTIONAL MATCH\n  (aitm1)-[:HAS_UNIT_DEFINITION]->\n  (:UnitDefinitionRoot)-[:LATEST]->\n  (std_unit:UnitDefinitionValue)-[:HAS_CT_UNIT]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(:CTTermRoot)<-[:HAS_TERM_ROOT]-(cdisc_std_unit:CTCodelistTerm)\nRETURN std_unit, cdisc_std_unit\n}\nCALL {\n  WITH s, act, ai\n  OPTIONAL MATCH\n    (ai)-[:CONTAINS_ACTIVITY_ITEM]->\n    (aitm1:ActivityItem)<--\n    (:ActivityItemClassRoot)-[:LATEST]->\n    (:ActivityItemClassValue {name: \"specimen\"})\n  WITH DISTINCT aitm1\n  OPTIONAL MATCH\n  (aitm1)-[:HAS_CT_TERM]->\n  (:CTTermContext)-[:HAS_SELECTED_TERM]->\n  (:CTTermRoot)<-[:HAS_TERM_ROOT]-(subm_val1:CTCodelistTerm)\n  RETURN collect(DISTINCT subm_val1.submission_value) AS lbspec\n}\nCALL {\n  WITH s, act, ai\n  OPTIONAL MATCH\n    (ai)-[:CONTAINS_ACTIVITY_ITEM]->\n    (aitm2:ActivityItem)<--\n    (:ActivityItemClassRoot)-[:LATEST]->\n    (:ActivityItemClassValue {name: \"method\"})\n  WITH DISTINCT aitm2\n  OPTIONAL MATCH\n    (aitm2)-[:HAS_CT_TERM]->\n    (:CTTermContext)-[:HAS_SELECTED_TERM]->\n    (:CTTermRoot)<-[:HAS_TERM_ROOT]-(subm_val2:CTCodelistTerm)\n  RETURN collect(DISTINCT subm_val2.submission_value) AS lbmethod\n}\nCALL {\n  WITH s, act, ai\n  OPTIONAL MATCH\n    (ai)-[:CONTAINS_ACTIVITY_ITEM]->\n    (aitm3:ActivityItem)<--\n    (:ActivityItemClassRoot)-[:LATEST]->\n    (:ActivityItemClassValue {name: \"original_result\"})\n  WITH DISTINCT aitm3\n  OPTIONAL MATCH\n    (aitm3)-[:HAS_CT_TERM]->\n    (:CTTermContext)-[:HAS_SELECTED_TERM]->\n    (:CTTermRoot)<-[:HAS_TERM_ROOT]-(subm_val3:CTCodelistTerm)\n  RETURN collect(DISTINCT subm_val3.submission_value) AS lbstresc\n}\nWITH\n  act,\n  ai,\n  CASE\n    WHEN size(lbmethod) > 0 THEN apoc.text.join(lbmethod,\";\")\n    ELSE ' '\n  END AS lbmethod,\n  CASE\n    WHEN size(lbspec) > 0 THEN apoc.text.join(lbspec,\";\") \n    ELSE ' '\n  END AS lbspec,\n  CASE\n    WHEN possible_units='' THEN ' '\n    ELSE possible_units\n  END AS possible_units,\n  CASE\n    WHEN size(lbstresc) > 0 THEN apoc.text.join(lbstresc,\";\") \n    ELSE ' '\n  END AS lbstresc,\n  CASE WHEN std_unit.name is null THEN ' ' ELSE std_unit.name END AS `Standard unit`\n  RETURN DISTINCT\n  act.name AS `Assessment description based on protocol`,\n  ' ' AS `Supplier Assessment`,\n  ' ' AS `Supplier Unit`,\n  ' ' AS `Supplier Method Name`,\n  ' ' as UNITCOLL,\n  lbspec AS PCSPEC,\nai.topic_code AS TOPICCD,\n lbmethod as PCMETHOD,\n`Standard unit`,\npossible_units as `Units in units dimension[CDISC Submission Value]`\n\n",
+          "width": 19,
+          "height": 5,
+          "x": 0,
+          "y": 7,
+          "type": "table",
+          "selection": {},
+          "settings": {
+            "allowDownload": true,
+            "compact": true,
+            "styleRules": [
+              {
+                "field": "Assessment description based on protocol",
+                "condition": "!=",
+                "value": " $",
+                "customization": "cell color",
+                "customizationValue": "#D6DCE4"
+              },
+              {
+                "field": "Supplier Assessment",
+                "condition": "!=",
+                "value": " $",
+                "customization": "cell color",
+                "customizationValue": "#BDD7EE"
+              },
+              {
+                "field": "Supplier Unit",
+                "condition": "!=",
+                "value": " $",
+                "customization": "cell color",
+                "customizationValue": "#BDD7EE"
+              },
+              {
+                "field": "Supplier Method Name",
+                "condition": "!=",
+                "value": " $",
+                "customization": "cell color",
+                "customizationValue": "#BDD7EE"
+              },
+              {
+                "field": "UNITCOLL",
+                "condition": "!=",
+                "value": "$",
+                "customization": "cell color",
+                "customizationValue": "#A9D08E"
+              },
+              {
+                "field": "PCSPEC",
+                "condition": "!=",
+                "value": "$",
+                "customization": "cell color",
+                "customizationValue": "#A9D08E"
+              },
+              {
+                "field": "TOPICCD",
+                "condition": "!=",
+                "value": "$",
+                "customization": "cell color",
+                "customizationValue": "#A9D08E"
+              },
+              {
+                "field": "PCMETHOD",
+                "condition": "!=",
+                "value": "$",
+                "customization": "cell color",
+                "customizationValue": "#A9D08E"
+              },
+              {
+                "field": "Standard unit",
+                "condition": "!=",
+                "value": "$",
+                "customization": "cell color",
+                "customizationValue": "red"
+              },
+              {
+                "field": "CDISC Submission unit",
+                "condition": "!=",
+                "value": "$",
+                "customization": "cell color",
+                "customizationValue": "red"
+              },
+              {
+                "field": "Units in units dimension[CDISC Submission Value]",
+                "condition": "!=",
+                "value": "$",
+                "customization": "cell color",
+                "customizationValue": "red"
+              }
+            ],
+            "wrapContent": true,
+            "columnWidths": "[2.5,1,1,1,2,1,1,1,1,1,1,1]",
+            "refreshButtonEnabled": true,
+            "transposed": false
+          }
+        },
+        {
+          "id": "fba58b77-b393-49c9-8dce-e0c2b916338d",
+          "title": "Removed Activity Instance",
+          "query": "WITH $neodash_remove_pk_activity_instances as topic_codes\nUNWIND topic_codes as topic_code\nReturn topic_code as `Assessments`\n\n\n",
+          "width": 5,
+          "height": 4,
+          "x": 19,
+          "y": 7,
+          "type": "table",
+          "selection": {},
+          "settings": {
+            "noDataMessage": "Select above to remove assessments"
+          }
+        },
+        {
+          "id": "ceec002d-fb89-4d61-90e9-336d10d0cf53",
+          "title": "Select assessments to REMOVE",
+          "query": "MATCH\n  (:StudyRoot {uid: $neodash_studyroot_uid})-[:LATEST]->\n  (s:StudyValue)\nWITH s\nMATCH(s)-->\n  (s_act:StudyActivity)-[:STUDY_ACTIVITY_HAS_STUDY_ACTIVITY_SUBGROUP]->\n  (:StudyActivitySubGroup)-[:HAS_SELECTED_ACTIVITY_SUBGROUP]->\n  (asgv:ActivitySubGroupValue)<-[:HAS_SELECTED_SUBGROUP]-\n  (:ActivityGrouping)-[:HAS_SELECTED_GROUP]->\n  (agv:ActivityGroupValue)\nWITH DISTINCT s, s_act, agv, asgv where (toLower(agv.name) in ['pk sampling','pk parameters']) OR (toLower(agv.name) in ['pd sampling']) OR (toLower(agv.name)='laboratory assessments' AND toLower(asgv.name)='pharmacodynamics') \nWITH DISTINCT s, s_act\nMATCH (s)-[:HAS_STUDY_ACTIVITY]->(s_act)-[:HAS_SELECTED_ACTIVITY]->(act:ActivityValue),\n(s_act)\nMATCH(s_act)-[:STUDY_ACTIVITY_HAS_SCHEDULE]->(s_act_sch:StudyActivitySchedule)<-[:STUDY_VISIT_HAS_SCHEDULE]-(visit:StudyVisit)<--(s)\nwhere not (s_act_sch)<--(:Delete)\nMATCH(n:ActivityInstanceValue)<-[:HAS_SELECTED_ACTIVITY_INSTANCE]-\n  (s_ai:StudyActivityInstance)<-[:HAS_STUDY_ACTIVITY_INSTANCE]-\n  (s),(s_act)-->(s_ai)\nWHERE toLower(toString(n.topic_code)) CONTAINS toLower($input) \nRETURN DISTINCT n.topic_code as value,  n.topic_code as display ORDER BY size(toString(value)) ASC LIMIT 100",
+          "width": 5,
+          "height": 2,
+          "x": 19,
+          "y": 5,
+          "type": "select",
+          "selection": {},
+          "settings": {
+            "type": "Custom Query",
+            "entityType": "Remove PK Activity Instances",
+            "refreshButtonEnabled": true,
+            "fullscreenEnabled": true,
+            "multiSelector": true,
+            "multiSelectLimit": 100,
+            "helperText": "One or more if applicable",
+            "clearParameterOnFieldClear": false,
+            "parameterName": "neodash_remove_pk_activity_instances"
+          },
+          "schema": []
+        }
+      ]
+    },
+    {
+      "title": "AB Content",
+      "reports": [
+        {
+          "id": "05474e92-e761-4dff-b9d1-844ee119147f",
+          "title": "AB Content - $neodash_study_name -TABLE 1: REMOVE unwanted lab assessments by selecting in the dropdown to the right",
+          "query": "MATCH\n  (:StudyRoot {uid: $neodash_studyroot_uid})-[:LATEST]->\n  (s:StudyValue)\nWITH s\nMATCH(s)-->\n  (s_act:StudyActivity)-[:STUDY_ACTIVITY_HAS_STUDY_ACTIVITY_SUBGROUP]->\n  (:StudyActivitySubGroup)-[:HAS_SELECTED_ACTIVITY_SUBGROUP]->\n  (asgv:ActivitySubGroupValue)<-[:HAS_SELECTED_SUBGROUP]-\n  (:ActivityGrouping)-[:HAS_SELECTED_GROUP]->\n  (:ActivityGroupValue)\nWHERE asgv.name = \"Antibodies\"\nWITH DISTINCT s, s_act\nMATCH(s)-[:HAS_STUDY_ACTIVITY]->(s_act)-[:HAS_SELECTED_ACTIVITY]->(act:ActivityValue),\n(s_act)\nMATCH(s_act)-[:STUDY_ACTIVITY_HAS_SCHEDULE]->(s_act_sch:StudyActivitySchedule)<-[:STUDY_VISIT_HAS_SCHEDULE]-(visit:StudyVisit)<--(s)\nwhere not (s_act_sch)<--(:Delete)\nMATCH (ai:ActivityInstanceValue)<-[:HAS_SELECTED_ACTIVITY_INSTANCE]-\n  (s_ai:StudyActivityInstance)<-[:HAS_STUDY_ACTIVITY_INSTANCE]-\n  (s),(s_act)-->(s_ai)\nWITH DISTINCT s, act, ai\nCALL {\n  WITH s, act, ai\n  OPTIONAL MATCH (ai)-[:CONTAINS_ACTIVITY_ITEM]->(aitm1:ActivityItem)\n  WITH DISTINCT aitm1\n  OPTIONAL MATCH\n    (aitm1)-[:HAS_UNIT_DEFINITION]->\n    (:UnitDefinitionRoot)-[:LATEST]->\n    (p_unitdef:UnitDefinitionValue)-[:HAS_CT_DIMENSION]->(context:CTTermContext)\n    with context\n    MATCH(context)<-[:HAS_CT_DIMENSION]-(possible_units:UnitDefinitionValue)-[r1:HAS_CT_UNIT]->(x:CTTermContext)-[r2:HAS_SELECTED_TERM]->     (y:CTTermRoot)<-[r3:HAS_TERM_ROOT]-(cdisc_unit:CTCodelistTerm),\n  (x)-[:HAS_SELECTED_CODELIST]->(:CTCodelistRoot)-[:HAS_TERM]->(cdisc_unit)\n  WITH distinct x, possible_units.name as pos_unit, CASE WHEN possible_units.convertible_unit THEN '*' ELSE ''  END as convertible,  cdisc_unit.submission_value as sub_vals \n  WITH x, apoc.text.join(collect(pos_unit+convertible),';') as pos_units, sub_vals\n  return  apoc.text.join(collect(pos_units+'['+sub_vals+']'),\" | \") as possible_units\n}\nCALL {\n WITH s, act, ai\nOPTIONAL MATCH\n    (ai)-[:CONTAINS_ACTIVITY_ITEM]->\n    (aitm1:ActivityItem)<--\n    (:ActivityItemClassRoot)-[:LATEST]->\n    (:ActivityItemClassValue {name: \"standard_unit\"})\nWITH DISTINCT aitm1\nOPTIONAL MATCH\n  (aitm1)-[:HAS_UNIT_DEFINITION]->\n  (:UnitDefinitionRoot)-[:LATEST]->\n  (std_unit:UnitDefinitionValue)-[:HAS_CT_UNIT]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(:CTTermRoot)<-[:HAS_TERM_ROOT]-(cdisc_std_unit:CTCodelistTerm)\nRETURN std_unit, cdisc_std_unit\n}\nCALL {\n  WITH s, act, ai\n  OPTIONAL MATCH\n    (ai)-[:CONTAINS_ACTIVITY_ITEM]->\n    (aitm1:ActivityItem)<--\n    (:ActivityItemClassRoot)-[:LATEST]->\n    (:ActivityItemClassValue {name: \"specimen\"})\n  WITH DISTINCT aitm1\n  OPTIONAL MATCH\n  (aitm1)-[:HAS_CT_TERM]->\n  (:CTTermContext)-[:HAS_SELECTED_TERM]->\n  (:CTTermRoot)<-[:HAS_TERM_ROOT]-(subm_val1:CTCodelistTerm)\n  RETURN collect(DISTINCT subm_val1.submission_value) AS lbspec\n}\nCALL {\n  WITH s, act, ai\n  OPTIONAL MATCH\n    (ai)-[:CONTAINS_ACTIVITY_ITEM]->\n    (aitm2:ActivityItem)<--\n    (:ActivityItemClassRoot)-[:LATEST]->\n    (:ActivityItemClassValue {name: \"method\"})\n  WITH DISTINCT aitm2\n  OPTIONAL MATCH\n    (aitm2)-[:HAS_CT_TERM]->\n    (:CTTermContext)-[:HAS_SELECTED_TERM]->\n    (:CTTermRoot)<-[:HAS_TERM_ROOT]-(subm_val2:CTCodelistTerm)\n  RETURN collect(DISTINCT subm_val2.submission_value) AS lbmethod\n}\nCALL {\n  WITH s, act, ai\n  OPTIONAL MATCH\n    (ai)-[:CONTAINS_ACTIVITY_ITEM]->\n    (aitm3:ActivityItem)<--\n    (:ActivityItemClassRoot)-[:LATEST]->\n    (:ActivityItemClassValue {name: \"original_result\"})\n  WITH DISTINCT aitm3\n  OPTIONAL MATCH\n    (aitm3)-[:HAS_CT_TERM]->\n    (:CTTermContext)-[:HAS_SELECTED_TERM]->\n    (:CTTermRoot)<-[:HAS_TERM_ROOT]-(subm_val3:CTCodelistTerm)\n  RETURN collect(DISTINCT subm_val3.submission_value) AS lbstresc\n}\nWITH\n  act,\n  ai,\n  CASE\n    WHEN size(lbmethod) > 0 THEN apoc.text.join(lbmethod,\";\")\n    ELSE ' '\n  END AS lbmethod,\n  CASE\n    WHEN size(lbspec) > 0 THEN apoc.text.join(lbspec,\";\") \n    ELSE ' '\n  END AS lbspec,\n  CASE\n    WHEN possible_units='' THEN ' '\n    ELSE possible_units\n  END AS possible_units,\n  CASE\n    WHEN size(lbstresc) > 0 THEN apoc.text.join(lbstresc,\";\") \n    ELSE ' '\n  END AS lbstresc,\n  CASE WHEN std_unit.name is null THEN ' ' ELSE std_unit.name END AS `Standard unit`\n  RETURN DISTINCT\n  CASE WHEN ai.topic_code in $neodash_remove_ab_activity_instances THEN '❌' ELSE  '✅' END AS `In/Excluded`,\n  act.name AS `Assessment description based on protocol`,\n  ' ' AS `Supplier Assessment`,\n  ' ' AS `Supplier Unit`,\n  ' ' AS `Supplier Method Name`,\n  ' ' as UNITCOLL,\n  lbspec AS SPEC,\n  ai.topic_code AS TOPICCD,\n  lbstresc as `If result is categorical, specify valid ORRES values from categorical response list`,\n  lbmethod AS METHOD,\n`Standard unit`,\npossible_units as `Units in units dimension[CDISC Submission Value]`\n",
+          "width": 19,
+          "height": 7,
+          "x": 0,
+          "y": 0,
+          "type": "table",
+          "selection": {},
+          "settings": {
+            "allowDownload": true,
+            "compact": true,
+            "styleRules": [
+              {
+                "field": "Assessment description based on protocol",
+                "condition": "!=",
+                "value": " $",
+                "customization": "cell color",
+                "customizationValue": "#D6DCE4"
+              },
+              {
+                "field": "Supplier Assessment",
+                "condition": "!=",
+                "value": " $",
+                "customization": "cell color",
+                "customizationValue": "#BDD7EE"
+              },
+              {
+                "field": "Supplier Unit",
+                "condition": "!=",
+                "value": " $",
+                "customization": "cell color",
+                "customizationValue": "#BDD7EE"
+              },
+              {
+                "field": "Supplier Method Name",
+                "condition": "!=",
+                "value": " $",
+                "customization": "cell color",
+                "customizationValue": "#BDD7EE"
+              },
+              {
+                "field": "UNITCOLL",
+                "condition": "!=",
+                "value": "$",
+                "customization": "cell color",
+                "customizationValue": "#A9D08E"
+              },
+              {
+                "field": "SPEC",
+                "condition": "!=",
+                "value": "$",
+                "customization": "cell color",
+                "customizationValue": "#A9D08E"
+              },
+              {
+                "field": "TOPICCD",
+                "condition": "!=",
+                "value": "$",
+                "customization": "cell color",
+                "customizationValue": "#A9D08E"
+              },
+              {
+                "field": "METHOD",
+                "condition": "!=",
+                "value": "$",
+                "customization": "cell color",
+                "customizationValue": "#A9D08E"
+              },
+              {
+                "field": "Standard unit",
+                "condition": "!=",
+                "value": "$",
+                "customization": "cell color",
+                "customizationValue": "red"
+              },
+              {
+                "field": "Units in units dimension[CDISC Submission Value]",
+                "condition": "!=",
+                "value": "$",
+                "customization": "cell color",
+                "customizationValue": "red"
+              },
+              {
+                "field": "If result is categorical, specify valid ORRES values from categorical response list",
+                "condition": "!=",
+                "value": "$",
+                "customization": "cell color",
+                "customizationValue": "#A9D08E"
+              }
+            ],
+            "wrapContent": true,
+            "columnWidths": "[1,2.5,1,1,1,2,1,1,1,1,1,1,1,1,1,1]",
+            "refreshButtonEnabled": true,
+            "transposed": false,
+            "fullscreenEnabled": true
+          }
+        },
+        {
+          "id": "1b48d0d4-b64d-4959-b10e-e91472617e32",
+          "title": "Reminder",
+          "query": "By default, rows per page is set to 5. Please select the appropriate number of rows per page to display all required records.\n\nIf assessments are removed the resulting table to export is the lower one.\n\nNOTE: unit marked * is convertible unit\n",
+          "width": 5,
+          "height": 3,
+          "x": 19,
+          "y": 0,
+          "type": "text",
+          "selection": {},
+          "settings": {
+            "backgroundColor": "#90EE9020"
+          },
+          "schema": []
+        },
+        {
+          "id": "0b18aa27-5d0e-4e35-be9a-ffe9b5104e16",
+          "title": "AB Content - $neodash_study_name -TABLE 2 : The final list of assessments that can be exported",
+          "query": "MATCH\n  (:StudyRoot {uid: $neodash_studyroot_uid})-[:LATEST]->\n  (s:StudyValue)\nWITH s\nMATCH(s)-->\n  (s_act:StudyActivity)-[:STUDY_ACTIVITY_HAS_STUDY_ACTIVITY_SUBGROUP]->\n  (:StudyActivitySubGroup)-[:HAS_SELECTED_ACTIVITY_SUBGROUP]->\n  (asgv:ActivitySubGroupValue)<-[:HAS_SELECTED_SUBGROUP]-\n  (:ActivityGrouping)-[:HAS_SELECTED_GROUP]->\n  (:ActivityGroupValue)\nWHERE asgv.name = \"Antibodies\"\nWITH DISTINCT s, s_act\nMATCH(s)-[:HAS_STUDY_ACTIVITY]->(s_act)-[:HAS_SELECTED_ACTIVITY]->(act:ActivityValue),\n(s_act)\nMATCH(s_act)-[:STUDY_ACTIVITY_HAS_SCHEDULE]->(s_act_sch:StudyActivitySchedule)<-[:STUDY_VISIT_HAS_SCHEDULE]-(visit:StudyVisit)<--(s)\nwhere not (s_act_sch)<--(:Delete)\nMATCH (ai:ActivityInstanceValue)<-[:HAS_SELECTED_ACTIVITY_INSTANCE]-\n  (s_ai:StudyActivityInstance)<-[:HAS_STUDY_ACTIVITY_INSTANCE]-\n  (s),(s_act)-->(s_ai)\nWITH DISTINCT s, act, ai WHERE size($neodash_remove_ab_activity_instances ) = 0  OR NOT ai.topic_code IN $neodash_remove_ab_activity_instances\nCALL {\n  WITH s, act, ai\n  OPTIONAL MATCH (ai)-[:CONTAINS_ACTIVITY_ITEM]->(aitm1:ActivityItem)\n  WITH DISTINCT aitm1\n  OPTIONAL MATCH\n    (aitm1)-[:HAS_UNIT_DEFINITION]->\n    (:UnitDefinitionRoot)-[:LATEST]->\n    (p_unitdef:UnitDefinitionValue)-[:HAS_CT_DIMENSION]->(context:CTTermContext)\n    with context\n    MATCH(context)<-[:HAS_CT_DIMENSION]-(possible_units:UnitDefinitionValue)-[r1:HAS_CT_UNIT]->(x:CTTermContext)-[r2:HAS_SELECTED_TERM]->     (y:CTTermRoot)<-[r3:HAS_TERM_ROOT]-(cdisc_unit:CTCodelistTerm),\n  (x)-[:HAS_SELECTED_CODELIST]->(:CTCodelistRoot)-[:HAS_TERM]->(cdisc_unit)\n  WITH distinct x, possible_units.name as pos_unit, CASE WHEN possible_units.convertible_unit THEN '*' ELSE ''  END as convertible,  cdisc_unit.submission_value as sub_vals \n  WITH x, apoc.text.join(collect(pos_unit+convertible),';') as pos_units, sub_vals\n  return  apoc.text.join(collect(pos_units+'['+sub_vals+']'),\" | \") as possible_units\n}\nCALL {\n WITH s, act, ai\nOPTIONAL MATCH\n    (ai)-[:CONTAINS_ACTIVITY_ITEM]->\n    (aitm1:ActivityItem)<--\n    (:ActivityItemClassRoot)-[:LATEST]->\n    (:ActivityItemClassValue {name: \"standard_unit\"})\nWITH DISTINCT aitm1\nOPTIONAL MATCH\n  (aitm1)-[:HAS_UNIT_DEFINITION]->\n  (:UnitDefinitionRoot)-[:LATEST]->\n  (std_unit:UnitDefinitionValue)-[:HAS_CT_UNIT]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(:CTTermRoot)<-[:HAS_TERM_ROOT]-(cdisc_std_unit:CTCodelistTerm)\nRETURN std_unit, cdisc_std_unit\n}\nCALL {\n  WITH s, act, ai\n  OPTIONAL MATCH\n    (ai)-[:CONTAINS_ACTIVITY_ITEM]->\n    (aitm1:ActivityItem)<--\n    (:ActivityItemClassRoot)-[:LATEST]->\n    (:ActivityItemClassValue {name: \"specimen\"})\n  WITH DISTINCT aitm1\n  OPTIONAL MATCH\n  (aitm1)-[:HAS_CT_TERM]->\n  (:CTTermContext)-[:HAS_SELECTED_TERM]->\n  (:CTTermRoot)<-[:HAS_TERM_ROOT]-(subm_val1:CTCodelistTerm)\n  RETURN collect(DISTINCT subm_val1.submission_value) AS lbspec\n}\nCALL {\n  WITH s, act, ai\n  OPTIONAL MATCH\n    (ai)-[:CONTAINS_ACTIVITY_ITEM]->\n    (aitm2:ActivityItem)<--\n    (:ActivityItemClassRoot)-[:LATEST]->\n    (:ActivityItemClassValue {name: \"method\"})\n  WITH DISTINCT aitm2\n  OPTIONAL MATCH\n    (aitm2)-[:HAS_CT_TERM]->\n    (:CTTermContext)-[:HAS_SELECTED_TERM]->\n    (:CTTermRoot)<-[:HAS_TERM_ROOT]-(subm_val2:CTCodelistTerm)\n  RETURN collect(DISTINCT subm_val2.submission_value) AS lbmethod\n}\nCALL {\n  WITH s, act, ai\n  OPTIONAL MATCH\n    (ai)-[:CONTAINS_ACTIVITY_ITEM]->\n    (aitm3:ActivityItem)<--\n    (:ActivityItemClassRoot)-[:LATEST]->\n    (:ActivityItemClassValue {name: \"original_result\"})\n  WITH DISTINCT aitm3\n  OPTIONAL MATCH\n    (aitm3)-[:HAS_CT_TERM]->\n    (:CTTermContext)-[:HAS_SELECTED_TERM]->\n    (:CTTermRoot)<-[:HAS_TERM_ROOT]-(subm_val3:CTCodelistTerm)\n  RETURN collect(DISTINCT subm_val3.submission_value) AS lbstresc\n}\nWITH\n  act,\n  ai,\n  CASE\n    WHEN size(lbmethod) > 0 THEN apoc.text.join(lbmethod,\";\")\n    ELSE ' '\n  END AS lbmethod,\n  CASE\n    WHEN size(lbspec) > 0 THEN apoc.text.join(lbspec,\";\") \n    ELSE ' '\n  END AS lbspec,\n  CASE\n    WHEN possible_units='' THEN ' '\n    ELSE possible_units\n  END AS possible_units,\n  CASE\n    WHEN size(lbstresc) > 0 THEN apoc.text.join(lbstresc,\";\") \n    ELSE ' '\n  END AS lbstresc,\n  CASE WHEN std_unit.name is null THEN ' ' ELSE std_unit.name END AS `Standard unit`\n  RETURN DISTINCT\n   act.name AS `Assessment description based on protocol`,\n  ' ' AS `Supplier Assessment`,\n  ' ' AS `Supplier Unit`,\n  ' ' AS `Supplier Method Name`,\n  ' ' as UNITCOLL,\n  lbspec AS SPEC,\n  ai.topic_code AS TOPICCD,\n  lbstresc as `If result is categorical, specify valid ORRES values from categorical response list`,\n  lbmethod AS METHOD,\n`Standard unit`,\npossible_units as `Units in units dimension[CDISC Submission Value]`\n\n\n",
+          "width": 19,
+          "height": 5,
+          "x": 0,
+          "y": 7,
+          "type": "table",
+          "selection": {},
+          "settings": {
+            "allowDownload": true,
+            "compact": true,
+            "styleRules": [
+              {
+                "field": "Assessment description based on protocol",
+                "condition": "!=",
+                "value": " $",
+                "customization": "cell color",
+                "customizationValue": "#D6DCE4"
+              },
+              {
+                "field": "Supplier Assessment",
+                "condition": "!=",
+                "value": " $",
+                "customization": "cell color",
+                "customizationValue": "#BDD7EE"
+              },
+              {
+                "field": "Supplier Unit",
+                "condition": "!=",
+                "value": " $",
+                "customization": "cell color",
+                "customizationValue": "#BDD7EE"
+              },
+              {
+                "field": "Supplier Method Name",
+                "condition": "!=",
+                "value": " $",
+                "customization": "cell color",
+                "customizationValue": "#BDD7EE"
+              },
+              {
+                "field": "UNITCOLL",
+                "condition": "!=",
+                "value": "$",
+                "customization": "cell color",
+                "customizationValue": "#A9D08E"
+              },
+              {
+                "field": "SPEC",
+                "condition": "!=",
+                "value": "$",
+                "customization": "cell color",
+                "customizationValue": "#A9D08E"
+              },
+              {
+                "field": "TOPICCD",
+                "condition": "!=",
+                "value": "$",
+                "customization": "cell color",
+                "customizationValue": "#A9D08E"
+              },
+              {
+                "field": "If result is categorical, specify valid ORRES values from categorical response list",
+                "condition": "!=",
+                "value": "$",
+                "customization": "cell color",
+                "customizationValue": "#A9D08E"
+              },
+              {
+                "field": "METHOD",
+                "condition": "!=",
+                "value": "$",
+                "customization": "cell color",
+                "customizationValue": "#A9D08E"
+              },
+              {
+                "field": "Standard unit",
+                "condition": "!=",
+                "value": "$",
+                "customization": "cell color",
+                "customizationValue": "red"
+              },
+              {
+                "field": "Units in units dimension[CDISC Submission Value]",
+                "condition": "!=",
+                "value": "$",
+                "customization": "cell color",
+                "customizationValue": "red"
+              },
+              {
+                "field": "Units in units dimension",
+                "condition": "!=",
+                "value": "$",
+                "customization": "cell color",
+                "customizationValue": "red"
+              }
+            ],
+            "wrapContent": true,
+            "columnWidths": "[2.5,1,1,1,2,1,1,1,1,1,1,1]",
+            "refreshButtonEnabled": true,
+            "transposed": false
+          }
+        },
+        {
+          "id": "fba58b77-b393-49c9-8dce-e0c2b916338d",
+          "title": "Removed Activity Instance",
+          "query": "WITH $neodash_remove_ab_activity_instances as topic_codes\nUNWIND topic_codes as topic_code\nReturn topic_code as `Assessments`\n\n\n",
+          "width": 5,
+          "height": 4,
+          "x": 19,
+          "y": 5,
+          "type": "table",
+          "selection": {},
+          "settings": {
+            "noDataMessage": "Select above to remove assessments"
+          }
+        },
+        {
+          "id": "ceec002d-fb89-4d61-90e9-336d10d0cf53",
+          "title": "Select assessments to REMOVE",
+          "query": "MATCH\n  (:StudyRoot {uid: $neodash_studyroot_uid})-[:LATEST]->\n  (s:StudyValue)\nWITH s\nMATCH(s)-->\n  (s_act:StudyActivity)-[:STUDY_ACTIVITY_HAS_STUDY_ACTIVITY_SUBGROUP]->\n  (:StudyActivitySubGroup)-[:HAS_SELECTED_ACTIVITY_SUBGROUP]->\n  (asgv:ActivitySubGroupValue)<-[:HAS_SELECTED_SUBGROUP]-\n  (:ActivityGrouping)-[:HAS_SELECTED_GROUP]->\n  (:ActivityGroupValue)\nWHERE asgv.name = \"Antibodies\"\nWITH DISTINCT s, s_act\nMATCH\n(s)-[:HAS_STUDY_ACTIVITY]->(s_act)-[:HAS_SELECTED_ACTIVITY]->(act:ActivityValue),\n(s_act)\nMATCH(s_act)-[:STUDY_ACTIVITY_HAS_SCHEDULE]->(s_act_sch:StudyActivitySchedule)<-[:STUDY_VISIT_HAS_SCHEDULE]-(visit:StudyVisit)<--(s)\nwhere not (s_act_sch)<--(:Delete)\nMATCH(n:ActivityInstanceValue)<-[:HAS_SELECTED_ACTIVITY_INSTANCE]-\n  (s_ai:StudyActivityInstance)<-[:HAS_STUDY_ACTIVITY_INSTANCE]-\n  (s),(s_act)-->(s_ai)\nWHERE toLower(toString(n.topic_code)) CONTAINS toLower($input) \nRETURN DISTINCT n.topic_code as value,  n.topic_code as display ORDER BY size(toString(value)) ASC LIMIT 100",
+          "width": 5,
+          "height": 2,
+          "x": 19,
+          "y": 3,
+          "type": "select",
+          "selection": {},
+          "settings": {
+            "type": "Custom Query",
+            "entityType": "Remove AB Activity Instances",
+            "refreshButtonEnabled": true,
+            "fullscreenEnabled": true,
+            "multiSelector": true,
+            "multiSelectLimit": 100,
+            "helperText": "One or more if applicable",
+            "parameterName": "neodash_remove_ab_activity_instances"
+          },
+          "schema": []
+        }
+      ]
+    }
+  ],
+  "parameters": {},
+  "extensions": {
+    "active": true,
+    "activeReducers": [],
+    "advanced-charts": {
+      "active": true
+    },
+    "actions": {
+      "active": true
+    },
+    "styling": {
+      "active": true
+    },
+    "forms": {
+      "active": true
+    }
+  },
+  "uuid": "4ba24076-8f72-4c67-8aeb-bef818936941"
+}

@@ -1,0 +1,49 @@
+name: Load tests — build validation
+
+# Invoked by .github/workflows/pr-required-checks.yml when a PR touches
+# load_tests/ or this workflow file. Not triggered directly by
+# `pull_request:` — the coordinator handles path detection, so a direct
+# trigger here would just duplicate the work and burn runner minutes.
+# `workflow_dispatch:` stays so you can still fire it manually from the
+# Actions UI.
+#
+# The source pipeline had a `concurrency:` block to cancel superseded
+# runs; that now lives on the coordinator (pr-required-checks.yml), which
+# cancels the whole PR run on force-push. No per-project group needed.
+on:
+  workflow_call:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Build validation
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: load_tests
+    steps:
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6
+        with:
+          python-version: "3.14"
+
+      - name: Set up Python environment
+        run: |
+          pip install --upgrade pip pipenv wheel
+          pipenv sync --dev
+
+      - name: Pylint
+        run: pipenv run lint
+
+      - name: Black formatting check
+        run: pipenv run black --check
+
+      - name: Isort import ordering check
+        run: pipenv run isort --check
+
+      - name: Check for vulnerable packages
+        run: pipenv run audit

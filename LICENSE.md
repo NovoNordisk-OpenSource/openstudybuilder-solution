@@ -9,16 +9,16 @@ information and full license texts.
 
 System Component (License) | Location
 -- | --
-OpenStudyBuilder App (GPLv3) | studybuilder
-OpenStudyBuilder Documentation Portal (CC-BY-4.0 for content and MIT for source code) | documentation-portal
-Clinical MDR API Specification (MIT) | clinical-mdr-api (swagger documentation)
-Clinical MDR API (GPLv3) | clinical-mdr-api
-Clinical MDR (MIT) | neo4j-mdr-db (does not include Neo4j database which is needed as third party software as pre-requisite)
-Sponsor Data Import (MIT) | studybuilder-import
-Data Export (MIT) | studybuilder-export
-Standards Import (GPLv3) | mdr-standards-import
-DB Schema Migration (MIT) | db-schema-migration
-System Tests (MIT) | system-tests
+OpenStudyBuilder App (GPLv3) | frontend
+OpenStudyBuilder Documentation Portal (CC-BY-4.0 for content and MIT for source code) | documentation_portal
+Clinical MDR API Specification (MIT) | api (swagger documentation)
+Clinical MDR API (GPLv3) | api
+Clinical MDR (MIT) | db (does not include Neo4j database which is needed as third party software as pre-requisite)
+Sponsor Data Import (MIT) | import_sponsor_data
+Data Export (MIT) | export
+Standards Import (GPLv3) | import_standards
+DB Schema Migration (MIT) | db_schema_migration
+System Tests (MIT) | system_tests
 
 ## License Terms (GPLv3)
 

@@ -1,0 +1,9 @@
+{
+    "ig_uid": "SDTMIG",
+    "ig_version_number": "3.3",
+    "sponsor_model_version_number": "2",
+    "sponsor_model_name": "sdtmig_mastermodel_3.3_NN02",
+    "library_name": "Sponsor",
+    "schema_version": 2,
+    "exclude": false
+}

@@ -1,0 +1,105 @@
+:root {
+  --vp-home-hero-name-color: transparent;
+  --vp-home-hero-name-background: linear-gradient(120deg, #4f9cff 30%, #9ad0ff);
+  /* Use the full window width instead of the default 1440px cap */
+  --vp-layout-max-width: 100%;
+}
+
+/* Let the doc content fill the space left by the sidebar/aside */
+.VPDoc .container {
+  max-width: 100% !important;
+}
+
+.VPDoc .content {
+  max-width: 100% !important;
+}
+
+.VPDoc.has-aside .content-container {
+  max-width: 100% !important;
+}
+
+:root,
+.dark {
+  --vp-nav-bg-color: #ffffff;
+}
+
+/* Navbar */
+.VPNav,
+.VPNavBar,
+.dark .VPNavBar,
+.VPNavBar.has-sidebar .content,
+.dark .VPNavBar.has-sidebar .content {
+  background-color: #ffffff !important;
+}
+
+.VPNavBar .VPNavBarSearch {
+  flex-grow: 0;
+  width: 30%;
+}
+
+.VPNavBarSearchButton {
+  width: 100%;
+}
+
+.VPNavBar .VPNavBarTitle .title,
+.VPNavBar .VPNavBarMenuLink,
+.VPNavBar .VPNavBarMenuLink.active,
+.VPNavBar .VPNavBarMenuGroup .text,
+.VPNavBar .VPNavBarExtra .button,
+.VPNavBar .VPNavBarHamburger .top,
+.VPNavBar .VPNavBarHamburger .middle,
+.VPNavBar .VPNavBarHamburger .bottom,
+.VPNavBar .VPSocialLink,
+.dark .VPNavBar .VPNavBarTitle .title,
+.dark .VPNavBar .VPNavBarMenuLink,
+.dark .VPNavBar .VPNavBarMenuLink.active,
+.dark .VPNavBar .VPNavBarMenuGroup .text,
+.dark .VPNavBar .VPNavBarExtra .button,
+.dark .VPNavBar .VPSocialLink {
+  color: #1a1a1a !important;
+}
+
+/* Home hero */
+.is-home {
+  background-color: #001966;
+}
+
+.dark .is-home {
+  background-color: #0d1b2a;
+}
+
+.VPHome .VPHero .text {
+  color: #ffffff;
+}
+
+.VPHome .VPHero .tagline {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* Home features (light mode) */
+.VPHome .VPFeature {
+  background-color: #ffffff;
+  border-color: rgba(0, 0, 0, 0.12);
+}
+
+.VPHome .VPFeature .title {
+  color: #1a1a1a;
+}
+
+.VPHome .VPFeature .details {
+  color: rgba(0, 0, 0, 0.7);
+}
+
+/* Home features (dark mode) */
+.dark .VPHome .VPFeature {
+  background-color: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.dark .VPHome .VPFeature .title {
+  color: #ffffff;
+}
+
+.dark .VPHome .VPFeature .details {
+  color: rgba(255, 255, 255, 0.75);
+}

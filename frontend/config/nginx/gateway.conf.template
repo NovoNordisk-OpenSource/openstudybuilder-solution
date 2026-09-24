@@ -1,0 +1,40 @@
+map $sent_http_content_type $expires {
+    image/x-icon                   1y;
+    application/pdf                1y;
+    video/x-flv                    1y;
+    application/javascript         14d;
+    text/css                       14d;
+    image/png                      14d;
+    image/jpeg                     14d;
+    image/gif                      14d;
+    application/x-shockwave-flash  14d;
+    text/html                       -1;
+    text/xml                       14d;
+    text/plain                     14d;
+    default                        off;
+}
+
+## Gateway deployment: an upstream gateway (e.g. Azure Application Gateway)
+## terminates TLS and does path-based routing to the API, doc, neodash and
+## other backends. This server only serves the static SPA, so it deliberately
+## has no proxy_pass blocks -- see standalone.conf.template for the variant
+## that fans out to sibling containers itself.
+server {
+    listen       $PORT;
+    server_name  localhost;
+    include      mime.types;
+
+    location / {
+        root   /usr/share/nginx/html;
+        try_files $uri $uri/ /index.html;
+        index  index.html index.htm;
+        expires $expires;
+    }
+
+    # redirect server error pages to the static page /50x.html
+    #
+    error_page   500 502 503 504  /50x.html;
+    location = /50x.html {
+        root   /usr/share/nginx/html;
+    }
+}

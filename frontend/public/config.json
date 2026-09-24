@@ -1,0 +1,41 @@
+{
+    "APP_ENV": "",
+    "API_BASE_URL": "http://127.0.0.1:8000",
+    "EXTENSIONS_API_BASE_URL": "http://127.0.0.1:8009",
+    "DOC_BASE_URL": "http://127.0.0.1:8081",
+    "NEODASH_BASE_URL": "",
+    "NEED_HELP_URL": "https://example.com/sites/MDR-StudyBuilder/SitePages/Support.aspx",
+    "ENABLE_SCREEN_RECORDER": "false",
+
+    "APPINSIGHTS_CONNSTRING": "InstrumentationKey=XYZ;IngestionEndpoint=XYZ",
+    "APPINSIGHTS_DISABLE": "1",
+
+    "OAUTH_API_APP_ID": "",
+    "OAUTH_ENABLED": "0",
+    "OAUTH_RBAC_ENABLED": "1",
+    "OAUTH_METADATA_URL": "",
+    "OAUTH_UI_APP_ID": "",
+
+    "BUILD_NUMBER": "",
+    "BUILD_BRANCH": "",
+    "BUILD_COMMIT": "",
+
+    "AUTH_APP_ID": "",
+    "AUTH_AUTHORITY": "",
+    "AUTH_CLIENT_ID": "",
+    "AUTH_ENABLED": "",
+
+    "API_BUILD_NUMBER": "N/A",
+    "DATA_IMPORT_BUILD_NUMBER": "N/A",
+    "DOCUMENTATION_PORTAL_BUILD_NUMBER": "N/A",
+    "FRONTEND_BUILD_NUMBER": "N/A",
+    "NEO4J_MDR_BUILD_NUMBER": "N/A",
+    "NEODASH_BUILD_NUMBER": "N/A",
+    "RELEASE_VERSION_NUMBER": "N/A",
+    "STANDARDS_IMPORT_BUILD_NUMBER": "N/A",
+    "STUDYBUILDER_EXPORT_BUILD_NUMBER": "N/A",
+    "STUDYBUILDER_VERSION": "N/A",
+
+    "PENDO_ENABLED": "0",
+    "PENDO_APP_ID": ""
+}

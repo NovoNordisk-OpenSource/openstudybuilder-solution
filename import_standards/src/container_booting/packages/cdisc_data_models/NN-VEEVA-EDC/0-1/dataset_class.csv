@@ -1,0 +1,2 @@
+data_model,activity_instance_class,name,description,version,release_date
+NN-VEEVA-EDC v0.1,Finding (NumericFinding|CategoricFinding),Finding,Finding related data,0.1,2024-06-20

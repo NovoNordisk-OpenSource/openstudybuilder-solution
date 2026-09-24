@@ -1,0 +1,774 @@
+name: Api — build validation
+
+# Invoked by .github/workflows/pr-required-checks.yml when a PR touches
+# api/ or this workflow file. Not triggered directly by `pull_request:` —
+# the coordinator handles path detection, so a direct trigger here would
+# just duplicate the work and burn runner minutes. `workflow_dispatch:`
+# stays so you can still fire it manually from the Actions UI.
+#
+# The source pipeline's own `concurrency:` group is dropped — the
+# coordinator cancels the whole PR run on force-push.
+#
+# All jobs run with `working-directory: api` (compose files, Pipfile, and
+# sources live under api/). NB: upload/download-artifact `path:` values are
+# workspace-root-relative and NOT affected by working-directory, so every
+# relative artifact path is prefixed with `api/` explicitly. Artifact
+# `name:` values are prefixed with `api-` to stay unique across the shared
+# coordinator run (reusable workflows share one run) — including the
+# internal `api-dev-image` passed from build-dev-image to the test jobs.
+on:
+  workflow_call:
+  workflow_dispatch:
+
+# Shared image tag for the dev container.
+# Built once by `build-dev-image` and loaded by every test job from the same artifact.
+env:
+  DEV_IMAGE: "clinical-mdr-dev:ci"
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    working-directory: api
+
+jobs:
+  check-auto-generated-files:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: api
+    steps:
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6
+        with:
+          python-version: "3.14"
+
+      - name: Install pipenv
+        run: pip install --upgrade pip pipenv wheel
+
+      - name: Install system packages
+        run: sudo apt-get update && sudo apt-get -y install libxml2-dev libxslt-dev
+
+      - name: Install dependencies
+        run: pipenv sync --dev
+
+      # ---- SBOM check ------------------------------------------------------
+      - name: Generate SBOM
+        id: sbom
+        run: |
+          pipenv run build-sbom
+          if git diff --exit-code sbom.md; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Publish SBOM artifact
+        if: steps.sbom.outputs.changed == 'true'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: api-sbom
+          path: api/sbom.md
+          if-no-files-found: warn
+
+      - name: Fail if SBOM changed
+        if: steps.sbom.outputs.changed == 'true'
+        run: |
+          echo "::error::SBOM (sbom.md) is out of date. Regenerate it locally and commit the changes."
+          git --no-pager diff sbom.md
+          exit 1
+
+      - name: Generate OpenAPI specifications
+        env:
+          NEO4J_DSN: "bolt://x:x@localhost:7687/x"
+        run: |
+          pipenv run openapi
+          pipenv run consumer-openapi
+          pipenv run extensions-openapi
+
+      - name: Generate neomodel schema
+        env:
+          NEO4J_DSN: "bolt://x:x@localhost:7687/x"
+        run: |
+          pipenv run neomodel-schema -o neomodel_schema.generated.json
+          mv neomodel_schema.generated.json neomodel_schema.json
+
+      - name: Check for outdated auto-generated files
+        id: check-diff
+        run: |
+          if ! git diff --exit-code --quiet; then
+            echo "detected=true" >> "$GITHUB_OUTPUT"
+            git diff > regenerated.patch
+          else
+            echo "detected=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Upload regenerated files if needed
+        if: steps.check-diff.outputs.detected == 'true'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: api-regenerated-files
+          path: |
+            api/regenerated.patch
+            api/openapi.json
+            api/consumer_api/openapi.json
+            api/extensions/openapi.json
+            api/neomodel_schema.json
+          retention-days: 7
+          if-no-files-found: error
+
+      - name: Fail if generated files are outdated
+        if: steps.check-diff.outputs.detected == 'true'
+        run: |
+          echo "::error::Auto-generated files are outdated"
+          echo "::error::Download the 'api-regenerated-files' artifact from this run and apply changes:"
+          echo "::error::  1. Download artifact from: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          echo "::error::  2. Extract and apply: git apply regenerated.patch"
+          echo "::error::  3. Or copy individual files from the artifact"
+          echo "::error::  4. Commit and push the changes"
+          exit 1
+
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    defaults:
+      run:
+        working-directory: api
+    steps:
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6
+        with:
+          python-version: "3.14"
+
+      - name: Install system packages
+        run: sudo apt-get update && sudo apt-get -y install libxml2-dev libxslt-dev
+
+      - name: Install pipenv
+        run: pip install --upgrade pip pipenv wheel
+
+      - name: Install runtime dependencies
+        run: pipenv sync
+
+      - name: Install dev dependencies
+        run: pipenv sync --dev
+
+      - name: Verify Pipfile.lock is up to date
+        id: verify-lock
+        run: |
+          if pipenv verify; then
+            echo "outdated=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "outdated=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Regenerate Pipfile.lock
+        if: steps.verify-lock.outputs.outdated == 'true'
+        run: pipenv lock
+
+      - name: Publish updated Pipfile.lock artifact
+        if: steps.verify-lock.outputs.outdated == 'true'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: api-pipfile-lock
+          path: api/Pipfile.lock
+          if-no-files-found: error
+
+      - name: Fail if Pipfile.lock is outdated
+        if: steps.verify-lock.outputs.outdated == 'true'
+        run: |
+          echo "::error::Pipfile.lock is out of date. Download the 'api-pipfile-lock' artifact from this run,"
+          echo "::error::replace api/Pipfile.lock with it, and commit the change:"
+          echo "::error::  ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          exit 1
+
+      - name: Black formatting check
+        run: pipenv run black --check
+
+      - name: Isort import ordering check
+        run: pipenv run isort --check
+
+      - name: SBLint
+        run: pipenv run sblint
+
+      - name: mypy type checking
+        run: pipenv run mypy
+
+      - name: Pylint
+        run: pipenv run lint
+
+      # -----------------------------------------------------------------
+      # TODO: Snyk security scanning
+      # Requires SNYK_TOKEN as a GitHub repository secret.
+      # - name: Snyk open-source scan
+      #   run: |
+      #     npm install -g snyk
+      #     snyk auth "$SNYK_TOKEN"
+      #     snyk test --severity-threshold=critical --fail-on=all
+      #   env:
+      #     SNYK_API: https://app.eu.snyk.io/api
+      #     SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      #
+      # - name: Snyk code scan
+      #   run: snyk code test --severity-threshold=high --fail-on=all
+      #   env:
+      #     SNYK_API: https://app.eu.snyk.io/api
+      #     SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      # -----------------------------------------------------------------
+
+      # -----------------------------------------------------------------
+      # TODO: SonarQube / SonarCloud analysis
+      # Replace with SonarCloud GitHub Action once configured.
+      # - name: SonarCloud scan
+      #   uses: SonarSource/sonarqube-scan-action@<SHA> # pin to node24 SHA
+      #   env:
+      #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      #   with:
+      #     args: >
+      #       -Dsonar.projectKey=clinical-mdr-api
+      #       -Dsonar.sources=clinical_mdr_api
+      #       -Dsonar.tests=clinical_mdr_api
+      #       -Dsonar.test.inclusions=**/tests/**
+      #       -Dsonar.exclusions=**/tests/**
+      #       -Dsonar.python.coverage.reportPaths=reports/coverage.xml
+      # -----------------------------------------------------------------
+
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # Independent job: runs in parallel and isn't required by other jobs,
+    # so a failure here (e.g. known unfixed vulnerabilities) doesn't block
+    # the rest of the workflow from reporting results.
+    defaults:
+      run:
+        working-directory: api
+    steps:
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6
+        with:
+          python-version: "3.14"
+
+      - name: Install pipenv and dev dependencies
+        run: |
+          pip install --upgrade pip pipenv wheel
+          pipenv sync --dev
+
+      - name: Check for vulnerable packages
+        run: pipenv run audit
+
+  build-dev-image:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      BUILD_TARGET: dev
+    defaults:
+      run:
+        working-directory: api
+    steps:
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+
+      - name: Set UID to runner user (matches the dev container user)
+        run: echo "UID=$(id -u)" >> "$GITHUB_ENV"
+
+      - name: Generate ephemeral Neo4j password for CI
+        # compose.yaml / compose.dev.yaml fail fast if NEO4J_MDR_AUTH_PASSWORD
+        # is unset (`:?Set NEO4J_MDR_AUTH_PASSWORD ...`). Compose evaluates
+        # interpolation on file load, so even `docker compose build` needs it.
+        # A fresh random value per run keeps the password out of source and
+        # makes it unique per job. add-mask hides it from any log echo.
+        run: |
+          pw=$(openssl rand -hex 16)
+          echo "::add-mask::$pw"
+          echo "NEO4J_MDR_AUTH_PASSWORD=$pw" >> "$GITHUB_ENV"
+
+      - name: Build dev image
+        # `docker compose build dev` reads compose.yaml and produces an image
+        # tagged with $DEV_IMAGE (image: ${DEV_IMAGE:-} on the dev service).
+        run: docker compose build dev
+
+      - name: Save dev image as tarball
+        run: docker save "$DEV_IMAGE" -o /tmp/dev-image.tar
+
+      - name: Upload dev image artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: api-dev-image
+          path: /tmp/dev-image.tar
+          retention-days: 1
+          if-no-files-found: error
+
+  test-unit:
+    needs: build-dev-image
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      NEO4J_IMAGE: "neo4j:enterprise"
+      BUILD_TARGET: dev
+      COMPOSE_PROFILES: dev
+    defaults:
+      run:
+        working-directory: api
+    steps:
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+
+      - name: Set UID to runner user (matches Azure pipeline)
+        run: echo "UID=$(id -u)" >> "$GITHUB_ENV"
+
+      - name: Generate ephemeral Neo4j password for CI
+        # compose fails fast if NEO4J_MDR_AUTH_PASSWORD is unset; generate a
+        # fresh per-job random value. See build-dev-image for full rationale.
+        run: |
+          pw=$(openssl rand -hex 16)
+          echo "::add-mask::$pw"
+          echo "NEO4J_MDR_AUTH_PASSWORD=$pw" >> "$GITHUB_ENV"
+
+      - name: Free up runner disk space
+        # Remove pre-installed toolchains we don't use. The runner ships with
+        # ~10 GB of Android SDK, .NET, Haskell, Swift, etc.; docker save/load
+        # plus Neo4j data quickly fill the remaining ~14 GB free.
+        run: |
+          df -h /
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc \
+                      /usr/local/share/boost /usr/local/lib/heroku \
+                      /usr/local/share/powershell /usr/local/share/chromium \
+                      "$AGENT_TOOLSDIRECTORY" || true
+          df -h /
+
+      - name: Create report directories
+        run: mkdir -p reports consumer_api/reports extensions/reports
+
+      - name: Tune Neo4j memory for GitHub runner
+        run: |
+          cat > compose.ci.yaml <<'YAML'
+          services:
+            database:
+              environment:
+                NEO4J_server_memory_heap_initial__size: "2G"
+                NEO4J_server_memory_heap_max__size: "2G"
+                NEO4J_server_memory_pagecache_size: "1G"
+          YAML
+          echo "COMPOSE_FILE=compose.yaml:compose.ci.yaml" >> "$GITHUB_ENV"
+
+      - name: Download dev image artifact
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: api-dev-image
+          path: /tmp
+
+      - name: Load dev image
+        # Delete the tarball after loading; the docker daemon now has its own copy.
+        run: |
+          docker load -i /tmp/dev-image.tar
+          rm -f /tmp/dev-image.tar
+
+      - name: Start database service
+        run: docker compose up -d --renew-anon-volumes --wait database
+
+      - name: Dump database logs on startup failure
+        if: failure()
+        run: docker compose logs --no-color --no-log-prefix database || true
+
+      - name: Run unit tests
+        run: docker compose run --rm dev pipenv run testunit
+
+      - name: Run extensions tests
+        run: docker compose run --rm dev pipenv run extensions-test
+
+      - name: Run telemetry tests
+        run: >-
+          docker compose run --rm
+          -e TRACING_ENABLED=True
+          -e APPLICATIONINSIGHTS_CONNECTION_STRING=InstrumentationKey=00000000-0000-0000-0000-000000000000
+          -e UVICORN_LOG_CONFIG=logging-azure.yaml
+          dev pipenv run test-telemetry
+
+      # -----------------------------------------------------------------
+      # TODO: Auth tests
+      # Requires OAUTH secrets configured as GitHub repository secrets.
+      # - name: Run auth tests
+      #   env:
+      #     OAUTH_ENABLED: "y"
+      #     OAUTH_RBAC_ENABLED: "y"
+      #     OAUTH_METADATA_URL: ${{ secrets.OAUTH_METADATA_URL }}
+      #     OAUTH_API_APP_ID: ${{ secrets.OAUTH_API_APP_ID }}
+      #     EXPIRED_ACCESS_TOKEN: ${{ secrets.EXPIRED_ACCESS_TOKEN }}
+      #   run: pipenv run testauth
+      # -----------------------------------------------------------------
+
+      - name: Upload unit test reports
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: api-test-reports-unit
+          path: |
+            api/reports/unit_report.xml
+            api/reports/telemetry_report.xml
+            api/reports/coverage.xml
+            api/extensions/reports/test_report.xml
+            api/extensions/reports/coverage.xml
+          if-no-files-found: warn
+
+      - name: Save Neo4j logs
+        if: always()
+        run: docker compose logs --no-color --no-log-prefix database > reports/neo4j.log
+
+      - name: Upload Neo4j logs
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: api-neo4j-logs-unit
+          path: api/reports/neo4j.log
+          if-no-files-found: warn
+
+      - name: Shut down services
+        if: always()
+        run: docker compose down -v
+
+  test-integration:
+    name: test-integration (${{ matrix.shard }})
+    needs: build-dev-image
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    # Sharded by directory; `api-misc` and `non-api` are catch-all shards using
+    # pytest --ignore= so anything new (new dir or new file) is picked up
+    # automatically. File counts shown for reference — rebalance from real
+    # durations once we have data.
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - shard: api-old
+            # 107 files
+            paths: clinical_mdr_api/tests/integration/api/old
+          - shard: api-study
+            # ~36 files
+            paths: >-
+              clinical_mdr_api/tests/integration/api/study
+              clinical_mdr_api/tests/integration/api/study_selections
+              clinical_mdr_api/tests/integration/api/study_design_listings
+          - shard: api-syntax
+            # ~17 files
+            paths: >-
+              clinical_mdr_api/tests/integration/api/syntax_templates
+              clinical_mdr_api/tests/integration/api/syntax_instances
+              clinical_mdr_api/tests/integration/api/syntax_pre_instances
+          - shard: api-misc
+            # Catch-all for clinical_mdr_api/tests/integration/api/ — runs everything
+            # under api/ EXCEPT the dirs already covered by api-old/api-study/api-syntax.
+            # New api/* subdirs or root test files automatically land here.
+            paths: >-
+              --ignore=clinical_mdr_api/tests/integration/api/old
+              --ignore=clinical_mdr_api/tests/integration/api/study
+              --ignore=clinical_mdr_api/tests/integration/api/study_selections
+              --ignore=clinical_mdr_api/tests/integration/api/study_design_listings
+              --ignore=clinical_mdr_api/tests/integration/api/syntax_templates
+              --ignore=clinical_mdr_api/tests/integration/api/syntax_instances
+              --ignore=clinical_mdr_api/tests/integration/api/syntax_pre_instances
+              clinical_mdr_api/tests/integration/api
+          - shard: non-api
+            # Catch-all for everything under clinical_mdr_api/tests/integration/
+            # EXCEPT the api/ tree (handled by the api-* shards above).
+            # New top-level dirs or root test files automatically land here.
+            paths: >-
+              --ignore=clinical_mdr_api/tests/integration/api
+              clinical_mdr_api/tests/integration
+    env:
+      NEO4J_IMAGE: "neo4j:enterprise"
+      BUILD_TARGET: dev
+      COMPOSE_PROFILES: dev
+    defaults:
+      run:
+        working-directory: api
+    steps:
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+
+      - name: Set UID to runner user (matches Azure pipeline)
+        run: echo "UID=$(id -u)" >> "$GITHUB_ENV"
+
+      - name: Generate ephemeral Neo4j password for CI
+        # compose fails fast if NEO4J_MDR_AUTH_PASSWORD is unset; generate a
+        # fresh per-job random value. See build-dev-image for full rationale.
+        run: |
+          pw=$(openssl rand -hex 16)
+          echo "::add-mask::$pw"
+          echo "NEO4J_MDR_AUTH_PASSWORD=$pw" >> "$GITHUB_ENV"
+
+      - name: Free up runner disk space
+        # Remove pre-installed toolchains we don't use. The runner ships with
+        # ~10 GB of Android SDK, .NET, Haskell, Swift, etc.; docker save/load
+        # plus Neo4j data quickly fill the remaining ~14 GB free.
+        run: |
+          df -h /
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc \
+                      /usr/local/share/boost /usr/local/lib/heroku \
+                      /usr/local/share/powershell /usr/local/share/chromium \
+                      "$AGENT_TOOLSDIRECTORY" || true
+          df -h /
+
+      - name: Create report directories
+        run: mkdir -p reports consumer_api/reports extensions/reports
+
+      - name: Tune Neo4j memory for GitHub runner
+        run: |
+          cat > compose.ci.yaml <<'YAML'
+          services:
+            database:
+              environment:
+                NEO4J_server_memory_heap_initial__size: "2G"
+                NEO4J_server_memory_heap_max__size: "2G"
+                NEO4J_server_memory_pagecache_size: "1G"
+          YAML
+          echo "COMPOSE_FILE=compose.yaml:compose.ci.yaml" >> "$GITHUB_ENV"
+
+      - name: Download dev image artifact
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: api-dev-image
+          path: /tmp
+
+      - name: Load dev image
+        # Delete the tarball after loading; the docker daemon now has its own copy.
+        run: |
+          docker load -i /tmp/dev-image.tar
+          rm -f /tmp/dev-image.tar
+
+      - name: Start database service
+        run: docker compose up -d --renew-anon-volumes --wait database
+
+      - name: Dump database logs on startup failure
+        if: failure()
+        run: docker compose logs --no-color --no-log-prefix database || true
+
+      - name: Run integration tests
+        # Mirrors the `testint` Pipfile script but targets only this shard's
+        # paths, and writes shard-tagged report files so artifacts don't collide.
+        run: >-
+          docker compose run --rm dev pipenv run pytest
+          -s -n auto --dist loadfile
+          --cov-report xml:reports/coverage-${{ matrix.shard }}.xml
+          --cov-append --cov
+          --junitxml=reports/int_report-${{ matrix.shard }}.xml
+          ${{ matrix.paths }}
+
+      - name: Upload integration test reports
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: api-test-reports-integration-${{ matrix.shard }}
+          path: |
+            api/reports/int_report-${{ matrix.shard }}.xml
+            api/reports/coverage-${{ matrix.shard }}.xml
+          if-no-files-found: warn
+
+      - name: Save Neo4j logs
+        if: always()
+        run: docker compose logs --no-color --no-log-prefix database > reports/neo4j.log
+
+      - name: Upload Neo4j logs
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: api-neo4j-logs-integration-${{ matrix.shard }}
+          path: api/reports/neo4j.log
+          if-no-files-found: warn
+
+      - name: Shut down services
+        if: always()
+        run: docker compose down -v
+
+  test-consumer-api:
+    needs: build-dev-image
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      NEO4J_IMAGE: "neo4j:enterprise"
+      BUILD_TARGET: dev
+      COMPOSE_PROFILES: dev
+    defaults:
+      run:
+        working-directory: api
+    steps:
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+
+      - name: Set UID to runner user (matches Azure pipeline)
+        run: echo "UID=$(id -u)" >> "$GITHUB_ENV"
+
+      - name: Generate ephemeral Neo4j password for CI
+        # compose fails fast if NEO4J_MDR_AUTH_PASSWORD is unset; generate a
+        # fresh per-job random value. See build-dev-image for full rationale.
+        run: |
+          pw=$(openssl rand -hex 16)
+          echo "::add-mask::$pw"
+          echo "NEO4J_MDR_AUTH_PASSWORD=$pw" >> "$GITHUB_ENV"
+
+      - name: Free up runner disk space
+        # Remove pre-installed toolchains we don't use. The runner ships with
+        # ~10 GB of Android SDK, .NET, Haskell, Swift, etc.; docker save/load
+        # plus Neo4j data quickly fill the remaining ~14 GB free.
+        run: |
+          df -h /
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc \
+                      /usr/local/share/boost /usr/local/lib/heroku \
+                      /usr/local/share/powershell /usr/local/share/chromium \
+                      "$AGENT_TOOLSDIRECTORY" || true
+          df -h /
+
+      - name: Create report directories
+        run: mkdir -p reports consumer_api/reports extensions/reports
+
+      - name: Tune Neo4j memory for GitHub runner
+        run: |
+          cat > compose.ci.yaml <<'YAML'
+          services:
+            database:
+              environment:
+                NEO4J_server_memory_heap_initial__size: "2G"
+                NEO4J_server_memory_heap_max__size: "2G"
+                NEO4J_server_memory_pagecache_size: "1G"
+          YAML
+          echo "COMPOSE_FILE=compose.yaml:compose.ci.yaml" >> "$GITHUB_ENV"
+
+      - name: Download dev image artifact
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: api-dev-image
+          path: /tmp
+
+      - name: Load dev image
+        # Delete the tarball after loading; the docker daemon now has its own copy.
+        run: |
+          docker load -i /tmp/dev-image.tar
+          rm -f /tmp/dev-image.tar
+
+      - name: Start database service
+        run: docker compose up -d --renew-anon-volumes --wait database
+
+      - name: Dump database logs on startup failure
+        if: failure()
+        run: docker compose logs --no-color --no-log-prefix database || true
+
+      - name: Run Consumer API tests
+        run: docker compose run --rm dev pipenv run consumer-api-test
+
+      # -----------------------------------------------------------------
+      # TODO: Consumer API auth tests
+      # Requires OAUTH secrets configured as GitHub repository secrets.
+      # - name: Run Consumer API auth tests
+      #   run: docker compose run --rm dev pipenv run consumer-api-testauth
+      #   env:
+      #     OAUTH_ENABLED: "y"
+      #     OAUTH_RBAC_ENABLED: "y"
+      #     OAUTH_METADATA_URL: ${{ secrets.OAUTH_METADATA_URL }}
+      #     OAUTH_API_APP_ID: ${{ secrets.OAUTH_API_APP_ID }}
+      #     EXPIRED_ACCESS_TOKEN: ${{ secrets.EXPIRED_ACCESS_TOKEN }}
+      # -----------------------------------------------------------------
+
+      - name: Upload Consumer API test reports
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: api-test-reports-consumer-api
+          path: |
+            api/consumer_api/reports/test_report.xml
+            api/consumer_api/reports/coverage.xml
+          if-no-files-found: warn
+
+      - name: Save Neo4j logs
+        if: always()
+        run: docker compose logs --no-color --no-log-prefix database > reports/neo4j.log
+
+      - name: Upload Neo4j logs
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: api-neo4j-logs-consumer-api
+          path: api/reports/neo4j.log
+          if-no-files-found: warn
+
+      - name: Shut down services
+        if: always()
+        run: docker compose down -v
+
+  # -------------------------------------------------------------------
+  # TODO: Schemathesis contract tests
+  # Requires a running API with a populated Neo4j database (restore from
+  # backup). Consider as a separate workflow or add a DB restore step.
+  # When uncommenting: also add a `Generate ephemeral Neo4j password for CI`
+  # step before `docker compose up` (compose.yaml requires
+  # NEO4J_MDR_AUTH_PASSWORD). See test-unit / test-integration for the
+  # canonical step.
+  #
+  # schemathesis:
+  #   runs-on: ubuntu-latest
+  #   timeout-minutes: 90
+  #   steps:
+  #     - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+  #
+  #     - name: Build and start all services
+  #       run: docker compose up -d --build database api consumer-api extensions-api dev
+  #       env:
+  #         NEO4J_IMAGE: "neo4j:enterprise"
+  #         BUILD_TARGET: dev
+  #         UID: "1000"
+  #         OAUTH_ENABLED: "False"
+  #
+  #     - name: Wait for services
+  #       run: |
+  #         timeout 120 bash -c 'until curl -sf http://localhost:8000/docs >/dev/null; do sleep 5; done'
+  #
+  #     - name: Restore Neo4j database
+  #       run: # TODO: add database restore command
+  #
+  #     - name: Run Schemathesis (main API)
+  #       run: docker compose run --rm -e SCHEMATHESIS_HOOKS=clinical_mdr_api.hooks.schemathesis_hooks -e SCHEMATHESIS_STUDY_UID=Study_000006 dev pipenv run schemathesis --url=http://api:8000
+  #
+  #     - name: Run Schemathesis (consumer API)
+  #       run: docker compose run --rm -e SCHEMATHESIS_HOOKS=clinical_mdr_api.hooks.schemathesis_hooks dev pipenv run consumer-api-schemathesis --url=http://consumer-api:8000
+  #
+  #     - name: Run Schemathesis (extensions API)
+  #       run: docker compose run --rm -e SCHEMATHESIS_HOOKS=clinical_mdr_api.hooks.schemathesis_hooks dev pipenv run extensions-schemathesis --url=http://extensions-api:8000
+  #
+  #     - name: Upload Schemathesis reports
+  #       if: always()
+  #       uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+  #       with:
+  #         name: api-schemathesis-reports
+  #         path: |
+  #           api/reports/schemathesis_report.xml
+  #           api/consumer_api/reports/schemathesis_report.xml
+  #           api/extensions/reports/schemathesis_report.xml
+  #
+  #     - name: Shut down services
+  #       if: always()
+  #       run: docker compose down -v
+  # -------------------------------------------------------------------
+
+  # -------------------------------------------------------------------
+  # TODO: Merge and publish code coverage
+  # Once all test jobs upload coverage.xml artifacts, add a job that
+  # downloads them and produces a combined report (e.g., via codecov or
+  # a coverage merge tool).
+  #
+  # coverage:
+  #   runs-on: ubuntu-latest
+  #   needs: [test-unit, test-integration]
+  #   if: always()
+  #   steps:
+  #     - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+  #
+  #     - name: Download all coverage artifacts
+  #       uses: actions/download-artifact@<SHA> # pin to node24 SHA
+  #       with:
+  #         pattern: api-test-reports-*
+  #         merge-multiple: true
+  #
+  #     - name: Merge coverage
+  #       run: # TODO: pip install coverage && coverage combine && coverage xml
+  #
+  #     - name: Upload to Codecov (or similar)
+  #       run: # TODO: upload merged coverage
+  # -------------------------------------------------------------------

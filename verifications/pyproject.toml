@@ -1,0 +1,39 @@
+[project]
+
+[tool.pytest.ini_options]
+log_cli = true
+log_cli_level = "INFO"
+log_cli_format = "%(asctime)s [%(levelname)s] %(message)s"
+log_cli_date_format = "%Y-%m-%d %H:%M:%S"
+bdd_features_base_dir = "features/"
+pythonpath = ["../api"]
+markers = [
+    "impact:data_schema: Database / schema verification",
+    "impact:business_rules: Business rule verification",
+    "impact:performance: Performance-related checks",
+    "impact:api: API endpoint checks",
+    "impact:consumer_api: Consumer API checks",
+    "impact:api_soa: SOA-related API checks",
+]
+
+[tool.pylint.MAIN]
+# Set up sys.path to resolve ``clinical_mdr_api`` from ../api
+init-hook = "import sys; import os; sys.path.insert(0, os.path.normpath(os.path.join(os.getcwd(), '..', 'api')))"
+
+[tool.pylint.'MESSAGES CONTROL']
+disable = 'global-statement,invalid-name,missing-function-docstring,missing-class-docstring,missing-module-docstring,unused-variable,line-too-long,no-name-in-module,protected-access,anomalous-backslash-in-string,wrong-import-position'
+
+[tool.pylint.'FORMAT']
+max-line-length = 150
+max-module-lines = 5000
+
+[tool.pylint.'BASIC']
+good-names = 'x,i,j,k,ex,Run,_,e'
+
+
+[tool.isort]
+profile = 'black'
+extend_skip_glob = ['clinical-mdr-api/**']
+
+[tool.pyright]
+extraPaths = ["../api"]

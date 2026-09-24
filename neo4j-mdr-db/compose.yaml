@@ -1,9 +1,0 @@
-services:
-
-  dev:
-    build:
-      args:
-        UID: "${UID:-1000}"
-      context: ./
-      dockerfile: Dockerfile
-    network_mode: host

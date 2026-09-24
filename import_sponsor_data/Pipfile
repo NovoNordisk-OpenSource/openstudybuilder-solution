@@ -1,0 +1,52 @@
+[[source]]
+url = "https://pypi.python.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+requests = "~=2.34.2"
+aiohttp = "~=3.14.1"
+typing-extensions = "~=4.15.0"
+pyyaml = "~=6.0"
+
+[dev-packages]
+pylint = "~=4.0.5"
+isort = "~=8.0.1"
+black = ">=26.5.1"
+ipykernel = "7.3.0"
+
+[requires]
+python_version = "3.14"
+
+[scripts]
+build-sbom = "pipenv run python3 ../_tools/build_sbom.py --pipfile --fallback-dir doc/licenses --level 2 --output sbom.md"
+import_all = "python -m run_import"
+import_feature_flags = "python -m importers.run_import_feature_flags"
+import_data_suppliers = "python -m importers.run_import_data_suppliers"
+import_dummydata = "python -m importers.run_import_dummydata"
+complexity = "python -m importers.run_import_complexity_burdens"
+dictionaries = "python -m importers.run_import_dictionaries"
+activities = "python -m importers.run_import_activities"
+activity_items = "python -m importers.run_update_activity_instance_activity_items"
+codelistterms1 = "python -m importers.run_import_standardcodelistterms1"
+codelistterms2 = "python -m importers.run_import_standardcodelistterms2"
+unitdefinitions = "python -m importers.run_import_unitdefinitions"
+codelistfinish = "python -m importers.run_import_standardcodelistfinish"
+compounds = "python -m importers.run_import_compounds"
+crfs = "python -m importers.run_import_crfs"
+mockdata = "python -m importers.run_import_mockdata"
+mockdatajson = "python -m importers.run_import_mockdatajson"
+e2e = "python -m importers.run_import_e2e"
+sponsormodels = "python -m importers.run_import_sponsormodels"
+nonstandard_variables = "python -m importers.run_import_nonstandard_variables"
+response_codelists = "python -m importers.run_import_response_codelists"
+trial_summary_parameters = "python -m importers.run_import_trial_summary_parameters"
+validatedatafiles = "python -m test_datafiles_e2e_sync"
+format = """sh -c "
+    python -m isort . \
+    && python -m black . \
+"
+"""
+lint = "pylint importers"
+black = "python -m black ."
+isort = "python -m isort ."

@@ -1,0 +1,9 @@
+node_modules
+.idea
+build.json
+docs/.vitepress/dist
+docs/.vitepress/cache
+.DS_Store
+.playwright-mcp/
+__pycache__/
+*.pyc

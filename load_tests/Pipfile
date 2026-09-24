@@ -1,0 +1,34 @@
+[[source]]
+url = "https://pypi.python.org/simple"
+verify_ssl = false
+name = "pypi"
+
+[requires]
+python_version = "3.14"
+
+[scripts]
+load-test-ui = "locust -f tests/locustfile.py"
+load-test-cl = "locust -f tests/locustfile.py --csv=test_report --html=test_report.html --headless -u 10 -r 1 --run-time 1m"
+audit = "python -m pip_audit"
+lint = "python -m pylint tests"
+black = "python -m black tests"
+isort = "python -m isort tests"
+format = """sh -c "
+    python -m black tests \
+    && python -m isort tests \
+"
+"""
+token = "python -m tests.auth"
+summary = "python -m tests.summary"
+
+[packages]
+locust = "2.44.3"
+neomodel = "~=6.1.0"
+
+[dev-packages]
+isort = "~=8.0.1"
+black = ">=26.5.1"
+junit-xml = "~=1.9"
+typing-extensions = "~=4.15.0"
+pylint = "~=4.0.6"
+pip-audit = "~=2.10.0"

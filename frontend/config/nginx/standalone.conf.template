@@ -1,0 +1,56 @@
+map $sent_http_content_type $expires {
+    image/x-icon                   1y;
+    application/pdf                1y;
+    video/x-flv                    1y;
+    application/javascript         14d;
+    text/css                       14d;
+    image/png                      14d;
+    image/jpeg                     14d;
+    image/gif                      14d;
+    application/x-shockwave-flash  14d;
+    text/html                       -1;
+    text/xml                       14d;
+    text/plain                     14d;
+    default                        off;
+}
+
+server {
+    listen       $PORT;
+    server_name  localhost;
+    include      mime.types;
+
+    location / {
+        root   /usr/share/nginx/html;
+        try_files $uri $uri/ /index.html;
+        index  index.html index.htm;
+        expires $expires;
+    }
+
+    location $API_PATH {
+        proxy_pass http://$API_HOST:$API_PORT/;
+        proxy_read_timeout 300s;
+    }
+
+    location $CONSUMER_API_PATH {
+        proxy_pass http://$CONSUMER_API_HOST:$CONSUMER_API_PORT/;
+    }
+
+    location $EXTENSIONS_API_PATH {
+        proxy_pass http://$EXTENSIONS_API_HOST:$EXTENSIONS_API_PORT/;
+    }
+
+    location $DOC_PATH {
+        proxy_pass http://$DOC_HOST:$DOC_PORT/;
+    }
+
+    location $NEODASH_PATH {
+        proxy_pass http://$NEODASH_HOST:$NEODASH_PORT/;
+    }
+
+    # redirect server error pages to the static page /50x.html
+    #
+    error_page   500 502 503 504  /50x.html;
+    location = /50x.html {
+        root   /usr/share/nginx/html;
+    }
+}

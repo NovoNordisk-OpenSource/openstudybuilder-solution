@@ -1,0 +1,20 @@
+[project]
+
+[tool.pylint.'MASTER']
+extension-pkg-allow-list = 'locust'
+
+[tool.pylint.'MESSAGES CONTROL']
+disable = 'missing-function-docstring,missing-class-docstring,missing-module-docstring,unused-variable,line-too-long,missing-module-docstring,no-name-in-module'
+
+[tool.pylint.'FORMAT']
+max-line-length = 150
+max-module-lines = 5000
+
+[tool.pylint.'BASIC']
+good-names = 'x,i,j,k,ex,Run,_,e'
+
+[tool.black]
+line-length = 120
+
+[tool.isort]
+line_length = 120

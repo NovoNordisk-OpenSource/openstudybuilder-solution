@@ -1,0 +1,47 @@
+request-timeout = 300
+
+[generation]
+# Do not inject unexpected query, header, or cookie parameters during negative
+# testing. FastAPI (like most frameworks) silently ignores unknown parameters by
+# design, so those cases produced false `negative_data_rejection` failures.
+# Available since schemathesis 4.4.0.
+allow-extra-parameters = false
+
+[checks.positive_data_acceptance]
+# Allow-list rationale:
+#   2xx          - default success statuses.
+#   400          - documented status for business-rule violations raised by
+#                  `BusinessLogicException` / `ValidationException` (see
+#                  common/exceptions.py); 209 routes declare 400 in `responses=`
+#                  and schemathesis uses a single global allow-list, so 400 is
+#                  accepted here rather than per-route.
+#   401, 403     - auth / authorization outcomes schemathesis cannot satisfy
+#                  without a real token or role context.
+#   404          - generated path UIDs naturally miss existing records; the
+#                  request shape is valid, the referent just does not exist.
+#   409          - unique-constraint / state-conflict outcomes from legitimate
+#                  business rules (not contract violations).
+# 5xx is intentionally excluded: server errors are real bugs and must remain
+# visible via both `positive_data_acceptance` and the dedicated `server_error`
+# check. Double-reporting is preferred over silently hiding crashes.
+expected-statuses = ["2xx", "400", "401", "403", "404", "409"]
+
+[checks.unsupported_method]
+# Schemathesis v4 added the `unsupported_method` check, which expects methods
+# not declared in the OpenAPI spec to return 405 Method Not Allowed. That
+# expectation doesn't match FastAPI's routing semantics: when schemathesis
+# sends e.g. `PATCH /odms/item-groups/headers`, FastAPI matches it against
+# the declared `PATCH /odms/item-groups/{odm_item_group_uid}` route with
+# `odm_item_group_uid="headers"` and the request then fails validation for
+# a missing body (400), or hits a non-existent resource (404). Those are
+# documented, correct outcomes for the routes FastAPI actually reached;
+# they just aren't the 405 schemathesis wants.
+#
+# Returning 405 instead would require either restructuring dozens of URL
+# families to avoid `{uid}` collisions with sibling literal segments
+# (`/headers`, `/audit-trail`, `/versions`, `/preview`, `/pre-validate`,
+# `/template`), or adding explicit method-guard routes to ~90 endpoints.
+# Both are invasive changes that the `unsupported_method` check does not
+# justify. The check is disabled so we stop reporting framework-level
+# routing behaviour as API contract violations.
+enabled = false

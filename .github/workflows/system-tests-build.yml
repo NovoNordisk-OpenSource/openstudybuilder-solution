@@ -1,0 +1,214 @@
+name: System tests — UI tests validation
+
+# Invoked by .github/workflows/pr-required-checks.yml when a PR touches
+# system_tests/ or this workflow file. Not triggered directly by
+# `pull_request:` (nor the source pipeline's `push:` on main/release) —
+# the coordinator handles path detection, so a direct trigger here would
+# just duplicate the work and burn runner minutes. `workflow_dispatch:`
+# stays so you can still fire it manually from the Actions UI.
+#
+# The tests live in the nested system_tests/ui-tests/ subdirectory, so
+# defaults.run.working-directory points there. The source pipeline's own
+# `concurrency:` group is dropped — the coordinator cancels the whole PR
+# run on force-push.
+on:
+  workflow_call:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ui-tests-validation:
+    name: Verify Repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    defaults:
+      run:
+        shell: bash
+        working-directory: system_tests/ui-tests
+    env:
+      # Keep script behavior close to Azure pipeline defaults.
+      SHELLOPTS: errexit:pipefail:xtrace
+      PS4: '::debug::[command] '
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@0a44ba7841725637a19e28fa30b79a866c81b0a6 # v4.0.4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: system_tests/ui-tests/package-lock.json
+
+      - name: Install runtime packages
+        run: npm ci
+
+      # ---- SBOM check ------------------------------------------------------
+      - name: Generate SBOM
+        id: sbom
+        run: |
+          npm run build-sbom
+          if git diff --exit-code sbom.md; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Publish SBOM artifact
+        if: steps.sbom.outputs.changed == 'true'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: system-tests-ui-sbom
+          path: system_tests/ui-tests/sbom.md
+          if-no-files-found: warn
+
+      - name: Fail if SBOM changed
+        if: steps.sbom.outputs.changed == 'true'
+        run: |
+          echo "::error::SBOM (sbom.md) is out of date. Run 'npm run build-sbom' locally (from ui-tests) and commit the result."
+          git --no-pager diff sbom.md
+          exit 1
+
+      - name: Validate Docker cypress image build
+        run: docker compose build cypress
+
+  ui-tests-audit:
+    # Separate job so a failure is visible on the PR (red X) without blocking
+    # merge. Do NOT add this job to branch protection's required checks until
+    # the existing high/critical findings have been cleaned up — at that point
+    # the gate becomes meaningful.
+    name: npm audit (advisory)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: system_tests/ui-tests
+    steps:
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: system_tests/ui-tests/package-lock.json
+
+      - name: Install runtime packages
+        run: npm ci --ignore-scripts
+
+      - name: npm audit (full report)
+        run: npm audit | tee npm_audit_report.txt || true
+
+      - name: Publish npm audit report
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: system-tests-ui-npm-vulnerabilities
+          path: system_tests/ui-tests/npm_audit_report.txt
+          if-no-files-found: warn
+
+      - name: Fail on high/critical findings
+        # Once existing vulnerabilities are fixed, add `audit` to branch
+        # protection's required checks so this gate actually blocks merges.
+        run: npm audit --audit-level=high
+        
+  neodash-tests-validation:
+    name: Verify Repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    defaults:
+      run:
+        shell: bash
+        working-directory: system_tests/neodash-test
+    env:
+      # Keep script behavior close to Azure pipeline defaults.
+      SHELLOPTS: errexit:pipefail:xtrace
+      PS4: '::debug::[command] '
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@0a44ba7841725637a19e28fa30b79a866c81b0a6 # v4.0.4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: system_tests/neodash-test/package-lock.json
+
+      - name: Install runtime packages
+        run: npm ci
+
+      # ---- SBOM check ------------------------------------------------------
+      - name: Generate SBOM
+        id: sbom
+        run: |
+          npm run build-sbom
+          if git diff --exit-code sbom.md; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Publish SBOM artifact
+        if: steps.sbom.outputs.changed == 'true'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: system-tests-neodash-sbom
+          path: system_tests/neodash-test/sbom.md
+          if-no-files-found: warn
+
+      - name: Fail if SBOM changed
+        if: steps.sbom.outputs.changed == 'true'
+        run: |
+          echo "::error::SBOM (sbom.md) is out of date. Run 'npm run build-sbom' locally (from neodash-test) and commit the result."
+          git --no-pager diff sbom.md
+          exit 1
+
+      - name: Validate Docker cypress image build
+        run: docker compose build cypress
+
+  neodash-tests-audit:
+    # Separate job so a failure is visible on the PR (red X) without blocking
+    # merge. Do NOT add this job to branch protection's required checks until
+    # the existing high/critical findings have been cleaned up — at that point
+    # the gate becomes meaningful.
+    name: npm audit (advisory)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: system_tests/neodash-test
+    steps:
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: system_tests/neodash-test/package-lock.json
+
+      - name: Install runtime packages
+        run: npm ci --ignore-scripts
+
+      - name: npm audit (full report)
+        run: npm audit | tee npm_audit_report.txt || true
+
+      - name: Publish npm audit report
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: neodash-tests-npm-vulnerabilities
+          path: system_tests/neodash-test/npm_audit_report.txt
+          if-no-files-found: warn
+
+      - name: Fail on high/critical findings
+        # Once existing vulnerabilities are fixed, add `audit` to branch
+        # protection's required checks so this gate actually blocks merges.
+        run: npm audit --audit-level=high

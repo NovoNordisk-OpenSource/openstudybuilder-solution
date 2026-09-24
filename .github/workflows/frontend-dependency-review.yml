@@ -1,0 +1,31 @@
+name: Frontend — dependency review
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "frontend/package.json"
+      - "frontend/package-lock.json"
+      - ".github/workflows/frontend-dependency-review.yml"
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  dependency-review:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # 6.0.3
+
+      - name: Dependency Review (PR vulnerability gate)
+        uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5
+        with:
+          comment-summary-in-pr: always
+          # Advisory gate: fail only on high/critical. Moderate & low
+          # findings surface as PR comments so reviewers see them, but
+          # don't block merges — matches how the ADO pipeline actually
+          # gated builds. Tighten to `moderate` once the backlog of
+          # existing Dependabot alerts (17 open, mostly high) is drained.
+          fail-on-severity: high

@@ -1,0 +1,23 @@
+[
+  {
+    "name": "Metformin",
+    "name_sentence_case": "metformin",
+    "definition": null,
+    "abbreviation": null,
+    "library_name": "Sponsor"
+  },
+  {
+    "name": "NPH Insulin",
+    "name_sentence_case": "NPH insulin",
+    "definition": null,
+    "abbreviation": null,
+    "library_name": "Sponsor"
+  },
+  {
+    "name": "generic glibenclamide",
+    "name_sentence_case": "generic glibenclamide",
+    "definition": null,
+    "abbreviation": null,
+    "library_name": "Sponsor"
+  }
+]

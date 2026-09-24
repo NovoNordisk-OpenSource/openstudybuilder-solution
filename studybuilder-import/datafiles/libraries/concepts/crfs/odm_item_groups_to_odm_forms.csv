@@ -1,7 +1,0 @@
-item_group_oid,form_oid,order_number,mandatory,collection_exception_condition_oid
-G.DM.IC,F.DM,1,Yes,
-G.DM.DM,F.DM,2,Yes,
-G.MH.NS,F.MH,1,Yes,
-G.MH.CM,F.MH,2,Yes,
-G.VS.VS,F.VS,1,Yes,
-G.VS.BPP,F.VS,2,Yes,

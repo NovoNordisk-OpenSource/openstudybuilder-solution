@@ -1,6 +1,12 @@
 # Docker Compose file for preview environment and building docker images in pipelines
 
-# Docker commands:
+# Docker command for Windows:
+
+#docker compose --env-file .env.example build
+
+#docker compose --env-file .env.example up
+
+# Docker commands for Linux/Mac:
  
 #NEO4J_MDR_AUTH_PASSWORD=put_your_password_here docker compose build
  

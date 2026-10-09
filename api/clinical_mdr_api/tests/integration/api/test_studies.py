@@ -2,21 +2,15 @@
 Tests for /studies endpoints
 """
 
-# pylint: disable=unused-argument
-# pylint: disable=redefined-outer-name
-# pylint: disable=too-many-arguments
-
-# pytest fixture functions have other fixture functions as arguments,
-# which pylint interprets as unused arguments
-
 import copy
 import datetime
 import json
 import logging
 import random
 import threading
+from collections.abc import Sequence
 from string import ascii_lowercase
-from typing import Any, Sequence
+from typing import Any
 from unittest import mock
 
 import pytest
@@ -129,7 +123,7 @@ def test_data():
         order=1,
         catalogue_name=catalogue_name,
         library_name=library_name,
-        effective_date=datetime.datetime(2020, 3, 25, tzinfo=datetime.timezone.utc),
+        effective_date=datetime.datetime(2020, 3, 25, tzinfo=datetime.UTC),
         approve=True,
     )
 
@@ -147,7 +141,7 @@ def test_data():
         order=1,
         catalogue_name=catalogue_name,
         library_name=library_name,
-        effective_date=datetime.datetime(2020, 3, 25, tzinfo=datetime.timezone.utc),
+        effective_date=datetime.datetime(2020, 3, 25, tzinfo=datetime.UTC),
         approve=True,
         term_uid="C49488",
     )
@@ -158,7 +152,7 @@ def test_data():
         order=1,
         catalogue_name=catalogue_name,
         library_name=library_name,
-        effective_date=datetime.datetime(2020, 3, 25, tzinfo=datetime.timezone.utc),
+        effective_date=datetime.datetime(2020, 3, 25, tzinfo=datetime.UTC),
         approve=True,
         term_uid="C49487",
     )
@@ -169,13 +163,13 @@ def test_data():
         catalogue=catalogue_name,
         name=cdisc_package_name,
         approve_elements=False,
-        effective_date=datetime.datetime(2020, 3, 27, tzinfo=datetime.timezone.utc),
+        effective_date=datetime.datetime(2020, 3, 27, tzinfo=datetime.UTC),
     )
 
     # patch the date of the latest HAS_VERSION FINAL relationship so it can be detected by the selected study_standard_Version
     params = {
         "uid": ct_term_study_standard_test.term_uid,
-        "date": datetime.datetime(2020, 3, 26, tzinfo=datetime.timezone.utc),
+        "date": datetime.datetime(2020, 3, 26, tzinfo=datetime.UTC),
     }
     db.cypher_query(
         """
@@ -1804,7 +1798,6 @@ def test_detach_study_subpart_requires_identification_section(api_client):
     assert "identification is required" in res["message"]
 
 
-# pylint: disable=too-many-statements
 def test_get_audit_trail_of_all_study_subparts_of_study(api_client):
     response = api_client.get(
         f"/studies/{study_with_subparts.uid}/audit-trail?page_size=0"
@@ -2481,7 +2474,7 @@ def test_study_metadata_version_selecting_ct_package(api_client):
     TestUtils.set_study_standard_version(
         study_uid=_study.uid,
         package_name="SDTM CT 2020-03-27",
-        effective_date=datetime.datetime(2020, 3, 27, tzinfo=datetime.timezone.utc),
+        effective_date=datetime.datetime(2020, 3, 27, tzinfo=datetime.UTC),
     )
 
     # get study with previous ctterm
@@ -2963,6 +2956,30 @@ def test_verify_study_duration_fields(
     )
 
 
+def test_duration_field_rejects_unit_outside_study_time_subset(api_client):
+    """A duration unit outside the Study Time subset is rejected with 400 instead of
+    silently storing a null unit (the stored ISO duration can't resolve back to it)."""
+    _study = TestUtils.create_study()
+    non_study_time_unit = TestUtils.create_unit_definition(
+        name="months-not-in-study-time"
+    )
+    response = api_client.patch(
+        f"/studies/{_study.uid}",
+        json={
+            "current_metadata": {
+                "study_intervention": {
+                    "planned_study_length": {
+                        "duration_value": 42,
+                        "duration_unit_code": {"uid": non_study_time_unit.uid},
+                    }
+                },
+            },
+        },
+    )
+    assert_response_status_code(response, 400)
+    assert non_study_time_unit.name in response.json()["message"]
+
+
 def test_get_study_structure_overview(api_client):
     response = api_client.get("/studies/structure-overview")
     assert_response_status_code(response, 200)
@@ -3164,7 +3181,6 @@ def test_study_selection_containment(api_client, tst_study):
         )
 
 
-# pylint: disable=invalid-name
 def test_get_studies_list(api_client):
     STUDY_MINIMAL_FIELDS = [
         "uid",

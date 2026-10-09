@@ -58,7 +58,7 @@ class _BranchArmConflictIndexes:
     @classmethod
     def from_aggregate(
         cls, aggregate: StudySelectionBranchArmAR
-    ) -> "_BranchArmConflictIndexes":
+    ) -> _BranchArmConflictIndexes:
         indexes = cls(by_name={}, by_short_name={})
         for vo in aggregate.study_branch_arms_selection:
             indexes.register_vo(vo)
@@ -82,7 +82,7 @@ class _TargetArmIndexes:
     by_name_and_type: dict[tuple[str, str | None], _TargetArmIndexEntry]
 
     @classmethod
-    def from_arm_vos(cls, arm_vos: list[StudySelectionArmVO]) -> "_TargetArmIndexes":
+    def from_arm_vos(cls, arm_vos: list[StudySelectionArmVO]) -> _TargetArmIndexes:
         indexes = cls(by_name_and_type={})
         for vo in arm_vos:
             indexes.register_vo(vo)
@@ -230,7 +230,6 @@ class StudyBranchArmSelectionService(StudySelectionMixin):
                 # if the study_branch_arm is the last StudyBranchArm of its StudyArm root
                 if repos.study_branch_arm_repository.branch_arm_specific_is_last_on_arm_root(
                     study_uid=study_uid,
-                    # pylint: disable=possibly-used-before-assignment
                     arm_root_uid=selection_to_delete.arm_root_uid,
                     branch_arm_uid=study_selection_uid,
                 ):

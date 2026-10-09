@@ -1,4 +1,5 @@
-from typing import Annotated, Callable, Self
+from collections.abc import Callable
+from typing import Annotated, Self
 
 from pydantic import ConfigDict, Field, ValidationInfo, field_validator
 

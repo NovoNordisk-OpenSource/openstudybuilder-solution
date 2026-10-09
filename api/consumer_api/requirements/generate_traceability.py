@@ -32,6 +32,7 @@ FS_DIR = REQUIREMENTS_DIR / "fs"
 TEMPLATE_FILE = REQUIREMENTS_DIR / "traceability_template.html"
 
 HTML_PARSER = "html.parser"
+MIN_TEST_COVERAGE_TABLE_COLUMNS = 2
 
 
 def collect_markdown_files(directory):
@@ -46,7 +47,7 @@ def collect_markdown_files(directory):
 
 def parse_markdown_file(file_path) -> str:
     """Parse a markdown file and return its HTML content."""
-    with open(file_path, "r", encoding="utf-8") as f:
+    with open(file_path, encoding="utf-8") as f:
         text = f.read()
     html = markdown.markdown(text, extensions=["fenced_code", "tables"])
     return html
@@ -97,7 +98,7 @@ def extract_fs_titles_and_tests(html_content: str):
                             tests_list = []
                             for row in rows:
                                 cols = row.find_all("td")
-                                if len(cols) >= 2:
+                                if len(cols) >= MIN_TEST_COVERAGE_TABLE_COLUMNS:
                                     test_file = cols[0].get_text().strip()
                                     test_method = cols[1].get_text().strip()
                                     tests_list.append(
@@ -126,7 +127,7 @@ def extract_id_and_title(html_content: str):
 
 def generate_html(full_traceability, warnings) -> str:
     """Generate the final HTML document using Jinja2 template."""
-    with open(TEMPLATE_FILE, "r", encoding="utf-8") as f:
+    with open(TEMPLATE_FILE, encoding="utf-8") as f:
         template_str = f.read()
         template = Template(template_str, autoescape=True)
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -324,7 +325,7 @@ def get_all_tests() -> list[dict[str, Any]]:
         for file in files:
             if file.endswith(".py"):
                 file_path = Path(root) / file
-                with open(file_path, "r", encoding="utf-8") as f:
+                with open(file_path, encoding="utf-8") as f:
                     content = f.read()
                     method_names = re.findall(r"def (test_\w+)\s*\(", content)
                     tests.append(

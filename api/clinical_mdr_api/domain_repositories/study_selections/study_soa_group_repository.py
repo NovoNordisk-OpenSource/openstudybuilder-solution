@@ -156,7 +156,9 @@ class StudySoAGroupRepository(StudySelectionActivityBaseRepository[StudySoAGroup
         audit_trail_cypher += """
 
                     WITH DISTINCT all_sa, study_activity
-                    OPTIONAL MATCH (all_sa)-[:HAS_FLOWCHART_GROUP]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(fgr:CTTermRoot)-[:HAS_NAME_ROOT]->(:CTTermNameRoot)-[:LATEST]->(soa_group_term_name:CTTermNameValue)
+                    OPTIONAL MATCH (all_sa)-[:HAS_FLOWCHART_GROUP]->(:CTTermContext)-[:HAS_SELECTED_TERM]->
+                        (fgr:CTTermRoot)-[:HAS_NAME_ROOT]->(:CTTermNameRoot)-[:LATEST]->
+                        (soa_group_term_name:CTTermNameValue)
                     WITH DISTINCT all_sa, fgr, soa_group_term_name, study_activity
                     ORDER BY study_activity.order ASC
                     MATCH (all_sa)<-[:AFTER]-(asa:StudyAction)

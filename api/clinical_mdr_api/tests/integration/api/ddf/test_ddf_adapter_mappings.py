@@ -2,30 +2,21 @@
 Tests for DDF adapter mappings
 """
 
-# pylint: disable=unused-argument
-# pylint: disable=redefined-outer-name
-# pylint: disable=too-many-arguments
-
-# pytest fixture functions have other fixture functions as arguments,
-# which pylint interprets as unused arguments
-
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 import pytest
 from starlette.testclient import TestClient
-from usdm_model import Administration as USDMAdministration
-from usdm_model import AliasCode as USDMAliasCode
-from usdm_model import Code as USDMCode
-from usdm_model import Indication as USDMIndication
-from usdm_model import InterventionalStudyDesign as USDMInterventionalStudyDesign
-from usdm_model import Procedure as USDMProcedure
 from usdm_model import (
+    Administration as USDMAdministration,
+    AliasCode as USDMAliasCode,
+    Code as USDMCode,
+    Indication as USDMIndication,
+    InterventionalStudyDesign as USDMInterventionalStudyDesign,
+    Procedure as USDMProcedure,
     StudyArm,
     StudyCohort,
-)
-from usdm_model import StudyDesignPopulation as USDMStudyDesignPopulation
-from usdm_model import (
+    StudyDesignPopulation as USDMStudyDesignPopulation,
     StudyElement,
     StudyEpoch,
 )
@@ -1314,6 +1305,36 @@ def test_administration_dose_unit_falls_back_to_void_when_no_ct_linkage(
     assert admin.dose.value == 50.0
     # void code fallback: code=""
     assert admin.dose.unit.standardCode.code == ""
+
+
+def test_administration_label_preserves_free_text_dose_value_and_frequency(
+    ddf_mapper, tst_study, monkeypatch
+):
+    """Free-text dosing must survive export instead of being silently dropped."""
+    dosing = MagicMock()
+    dosing.study_compound_dosing_uid = "Dosing_FreeText"
+    dosing.dose_value = None
+    dosing.free_text_dose_value = "5 mL"
+    dosing.dose_frequency = None
+    dosing.free_text_dose_frequency = "Every other Tuesday"
+    dosing.study_compound.compound_uid = "Compound_FreeText"
+    dosing.study_element.planned_duration = None
+
+    fake_result = MagicMock()
+    fake_result.items = [dosing]
+    monkeypatch.setattr(
+        ddf_mapper,
+        "_get_osb_study_compound_dosings",
+        lambda **kwargs: fake_result,
+    )
+
+    interventions = ddf_mapper._get_study_interventions(tst_study)
+    admins = interventions[0].administrations
+
+    assert len(admins) == 1
+    assert admins[0].label == "5 mL Every other Tuesday"
+    assert admins[0].dose is None
+    assert admins[0].frequency is None
 
 
 def test_procedure_description_from_activity_definition(ddf_mapper, tst_study):

@@ -1,8 +1,8 @@
-# pylint: disable=redefined-outer-name,unused-argument
 import csv
 import logging
 from collections import deque
 from io import BytesIO
+from typing import Any, ClassVar
 
 import docx
 import lxml.etree
@@ -34,8 +34,6 @@ from clinical_mdr_api.services.studies.study_flowchart import (
 )
 from clinical_mdr_api.services.utils.table_f import TableWithFootnotes
 from clinical_mdr_api.tests.fixtures.database import TempDatabasePopulated
-
-# pylint: disable=unused-import
 from clinical_mdr_api.tests.integration.services.test_study_flowchart import (
     check_operational_soa_table,
 )
@@ -70,14 +68,17 @@ PROTOCOL_SOA_EXPORT_COLUMN_HEADERS = [
     "visit",
     "activity",
 ]
-PROTOCOL_SOA_JSON_EXPORT_COLUMN_HEADERS = PROTOCOL_SOA_EXPORT_COLUMN_HEADERS + [
-    "study_activity_schedule_uid"
+PROTOCOL_SOA_JSON_EXPORT_COLUMN_HEADERS = [
+    *PROTOCOL_SOA_EXPORT_COLUMN_HEADERS,
+    "study_activity_schedule_uid",
 ]
-DETAILED_SOA_EXPORT_COLUMN_HEADERS = PROTOCOL_SOA_EXPORT_COLUMN_HEADERS + [
-    "is_data_collected"
+DETAILED_SOA_EXPORT_COLUMN_HEADERS = [
+    *PROTOCOL_SOA_EXPORT_COLUMN_HEADERS,
+    "is_data_collected",
 ]
-DETAILED_SOA_JSON_EXPORT_COLUMN_HEADERS = DETAILED_SOA_EXPORT_COLUMN_HEADERS + [
-    "study_activity_schedule_uid"
+DETAILED_SOA_JSON_EXPORT_COLUMN_HEADERS = [
+    *DETAILED_SOA_EXPORT_COLUMN_HEADERS,
+    "study_activity_schedule_uid",
 ]
 OPERATIONAL_SOA_EXPORT_COLUMN_HEADERS = [
     "study_number",
@@ -93,8 +94,9 @@ OPERATIONAL_SOA_EXPORT_COLUMN_HEADERS = [
     "topic_code",
     "param_code",
 ]
-OPERATIONAL_SOA_JSON_EXPORT_COLUMN_HEADERS = OPERATIONAL_SOA_EXPORT_COLUMN_HEADERS + [
-    "study_activity_schedule_uid"
+OPERATIONAL_SOA_JSON_EXPORT_COLUMN_HEADERS = [
+    *OPERATIONAL_SOA_EXPORT_COLUMN_HEADERS,
+    "study_activity_schedule_uid",
 ]
 OPERATIONAL_SOA_EXPORT_COLUMN_HEADERS_XLSX = [
     "Study number",
@@ -118,11 +120,11 @@ logger = logging.getLogger(__name__)
 class SoATestDataForUpdating(SoATestData):
     """A dirty subclass of SoATestData to create some activities that are private to test_flowchart_with_non_latest_activities isolation"""
 
-    EPOCHS = {
+    EPOCHS: ClassVar[dict[str, dict[str, Any]]] = {
         "Treatment": {},
     }
 
-    VISITS = {
+    VISITS: ClassVar[dict[str, dict[str, Any]]] = {
         "V1": {
             "epoch": "Treatment",
             "type": "Treatment",
@@ -134,7 +136,7 @@ class SoATestDataForUpdating(SoATestData):
         },
     }
 
-    ACTIVITIES = {
+    ACTIVITIES: ClassVar[dict[str, dict[str, Any]]] = {
         "Pumpking weight": {
             "soa_group": "Efficacy",
             "group": "Laboratory Assessments",
@@ -155,7 +157,7 @@ class SoATestDataForUpdating(SoATestData):
         },
     }
 
-    FOOTNOTES = {}
+    FOOTNOTES: ClassVar[dict[str, Any]] = {}
 
 
 @pytest.fixture(scope="module")
@@ -418,7 +420,8 @@ def test_flowchart_html(
     assert title.text == soa_table.title, "title mismatch"
 
     # THEN the document has TABLE
-    assert (table := doc.select_one("html > body > table")), "<TABLE> tag not found"
+    table = doc.select_one("html > body > table")
+    assert table, "<TABLE> tag not found"
 
     # Although table_f.table_to_html() has it's unit tests, we also run them on this SoA table
     # to increase the number of cases and to test on real-world scenarios.
@@ -873,7 +876,8 @@ def test_soa_exports(
 
     if data_format == "text/xml":
         # THEN payload is a valid XML document
-        assert (tree := lxml.etree.parse(BytesIO(response.content)))
+        tree = lxml.etree.parse(BytesIO(response.content))
+        assert tree
         root = tree.getroot()
         assert root is not None, "root tag not found"
         # THEN root XML tag is "items"

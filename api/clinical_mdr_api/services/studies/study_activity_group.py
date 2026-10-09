@@ -45,7 +45,6 @@ class StudyActivityGroupService(
     ):
         pass
 
-    # pylint: disable=unused-argument
     def _transform_all_to_response_model(
         self,
         study_selection: StudySelectionActivityGroupAR | None,

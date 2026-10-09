@@ -1,8 +1,3 @@
-# pylint: disable=unused-argument
-# pylint: disable=redefined-outer-name
-
-# pytest fixture functions have other fixture functions as arguments,
-# which pylint interprets as unused arguments
 import copy
 import logging
 

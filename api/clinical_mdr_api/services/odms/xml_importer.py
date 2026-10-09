@@ -1,5 +1,6 @@
 import re
 from time import time
+from typing import ClassVar
 from xml.dom import minicompat, minidom
 
 from fastapi import UploadFile
@@ -152,8 +153,12 @@ class OdmXmlImporterService:
     mapper_file: UploadFile | None = None
 
     OSB_PREFIX = "osb"
-    EXCLUDED_OSB_VENDOR_ATTRIBUTES = ["version", "lang", "allowsMultiChoice"]
-    EXCLUDED_OSB_VENDOR_ELEMENTS = [
+    EXCLUDED_OSB_VENDOR_ATTRIBUTES: ClassVar[list[str]] = [
+        "version",
+        "lang",
+        "allowsMultiChoice",
+    ]
+    EXCLUDED_OSB_VENDOR_ELEMENTS: ClassVar[list[str]] = [
         "DomainColor",
         "DisplayText",
         "DesignNotes",

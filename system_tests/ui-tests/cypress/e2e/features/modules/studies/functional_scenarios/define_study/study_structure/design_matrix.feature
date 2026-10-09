@@ -71,6 +71,7 @@ Feature: Studies - Define Study - Study Structure - Design Matrix
         When Form save button is clicked
         And User saves changes made in the edition mode
         Then The pop up displays 'Design Matrix updated'
+        And The pencil button is clicked
         And Transition rule is visible in the table for epoch 'Run-in'
         
     Scenario: [Transition rules] User must be able to toggle transition rule on and off
@@ -80,6 +81,7 @@ Feature: Studies - Define Study - Study Structure - Design Matrix
         And Column 'Intervention' is made visible
         And User waits for the table
         When Transion rules are enabled
+        And The pencil button is clicked
         Then Transition rule is visible in the table for epoch 'Run-in'
         When Transion rules are disabled
         Then Transition rule is not visible in the table for epoch 'Run-in'
@@ -107,6 +109,7 @@ Feature: Studies - Define Study - Study Structure - Design Matrix
         When Form save button is clicked
         And User saves changes made in the edition mode
         Then The pop up displays 'Design Matrix updated'
+        And The pencil button is clicked
         And Transition rule is visible in the table for epoch 'Run-in'
         Given The page 'sdtm_study_design_datasets/tab-0' is opened for current study
         And User waits for the table

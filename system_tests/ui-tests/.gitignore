@@ -1,6 +1,8 @@
 /node_modules
 /coverage
+/cypress/fixtures
 /cypress/screenshots
 /cypress/videos
+/cypress/downloads
 /results
 /.idea

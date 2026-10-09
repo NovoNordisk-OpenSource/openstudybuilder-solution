@@ -370,7 +370,7 @@ test('smoke: sidebar click path produces the same trail as a deep link', async (
 }) => {
   await page.addInitScript(seedDemoAuth)
   const spy = setupConsoleSpy(page)
-  await page.goto(`/studies/${STUDY_UID}/study_status`)
+  await page.goto(`/studies/${STUDY_UID}/study_status/core_attributes`)
 
   // Wait for the study to actually be selected before touching the menu.
   // Sidebar items are studyRequired: clicking one before the study store is
@@ -394,15 +394,21 @@ test('smoke: sidebar click path produces the same trail as a deep link', async (
   // Real checkpoint instead of an arbitrary wait: confirm the group's
   // expand transition actually revealed the link before clicking it.
   await expect(studyActivitiesLink).toBeVisible({ timeout: 10_000 })
-  await studyActivitiesLink.click()
-  // The sidebar lands on /activities, then ActivitiesPage redirects to a
-  // default sub-tab (/activities/soa). Wait for the settled route with an
-  // auto-retrying assertion so we don't race that redirect (or the strict
-  // trailing-slash glob) — the leaf sub-tab is optional.
-  await expect(page).toHaveURL(
-    new RegExp(`/studies/${STUDY_UID}/activities(/(list|soa|instances))?/?$`),
-    { timeout: 15_000 }
-  )
+  // The sidebar routes clicks through a Vue watcher (RedirectHandler),
+  // not a native <a> navigation — an occasional click that lands during a
+  // re-render is swallowed silently instead of throwing, leaving the URL
+  // unchanged. Retry the click itself (harmless if already navigated) until
+  // the URL actually moves, rather than re-clicking the group expander.
+  await expect(async () => {
+    await studyActivitiesLink.click()
+    // The sidebar lands on /activities, then ActivitiesPage redirects to a
+    // default sub-tab (/activities/soa). Wait for the settled route (or the
+    // strict trailing-slash glob) — the leaf sub-tab is optional.
+    await expect(page).toHaveURL(
+      new RegExp(`/studies/${STUDY_UID}/activities(/(list|soa|instances))?/?$`),
+      { timeout: 3_000 }
+    )
+  }).toPass({ timeout: 15_000 })
 
   const clickedPath = new URL(page.url()).pathname
   const clickedTrail = await readCrumbs(page)

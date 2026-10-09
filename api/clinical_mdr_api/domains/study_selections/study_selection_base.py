@@ -1,6 +1,7 @@
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable, Iterable, Self
+from typing import Any, Self
 
 from clinical_mdr_api.utils import normalize_string
 from common import exceptions
@@ -88,7 +89,8 @@ class StudySelectionBaseAR:
                 updated_selections.append(study_object_selection)
             self._study_objects_selection = tuple(updated_selections)
         else:
-            self._study_objects_selection = self._study_objects_selection + (
+            self._study_objects_selection = (
+                *self._study_objects_selection,
                 study_object_selection,
             )
 
@@ -116,7 +118,6 @@ class StudySelectionBaseAR:
         ]
         self._study_objects_selection = tuple(updated_selection)
 
-    # pylint: disable=unused-argument
     # TODO: Check why author_id is not used
     def set_new_order_for_selection(
         self, study_selection_uid: str, new_order: int, author_id: str
@@ -156,14 +157,13 @@ class StudySelectionBaseAR:
                 != updated_study_object_selection.study_selection_uid
             ):
                 updated_selection.append(selection)
+            elif getattr(
+                updated_study_object_selection, self._order_field_name, None
+            ) == getattr(selection, self._order_field_name, None):
+                updated_selection.append(updated_study_object_selection)
             else:
-                if getattr(
-                    updated_study_object_selection, self._order_field_name, None
-                ) == getattr(selection, self._order_field_name, None):
-                    updated_selection.append(updated_study_object_selection)
-                else:
-                    # the object level has changed so the object order is changed
-                    further_update = True
+                # the object level has changed so the object order is changed
+                further_update = True
         if further_update:
             # The order is updated
             selection_inserted = False

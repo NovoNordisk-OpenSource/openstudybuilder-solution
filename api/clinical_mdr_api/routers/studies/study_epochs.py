@@ -7,8 +7,11 @@ from clinical_mdr_api.models.study_selections import study_epoch
 from clinical_mdr_api.models.study_selections.study_visit import StudyVisitGroup
 from clinical_mdr_api.models.utils import CustomPage
 from clinical_mdr_api.repositories._utils import FilterOperator
-from clinical_mdr_api.routers import _generic_descriptions, decorators
-from clinical_mdr_api.routers import study_router as router
+from clinical_mdr_api.routers import (
+    _generic_descriptions,
+    decorators,
+    study_router as router,
+)
 from clinical_mdr_api.services.studies.study_epoch import StudyEpochService
 from clinical_mdr_api.services.studies.study_visit import StudyVisitService
 from common.auth import rbac
@@ -37,7 +40,8 @@ State before:
  - Study must exist.
  
 Business logic:
- - By default (no study status is provided) list all study epochs for the study uid in status draft. If the study not exist in status draft then return the study epochs for the study in status released. If the study uid only exist as deleted then this is returned.
+ - By default (no study status is provided) list all study epochs for the study uid in status draft. If the study not exist in status draft then return the study epochs for the study in status
+   released. If the study uid only exist as deleted then this is returned.
  - If a specific study status parameter is provided then return study epoch for this study status.
  - If the locked study status parameter is requested then a study version should also be provided, and then the study epochs for the specific locked study version is returned.
  - Indicate by an boolean variable if the study epoch can be updated (if the selected study is in status draft).  
@@ -109,7 +113,6 @@ Possible errors:
         },
     }
 )
-# pylint: disable=unused-argument
 def get_all(
     request: Request,  # request is actually required by the allow_exports decorator
     study_uid: Annotated[str, studyUID],
@@ -226,7 +229,8 @@ State before:
  - Study and study epoch must exist
  
 Business logic:
- - By default (no study status is provided) list all details for specified study epoch for the study uid in status draft. If the study not exist in status draft then return the study epochs for the study in status released. If the study uid only exist as deleted then this is returned.
+ - By default (no study status is provided) list all details for specified study epoch for the study uid in status draft. If the study not exist in status draft then return the study epochs for
+   the study in status released. If the study uid only exist as deleted then this is returned.
  - If a specific study status parameter is provided then return study epochs for this study status.
  - If the locked study status parameter is requested then a study version should also be provided, and then the specified study epoch  for the specific locked study version is returned.
  - Indicate by an boolean variable if the study epoch can be updated (if the selected study is in status draft).
@@ -250,7 +254,6 @@ Possible errors:
         },
     },
 )
-# pylint: disable=unused-argument
 def get_study_epoch(
     study_uid: Annotated[str, studyUID],
     study_epoch_uid: Annotated[str, study_epoch_uid_description],
@@ -499,7 +502,6 @@ Possible errors:
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
-# pylint: disable=unused-argument
 def patch_reorder(
     study_uid: Annotated[str, studyUID],
     study_epoch_uid: Annotated[str, study_epoch_uid_description],
@@ -543,7 +545,6 @@ Possible errors:
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
-# pylint: disable=unused-argument
 def patch_update_epoch(
     study_uid: Annotated[str, studyUID],
     study_epoch_uid: Annotated[str, study_epoch_uid_description],

@@ -1,5 +1,6 @@
+from collections.abc import Callable
 from datetime import datetime
-from typing import Annotated, Callable, Self
+from typing import Annotated, Any, Self
 
 from pydantic import Field, StrictBool
 
@@ -9,6 +10,7 @@ from clinical_mdr_api.domains.concepts.unit_definitions.unit_definition import (
 )
 from clinical_mdr_api.domains.controlled_terminologies.ct_codelist_term import (
     CTSimpleCodelistTermAR,
+    CTSimpleCodelistTermVO,
 )
 from clinical_mdr_api.domains.dictionaries.dictionary_term import DictionaryTermAR
 from clinical_mdr_api.models.concepts.concept import (
@@ -24,14 +26,25 @@ from clinical_mdr_api.models.utils import BaseModel
 from common.config import settings
 
 
+class UnitCTTermModel(SimpleCodelistTermModel):
+    library_name: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
+
+    @classmethod
+    def _extra_fields_from_simple_codelist_term_vo(
+        cls, ct_simple_codelist_term_vo: CTSimpleCodelistTermVO
+    ) -> dict[str, Any]:
+        return {"library_name": ct_simple_codelist_term_vo.library_name}
+
+
 class UnitDefinitionModel(ConceptModel):
     convertible_unit: Annotated[bool, Field()]
     display_unit: Annotated[bool, Field()]
     master_unit: Annotated[bool, Field()]
-    si_unit: Annotated[bool, Field()]
     us_conventional_unit: Annotated[bool, Field()]
     use_complex_unit_conversion: Annotated[bool, Field()]
-    ct_units: Annotated[list[SimpleCodelistTermModel], Field()]
+    ct_units: Annotated[list[UnitCTTermModel], Field()]
     unit_subsets: Annotated[list[SimpleCodelistTermModel], Field()]
     ucum: Annotated[
         SimpleTermModel | None, Field(json_schema_extra={"nullable": True})
@@ -39,9 +52,6 @@ class UnitDefinitionModel(ConceptModel):
     unit_dimension: Annotated[
         SimpleCodelistTermModel | None, Field(json_schema_extra={"nullable": True})
     ] = None
-    legacy_code: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
-        None
-    )
     use_molecular_weight: Annotated[
         bool | None, Field(json_schema_extra={"nullable": True})
     ] = None
@@ -66,7 +76,7 @@ class UnitDefinitionModel(ConceptModel):
     ) -> Self:
         ct_units = []
         for ct_unit in unit_definition_ar.concept_vo.ct_units:
-            controlled_terminology_unit = SimpleCodelistTermModel.from_term_uid_and_codelist_submval(
+            controlled_terminology_unit = UnitCTTermModel.from_term_uid_and_codelist_submval(
                 term_uid=ct_unit.uid,
                 codelist_submission_value=settings.unit_cl_submval,
                 find_codelist_term_by_uid_and_submission_value=find_codelist_term_by_uid_and_submission_value,
@@ -121,10 +131,8 @@ class UnitDefinitionModel(ConceptModel):
             convertible_unit=unit_definition_ar.concept_vo.convertible_unit,
             display_unit=unit_definition_ar.concept_vo.display_unit,
             master_unit=unit_definition_ar.concept_vo.master_unit,
-            si_unit=unit_definition_ar.concept_vo.si_unit,
             us_conventional_unit=unit_definition_ar.concept_vo.us_conventional_unit,
             use_complex_unit_conversion=unit_definition_ar.concept_vo.use_complex_unit_conversion,
-            legacy_code=unit_definition_ar.concept_vo.legacy_code,
             use_molecular_weight=unit_definition_ar.concept_vo.use_molecular_weight,
             conversion_factor_to_master=unit_definition_ar.concept_vo.conversion_factor_to_master,
             start_date=unit_definition_ar.item_metadata.start_date,
@@ -145,14 +153,12 @@ class UnitDefinitionPostInput(ConceptPostInput):
     convertible_unit: Annotated[StrictBool, Field()]
     display_unit: Annotated[StrictBool, Field()]
     master_unit: Annotated[StrictBool, Field()]
-    si_unit: Annotated[StrictBool, Field()]
     us_conventional_unit: Annotated[StrictBool, Field()]
     use_complex_unit_conversion: Annotated[StrictBool, Field()] = False
     ct_units: Annotated[list[str], Field()]
     unit_subsets: list[str] = Field(default_factory=list)
     ucum: Annotated[str | None, Field()] = None
     unit_dimension: Annotated[str | None, Field()] = None
-    legacy_code: Annotated[str | None, Field()] = None
     use_molecular_weight: Annotated[StrictBool, Field()] = False
     conversion_factor_to_master: Annotated[float | None, Field()] = None
     comment: Annotated[str | None, Field()] = None
@@ -165,14 +171,12 @@ class UnitDefinitionPatchInput(ConceptPatchInput):
     convertible_unit: Annotated[StrictBool, Field()] = False
     display_unit: Annotated[StrictBool, Field()] = False
     master_unit: Annotated[StrictBool, Field()] = False
-    si_unit: Annotated[StrictBool, Field()] = False
     us_conventional_unit: Annotated[StrictBool, Field()] = False
     use_complex_unit_conversion: Annotated[StrictBool, Field()] = False
     ct_units: list[str] = Field(default_factory=list)
     unit_subsets: list[str] = Field(default_factory=list)
     ucum: Annotated[str | None, Field()] = None
     unit_dimension: Annotated[str | None, Field()] = None
-    legacy_code: Annotated[str | None, Field()] = None
     use_molecular_weight: Annotated[StrictBool, Field()] = False
     conversion_factor_to_master: Annotated[float | None, Field()] = None
     comment: Annotated[str | None, Field()] = None

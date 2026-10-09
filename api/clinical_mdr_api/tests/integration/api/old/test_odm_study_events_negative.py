@@ -1,8 +1,3 @@
-# pylint: disable=unused-argument, redefined-outer-name, too-many-arguments, line-too-long, too-many-statements
-
-# pytest fixture functions have other fixture functions as arguments,
-# which pylint interprets as unused arguments
-
 import pytest
 from fastapi.testclient import TestClient
 from neomodel import db
@@ -78,7 +73,9 @@ def test_cannot_create_a_new_odm_study_event_with_same_properties(api_client):
     assert res["type"] == "AlreadyExistsException"
     assert (
         res["message"]
-        == "ODM Study Event already exists with UID (OdmStudyEvent_000001) and data {'name': 'name1', 'oid': 'oid1', 'effective_date': '2022-04-21', 'retired_date': '2022-04-21', 'description': 'description1', 'display_in_tree': True}"
+        == "ODM Study Event already exists with UID (OdmStudyEvent_000001) and data {'name': 'name1', 'oid': 'oid1', "
+        "'effective_date': '2022-04-21', 'retired_date': '2022-04-21', 'description': 'description1', "
+        "'display_in_tree': True}"
     )
 
 

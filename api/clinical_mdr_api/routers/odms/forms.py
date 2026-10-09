@@ -92,7 +92,6 @@ OdmFormUID = Path(description="The unique id of the ODM Form.")
         ],
     }
 )
-# pylint: disable=unused-argument
 def get_all_odm_forms(
     request: Request,  # request is actually required by the allow_exports decorator
     library_name: Annotated[str | None, Query()] = None,
@@ -194,7 +193,6 @@ def get_distinct_values_for_header(
         ],
     }
 )
-# pylint: disable=unused-argument
 def get_odm_form_that_belongs_to_study_event(
     request: Request,  # request is actually required by the allow_exports decorator
 ) -> list[OdmElementWithParentUid]:

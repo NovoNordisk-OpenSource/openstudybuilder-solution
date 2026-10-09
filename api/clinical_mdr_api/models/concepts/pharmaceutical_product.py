@@ -1,5 +1,6 @@
+from collections.abc import Callable
 from datetime import datetime
-from typing import Annotated, Callable, Self, overload
+from typing import Annotated, Self, overload
 
 from pydantic import Field
 
@@ -234,7 +235,7 @@ class PharmaceuticalProduct(VersionProperties):
         )
 
     @staticmethod
-    def _compute_derived_name(formulations: list["Formulation"]) -> str:
+    def _compute_derived_name(formulations: list[Formulation]) -> str:
         parts = []
         for formulation in formulations:
             for ingredient in formulation.ingredients:

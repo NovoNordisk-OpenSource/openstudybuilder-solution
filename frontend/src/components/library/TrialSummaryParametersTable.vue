@@ -1,7 +1,7 @@
 <template>
   <NNTable
     ref="tableRef"
-    table-id="library-trial-summary-parameters-table"
+    :table-id="tableId"
     :headers="headers"
     :items="items"
     :items-length="total"
@@ -34,6 +34,9 @@
     </template>
     <template #[`item.actions`]="{ item }">
       <ActionsMenu :actions="actions" :item="item" />
+    </template>
+    <template #[`item.submission_value_test_name`]="{ item }">
+      {{ item.submission_value_test_name || '-' }}
     </template>
     <template #[`item.attributes_date`]="{ item }">
       {{ $filters.date(item.attributes_date) || '-' }}
@@ -97,20 +100,40 @@ import filteringParameters from '@/utils/filteringParameters'
 import controlledTerminology from '@/api/controlledTerminology'
 import HistoryTable from '@/components/tools/HistoryTable.vue'
 import StatusChip from '@/components/tools/StatusChip.vue'
+import { useFeatureFlagsStore } from '@/stores/feature-flags'
 
 const { t } = useI18n()
 const roles = inject('roles')
 const router = useRouter()
+const featureFlagsStore = useFeatureFlagsStore()
 
-const headers = [
+const showShortCode = computed(() =>
+  featureFlagsStore.getFeatureFlag('ct_term_short_code')
+)
+
+// Own layout key per flag state: NNTable hides headers missing from the saved
+// column layout, so a layout stored while the flag was off would keep the
+// short_code column hidden after switching it on.
+const tableId = computed(() =>
+  showShortCode.value
+    ? 'library-trial-summary-parameters-table-short-code'
+    : 'library-trial-summary-parameters-table'
+)
+
+const headers = computed(() => [
   { title: '', key: 'actions', width: '1%' },
   { title: t('TrialSummaryParameters.library'), key: 'library_name' },
   {
     title: t('TrialSummaryParameters.sponsor_name'),
     key: 'sponsor_preferred_name',
   },
-  { title: t('TrialSummaryParameters.ct_name'), key: 'nci_preferred_name' },
   { title: t('TrialSummaryParameters.code'), key: 'submission_value' },
+  {
+    title: t('TrialSummaryParameters.test_name_submission_value'),
+    key: 'submission_value_test_name',
+    parameters: { include_ts_parameters: true },
+  },
+  { title: t('TrialSummaryParameters.ct_name'), key: 'nci_preferred_name' },
   { title: t('TrialSummaryParameters.concept_id'), key: 'concept_id' },
   { title: t('TrialSummaryParameters.definition'), key: 'definition' },
   { title: t('TrialSummaryParameters.required_level'), key: 'required_level' },
@@ -122,6 +145,7 @@ const headers = [
   {
     title: t('TrialSummaryParameters.response_code_list'),
     key: 'response_codelist.sponsor_preferred_name',
+    parameters: { include_ts_parameters: true },
   },
   { title: t('TrialSummaryParameters.cardinality'), key: 'cardinality' },
   {
@@ -129,6 +153,15 @@ const headers = [
     key: 'valid_null_flavor_terms',
   },
   { title: t('TrialSummaryParameters.notes'), key: 'notes' },
+  ...(showShortCode.value
+    ? [
+        {
+          title: t('TrialSummaryParameters.short_code'),
+          key: 'short_code',
+          parameters: { include_ts_parameters: true },
+        },
+      ]
+    : []),
   {
     title: t('TrialSummaryParameters.osb_page_reference'),
     key: 'osb_page_reference',
@@ -157,7 +190,7 @@ const headers = [
     title: t('TrialSummaryParameters.attributes_date'),
     key: 'attributes_date',
   },
-]
+])
 
 const actions = [
   {

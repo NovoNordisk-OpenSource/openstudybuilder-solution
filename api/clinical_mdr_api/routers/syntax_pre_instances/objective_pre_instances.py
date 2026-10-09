@@ -66,7 +66,6 @@ Service = ObjectivePreInstanceService
         ],
     }
 )
-# pylint: disable=unused-argument
 def objective_pre_instances(
     request: Request,  # request is actually required by the allow_exports decorator
     status: Annotated[
@@ -367,7 +366,6 @@ The returned versions are ordered by `start_date` descending (newest entries fir
         ],
     }
 )
-# pylint: disable=unused-argument
 def get_versions(
     request: Request,  # request is actually required by the allow_exports decorator
     objective_pre_instance_uid: Annotated[str, ObjectivePreInstanceUID],

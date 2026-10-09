@@ -1,7 +1,5 @@
 """Tests for GET /studies/{study_uid}/study-design-matrix-structure (listing + export)."""
 
-# pylint: disable=redefined-outer-name,unused-argument
-
 from typing import Any
 
 import pytest

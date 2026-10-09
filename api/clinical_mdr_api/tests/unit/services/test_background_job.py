@@ -8,7 +8,7 @@ clinical_mdr_api/tests/integration.
 
 # `self` is intentionally unused in the dummy service-method stand-ins below —
 # the decorator targets bound methods, so the test functions must accept self.
-# pylint: disable=unused-argument,useless-return
+
 
 import json
 from contextlib import contextmanager
@@ -141,7 +141,7 @@ def test_decorator_requires_author_id_on_service():
         pass
 
     with _patched_repo_and_db():
-        with pytest.raises(RuntimeError, match="self.author_id"):
+        with pytest.raises(RuntimeError, match=r"self\.author_id"):
             do_work(NoAuthorService(), background_tasks=bg_tasks)
 
 
@@ -217,7 +217,6 @@ def test_job_log_captures_lines_inside_a_running_job_only():
     def work(self):
         job_log("hello from inside the job")
         job_log("another line", level="WARNING")
-        return None
 
     job = JobAR.create_started(uid="Job_000010", author_id="user-123", job_name="t")
     repo = MagicMock()

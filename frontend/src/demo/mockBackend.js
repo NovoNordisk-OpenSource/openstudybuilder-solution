@@ -720,6 +720,12 @@ export function createDemoAdapter() {
     // writes here so smoke tests can assert on the actual submitted payload.
     if (method !== 'GET') {
       globalThis.__demoLastWrite = { method, path, body: ctx.data }
+    } else {
+      // Same rationale as __demoLastWrite: generateForOperation ignores
+      // filters/search entirely, so tests can't assert on changed row
+      // content. Capture the outgoing params so they can assert on those
+      // instead.
+      globalThis.__demoLastRead = { method, path, params: ctx.params }
     }
 
     const matched = matchHandHandler(method, path)

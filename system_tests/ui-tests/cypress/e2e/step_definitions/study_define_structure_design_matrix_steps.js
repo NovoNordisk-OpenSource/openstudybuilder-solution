@@ -15,17 +15,31 @@ When('Transition rules edit window is opened', () => cy.get('.v-overlay .v-card-
 
 When('{int} element is selected', (elementIndex) => cy.get('.v-select__content .v-list-item').eq(elementIndex).click())
 
-Then('User triggers dropdown for element assignment to epoch {string}', (epochName) => perfomAction(epochName, '[role="combobox"] .v-field__input'))
+Then('User triggers dropdown for element assignment to epoch {string}', (epochName) => {
+    cy.contains('table thead th', epochName).invoke('index').then(index => {
+        cy.get('table tbody tr').eq(0).find('td').eq(index).find( '[role="combobox"] .v-field__input').click()
+    })
+})
 
 Then('User triggers dropdown for element assignment to epoch {string}, branch {string}', (epochName, branchName) => perfomActionForSpecificBranch(epochName, branchName, '[role="combobox"] .v-field__input'))
 
-Then('User open transition rules edit mode for epoch {string}', (epochName) => perfomAction(epochName, 'button[hide-details]'))
+Then('User open transition rules edit mode for epoch {string}', (epochName) => {
+    expandTransitionRules(epochName)
+    cy.get('.v-card .v-card-actions button').click()
+})
 
 Then('User sets transition rule', () => fillTransitionRule('Transition Rule 1'))
 
-Then('Transition rule is visible in the table for epoch {string}', (epochName) => checkValueForEpoch(epochName, 'contain.text'))
+Then('Transition rule is visible in the table for epoch {string}', (epochName) => {
+    expandTransitionRules(epochName)
+    cy.get('.v-card p').should('contain', transitionRule)
+})
 
-Then('Transition rule is not visible in the table for epoch {string}', (epochName) => checkValueForEpoch(epochName, 'not.contain.text'))
+Then('Transition rule is not visible in the table for epoch {string}', (epochName) => {
+    cy.contains('table thead th', epochName).invoke('index').then(index => {
+        cy.get('table tbody tr').eq(0).find('td').eq(index).find('button[aria-label$="transition rule"]').should('not.exist')
+    })
+})
 
 Then('Transition rule is searched', () => cy.searchFor(transitionRule, true))
 
@@ -52,8 +66,8 @@ function perfomActionForSpecificBranch(epochName, branchName, actionLocator) {
     })
 }
 
-function checkValueForEpoch(epochName, validation) {
+function expandTransitionRules(epochName) {
     cy.contains('table thead th', epochName).invoke('index').then(index => {
-        cy.get('table tbody tr').eq(0).find('td').eq(index).should(validation, `${transitionRule.substring(0, 5)}...`)
+        cy.get('table tbody tr').eq(0).find('td').eq(index).find('button[aria-label$="transition rule"]').click()
     })
 }

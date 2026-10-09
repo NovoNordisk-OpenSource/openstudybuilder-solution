@@ -67,7 +67,6 @@ Service = ActivityInstructionPreInstanceService
         ],
     }
 )
-# pylint: disable=unused-argument
 def activity_instruction_pre_instances(
     request: Request,  # request is actually required by the allow_exports decorator
     status: Annotated[
@@ -348,7 +347,6 @@ The returned versions are ordered by `start_date` descending (newest entries fir
         ],
     }
 )
-# pylint: disable=unused-argument
 def get_versions(
     request: Request,  # request is actually required by the allow_exports decorator
     activity_instruction_pre_instance_uid: Annotated[

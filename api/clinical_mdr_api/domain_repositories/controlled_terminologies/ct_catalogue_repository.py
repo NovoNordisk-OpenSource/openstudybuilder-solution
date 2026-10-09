@@ -1,4 +1,4 @@
-from typing import Collection
+from collections.abc import Collection
 
 from clinical_mdr_api.domain_repositories.models.controlled_terminology import (
     CTCatalogue,

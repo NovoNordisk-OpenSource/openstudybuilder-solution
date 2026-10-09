@@ -83,15 +83,22 @@ class ActivityItemClassService(ConceptGenericService[ActivityItemClassAR]):
         filter_by: dict[str, dict[str, Any]] | None = None,
         filter_operator: FilterOperator = FilterOperator.AND,
         page_size: int = 10,
+        lite: bool = False,
+        is_nsv: bool | None = None,
+        library: str | None = None,
+        **kwargs,
     ) -> list[Any]:
         """Wrapper method to maintain compatibility with router - library param optional."""
         return super().get_distinct_values_for_header(
+            library=library,
             field_name=field_name,
-            library=None,
             search_string=search_string,
             filter_by=filter_by,
             filter_operator=filter_operator,
             page_size=page_size,
+            lite=lite,
+            is_nsv=is_nsv,
+            **kwargs,
         )
 
     def _transform_aggregate_root_to_pydantic_model(
@@ -288,6 +295,14 @@ class ActivityItemClassService(ConceptGenericService[ActivityItemClassAR]):
                 result.uid, concept_input.valid_codelist_uids
             )
             result = self.get_by_uid(result.uid)
+        elif not preview and result.non_standard_variable is not None:
+            # nsvxmldt is derived from the DB (nearest NSVXMLDT-codelist
+            # ancestor of the data_type term) rather than copied from the
+            # input, so it is only resolved when the AR is hydrated from a
+            # persisted value node - the in-memory AR built by super().create()
+            # never computes it. Re-fetching is the only way to get it onto
+            # the response.
+            result = self.get_by_uid(result.uid)
         return result
 
     @ensure_transaction(db)
@@ -305,6 +320,11 @@ class ActivityItemClassService(ConceptGenericService[ActivityItemClassAR]):
             self._repos.activity_item_class_repository.patch_valid_codelist_mappings(
                 uid, valid_codelist_uids
             )
+            result = self.get_by_uid(uid)
+        elif result.non_standard_variable is not None:
+            # See the equivalent branch in create() above: nsvxmldt is only
+            # resolved when hydrating the AR from a persisted value node, so
+            # the in-memory result from super().edit_draft() never carries it.
             result = self.get_by_uid(uid)
         return result
 
@@ -493,7 +513,7 @@ class ActivityItemClassService(ConceptGenericService[ActivityItemClassAR]):
 
         # Get all versions
         version_history = self.get_version_history(activity_item_class_uid)
-        all_versions = list(set(v.version for v in version_history))
+        all_versions = list({v.version for v in version_history})
         all_versions = self._sort_semantic_versions(all_versions, reverse=True)
 
         return ActivityItemClassOverview(
@@ -558,7 +578,7 @@ class ActivityItemClassService(ConceptGenericService[ActivityItemClassAR]):
             )
         return GenericFilteringReturn(items=instance_classes, total=total)
 
-    def _find_by_uid_or_raise_not_found(  # pylint: disable=arguments-renamed
+    def _find_by_uid_or_raise_not_found(
         self,
         uid: str,
         version: str | None = None,

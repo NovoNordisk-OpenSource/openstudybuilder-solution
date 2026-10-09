@@ -1,11 +1,3 @@
-# pylint: disable=unused-argument
-# pylint: disable=redefined-outer-name
-# pylint: disable=too-many-arguments
-# pylint: disable=invalid-name
-
-# pytest fixture functions have other fixture functions as arguments,
-# which pylint interprets as unused arguments
-
 import pytest
 from fastapi.testclient import TestClient
 from neomodel import db
@@ -42,6 +34,33 @@ test_data_dict = {}
 branch_arm_uids = []
 reason_for_lock_term_uid = None
 reason_for_unlock_term_uid = None
+
+_NOT_NONE = object()
+_BRANCH_ARM_AUDIT_DEFAULTS = {
+    "study_uid": "study_root",
+    "project_number": None,
+    "project_name": None,
+    "study_version": None,
+    "author_username": "unknown-user@example.com",
+    "status": None,
+    "accepted_version": False,
+}
+
+
+def _assert_branch_arm_audit_entry(entry, expected):
+    for field, value in (_BRANCH_ARM_AUDIT_DEFAULTS | expected).items():
+        if field == "changes_unordered":
+            assert set(entry["changes"]) == set(value)
+        elif value is _NOT_NONE:
+            assert entry[field] is not None
+        else:
+            assert entry[field] == value
+
+
+def _assert_branch_arm_audit_entries(entries, expected_entries):
+    assert len(entries) == len(expected_entries)
+    for entry, expected in zip(entries, expected_entries):
+        _assert_branch_arm_audit_entry(entry, expected)
 
 
 @pytest.fixture(scope="module")
@@ -865,376 +884,236 @@ def test_delete_to_be_sure_that_the_cascade_delete_wont_take_effect(api_client):
     assert_response_status_code(response, 204)
 
 
-def test_all_history_of_all_selection_study_branch_arms(
-    api_client,
-):  # pylint:disable=too-many-statements
+def test_all_history_of_all_selection_study_branch_arms(api_client):
     response = api_client.get("/studies/study_root/study-branch-arm/audit-trail")
 
     assert_response_status_code(response, 200)
 
-    res = response.json()
+    expected_entries = [
+        {
+            "order": 1,
+            "branch_arm_uid": "StudyBranchArm_000001",
+            "name": "New_BranchArm_Name_1",
+            "short_name": "BranchArm_Short_Name_1",
+            "code": "BranchArm_code_1",
+            "description": "desc...",
+            "randomization_group": "Randomization_Group_1",
+            "number_of_subjects": 1,
+            "end_date": None,
+            "change_type": "Delete",
+            "arm_root_uid": "StudyArm_000001",
+            "changes_unordered": ["start_date", "end_date", "change_type"],
+        },
+        {
+            "order": 1,
+            "branch_arm_uid": "StudyBranchArm_000001",
+            "name": "New_BranchArm_Name_1",
+            "short_name": "BranchArm_Short_Name_1",
+            "code": "BranchArm_code_1",
+            "description": "desc...",
+            "randomization_group": "Randomization_Group_1",
+            "number_of_subjects": 1,
+            "end_date": _NOT_NONE,
+            "change_type": "Edit",
+            "arm_root_uid": "StudyArm_000001",
+            "changes_unordered": ["name", "start_date", "end_date", "change_type"],
+        },
+        {
+            "order": 1,
+            "branch_arm_uid": "StudyBranchArm_000001",
+            "name": "BranchArm_Name_1",
+            "short_name": "BranchArm_Short_Name_1",
+            "code": "BranchArm_code_1",
+            "description": "desc...",
+            "randomization_group": "Randomization_Group_1",
+            "number_of_subjects": 1,
+            "end_date": _NOT_NONE,
+            "change_type": "Create",
+            "arm_root_uid": "StudyArm_000001",
+            "changes": [],
+        },
+        {
+            "order": 2,
+            "branch_arm_uid": "StudyBranchArm_000002",
+            "name": "BranchArm_Name_2",
+            "short_name": "BranchArm_Short_Name_2",
+            "code": "BranchArm_code_2",
+            "description": "desc...",
+            "randomization_group": "Randomization_Group_2",
+            "number_of_subjects": 1,
+            "end_date": None,
+            "change_type": "Edit",
+            "arm_root_uid": "StudyArm_000001",
+            "changes_unordered": ["order", "start_date", "end_date"],
+        },
+        {
+            "order": 1,
+            "branch_arm_uid": "StudyBranchArm_000002",
+            "name": "BranchArm_Name_2",
+            "short_name": "BranchArm_Short_Name_2",
+            "code": "BranchArm_code_2",
+            "description": "desc...",
+            "randomization_group": "Randomization_Group_2",
+            "number_of_subjects": 1,
+            "end_date": _NOT_NONE,
+            "change_type": "Edit",
+            "arm_root_uid": "StudyArm_000001",
+            "changes_unordered": ["order", "start_date", "end_date", "change_type"],
+        },
+        {
+            "order": 2,
+            "branch_arm_uid": "StudyBranchArm_000002",
+            "name": "BranchArm_Name_2",
+            "short_name": "BranchArm_Short_Name_2",
+            "code": "BranchArm_code_2",
+            "description": "desc...",
+            "randomization_group": "Randomization_Group_2",
+            "number_of_subjects": 1,
+            "end_date": _NOT_NONE,
+            "change_type": "Create",
+            "arm_root_uid": "StudyArm_000001",
+            "changes": [],
+        },
+        {
+            "order": 1,
+            "branch_arm_uid": "StudyBranchArm_000003",
+            "name": "BranchArm_Name_3",
+            "short_name": "BranchArm_Short_Name_3",
+            "code": "BranchArm_code_3",
+            "description": "desc...",
+            "randomization_group": "Randomization_Group_3",
+            "number_of_subjects": 3,
+            "end_date": None,
+            "change_type": "Edit",
+            "arm_root_uid": "StudyArm_000001",
+            "changes_unordered": ["order", "start_date", "end_date", "change_type"],
+        },
+        {
+            "order": 2,
+            "branch_arm_uid": "StudyBranchArm_000003",
+            "name": "BranchArm_Name_3",
+            "short_name": "BranchArm_Short_Name_3",
+            "code": "BranchArm_code_3",
+            "description": "desc...",
+            "randomization_group": "Randomization_Group_3",
+            "number_of_subjects": 3,
+            "end_date": _NOT_NONE,
+            "change_type": "Create",
+            "arm_root_uid": "StudyArm_000001",
+            "changes": [],
+        },
+        {
+            "order": 1,
+            "branch_arm_uid": "StudyBranchArm_000004",
+            "name": "BranchArm_Name_4",
+            "short_name": "BranchArm_Short_Name_4",
+            "code": "BranchArm_code_4",
+            "description": "desc...",
+            "randomization_group": "Randomization_Group_4",
+            "number_of_subjects": 4,
+            "end_date": None,
+            "change_type": "Create",
+            "arm_root_uid": test_data_dict["arm3"].arm_uid,
+            "changes": [],
+        },
+        {
+            "order": 3,
+            "branch_arm_uid": "StudyBranchArm_000005",
+            "name": "BranchArm_Name_5",
+            "short_name": "BranchArm_Short_Name_5",
+            "code": "BranchArm_code_5",
+            "description": "desc...",
+            "randomization_group": "Randomization_Group_5",
+            "number_of_subjects": 5,
+            "end_date": None,
+            "change_type": "Create",
+            "arm_root_uid": "StudyArm_000001",
+            "changes": [],
+        },
+        {
+            "order": 2,
+            "branch_arm_uid": "StudyBranchArm_000006",
+            "name": "BranchArm_Name_6",
+            "short_name": "BranchArm_Short_Name_6",
+            "code": "BranchArm_code_6",
+            "description": "desc...",
+            "randomization_group": "Randomization_Group_6",
+            "number_of_subjects": 1,
+            "end_date": None,
+            "change_type": "Delete",
+            "arm_root_uid": test_data_dict["arm3"].arm_uid,
+            "changes_unordered": ["start_date", "end_date", "change_type"],
+        },
+        {
+            "order": 2,
+            "branch_arm_uid": "StudyBranchArm_000006",
+            "name": "BranchArm_Name_6",
+            "short_name": "BranchArm_Short_Name_6",
+            "code": "BranchArm_code_6",
+            "description": "desc...",
+            "randomization_group": "Randomization_Group_6",
+            "number_of_subjects": 1,
+            "end_date": _NOT_NONE,
+            "change_type": "Create",
+            "arm_root_uid": test_data_dict["arm3"].arm_uid,
+            "changes": [],
+        },
+        {
+            "order": 2,
+            "branch_arm_uid": "StudyBranchArm_000007",
+            "name": "BranchArm_Name_8",
+            "short_name": "BranchArm_Short_Name_8",
+            "code": "BranchArm_code_8",
+            "description": "desc...",
+            "randomization_group": "Randomization_Group_8",
+            "number_of_subjects": 1,
+            "end_date": None,
+            "change_type": "Delete",
+            "arm_root_uid": test_data_dict["arm3"].arm_uid,
+            "changes_unordered": ["start_date", "end_date", "change_type"],
+        },
+        {
+            "order": 2,
+            "branch_arm_uid": "StudyBranchArm_000007",
+            "name": "BranchArm_Name_8",
+            "short_name": "BranchArm_Short_Name_8",
+            "code": "BranchArm_code_8",
+            "description": "desc...",
+            "randomization_group": "Randomization_Group_8",
+            "number_of_subjects": 1,
+            "end_date": _NOT_NONE,
+            "change_type": "Create",
+            "arm_root_uid": test_data_dict["arm3"].arm_uid,
+            "changes": [],
+        },
+        {
+            "order": 2,
+            "branch_arm_uid": "StudyBranchArm_000008",
+            "name": "BranchArm_Name_7",
+            "short_name": "BranchArm_Short_Name_7",
+            "code": "BranchArm_code_7",
+            "description": "desc...",
+            "randomization_group": "Randomization_Group_7",
+            "number_of_subjects": 1,
+            "end_date": None,
+            "change_type": "Edit",
+            "arm_root_uid": test_data_dict["arm3"].arm_uid,
+            "changes_unordered": ["order", "start_date", "end_date", "change_type"],
+        },
+        {
+            "order": 3,
+            "branch_arm_uid": "StudyBranchArm_000008",
+            "name": "BranchArm_Name_7",
+            "short_name": "BranchArm_Short_Name_7",
+            "code": "BranchArm_code_7",
+            "description": "desc...",
+            "randomization_group": "Randomization_Group_7",
+            "number_of_subjects": 1,
+            "end_date": _NOT_NONE,
+            "change_type": "Create",
+            "arm_root_uid": test_data_dict["arm3"].arm_uid,
+            "changes": [],
+        },
+    ]
 
-    assert len(res) == 16
-
-    assert res[0]["study_uid"] == "study_root"
-    assert res[0]["order"] == 1
-    assert res[0]["project_number"] is None
-    assert res[0]["project_name"] is None
-    assert res[0]["study_version"] is None
-    assert res[0]["branch_arm_uid"] == "StudyBranchArm_000001"
-    assert res[0]["name"] == "New_BranchArm_Name_1"
-    assert res[0]["short_name"] == "BranchArm_Short_Name_1"
-    assert res[0]["code"] == "BranchArm_code_1"
-    assert res[0]["description"] == "desc..."
-    assert res[0]["randomization_group"] == "Randomization_Group_1"
-    assert res[0]["number_of_subjects"] == 1
-    assert res[0]["author_username"] == "unknown-user@example.com"
-    assert res[0]["end_date"] is None
-    assert res[0]["status"] is None
-    assert res[0]["change_type"] == "Delete"
-    assert res[0]["accepted_version"] is False
-    assert res[0]["arm_root_uid"] == "StudyArm_000001"
-    assert set(res[0]["changes"]) == set(
-        [
-            "start_date",
-            "end_date",
-            "change_type",
-        ]
-    )
-    assert res[1]["study_uid"] == "study_root"
-    assert res[1]["order"] == 1
-    assert res[1]["project_number"] is None
-    assert res[1]["project_name"] is None
-    assert res[1]["study_version"] is None
-    assert res[1]["branch_arm_uid"] == "StudyBranchArm_000001"
-    assert res[1]["name"] == "New_BranchArm_Name_1"
-    assert res[1]["short_name"] == "BranchArm_Short_Name_1"
-    assert res[1]["code"] == "BranchArm_code_1"
-    assert res[1]["description"] == "desc..."
-    assert res[1]["randomization_group"] == "Randomization_Group_1"
-    assert res[1]["number_of_subjects"] == 1
-    assert res[1]["author_username"] == "unknown-user@example.com"
-    assert res[1]["end_date"]
-    assert res[1]["status"] is None
-    assert res[1]["change_type"] == "Edit"
-    assert res[1]["accepted_version"] is False
-    assert res[1]["arm_root_uid"] == "StudyArm_000001"
-    assert set(res[1]["changes"]) == set(
-        [
-            "name",
-            "start_date",
-            "end_date",
-            "change_type",
-        ]
-    )
-    assert res[2]["study_uid"] == "study_root"
-    assert res[2]["order"] == 1
-    assert res[2]["project_number"] is None
-    assert res[2]["project_name"] is None
-    assert res[2]["study_version"] is None
-    assert res[2]["branch_arm_uid"] == "StudyBranchArm_000001"
-    assert res[2]["name"] == "BranchArm_Name_1"
-    assert res[2]["short_name"] == "BranchArm_Short_Name_1"
-    assert res[2]["code"] == "BranchArm_code_1"
-    assert res[2]["description"] == "desc..."
-    assert res[2]["randomization_group"] == "Randomization_Group_1"
-    assert res[2]["number_of_subjects"] == 1
-    assert res[2]["author_username"] == "unknown-user@example.com"
-    assert res[2]["end_date"]
-    assert res[2]["status"] is None
-    assert res[2]["change_type"] == "Create"
-    assert res[2]["accepted_version"] is False
-    assert res[2]["arm_root_uid"] == "StudyArm_000001"
-    assert res[2]["changes"] == []
-    assert res[3]["study_uid"] == "study_root"
-    assert res[3]["order"] == 2
-    assert res[3]["project_number"] is None
-    assert res[3]["project_name"] is None
-    assert res[3]["study_version"] is None
-    assert res[3]["branch_arm_uid"] == "StudyBranchArm_000002"
-    assert res[3]["name"] == "BranchArm_Name_2"
-    assert res[3]["short_name"] == "BranchArm_Short_Name_2"
-    assert res[3]["code"] == "BranchArm_code_2"
-    assert res[3]["description"] == "desc..."
-    assert res[3]["randomization_group"] == "Randomization_Group_2"
-    assert res[3]["number_of_subjects"] == 1
-    assert res[3]["author_username"] == "unknown-user@example.com"
-    assert res[3]["end_date"] is None
-    assert res[3]["status"] is None
-    assert res[3]["change_type"] == "Edit"
-    assert res[3]["accepted_version"] is False
-    assert res[3]["arm_root_uid"] == "StudyArm_000001"
-    assert set(res[3]["changes"]) == set(
-        [
-            "order",
-            "start_date",
-            "end_date",
-        ]
-    )
-    assert res[4]["study_uid"] == "study_root"
-    assert res[4]["order"] == 1
-    assert res[4]["project_number"] is None
-    assert res[4]["project_name"] is None
-    assert res[4]["study_version"] is None
-    assert res[4]["branch_arm_uid"] == "StudyBranchArm_000002"
-    assert res[4]["name"] == "BranchArm_Name_2"
-    assert res[4]["short_name"] == "BranchArm_Short_Name_2"
-    assert res[4]["code"] == "BranchArm_code_2"
-    assert res[4]["description"] == "desc..."
-    assert res[4]["randomization_group"] == "Randomization_Group_2"
-    assert res[4]["number_of_subjects"] == 1
-    assert res[4]["author_username"] == "unknown-user@example.com"
-    assert res[4]["end_date"]
-    assert res[4]["status"] is None
-    assert res[4]["change_type"] == "Edit"
-    assert res[4]["accepted_version"] is False
-    assert res[4]["arm_root_uid"] == "StudyArm_000001"
-    assert set(res[4]["changes"]) == set(
-        [
-            "order",
-            "start_date",
-            "end_date",
-            "change_type",
-        ]
-    )
-
-    assert res[5]["study_uid"] == "study_root"
-    assert res[5]["order"] == 2
-    assert res[5]["project_number"] is None
-    assert res[5]["project_name"] is None
-    assert res[5]["study_version"] is None
-    assert res[5]["branch_arm_uid"] == "StudyBranchArm_000002"
-    assert res[5]["name"] == "BranchArm_Name_2"
-    assert res[5]["short_name"] == "BranchArm_Short_Name_2"
-    assert res[5]["code"] == "BranchArm_code_2"
-    assert res[5]["description"] == "desc..."
-    assert res[5]["randomization_group"] == "Randomization_Group_2"
-    assert res[5]["number_of_subjects"] == 1
-    assert res[5]["author_username"] == "unknown-user@example.com"
-    assert res[5]["end_date"] is not None
-    assert res[5]["status"] is None
-    assert res[5]["change_type"] == "Create"
-    assert res[5]["accepted_version"] is False
-    assert res[5]["arm_root_uid"] == "StudyArm_000001"
-    assert res[5]["changes"] == []
-
-    assert res[6]["study_uid"] == "study_root"
-    assert res[6]["order"] == 1
-    assert res[6]["project_number"] is None
-    assert res[6]["project_name"] is None
-    assert res[6]["study_version"] is None
-    assert res[6]["branch_arm_uid"] == "StudyBranchArm_000003"
-    assert res[6]["name"] == "BranchArm_Name_3"
-    assert res[6]["short_name"] == "BranchArm_Short_Name_3"
-    assert res[6]["code"] == "BranchArm_code_3"
-    assert res[6]["description"] == "desc..."
-    assert res[6]["randomization_group"] == "Randomization_Group_3"
-    assert res[6]["number_of_subjects"] == 3
-    assert res[6]["author_username"] == "unknown-user@example.com"
-    assert res[6]["end_date"] is None
-    assert res[6]["status"] is None
-    assert res[6]["change_type"] == "Edit"
-    assert res[6]["accepted_version"] is False
-    assert res[6]["arm_root_uid"] == "StudyArm_000001"
-    assert set(res[6]["changes"]) == set(
-        [
-            "order",
-            "start_date",
-            "end_date",
-            "change_type",
-        ]
-    )
-
-    assert res[7]["study_uid"] == "study_root"
-    assert res[7]["order"] == 2
-    assert res[7]["project_number"] is None
-    assert res[7]["project_name"] is None
-    assert res[7]["study_version"] is None
-    assert res[7]["branch_arm_uid"] == "StudyBranchArm_000003"
-    assert res[7]["name"] == "BranchArm_Name_3"
-    assert res[7]["short_name"] == "BranchArm_Short_Name_3"
-    assert res[7]["code"] == "BranchArm_code_3"
-    assert res[7]["description"] == "desc..."
-    assert res[7]["randomization_group"] == "Randomization_Group_3"
-    assert res[7]["number_of_subjects"] == 3
-    assert res[7]["author_username"] == "unknown-user@example.com"
-    assert res[7]["end_date"] is not None
-    assert res[7]["status"] is None
-    assert res[7]["change_type"] == "Create"
-    assert res[7]["accepted_version"] is False
-    assert res[7]["arm_root_uid"] == "StudyArm_000001"
-    assert res[7]["changes"] == []
-
-    assert res[8]["study_uid"] == "study_root"
-    assert res[8]["order"] == 1
-    assert res[8]["project_number"] is None
-    assert res[8]["project_name"] is None
-    assert res[8]["study_version"] is None
-    assert res[8]["branch_arm_uid"] == "StudyBranchArm_000004"
-    assert res[8]["name"] == "BranchArm_Name_4"
-    assert res[8]["short_name"] == "BranchArm_Short_Name_4"
-    assert res[8]["code"] == "BranchArm_code_4"
-    assert res[8]["description"] == "desc..."
-    assert res[8]["randomization_group"] == "Randomization_Group_4"
-    assert res[8]["number_of_subjects"] == 4
-    assert res[8]["author_username"] == "unknown-user@example.com"
-    assert res[8]["end_date"] is None
-    assert res[8]["status"] is None
-    assert res[8]["change_type"] == "Create"
-    assert res[8]["accepted_version"] is False
-    assert res[8]["arm_root_uid"] == test_data_dict["arm3"].arm_uid
-    assert res[8]["changes"] == []
-
-    assert res[9]["study_uid"] == "study_root"
-    assert res[9]["order"] == 3
-    assert res[9]["project_number"] is None
-    assert res[9]["project_name"] is None
-    assert res[9]["study_version"] is None
-    assert res[9]["branch_arm_uid"] == "StudyBranchArm_000005"
-    assert res[9]["name"] == "BranchArm_Name_5"
-    assert res[9]["short_name"] == "BranchArm_Short_Name_5"
-    assert res[9]["code"] == "BranchArm_code_5"
-    assert res[9]["description"] == "desc..."
-    assert res[9]["randomization_group"] == "Randomization_Group_5"
-    assert res[9]["number_of_subjects"] == 5
-    assert res[9]["author_username"] == "unknown-user@example.com"
-    assert res[9]["end_date"] is None
-    assert res[9]["status"] is None
-    assert res[9]["change_type"] == "Create"
-    assert res[9]["accepted_version"] is False
-    assert res[9]["arm_root_uid"] == "StudyArm_000001"
-    assert res[9]["changes"] == []
-    assert res[10]["study_uid"] == "study_root"
-    assert res[10]["order"] == 2
-    assert res[10]["project_number"] is None
-    assert res[10]["project_name"] is None
-    assert res[10]["study_version"] is None
-    assert res[10]["branch_arm_uid"] == "StudyBranchArm_000006"
-    assert res[10]["name"] == "BranchArm_Name_6"
-    assert res[10]["short_name"] == "BranchArm_Short_Name_6"
-    assert res[10]["code"] == "BranchArm_code_6"
-    assert res[10]["description"] == "desc..."
-    assert res[10]["randomization_group"] == "Randomization_Group_6"
-    assert res[10]["number_of_subjects"] == 1
-    assert res[10]["author_username"] == "unknown-user@example.com"
-    assert res[10]["end_date"] is None
-    assert res[10]["status"] is None
-    assert res[10]["change_type"] == "Delete"
-    assert res[10]["accepted_version"] is False
-    assert res[10]["arm_root_uid"] == test_data_dict["arm3"].arm_uid
-    assert set(res[10]["changes"]) == set(
-        [
-            "start_date",
-            "end_date",
-            "change_type",
-        ]
-    )
-    assert res[11]["study_uid"] == "study_root"
-    assert res[11]["order"] == 2
-    assert res[11]["project_number"] is None
-    assert res[11]["project_name"] is None
-    assert res[11]["study_version"] is None
-    assert res[11]["branch_arm_uid"] == "StudyBranchArm_000006"
-    assert res[11]["name"] == "BranchArm_Name_6"
-    assert res[11]["short_name"] == "BranchArm_Short_Name_6"
-    assert res[11]["code"] == "BranchArm_code_6"
-    assert res[11]["description"] == "desc..."
-    assert res[11]["randomization_group"] == "Randomization_Group_6"
-    assert res[11]["number_of_subjects"] == 1
-    assert res[11]["author_username"] == "unknown-user@example.com"
-    assert res[11]["end_date"]
-    assert res[11]["status"] is None
-    assert res[11]["change_type"] == "Create"
-    assert res[11]["accepted_version"] is False
-    assert res[11]["arm_root_uid"] == test_data_dict["arm3"].arm_uid
-    assert res[11]["changes"] == []
-
-    assert res[12]["study_uid"] == "study_root"
-    assert res[12]["order"] == 2
-    assert res[12]["project_number"] is None
-    assert res[12]["project_name"] is None
-    assert res[12]["study_version"] is None
-    assert res[12]["branch_arm_uid"] == "StudyBranchArm_000007"
-    assert res[12]["name"] == "BranchArm_Name_8"
-    assert res[12]["short_name"] == "BranchArm_Short_Name_8"
-    assert res[12]["code"] == "BranchArm_code_8"
-    assert res[12]["description"] == "desc..."
-    assert res[12]["randomization_group"] == "Randomization_Group_8"
-    assert res[12]["number_of_subjects"] == 1
-    assert res[12]["author_username"] == "unknown-user@example.com"
-    assert res[12]["end_date"] is None
-    assert res[12]["status"] is None
-    assert res[12]["change_type"] == "Delete"
-    assert res[12]["accepted_version"] is False
-    assert res[12]["arm_root_uid"] == test_data_dict["arm3"].arm_uid
-    assert set(res[12]["changes"]) == set(
-        [
-            "start_date",
-            "end_date",
-            "change_type",
-        ]
-    )
-    assert res[13]["study_uid"] == "study_root"
-    assert res[13]["order"] == 2
-    assert res[13]["project_number"] is None
-    assert res[13]["project_name"] is None
-    assert res[13]["study_version"] is None
-    assert res[13]["branch_arm_uid"] == "StudyBranchArm_000007"
-    assert res[13]["name"] == "BranchArm_Name_8"
-    assert res[13]["short_name"] == "BranchArm_Short_Name_8"
-    assert res[13]["code"] == "BranchArm_code_8"
-    assert res[13]["description"] == "desc..."
-    assert res[13]["randomization_group"] == "Randomization_Group_8"
-    assert res[13]["number_of_subjects"] == 1
-    assert res[13]["author_username"] == "unknown-user@example.com"
-    assert res[13]["end_date"]
-    assert res[13]["status"] is None
-    assert res[13]["change_type"] == "Create"
-    assert res[13]["accepted_version"] is False
-    assert res[13]["arm_root_uid"] == test_data_dict["arm3"].arm_uid
-    assert res[13]["changes"] == []
-    assert res[14]["study_uid"] == "study_root"
-    assert res[14]["order"] == 2
-    assert res[14]["project_number"] is None
-    assert res[14]["project_name"] is None
-    assert res[14]["study_version"] is None
-    assert res[14]["branch_arm_uid"] == "StudyBranchArm_000008"
-    assert res[14]["name"] == "BranchArm_Name_7"
-    assert res[14]["short_name"] == "BranchArm_Short_Name_7"
-    assert res[14]["code"] == "BranchArm_code_7"
-    assert res[14]["description"] == "desc..."
-    assert res[14]["randomization_group"] == "Randomization_Group_7"
-    assert res[14]["number_of_subjects"] == 1
-    assert res[14]["author_username"] == "unknown-user@example.com"
-    assert res[14]["end_date"] is None
-    assert res[14]["status"] is None
-    assert res[14]["change_type"] == "Edit"
-    assert res[14]["accepted_version"] is False
-    assert res[14]["arm_root_uid"] == test_data_dict["arm3"].arm_uid
-    assert set(res[14]["changes"]) == set(
-        [
-            "order",
-            "start_date",
-            "end_date",
-            "change_type",
-        ]
-    )
-    assert res[15]["study_uid"] == "study_root"
-    assert res[15]["order"] == 3
-    assert res[15]["project_number"] is None
-    assert res[15]["project_name"] is None
-    assert res[15]["study_version"] is None
-    assert res[15]["branch_arm_uid"] == "StudyBranchArm_000008"
-    assert res[15]["name"] == "BranchArm_Name_7"
-    assert res[15]["short_name"] == "BranchArm_Short_Name_7"
-    assert res[15]["code"] == "BranchArm_code_7"
-    assert res[15]["description"] == "desc..."
-    assert res[15]["randomization_group"] == "Randomization_Group_7"
-    assert res[15]["number_of_subjects"] == 1
-    assert res[15]["author_username"] == "unknown-user@example.com"
-    assert res[15]["end_date"]
-    assert res[15]["status"] is None
-    assert res[15]["change_type"] == "Create"
-    assert res[15]["accepted_version"] is False
-    assert res[15]["arm_root_uid"] == test_data_dict["arm3"].arm_uid
-    assert res[15]["changes"] == []
+    _assert_branch_arm_audit_entries(response.json(), expected_entries)

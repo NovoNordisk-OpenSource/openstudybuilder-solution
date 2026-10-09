@@ -52,14 +52,6 @@ from clinical_mdr_api.tests.utils.checks import (
 from common.config import settings
 from common.exceptions import BusinessLogicException
 
-# pylint: disable=unused-argument
-# pylint: disable=redefined-outer-name
-# pylint: disable=too-many-arguments
-
-# pytest fixture functions have other fixture functions as arguments,
-# which pylint interprets as unused arguments
-
-
 log = logging.getLogger(__name__)
 
 # Global variables shared between fixtures and tests
@@ -531,6 +523,7 @@ ACTIVITY_INSTANCES_FIELDS_ALL = [
     "legacy_description",
     "activity_groupings",
     "activity_name",
+    "sdtm_domain",
     "activity_instance_class",
     "activity_items",
     "library_name",
@@ -760,8 +753,8 @@ def test_get_activity_instances(
     if sort_by:
         # sort_by is JSON string in the form: {"sort_field_name": is_ascending_order}
         sort_by_dict = json.loads(sort_by)
-        sort_field: str = list(sort_by_dict.keys())[0]
-        sort_order_ascending: bool = list(sort_by_dict.values())[0]
+        sort_field: str = next(iter(sort_by_dict.keys()))
+        sort_order_ascending: bool = next(iter(sort_by_dict.values()))
 
         # extract list of values of 'sort_field_name' field from the returned result
         result_vals = list(map(lambda x: x[sort_field], res["items"]))
@@ -911,16 +904,19 @@ def test_filtering_wildcard(
 
         # Each returned row has a field that starts with the specified filter value
         for row in res["items"]:
+            current_row = row
             if nested_path:
                 for prop in nested_path:
-                    row = row[prop]
-            if isinstance(row, list):
+                    current_row = current_row[prop]
+            if isinstance(current_row, list):
                 any(
                     item[expected_matched_field].startswith(expected_result_prefix)
-                    for item in row
+                    for item in current_row
                 )
             else:
-                assert row[expected_matched_field].startswith(expected_result_prefix)
+                assert current_row[expected_matched_field].startswith(
+                    expected_result_prefix
+                )
     else:
         assert len(res["items"]) == 0
 
@@ -983,18 +979,22 @@ def test_filtering_exact(
 
         # Each returned row has a field whose value is equal to the specified filter value
         for row in res["items"]:
+            current_row = row
             if nested_path:
                 for prop in nested_path:
-                    row = row[prop]
+                    current_row = current_row[prop]
             if isinstance(expected_result, list):
                 assert all(
-                    item in row[expected_matched_field] for item in expected_result
+                    item in current_row[expected_matched_field]
+                    for item in expected_result
+                )
+            elif isinstance(current_row, list):
+                all(
+                    item[expected_matched_field] == expected_result
+                    for item in current_row
                 )
             else:
-                if isinstance(row, list):
-                    all(item[expected_matched_field] == expected_result for item in row)
-                else:
-                    assert row[expected_matched_field] == expected_result
+                assert current_row[expected_matched_field] == expected_result
     else:
         assert len(res["items"]) == 0
 
@@ -1069,16 +1069,19 @@ def test_filtering_attributes_versions_wildcard(
 
         # Each returned row has a field that starts with the specified filter value
         for row in res["items"]:
+            current_row = row
             if nested_path:
                 for prop in nested_path:
-                    row = row[prop]
-            if isinstance(row, list):
+                    current_row = current_row[prop]
+            if isinstance(current_row, list):
                 any(
                     item[expected_matched_field].startswith(expected_result_prefix)
-                    for item in row
+                    for item in current_row
                 )
             else:
-                assert row[expected_matched_field].startswith(expected_result_prefix)
+                assert current_row[expected_matched_field].startswith(
+                    expected_result_prefix
+                )
     else:
         assert len(res["items"]) == 0
 
@@ -1135,18 +1138,22 @@ def test_filtering_attributes_versions_exact(
 
         # Each returned row has a field whose value is equal to the specified filter value
         for row in res["items"]:
+            current_row = row
             if nested_path:
                 for prop in nested_path:
-                    row = row[prop]
+                    current_row = current_row[prop]
             if isinstance(expected_result, list):
                 assert all(
-                    item in row[expected_matched_field] for item in expected_result
+                    item in current_row[expected_matched_field]
+                    for item in expected_result
+                )
+            elif isinstance(current_row, list):
+                all(
+                    item[expected_matched_field] == expected_result
+                    for item in current_row
                 )
             else:
-                if isinstance(row, list):
-                    all(item[expected_matched_field] == expected_result for item in row)
-                else:
-                    assert row[expected_matched_field] == expected_result
+                assert current_row[expected_matched_field] == expected_result
     else:
         assert len(res["items"]) == 0
 
@@ -3461,6 +3468,66 @@ def test_cannot_provide_multiple_unit_definitions_with_is_activity_instance_id_s
     res = response.json()
     assert res["type"] == "RequestValidationError"
     assert "must not have more than one unit_definition" in res["details"][0]["msg"]
+
+
+def test_cannot_link_domain_activity_item_to_multiple_ct_terms(api_client):
+    """A 'domain' Activity Item Class may link at most one CT Term."""
+    domain_item_class = TestUtils.create_activity_item_class(
+        name="domain",
+        order=99,
+        activity_instance_classes=[
+            {
+                "uid": activity_instance_classes[0].uid,
+                "mandatory": False,
+                "is_adam_param_specific_enabled": False,
+                "is_additional_optional": False,
+                "is_default_linked": False,
+            }
+        ],
+        role_uid=role_term.term_uid,
+        data_type_uid=data_type_term.term_uid,
+    )
+    response = api_client.post(
+        "/concepts/activities/activity-instances",
+        json={
+            "name": "domain with multiple terms",
+            "name_sentence_case": "domain with multiple terms",
+            "activity_groupings": [
+                {
+                    "activity_uid": activities[0].uid,
+                    "activity_subgroup_uid": activity_subgroup.uid,
+                    "activity_group_uid": activity_group.uid,
+                }
+            ],
+            "activity_instance_class_uid": activity_instance_classes[0].uid,
+            "activity_items": [
+                {
+                    "activity_item_class_uid": domain_item_class.uid,
+                    "ct_terms": [
+                        {
+                            "term_uid": ct_terms[0].term_uid,
+                            "codelist_uid": codelist.codelist_uid,
+                        },
+                        {
+                            "term_uid": ct_terms[1].term_uid,
+                            "codelist_uid": codelist.codelist_uid,
+                        },
+                    ],
+                    "unit_definition_uids": [],
+                    "is_adam_param_specific": False,
+                    "is_activity_instance_id_specific": False,
+                },
+            ],
+            "library_name": "Sponsor",
+        },
+    )
+    assert_response_status_code(response, 400)
+    res = response.json()
+    assert res["type"] == "BusinessLogicException"
+    assert (
+        res["message"]
+        == "An Activity Item of the 'domain' Activity Item Class must not be linked to more than one CT Term."
+    )
 
 
 def test_get_activity_instances_excludes_archived(api_client):

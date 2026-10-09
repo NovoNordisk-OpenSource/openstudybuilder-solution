@@ -1,7 +1,7 @@
 const { Given, When, Then } = require("@badeball/cypress-cucumber-preprocessor");
 const { getShortUniqueId } = require("../../support/helper_functions");
 
-let study_uid, studyNumber, studyAcronym
+let studyNumber, studyAcronym
 
 Given('The user selects to create study from existing study', () => cy.contains('Create a study from an existing study').click())
 
@@ -111,6 +111,7 @@ Then('The Design matrix category is presented for selection', () => cy.contains(
 When('New study project id, study number and study acronym are filled in', () => {
     studyAcronym = `TestStudy_${getShortUniqueId()}`
     studyNumber = `${Math.floor(1000 + Math.random() * 9000)}`
+    cy.writeFile('cypress/fixtures/study_metadata.json', { studyNumber: studyNumber})
     cy.get('[data-cy="project-id"] input').click().type('CDISC DEV')
     cy.selectAutoComplete('project-id', 'CDISC DEV')
     cy.fillInput('study-number', studyNumber)

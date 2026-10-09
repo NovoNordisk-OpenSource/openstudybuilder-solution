@@ -342,10 +342,10 @@ class StudyDesignCellRepository:
         )
         assert isinstance(study_value, StudyValue)
 
-        assert len(set(ith.uid for ith in design_cell.study_arm.all())) <= 1
-        assert len(set(ith.uid for ith in design_cell.study_branch_arm.all())) <= 1
-        assert len(set(ith.uid for ith in design_cell.study_element.all())) <= 1
-        assert len(set(ith.uid for ith in design_cell.study_epoch.all())) <= 1
+        assert len({ith.uid for ith in design_cell.study_arm.all()}) <= 1
+        assert len({ith.uid for ith in design_cell.study_branch_arm.all()}) <= 1
+        assert len({ith.uid for ith in design_cell.study_element.all()}) <= 1
+        assert len({ith.uid for ith in design_cell.study_epoch.all()}) <= 1
 
         study_epoch: StudyEpoch = cls.get_current_outbound_node(
             node=design_cell, outbound_rel_name="study_epoch", study_value=study_value
@@ -403,7 +403,6 @@ class StudyDesignCellRepository:
                 outbound_node = i_outbound_node
         return outbound_node
 
-    # pylint: disable=unused-argument
     @classmethod
     @trace_calls
     def save(

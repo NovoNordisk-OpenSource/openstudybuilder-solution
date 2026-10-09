@@ -1,5 +1,6 @@
 import ast
 import sys
+from typing import ClassVar
 
 from rich import print as rptint
 
@@ -7,7 +8,7 @@ from sblint.sblinter import SBLinter
 
 
 class NoTypeHintsWithImplicitAny(SBLinter):
-    NO_IMPLICIT_ANY_TYPES = ["list", "dict", "set", "tuple"]
+    NO_IMPLICIT_ANY_TYPES: ClassVar[list[str]] = ["list", "dict", "set", "tuple"]
 
     @classmethod
     def validate(cls, code_tree: ast.Module, _file_path: str) -> list[int]:

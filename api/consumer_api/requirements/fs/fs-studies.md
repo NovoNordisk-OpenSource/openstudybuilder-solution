@@ -20,6 +20,12 @@ It must be possible to sort items by `uid`, `id_prefix` and `number` fields.
 
 Each item in the response must include basic information about a study (`uid`, `id`), together with a list of all existing study versions for each study (`version_status`, `version_number`, `version_started_at`, `version_ended_at`).
 
+Each item must also include the data completeness tags assigned to the study (`data_completeness_tags`) and the data suppliers selected for the study (`data_suppliers`).
+
+Each entry of `data_suppliers` must include the study data supplier `uid`, the `name` and `type` of the underlying library data supplier, the `order` of the selection, and `is_blinded`, indicating whether the data delivered by that supplier is blinded for the study. `is_blinded` is null when it has not been set on the study data supplier selection.
+
+`data_suppliers` entries are sorted by `order`, with entries without an order last.
+
 ### Test coverage
 
 | Test File                    | Test Function                              |

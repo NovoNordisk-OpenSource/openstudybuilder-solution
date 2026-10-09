@@ -1,5 +1,5 @@
 import unittest
-from typing import Callable
+from collections.abc import Callable
 
 from clinical_mdr_api.domains.concepts.simple_concepts.numeric_value import (
     NumericValueAR,
@@ -23,8 +23,7 @@ def create_random_numeric_value_vo() -> NumericValueVO:
 
 
 def create_random_numeric_value_ar(
-    # pylint: disable=unnecessary-lambda
-    generate_uid_callback: Callable[[], str] = lambda: random_str(),
+    generate_uid_callback: Callable[[], str] = random_str,
     library: str = "Library",
     is_editable: bool = True,
 ) -> NumericValueAR:
@@ -42,7 +41,7 @@ def create_random_numeric_value_ar(
 
 class TestNumericValue(unittest.TestCase):
     def test__init__ar_created(self):
-        # pylint: disable=no-member
+
         # given
 
         # when

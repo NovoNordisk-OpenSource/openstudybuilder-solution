@@ -2,6 +2,8 @@
 Tests for /activity-item-classes endpoints
 """
 
+import csv
+import io
 import json
 import logging
 from functools import reduce
@@ -26,6 +28,9 @@ from clinical_mdr_api.models.standard_data_models.dataset_variable import (
     DatasetVariable,
 )
 from clinical_mdr_api.models.standard_data_models.variable_class import VariableClass
+from clinical_mdr_api.services.controlled_terminologies.ct_codelist import (
+    CTCodelistService,
+)
 from clinical_mdr_api.tests.integration.utils.api import (
     inject_and_clear_db,
     inject_base_data,
@@ -35,14 +40,6 @@ from clinical_mdr_api.tests.utils.checks import (
     assert_response_status_code,
     parse_json_response,
 )
-
-# pylint: disable=unused-argument
-# pylint: disable=redefined-outer-name
-# pylint: disable=too-many-arguments
-
-# pytest fixture functions have other fixture functions as arguments,
-# which pylint interprets as unused arguments
-
 
 log = logging.getLogger(__name__)
 
@@ -330,7 +327,7 @@ ACTIVITY_IC_FIELDS_ALL = [
     "nci_concept_name",
     "order",
     "activity_instance_classes",
-    "data_type",
+    "semtcdt",
     "role",
     "variable_classes",
     "valid_codelists",
@@ -350,7 +347,7 @@ ACTIVITY_IC_FIELDS_NOT_NULL = [
     "name",
     "order",
     "activity_instance_classes",
-    "data_type",
+    "semtcdt",
     "role",
 ]
 
@@ -387,7 +384,7 @@ def test_get_activity_item_class(api_client):
         instance_class["name"] for instance_class in res["activity_instance_classes"]
     ) == [activity_instance_class.name, activity_instance_class2.name]
     assert res["role"]["uid"] == role_term.term_uid
-    assert res["data_type"]["uid"] == data_type_term.term_uid
+    assert res["semtcdt"]["uid"] == data_type_term.term_uid
     assert res["version"] == "1.0"
     assert res["status"] == "Final"
     assert res["library_name"] == "Sponsor"
@@ -490,8 +487,8 @@ def test_get_activity_item_classes(
     if sort_by:
         # sort_by is JSON string in the form: {"sort_field_name": is_ascending_order}
         sort_by_dict = json.loads(sort_by)
-        sort_field: str = list(sort_by_dict.keys())[0]
-        sort_order_ascending: bool = list(sort_by_dict.values())[0]
+        sort_field: str = next(iter(sort_by_dict.keys()))
+        sort_order_ascending: bool = next(iter(sort_by_dict.values()))
 
         # extract list of values of 'sort_field_name' field from the returned result
         result_vals = list(map(lambda x: x[sort_field], res["items"]))
@@ -561,16 +558,19 @@ def test_filtering_wildcard(
 
         # Each returned row has a field that starts with the specified filter value
         for row in res["items"]:
+            current_row = row
             if nested_path:
                 for prop in nested_path:
-                    row = row[prop]
-            if isinstance(row, list):
+                    current_row = current_row[prop]
+            if isinstance(current_row, list):
                 any(
                     item[expected_matched_field].startswith(expected_result_prefix)
-                    for item in row
+                    for item in current_row
                 )
             else:
-                assert row[expected_matched_field].startswith(expected_result_prefix)
+                assert current_row[expected_matched_field].startswith(
+                    expected_result_prefix
+                )
     else:
         assert len(res["items"]) == 0
 
@@ -598,8 +598,8 @@ def test_filtering_wildcard(
             True,
         ),
         pytest.param(
-            '{"data_type.name": {"v": ["Data type"]}}',
-            "data_type.name",
+            '{"semtcdt.name": {"v": ["Data type"]}}',
+            "semtcdt.name",
             "Data type",
         ),
         pytest.param(
@@ -635,18 +635,22 @@ def test_filtering_exact(
 
         # Each returned row has a field whose value is equal to the specified filter value
         for row in res["items"]:
+            current_row = row
             if nested_path:
                 for prop in nested_path:
-                    row = row[prop]
+                    current_row = current_row[prop]
             if isinstance(expected_result, list):
                 assert all(
-                    item in row[expected_matched_field] for item in expected_result
+                    item in current_row[expected_matched_field]
+                    for item in expected_result
+                )
+            elif isinstance(current_row, list):
+                all(
+                    item[expected_matched_field] == expected_result
+                    for item in current_row
                 )
             else:
-                if isinstance(row, list):
-                    all(item[expected_matched_field] == expected_result for item in row)
-                else:
-                    assert row[expected_matched_field] == expected_result
+                assert current_row[expected_matched_field] == expected_result
     else:
         assert len(res["items"]) == 0
 
@@ -1285,10 +1289,13 @@ def test_post_activity_item_class_nsv_and_is_nsv_filter(api_client):
     assert nsv["derivation_rule"] == "rule X"
     assert nsv["origin_type"] is None
     assert nsv["origin_source"] is None
+    # data_type_term has no NSVXMLDT ancestor, so nsvxmldt resolves to None
+    assert nsv["nsvxmldt"] is None
 
     # Single-item GET returns same NSV payload
     get_res = api_client.get(f"/activity-item-classes/{created_uid}").json()
     assert get_res["non_standard_variable"]["code"] == "NSV_CODE"
+    assert get_res["non_standard_variable"]["nsvxmldt"] is None
 
     # Overview endpoint exposes the same NSV info under activity_item_class.non_standard_variable
     overview_detail = api_client.get(
@@ -1337,6 +1344,109 @@ def test_post_activity_item_class_nsv_and_is_nsv_filter(api_client):
         )
     )
     assert nsv_list["total"] + non_nsv_list["total"] == unfiltered["total"]
+
+
+def test_activity_item_class_nsv_nsvxmldt_resolution(api_client):
+    """
+    SCENARIO: non_standard_variable.nsvxmldt resolves the data type's nearest
+    NSVXMLDT-codelist ancestor via IS_SPECIALIZATION_OF, on both the list and
+    single-item GET paths
+    GIVEN an NSVXMLDT-tagged term (0 hops) and a term 2 IS_SPECIALIZATION_OF
+        hops away from an NSVXMLDT-tagged ancestor
+    WHEN an NSV activity item class is created using either term as its data type
+    THEN GET /activity-item-classes (list) and GET /activity-item-classes/{uid}
+        both resolve non_standard_variable.nsvxmldt to the NSVXMLDT ancestor's
+        submission value
+    """
+    nsvxmldt_codelist = TestUtils.create_ct_codelist(
+        name="NSVXMLDT",
+        submission_value="NSVXMLDT",
+        extensible=True,
+        approve=True,
+    )
+    scratch_codelist = TestUtils.create_ct_codelist(
+        name="AIC_NSVXMLDT_SCRATCH",
+        submission_value="AIC_NSVXMLDT_SCRATCH",
+        extensible=True,
+        approve=True,
+    )
+
+    # 0-hop term: tagged NSVXMLDT directly.
+    dt_leaf = TestUtils.create_ct_term(
+        sponsor_preferred_name="AIC NSVXMLDT Leaf",
+        codelist_uid=data_type_codelist.codelist_uid,
+        submission_value="AIC_NSVXMLDT_LEAF",
+    )
+    CTCodelistService().add_term(
+        codelist_uid=nsvxmldt_codelist.codelist_uid,
+        term_uid=dt_leaf.term_uid,
+        order=1,
+        submission_value="AIC_NSVXMLDT_LEAF",
+    )
+    # Untagged intermediate ancestor.
+    dt_mid = TestUtils.create_ct_term(
+        sponsor_preferred_name="AIC NSVXMLDT Mid",
+        codelist_uid=scratch_codelist.codelist_uid,
+    )
+
+    # 2-hop term: dt_two_hop -> dt_mid -> dt_leaf.
+    dt_two_hop = TestUtils.create_ct_term(
+        sponsor_preferred_name="AIC NSVXMLDT Two Hop",
+        codelist_uid=data_type_codelist.codelist_uid,
+    )
+    TestUtils.add_ct_term_parent(
+        term=dt_two_hop, parent=dt_mid, relationship_type="specialization"
+    )
+    TestUtils.add_ct_term_parent(
+        term=dt_mid, parent=dt_leaf, relationship_type="specialization"
+    )
+
+    for data_type_uid, label in (
+        (dt_leaf.term_uid, "0-hop"),
+        (dt_two_hop.term_uid, "2-hop"),
+    ):
+        response = api_client.post(
+            "/activity-item-classes",
+            json={
+                "name": f"NSV nsvxmldt {label}",
+                "order": 103,
+                "library_name": "Sponsor",
+                "activity_instance_classes": [
+                    {
+                        "uid": activity_instance_class.uid,
+                        "mandatory": True,
+                        "is_adam_param_specific_enabled": False,
+                        "is_additional_optional": False,
+                        "is_default_linked": False,
+                    }
+                ],
+                "role_uid": role_term.term_uid,
+                "data_type_uid": data_type_uid,
+                "non_standard_variable": {
+                    "code": f"NSV_NSVXMLDT_{label}",
+                    "is_multiple": False,
+                    "length": 4,
+                    "is_cdisc_defined": False,
+                },
+            },
+        )
+        assert_response_status_code(response, 201)
+        created_uid = response.json()["uid"]
+        assert (
+            response.json()["non_standard_variable"]["nsvxmldt"] == "AIC_NSVXMLDT_LEAF"
+        ), f"list-adjacent create response should resolve nsvxmldt for {label} term"
+
+        get_res = api_client.get(f"/activity-item-classes/{created_uid}").json()
+        assert get_res["non_standard_variable"]["nsvxmldt"] == "AIC_NSVXMLDT_LEAF"
+
+        list_res = parse_json_response(
+            api_client.get(
+                "/activity-item-classes",
+                params={"is_nsv": "true", "page_size": 1000, "total_count": True},
+            )
+        )
+        listed = next(item for item in list_res["items"] if item["uid"] == created_uid)
+        assert listed["non_standard_variable"]["nsvxmldt"] == "AIC_NSVXMLDT_LEAF"
 
 
 def test_patch_activity_item_class_valid_codelist_uids(api_client):
@@ -1581,6 +1691,270 @@ def test_nsv_is_cdisc_defined_filter_headers_and_export(api_client):
     assert csv_header_line.index(
         "non_standard_variable.is_multiple"
     ) < csv_header_line.index("non_standard_variable.is_cdisc_defined")
+
+    # The "semtcdt.name" column must resolve to the ActivityItemClass.semtcdt
+    # response field (renamed from data_type). A stale "data_type.name" export
+    # default silently resolves to "" for every row instead of erroring.
+    csv_rows = list(
+        csv.DictReader(io.StringIO(export_response.content.decode("utf-8")))
+    )
+    row_true = next(row for row in csv_rows if row["uid"] == uid_true)
+    row_false = next(row for row in csv_rows if row["uid"] == uid_false)
+    assert row_true["semtcdt.name"] == data_type_term.sponsor_preferred_name
+    assert row_false["semtcdt.name"] == data_type_term.sponsor_preferred_name
+
+
+def test_nsv_nci_concept_id_headers_do_not_include_activity_item_class_codes(
+    api_client,
+):
+    """
+    SCENARIO: NSV NCI Code filter headers must not list Activity Item Class NCI codes
+    GIVEN a standard Activity Item Class and an NSV with distinct nci_concept_id values
+    WHEN GET /activity-item-classes/headers?field_name=nci_concept_id is called with is_nsv
+    THEN is_nsv=true returns only the NSV NCI code
+    AND is_nsv=false returns only the Activity Item Class NCI code
+    AND sending lite=true (as the UI does) still applies the same scoping
+    """
+    aic_nci = "C-AIC-HDR-ONLY"
+    nsv_nci = "C-NSV-HDR-ONLY"
+
+    aic_response = api_client.post(
+        "/activity-item-classes",
+        json={
+            "name": "AIC NCI header leak sentinel",
+            "order": 401,
+            "library_name": "Sponsor",
+            "nci_concept_id": aic_nci,
+            "activity_instance_classes": [
+                {
+                    "uid": activity_instance_class.uid,
+                    "mandatory": True,
+                    "is_adam_param_specific_enabled": False,
+                    "is_additional_optional": False,
+                    "is_default_linked": False,
+                }
+            ],
+            "role_uid": role_term.term_uid,
+            "data_type_uid": data_type_term.term_uid,
+        },
+    )
+    assert_response_status_code(aic_response, 201)
+
+    nsv_response = api_client.post(
+        "/activity-item-classes",
+        json={
+            "name": "NSV NCI header leak sentinel",
+            "order": 402,
+            "library_name": "Sponsor",
+            "nci_concept_id": nsv_nci,
+            "activity_instance_classes": [
+                {
+                    "uid": activity_instance_class.uid,
+                    "mandatory": True,
+                    "is_adam_param_specific_enabled": False,
+                    "is_additional_optional": False,
+                    "is_default_linked": False,
+                }
+            ],
+            "role_uid": role_term.term_uid,
+            "data_type_uid": data_type_term.term_uid,
+            "non_standard_variable": {
+                "code": "NCIHDR",
+                "is_multiple": False,
+                "length": 8,
+                "is_cdisc_defined": False,
+            },
+        },
+    )
+    assert_response_status_code(nsv_response, 201)
+
+    for lite in (True, False):
+        nsv_headers = parse_json_response(
+            api_client.get(
+                "/activity-item-classes/headers",
+                params={
+                    "field_name": "nci_concept_id",
+                    "search_string": "HDR-ONLY",
+                    "page_size": 50,
+                    "is_nsv": "true",
+                    "lite": str(lite).lower(),
+                },
+            )
+        )
+        assert nsv_nci in nsv_headers
+        assert aic_nci not in nsv_headers
+
+        aic_headers = parse_json_response(
+            api_client.get(
+                "/activity-item-classes/headers",
+                params={
+                    "field_name": "nci_concept_id",
+                    "search_string": "HDR-ONLY",
+                    "page_size": 50,
+                    "is_nsv": "false",
+                    "lite": str(lite).lower(),
+                },
+            )
+        )
+        assert aic_nci in aic_headers
+        assert nsv_nci not in aic_headers
+
+
+def test_nsv_status_headers_match_filtered_table(api_client):
+    """
+    SCENARIO: NSV Status filter headers stay in sync with the filtered table
+    GIVEN a Draft NSV and a Final NSV with distinct names
+    WHEN GET /activity-item-classes/headers?field_name=status is called with is_nsv
+         and a filter that leaves only the Draft NSV
+    THEN the header values contain Draft and do not contain Final
+    AND listing NSVs with status=Draft returns the Draft NSV
+    """
+    draft_name = "NSV-STATUS-HDR-DRAFT-ONLY"
+    final_name = "NSV-STATUS-HDR-FINAL-ONLY"
+
+    draft_response = _post_activity_item_class(
+        api_client,
+        name=draft_name,
+        order=403,
+        non_standard_variable={
+            "code": "STSDRAFT",
+            "is_multiple": False,
+            "length": 8,
+            "is_cdisc_defined": False,
+        },
+    )
+    assert_response_status_code(draft_response, 201)
+    assert draft_response.json()["status"] == "Draft"
+
+    final_response = _post_activity_item_class(
+        api_client,
+        name=final_name,
+        order=404,
+        non_standard_variable={
+            "code": "STSFINAL",
+            "is_multiple": False,
+            "length": 8,
+            "is_cdisc_defined": False,
+        },
+    )
+    assert_response_status_code(final_response, 201)
+    approve_response = api_client.post(
+        f"/activity-item-classes/{final_response.json()['uid']}/approvals"
+    )
+    assert_response_status_code(approve_response, 201)
+    assert approve_response.json()["status"] == "Final"
+
+    draft_only_headers = parse_json_response(
+        api_client.get(
+            "/activity-item-classes/headers",
+            params={
+                "field_name": "status",
+                "page_size": 50,
+                "is_nsv": "true",
+                "filters": json.dumps({"name": {"v": [draft_name]}}),
+            },
+        )
+    )
+    assert "Draft" in draft_only_headers
+    assert "Final" not in draft_only_headers
+
+    final_only_headers = parse_json_response(
+        api_client.get(
+            "/activity-item-classes/headers",
+            params={
+                "field_name": "status",
+                "page_size": 50,
+                "is_nsv": "true",
+                "filters": json.dumps({"name": {"v": [final_name]}}),
+            },
+        )
+    )
+    assert "Final" in final_only_headers
+    assert "Draft" not in final_only_headers
+
+    draft_list = parse_json_response(
+        api_client.get(
+            "/activity-item-classes",
+            params={
+                "is_nsv": "true",
+                "filters": json.dumps({"status": {"v": ["Draft"]}}),
+                "page_size": 0,
+                "total_count": True,
+            },
+        )
+    )
+    draft_names = [item["name"] for item in draft_list["items"]]
+    assert draft_name in draft_names
+    assert final_name not in draft_names
+
+
+def test_nsv_length_headers_search_string_matches_numeric_values(api_client):
+    """
+    SCENARIO: NSV Length filter search_string must match numeric length values
+    GIVEN two NSVs with distinct lengths 42 and 99
+    WHEN GET /activity-item-classes/headers?field_name=non_standard_variable.length
+         is called with is_nsv=true and search_string=42
+    THEN 42 is returned and 99 is not
+    AND listing NSVs filtered by length 42 still returns the matching NSV
+    """
+    length_match = 42
+    length_other = 99
+
+    match_response = _post_activity_item_class(
+        api_client,
+        name="NSV-LENGTH-HDR-SEARCH-42",
+        order=405,
+        non_standard_variable={
+            "code": "LEN42NSV",
+            "is_multiple": False,
+            "length": length_match,
+            "is_cdisc_defined": False,
+        },
+    )
+    assert_response_status_code(match_response, 201)
+
+    other_response = _post_activity_item_class(
+        api_client,
+        name="NSV-LENGTH-HDR-SEARCH-99",
+        order=406,
+        non_standard_variable={
+            "code": "LEN99NSV",
+            "is_multiple": False,
+            "length": length_other,
+            "is_cdisc_defined": False,
+        },
+    )
+    assert_response_status_code(other_response, 201)
+
+    searched_headers = parse_json_response(
+        api_client.get(
+            "/activity-item-classes/headers",
+            params={
+                "field_name": "non_standard_variable.length",
+                "search_string": str(length_match),
+                "page_size": 50,
+                "is_nsv": "true",
+            },
+        )
+    )
+    assert length_match in searched_headers
+    assert length_other not in searched_headers
+
+    exact_list = parse_json_response(
+        api_client.get(
+            "/activity-item-classes",
+            params={
+                "is_nsv": "true",
+                "filters": json.dumps(
+                    {"non_standard_variable.length": {"v": [length_match]}}
+                ),
+                "page_size": 0,
+            },
+        )
+    )
+    names = [item["name"] for item in exact_list["items"]]
+    assert "NSV-LENGTH-HDR-SEARCH-42" in names
+    assert "NSV-LENGTH-HDR-SEARCH-99" not in names
 
 
 def _post_activity_item_class(
@@ -1865,3 +2239,52 @@ def test_edit_converting_standard_to_nsv_name_conflict_with_existing_nsv(api_cli
         res["message"]
         == "Activity Item Class with Name 'Edit Conversion NSV Name Holder' already exists."
     )
+
+
+def test_headers_endpoint_respects_is_nsv_filter(api_client):
+    """
+    Regression test for bug/922457:
+    GET /activity-item-classes/headers had no is_nsv query parameter at all, so the
+    header/autocomplete endpoint always returned a mix of NSV and non-NSV values
+    regardless of how the main list endpoint was being filtered by is_nsv.
+    """
+    nsv_name = "HeadersNSVItem922457"
+    plain_name = "HeadersPlainItem922457"
+
+    nsv_response = _post_activity_item_class(
+        api_client,
+        name=nsv_name,
+        order=922457,
+        non_standard_variable={
+            "code": "NSV_922457",
+            "is_multiple": False,
+            "length": 8,
+            "is_cdisc_defined": False,
+        },
+    )
+    assert_response_status_code(nsv_response, 201)
+
+    plain_response = _post_activity_item_class(
+        api_client, name=plain_name, order=922458
+    )
+    assert_response_status_code(plain_response, 201)
+
+    nsv_headers = parse_json_response(
+        api_client.get(
+            "/activity-item-classes/headers",
+            params={"field_name": "name", "is_nsv": "true", "page_size": 1000},
+        ),
+        assert_status=200,
+    )
+    assert nsv_name in nsv_headers
+    assert plain_name not in nsv_headers
+
+    plain_headers = parse_json_response(
+        api_client.get(
+            "/activity-item-classes/headers",
+            params={"field_name": "name", "is_nsv": "false", "page_size": 1000},
+        ),
+        assert_status=200,
+    )
+    assert plain_name in plain_headers
+    assert nsv_name not in plain_headers

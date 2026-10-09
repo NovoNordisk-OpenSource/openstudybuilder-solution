@@ -219,7 +219,7 @@ class StudyDiseaseMilestoneService:
         return StudyDiseaseMilestoneVO(
             study_uid=study_uid,
             order=study_disease_milestone_create_input.order,  # type: ignore[arg-type]
-            start_date=datetime.datetime.now(datetime.timezone.utc),
+            start_date=datetime.datetime.now(datetime.UTC),
             status=StudyStatus.DRAFT,
             author_id=self.author,
             author_username=UserInfoService.get_author_username_from_id(self.author),

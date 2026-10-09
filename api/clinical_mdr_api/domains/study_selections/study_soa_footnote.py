@@ -1,6 +1,7 @@
+from collections.abc import Callable
 from dataclasses import dataclass, replace
 from datetime import datetime
-from typing import Callable, Self
+from typing import Self
 
 from clinical_mdr_api.domains.study_selections.study_selection_base import SoAItemType
 from common.exceptions import AlreadyExistsException
@@ -33,6 +34,7 @@ class StudySoAFootnoteVOHistory:
     author_username: str | None = None
     is_deleted: bool = False
     accepted_version: bool = False
+    layout: str | None = None
 
 
 @dataclass
@@ -59,6 +61,7 @@ class StudySoAFootnoteVO:
     author_username: str | None = None
     is_deleted: bool = False
     accepted_version: bool = False
+    layout: str | None = None
 
     @classmethod
     def from_input_values(
@@ -84,6 +87,7 @@ class StudySoAFootnoteVO:
         generate_uid_callback: Callable[[], str] = lambda: "",
         accepted_version: bool = False,
         author_username: str | None = None,
+        layout: str | None = None,
     ) -> Self:
         footnote_ar = cls(
             uid=generate_uid_callback(),
@@ -107,6 +111,7 @@ class StudySoAFootnoteVO:
             author_username=author_username,
             modified=modified,
             accepted_version=accepted_version,
+            layout=layout,
         )
         return footnote_ar
 
@@ -134,6 +139,7 @@ class StudySoAFootnoteVO:
         footnote_template_library_name: str | None = None,
         footnote_template_parameters: list[str] | None = None,
         author_username: str | None = None,
+        layout: str | None = None,
     ) -> Self:
         footnote_ar = cls(
             uid=uid,
@@ -157,6 +163,7 @@ class StudySoAFootnoteVO:
             author_id=author_id,
             author_username=author_username,
             accepted_version=accepted_version,
+            layout=layout,
         )
         return footnote_ar
 

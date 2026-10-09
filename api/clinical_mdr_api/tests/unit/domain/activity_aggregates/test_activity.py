@@ -1,5 +1,5 @@
 import unittest
-from typing import Callable
+from collections.abc import Callable
 
 from clinical_mdr_api.domains.concepts.activities.activity import (
     ActivityAR,
@@ -43,8 +43,7 @@ def create_random_activity_vo() -> ActivityVO:
 
 
 def create_random_activity_ar(
-    # pylint: disable=unnecessary-lambda
-    generate_uid_callback: Callable[[], str] = lambda: random_str(),
+    generate_uid_callback: Callable[[], str] = random_str,
     library: str = "Library",
     is_editable: bool = True,
 ) -> ActivityAR:

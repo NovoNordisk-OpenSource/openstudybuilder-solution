@@ -15,6 +15,9 @@ from common.exceptions import BusinessLogicException
 
 log = logging.getLogger(__name__)
 
+# Length of a valid (expression, alias) pair in extra_return
+EXPRESSION_ALIAS_PAIR_LENGTH = 2
+
 
 def build_root_summary_return_statement(root_alias, extra_return=None):
     if extra_return is None:
@@ -27,7 +30,7 @@ def build_root_summary_return_statement(root_alias, extra_return=None):
         with_expressions = []
 
         for item in extra_return:
-            if isinstance(item, tuple) and len(item) == 2:
+            if isinstance(item, tuple) and len(item) == EXPRESSION_ALIAS_PAIR_LENGTH:
                 # Tuple: (expression, alias)
                 expression, alias = item
                 # Add to WITH clause: expression AS alias
@@ -440,7 +443,7 @@ def execute_check_for_study(
             ),
             root_uids=root_uids,
         )
-    except Exception as e:  # pylint: disable=broad-exception-caught
+    except Exception as e:
         log.error("Error executing check %s: %s", check_id, e, exc_info=True)
         return CheckResult(
             check_id=check_id,

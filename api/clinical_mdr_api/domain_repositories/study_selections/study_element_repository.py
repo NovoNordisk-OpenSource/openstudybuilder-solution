@@ -105,12 +105,11 @@ class StudySelectionElementRepository:
             else:
                 query = "MATCH (sr:StudyRoot { uid: $uid})-[l:LATEST]->(sv:StudyValue)"
                 query_parameters["uid"] = study_uid
+        elif study_value_version:
+            query = "MATCH (sr:StudyRoot)-[l:HAS_VERSION{status:'RELEASED', version:$study_value_version}]->(sv:StudyValue)"
+            query_parameters["study_value_version"] = study_value_version
         else:
-            if study_value_version:
-                query = "MATCH (sr:StudyRoot)-[l:HAS_VERSION{status:'RELEASED', version:$study_value_version}]->(sv:StudyValue)"
-                query_parameters["study_value_version"] = study_value_version
-            else:
-                query = "MATCH (sr:StudyRoot)-[l:LATEST]->(sv:StudyValue)"
+            query = "MATCH (sr:StudyRoot)-[l:LATEST]->(sv:StudyValue)"
 
         if project_name is not None or project_number is not None:
             query += (
@@ -313,7 +312,6 @@ class StudySelectionElementRepository:
         )
         return len(sdc_node) > 0
 
-    # pylint: disable=unused-argument
     def save(self, study_selection: StudySelectionElementAR, author_id: str) -> None:
         """
         Persist the set of selected study element from the aggregate to the database

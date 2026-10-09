@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Any, TypeVar
+from typing import Any
 
 from neomodel import db
 
@@ -44,8 +44,6 @@ from clinical_mdr_api.utils import normalize_string
 from common import exceptions
 from common.auth.user import user
 from common.exceptions import BusinessLogicException, NotFoundException
-
-_AggregateRootType = TypeVar("_AggregateRootType")
 
 
 class CTTermService:
@@ -98,6 +96,10 @@ class CTTermService:
                 )
             )
             BusinessLogicException.raise_if(
+                ct_codelist_attributes_ar is None,
+                msg=f"CT Codelist with UID '{codelist.codelist_uid}' doesn't exist.",
+            )
+            BusinessLogicException.raise_if(
                 ct_codelist_attributes_ar
                 and ct_codelist_attributes_ar.item_metadata.status
                 is LibraryItemStatus.DRAFT,
@@ -111,6 +113,10 @@ class CTTermService:
             )
             ct_codelist_name_ar = self._repos.ct_codelist_name_repository.find_by_uid(
                 codelist_uid=codelist.codelist_uid
+            )
+            BusinessLogicException.raise_if(
+                ct_codelist_name_ar is None,
+                msg=f"CT Codelist with UID '{codelist.codelist_uid}' doesn't exist.",
             )
             if (
                 ct_codelist_name_ar is not None
@@ -175,6 +181,7 @@ class CTTermService:
                 required_level=(ts_parameter.required_level if ts_parameter else None),
                 cardinality=ts_parameter.cardinality if ts_parameter else None,
                 notes=ts_parameter.notes if ts_parameter else None,
+                short_code=ts_parameter.short_code if ts_parameter else None,
                 osb_field_name=(ts_parameter.osb_field_name if ts_parameter else None),
                 osb_page_reference=(
                     ts_parameter.osb_page_reference if ts_parameter else None
@@ -500,9 +507,14 @@ class CTTermService:
                 at_specific_date_time=at_specific_date_time,
             )
         )
+        term_library_name = (
+            self._repos.ct_term_aggregated_repository.find_term_library_name(term_uid)
+        )
 
         return CTTermCodelists.from_ct_term_codelists(
-            term_uid=term_uid, ct_term_codelists=ct_term_codelists
+            term_uid=term_uid,
+            term_library_name=term_library_name,
+            ct_term_codelists=ct_term_codelists,
         )
 
     def get_parents_by_uid(

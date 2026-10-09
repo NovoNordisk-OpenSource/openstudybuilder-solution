@@ -1,9 +1,9 @@
 import copy
+from collections.abc import Mapping, MutableSequence, Sequence
 from dataclasses import dataclass, fields, replace
-from datetime import date as date_type
-from datetime import datetime, time, timezone
+from datetime import UTC, date as date_type, datetime, time
 from decimal import Decimal
-from typing import Any, Mapping, MutableSequence, Sequence, cast, overload
+from typing import Any, ClassVar, cast, overload
 
 from neomodel import db
 from neomodel.exceptions import DoesNotExist
@@ -683,7 +683,7 @@ class StudyDefinitionRepositoryImpl(StudyDefinitionRepository, RepositoryImpl):
         latest_released: VersionRelationship | None = additional_closure.latest_released
         latest_locked: VersionRelationship | None = additional_closure.latest_locked
         root: StudyRoot = additional_closure.root
-        date = datetime.now(timezone.utc)
+        date = datetime.now(UTC)
 
         # we do nothing if nothing changed
         if previous_snapshot == current_snapshot and not is_subpart_relationship_update:
@@ -970,50 +970,49 @@ class StudyDefinitionRepositoryImpl(StudyDefinitionRepository, RepositoryImpl):
                         current_snapshot.current_metadata.ver_metadata.version_timestamp
                     )
                     latest_released.save()
-            else:
-                # if we have some new released_metadata we either initialize LATEST_RELEASED relationship (if there is
-                # none) or update and reconnect existing if there is one
-                if latest_released is None:  # initialize LATEST_RELEASED
-                    version_properties = {
-                        "start_date": current_snapshot.released_metadata.ver_metadata.version_timestamp,
-                        "status": StudyStatus.RELEASED.value,
-                        "author_id": self.audit_info.author_id,
-                        "version": current_snapshot.released_metadata.ver_metadata.version_number,
-                        "change_description": current_snapshot.released_metadata.ver_metadata.version_description,
-                    }
-                    root.latest_released.connect(
-                        study_value_node_to_connect, properties=version_properties
-                    )
-                    root.has_version.connect(
-                        study_value_node_to_connect, properties=version_properties
-                    )
-                else:  # update and reconnect goes below
-                    latest_released.start_date = (
-                        current_snapshot.released_metadata.ver_metadata.version_timestamp
-                    )
-                    latest_released.change_description = (
-                        current_snapshot.released_metadata.ver_metadata.version_description
-                    )
-                    latest_released.author_id = self.audit_info.author_id
-                    latest_released.version = (
-                        current_snapshot.released_metadata.ver_metadata.version_number
-                    )
-                    latest_released.end_date = None
-                    latest_released.save()
-                    root.has_version.connect(
-                        study_value_node_to_connect,
-                        properties={
-                            "start_date": latest_released.start_date,
-                            "status": latest_released.status,
-                            "author_id": latest_released.author_id,
-                            "version": latest_released.version,
-                            "change_description": latest_released.change_description,
-                        },
-                    )
-                    root.latest_released.reconnect(
-                        old_node=latest_released.end_node(),
-                        new_node=study_value_node_to_connect,
-                    )
+            # if we have some new released_metadata we either initialize LATEST_RELEASED relationship (if there is
+            # none) or update and reconnect existing if there is one
+            elif latest_released is None:  # initialize LATEST_RELEASED
+                version_properties = {
+                    "start_date": current_snapshot.released_metadata.ver_metadata.version_timestamp,
+                    "status": StudyStatus.RELEASED.value,
+                    "author_id": self.audit_info.author_id,
+                    "version": current_snapshot.released_metadata.ver_metadata.version_number,
+                    "change_description": current_snapshot.released_metadata.ver_metadata.version_description,
+                }
+                root.latest_released.connect(
+                    study_value_node_to_connect, properties=version_properties
+                )
+                root.has_version.connect(
+                    study_value_node_to_connect, properties=version_properties
+                )
+            else:  # update and reconnect goes below
+                latest_released.start_date = (
+                    current_snapshot.released_metadata.ver_metadata.version_timestamp
+                )
+                latest_released.change_description = (
+                    current_snapshot.released_metadata.ver_metadata.version_description
+                )
+                latest_released.author_id = self.audit_info.author_id
+                latest_released.version = (
+                    current_snapshot.released_metadata.ver_metadata.version_number
+                )
+                latest_released.end_date = None
+                latest_released.save()
+                root.has_version.connect(
+                    study_value_node_to_connect,
+                    properties={
+                        "start_date": latest_released.start_date,
+                        "status": latest_released.status,
+                        "author_id": latest_released.author_id,
+                        "version": latest_released.version,
+                        "change_description": latest_released.change_description,
+                    },
+                )
+                root.latest_released.reconnect(
+                    old_node=latest_released.end_node(),
+                    new_node=study_value_node_to_connect,
+                )
 
     def _maintain_has_version_relationship_on_save(
         self,
@@ -1150,13 +1149,12 @@ class StudyDefinitionRepositoryImpl(StudyDefinitionRepository, RepositoryImpl):
                 old_node=latest_draft_relationship.end_node(),
                 new_node=expected_latest_value,
             )
-        else:  # if it's not in DRAFT (anymore)
-            # then we may need to close (set end date) on LATEST_DRAFT (if it's not already closed)
-            if latest_draft_relationship.end_date is None:
-                latest_draft_relationship.end_date = (
-                    current_snapshot.current_metadata.ver_metadata.version_timestamp
-                )
-                latest_draft_relationship.save()
+        # then we may need to close (set end date) on LATEST_DRAFT (if it's not already closed)
+        elif latest_draft_relationship.end_date is None:
+            latest_draft_relationship.end_date = (
+                current_snapshot.current_metadata.ver_metadata.version_timestamp
+            )
+            latest_draft_relationship.save()
 
     def _maintain_study_project_field_relationship(
         self,
@@ -2383,7 +2381,7 @@ class StudyDefinitionRepositoryImpl(StudyDefinitionRepository, RepositoryImpl):
         value.has_project.connect(study_project_field_node)
 
         # Log the study value creation in the audit trail
-        date = datetime.now(timezone.utc)
+        date = datetime.now(UTC)
         self._generate_study_value_audit_node(
             study_root_node=root,
             study_value_node_after=value,
@@ -3045,7 +3043,7 @@ MATCH (sr:StudyRoot)-[:LATEST]->(sv)
             study_field_node_before=None,
             change_status=None,
             author_id=self.audit_info.author_id,
-            date=datetime.now(timezone.utc),
+            date=datetime.now(UTC),
         )
         return self.get_preferred_time_unit(
             study_uid=study_uid, for_protocol_soa=for_protocol_soa
@@ -3104,7 +3102,7 @@ MATCH (sr:StudyRoot)-[:LATEST]->(sv)
             study_field_node_before=previous_time_field,
             change_status=None,
             author_id=self.audit_info.author_id,
-            date=datetime.now(timezone.utc),
+            date=datetime.now(UTC),
         )
         return self.get_preferred_time_unit(
             study_uid=study_uid, for_protocol_soa=for_protocol_soa
@@ -3414,7 +3412,7 @@ MATCH (sr:StudyRoot)-[:LATEST]->(sv)
     # StudyValue relationship attribute). Used both when persisting new
     # values (POST/PATCH) and when locating the existing field of a
     # previous data type to detach it.
-    _OTHER_ATTRIBUTE_TYPE_MAP: dict[str, tuple[type[StudyField], str]] = {
+    _OTHER_ATTRIBUTE_TYPE_MAP: ClassVar[dict[str, tuple[type[StudyField], str]]] = {
         "Boolean": (StudyBooleanField, "has_boolean_field"),
         "Date": (StudyTimeField, "has_time_field"),
         "DateTime": (StudyTimeField, "has_time_field"),
@@ -3539,7 +3537,7 @@ MATCH (sr:StudyRoot)-[:LATEST]->(sv)
         return GenericFilteringReturn(items=rows, total=total)
 
     # Map nested response-model field names to internal flat column aliases
-    _OTHER_ATTR_FIELD_MAP: dict[str, str] = {
+    _OTHER_ATTR_FIELD_MAP: ClassVar[dict[str, str]] = {
         "response_codelist.sponsor_preferred_name": "response_codelist_name",
         "response_codelist.uid": "response_codelist_uid",
         "null_flavor.sponsor_preferred_name": "null_flavor_term_name",
@@ -3762,7 +3760,7 @@ MATCH (sr:StudyRoot)-[:LATEST]->(sv)
             study_field_node_before=None,
             change_status=None,
             author_id=self.audit_info.author_id,
-            date=datetime.now(timezone.utc),
+            date=datetime.now(UTC),
         )
 
     def edit_study_other_attribute(
@@ -3811,7 +3809,7 @@ MATCH (sr:StudyRoot)-[:LATEST]->(sv)
             study_field_node_before=previous_field,
             change_status=None,
             author_id=self.audit_info.author_id,
-            date=datetime.now(timezone.utc),
+            date=datetime.now(UTC),
         )
 
     def delete_study_other_attribute(
@@ -3847,7 +3845,7 @@ MATCH (sr:StudyRoot)-[:LATEST]->(sv)
             study_field_node_before=existing_field,
             change_status=None,
             author_id=self.audit_info.author_id,
-            date=datetime.now(timezone.utc),
+            date=datetime.now(UTC),
         )
 
     @staticmethod
@@ -3988,7 +3986,7 @@ MATCH (sr:StudyRoot)-[:LATEST]->(sv)
                 study_field_node_before=None,
                 change_status=None,
                 author_id=self.audit_info.author_id,
-                date=datetime.now(timezone.utc),
+                date=datetime.now(UTC),
             )
 
         return self.get_soa_preferences(study_uid=study_uid)
@@ -4026,7 +4024,7 @@ MATCH (sr:StudyRoot)-[:LATEST]->(sv)
                 study_field_node_before=_nodes.get(name, None),
                 change_status=None,
                 author_id=self.audit_info.author_id,
-                date=datetime.now(timezone.utc),
+                date=datetime.now(UTC),
             )
 
         return self.get_soa_preferences(study_uid=study_uid)
@@ -4148,7 +4146,7 @@ MATCH (sr:StudyRoot)-[:LATEST]->(sv)
             study_field_node_before=previous_study_array_field,
             change_status=None,
             author_id=self.audit_info.author_id,
-            date=datetime.now(timezone.utc),
+            date=datetime.now(UTC),
         )
 
         return new_study_array_field
@@ -4201,7 +4199,7 @@ MATCH (sr:StudyRoot)-[:LATEST]->(sv)
             study_field_node_before=previous_study_array_field,
             change_status=None,
             author_id=self.audit_info.author_id,
-            date=datetime.now(timezone.utc),
+            date=datetime.now(UTC),
         )
 
         return new_study_array_field
@@ -4235,5 +4233,5 @@ MATCH (sr:StudyRoot)-[:LATEST]->(sv)
                 study_field_node_after=None,
                 change_status=None,
                 author_id=self.audit_info.author_id,
-                date=datetime.now(timezone.utc),
+                date=datetime.now(UTC),
             )

@@ -13,11 +13,11 @@ A Verification pipeline (ADO, retired — to be re-authored as a GitHub Actions 
 
 ## Installation
 
-Python 3.14 and Pipenv are prerequisites — see the
+Python 3.14 and uv are prerequisites — see the
 [root README](../README.md#prerequisites).
 
 ```sh
-pipenv sync --dev
+uv sync --group dev
 ```
 
 ## Available Actions
@@ -29,27 +29,27 @@ writes Allure result files.
 
 | Script | Tests selected | Reports produced |
 |--------|----------------|------------------|
-| `pipenv run test` | everything under `tests/` | JUnit XML, Cucumber JSON, coverage |
-| `pipenv run test-allure` | everything under `tests/` | the above **+ Allure results** |
-| `pipenv run test-only-endpoints` | `impact:api`, `impact:consumer_api`, `impact:api_soa` | JUnit XML, Cucumber JSON, coverage |
-| `pipenv run test-only-endpoints-allure` | same as above | the above **+ Allure results** |
-| `pipenv run test-only-db` | `impact:data_schema`, `impact:business_rules`, `impact:performance`, `impact:library_quality` | JUnit XML, Cucumber JSON, coverage |
-| `pipenv run test-only-db-allure` | same as above, **minus** `impact:library_quality` | the above **+ Allure results** |
+| `uv run poe test` | everything under `tests/` | JUnit XML, Cucumber JSON, coverage |
+| `uv run poe test-allure` | everything under `tests/` | the above **+ Allure results** |
+| `uv run poe test-only-endpoints` | `impact:api`, `impact:consumer_api`, `impact:api_soa` | JUnit XML, Cucumber JSON, coverage |
+| `uv run poe test-only-endpoints-allure` | same as above | the above **+ Allure results** |
+| `uv run poe test-only-db` | `impact:data_schema`, `impact:business_rules`, `impact:performance`, `impact:library_quality` | JUnit XML, Cucumber JSON, coverage |
+| `uv run poe test-only-db-allure` | same as above, **minus** `impact:library_quality` | the above **+ Allure results** |
 
 Any variant accepts extra pytest arguments, so a narrower selection can be run
 ad hoc without a dedicated script:
 
 ```sh
-pipenv run test -m impact:data_schema
-pipenv run test-allure -m "impact:api or impact:api_soa"
+uv run poe test -m impact:data_schema
+uv run poe test-allure -m "impact:api or impact:api_soa"
 ```
 
 Non-test actions:
 
-- `pipenv run format` — formats code with black and isort.
-- `pipenv run lint` — lints code with pylint.
-- `pipenv run token` — fetches an API auth token (`utils.auth`).
-- `pipenv run audit` — runs `pip-audit` against the locked dependencies.
+- `uv run poe format` — formats code with black and isort.
+- `uv run poe lint` — lints code with ruff.
+- `uv run poe token` — fetches an API auth token (`utils.auth`).
+- `uv run poe audit` — runs `pip-audit` against the locked dependencies.
 
 ## Test Selection Tags
 
@@ -58,9 +58,9 @@ tags. pytest-bdd turns each Gherkin tag into a pytest marker of the same name, s
 any tag can be used as a selector:
 
 ```sh
-pipenv run test -m impact:business_rules
-pipenv run test -m "impact:data_schema or impact:business_rules"
-pipenv run test -m "not impact:performance"
+uv run poe test -m impact:business_rules
+uv run poe test -m "impact:data_schema or impact:business_rules"
+uv run poe test -m "not impact:performance"
 ```
 
 Each tag states which category the test belongs to and how critical a failure in
@@ -83,9 +83,10 @@ name.
 A `@REQ_ID:<id>` tag on a scenario is picked up by the same hook and attached to
 the Allure result as a `requirement` label.
 
-Registered markers live in `pyproject.toml` under
-`[tool.pytest.ini_options].markers`; the severity mapping lives in
-`tests/conftest.py` (`IMPACT_TO_SEVERITY`). Adding a new tag means touching both.
+Registered markers and available commands live in `pyproject.toml` under
+`[tool.pytest.ini_options].markers` and `[tool.poe.tasks]`; the severity mapping
+lives in `tests/conftest.py` (`IMPACT_TO_SEVERITY`). Adding a new tag means
+touching both relevant sections.
 
 ## Test Reports
 
@@ -162,9 +163,9 @@ file. That directory is the publishable artefact:
 Pick the `-allure` variant matching the scope you want published:
 
 ```sh
-pipenv run test-allure                      # whole suite
-pipenv run test-only-endpoints-allure       # API/endpoint tests only
-pipenv run test-only-db-allure              # database tests only
+uv run poe test-allure                      # whole suite
+uv run poe test-only-endpoints-allure       # API/endpoint tests only
+uv run poe test-only-db-allure              # database tests only
 ```
 
 To view a run locally, install the [Allure Report](https://allurereport.org/docs/install/)
@@ -177,4 +178,3 @@ allure generate reports/allure-results -o reports/allure-report --clean
 
 `allure serve` is a developer convenience only. Trend and history across runs
 come from the Allure server, not from a local `generate`.
-

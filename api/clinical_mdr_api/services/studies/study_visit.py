@@ -11,8 +11,6 @@ from clinical_mdr_api.domain_repositories._utils.helpers import (
 from clinical_mdr_api.domain_repositories.models._utils import ListDistinct
 from clinical_mdr_api.domain_repositories.models.study_visit import (
     StudyVisit as StudyVisitNeoModel,
-)
-from clinical_mdr_api.domain_repositories.models.study_visit import (
     StudyVisitGroup,
 )
 from clinical_mdr_api.domain_repositories.study_selections.study_visit_repository import (
@@ -82,11 +80,7 @@ from clinical_mdr_api.models.study_selections.study_visit import (
     StudyVisitCreateInput,
     StudyVisitDetailed,
     StudyVisitEditInput,
-)
-from clinical_mdr_api.models.study_selections.study_visit import (
     StudyVisitGroup as StudyVisitGroupModel,
-)
-from clinical_mdr_api.models.study_selections.study_visit import (
     StudyVisitLite,
     StudyVisitVersion,
 )
@@ -116,6 +110,10 @@ from common.exceptions import (
 )
 from common.telemetry import trace_calls
 from common.utils import TimeUnit, VisitClass, VisitSubclass, convert_to_datetime
+
+# Minimum number of visits in the schedule required to check a visit that is
+# neither the first nor the last one against both of its neighbours
+MIN_VISITS_FOR_MIDDLE_CHRONOLOGICAL_CHECK = 2
 
 
 class StudyVisitService(StudySelectionMixin):
@@ -504,7 +502,9 @@ class StudyVisitService(StudySelectionMixin):
                             ordered_visits=[ordered_visits[idx - 1], visit_vo],
                         )
                     # If visit which is about to be created is not the first or the last one visit in the schedule
-                    elif len(ordered_visits) > 2:
+                    elif (
+                        len(ordered_visits) > MIN_VISITS_FOR_MIDDLE_CHRONOLOGICAL_CHECK
+                    ):
                         chronological_order_dict = self._chronological_order_check(
                             visit_vo=visit_vo,
                             ordered_visits=[
@@ -629,6 +629,10 @@ class StudyVisitService(StudySelectionMixin):
                 )
 
         if visit_vo.is_global_anchor_visit:
+            ValidationException.raise_if(
+                visit_vo.visit_class in visit_classes_without_timing,
+                msg=f"The field 'is_global_anchor_visit' is not allowed for the Visit with Visit Class '{visit_vo.visit_class.value}'.",
+            )
             BusinessLogicException.raise_if(
                 (
                     visit_vo.timepoint.visit_value != 0
@@ -1027,7 +1031,7 @@ class StudyVisitService(StudySelectionMixin):
                 else None
             ),
             visit_type=visit_type,
-            start_date=datetime.datetime.now(datetime.timezone.utc),
+            start_date=datetime.datetime.now(datetime.UTC),
             author_id=self.author,
             author_username=UserInfoService().get_author_username_from_id(
                 user_id=self.author

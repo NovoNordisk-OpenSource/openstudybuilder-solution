@@ -1,5 +1,6 @@
 import ast
 import sys
+from typing import ClassVar
 
 from rich import print as rptint
 from rich.table import Table
@@ -8,7 +9,7 @@ from sblint.sblinter import SBLinter
 
 
 class NoHTTPMethodsWithDisallowedStatusCode(SBLinter):
-    ALLOWED_STATUS_CODES = {
+    ALLOWED_STATUS_CODES: ClassVar[dict[str, list[int]]] = {
         "get": [200],
         "post": [200, 201, 202, 204, 207],
         "patch": [200, 207],

@@ -1,5 +1,5 @@
-from datetime import datetime, timezone
-from typing import Annotated, Any, Generic, Self, TypeVar
+from datetime import UTC, datetime
+from typing import Annotated, Any, Self
 
 from fastapi import Request
 from pydantic import BaseModel, Field
@@ -7,8 +7,6 @@ from requests.utils import requote_uri
 
 from common.utils import convert_to_datetime
 from consumer_api.shared.common import urlencode_link
-
-T = TypeVar("T")
 
 
 class StudyVersionSimple(BaseModel):
@@ -53,11 +51,11 @@ class StudyVersionSimple(BaseModel):
             version_number=version_number,
             version_started_at=version_started_at,
             version_ended_at=version_ended_at,
-            retrieved_at=datetime.now(timezone.utc),
+            retrieved_at=datetime.now(UTC),
         )
 
 
-class PaginatedResponse(BaseModel, Generic[T]):
+class PaginatedResponse[T](BaseModel):
     """
     Paginated response model
     """
@@ -101,7 +99,6 @@ class PaginatedResponse(BaseModel, Generic[T]):
         prev_link = f"{path}?{query_params}sort_by={sort_by}&sort_order={sort_order}&page_size={page_size}&page_number={prev_page_number}"
         next_link = f"{path}?{query_params}sort_by={sort_by}&sort_order={sort_order}&page_size={page_size}&page_number={page_number + 1}"
 
-        # pylint: disable=kwarg-superseded-by-positional-arg
         return cls(
             self=urlencode_link(self_link),
             prev=urlencode_link(prev_link),
@@ -110,7 +107,7 @@ class PaginatedResponse(BaseModel, Generic[T]):
         )
 
 
-class PaginatedResponseWithStudyVersion(PaginatedResponse, Generic[T]):
+class PaginatedResponseWithStudyVersion[T](PaginatedResponse[T]):
     """
     Paginated response model with study version
     """
@@ -120,7 +117,6 @@ class PaginatedResponseWithStudyVersion(PaginatedResponse, Generic[T]):
     ] = None
 
     @classmethod
-    # pylint: disable=arguments-renamed
     def from_input(
         cls,
         request: Request,

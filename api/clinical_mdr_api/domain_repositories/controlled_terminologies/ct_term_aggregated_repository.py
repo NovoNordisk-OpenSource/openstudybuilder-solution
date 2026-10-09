@@ -291,8 +291,7 @@ class CTTermAggregatedRepository:
 
         filter_by = validate_filter_by_dict(filter_by)
         filtering_active = (
-            filter_by is not None
-            and len(filter_by) > 0
+            (filter_by is not None and len(filter_by) > 0)
             or library is not None
             or package is not None
             or codelist_name is not None
@@ -494,7 +493,7 @@ class CTTermAggregatedRepository:
             "attributes.start_date",
             "attributes.version",
         ]:
-            prefix = field_name.split(".")[0]
+            prefix = field_name.split(".", maxsplit=1)[0]
             root = f"term_{prefix}_root"
             value = f"term_{prefix}_value"
 
@@ -527,7 +526,7 @@ class CTTermAggregatedRepository:
             "attributes.synonyms",
             "attributes.nci_preferred_name",  # Alias of `preferred_term`
         ]:
-            prefix = field_name.split(".")[0]
+            prefix = field_name.split(".", maxsplit=1)[0]
             db_property, alias = self._get_db_property_and_alias_for_api_field(
                 field_name
             )
@@ -585,7 +584,7 @@ class CTTermAggregatedRepository:
             "name.author_username",
             "attributes.author_username",
         ]:
-            prefix = field_name.split(".")[0]
+            prefix = field_name.split(".", maxsplit=1)[0]
             root = f"term_{prefix}_root"
             value = f"term_{prefix}_value"
 
@@ -716,15 +715,14 @@ class CTTermAggregatedRepository:
                 }
                 """
 
-        else:
-            if package:
-                match_clause = """
+        elif package:
+            match_clause = """
                 MATCH (package:CTPackage)-[:CONTAINS_CODELIST]->(:CTPackageCodelist)-[:CONTAINS_TERM]->(:CTPackageTerm)-
                 [:CONTAINS_ATTRIBUTES]->(term_attributes_value:CTTermAttributesValue)<--(term_attributes_root:CTTermAttributesRoot)<-[:HAS_ATTRIBUTES_ROOT]-
                 (term_root:CTTermRoot)-[:HAS_NAME_ROOT]->(term_name_root:CTTermNameRoot)-[:LATEST]->(term_name_value:CTTermNameValue)
                 """
-            else:
-                match_clause = """
+        else:
+            match_clause = """
                 MATCH (term_name_value:CTTermNameValue)<-[:LATEST]-(term_name_root:CTTermNameRoot)<-[:HAS_NAME_ROOT]-(term_root:CTTermRoot)
                 -[:HAS_ATTRIBUTES_ROOT]->(term_attributes_root:CTTermAttributesRoot)-[:LATEST]->(term_attributes_value:CTTermAttributesValue)
                 """
@@ -864,6 +862,14 @@ class CTTermAggregatedRepository:
         return self._create_term_codelists_from_cypher_result(
             result_array, attributes_names
         )
+
+    def find_term_library_name(self, term_uid: str) -> str | None:
+        query = """
+            MATCH (term_root:CTTermRoot {uid: $term_uid})<-[:CONTAINS_TERM]-(library:Library)
+            RETURN library.name AS library_name
+            """
+        result, _ = db.cypher_query(query, {"term_uid": term_uid})
+        return result[0][0] if result else None
 
     def _create_term_codelists_from_cypher_result(
         self, result_array: list[Any], attributes_names: list[str]

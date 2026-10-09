@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, Generic, TypeVar
+from typing import Any, TypeVar
 
 from neomodel import db
 from pydantic import BaseModel
@@ -21,7 +21,7 @@ from common.exceptions import BusinessLogicException, NotFoundException
 _AggregateRootType = TypeVar("_AggregateRootType")
 
 
-class NeomodelExtGenericService(ABC, Generic[_AggregateRootType]):
+class NeomodelExtGenericService[AggregateRootType](ABC):
     object_name: str
     _repos: MetaRepository
     author_id: str
@@ -39,16 +39,16 @@ class NeomodelExtGenericService(ABC, Generic[_AggregateRootType]):
     @abstractmethod
     def _create_aggregate_root(
         self, item_input: BaseModel, library: LibraryVO
-    ) -> _AggregateRootType:
+    ) -> AggregateRootType:
         raise NotImplementedError()
 
     @abstractmethod
-    def _edit_aggregate(self, item, item_edit_input: BaseModel) -> _AggregateRootType:
+    def _edit_aggregate(self, item, item_edit_input: BaseModel) -> AggregateRootType:
         raise NotImplementedError
 
     @abstractmethod
     def _transform_aggregate_root_to_pydantic_model(
-        self, item_ar: _AggregateRootType
+        self, item_ar: AggregateRootType
     ) -> BaseModel:
         raise NotImplementedError
 
@@ -122,7 +122,7 @@ class NeomodelExtGenericService(ABC, Generic[_AggregateRootType]):
 
     def _find_by_uid_or_raise_not_found(
         self, uid: str, for_update: bool
-    ) -> _AggregateRootType:
+    ) -> AggregateRootType:
         item = self.repository.find_by_uid_2(uid=uid, for_update=for_update)
 
         NotFoundException.raise_if(

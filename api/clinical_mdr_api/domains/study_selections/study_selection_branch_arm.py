@@ -1,6 +1,7 @@
 import datetime
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
-from typing import Any, Callable, Iterable, Self
+from typing import Any, Self
 
 from clinical_mdr_api.services.user_info import UserInfoService
 from clinical_mdr_api.utils import normalize_string
@@ -83,7 +84,7 @@ class StudySelectionBranchArmVO:
             study_selection_uid = generate_uid_callback()
 
         if start_date is None:
-            start_date = datetime.datetime.now(datetime.timezone.utc)
+            start_date = datetime.datetime.now(datetime.UTC)
 
         # returns a new instance of the VO
 
@@ -110,11 +111,11 @@ class StudySelectionBranchArmVO:
     def validate(
         self,
         study_branch_arm_study_arm_update_conflict_callback: Callable[
-            ["StudySelectionBranchArmVO"], bool
+            [StudySelectionBranchArmVO], bool
         ] = lambda _: True,
         study_arm_exists_callback: Callable[[str], bool] = lambda _: True,
         branch_arm_exists_callback_by: Callable[
-            [str, str, "StudySelectionBranchArmVO"], bool
+            [str, str, StudySelectionBranchArmVO], bool
         ] = lambda x, y, z: True,
     ) -> None:
         """
@@ -219,7 +220,8 @@ class StudySelectionBranchArmAR:
         raise exceptions.NotFoundException("Study Branch Arm", study_branch_arm_uid)
 
     def _add_selection(self, study_branch_arm_selection) -> None:
-        new_selections = self._study_branch_arms_selection + (
+        new_selections = (
+            *self._study_branch_arms_selection,
             study_branch_arm_selection,
         )
         self._study_branch_arms_selection = new_selections
@@ -331,7 +333,7 @@ class StudySelectionBranchArmAR:
         ] = lambda _: True,
         study_arm_exists_callback: Callable[[str], bool] = lambda _: True,
         branch_arm_exists_callback_by: Callable[
-            [str, str, "StudySelectionBranchArmVO"], bool
+            [str, str, StudySelectionBranchArmVO], bool
         ] = lambda x, y, z: True,
         validate: bool = True,
     ) -> None:

@@ -125,7 +125,9 @@ class StudySelectionCompoundRepository:
             query += " OPTIONAL MATCH (sc)-[:HAS_TYPE_OF_TREATMENT]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(tot:CTTermRoot)"
         query += """
             WITH DISTINCT sr, sv, sc, car, cr, mpr, tot
-            OPTIONAL MATCH (sc)-[:HAS_DELIVERY_DEVICE]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(deliveryDevice:CTTermRoot)-[:HAS_NAME_ROOT]->(:CTTermNameRoot)-[:LATEST]->(deliveryDeviceNameVal:CTTermNameValue)
+            OPTIONAL MATCH (sc)-[:HAS_DELIVERY_DEVICE]->(:CTTermContext)-[:HAS_SELECTED_TERM]->
+                (deliveryDevice:CTTermRoot)-[:HAS_NAME_ROOT]->(:CTTermNameRoot)-[:LATEST]->
+                (deliveryDeviceNameVal:CTTermNameValue)
             OPTIONAL MATCH (sc)-[:HAS_DISPENSED_IN]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(dispenser:CTTermRoot)-[:HAS_NAME_ROOT]->(:CTTermNameRoot)-[:LATEST]->(dispenserNameVal:CTTermNameValue)
             OPTIONAL MATCH (sc)-[:HAS_REASON_FOR_NULL_VALUE]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(nvr:CTTermRoot)
             OPTIONAL MATCH (sc)-[:STUDY_COMPOUND_HAS_COMPOUND_DOSING]->(scd:StudyCompoundDosing)<-[:HAS_STUDY_COMPOUND_DOSING]-(sv)
@@ -259,7 +261,9 @@ class StudySelectionCompoundRepository:
         WITH DISTINCT sr, sv, sc, car, cr, mpr
         OPTIONAL MATCH (sc)-[:HAS_TYPE_OF_TREATMENT]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(tot:CTTermRoot)
         WITH DISTINCT sr, sv, sc, car, cr, mpr, tot
-        OPTIONAL MATCH (sc)-[:HAS_DELIVERY_DEVICE]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(deliveryDevice:CTTermRoot)-[:HAS_NAME_ROOT]->(:CTTermNameRoot)-[:LATEST]->(deliveryDeviceNameVal:CTTermNameValue)
+        OPTIONAL MATCH (sc)-[:HAS_DELIVERY_DEVICE]->(:CTTermContext)-[:HAS_SELECTED_TERM]->
+            (deliveryDevice:CTTermRoot)-[:HAS_NAME_ROOT]->(:CTTermNameRoot)-[:LATEST]->
+            (deliveryDeviceNameVal:CTTermNameValue)
         OPTIONAL MATCH (sc)-[:HAS_DISPENSED_IN]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(dispenser:CTTermRoot)-[:HAS_NAME_ROOT]->(:CTTermNameRoot)-[:LATEST]->(dispenserNameVal:CTTermNameValue)
         OPTIONAL MATCH (sc)-[:HAS_REASON_FOR_NULL_VALUE]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(nvr:CTTermRoot)
         OPTIONAL MATCH (sc)-[:STUDY_COMPOUND_HAS_COMPOUND_DOSING]->(scd)<-[:HAS_STUDY_COMPOUND_DOSING]-(sv)
@@ -339,7 +343,9 @@ class StudySelectionCompoundRepository:
         WITH DISTINCT sc, sa, scd, car, cr, mpr
         OPTIONAL MATCH (sc)-[:HAS_TYPE_OF_TREATMENT]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(tot:CTTermRoot)
         WITH DISTINCT sc, sa, scd, car, cr, mpr, tot
-        OPTIONAL MATCH (sc)-[:HAS_DELIVERY_DEVICE]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(deliveryDevice:CTTermRoot)-[:HAS_NAME_ROOT]->(:CTTermNameRoot)-[:LATEST]->(deliveryDeviceNameVal:CTTermNameValue)
+        OPTIONAL MATCH (sc)-[:HAS_DELIVERY_DEVICE]->(:CTTermContext)-[:HAS_SELECTED_TERM]->
+            (deliveryDevice:CTTermRoot)-[:HAS_NAME_ROOT]->(:CTTermNameRoot)-[:LATEST]->
+            (deliveryDeviceNameVal:CTTermNameValue)
         OPTIONAL MATCH (sc)-[:HAS_DISPENSED_IN]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(dispenser:CTTermRoot)-[:HAS_NAME_ROOT]->(:CTTermNameRoot)-[:LATEST]->(dispenserNameVal:CTTermNameValue)
         OPTIONAL MATCH (sc)-[:HAS_REASON_FOR_NULL_VALUE]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(nvr:CTTermRoot)
 
@@ -412,7 +418,6 @@ class StudySelectionCompoundRepository:
             return Create()
         return Delete()
 
-    # pylint: disable=unused-argument
     def save(self, study_selection: StudySelectionCompoundsAR, author_id: str) -> None:
         """
         Persist the set of selected study compounds from the aggregate to the database

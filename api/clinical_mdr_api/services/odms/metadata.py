@@ -63,14 +63,14 @@ def _query(
     if sort_by:
         order_clauses = []
         for sort_field in sort_by.split(","):
-            sort_field = sort_field.strip()
+            normalized_sort_field = sort_field.strip()
 
             direction = "ASC"
-            field_name = sort_field
+            field_name = normalized_sort_field
 
-            if sort_field.startswith("-"):
+            if normalized_sort_field.startswith("-"):
                 direction = "DESC"
-                field_name = sort_field[1:]
+                field_name = normalized_sort_field[1:]
 
             if field_name in fields:
                 order_clauses.append(f"toLower(n.{field_name}) {direction}")

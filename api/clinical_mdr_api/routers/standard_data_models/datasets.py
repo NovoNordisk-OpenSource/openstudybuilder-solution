@@ -53,7 +53,6 @@ State after:
         ],
     }
 )
-# pylint: disable=unused-argument
 def get_datasets(
     request: Request,  # request is actually required by the allow_exports decorator
     data_model_ig_name: Annotated[

@@ -1,6 +1,6 @@
 import datetime
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable
 
 from clinical_mdr_api.domains.study_selections import study_selection_base
 from clinical_mdr_api.services.user_info import UserInfoService
@@ -47,7 +47,7 @@ class StudySoAGroupVO(study_selection_base.StudySelectionBaseVO):
             study_selection_uid = generate_uid_callback()
 
         if start_date is None:
-            start_date = datetime.datetime.now(datetime.timezone.utc)
+            start_date = datetime.datetime.now(datetime.UTC)
 
         return cls(
             study_uid=normalize_string(study_uid),

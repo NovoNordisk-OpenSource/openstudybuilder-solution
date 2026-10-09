@@ -325,7 +325,8 @@ function transformItems(items) {
 }
 
 async function fetchGlobalAuditTrail(options) {
-  const resp = await api.getAllVersions(options)
-  return transformItems(resp.data.items)
+  const params = filteringParameters.prepareParameters(options)
+  const resp = await api.getAllVersions(params)
+  return { items: transformItems(resp.data.items), total: resp.data.total }
 }
 </script>

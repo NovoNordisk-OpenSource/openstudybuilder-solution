@@ -1,6 +1,7 @@
 import datetime
+from collections.abc import Callable, Iterable
 from dataclasses import asdict
-from typing import Annotated, Any, Callable, Iterable, Self, overload
+from typing import Annotated, Any, Self, overload
 
 from pydantic import ConfigDict, Field, ValidationInfo, field_validator
 
@@ -320,7 +321,7 @@ class Activity(ActivityBase):
         activity_ar: ActivityAR,
         activity_instance_ars: Iterable[
             ActivityInstanceAR | ActivityHierarchySimpleModel
-        ] = tuple(),
+        ] = (),
     ) -> Self:
         activity_groupings = [
             ActivityGroupingHierarchySimpleModel(**asdict(ar))

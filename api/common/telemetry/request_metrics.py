@@ -2,8 +2,8 @@ import contextlib
 import json
 import logging
 import time
+from collections.abc import Mapping
 from functools import wraps
-from typing import Mapping
 
 import opencensus.trace
 from neomodel.sync_.database import Database as NeomodelDatabase
@@ -98,7 +98,6 @@ def add_request_metrics_header(
 
 
 @contextlib.contextmanager
-# pylint: disable=unused-argument
 def cypher_tracing(query: str, params: Mapping):
     """cypher query tracing and metrics to Opencensus"""
     # update request metrics
@@ -115,7 +114,7 @@ def cypher_tracing(query: str, params: Mapping):
 
     # update cypher query metrics of the request
     if metrics:
-        # pylint: disable=possibly-used-before-assignment
+
         delta_time = time.time() - start_time
         metrics.cypher_times += delta_time
 

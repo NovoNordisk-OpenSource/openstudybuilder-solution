@@ -138,7 +138,6 @@ def get_distinct_values_for_header(
         ],
     }
 )
-# pylint: disable=unused-argument
 def get_all_activities_report(
     request: Request,  # request is actually required by the allow_exports decorator
     at_specified_date_time: Annotated[

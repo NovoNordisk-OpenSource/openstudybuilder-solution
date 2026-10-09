@@ -1,12 +1,9 @@
 import copy
 from abc import ABC, abstractmethod
-from typing import Any, Generic
+from typing import Any
 
 from neomodel import db
 
-from clinical_mdr_api.domain_repositories._generic_repository_interface import (
-    _AggregateRootType,
-)
 from clinical_mdr_api.domain_repositories.library_item_repository import (
     LibraryItemRepositoryImplBase,
 )
@@ -55,23 +52,25 @@ from clinical_mdr_api.repositories._utils import (
     sb_clear_cache,
     validate_filters_and_add_search_string,
 )
-from common.exceptions import BusinessLogicException
+from common.exceptions import BusinessLogicException, ValidationException
 from common.utils import get_field_type, get_sub_fields
 
 
-class OdmGenericRepository(
-    LibraryItemRepositoryImplBase, Generic[_AggregateRootType], ABC
-):
+class OdmGenericRepository[AggregateRootType](LibraryItemRepositoryImplBase, ABC):
     root_class = type
     value_class = type
     return_model: type = BaseModel
-    filter_query_parameters: dict[Any, Any] = {}
+    filter_query_parameters: dict[Any, Any]
     sort_by: dict[Any, Any] | None = None
+
+    def __init__(self, user: str | None = None):
+        super().__init__(user)
+        self.filter_query_parameters = {}
 
     @abstractmethod
     def _create_aggregate_root_instance_from_cypher_result(
         self, input_dict: dict[str, Any]
-    ) -> _AggregateRootType:
+    ) -> AggregateRootType:
         raise NotImplementedError
 
     @abstractmethod
@@ -82,7 +81,7 @@ class OdmGenericRepository(
         relationship: VersionRelationship,
         value: VersionValue,
         **_kwargs,
-    ) -> _AggregateRootType:
+    ) -> AggregateRootType:
         raise NotImplementedError
 
     @abstractmethod
@@ -96,16 +95,15 @@ class OdmGenericRepository(
     def specific_header_match_clause(self) -> str | None:
         return None
 
-    # pylint: disable=unused-argument
     def specific_header_match_clause_lite(self, field_name: str) -> str | None:
         return None
 
-    def _create_new_value_node(self, ar: _AggregateRootType) -> VersionValue:
+    def _create_new_value_node(self, ar: AggregateRootType) -> VersionValue:
         return self.value_class(  # type: ignore[call-overload]
             name=ar.name,
         )
 
-    def _has_data_changed(self, ar: _AggregateRootType, value: VersionValue) -> bool:
+    def _has_data_changed(self, ar: AggregateRootType, value: VersionValue) -> bool:
         return ar.name != value.name
 
     def generate_uid(self) -> str:
@@ -196,7 +194,6 @@ class OdmGenericRepository(
         return filter_statements, filter_query_parameters
 
     @classmethod
-    # pylint: disable=unused-argument
     def format_filter_sort_keys(cls, key: str):
         return key
 
@@ -215,7 +212,7 @@ class OdmGenericRepository(
         total_count: bool = False,
         return_all_versions: bool = False,
         **kwargs,
-    ) -> tuple[list[_AggregateRootType], int]:
+    ) -> tuple[list[AggregateRootType], int]:
         match_clause = self.generic_match_clause(**kwargs)
 
         filter_statements, filter_query_parameters = self.create_query_filter_statement(
@@ -322,7 +319,7 @@ class OdmGenericRepository(
 
     def _retrieve_odm_items_from_cypher_res(
         self, result_array, attribute_names
-    ) -> list[_AggregateRootType]:
+    ) -> list[AggregateRootType]:
         odm_ars = []
         for item in result_array:
             item_dictionary = {}
@@ -502,6 +499,14 @@ class OdmGenericRepository(
                     needs_author = True
                 field_aliases.append(expression)
 
+        # Guard: if none of the requested fields are recognised the WITH clause
+        # would be malformed ("WITH uid,"), producing a Cypher SyntaxError.
+        # Raise a 400 so callers get a clear error instead of a 500.
+        if not field_aliases:
+            raise ValidationException(
+                msg=f"None of the requested fields are valid for this resource: {select_fields!r}"
+            )
+
         # If author username is needed, add author lookup
         if needs_author:
             author_lookup = """
@@ -532,7 +537,7 @@ class OdmGenericRepository(
         page_size: int = 10,
         **kwargs,
     ) -> list[Any]:
-        # pylint: disable=unused-argument
+
         filter_by = validate_filters_and_add_search_string(
             search_string, field_name, filter_by
         )
@@ -652,9 +657,8 @@ class OdmGenericRepository(
                 WITH author.username AS author_username
             """
 
-        else:
-            if self.specific_header_match_clause_lite(field_name):
-                match_clause += self.specific_header_match_clause_lite(field_name)
+        elif self.specific_header_match_clause_lite(field_name):
+            match_clause += self.specific_header_match_clause_lite(field_name)
 
         query = CypherQueryBuilder(
             filter_by=FilterDict.model_validate({"elements": filter_by}),
@@ -678,9 +682,7 @@ class OdmGenericRepository(
         )
 
     @sb_clear_cache(caches=["cache_store_item_by_uid"])
-    def save(
-        self, item: _AggregateRootType, force_new_value_node: bool = False
-    ) -> None:
+    def save(self, item: AggregateRootType, force_new_value_node: bool = False) -> None:
         if item.uid is not None and item.repository_closure_data is None:
             self._create(item)
         elif item.uid is not None and not item.is_deleted:
@@ -722,14 +724,14 @@ class OdmGenericRepository(
         )
 
     def _is_new_version_necessary(
-        self, ar: _AggregateRootType, value: VersionValue
+        self, ar: AggregateRootType, value: VersionValue
     ) -> bool:
         return self._has_data_changed(ar, value)
 
     def _get_or_create_value(
         self,
         root: VersionRoot,
-        ar: _AggregateRootType,
+        ar: AggregateRootType,
         force_new_value_node: bool = False,
     ) -> VersionValue:
         if not force_new_value_node:
@@ -751,7 +753,7 @@ class OdmGenericRepository(
 
     def _maintain_parameters(
         self,
-        versioned_object: _AggregateRootType,
+        versioned_object: AggregateRootType,
         root: VersionRoot,
         value: VersionValue,
     ) -> None:
@@ -1046,7 +1048,7 @@ class OdmGenericRepository(
         query += " WHERE " + " AND ".join(wheres)
 
         _where = []
-        # pylint: disable=too-many-boolean-expressions
+
         if sdtm_domain_uids or term_uids or unit_definition_uids:
             query += " WITH root"
 

@@ -337,7 +337,11 @@ class StudySummaryListing(BaseModel):
             DOMAIN=query_result["DOMAIN"],
             TSPARMCD=query_result["TSPARMCD"],
             TSPARM=query_result["TSPARM"],
-            TSVAL=str(query_result["TSVAL"]),
+            TSVAL=(
+                str(query_result["TSVAL"])
+                if query_result["TSVAL"] is not None
+                else None
+            ),
             TSVALNF=query_result["TSVALNF"],
             TSVALCD=query_result["TSVALCD"],
             TSVCDREF=query_result["TSVCDREF"],

@@ -2,16 +2,16 @@ import functools
 import inspect
 import logging
 import re
+from collections.abc import Callable
 from datetime import datetime
 from enum import Enum
-from typing import Annotated, Any, Callable, Generic
+from typing import Annotated, Any
 
 from cachetools import cached
 from dateutil.parser import isoparse
 from neo4j.exceptions import CypherSyntaxError
 from neomodel import Q, db
 from pydantic import BaseModel, Field, field_validator
-from pydantic.types import T
 
 from clinical_mdr_api.models.biomedical_concepts.activity_item_class import (
     CompactActivityInstanceClassForActivityItemClass,
@@ -71,6 +71,10 @@ class ComparisonOperator(Enum):
     LESS_THAN_OR_EQUAL_TO = "le"
     BETWEEN = "bw"
     IN = "in"
+
+
+# The 'between' operator requires exactly a lower and an upper bound value
+BETWEEN_OPERATOR_VALUES_COUNT = 2
 
 
 comparison_operator_to_neomodel = {
@@ -247,7 +251,7 @@ def get_order_by_clause(
     return sort_paths
 
 
-def merge_q_query_filters(*args, filter_operator: "FilterOperator"):
+def merge_q_query_filters(*args, filter_operator: FilterOperator):
     if filter_operator == FilterOperator.AND and args:
         return functools.reduce(lambda filter1, filter2: filter1 & filter2, args)
     if filter_operator == FilterOperator.OR and args:
@@ -277,7 +281,7 @@ def get_version_properties_sources() -> list[Any]:
     return result
 
 
-def validate_sort_by_dict(sort_by: dict[str, bool] | None | str):
+def validate_sort_by_dict(sort_by: dict[str, bool] | str | None):
     # Accept an empty string as an empty dictionary
     if sort_by == "":
         sort_by = {}
@@ -376,47 +380,71 @@ def transform_filters_into_neomodel(
                     if isinstance(filter_value, str) and is_date(filter_value):
                         filter_value = f"datetime({filter_value})"
                     q_filters.append(Q(**{filter_name: filter_value}))
+                elif filter_elem.op == ComparisonOperator.BETWEEN:
+                    filter_elem.v.sort()
+                    filter_values = filter_elem.v
+                    min_bound = f"{field_name}__gt"
+                    max_bound = f"{field_name}__lt"
+                    min_bound_value = filter_values[0]
+                    max_bound_value = filter_values[1]
+                    if isinstance(min_bound_value, str) and is_date(min_bound_value):
+                        min_bound_value = f"datetime({min_bound_value})"
+                    q_filters.append(Q(**{min_bound: min_bound_value}))
+                    if isinstance(max_bound_value, str) and is_date(max_bound_value):
+                        max_bound_value = f"datetime({max_bound_value})"
+                    q_filters.append(Q(**{max_bound: max_bound_value}))
+                elif filter_elem.op == ComparisonOperator.EQUALS:
+                    neomodel_filter = comparison_operator_to_neomodel.get(
+                        ComparisonOperator.IN
+                    )
+                    filter_name = f"{field_name}{neomodel_filter}"
+                    filter_value = filter_elem.v
+                    q_filters.append(Q(**{filter_name: filter_value}))
+                elif filter_elem.op == ComparisonOperator.NOT_EQUALS:
+                    neomodel_filter = comparison_operator_to_neomodel.get(
+                        ComparisonOperator.NOT_EQUALS
+                    )
+                    filter_name = f"{field_name}{neomodel_filter}"
+                    filter_value = filter_elem.v
+                    for f_val in filter_value:
+                        q_filters.append(Q(**{filter_name: f_val}))
                 else:
-                    if filter_elem.op == ComparisonOperator.BETWEEN:
-                        filter_elem.v.sort()
-                        filter_values = filter_elem.v
-                        min_bound = f"{field_name}__gt"
-                        max_bound = f"{field_name}__lt"
-                        min_bound_value = filter_values[0]
-                        max_bound_value = filter_values[1]
-                        if isinstance(min_bound_value, str) and is_date(
-                            min_bound_value
-                        ):
-                            min_bound_value = f"datetime({min_bound_value})"
-                        q_filters.append(Q(**{min_bound: min_bound_value}))
-                        if isinstance(max_bound_value, str) and is_date(
-                            max_bound_value
-                        ):
-                            max_bound_value = f"datetime({max_bound_value})"
-                        q_filters.append(Q(**{max_bound: max_bound_value}))
-                    elif filter_elem.op == ComparisonOperator.EQUALS:
-                        neomodel_filter = comparison_operator_to_neomodel.get(
-                            ComparisonOperator.IN
-                        )
-                        filter_name = f"{field_name}{neomodel_filter}"
-                        filter_value = filter_elem.v
-                        q_filters.append(Q(**{filter_name: filter_value}))
-                    elif filter_elem.op == ComparisonOperator.NOT_EQUALS:
-                        neomodel_filter = comparison_operator_to_neomodel.get(
-                            ComparisonOperator.NOT_EQUALS
-                        )
-                        filter_name = f"{field_name}{neomodel_filter}"
-                        filter_value = filter_elem.v
-                        for f_val in filter_value:
-                            q_filters.append(Q(**{filter_name: f_val}))
-                    else:
-                        raise AttributeError(
-                            f"Not valid operator {filter_elem.op.value} for the following property {prop} of type"
-                            f"{type(prop)}"
-                        )
+                    raise AttributeError(
+                        f"Not valid operator {filter_elem.op.value} for the following property {prop} of type"
+                        f"{type(prop)}"
+                    )
             else:
                 raise AttributeError("Passed wrong filter field name")
     return q_filters
+
+
+def _nested_filter_lhs(
+    expr: str, field_type: type | None, parsed_operator: str, elm: Any = None
+) -> str:
+    """Left-hand Cypher expression for nested property filters.
+
+    String values are lowercased before being bound as a query parameter, so a
+    string-typed alias must be lowercased too or the comparison can never match.
+    CONTAINS is itself a string operator, so a resolved non-string field (for
+    example NSV ``non_standard_variable.length``) still needs lowercasing via
+    toString so header ``search_string`` still matches typed digits.
+
+    `field_type` is None when the property could not be resolved on the return
+    model, which happens whenever the Cypher alias clause exposes a property
+    under a different name than the response model uses (e.g. unit definitions
+    return `unit_subsets`/`unit_dimension` maps keyed `name`, while
+    SimpleCodelistTermModel names that field `term_name`). Such a key is still
+    valid Cypher, so fall back to the type of the bound value rather than
+    assuming a non-string field — toLower() on a non-string value (e.g. a bool)
+    is a Cypher type error.
+    """
+    if field_type is str:
+        return f"toLower({expr})"
+    if field_type is None:
+        return f"toLower({expr})" if isinstance(elm, str) else expr
+    if parsed_operator.strip() == "CONTAINS":
+        return f"toLower(toString({expr}))"
+    return expr
 
 
 def is_date(string):
@@ -451,7 +479,7 @@ class FilterOperator(Enum):
         )
 
 
-class FilterDictElement(BaseModel, Generic[T]):
+class FilterDictElement[T](BaseModel):
     v: Annotated[
         list[T],
         Field(
@@ -634,7 +662,7 @@ class CypherQueryBuilder:
                 attr_desc = get_field_type(attr_desc.annotation).model_fields.get(
                     traversal
                 )
-                path = traversal
+                path = f"{path}.{traversal}"
 
             if get_sub_fields(attr_desc) is None:
                 # Need to get the nested field descriptor to check its type
@@ -648,79 +676,65 @@ class CypherQueryBuilder:
                         if nested_field_desc
                         else None
                     )
-
-                    # Check if field is a string type - if so, apply toLower()
-                    if field_type is str:
-                        _predicates.append(
-                            f"toLower({path}.{_alias}){_parsed_operator}${_query_param_name}"
-                        )
-                    else:
-                        # For non-string types (bool, int, etc.), don't use toLower()
-                        _predicates.append(
-                            f"{path}.{_alias}{_parsed_operator}${_query_param_name}"
-                        )
+                    lhs = _nested_filter_lhs(
+                        f"{path}.{_alias}", field_type, _parsed_operator, elm
+                    )
+                    _predicates.append(f"{lhs}{_parsed_operator}${_query_param_name}")
                 else:
                     # Fallback to original behavior if we can't determine the type
-                    _predicates.append(
-                        f"toLower({path}.{_alias}){_parsed_operator}${_query_param_name}"
+                    lhs = _nested_filter_lhs(
+                        f"{path}.{_alias}", None, _parsed_operator, elm
                     )
+                    _predicates.append(f"{lhs}{_parsed_operator}${_query_param_name}")
+            # Special handling for activity_groupings fields that map to nested structure
+            # activity_group_name -> activity_group.name
+            # activity_subgroup_name -> activity_subgroup.name
+            elif elm is None:
+                _predicates.append(f"size({path}) = 0 ")
+            elif path == "activity_groupings" and _alias == "activity_group_name":
+                _predicates.append(
+                    f"any(attr in {path} WHERE toLower(attr.activity_group.name) {_parsed_operator} ${_query_param_name})"
+                )
+            elif path == "activity_groupings" and _alias == "activity_subgroup_name":
+                _predicates.append(
+                    f"any(attr in {path} WHERE toLower(attr.activity_subgroup.name) {_parsed_operator} ${_query_param_name})"
+                )
             else:
-                # Special handling for activity_groupings fields that map to nested structure
-                # activity_group_name -> activity_group.name
-                # activity_subgroup_name -> activity_subgroup.name
-                if elm is None:
-                    _predicates.append(f"size({path}) = 0 ")
-                elif path == "activity_groupings" and _alias == "activity_group_name":
-                    _predicates.append(
-                        f"any(attr in {path} WHERE toLower(attr.activity_group.name) {_parsed_operator} ${_query_param_name})"
+                # Default behavior for other array fields - check field type first
+                # Get the element type of the list
+                list_element_type = get_field_type(attr_desc.annotation)
+                if hasattr(list_element_type, "model_fields"):
+                    nested_field_desc = list_element_type.model_fields.get(_alias)
+                    field_type = (
+                        get_field_type(nested_field_desc.annotation)
+                        if nested_field_desc
+                        else None
                     )
-                elif (
-                    path == "activity_groupings" and _alias == "activity_subgroup_name"
-                ):
+
+                    lhs = _nested_filter_lhs(
+                        f"attr.{_alias}", field_type, _parsed_operator, elm
+                    )
                     _predicates.append(
-                        f"any(attr in {path} WHERE toLower(attr.activity_subgroup.name) {_parsed_operator} ${_query_param_name})"
+                        f"any(attr in {path} WHERE {lhs} {_parsed_operator} ${_query_param_name})"
                     )
                 else:
-                    # Default behavior for other array fields - check field type first
-                    # Get the element type of the list
-                    list_element_type = get_field_type(attr_desc.annotation)
-                    if hasattr(list_element_type, "model_fields"):
-                        nested_field_desc = list_element_type.model_fields.get(_alias)
-                        field_type = (
-                            get_field_type(nested_field_desc.annotation)
-                            if nested_field_desc
-                            else None
-                        )
-
-                        if field_type is str:
-                            _predicates.append(
-                                f"any(attr in {path} WHERE toLower(attr.{_alias}) {_parsed_operator} ${_query_param_name})"
-                            )
-                        else:
-                            # For non-string types, don't use toLower()
-                            _predicates.append(
-                                f"any(attr in {path} WHERE attr.{_alias} {_parsed_operator} ${_query_param_name})"
-                            )
-                    else:
-                        # Fallback to original behavior
-                        _predicates.append(
-                            f"any(attr in {path} WHERE toLower(attr.{_alias}) {_parsed_operator} ${_query_param_name})"
-                        )
+                    # Fallback to original behavior
+                    _predicates.append(
+                        f"any(attr in {path} WHERE toLower(attr.{_alias}) {_parsed_operator} ${_query_param_name})"
+                    )
         else:
             attr_desc = self.return_model.model_fields.get(_alias)
             if get_sub_fields(attr_desc) is None:
                 _predicates.append(
                     f"toLower({_alias}.name){_parsed_operator}${_query_param_name}"
                 )
+            elif elm is None:
+                _predicates.append(f"size({_alias}) = 0 ")
             else:
-                if elm is None:
-                    _predicates.append(f"size({_alias}) = 0 ")
-                else:
-                    _predicates.append(
-                        f"any(attr in {_alias} WHERE toLower(attr.name) {_parsed_operator} ${_query_param_name})"
-                    )
+                _predicates.append(
+                    f"any(attr in {_alias} WHERE toLower(attr.name) {_parsed_operator} ${_query_param_name})"
+                )
 
-    # pylint: disable=too-many-statements
     def build_filter_clause(self) -> None:
         _filter_clause = "WHERE "
         filter_predicates = []
@@ -744,33 +758,32 @@ class CypherQueryBuilder:
                     and ComparisonOperator(_operator) != ComparisonOperator.CONTAINS,
                     msg="Only the default 'contains' operator is supported for wildcard filtering.",
                 )
-            else:
-                # Parse operator to use in filter for the current label
-                if ComparisonOperator(_operator) == ComparisonOperator.CONTAINS:
-                    _parsed_operator = " CONTAINS "
-                elif ComparisonOperator(_operator) == ComparisonOperator.NOT_EQUALS:
-                    _predicate_operator = " AND "
-                    _parsed_operator = "<>"
-                elif ComparisonOperator(_operator) == ComparisonOperator.GREATER_THAN:
-                    _parsed_operator = ">"
-                elif (
-                    ComparisonOperator(_operator)
-                    == ComparisonOperator.GREATER_THAN_OR_EQUAL_TO
-                ):
-                    _parsed_operator = ">="
-                elif ComparisonOperator(_operator) == ComparisonOperator.LESS_THAN:
-                    _parsed_operator = "<"
-                elif (
-                    ComparisonOperator(_operator)
-                    == ComparisonOperator.LESS_THAN_OR_EQUAL_TO
-                ):
-                    _parsed_operator = "<="
+            # Parse operator to use in filter for the current label
+            elif ComparisonOperator(_operator) == ComparisonOperator.CONTAINS:
+                _parsed_operator = " CONTAINS "
+            elif ComparisonOperator(_operator) == ComparisonOperator.NOT_EQUALS:
+                _predicate_operator = " AND "
+                _parsed_operator = "<>"
+            elif ComparisonOperator(_operator) == ComparisonOperator.GREATER_THAN:
+                _parsed_operator = ">"
+            elif (
+                ComparisonOperator(_operator)
+                == ComparisonOperator.GREATER_THAN_OR_EQUAL_TO
+            ):
+                _parsed_operator = ">="
+            elif ComparisonOperator(_operator) == ComparisonOperator.LESS_THAN:
+                _parsed_operator = "<"
+            elif (
+                ComparisonOperator(_operator)
+                == ComparisonOperator.LESS_THAN_OR_EQUAL_TO
+            ):
+                _parsed_operator = "<="
 
             # Parse filter clauses for the current label
             # 'Between' operator works differently from the others
             if ComparisonOperator(_operator) == ComparisonOperator.BETWEEN:
                 ValidationException.raise_if(
-                    len(_values) != 2,
+                    len(_values) != BETWEEN_OPERATOR_VALUES_COUNT,
                     msg="For between operator to work, exactly 2 values must be provided",
                 )
 
@@ -792,7 +805,11 @@ class CypherQueryBuilder:
                 # If the provided value can be parsed as a date, also add a predicate with a datetime casting on the Neo4j side
                 if is_date(_values[0]) and is_date(_values[1]):
                     _date_predicate = f"datetime(${_query_param_prefix}_0)<={_alias}<=datetime(${_query_param_prefix}_1)"
-                    _predicate += f" OR {_date_predicate}"
+                    # Parenthesize: this key's own OR must bind before the AND/OR joining
+                    # it with sibling keys' predicates, otherwise (e.g. under the default
+                    # AND join) an unrelated sibling filter is skipped entirely for rows
+                    # that satisfy the date-cast half of this OR.
+                    _predicate = f"({_predicate} OR {_date_predicate})"
                 filter_predicates.append(_predicate)
                 self.parameters[f"{_query_param_prefix}_0"] = _values[0]
                 self.parameters[f"{_query_param_prefix}_1"] = _values[1]
@@ -823,8 +840,13 @@ class CypherQueryBuilder:
                             # If a list of wildcard properties is provided, use it
                             if len(self.wildcard_properties_list) > 0:
                                 for db_property in self.wildcard_properties_list:
+                                    # toString() is a no-op on an already-string value, so this
+                                    # also covers manually-listed non-string properties (e.g. a
+                                    # numeric NSV field) without needing per-entry type info -
+                                    # toLower() alone would raise a Cypher type error on those.
                                     _predicates.append(
-                                        f"toLower({db_property}){_parsed_operator}$wildcard_{index}"
+                                        f"toLower(toString({db_property}))"
+                                        f"{_parsed_operator}$wildcard_{index}"
                                     )
                             # If not, then extract list of properties from return model
                             elif self.return_model:
@@ -843,12 +865,13 @@ class CypherQueryBuilder:
                                         and get_sub_fields(attr_desc) is None
                                     ):
                                         # name=$name_0 with name_0 defined in parameter objects
+                                        formatted_attribute = attribute
                                         if self.format_filter_sort_keys:
-                                            attribute = self.format_filter_sort_keys(
-                                                attribute
+                                            formatted_attribute = (
+                                                self.format_filter_sort_keys(attribute)
                                             )
                                         _predicates.append(
-                                            f"toLower({attribute}){_parsed_operator}$wildcard_{index}"
+                                            f"toLower({formatted_attribute}){_parsed_operator}$wildcard_{index}"
                                         )
                                     # if field is list[str]: case-insensitive substring match on each element
                                     elif (
@@ -865,20 +888,21 @@ class CypherQueryBuilder:
                                         is SimpleTermModel
                                     ):
                                         # name=$name_0 with name_0 defined in parameter objects
+                                        formatted_attribute = attribute
                                         if self.format_filter_sort_keys:
-                                            attribute = self.format_filter_sort_keys(
-                                                attribute
+                                            formatted_attribute = (
+                                                self.format_filter_sort_keys(attribute)
                                             )
                                         if get_sub_fields(attr_desc) is None:
                                             # if field is just SimpleTermModel compare wildcard filter
                                             # with name property of SimpleTermModel
                                             _predicates.append(
-                                                f"toLower({attribute}.name){_parsed_operator}$wildcard_{index}"
+                                                f"toLower({formatted_attribute}.name){_parsed_operator}$wildcard_{index}"
                                             )
                                         else:
                                             # if field is an array of SimpleTermModels
                                             _predicates.append(
-                                                f"$wildcard_{index} IN [attr in {attribute} | toLower(attr.name)]"
+                                                f"$wildcard_{index} IN [attr in {formatted_attribute} | toLower(attr.name)]"
                                             )
                                     # Wildcard filtering for SimpleDictionaryTermModel
                                     elif (
@@ -886,26 +910,27 @@ class CypherQueryBuilder:
                                         is SimpleDictionaryTermModel
                                     ):
                                         # name=$name_0 with name_0 defined in parameter objects
+                                        formatted_attribute = attribute
                                         if self.format_filter_sort_keys:
-                                            attribute = self.format_filter_sort_keys(
-                                                attribute
+                                            formatted_attribute = (
+                                                self.format_filter_sort_keys(attribute)
                                             )
                                         if get_sub_fields(attr_desc) is None:
                                             # if field is just SimpleDictionaryTermModel compare wildcard filter
                                             # with `name` or `dictionary_id` property of SimpleDictionaryTermModel
                                             _predicates.append(
-                                                f"toLower({attribute}.name){_parsed_operator}$wildcard_{index}"
+                                                f"toLower({formatted_attribute}.name){_parsed_operator}$wildcard_{index}"
                                             )
                                             _predicates.append(
-                                                f"toLower({attribute}.dictionary_id){_parsed_operator}$wildcard_{index}"
+                                                f"toLower({formatted_attribute}.dictionary_id){_parsed_operator}$wildcard_{index}"
                                             )
                                         else:
                                             # if field is an array of SimpleDictionaryTermModel
                                             _predicates.append(
-                                                f"$wildcard_{index} IN [attr in {attribute} | toLower(attr.name)]"
+                                                f"$wildcard_{index} IN [attr in {formatted_attribute} | toLower(attr.name)]"
                                             )
                                             _predicates.append(
-                                                f"$wildcard_{index} IN [attr in {attribute} | toLower(attr.dictionary_id)]"
+                                                f"$wildcard_{index} IN [attr in {formatted_attribute} | toLower(attr.dictionary_id)]"
                                             )
                                     elif (
                                         get_field_type(attr_desc.annotation)
@@ -997,7 +1022,6 @@ class CypherQueryBuilder:
                                     elm=elm,
                                 )
                             elif (
-                                # pylint: disable=too-many-boolean-expressions
                                 self.return_model
                                 and issubclass(self.return_model, BaseModel)
                                 and self.return_model.model_fields.get(_alias)
@@ -1037,9 +1061,12 @@ class CypherQueryBuilder:
                                     )
                                 self.parameters[_query_param_name] = elm
 
-                # If multiple values, will create a clause with OR or AND, between ()
+                # If more than one sub-predicate was collected for this key (multiple
+                # values, wildcard, or a single date-like value that also got an extra
+                # datetime-cast predicate), group them so they bind before this key's
+                # predicate is AND/OR-joined with sibling keys' predicates.
                 _predicate = _predicate_operator.join(_predicates)
-                if len(_values) > 1 or _alias == "*":
+                if len(_predicates) > 1 or _alias == "*":
                     _predicate = f"({_predicate})"
 
                 # Add to list of predicates
@@ -1073,18 +1100,19 @@ class CypherQueryBuilder:
                 sort_order = " ASC"
             else:
                 sort_order = " DESC"
+            sort_key = key
             if self.format_filter_sort_keys:
-                key = self.format_filter_sort_keys(key)
+                sort_key = self.format_filter_sort_keys(key)
             if self.return_model and issubclass(self.return_model, BaseModel):
-                attr_desc = self.return_model.model_fields.get(key)
+                attr_desc = self.return_model.model_fields.get(sort_key)
                 # if property is of string type we should apply toLower() to sort
                 if (
                     attr_desc
                     and get_field_type(attr_desc.annotation) is str
                     and get_sub_fields(attr_desc) is None
                 ):
-                    key = f"toLower({key})"
-            sort_by_statements.append(key + sort_order)
+                    sort_key = f"toLower({sort_key})"
+            sort_by_statements.append(sort_key + sort_order)
 
         if (
             self.implicit_sort_by is not None

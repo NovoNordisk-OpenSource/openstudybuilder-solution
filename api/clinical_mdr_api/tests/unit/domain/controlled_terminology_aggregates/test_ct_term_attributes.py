@@ -29,8 +29,7 @@ def create_random_ct_term_attributes_ar(
     library: str = "Library", is_editable: bool = True
 ) -> CTTermAttributesAR:
     random_ct_term_attributes_ar = CTTermAttributesAR.from_input_values(
-        # pylint: disable=unnecessary-lambda
-        generate_uid_callback=lambda: random_str(),
+        generate_uid_callback=random_str,
         ct_term_attributes_vo=create_random_ct_term_attributes_vo(),
         library=LibraryVO.from_repository_values(
             library_name=library, is_editable=is_editable

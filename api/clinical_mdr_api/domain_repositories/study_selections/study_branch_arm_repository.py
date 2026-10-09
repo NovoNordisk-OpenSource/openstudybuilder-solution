@@ -2,7 +2,7 @@ import datetime
 from dataclasses import dataclass
 from typing import Any
 
-from neomodel import db
+from neomodel import DoesNotExist, db
 
 from clinical_mdr_api import utils
 from clinical_mdr_api.domain_repositories._utils.helpers import (
@@ -28,7 +28,7 @@ from clinical_mdr_api.domains.study_selections.study_selection_branch_arm import
     StudySelectionBranchArmAR,
     StudySelectionBranchArmVO,
 )
-from common.exceptions import BusinessLogicException
+from common.exceptions import BusinessLogicException, NotFoundException
 from common.utils import convert_to_datetime
 
 
@@ -74,12 +74,11 @@ class StudySelectionBranchArmRepository:
             else:
                 query = "MATCH (sr:StudyRoot)-[l:HAS_VERSION{status:'RELEASED', version:$study_value_version}]->(sv:StudyValue)"
                 query_parameters["study_value_version"] = study_value_version
+        elif study_uid:
+            query = "MATCH (sr:StudyRoot { uid: $uid})-[l:LATEST]->(sv:StudyValue)"
+            query_parameters["uid"] = study_uid
         else:
-            if study_uid:
-                query = "MATCH (sr:StudyRoot { uid: $uid})-[l:LATEST]->(sv:StudyValue)"
-                query_parameters["uid"] = study_uid
-            else:
-                query = "MATCH (sr:StudyRoot)-[l:LATEST]->(sv:StudyValue)"
+            query = "MATCH (sr:StudyRoot)-[l:LATEST]->(sv:StudyValue)"
         if project_name is not None or project_number is not None:
             query += (
                 "-[:HAS_PROJECT]->(:StudyProjectField)<-[:HAS_FIELD]-(proj:Project)"
@@ -173,12 +172,11 @@ class StudySelectionBranchArmRepository:
             else:
                 query = "MATCH (sr:StudyRoot)-[l:HAS_VERSION{status:'RELEASED', version:$study_value_version}]->(sv:StudyValue)"
                 query_parameters["study_value_version"] = study_value_version
+        elif study_uid:
+            query = "MATCH (sr:StudyRoot { uid: $uid})-[l:LATEST]->(sv:StudyValue)"
+            query_parameters["uid"] = study_uid
         else:
-            if study_uid:
-                query = "MATCH (sr:StudyRoot { uid: $uid})-[l:LATEST]->(sv:StudyValue)"
-                query_parameters["uid"] = study_uid
-            else:
-                query = "MATCH (sr:StudyRoot)-[l:LATEST]->(sv:StudyValue)"
+            query = "MATCH (sr:StudyRoot)-[l:LATEST]->(sv:StudyValue)"
 
         if project_name is not None or project_number is not None:
             query += (
@@ -455,7 +453,6 @@ class StudySelectionBranchArmRepository:
         )
         return len(sdc_node) == 0
 
-    # pylint: disable=unused-argument
     def save(self, study_selection: StudySelectionBranchArmAR, author_id: str) -> None:
         """
         Persist the set of selected study branch arms from the aggregate to the database
@@ -675,18 +672,28 @@ class StudySelectionBranchArmRepository:
         # check if arm root is set
         if selection.arm_root_uid:
             # find the study arm
-            study_arm_root = latest_study_value_node.has_study_arm.get(
-                uid=selection.arm_root_uid
-            )
+            try:
+                study_arm_root = latest_study_value_node.has_study_arm.get(
+                    uid=selection.arm_root_uid
+                )
+            except DoesNotExist as exc:
+                raise NotFoundException(
+                    msg=f"Study Arm with UID '{selection.arm_root_uid}' doesn't exist."
+                ) from exc
             # connect to node
             study_branch_arm_selection_node.arm_root.connect(study_arm_root)
 
         # check if study cohort is set
-        for study_cohort in selection.study_cohorts:
+        for study_cohort_selection in selection.study_cohorts:
             # find the study cohort
-            study_cohort = latest_study_value_node.has_study_cohort.get(
-                uid=study_cohort.study_cohort_uid
-            )
+            try:
+                study_cohort = latest_study_value_node.has_study_cohort.get(
+                    uid=study_cohort_selection.study_cohort_uid
+                )
+            except DoesNotExist as exc:
+                raise NotFoundException(
+                    msg=f"Study Cohort with UID '{study_cohort_selection.study_cohort_uid}' doesn't exist."
+                ) from exc
             # connect to node
             study_branch_arm_selection_node.has_cohort.connect(study_cohort)
 

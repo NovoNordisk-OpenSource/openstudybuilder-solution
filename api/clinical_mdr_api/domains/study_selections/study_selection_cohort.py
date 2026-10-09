@@ -1,6 +1,7 @@
 import datetime
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
-from typing import Any, Callable, Iterable, Self
+from typing import Any, Self
 
 from clinical_mdr_api.services.user_info import UserInfoService
 from clinical_mdr_api.utils import normalize_string
@@ -71,7 +72,7 @@ class StudySelectionCohortVO:
             study_selection_uid = generate_uid_callback()
 
         if start_date is None:
-            start_date = datetime.datetime.now(datetime.timezone.utc)
+            start_date = datetime.datetime.now(datetime.UTC)
 
         # returns a new instance of the VO
 
@@ -101,7 +102,7 @@ class StudySelectionCohortVO:
             [str, str], bool
         ] = lambda x, y: True,
         cohort_exists_callback_by: Callable[
-            [str, str, "StudySelectionCohortVO"], bool
+            [str, str, StudySelectionCohortVO], bool
         ] = lambda x, y, z: True,
     ) -> None:
         """
@@ -197,7 +198,7 @@ class StudySelectionCohortAR:
         )
 
     def _add_selection(self, study_cohort_selection) -> None:
-        new_selections = self._study_cohorts_selection + (study_cohort_selection,)
+        new_selections = (*self._study_cohorts_selection, study_cohort_selection)
         self._study_cohorts_selection = new_selections
 
     def add_cohort_selection(

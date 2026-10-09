@@ -1,5 +1,6 @@
+from collections.abc import Callable
 from datetime import datetime
-from typing import Annotated, Callable, Self
+from typing import Annotated, Self
 
 from pydantic import Field
 

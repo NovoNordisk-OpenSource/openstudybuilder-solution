@@ -1,0 +1,27 @@
+[project]
+name = "export"
+version = "0.1.0"
+requires-python = ">=3.14"
+dependencies = [
+    "httpx==0.28.1",
+    "httpx_auth==0.23.1",
+    # poethepoet is a main (not dev) dependency here: the docker image (see
+    # Dockerfile/compose.yaml) invokes tasks in production via `uv run poe
+    # <task>` and is synced with `--no-dev`, unlike api's split dev/prod
+    # image stages.
+    "poethepoet>=0.30",
+]
+
+[tool.uv]
+package = false
+
+[dependency-groups]
+dev = []
+
+[tool.poe]
+envfile = ".env"
+
+[tool.poe.tasks]
+build-sbom = "python3 ../_tools/build_sbom.py --uv --fallback-dir doc/licenses --level 2 --output sbom.md"
+export = "python -m export"
+export-study-list = "python -m export_study_list"

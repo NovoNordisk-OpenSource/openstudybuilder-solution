@@ -11,8 +11,6 @@ from clinical_mdr_api.tests.integration.utils.api import (
 from clinical_mdr_api.tests.integration.utils.utils import TestUtils
 from clinical_mdr_api.tests.utils.checks import assert_response_status_code
 
-# pylint: disable=unused-argument,redefined-outer-name
-
 
 @pytest.fixture(scope="module")
 def api_client(test_data):

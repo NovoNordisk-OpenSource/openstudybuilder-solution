@@ -2,16 +2,10 @@
 Tests for /studies/{study_uid}/study-visits endpoints
 """
 
-# pylint: disable=unused-argument
-# pylint: disable=redefined-outer-name
-# pylint: disable=too-many-arguments
-
-# pytest fixture functions have other fixture functions as arguments,
-# which pylint interprets as unused arguments
-
-from datetime import datetime, timezone
+from collections.abc import Iterable, Mapping
+from datetime import UTC, datetime
 from enum import Enum
-from typing import Any, Iterable, Mapping
+from typing import Any
 from unittest import mock
 
 import pytest
@@ -117,7 +111,7 @@ def test_data():
     # Create a study selection
     ct_term_codelist_name = "VisitType"
     ct_term_name = ct_term_codelist_name + " Name For StudyStandardVersioning test"
-    ct_term_start_date = datetime(2020, 3, 25, tzinfo=timezone.utc)
+    ct_term_start_date = datetime(2020, 3, 25, tzinfo=UTC)
 
     global initial_ct_term_study_standard_test_uid
     initial_ct_term_study_standard_test_uid = "VisitType_0000"
@@ -136,7 +130,7 @@ def test_data():
     # patch the date of the latest HAS_VERSION FINAL relationship so it can be detected by the selected study_standard_Version
     params = {
         "uids": [initial_ct_term_study_standard_test_uid],
-        "date": datetime(2020, 3, 26, tzinfo=timezone.utc),
+        "date": datetime(2020, 3, 26, tzinfo=UTC),
     }
     db.cypher_query(
         """
@@ -1655,7 +1649,7 @@ def test_study_visist_version_selecting_ct_package(api_client):
     # patch the date of the latest HAS_VERSION FINAL relationship so it can be detected by the selected study_standard_Version
     params = {
         "uids": [initial_ct_term_study_standard_test_uid],
-        "date": datetime(2020, 3, 26, tzinfo=timezone.utc),
+        "date": datetime(2020, 3, 26, tzinfo=UTC),
     }
     db.cypher_query(
         """
@@ -1737,7 +1731,7 @@ def test_study_visist_version_selecting_ct_package(api_client):
     TestUtils.set_study_standard_version(
         study_uid=study_for_ctterm_versioning.uid,
         package_name="SDTM CT 2020-03-27",
-        effective_date=datetime(2020, 3, 27, tzinfo=timezone.utc),
+        effective_date=datetime(2020, 3, 27, tzinfo=UTC),
     )
 
     # get study selection with previous ctterm
@@ -1944,6 +1938,30 @@ def test_global_anchor_visit_time_reference(api_client):
         res["message"]
         == "The global anchor visit must take place at day 0 and time reference has to be set to 'Global anchor Visit' or be an Information Visit"
     )
+
+
+def test_global_anchor_visit_not_allowed_for_unscheduled_visit(api_client):
+    """UNSCHEDULED_VISIT with is_global_anchor_visit=True is rejected with 400, not a 500 crash."""
+    _study = TestUtils.create_study()
+    study_epoch = create_study_epoch("EpochSubType_0001", study_uid=_study.uid)
+    datadict = visits_basic_data.copy()
+    datadict.update(
+        {
+            "study_epoch_uid": study_epoch.uid,
+            "visit_type": {"term_uid": "VisitType_0003"},
+            "visit_class": "UNSCHEDULED_VISIT",
+            "visit_subclass": None,
+            "is_global_anchor_visit": True,
+        }
+    )
+    response = api_client.post(
+        f"/studies/{_study.uid}/study-visits",
+        json=datadict,
+    )
+    assert_response_status_code(response, 400)
+    message = response.json()["message"]
+    assert "is_global_anchor_visit" in message
+    assert "UNSCHEDULED_VISIT" in message
 
 
 def test_study_visit_editing_study_epoch(api_client):

@@ -500,7 +500,7 @@ function populateForm(item) {
       if (nsv.is_multiple) return uids
       return uids.slice(0, 1)
     })(),
-    data_type_uid: item.data_type?.uid ?? item.data_type?.term_uid ?? null,
+    data_type_uid: item.semtcdt?.uid ?? item.semtcdt?.term_uid ?? null,
     role_uid: item.role?.uid ?? item.role?.term_uid ?? null,
     valid_codelist: item.valid_codelists?.[0] ?? null,
     non_standard_variable: {

@@ -1,8 +1,10 @@
 import json
 import logging
 from asyncio import Lock
+from collections.abc import Mapping
 from functools import wraps
-from typing import Any, Mapping
+from http import HTTPStatus
+from typing import Any
 
 from asyncache import cached
 from authlib.integrations.starlette_client import StarletteOAuth2App
@@ -59,7 +61,6 @@ class MsGraphClientService:
         # Dummy expired token to trigger OAuth client to do an authentication flow at first API request
         self.token: Mapping[str, Any] = {"expires_at": 1, "access_token": None}
 
-    # pylint: disable=unused-argument
     async def set_token(
         self, token: Mapping, refresh_token: Any = None, access_token: Any = None
     ):
@@ -83,7 +84,7 @@ class MsGraphClientService:
             )
 
         BusinessLogicException.raise_if(
-            resp.status_code != 200,
+            resp.status_code != HTTPStatus.OK,
             msg=f"Graph request failed: {resp.status_code} {resp.reason_phrase} {resp.request.url} {resp.text[:1024]}",
         )
 
@@ -204,7 +205,7 @@ class MsGraphClientService:
 
 
 # Singleton service for reusing the OIDC metadata and recycling access/refresh tokens for further requests
-service = None  # pylint: disable=invalid-name
+service = None
 if not settings.ms_graph_integration_enabled:
     log.info(
         "MS Graph API integration is disabled. ms_graph_integration_enabled=%r",

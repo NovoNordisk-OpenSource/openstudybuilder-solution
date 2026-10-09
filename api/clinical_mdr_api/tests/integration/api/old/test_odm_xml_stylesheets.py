@@ -1,7 +1,3 @@
-# pylint: disable=unused-argument, redefined-outer-name, too-many-arguments, line-too-long, too-many-statements
-
-# pytest fixture functions have other fixture functions as arguments,
-# which pylint interprets as unused arguments
 import xml.etree.ElementTree as ET
 
 import pytest
@@ -29,7 +25,7 @@ def test_get_specific_stylesheet(api_client):
     response = api_client.get("odms/metadata/xmls/stylesheets/falcon")
 
     with open(
-        settings.xml_stylesheet_dir_path + "falcon.xsl", mode="r", encoding="utf-8"
+        settings.xml_stylesheet_dir_path + "falcon.xsl", encoding="utf-8"
     ) as file:
         expected_xml = file.read()
 

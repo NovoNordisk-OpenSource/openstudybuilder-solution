@@ -1,4 +1,4 @@
-from typing import MutableMapping
+from collections.abc import MutableMapping
 
 from clinical_mdr_api.domain_repositories.models.generic import Library
 from clinical_mdr_api.domains.libraries.library_ar import LibraryAR

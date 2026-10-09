@@ -48,6 +48,14 @@ When('The study type is fully defined', () => {
     cy.selectRadioButton('post-auth-safety-indicator', postAuthSafetyIndicator)
 })
 
+When('The study intervention type is set as {string}', (value) => cy.selectAutoComplete('Intervention type', value))
+
+When('The study intervention type visible as {string}', (value) => cy.contains('table tbody tr td', 'Intervention type').next().should('have.text', value))
+
+When('The study type is set as {string}', (value) => cy.selectAutoComplete('study-type', value))
+
+When('The study type is visible as {string}', (value) => cy.contains('table tbody tr td', 'Study type').next().should('have.text', value))
+
 Then('The study type data is reflected in the table', () => {
     cy.tableContains(studyType)
     cy.tableContains(trialType)

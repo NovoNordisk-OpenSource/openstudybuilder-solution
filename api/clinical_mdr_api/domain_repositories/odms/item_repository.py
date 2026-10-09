@@ -398,7 +398,7 @@ class ItemRepository(OdmGenericRepository[OdmItemAR]):
 
     def _get_computed_field_expressions(self) -> dict[str, str]:
         """Item computed field expressions."""
-        # pylint: disable=line-too-long
+
         return {
             "datatype": """head(COLLECT {
                 MATCH (odm_value)-[:HAS_DATA_TYPE]->(data_type_context:CTTermContext)
@@ -409,17 +409,36 @@ class ItemRepository(OdmGenericRepository[OdmItemAR]):
             }) AS datatype""",
             "external_question": """head(COLLECT {
                 MATCH (odm_value)-[:HAS_EXTERNAL_QUESTION]->(external_question_context:CTTermContext)
-                MATCH (external_question_context)-[:HAS_SELECTED_TERM]->(external_question_term:CTTermRoot)-[:HAS_NAME_ROOT]->(external_question_name_root:CTTermNameRoot)-[:LATEST]->(external_question_name_value:CTTermNameValue)
+                MATCH (external_question_context)-[:HAS_SELECTED_TERM]->(external_question_term:CTTermRoot)
+                    -[:HAS_NAME_ROOT]->(external_question_name_root:CTTermNameRoot)
+                    -[:LATEST]->(external_question_name_value:CTTermNameValue)
                 MATCH (external_question_context)-[:HAS_SELECTED_CODELIST]->(external_question_codelist:CTCodelistRoot)
                 OPTIONAL MATCH (external_question_codelist)-[:HAS_TERM]->(clt:CTCodelistTerm)-[:HAS_TERM_ROOT]->(external_question_term)
                 MATCH (external_question_name_root)-[hv:HAS_VERSION]->(external_question_name_value)
-                RETURN {uid: external_question_term.uid, name: external_question_name_value.name, version: hv.version, codelist_uid: external_question_codelist.uid, submission_value: clt.submission_value}
+                RETURN {
+                    uid: external_question_term.uid,
+                    name: external_question_name_value.name,
+                    version: hv.version,
+                    codelist_uid: external_question_codelist.uid,
+                    submission_value: clt.submission_value
+                }
             }) AS external_question""",
             "odm_item_group": "head([(odm_value)<-[:ITEM_REF]-(oigv:OdmItemGroupValue)<-[:HAS_VERSION]-(oigr:OdmItemGroupRoot) | {uid: oigr.uid, oid:oigv.oid, name: oigv.name }]) AS odm_item_group",
             "translated_texts": "[(odm_value)-[:HAS_TRANSLATED_TEXT]->(dv:OdmTranslatedText) | {text_type: dv.text_type, language: dv.language, text: dv.text}] AS translated_texts",
             "aliases": "[(odm_value)-[:HAS_ALIAS]->(av:OdmAlias) | {name: av.name, context: av.context}] AS aliases",
-            "unit_definitions": "[(odm_value)-[hud:HAS_UNIT_DEFINITION]->(udr:UnitDefinitionRoot)-[:LATEST]->(udv:UnitDefinitionValue) | {uid: udr.uid, name: udv.name, mandatory: hud.mandatory, order: hud.order}] AS unit_definitions",
-            "codelist": "head([(odm_value)-[hc:HAS_CODELIST]->(ctcr:CTCodelistRoot)-[:HAS_ATTRIBUTES_ROOT]->(:CTCodelistAttributesRoot)-[:LATEST]->(ctcav:CTCodelistAttributesValue) | {uid: ctcr.uid, name: ctcav.name, preferred_term: ctcav.preferred_term, allows_multi_choice: hc.allows_multi_choice}]) AS codelist",
+            "unit_definitions": """[(odm_value)-[hud:HAS_UNIT_DEFINITION]->(udr:UnitDefinitionRoot)-[:LATEST]->
+                (udv:UnitDefinitionValue) |
+                {uid: udr.uid, name: udv.name, mandatory: hud.mandatory, order: hud.order}
+            ] AS unit_definitions""",
+            "codelist": """head([(odm_value)-[hc:HAS_CODELIST]->(ctcr:CTCodelistRoot)-[:HAS_ATTRIBUTES_ROOT]->
+                (:CTCodelistAttributesRoot)-[:LATEST]->(ctcav:CTCodelistAttributesValue) |
+                {
+                    uid: ctcr.uid,
+                    name: ctcav.name,
+                    preferred_term: ctcav.preferred_term,
+                    allows_multi_choice: hc.allows_multi_choice
+                }
+            ]) AS codelist""",
             "terms": """[(odm_value)-[hct:HAS_CODELIST_TERM]->(ctc:CTTermContext)-[:HAS_SELECTED_TERM]->(tr:CTTermRoot) |
             {
                 uid: tr.uid,
@@ -431,9 +450,32 @@ class ItemRepository(OdmGenericRepository[OdmItemAR]):
                     [(tr)<-[:HAS_TERM_ROOT]->(cct:CTCodelistTerm)<-[:HAS_TERM]-(:CTCodelistRoot)<-[:HAS_CODELIST]-(odm_value) | cct.submission_value]
                 )
             }] AS terms""",
-            "vendor_elements": "[(odm_value)-[hve:HAS_VENDOR_ELEMENT]->(vev:OdmVendorElementValue)<-[:HAS_VERSION]-(ver:OdmVendorElementRoot) | {uid: ver.uid, name: vev.name, compatible_types: vev.compatible_types, value: hve.value}] AS vendor_elements",
-            "vendor_attributes": "[(odm_value)-[hva:HAS_VENDOR_ATTRIBUTE]->(vav:OdmVendorAttributeValue)<-[:HAS_VERSION]-(var:OdmVendorAttributeRoot) | {uid: var.uid, name: vav.name, data_type: vav.data_type, value_regex: vav.value_regex, compatible_types: vav.compatible_types, value: hva.value}] AS vendor_attributes",
-            "vendor_element_attributes": "[(odm_value)-[hvea:HAS_VENDOR_ELEMENT_ATTRIBUTE]->(vav:OdmVendorAttributeValue)<-[:HAS_VERSION]-(var:OdmVendorAttributeRoot) | {uid: var.uid, name: vav.name, data_type: vav.data_type, value_regex: vav.value_regex, compatible_types: vav.compatible_types, value: hvea.value}] AS vendor_element_attributes",
+            "vendor_elements": """[(odm_value)-[hve:HAS_VENDOR_ELEMENT]->(vev:OdmVendorElementValue)
+                <-[:HAS_VERSION]-(ver:OdmVendorElementRoot) |
+                {uid: ver.uid, name: vev.name, compatible_types: vev.compatible_types, value: hve.value}
+            ] AS vendor_elements""",
+            "vendor_attributes": """[(odm_value)-[hva:HAS_VENDOR_ATTRIBUTE]->(vav:OdmVendorAttributeValue)
+                <-[:HAS_VERSION]-(var:OdmVendorAttributeRoot) |
+                {
+                    uid: var.uid,
+                    name: vav.name,
+                    data_type: vav.data_type,
+                    value_regex: vav.value_regex,
+                    compatible_types: vav.compatible_types,
+                    value: hva.value
+                }
+            ] AS vendor_attributes""",
+            "vendor_element_attributes": """[(odm_value)-[hvea:HAS_VENDOR_ELEMENT_ATTRIBUTE]->
+                (vav:OdmVendorAttributeValue)<-[:HAS_VERSION]-(var:OdmVendorAttributeRoot) |
+                {
+                    uid: var.uid,
+                    name: vav.name,
+                    data_type: vav.data_type,
+                    value_regex: vav.value_regex,
+                    compatible_types: vav.compatible_types,
+                    value: hvea.value
+                }
+            ] AS vendor_element_attributes""",
         }
 
     def specific_alias_clause(self, **kwargs) -> str:

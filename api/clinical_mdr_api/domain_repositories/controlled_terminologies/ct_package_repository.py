@@ -1,5 +1,5 @@
-from datetime import date, datetime
-from typing import Collection
+from collections.abc import Collection
+from datetime import UTC, date, datetime
 
 from neomodel import db
 from neomodel.exceptions import UniqueProperty
@@ -212,7 +212,7 @@ class CTPackageRepository:
             uid=sponsor_package_uid,
             name=sponsor_package_uid,
             description=f"{library_name} package for {extends_package}, as of {effective_date.strftime('%Y-%m-%d')}",
-            import_date=datetime.now(),
+            import_date=datetime.now(UTC),
             effective_date=effective_date,
             author_id=author_id,
         )

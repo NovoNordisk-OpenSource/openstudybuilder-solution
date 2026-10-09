@@ -80,7 +80,6 @@ class OdmXmlStylesheetService:
         """
         with open(
             OdmXmlStylesheetService.get_xml_filename_by_name(stylesheet),
-            mode="r",
             encoding="utf-8",
         ) as file:
             return file.read()

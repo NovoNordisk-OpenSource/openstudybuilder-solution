@@ -2,50 +2,50 @@
 
 ## Environment Setup
 ```bash
-pipenv sync --dev              # Install dependencies
+uv sync --group dev            # Install dependencies
 cp .env.example .env           # Setup environment variables (edit NEO4J_DSN, UID)
 ```
 
 ## Running APIs
 ```bash
-pipenv run dev                 # Start main API (localhost:8000)
-pipenv run consumer-api-dev    # Start consumer API (localhost:8008)
-pipenv run extensions-api-dev  # Start extensions API (localhost:8009)
+uv run poe dev                 # Start main API (localhost:8000)
+uv run poe consumer-api-dev    # Start consumer API (localhost:8008)
+uv run poe extensions-api-dev  # Start extensions API (localhost:8009)
 ```
 
 ## Testing
 ```bash
 # Run specific test
-pipenv run pytest clinical_mdr_api/tests/integration/services/test_listing_study_design.py::TestStudyListing::test_registry_identifiers_listing
+uv run poe test -- clinical_mdr_api/tests/integration/services/test_listing_study_design.py::TestStudyListing::test_registry_identifiers_listing
 
 # Test suites
-pipenv run testunit            # Unit tests only
-pipenv run testint             # Integration tests (requires Neo4j; parallel via -n auto --dist loadfile)
-pipenv run testauth            # OAuth/auth tests
-pipenv run test-telemetry      # Telemetry tests
-pipenv run test                # All tests
+uv run poe testunit            # Unit tests only
+uv run poe testint             # Integration tests (requires Neo4j; parallel via -n auto --dist loadfile)
+uv run poe testauth            # OAuth/auth tests
+uv run poe test-telemetry      # Telemetry tests
+uv run poe test                # All tests
 
 # Consumer API tests
-pipenv run consumer-api-test
-pipenv run consumer-api-testauth
+uv run poe consumer-api-test
+uv run poe consumer-api-testauth
 
 # Extensions API tests
-pipenv run extensions-test
-pipenv run extensions-testauth
+uv run poe extensions-test
+uv run poe extensions-testauth
 ```
 
 ## Code Quality
 ```bash
-pipenv run format              # Auto-format with Black + isort
-pipenv run lint                # Run Pylint
-pipenv run mypy                # Type checking
-pipenv run sblint              # Custom static analysis (SBLint)
+uv run poe format              # Auto-format with Black + isort
+uv run poe lint                # Run Ruff
+uv run poe mypy                # Type checking
+uv run poe sblint              # Custom static analysis (SBLint)
 ```
 
 ## API Documentation
 ```bash
-pipenv run openapi             # Generate openapi.json for main API
-pipenv run consumer-openapi    # Generate openapi.json for consumer API
-pipenv run extensions-openapi  # Generate openapi.json for extensions API
-pipenv run schemathesis        # Validate API against OpenAPI spec
+uv run poe openapi             # Generate openapi.json for main API
+uv run poe consumer-openapi    # Generate openapi.json for consumer API
+uv run poe extensions-openapi  # Generate openapi.json for extensions API
+uv run poe schemathesis        # Validate API against OpenAPI spec
 ```

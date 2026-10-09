@@ -1,4 +1,5 @@
-from typing import Any, Sequence, TypeVar
+from collections.abc import Sequence
+from typing import Any
 
 from neomodel import Q
 from neomodel.sync_.match import Path
@@ -33,9 +34,6 @@ from clinical_mdr_api.repositories._utils import (
 from common.exceptions import ValidationException
 from common.telemetry import trace_calls
 from common.utils import validate_page_number_and_page_size
-
-# pylint: disable=invalid-name
-_StandardsReturnType = TypeVar("_StandardsReturnType")
 
 
 class StudyStandardVersionRepository:

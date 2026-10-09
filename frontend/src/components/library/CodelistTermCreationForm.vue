@@ -238,8 +238,10 @@ const props = defineProps({
     type: String,
     default: null,
   },
-  // The parent codelist's library, used to pre-select the Library dropdown
-  // in the "names" step instead of always defaulting to Sponsor.
+  // The parent codelist's library. Only used to pre-select the Library
+  // dropdown when it is itself an editable/extensible library (e.g. the
+  // codelist is Sponsor-owned already) - a CDISC-origin extensible codelist
+  // must still default new terms to Sponsor, not to its own CDISC library.
   defaultLibraryName: {
     type: String,
     default: null,
@@ -275,12 +277,18 @@ const itemsPerPage = [
 ]
 const createNewTerm = ref(false)
 const form = ref([])
-function resolveDefaultLibraryName() {
-  return props.defaultLibraryName || constants.LIBRARY_SPONSOR
-}
-const selectedLibraryName = ref(resolveDefaultLibraryName())
 const { libraries: editableLibraries, showDropdown: showLibraryDropdown } =
   useEditableLibraries()
+function resolveDefaultLibraryName() {
+  if (
+    props.defaultLibraryName &&
+    editableLibraries.value.some((lib) => lib.name === props.defaultLibraryName)
+  ) {
+    return props.defaultLibraryName
+  }
+  return constants.LIBRARY_SPONSOR
+}
+const selectedLibraryName = ref(resolveDefaultLibraryName())
 const alternateSteps = [
   {
     name: 'creation_mode',

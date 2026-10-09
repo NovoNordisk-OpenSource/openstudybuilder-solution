@@ -1,6 +1,7 @@
+from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime, timezone
-from typing import Callable, Self
+from datetime import UTC, datetime
+from typing import Self
 
 from clinical_mdr_api.domains.concepts.simple_concepts.numeric_value_with_unit import (
     NumericValueWithUnitAR,
@@ -114,7 +115,7 @@ class LagTimeAR(NumericValueWithUnitAR):
             _change_description="Initial version",
             _status=LibraryItemStatus.FINAL,
             _author_id=author_id,
-            _start_date=datetime.now(timezone.utc),
+            _start_date=datetime.now(UTC),
             _end_date=None,
             _major_version=1,
             _minor_version=0,

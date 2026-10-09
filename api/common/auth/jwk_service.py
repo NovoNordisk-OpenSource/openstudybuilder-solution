@@ -1,7 +1,8 @@
 import logging
 import time
 import uuid
-from typing import Any, Mapping, MutableMapping
+from collections.abc import Mapping, MutableMapping
+from typing import Any
 
 from authlib.integrations.base_client import OAuth2Mixin
 from authlib.jose import JsonWebKey, JWTClaims, Key, KeySet, jwt
@@ -134,7 +135,7 @@ class JWKService(KeySet):
         return False
 
     async def _fetch_json(self, url: str):
-        # pylint: disable=protected-access
+
         resp = await self._http_client.request("GET", url)
         resp.raise_for_status()
         return resp.json()

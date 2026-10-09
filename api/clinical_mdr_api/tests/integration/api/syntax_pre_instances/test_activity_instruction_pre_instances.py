@@ -2,13 +2,6 @@
 Tests for activity-instruction-pre-instances endpoints
 """
 
-# pylint: disable=unused-argument
-# pylint: disable=redefined-outer-name
-# pylint: disable=too-many-arguments
-
-# pytest fixture functions have other fixture functions as arguments,
-# which pylint interprets as unused arguments
-
 import json
 import logging
 from functools import reduce
@@ -413,8 +406,8 @@ def test_activity_instruction_pre_instances(
     if sort_by:
         # sort_by is JSON string in the form: {"sort_field_name": is_ascending_order}
         sort_by_dict = json.loads(sort_by)
-        sort_field: str = list(sort_by_dict.keys())[0]
-        sort_order_ascending: bool = list(sort_by_dict.values())[0]
+        sort_field: str = next(iter(sort_by_dict.keys()))
+        sort_order_ascending: bool = next(iter(sort_by_dict.values()))
 
         # extract list of values of 'sort_field_name' field from the returned result
         result_vals = list(map(lambda x: x[sort_field], res["items"]))

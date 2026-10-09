@@ -4,6 +4,7 @@ library,Wizard Stepper,new_activity_instance_wizard_stepper,1,This flag toggles 
 library,Wizard Stepper,activity_instance_wizard_stepper_categoric_findings,0,This flag toggles on/off the Categoric Findings use case in the new wizard stepper for activity instances
 library,Wizard Stepper,activity_instance_wizard_stepper_events,0,This flag toggles on/off the Events use case in the new wizard stepper for activity instances
 library,Wizard Stepper,activity_instance_wizard_stepper_textual_findings,0,This flag toggles on/off the Textual Findings use case in the new wizard stepper for activity instances
+library,Wizard Stepper,activity_instance_wizard_stepper_interventions,0,This flag toggles on/off the Interventions use case in the new wizard stepper for activity instances
 library,Wizard Stepper,activity_instance_wizard_stepper_edit_mode,0,This flag toggles on/off the edit mode of the new wizard stepper for activity instances
 library,Compounds v2,compounds_library,0,This flag toggles on/off the whole subpage found at Library/Concepts/Compounds
 library,Non-Standard variables,nsvs_library,This flag toggles on/off the whole subpage found at Library/Concepts/Non-Standard Variables
@@ -17,3 +18,4 @@ library,Dictionaries,meddra_dictionary,0,This flag toggles on/off the MedDRA dic
 library,Dictionaries,loinc_dictionary,0,This flag toggles on/off the LOINC dictionary page found at Library/Dictionaries/LOINC
 studies,Protocol – Lab,soa_protocol_lab_table,0,Show/hide 'Protocol - Lab Table' tab on 'Studies > Study Activities'
 studies,Placeholder Activities,streamline_placeholder_activities,1,When enabled uses the streamlined placeholder activity workflow and hides the Requested Activities tab
+library,CT Terms,ct_term_short_code,0,This flag toggles on/off the short_code trial summary parameter field on CT terms

@@ -1,6 +1,5 @@
 """Service layer for feature flag operations."""
 
-# pylint: disable=invalid-name
 from neomodel import db
 
 from clinical_mdr_api.domain_repositories.feature_flag_repository import (

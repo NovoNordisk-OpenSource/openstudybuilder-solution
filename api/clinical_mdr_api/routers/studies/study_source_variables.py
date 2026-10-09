@@ -8,8 +8,11 @@ from clinical_mdr_api.models.study_selections.study_selection import (
     StudySourceVariable,
     StudySourceVariableInput,
 )
-from clinical_mdr_api.routers import _generic_descriptions, decorators
-from clinical_mdr_api.routers import study_router as router
+from clinical_mdr_api.routers import (
+    _generic_descriptions,
+    decorators,
+    study_router as router,
+)
 from clinical_mdr_api.routers.studies import utils
 from clinical_mdr_api.services.studies.study_source_variable import (
     StudySourceVariableService,

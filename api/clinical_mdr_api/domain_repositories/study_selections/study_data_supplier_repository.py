@@ -188,7 +188,9 @@ class StudyDataSupplierRepository:
             MATCH (data_supplier_value)-[:HAS_VERSION]-(data_supplier_root:DataSupplierRoot)
             MATCH (all_sds)<-[:AFTER]-(after_study_action:StudyAction)
             OPTIONAL MATCH (all_sds)<-[:BEFORE]-(before_study_action:StudyAction)
-            OPTIONAL MATCH (all_sds)-[:HAS_STUDY_DATA_SUPPLIER_TYPE]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(study_data_supplier_type:CTTermRoot)<-[:HAS_TERM_ROOT]-(:CTCodelistTerm)<-[ht:HAS_TERM WHERE (ct_package.effective_date IS NULL AND ht.end_date IS NULL)
+            OPTIONAL MATCH (all_sds)-[:HAS_STUDY_DATA_SUPPLIER_TYPE]->(:CTTermContext)-[:HAS_SELECTED_TERM]->
+            (study_data_supplier_type:CTTermRoot)<-[:HAS_TERM_ROOT]-(:CTCodelistTerm)
+            <-[ht:HAS_TERM WHERE (ct_package.effective_date IS NULL AND ht.end_date IS NULL)
             OR (ht.start_date <= datetime(toString(date(ct_package.effective_date)) + "T23:59:59.999999999Z") < datetime(ht.end_date))
             OR (ht.end_date IS NULL AND (ht.start_date <= datetime(toString(date(ct_package.effective_date)) + "T23:59:59.999999999Z")))]-(:CTCodelistRoot)
             RETURN DISTINCT
@@ -235,7 +237,9 @@ class StudyDataSupplierRepository:
             <-[:CONTAINS_PACKAGE]-(:CTCatalogue {{name: "{settings.sdtm_ct_catalogue_name}"}})
             MATCH (data_supplier_root:DataSupplierRoot {{uid: $data_supplier_uid}})-[:LATEST]->(data_supplier_value:DataSupplierValue)
             -[:HAS_DATA_SUPPLIER_TYPE]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(data_supplier_type:CTTermRoot)
-            OPTIONAL MATCH (old_study_data_supplier)-[:HAS_STUDY_DATA_SUPPLIER_TYPE]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(study_data_supplier_type:CTTermRoot)<-[:HAS_TERM_ROOT]-(:CTCodelistTerm)<-[ht:HAS_TERM WHERE (ct_package.effective_date IS NULL AND ht.end_date IS NULL)
+            OPTIONAL MATCH (old_study_data_supplier)-[:HAS_STUDY_DATA_SUPPLIER_TYPE]->(:CTTermContext)-[:HAS_SELECTED_TERM]->
+            (study_data_supplier_type:CTTermRoot)<-[:HAS_TERM_ROOT]-(:CTCodelistTerm)
+            <-[ht:HAS_TERM WHERE (ct_package.effective_date IS NULL AND ht.end_date IS NULL)
             OR (ht.start_date <= datetime(toString(date(ct_package.effective_date)) + "T23:59:59.999999999Z") < datetime(ht.end_date))
             OR (ht.end_date IS NULL AND (ht.start_date <= datetime(toString(date(ct_package.effective_date)) + "T23:59:59.999999999Z")))]-(:CTCodelistRoot)
             CREATE (new_study_data_supplier:StudySelection:StudyDataSupplier {{uid: $study_data_supplier_uid, order: old_study_data_supplier.order, blinded: $blinded}})

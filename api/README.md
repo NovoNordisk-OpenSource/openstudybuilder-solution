@@ -12,10 +12,10 @@ This repository contains the OpenStudyBuilder API providing read/write access to
 
 ## Setup python virtual environment
 
-Python 3.14 and Pipenv are prerequisites — see the
+Python 3.14 and uv are prerequisites — see the
 [root README](../README.md#prerequisites).
 
-Run `pipenv sync --dev` from the `api` directory to install the dependencies.
+Run `uv sync --group dev` from the `api` directory to install the dependencies.
 
 ## Setup environment variables
 Copy `.env.example` and name it `.env` and update the variables as needed.
@@ -61,7 +61,7 @@ Notes:
 Start the API locally by running:
 
 ```bash
-$ pipenv run dev
+$ uv run poe dev
 ```
 
 
@@ -80,38 +80,46 @@ You might want to use a start script like this:
 
 ```sh
 #!/usr/bin/env bash
-pipenv sync
-pipenv run dev
+uv sync
+uv run poe dev
 ```
 
 All in all, you should be able to start the API by performing these steps:
 * Start docker service by running `sudo service start docker`
 * Start database container by running `docker start neo4j_local`
-* Install Python virtual environment by running `pipenv sync`
-* Start the API by running `pipenv run dev`
+* Install Python virtual environment by running `uv sync`
+* Start the API by running `uv run poe dev`
+
+A running API is not a working one if the database lacks controlled terminology.
+The API resolves a number of codelists by submission value in order to validate
+mandatory fields, and a missing one surfaces as
+`The codelist identified by submission value ... was not found` on save — or, on
+the read path, as nothing at all. See
+[import_sponsor_data/SYSTEM_CODELISTS.md](../import_sponsor_data/SYSTEM_CODELISTS.md)
+for which codelists are required, what each is needed for, and how to verify an
+environment.
 
 
-
-## Useful shortcuts (i.e. scripts defined in Pipfile)
-- `pipenv run format` - Formats all Python code using [Black](https://black.readthedocs.io/en/stable/) and [isort](https://pycqa.github.io/isort/)
-- `pipenv run testunit` - Runs all tests defined in `clinical_mdr_api/tests/unit/` and `common/tests/unit/` and generates test and coverage reports
-- `pipenv run testint` - Runs all tests defined in the `clinical_mdr_api/tests/integration` folder and generates test and coverage reports
-- `pipenv run testauth` - Runs the authentication tests in `clinical_mdr_api/tests/auth/`, `common/tests/auth/` and `extensions/tests/auth/`.
-- `pipenv run test-telemetry` - Runs all tests defined in the `clinical_mdr_api/tests/telemetry` folder and generates test and coverage reports
-- `pipenv run test` - Runs all tests (no path filter)
-- `pipenv run mypy` - Performs type checking [mypy](https://mypy.readthedocs.io/)
-- `pipenv run sblint` - Performs static code analysis using [SBLint](./sblint)
-- `pipenv run lint` - Performs static code analysis using [Pylint](https://pylint.pycqa.org/en/latest/)
-- `pipenv run openapi` - Generates API specification in the [OpenAPI](https://swagger.io/specification/) format and stores it in `openapi.json` file
-- `pipenv run neomodel-schema` - Generates a single-file snapshot of the neomodel schema (nodes, properties, relationships) used for drift detection
-- `pipenv run schemathesis` - Checks API implementation against the specification defined in `openapi.json` file using the [schemathesis](https://schemathesis.readthedocs.io/en/stable/) tool
+## Useful shortcuts (i.e. poe tasks defined in pyproject.toml)
+- `uv run poe format` - Formats all Python code using [Black](https://black.readthedocs.io/en/stable/) and [isort](https://pycqa.github.io/isort/)
+- `uv run poe testunit` - Runs all tests defined in `clinical_mdr_api/tests/unit/` and `common/tests/unit/` and generates test and coverage reports
+- `uv run poe testint` - Runs all tests defined in the `clinical_mdr_api/tests/integration` folder and generates test and coverage reports
+- `uv run poe testauth` - Runs the authentication tests in `clinical_mdr_api/tests/auth/`, `common/tests/auth/` and `extensions/tests/auth/`.
+- `uv run poe test-telemetry` - Runs all tests defined in the `clinical_mdr_api/tests/telemetry` folder and generates test and coverage reports
+- `uv run poe test` - Runs all tests (no path filter)
+- `uv run poe mypy` - Performs type checking [mypy](https://mypy.readthedocs.io/)
+- `uv run poe sblint` - Performs static code analysis using [SBLint](./sblint)
+- `uv run poe lint` - Performs static code analysis using [Ruff](https://docs.astral.sh/ruff/)
+- `uv run poe openapi` - Generates API specification in the [OpenAPI](https://swagger.io/specification/) format and stores it in `openapi.json` file
+- `uv run poe neomodel-schema` - Generates a single-file snapshot of the neomodel schema (nodes, properties, relationships) used for drift detection
+- `uv run poe schemathesis` - Checks API implementation against the specification defined in `openapi.json` file using the [schemathesis](https://schemathesis.readthedocs.io/en/stable/) tool
 
 ## Neomodel schema snapshot
 
 To generate a local snapshot for comparison/testing, run:
 
 ```bash
-pipenv run neomodel-schema -o neomodel_schema.generated.json
+uv run poe neomodel-schema -o neomodel_schema.generated.json
 ```
 
 This creates one file containing the current neomodel schema structure.
@@ -124,11 +132,11 @@ In CI, this schema functionality follows the OpenAPI-style behavior: when drift 
 
 - If you want to execute only a subset of tests instead of using shortcuts defined above, you can run:
   ```bash
-  $ pipenv run pytest {test file path}::{test class}::{test method}
+  $ uv run poe test -- {test file path}::{test class}::{test method}
   ```
   Below is an example:
   ```bash
-  $ pipenv run pytest clinical_mdr_api/tests/integration/services/test_listing_study_design.py::TestStudyListing::test_registry_identifiers_listing
+  $ uv run poe test -- clinical_mdr_api/tests/integration/services/test_listing_study_design.py::TestStudyListing::test_registry_identifiers_listing
   ```
 
 ## Running Schemathesis checks
@@ -138,7 +146,7 @@ In CI, this schema functionality follows the OpenAPI-style behavior: when drift 
   SCHEMATHESIS_HOOKS=clinical_mdr_api.hooks.schemathesis_hooks
   ```
 
-- Run `pipenv run schemathesis` (to test the main API) or `pipenv run consumer-api-schemathesis` (to test the Consumer API). 
+- Run `uv run poe schemathesis` (to test the main API) or `uv run poe consumer-api-schemathesis` (to test the Consumer API). 
 
 - To run schemathesis checks on a subset of endpoints and/or http methods, 
 you can specify parameters for the desired http methods (`--include-method`) and/or endpoint paths (`--include-path-regex`).
@@ -146,7 +154,7 @@ you can specify parameters for the desired http methods (`--include-method`) and
   For example, this will only test `POST` endpoints `OR` endpoints whose path starts with `/concepts/numeric-values-with-unit`:
 
   ```
-  pipenv run schemathesis --include-method POST --include-path-regex ^/concepts/numeric-values-with-unit
+  uv run poe schemathesis --include-method POST --include-path-regex ^/concepts/numeric-values-with-unit
   ```
 
 ## Authentication setup
@@ -284,8 +292,8 @@ No other exceptions should ever be raised by our code.
 # Code Style
 
 - We should follow the rules mentioned here: https://pep8.org. 
-- All code must be formatted using [Black](https://black.readthedocs.io/en/stable/) and [isort](https://pycqa.github.io/isort/) tools (run `pipenv run format` to auto-format all code).
-- All code must pass [Pylint](https://pylint.pycqa.org/en/latest/) static code analysis. Pylint rules which we are globally ignoring are stored in the [pyproject.toml](pyproject.toml) file.
+- All code must be formatted using [Black](https://black.readthedocs.io/en/stable/) and [isort](https://pycqa.github.io/isort/) tools (run `uv run poe format` to auto-format all code).
+- All code must pass [Ruff](https://docs.astral.sh/ruff/) static code analysis. Ruff rules which we are globally ignoring are stored in the [pyproject.toml](pyproject.toml) file.
 
 
 # Source Code Management

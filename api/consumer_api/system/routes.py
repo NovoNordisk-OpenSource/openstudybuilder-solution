@@ -69,7 +69,7 @@ async def healthcheck() -> str:
     response_class=FileResponse,
     status_code=200,
 )
-async def get_sbom_md() -> FileResponse:
+def get_sbom_md() -> FileResponse:
     filename = "sbom.md"
     filepath = os.path.join(settings.app_root_dir, filename)
     if not os.path.isfile(filepath):
@@ -83,7 +83,7 @@ async def get_sbom_md() -> FileResponse:
     response_class=FileResponse,
     status_code=200,
 )
-async def get_license_md() -> FileResponse:
+def get_license_md() -> FileResponse:
     filename = "LICENSE.md"
     filepath = os.path.join(settings.app_root_dir, filename)
     if not os.path.isfile(filepath):

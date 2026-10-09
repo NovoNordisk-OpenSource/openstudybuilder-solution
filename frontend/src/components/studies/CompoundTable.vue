@@ -145,7 +145,11 @@ const headers = [
   },
   {
     title: t('StudyCompoundTable.dose_frequency'),
-    key: 'medicinal_product.dose_frequencies',
+    // Sort/filter on the term names — the API cannot order the list of
+    // dose_frequencies objects itself. transformItems joins those names into a
+    // single string, which is what the cell shows.
+    key: 'medicinal_product.dose_frequencies.name',
+    displayKey: 'medicinal_product.dose_frequencies',
   },
 ]
 const selectedStudyCompound = ref(null)

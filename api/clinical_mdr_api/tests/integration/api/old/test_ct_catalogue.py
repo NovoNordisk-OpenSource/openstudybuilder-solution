@@ -1,10 +1,3 @@
-# pylint: disable=unused-argument
-# pylint: disable=redefined-outer-name
-# pylint: disable=too-many-arguments
-
-# pytest fixture functions have other fixture functions as arguments,
-# which pylint interprets as unused arguments
-
 import pytest
 from fastapi.testclient import TestClient
 from neomodel import db

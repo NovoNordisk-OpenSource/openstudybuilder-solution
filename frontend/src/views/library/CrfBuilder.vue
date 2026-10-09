@@ -73,7 +73,7 @@ const { t } = useI18n()
 const router = useRouter()
 const route = useRoute()
 const appStore = useAppStore()
-const { tabKeys, updateTabKey } = useTabKeys()
+const { tabKeys, updateTabKey } = useTabKeys({ persist: true })
 
 const tab = ref(null)
 const type = ref('')

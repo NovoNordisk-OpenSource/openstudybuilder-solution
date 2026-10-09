@@ -1,6 +1,3 @@
-# pylint: disable=unused-argument
-# pylint: disable=redefined-outer-name
-
 from typing import Any
 
 import pytest
@@ -37,7 +34,7 @@ class TestData:
         self.visits = []
         for i in range(9):
             self.visits.append(
-                TestUtils.create_study_visit(  # pylint: disable=repeated-keyword
+                TestUtils.create_study_visit(
                     study_uid=self.study.uid,
                     study_epoch_uid=self.epochs[int(i / 3)].uid,
                     time_value=i * 7,

@@ -1,4 +1,3 @@
-# pylint: disable=invalid-name
 from datetime import datetime
 
 from neomodel import db

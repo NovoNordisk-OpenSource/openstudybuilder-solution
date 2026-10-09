@@ -1,8 +1,3 @@
-# pylint: disable=unused-argument, redefined-outer-name, too-many-arguments, line-too-long, too-many-statements
-
-# pytest fixture functions have other fixture functions as arguments,
-# which pylint interprets as unused arguments
-
 import pytest
 from fastapi.testclient import TestClient
 from neomodel import db
@@ -20,11 +15,7 @@ from clinical_mdr_api.tests.integration.utils.data_library import (
     CREATE_BASE_TEMPLATE_PARAMETER_TREE,
     STARTUP_CRITERIA,
     STARTUP_PARAMETERS_CYPHER,
-)
-from clinical_mdr_api.tests.integration.utils.data_library import (
     criteria_template_data as template_data,
-)
-from clinical_mdr_api.tests.integration.utils.data_library import (
     inject_base_data,
     library_data,
 )

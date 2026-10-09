@@ -2,6 +2,9 @@ from typing import Annotated, Any
 
 from fastapi import Body, Query
 
+from clinical_mdr_api.domain_repositories.study_selections.study_soa_repository import (
+    SoALayout,
+)
 from clinical_mdr_api.models.study_selections.study_soa_footnote import (
     StudySoAFootnote,
     StudySoAFootnoteBatchEditInput,
@@ -13,8 +16,11 @@ from clinical_mdr_api.models.study_selections.study_soa_footnote import (
 )
 from clinical_mdr_api.models.utils import CustomPage
 from clinical_mdr_api.repositories._utils import FilterOperator
-from clinical_mdr_api.routers import _generic_descriptions, decorators
-from clinical_mdr_api.routers import study_router as router
+from clinical_mdr_api.routers import (
+    _generic_descriptions,
+    decorators,
+    study_router as router,
+)
 from clinical_mdr_api.routers.studies import utils
 from clinical_mdr_api.services.studies.study_soa_footnote import StudySoAFootnoteService
 from common.auth import rbac
@@ -39,6 +45,13 @@ def get_all_study_soa_footnotes_from_all_studies(
     filters: _generic_descriptions.FILTERS_QUERY = None,
     operator: _generic_descriptions.FILTER_OPERATOR_QUERY = settings.default_filter_operator,
     total_count: _generic_descriptions.TOTAL_COUNT_QUERY = False,
+    layout: Annotated[
+        SoALayout | None,
+        Query(
+            description="If specified, returns footnotes connected to this SoA layout, "
+            "as well as footnotes without any layout (which apply to all layouts)."
+        ),
+    ] = None,
 ) -> CustomPage[StudySoAFootnote]:
     service = StudySoAFootnoteService()
     all_footnotes = service.get_all(
@@ -48,6 +61,7 @@ def get_all_study_soa_footnotes_from_all_studies(
         filter_by=filters,
         filter_operator=FilterOperator.from_str(operator),
         sort_by=sort_by,
+        layout=layout,
     )
     return CustomPage(
         items=all_footnotes.items,
@@ -88,6 +102,13 @@ def get_all_study_soa_footnotes(
             description="Specifies whether minimal version of SoAFootnote should be returned"
         ),
     ] = False,
+    layout: Annotated[
+        SoALayout | None,
+        Query(
+            description="If specified, returns footnotes connected to this SoA layout, "
+            "as well as footnotes without any layout (which apply to all layouts)."
+        ),
+    ] = None,
 ) -> CustomPage[StudySoAFootnote]:
     service = StudySoAFootnoteService()
     all_footnotes = service.get_all_by_study_uid(
@@ -100,6 +121,7 @@ def get_all_study_soa_footnotes(
         sort_by=sort_by,
         study_value_version=study_value_version,
         minimal_response=minimal_response,
+        layout=layout,
     )
     return CustomPage(
         items=all_footnotes.items,
@@ -194,7 +216,6 @@ def get_distinct_values_for_header_top_level(
     },
 )
 def get_study_soa_footnote(
-    # pylint: disable=unused-argument
     study_uid: Annotated[str, utils.studyUID],
     study_soa_footnote_uid: Annotated[str, utils.study_soa_footnote_uid],
     study_value_version: Annotated[

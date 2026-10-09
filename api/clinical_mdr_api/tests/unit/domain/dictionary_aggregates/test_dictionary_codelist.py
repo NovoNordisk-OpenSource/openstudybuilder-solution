@@ -1,5 +1,5 @@
 import unittest
-from typing import Callable
+from collections.abc import Callable
 
 from clinical_mdr_api.domains.dictionaries.dictionary_codelist import (
     DictionaryCodelistAR,
@@ -23,8 +23,7 @@ def create_random_dictionary_codelist_vo() -> DictionaryCodelistVO:
 
 
 def create_random_dictionary_codelist_ar(
-    # pylint: disable=unnecessary-lambda
-    generate_uid_callback: Callable[[], str] = lambda: random_str(),
+    generate_uid_callback: Callable[[], str] = random_str,
     library: str = "Library",
     is_editable: bool = True,
 ) -> DictionaryCodelistAR:

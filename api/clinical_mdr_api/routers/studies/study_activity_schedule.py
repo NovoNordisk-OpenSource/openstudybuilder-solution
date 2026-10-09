@@ -9,8 +9,7 @@ from clinical_mdr_api.models.study_selections.study_selection import (
     StudyActivityScheduleCreateInput,
     StudyActivityScheduleHistory,
 )
-from clinical_mdr_api.routers import _generic_descriptions
-from clinical_mdr_api.routers import study_router as router
+from clinical_mdr_api.routers import _generic_descriptions, study_router as router
 from clinical_mdr_api.routers.studies import utils
 from clinical_mdr_api.services.studies.study_activity_schedule import (
     StudyActivityScheduleService,

@@ -82,7 +82,6 @@ Possible errors:
         ],
     }
 )
-# pylint: disable=unused-argument
 def get_terms(
     request: Request,  # request is actually required by the allow_exports decorator
     codelist_uid: Annotated[
@@ -681,7 +680,6 @@ Possible errors:
         ],
     }
 )
-# pylint: disable=unused-argument
 def get_substances(
     request: Request,  # request is actually required by the allow_exports decorator
     sort_by: _generic_descriptions.SORT_BY_QUERY = None,

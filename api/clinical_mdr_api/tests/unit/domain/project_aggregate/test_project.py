@@ -1,4 +1,4 @@
-from typing import Callable
+from collections.abc import Callable
 
 from clinical_mdr_api.domains.projects.project import ProjectAR
 from clinical_mdr_api.tests.unit.domain.utils import random_opt_str, random_str

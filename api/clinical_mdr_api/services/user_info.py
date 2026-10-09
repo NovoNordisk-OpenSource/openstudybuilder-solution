@@ -8,12 +8,12 @@ if TYPE_CHECKING:
 
 
 class UserInfoService:
-    instance: "ClassVar[UserInfoService]"
+    instance: ClassVar[UserInfoService]
     repo: UserRepository
 
     def __new__(cls):
         if not hasattr(cls, "instance"):
-            cls.instance = super(UserInfoService, cls).__new__(cls)
+            cls.instance = super().__new__(cls)
         return cls.instance
 
     def __init__(self):

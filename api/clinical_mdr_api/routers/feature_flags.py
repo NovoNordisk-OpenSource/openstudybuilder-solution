@@ -1,6 +1,5 @@
 """Feature flag API routes."""
 
-# pylint: disable=invalid-name
 from typing import Annotated
 
 from fastapi import APIRouter, Body, Path, Query

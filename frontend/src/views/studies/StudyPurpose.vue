@@ -50,7 +50,7 @@ export default {
       addBreadcrumbsLevel: appStore.addBreadcrumbsLevel,
       selectedStudy: computed(() => studiesGeneralStore.selectedStudy),
       studyId: computed(() => studiesGeneralStore.studyId),
-      ...useTabKeys(),
+      ...useTabKeys({ persist: true }),
     }
   },
   data() {

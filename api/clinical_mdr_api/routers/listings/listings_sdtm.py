@@ -57,7 +57,6 @@ router = APIRouter()
         ],
     }
 )
-# pylint: disable=unused-argument
 def get_tv(
     request: Request,  # request is actually required by the allow_exports decorator
     study_uid: Annotated[
@@ -129,7 +128,6 @@ def get_tv(
         ],
     }
 )
-# pylint: disable=unused-argument
 def get_ta(
     request: Request,  # request is actually required by the allow_exports decorator
     study_uid: Annotated[
@@ -199,7 +197,6 @@ def get_ta(
         ],
     }
 )
-# pylint: disable=unused-argument
 def get_ti(
     request: Request,  # request is actually required by the allow_exports decorator
     study_uid: Annotated[
@@ -270,7 +267,6 @@ def get_ti(
         ],
     }
 )
-# pylint: disable=unused-argument
 def get_ts(
     request: Request,  # request is actually required by the allow_exports decorator
     study_uid: Annotated[
@@ -339,7 +335,6 @@ def get_ts(
         ],
     }
 )
-# pylint: disable=unused-argument
 def get_te(
     request: Request,  # request is actually required by the allow_exports decorator
     study_uid: Annotated[
@@ -406,7 +401,6 @@ def get_te(
         ],
     }
 )
-# pylint: disable=unused-argument
 def get_tdm(
     request: Request,  # request is actually required by the allow_exports decorator
     study_uid: Annotated[

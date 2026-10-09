@@ -1,9 +1,4 @@
-# pylint: disable=unused-argument
-# pylint: disable=redefined-outer-name
-# pylint: disable=too-many-arguments
-
-# pytest fixture functions have other fixture functions as arguments,
-# which pylint interprets as unused arguments
+import json
 
 import pytest
 from fastapi.testclient import TestClient
@@ -217,6 +212,21 @@ def test_data():
             }
         ],
     )
+    # A CT unit term from a second library, to sort units by CT term library
+    library_service.create(name="Alpha library", is_editable=True)
+    create_ct_term(
+        "CT Unit term 5",
+        "unit-ct-uid-alpha",
+        catalogue_name,
+        "Alpha library",
+        codelists=[
+            {
+                "uid": ct_unit_cod.codelist_uid,
+                "order": 5,
+                "submission_value": "CT Unit term 5",
+            }
+        ],
+    )
     yield
 
     drop_db("old.json.tests.unitdefinition")
@@ -236,10 +246,8 @@ def test_adding(api_client):
         "convertible_unit": True,
         "display_unit": True,
         "master_unit": True,
-        "si_unit": True,
         "us_conventional_unit": True,
         "unit_dimension": "unit1-dimension",
-        "legacy_code": "unit1-legacy-code",
         "conversion_factor_to_master": 1.0,
         "order": 1,
     }
@@ -270,6 +278,7 @@ def test_adding(api_client):
             "submission_value": "CT Unit term 1",
             "queried_effective_date": None,
             "date_conflict": False,
+            "library_name": "Test library",
         }
     ]
     assert res["unit_subsets"] == []
@@ -288,9 +297,7 @@ def test_adding(api_client):
     assert res["convertible_unit"] is True
     assert res["display_unit"] is True
     assert res["master_unit"] is True
-    assert res["si_unit"] is True
     assert res["us_conventional_unit"] is True
-    assert res["legacy_code"] == "unit1-legacy-code"
     assert res["use_molecular_weight"] is False
     assert res["conversion_factor_to_master"] == 1.0
     assert res["use_complex_unit_conversion"] is False
@@ -309,10 +316,8 @@ def test_adding_non_unique_name(api_client):
         "convertible_unit": True,
         "display_unit": True,
         "master_unit": True,
-        "si_unit": True,
         "us_conventional_unit": True,
         "unit_dimension": "unit1-dimension-2",
-        "legacy_code": "unit1-legacy-code-2",
         "conversion_factor_to_master": 1.0,
         "order": 2,
     }
@@ -343,6 +348,7 @@ def test_get_all_1(api_client):
             "submission_value": "CT Unit term 1",
             "queried_effective_date": None,
             "date_conflict": False,
+            "library_name": "Test library",
         }
     ]
     assert res["items"][0]["unit_subsets"] == []
@@ -369,9 +375,7 @@ def test_get_all_1(api_client):
     assert res["items"][0]["convertible_unit"] is True
     assert res["items"][0]["display_unit"] is True
     assert res["items"][0]["master_unit"] is True
-    assert res["items"][0]["si_unit"] is True
     assert res["items"][0]["us_conventional_unit"] is True
-    assert res["items"][0]["legacy_code"] == "unit1-legacy-code"
     assert res["items"][0]["use_molecular_weight"] is False
     assert res["items"][0]["conversion_factor_to_master"] == 1.0
     assert res["items"][0]["use_complex_unit_conversion"] is False
@@ -404,10 +408,8 @@ def test_adding1(api_client):
         "convertible_unit": True,
         "display_unit": True,
         "master_unit": True,
-        "si_unit": True,
         "us_conventional_unit": True,
         "unit_dimension": "unit1-dimension",
-        "legacy_code": "unit1-legacy-code",
         "conversion_factor_to_master": 1.0,
         "order": 1,
     }
@@ -430,6 +432,7 @@ def test_adding1(api_client):
             "submission_value": "CT Unit term 1",
             "queried_effective_date": None,
             "date_conflict": False,
+            "library_name": "Test library",
         }
     ]
     assert res["unit_subsets"] == []
@@ -456,9 +459,7 @@ def test_adding1(api_client):
     assert res["convertible_unit"] is True
     assert res["display_unit"] is True
     assert res["master_unit"] is True
-    assert res["si_unit"] is True
     assert res["us_conventional_unit"] is True
-    assert res["legacy_code"] == "unit1-legacy-code"
     assert res["use_molecular_weight"] is False
     assert res["conversion_factor_to_master"] == 1.0
     assert res["use_complex_unit_conversion"] is False
@@ -517,6 +518,7 @@ def test_get_all1(api_client):
             "submission_value": "CT Unit term 1",
             "queried_effective_date": None,
             "date_conflict": False,
+            "library_name": "Test library",
         }
     ]
     assert res["items"][0]["unit_subsets"] == []
@@ -543,9 +545,7 @@ def test_get_all1(api_client):
     assert res["items"][0]["convertible_unit"] is True
     assert res["items"][0]["display_unit"] is True
     assert res["items"][0]["master_unit"] is True
-    assert res["items"][0]["si_unit"] is True
     assert res["items"][0]["us_conventional_unit"] is True
-    assert res["items"][0]["legacy_code"] == "unit1-legacy-code"
     assert res["items"][0]["use_molecular_weight"] is False
     assert res["items"][0]["conversion_factor_to_master"] == 1.0
     assert res["items"][0]["use_complex_unit_conversion"] is False
@@ -573,6 +573,7 @@ def test_get_specific_latest(api_client):
             "submission_value": "CT Unit term 1",
             "queried_effective_date": None,
             "date_conflict": False,
+            "library_name": "Test library",
         }
     ]
     assert res["unit_subsets"] == []
@@ -599,9 +600,7 @@ def test_get_specific_latest(api_client):
     assert res["convertible_unit"] is True
     assert res["display_unit"] is True
     assert res["master_unit"] is True
-    assert res["si_unit"] is True
     assert res["us_conventional_unit"] is True
-    assert res["legacy_code"] == "unit1-legacy-code"
     assert res["use_molecular_weight"] is False
     assert res["conversion_factor_to_master"] == 1.0
     assert res["use_complex_unit_conversion"] is False
@@ -629,6 +628,7 @@ def test_get_specific_status_draft(api_client):
             "submission_value": "CT Unit term 1",
             "queried_effective_date": None,
             "date_conflict": False,
+            "library_name": "Test library",
         }
     ]
     assert res["unit_subsets"] == []
@@ -655,9 +655,7 @@ def test_get_specific_status_draft(api_client):
     assert res["convertible_unit"] is True
     assert res["display_unit"] is True
     assert res["master_unit"] is True
-    assert res["si_unit"] is True
     assert res["us_conventional_unit"] is True
-    assert res["legacy_code"] == "unit1-legacy-code"
     assert res["use_molecular_weight"] is False
     assert res["conversion_factor_to_master"] == 1.0
     assert res["use_complex_unit_conversion"] is False
@@ -685,6 +683,7 @@ def test_get_specific_version_0_1(api_client):
             "submission_value": "CT Unit term 1",
             "queried_effective_date": None,
             "date_conflict": False,
+            "library_name": "Test library",
         }
     ]
     assert res["unit_subsets"] == []
@@ -711,9 +710,7 @@ def test_get_specific_version_0_1(api_client):
     assert res["convertible_unit"] is True
     assert res["display_unit"] is True
     assert res["master_unit"] is True
-    assert res["si_unit"] is True
     assert res["us_conventional_unit"] is True
-    assert res["legacy_code"] == "unit1-legacy-code"
     assert res["use_molecular_weight"] is False
     assert res["conversion_factor_to_master"] == 1.0
     assert res["use_complex_unit_conversion"] is False
@@ -743,6 +740,7 @@ def test_get_specific_at_specified_date_start_date_ofv0_1_1(api_client):
             "submission_value": "CT Unit term 1",
             "queried_effective_date": None,
             "date_conflict": False,
+            "library_name": "Test library",
         }
     ]
     assert res["unit_subsets"] == []
@@ -769,9 +767,7 @@ def test_get_specific_at_specified_date_start_date_ofv0_1_1(api_client):
     assert res["convertible_unit"] is True
     assert res["display_unit"] is True
     assert res["master_unit"] is True
-    assert res["si_unit"] is True
     assert res["us_conventional_unit"] is True
-    assert res["legacy_code"] == "unit1-legacy-code"
     assert res["use_molecular_weight"] is False
     assert res["conversion_factor_to_master"] == 1.0
     assert res["use_complex_unit_conversion"] is False
@@ -828,7 +824,6 @@ def test_patch(api_client):
         "change_description": "Patched version",
         "name": "unit1-patched",
         "unit_dimension": "unit1-dimension-patched",
-        "legacy_code": "unit1-legacy-code-patched",
     }
     response = api_client.patch(f"/concepts/unit-definitions/{UNIT_UID}", json=data)
     assert_response_status_code(response, 200)
@@ -846,6 +841,7 @@ def test_patch(api_client):
             "submission_value": "CT Unit term 1",
             "queried_effective_date": None,
             "date_conflict": False,
+            "library_name": "Test library",
         }
     ]
     assert res["unit_subsets"] == []
@@ -872,9 +868,7 @@ def test_patch(api_client):
     assert res["convertible_unit"] is True
     assert res["display_unit"] is True
     assert res["master_unit"] is True
-    assert res["si_unit"] is True
     assert res["us_conventional_unit"] is True
-    assert res["legacy_code"] == "unit1-legacy-code-patched"
     assert res["use_molecular_weight"] is False
     assert res["conversion_factor_to_master"] == 1.0
     assert res["use_complex_unit_conversion"] is False
@@ -903,6 +897,7 @@ def test_get_all2(api_client):
             "submission_value": "CT Unit term 1",
             "queried_effective_date": None,
             "date_conflict": False,
+            "library_name": "Test library",
         }
     ]
     assert res["items"][0]["unit_subsets"] == []
@@ -929,9 +924,7 @@ def test_get_all2(api_client):
     assert res["items"][0]["convertible_unit"] is True
     assert res["items"][0]["display_unit"] is True
     assert res["items"][0]["master_unit"] is True
-    assert res["items"][0]["si_unit"] is True
     assert res["items"][0]["us_conventional_unit"] is True
-    assert res["items"][0]["legacy_code"] == "unit1-legacy-code-patched"
     assert res["items"][0]["use_molecular_weight"] is False
     assert res["items"][0]["conversion_factor_to_master"] == 1.0
     assert res["items"][0]["use_complex_unit_conversion"] is False
@@ -940,6 +933,34 @@ def test_get_all2(api_client):
     assert res["items"][0]["comment"] is None
     assert res["items"][0]["definition"] is None
     assert res["items"][0]["template_parameter"] is False
+
+
+def test_filter_and_headers_on_ct_unit_library(api_client):
+    response = api_client.get(
+        "/concepts/unit-definitions",
+        params={"filters": '{"ct_units.library_name": {"v": ["Test library"]}}'},
+    )
+    assert_response_status_code(response, 200)
+    res = response.json()
+    assert len(res["items"]) > 0
+    for item in res["items"]:
+        assert "Test library" in [
+            ct_unit["library_name"] for ct_unit in item["ct_units"]
+        ]
+
+    response = api_client.get(
+        "/concepts/unit-definitions",
+        params={"filters": '{"ct_units.library_name": {"v": ["Unknown library"]}}'},
+    )
+    assert_response_status_code(response, 200)
+    assert response.json()["items"] == []
+
+    response = api_client.get(
+        "/concepts/unit-definitions/headers",
+        params={"field_name": "ct_units.library_name"},
+    )
+    assert_response_status_code(response, 200)
+    assert response.json() == ["Test library"]
 
 
 def test_get_specific_latest1(api_client):
@@ -959,6 +980,7 @@ def test_get_specific_latest1(api_client):
             "submission_value": "CT Unit term 1",
             "queried_effective_date": None,
             "date_conflict": False,
+            "library_name": "Test library",
         }
     ]
     assert res["unit_subsets"] == []
@@ -985,9 +1007,7 @@ def test_get_specific_latest1(api_client):
     assert res["convertible_unit"] is True
     assert res["display_unit"] is True
     assert res["master_unit"] is True
-    assert res["si_unit"] is True
     assert res["us_conventional_unit"] is True
-    assert res["legacy_code"] == "unit1-legacy-code-patched"
     assert res["use_molecular_weight"] is False
     assert res["conversion_factor_to_master"] == 1.0
     assert res["use_complex_unit_conversion"] is False
@@ -1016,6 +1036,7 @@ def test_get_specific_status_draft1(api_client):
             "submission_value": "CT Unit term 1",
             "queried_effective_date": None,
             "date_conflict": False,
+            "library_name": "Test library",
         }
     ]
     assert res["unit_subsets"] == []
@@ -1042,9 +1063,7 @@ def test_get_specific_status_draft1(api_client):
     assert res["convertible_unit"] is True
     assert res["display_unit"] is True
     assert res["master_unit"] is True
-    assert res["si_unit"] is True
     assert res["us_conventional_unit"] is True
-    assert res["legacy_code"] == "unit1-legacy-code-patched"
     assert res["use_molecular_weight"] is False
     assert res["conversion_factor_to_master"] == 1.0
     assert res["use_complex_unit_conversion"] is False
@@ -1072,6 +1091,7 @@ def test_get_specific_version_0_2_2(api_client):
             "submission_value": "CT Unit term 1",
             "queried_effective_date": None,
             "date_conflict": False,
+            "library_name": "Test library",
         }
     ]
     assert res["unit_subsets"] == []
@@ -1098,9 +1118,7 @@ def test_get_specific_version_0_2_2(api_client):
     assert res["convertible_unit"] is True
     assert res["display_unit"] is True
     assert res["master_unit"] is True
-    assert res["si_unit"] is True
     assert res["us_conventional_unit"] is True
-    assert res["legacy_code"] == "unit1-legacy-code-patched"
     assert res["use_molecular_weight"] is False
     assert res["conversion_factor_to_master"] == 1.0
     assert res["use_complex_unit_conversion"] is False
@@ -1131,6 +1149,7 @@ def test_get_specific_at_specified_date_start_date_ofv0_2(api_client):
             "submission_value": "CT Unit term 1",
             "queried_effective_date": None,
             "date_conflict": False,
+            "library_name": "Test library",
         }
     ]
     assert res["unit_subsets"] == []
@@ -1157,9 +1176,7 @@ def test_get_specific_at_specified_date_start_date_ofv0_2(api_client):
     assert res["convertible_unit"] is True
     assert res["display_unit"] is True
     assert res["master_unit"] is True
-    assert res["si_unit"] is True
     assert res["us_conventional_unit"] is True
-    assert res["legacy_code"] == "unit1-legacy-code-patched"
     assert res["use_molecular_weight"] is False
     assert res["conversion_factor_to_master"] == 1.0
     assert res["use_complex_unit_conversion"] is False
@@ -1188,6 +1205,7 @@ def test_get_specific_version_0_11(api_client):
             "submission_value": "CT Unit term 1",
             "queried_effective_date": None,
             "date_conflict": False,
+            "library_name": "Test library",
         }
     ]
     assert res["unit_subsets"] == []
@@ -1214,9 +1232,7 @@ def test_get_specific_version_0_11(api_client):
     assert res["convertible_unit"] is True
     assert res["display_unit"] is True
     assert res["master_unit"] is True
-    assert res["si_unit"] is True
     assert res["us_conventional_unit"] is True
-    assert res["legacy_code"] == "unit1-legacy-code"
     assert res["use_molecular_weight"] is False
     assert res["conversion_factor_to_master"] == 1.0
     assert res["use_complex_unit_conversion"] is False
@@ -1268,6 +1284,7 @@ def test_approve(api_client):
             "submission_value": "CT Unit term 1",
             "queried_effective_date": None,
             "date_conflict": False,
+            "library_name": "Test library",
         }
     ]
     assert res["unit_subsets"] == []
@@ -1294,9 +1311,7 @@ def test_approve(api_client):
     assert res["convertible_unit"] is True
     assert res["display_unit"] is True
     assert res["master_unit"] is True
-    assert res["si_unit"] is True
     assert res["us_conventional_unit"] is True
-    assert res["legacy_code"] == "unit1-legacy-code-patched"
     assert res["use_molecular_weight"] is False
     assert res["conversion_factor_to_master"] == 1.0
     assert res["use_complex_unit_conversion"] is False
@@ -1325,6 +1340,7 @@ def test_get_all_after_approval(api_client):
             "submission_value": "CT Unit term 1",
             "queried_effective_date": None,
             "date_conflict": False,
+            "library_name": "Test library",
         }
     ]
     assert res["items"][0]["unit_subsets"] == []
@@ -1351,9 +1367,7 @@ def test_get_all_after_approval(api_client):
     assert res["items"][0]["convertible_unit"] is True
     assert res["items"][0]["display_unit"] is True
     assert res["items"][0]["master_unit"] is True
-    assert res["items"][0]["si_unit"] is True
     assert res["items"][0]["us_conventional_unit"] is True
-    assert res["items"][0]["legacy_code"] == "unit1-legacy-code-patched"
     assert res["items"][0]["use_molecular_weight"] is False
     assert res["items"][0]["conversion_factor_to_master"] == 1.0
     assert res["items"][0]["use_complex_unit_conversion"] is False
@@ -1381,6 +1395,7 @@ def test_get_by_uid_after_approval(api_client):
             "submission_value": "CT Unit term 1",
             "queried_effective_date": None,
             "date_conflict": False,
+            "library_name": "Test library",
         }
     ]
     assert res["unit_subsets"] == []
@@ -1407,9 +1422,7 @@ def test_get_by_uid_after_approval(api_client):
     assert res["convertible_unit"] is True
     assert res["display_unit"] is True
     assert res["master_unit"] is True
-    assert res["si_unit"] is True
     assert res["us_conventional_unit"] is True
-    assert res["legacy_code"] == "unit1-legacy-code-patched"
     assert res["use_molecular_weight"] is False
     assert res["conversion_factor_to_master"] == 1.0
     assert res["use_complex_unit_conversion"] is False
@@ -1437,6 +1450,7 @@ def test_get_by_uid_after_approval_status_final(api_client):
             "submission_value": "CT Unit term 1",
             "queried_effective_date": None,
             "date_conflict": False,
+            "library_name": "Test library",
         }
     ]
     assert res["unit_subsets"] == []
@@ -1463,9 +1477,7 @@ def test_get_by_uid_after_approval_status_final(api_client):
     assert res["convertible_unit"] is True
     assert res["display_unit"] is True
     assert res["master_unit"] is True
-    assert res["si_unit"] is True
     assert res["us_conventional_unit"] is True
-    assert res["legacy_code"] == "unit1-legacy-code-patched"
     assert res["use_molecular_weight"] is False
     assert res["conversion_factor_to_master"] == 1.0
     assert res["use_complex_unit_conversion"] is False
@@ -1493,6 +1505,7 @@ def test_get_by_uid_after_approval_version_1_0(api_client):
             "submission_value": "CT Unit term 1",
             "queried_effective_date": None,
             "date_conflict": False,
+            "library_name": "Test library",
         }
     ]
     assert res["unit_subsets"] == []
@@ -1519,9 +1532,7 @@ def test_get_by_uid_after_approval_version_1_0(api_client):
     assert res["convertible_unit"] is True
     assert res["display_unit"] is True
     assert res["master_unit"] is True
-    assert res["si_unit"] is True
     assert res["us_conventional_unit"] is True
-    assert res["legacy_code"] == "unit1-legacy-code-patched"
     assert res["use_molecular_weight"] is False
     assert res["conversion_factor_to_master"] == 1.0
     assert res["use_complex_unit_conversion"] is False
@@ -1555,7 +1566,6 @@ def test_patch_final_fail(api_client):
         "change_description": "Patched version 2 (failed)",
         "name": "unit1-patched-fail",
         "unit_dimension": "unit1-dimension-patched-fail",
-        "legacy_code": "unit1-legacy-code-patched-fail",
     }
     response = api_client.patch(f"/concepts/unit-definitions/{UNIT_UID}", json=data)
     assert_response_status_code(response, 400)
@@ -1591,6 +1601,7 @@ def test_inactivate(api_client):
             "submission_value": "CT Unit term 1",
             "queried_effective_date": None,
             "date_conflict": False,
+            "library_name": "Test library",
         }
     ]
     assert res["unit_subsets"] == []
@@ -1617,9 +1628,7 @@ def test_inactivate(api_client):
     assert res["convertible_unit"] is True
     assert res["display_unit"] is True
     assert res["master_unit"] is True
-    assert res["si_unit"] is True
     assert res["us_conventional_unit"] is True
-    assert res["legacy_code"] == "unit1-legacy-code-patched"
     assert res["use_molecular_weight"] is False
     assert res["conversion_factor_to_master"] == 1.0
     assert res["use_complex_unit_conversion"] is False
@@ -1662,7 +1671,6 @@ def test_patch_retired_fail(api_client):
         "change_description": "Patched version 2 (failed)",
         "name": "unit1-patched-fail",
         "unit_dimension": "unit1-dimension-patched-fail",
-        "legacy_code": "unit1-legacy-code-patched-fail",
     }
     response = api_client.patch(f"/concepts/unit-definitions/{UNIT_UID}", json=data)
     assert_response_status_code(response, 400)
@@ -1699,6 +1707,7 @@ def test_reactivate(api_client):
             "submission_value": "CT Unit term 1",
             "queried_effective_date": None,
             "date_conflict": False,
+            "library_name": "Test library",
         }
     ]
     assert res["unit_subsets"] == []
@@ -1725,9 +1734,7 @@ def test_reactivate(api_client):
     assert res["convertible_unit"] is True
     assert res["display_unit"] is True
     assert res["master_unit"] is True
-    assert res["si_unit"] is True
     assert res["us_conventional_unit"] is True
-    assert res["legacy_code"] == "unit1-legacy-code-patched"
     assert res["use_molecular_weight"] is False
     assert res["conversion_factor_to_master"] == 1.0
     assert res["use_complex_unit_conversion"] is False
@@ -1761,7 +1768,6 @@ def test_patch_final_fail1(api_client):
         "change_description": "Patched version 2 (failed)",
         "name": "unit1-patched-fail",
         "unit_dimension": "unit1-dimension-patched-fail",
-        "legacy_code": "unit1-legacy-code-patched-fail",
     }
     response = api_client.patch(f"/concepts/unit-definitions/{UNIT_UID}", json=data)
     assert_response_status_code(response, 400)
@@ -1797,6 +1803,7 @@ def test_post_versions(api_client):
             "submission_value": "CT Unit term 1",
             "queried_effective_date": None,
             "date_conflict": False,
+            "library_name": "Test library",
         }
     ]
     assert res["unit_subsets"] == []
@@ -1823,9 +1830,7 @@ def test_post_versions(api_client):
     assert res["convertible_unit"] is True
     assert res["display_unit"] is True
     assert res["master_unit"] is True
-    assert res["si_unit"] is True
     assert res["us_conventional_unit"] is True
-    assert res["legacy_code"] == "unit1-legacy-code-patched"
     assert res["use_molecular_weight"] is False
     assert res["conversion_factor_to_master"] == 1.0
     assert res["use_complex_unit_conversion"] is False
@@ -1877,7 +1882,6 @@ def test_patch_next_major_version(api_client):
         "change_description": "Patched version 2",
         "name": "unit1-patched-2",
         "unit_dimension": "unit1-dimension-patched-2",
-        "legacy_code": "unit1-legacy-code-patched-2",
     }
     response = api_client.patch(f"/concepts/unit-definitions/{UNIT_UID}", json=data)
     assert_response_status_code(response, 200)
@@ -1895,6 +1899,7 @@ def test_patch_next_major_version(api_client):
             "submission_value": "CT Unit term 1",
             "queried_effective_date": None,
             "date_conflict": False,
+            "library_name": "Test library",
         }
     ]
     assert res["unit_subsets"] == []
@@ -1921,9 +1926,7 @@ def test_patch_next_major_version(api_client):
     assert res["convertible_unit"] is True
     assert res["display_unit"] is True
     assert res["master_unit"] is True
-    assert res["si_unit"] is True
     assert res["us_conventional_unit"] is True
-    assert res["legacy_code"] == "unit1-legacy-code-patched-2"
     assert res["use_molecular_weight"] is False
     assert res["conversion_factor_to_master"] == 1.0
     assert res["use_complex_unit_conversion"] is False
@@ -1951,6 +1954,7 @@ def test_get_specific_latest2(api_client):
             "submission_value": "CT Unit term 1",
             "queried_effective_date": None,
             "date_conflict": False,
+            "library_name": "Test library",
         }
     ]
     assert res["unit_subsets"] == []
@@ -1977,9 +1981,7 @@ def test_get_specific_latest2(api_client):
     assert res["convertible_unit"] is True
     assert res["display_unit"] is True
     assert res["master_unit"] is True
-    assert res["si_unit"] is True
     assert res["us_conventional_unit"] is True
-    assert res["legacy_code"] == "unit1-legacy-code-patched-2"
     assert res["use_molecular_weight"] is False
     assert res["conversion_factor_to_master"] == 1.0
     assert res["use_complex_unit_conversion"] is False
@@ -2007,6 +2009,7 @@ def test_get_specific_status_final2(api_client):
             "submission_value": "CT Unit term 1",
             "queried_effective_date": None,
             "date_conflict": False,
+            "library_name": "Test library",
         }
     ]
     assert res["unit_subsets"] == []
@@ -2033,9 +2036,7 @@ def test_get_specific_status_final2(api_client):
     assert res["convertible_unit"] is True
     assert res["display_unit"] is True
     assert res["master_unit"] is True
-    assert res["si_unit"] is True
     assert res["us_conventional_unit"] is True
-    assert res["legacy_code"] == "unit1-legacy-code-patched"
     assert res["use_molecular_weight"] is False
     assert res["conversion_factor_to_master"] == 1.0
     assert res["use_complex_unit_conversion"] is False
@@ -2046,7 +2047,7 @@ def test_get_specific_status_final2(api_client):
     assert res["template_parameter"] is False
 
 
-def test_get_versions1(api_client):  # pylint:disable=too-many-statements
+def test_get_versions1(api_client):
     response = api_client.get(f"/concepts/unit-definitions/{UNIT_UID}/versions")
     assert_response_status_code(response, 200)
     res = response.json()
@@ -2063,6 +2064,7 @@ def test_get_versions1(api_client):  # pylint:disable=too-many-statements
             "submission_value": "CT Unit term 1",
             "queried_effective_date": None,
             "date_conflict": False,
+            "library_name": "Test library",
         }
     ]
     assert res[0]["unit_subsets"] == []
@@ -2089,9 +2091,7 @@ def test_get_versions1(api_client):  # pylint:disable=too-many-statements
     assert res[0]["convertible_unit"] is True
     assert res[0]["display_unit"] is True
     assert res[0]["master_unit"] is True
-    assert res[0]["si_unit"] is True
     assert res[0]["us_conventional_unit"] is True
-    assert res[0]["legacy_code"] == "unit1-legacy-code-patched-2"
     assert res[0]["use_molecular_weight"] is False
     assert res[0]["conversion_factor_to_master"] == 1.0
     assert res[0]["use_complex_unit_conversion"] is False
@@ -2112,6 +2112,7 @@ def test_get_versions1(api_client):  # pylint:disable=too-many-statements
             "submission_value": "CT Unit term 1",
             "queried_effective_date": None,
             "date_conflict": False,
+            "library_name": "Test library",
         }
     ]
     assert res[1]["unit_subsets"] == []
@@ -2138,9 +2139,7 @@ def test_get_versions1(api_client):  # pylint:disable=too-many-statements
     assert res[1]["convertible_unit"] is True
     assert res[1]["display_unit"] is True
     assert res[1]["master_unit"] is True
-    assert res[1]["si_unit"] is True
     assert res[1]["us_conventional_unit"] is True
-    assert res[1]["legacy_code"] == "unit1-legacy-code-patched"
     assert res[1]["use_molecular_weight"] is False
     assert res[1]["conversion_factor_to_master"] == 1.0
     assert res[1]["use_complex_unit_conversion"] is False
@@ -2161,6 +2160,7 @@ def test_get_versions1(api_client):  # pylint:disable=too-many-statements
             "submission_value": "CT Unit term 1",
             "queried_effective_date": None,
             "date_conflict": False,
+            "library_name": "Test library",
         }
     ]
     assert res[2]["unit_subsets"] == []
@@ -2187,9 +2187,7 @@ def test_get_versions1(api_client):  # pylint:disable=too-many-statements
     assert res[2]["convertible_unit"] is True
     assert res[2]["display_unit"] is True
     assert res[2]["master_unit"] is True
-    assert res[2]["si_unit"] is True
     assert res[2]["us_conventional_unit"] is True
-    assert res[2]["legacy_code"] == "unit1-legacy-code-patched"
     assert res[2]["use_molecular_weight"] is False
     assert res[2]["conversion_factor_to_master"] == 1.0
     assert res[2]["use_complex_unit_conversion"] is False
@@ -2210,6 +2208,7 @@ def test_get_versions1(api_client):  # pylint:disable=too-many-statements
             "submission_value": "CT Unit term 1",
             "queried_effective_date": None,
             "date_conflict": False,
+            "library_name": "Test library",
         }
     ]
     assert res[3]["unit_subsets"] == []
@@ -2236,9 +2235,7 @@ def test_get_versions1(api_client):  # pylint:disable=too-many-statements
     assert res[3]["convertible_unit"] is True
     assert res[3]["display_unit"] is True
     assert res[3]["master_unit"] is True
-    assert res[3]["si_unit"] is True
     assert res[3]["us_conventional_unit"] is True
-    assert res[3]["legacy_code"] == "unit1-legacy-code-patched"
     assert res[3]["use_molecular_weight"] is False
     assert res[3]["conversion_factor_to_master"] == 1.0
     assert res[3]["use_complex_unit_conversion"] is False
@@ -2259,6 +2256,7 @@ def test_get_versions1(api_client):  # pylint:disable=too-many-statements
             "submission_value": "CT Unit term 1",
             "queried_effective_date": None,
             "date_conflict": False,
+            "library_name": "Test library",
         }
     ]
     assert res[4]["unit_subsets"] == []
@@ -2285,9 +2283,7 @@ def test_get_versions1(api_client):  # pylint:disable=too-many-statements
     assert res[4]["convertible_unit"] is True
     assert res[4]["display_unit"] is True
     assert res[4]["master_unit"] is True
-    assert res[4]["si_unit"] is True
     assert res[4]["us_conventional_unit"] is True
-    assert res[4]["legacy_code"] == "unit1-legacy-code-patched"
     assert res[4]["use_molecular_weight"] is False
     assert res[4]["conversion_factor_to_master"] == 1.0
     assert res[4]["use_complex_unit_conversion"] is False
@@ -2308,6 +2304,7 @@ def test_get_versions1(api_client):  # pylint:disable=too-many-statements
             "submission_value": "CT Unit term 1",
             "queried_effective_date": None,
             "date_conflict": False,
+            "library_name": "Test library",
         }
     ]
     assert res[5]["unit_subsets"] == []
@@ -2334,9 +2331,7 @@ def test_get_versions1(api_client):  # pylint:disable=too-many-statements
     assert res[5]["convertible_unit"] is True
     assert res[5]["display_unit"] is True
     assert res[5]["master_unit"] is True
-    assert res[5]["si_unit"] is True
     assert res[5]["us_conventional_unit"] is True
-    assert res[5]["legacy_code"] == "unit1-legacy-code-patched"
     assert res[5]["use_molecular_weight"] is False
     assert res[5]["conversion_factor_to_master"] == 1.0
     assert res[5]["use_complex_unit_conversion"] is False
@@ -2357,6 +2352,7 @@ def test_get_versions1(api_client):  # pylint:disable=too-many-statements
             "submission_value": "CT Unit term 1",
             "queried_effective_date": None,
             "date_conflict": False,
+            "library_name": "Test library",
         }
     ]
     assert res[6]["unit_subsets"] == []
@@ -2383,9 +2379,7 @@ def test_get_versions1(api_client):  # pylint:disable=too-many-statements
     assert res[6]["convertible_unit"] is True
     assert res[6]["display_unit"] is True
     assert res[6]["master_unit"] is True
-    assert res[6]["si_unit"] is True
     assert res[6]["us_conventional_unit"] is True
-    assert res[6]["legacy_code"] == "unit1-legacy-code"
     assert res[6]["use_molecular_weight"] is False
     assert res[6]["conversion_factor_to_master"] == 1.0
     assert res[6]["use_complex_unit_conversion"] is False
@@ -2405,10 +2399,8 @@ def test_adding_another_master_unit_in_the_same_dimension(api_client):
         "convertible_unit": True,
         "display_unit": True,
         "master_unit": True,
-        "si_unit": True,
         "us_conventional_unit": True,
         "unit_dimension": "unit1-dimension-patched-2",
-        "legacy_code": "unit1-legacy-code",
         "conversion_factor_to_master": 1.0,
         "order": 1,
     }
@@ -2432,10 +2424,8 @@ def test_adding_another_master_unit_in_different_dimension(api_client):
         "convertible_unit": True,
         "display_unit": True,
         "master_unit": True,
-        "si_unit": True,
         "us_conventional_unit": True,
         "unit_dimension": "other-dimension",
-        "legacy_code": "unit1-legacy-code",
         "conversion_factor_to_master": 1.0,
         "order": 1,
     }
@@ -2456,7 +2446,6 @@ def test_adding_another_master_unit_in_different_dimension(api_client):
     assert res["convertible_unit"] is True
     assert res["display_unit"] is True
     assert res["master_unit"] is True
-    assert res["si_unit"] is True
     assert res["us_conventional_unit"] is True
     assert res["ct_units"] == [
         {
@@ -2470,6 +2459,7 @@ def test_adding_another_master_unit_in_different_dimension(api_client):
             "submission_value": "CT Unit term 4",
             "queried_effective_date": None,
             "date_conflict": False,
+            "library_name": "Test library",
         }
     ]
     assert res["unit_subsets"] == []
@@ -2485,7 +2475,6 @@ def test_adding_another_master_unit_in_different_dimension(api_client):
         "queried_effective_date": None,
         "date_conflict": False,
     }
-    assert res["legacy_code"] == "unit1-legacy-code"
     assert res["use_molecular_weight"] is False
     assert res["conversion_factor_to_master"] == 1.0
     assert res["use_complex_unit_conversion"] is False
@@ -2518,7 +2507,6 @@ def test_patch1(api_client):
         "ct_units": ["unit1-ct-uid", "unit1-ct-uid-2"],
         "unit_subsets": ["unit-subset-uid-1", "unit-subset-uid-2"],
         "unit_dimension": "unit1-dimension-patched",
-        "legacy_code": "unit1-legacy-code-patched",
     }
     response = api_client.patch(f"/concepts/unit-definitions/{UNIT_UID}", json=data)
     assert_response_status_code(response, 200)
@@ -2536,6 +2524,7 @@ def test_patch1(api_client):
             "submission_value": "CT Unit term 1",
             "queried_effective_date": None,
             "date_conflict": False,
+            "library_name": "Test library",
         },
         {
             "term_uid": "unit1-ct-uid-2",
@@ -2548,6 +2537,7 @@ def test_patch1(api_client):
             "submission_value": "CT Unit term 3",
             "queried_effective_date": None,
             "date_conflict": False,
+            "library_name": "Test library",
         },
     ]
     assert res["unit_subsets"] == [
@@ -2599,9 +2589,7 @@ def test_patch1(api_client):
     assert res["convertible_unit"] is True
     assert res["display_unit"] is True
     assert res["master_unit"] is True
-    assert res["si_unit"] is True
     assert res["us_conventional_unit"] is True
-    assert res["legacy_code"] == "unit1-legacy-code-patched"
     assert res["use_molecular_weight"] is False
     assert res["conversion_factor_to_master"] == 1.0
     assert res["use_complex_unit_conversion"] is False
@@ -2610,3 +2598,57 @@ def test_patch1(api_client):
     assert res["comment"] is None
     assert res["definition"] is None
     assert res["template_parameter"] is False
+
+
+def test_sort_by_ct_unit_library(api_client):
+    # The sort key is the sorted, de-duplicated list of CT term libraries. The
+    # "both" unit lists its terms as Test, Alpha, Test, so it only lands between
+    # the two others if the key is de-duplicated and sorted before comparison.
+    # Units are created out of order so that insertion order cannot pass for it.
+    unit_ct_units = {
+        "ct-library-sort-test": ["unit1-ct-uid"],
+        "ct-library-sort-alpha": ["unit-ct-uid-alpha"],
+        "ct-library-sort-both": ["unit1-ct-uid", "unit-ct-uid-alpha", "unit1-ct-uid-2"],
+    }
+    for name, ct_units in unit_ct_units.items():
+        data = {
+            "name": name,
+            "library_name": "Test library",
+            "ct_units": ct_units,
+            "convertible_unit": False,
+            "display_unit": True,
+            "master_unit": False,
+            "us_conventional_unit": False,
+        }
+        response = api_client.post("/concepts/unit-definitions", json=data)
+        assert_response_status_code(response, 201)
+
+    expected_ascending = [
+        "ct-library-sort-alpha",
+        "ct-library-sort-both",
+        "ct-library-sort-test",
+    ]
+    for ascending, expected in [
+        (True, expected_ascending),
+        (False, expected_ascending[::-1]),
+    ]:
+        response = api_client.get(
+            "/concepts/unit-definitions",
+            params={
+                "filters": json.dumps({"name": {"v": list(unit_ct_units)}}),
+                "sort_by": json.dumps({"ct_unit_library_names": ascending}),
+            },
+        )
+        assert_response_status_code(response, 200)
+        items = response.json()["items"]
+        assert [item["name"] for item in items] == expected
+
+    # A CT term outside the unit's own library still reports its library
+    both = next(item for item in items if item["name"] == "ct-library-sort-both")
+    assert {
+        ct_unit["term_uid"]: ct_unit["library_name"] for ct_unit in both["ct_units"]
+    } == {
+        "unit1-ct-uid": "Test library",
+        "unit-ct-uid-alpha": "Alpha library",
+        "unit1-ct-uid-2": "Test library",
+    }

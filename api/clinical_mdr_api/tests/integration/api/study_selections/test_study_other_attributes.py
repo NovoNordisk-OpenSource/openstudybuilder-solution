@@ -2,9 +2,6 @@
 Tests for /studies/{study_uid}/study-other-attributes endpoints.
 """
 
-# pylint: disable=unused-argument
-# pylint: disable=redefined-outer-name
-
 import json
 import logging
 from typing import Any
@@ -296,6 +293,40 @@ def test_batch_xor_validation_both_provided(api_client):
                     "parameter_value": "x",
                     "null_flavor_term_uid": NULL_FLAVOR_TERM_UID,
                 },
+            }
+        ],
+    )
+    assert_response_status_code(response, 400)
+
+
+def test_batch_xor_validation_both_missing_post(api_client):
+    """Batch POST with neither parameter_value nor null_flavor_term_uid should fail.
+
+    Regression test: `content` used to be an undiscriminated
+    StudyOtherAttributeInput | StudyOtherAttributeDeleteInput union, so a
+    payload missing both fields silently validated as a delete operation
+    (bypassing StudyOtherAttributeInput.check_xor) instead of failing.
+    """
+    response = api_client.post(
+        f"/studies/{study.uid}/study-other-attributes/batch",
+        json=[
+            {
+                "method": "POST",
+                "content": {"ts_parameter_term_uid": "some_term"},
+            }
+        ],
+    )
+    assert_response_status_code(response, 400)
+
+
+def test_batch_xor_validation_both_missing_patch(api_client):
+    """Batch PATCH with neither parameter_value nor null_flavor_term_uid should fail."""
+    response = api_client.post(
+        f"/studies/{study.uid}/study-other-attributes/batch",
+        json=[
+            {
+                "method": "PATCH",
+                "content": {"ts_parameter_term_uid": TS_TERM_UID},
             }
         ],
     )

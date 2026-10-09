@@ -7,8 +7,6 @@ from clinical_mdr_api.services.studies.complexity_score import (
     VisitsSummary,
 )
 
-# pylint: disable=redefined-outer-name
-
 
 @pytest.fixture
 def soas():

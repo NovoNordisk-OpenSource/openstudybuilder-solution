@@ -1,5 +1,6 @@
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any, Callable
+from typing import Any
 
 from clinical_mdr_api.utils import normalize_string
 from common.exceptions import BusinessLogicException

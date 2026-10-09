@@ -229,6 +229,6 @@ class FieldConfiguration:
         configs: list[StudyFieldConfigurationEntry] = cls.default_field_config()
         return {
             e.study_field_name: e.ts_vcdref
-            for e in configs  # pylint: disable=not-an-iterable
+            for e in configs
             if e.study_field_data_type == StudyFieldType.REGISTRY and e.ts_vcdref
         }

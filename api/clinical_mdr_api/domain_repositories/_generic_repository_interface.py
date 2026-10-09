@@ -1,13 +1,14 @@
 import abc
+from collections.abc import Iterable
 from datetime import datetime
-from typing import Generic, Iterable, TypeVar
+from typing import TypeVar
 
 from clinical_mdr_api.domains.versioned_object_aggregate import LibraryItemStatus
 
 _AggregateRootType = TypeVar("_AggregateRootType")
 
 
-class GenericRepository(Generic[_AggregateRootType], abc.ABC):
+class GenericRepository[AggregateRootType](abc.ABC):
     """
     Generic repository class with definition of necessary actions that
     library versioned objects repository have to support
@@ -19,7 +20,7 @@ class GenericRepository(Generic[_AggregateRootType], abc.ABC):
         *,
         status: LibraryItemStatus | None = None,
         library_name: str | None = None,
-    ) -> Iterable[_AggregateRootType]:
+    ) -> Iterable[AggregateRootType]:
         raise NotImplementedError()
 
     @abc.abstractmethod
@@ -31,11 +32,11 @@ class GenericRepository(Generic[_AggregateRootType], abc.ABC):
         status: LibraryItemStatus | None = None,
         at_specific_date: datetime | None = None,
         for_update: bool = False,
-    ) -> _AggregateRootType | None:
+    ) -> AggregateRootType | None:
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def save(self, item: _AggregateRootType) -> None:
+    def save(self, item: AggregateRootType) -> None:
         raise NotImplementedError()
 
     @property
@@ -51,7 +52,7 @@ class GenericRepository(Generic[_AggregateRootType], abc.ABC):
     @abc.abstractmethod
     def get_all_versions_2(
         self, uid: str, return_study_count: bool = False
-    ) -> Iterable[_AggregateRootType]:
+    ) -> Iterable[AggregateRootType]:
         raise NotImplementedError()
 
     @abc.abstractmethod

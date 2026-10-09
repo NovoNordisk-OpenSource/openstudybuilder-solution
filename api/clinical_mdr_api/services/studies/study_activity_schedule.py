@@ -20,6 +20,7 @@ from clinical_mdr_api.models.study_selections.study_selection import (
     StudyActivityScheduleBatchInput,
     StudyActivityScheduleBatchOutput,
     StudyActivityScheduleCreateInput,
+    StudyActivityScheduleDeleteInput,
     StudyActivityScheduleHistory,
     StudySelectionActivityInstanceEditInput,
 )
@@ -90,6 +91,50 @@ class StudyActivityScheduleService(StudySelectionMixin):
                 .resolve_subgraph()
             ).distinct()
         ]
+
+    @ensure_transaction(db)
+    def overwrite_schedules_for_activities(
+        self,
+        study_uid: str,
+        study_activity_uids: list[str],
+        study_visit_uids: list[str],
+    ) -> list[StudyActivitySchedule]:
+        schedules = []
+        for study_activity_uid in dict.fromkeys(study_activity_uids):
+            schedules.extend(
+                self._overwrite_schedules_for_activity(
+                    study_uid, study_activity_uid, study_visit_uids
+                )
+            )
+        return schedules
+
+    def _overwrite_schedules_for_activity(
+        self, study_uid: str, study_activity_uid: str, study_visit_uids: list[str]
+    ) -> list[StudyActivitySchedule]:
+        desired_visit_uids = set(study_visit_uids)
+        existing_by_visit_uid = {
+            schedule.study_visit_uid: schedule
+            for schedule in self.get_all_schedules_for_specific_activity(
+                study_uid, study_activity_uid
+            )
+        }
+        existing_visit_uids = set(existing_by_visit_uid.keys())
+
+        for visit_uid in existing_visit_uids - desired_visit_uids:
+            self.delete(
+                study_uid, existing_by_visit_uid[visit_uid].study_activity_schedule_uid
+            )
+            del existing_by_visit_uid[visit_uid]
+
+        for visit_uid in desired_visit_uids - existing_visit_uids:
+            existing_by_visit_uid[visit_uid] = self.create(
+                study_uid,
+                StudyActivityScheduleCreateInput(
+                    study_activity_uid=study_activity_uid, study_visit_uid=visit_uid
+                ),
+            )
+
+        return list(existing_by_visit_uid.values())
 
     def _from_input_values(
         self, study_uid: str, schedule_input: StudyActivityScheduleCreateInput
@@ -242,8 +287,13 @@ class StudyActivityScheduleService(StudySelectionMixin):
                         )
 
                 elif operation.method == "DELETE":
-                    self.delete(study_uid, operation.content.uid)
-                    response_code = status.HTTP_204_NO_CONTENT
+                    if isinstance(operation.content, StudyActivityScheduleDeleteInput):
+                        self.delete(study_uid, operation.content.uid)
+                        response_code = status.HTTP_204_NO_CONTENT
+                    else:
+                        raise exceptions.ValidationException(
+                            msg="DELETE operation requires StudyActivityScheduleDeleteInput as request payload."
+                        )
                 else:
                     raise exceptions.MethodNotAllowedException(method=operation.method)
                 results.append(

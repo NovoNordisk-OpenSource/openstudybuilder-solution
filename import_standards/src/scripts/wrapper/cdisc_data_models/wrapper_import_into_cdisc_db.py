@@ -3,7 +3,7 @@ This script serves as the entry point for the pipeline step 'Import CDISC Data M
 
 This script is meant to be called e.g. via:
 
-> `python -m pipenv run import_cdisc_data_models_into_cdisc_db <user initials> <JSON directory name>`
+> `uv run poe import_cdisc_data_models_into_cdisc_db <user initials> <JSON directory name>`
 
 The script expects the following parameters:
 

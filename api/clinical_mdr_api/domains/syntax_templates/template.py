@@ -1,5 +1,6 @@
+from collections.abc import Callable, Set
 from dataclasses import dataclass
-from typing import AbstractSet, Callable, Self
+from typing import Self
 
 from clinical_mdr_api.domains._utils import is_syntax_of_template_name_correct
 from clinical_mdr_api.domains.versioned_object_aggregate import (
@@ -244,7 +245,7 @@ class TemplateAggregateRootBase(LibraryItemAggregateRootBase):
         )
         self._template = template
 
-    def get_possible_actions(self) -> AbstractSet[ObjectAction]:
+    def get_possible_actions(self) -> Set[ObjectAction]:
         """
         Returns list of possible actions
         """

@@ -76,11 +76,11 @@
 | agent-base                                       | 6.0.2   | MIT (missing)                                            |
 | ajv                                              | 6.15.0  | [MIT](#ajv)                                              |
 | asynckit                                         | 0.4.0   | [MIT](#asynckit)                                         |
-| axios                                            | 1.18.0  | [MIT](#axios)                                            |
+| axios                                            | 1.20.0  | [MIT](#axios)                                            |
 | base64-arraybuffer                               | 1.0.2   | [MIT](#base64-arraybuffer)                               |
 | base64-js                                        | 1.5.1   | [MIT](#base64-js)                                        |
 | boolbase                                         | 1.0.0   | ISC (missing)                                            |
-| brace-expansion                                  | 5.0.9   | [MIT](#brace-expansion)                                  |
+| brace-expansion                                  | 5.0.12  | [MIT](#brace-expansion)                                  |
 | buffer                                           | 6.0.3   | [MIT](#buffer)                                           |
 | call-bind-apply-helpers                          | 1.0.2   | [MIT](#call-bind-apply-helpers)                          |
 | chart.js                                         | 4.5.1   | [MIT](#chartjs)                                          |
@@ -96,7 +96,7 @@
 | deep-is                                          | 0.1.4   | [MIT](#deep-is)                                          |
 | delayed-stream                                   | 1.0.0   | [MIT](#delayed-stream)                                   |
 | detect-libc                                      | 2.1.2   | [Apache-2.0](#detect-libc)                               |
-| dompurify                                        | 3.4.13  | [(MPL-2.0 OR Apache-2.0)](#dompurify)                    |
+| dompurify                                        | 3.4.16  | [(MPL-2.0 OR Apache-2.0)](#dompurify)                    |
 | dunder-proto                                     | 1.0.1   | [MIT](#dunder-proto)                                     |
 | entities                                         | 7.0.1   | [BSD-2-Clause](#entities)                                |
 | es-define-property                               | 1.0.1   | [MIT](#es-define-property)                               |

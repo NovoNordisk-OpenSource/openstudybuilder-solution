@@ -152,7 +152,8 @@ class ActiveSubstanceRepository(ConceptGenericRepository):
                     unii_term_name:unii_value.name
                 }
                 ]) AS unii_data,
-                head([(concept_value)-[:HAS_UNII_VALUE]->(unii:DictionaryTermRoot)-[:LATEST]->(unii_value:DictionaryTermValue)-[:HAS_PCLASS]->(pclass_root:DictionaryTermRoot)-[:LATEST]->(pclass_value:DictionaryTermValue) |
+                head([(concept_value)-[:HAS_UNII_VALUE]->(unii:DictionaryTermRoot)-[:LATEST]->(unii_value:DictionaryTermValue)
+                    -[:HAS_PCLASS]->(pclass_root:DictionaryTermRoot)-[:LATEST]->(pclass_value:DictionaryTermValue) |
                 {
                     pclass_name:pclass_value.name,
                     pclass_id:pclass_value.dictionary_id,

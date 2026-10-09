@@ -187,7 +187,6 @@ def _get_cache_item_info(items):
         ],
     }
 )
-# pylint: disable=unused-argument
 def get_complexity_activity_burdens(
     request: Request,  # request is actually required by the allow_exports decorator
 ) -> list[ActivityBurden]:
@@ -219,7 +218,6 @@ def get_complexity_activity_burdens(
         ],
     }
 )
-# pylint: disable=unused-argument
 def get_complexity_burdens(
     request: Request,  # request is actually required by the allow_exports decorator
 ) -> list[Burden]:

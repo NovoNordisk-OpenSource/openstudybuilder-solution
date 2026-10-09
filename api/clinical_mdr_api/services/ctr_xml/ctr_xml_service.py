@@ -1,12 +1,12 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from functools import cached_property
+from typing import ClassVar
 
-# pylint: disable=wrong-import-order # disagreement between isort and pylint
-import ctrxml
 from xsdata.formats.dataclass.serializers import XmlSerializer
 from xsdata.formats.dataclass.serializers.config import SerializerConfig
 from xsdata.models.datatype import XmlDateTime
 
+import ctrxml
 from clinical_mdr_api.domains._utils import get_iso_lang_data
 from clinical_mdr_api.domains.study_definition_aggregates.study_metadata import (
     StudyComponentEnum,
@@ -49,7 +49,7 @@ class CTRXMLService:
 
     serializer = XmlSerializer(config=SerializerConfig(indent="  "))
 
-    namespaces = {
+    namespaces: ClassVar[dict[str | None, str]] = {
         None: "http://www.cdisc.org/ns/odm/v1.3",
         "ctr": "http://www.cdisc.org/ns/ctr/v1.0",
         "ct": "http://eudract.emea.europa.eu/schema/clinical_trial",
@@ -147,11 +147,11 @@ class ODMBuilder:
             granularity=ctrxml.Granularity.METADATA,
             # TODO: any information that will help the receiver interpret the document correctly
             # description=self.study_identification_metadata.studyId,
-            creation_date_time=XmlDateTime.from_datetime(datetime.now(timezone.utc)),
+            creation_date_time=XmlDateTime.from_datetime(datetime.now(UTC)),
             as_of_date_time=XmlDateTime.from_datetime(
                 self.study_version_metadata.version_timestamp
                 if self.study_version_metadata.version_timestamp is not None
-                else datetime.now(timezone.utc)
+                else datetime.now(UTC)
             ),
             # originator="FIXME",  # TODO: Submission sponsor name "Company XYZ"
             source_system="OpenStudyBuilder",

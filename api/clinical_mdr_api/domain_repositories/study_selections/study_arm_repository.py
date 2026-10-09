@@ -96,12 +96,11 @@ class StudySelectionArmRepository:
             else:
                 query = "MATCH (sr:StudyRoot)-[l:HAS_VERSION{status:'RELEASED', version:$study_value_version}]->(sv:StudyValue)"
                 query_parameters["study_value_version"] = study_value_version
+        elif study_uid:
+            query = "MATCH (sr:StudyRoot { uid: $uid})-[l:LATEST]->(sv:StudyValue)"
+            query_parameters["uid"] = study_uid
         else:
-            if study_uid:
-                query = "MATCH (sr:StudyRoot { uid: $uid})-[l:LATEST]->(sv:StudyValue)"
-                query_parameters["uid"] = study_uid
-            else:
-                query = "MATCH (sr:StudyRoot)-[l:LATEST]->(sv:StudyValue)"
+            query = "MATCH (sr:StudyRoot)-[l:LATEST]->(sv:StudyValue)"
 
         query += """
             WITH sr, sv
@@ -186,12 +185,11 @@ class StudySelectionArmRepository:
             else:
                 query = "MATCH (sr:StudyRoot)-[l:HAS_VERSION{status:'RELEASED', version:$study_value_version}]->(sv:StudyValue)"
                 query_parameters["study_value_version"] = study_value_version
+        elif study_uid:
+            query = "MATCH (sr:StudyRoot { uid: $uid})-[l:LATEST]->(sv:StudyValue)"
+            query_parameters["uid"] = study_uid
         else:
-            if study_uid:
-                query = "MATCH (sr:StudyRoot { uid: $uid})-[l:LATEST]->(sv:StudyValue)"
-                query_parameters["uid"] = study_uid
-            else:
-                query = "MATCH (sr:StudyRoot)-[l:LATEST]->(sv:StudyValue)"
+            query = "MATCH (sr:StudyRoot)-[l:LATEST]->(sv:StudyValue)"
 
         if project_name is not None or project_number is not None:
             query += (
@@ -352,7 +350,6 @@ class StudySelectionArmRepository:
             return Create()
         return Delete()
 
-    # pylint: disable=unused-argument
     def save(self, study_selection: StudySelectionArmAR, author_id: str) -> None:
         """
         Persist the set of selected study arms from the aggregate to the database
@@ -509,7 +506,7 @@ class StudySelectionArmRepository:
                 )
             )
             # connect to node
-            # pylint: disable=no-member
+
             study_arm_selection_node.arm_type.connect(selected_arm_type_node)
 
         _manage_versioning_with_relations(

@@ -2,6 +2,8 @@ const { When, Then } = require("@badeball/cypress-cucumber-preprocessor");
 
 When('Table contains value {string}', (value) => cy.contains('table tbody tr', value).should('be.visible'))
 
+When('No results are present the table', () => cy.get('table tbody tr').should('have.text', 'No data available'))
+
 When('No results are returned in the form table', () => cy.get('.v-overlay tbody tr').should('have.text', 'No data available'))
 
 When('User waits for the table', () => cy.longWaitForTable(60000))

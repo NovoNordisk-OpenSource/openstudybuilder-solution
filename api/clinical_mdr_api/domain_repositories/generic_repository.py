@@ -1,7 +1,8 @@
 import datetime
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from textwrap import dedent
-from typing import Any, Iterable, Mapping
+from typing import Any
 
 from cachetools import TTLCache
 from neomodel import RelationshipDefinition, RelationshipManager, StructuredNode, db
@@ -191,13 +192,12 @@ def get_connected_node_by_rel_name_and_study_value(
             (_[0], _[1].definition["node_class"])
             for _ in connected_nodes[0].__all_relationships__
         ]
-        connected_study_value_rel_name, _ = [
-            i_rel for i_rel in relationships if i_rel[1] == type(study_value)
-        ][0]
+        connected_study_value_rel_name, _ = next(
+            i_rel for i_rel in relationships if i_rel[1] is type(study_value)
+        )
     for connected_node in connected_nodes:
         # get all study_values connected to the connected node
 
-        # pylint: disable=possibly-used-before-assignment
         study_values = getattr(connected_node, connected_study_value_rel_name).all()
         for iter_study_value in study_values:
             # if the connected study_value is the same as the study_value of node
@@ -231,7 +231,7 @@ def _manage_versioning_with_relations(
     after: StructuredNode | None = None,
     exclude_relationships: Iterable[
         type[StructuredNode] | RelationshipDefinition | str
-    ] = tuple(),
+    ] = (),
     **properties,
 ) -> StudyAction:
     """
@@ -281,7 +281,7 @@ def _manage_versioning_with_relations(
 
     # Create StudyAction node
     if "date" not in properties:
-        properties["date"] = datetime.datetime.now(datetime.timezone.utc)
+        properties["date"] = datetime.datetime.now(datetime.UTC)
     properties = action_type.deflate(properties, skip_empty=True)
     query.append(dedent(f"""
         CREATE (action:{':'.join(action_type.inherited_labels())}:StudyAction {{{', '.join(f'{k}: ${k}' for k in properties)}}})<-[:AUDIT_TRAIL]-(study_root)

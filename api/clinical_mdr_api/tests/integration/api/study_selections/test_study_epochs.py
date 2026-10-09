@@ -2,14 +2,7 @@
 Tests for /studies/{study_uid}/study-epochs endpoints
 """
 
-# pylint: disable=unused-argument
-# pylint: disable=redefined-outer-name
-# pylint: disable=too-many-arguments
-
-# pytest fixture functions have other fixture functions as arguments,
-# which pylint interprets as unused arguments
-
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 from unittest import mock
 
@@ -81,7 +74,7 @@ def test_data():
     # Create a study selection
     ct_term_codelist_name = settings.study_epoch_subtype_name
     ct_term_name = ct_term_codelist_name + " Name For StudyStandardVersioning test"
-    ct_term_start_date = datetime(2020, 3, 25, tzinfo=timezone.utc)
+    ct_term_start_date = datetime(2020, 3, 25, tzinfo=UTC)
 
     epoch_type_term_name = "Epoch Type for StudyStandardVersion"
     epoch_type_standard_version = TestUtils.create_ct_term(
@@ -138,7 +131,7 @@ def test_data():
             epoch_epoch.term_uid,
             epoch_type_standard_version.term_uid,
         ],
-        "date": datetime(2020, 3, 26, tzinfo=timezone.utc),
+        "date": datetime(2020, 3, 26, tzinfo=UTC),
     }
     db.cypher_query(
         """
@@ -564,7 +557,7 @@ def test_study_epoch_version_selecting_ct_package(api_client):
     TestUtils.set_study_standard_version(
         study_uid=study_for_ctterm_versioning.uid,
         package_name="SDTM CT 2020-03-27",
-        effective_date=datetime(2020, 3, 27, tzinfo=timezone.utc),
+        effective_date=datetime(2020, 3, 27, tzinfo=UTC),
     )
 
     # get study selection with previous ctterm
@@ -995,3 +988,82 @@ def test_study_epoch_lag_time_rejects_invalid_input(api_client):
     assert_response_status_code(response, 200)
     assert response.json()["ae_lag_time"] == 7
     assert response.json()["ae_lag_time_unit_uid"] == days_uid
+
+
+def test_epoch_reuses_existing_term_when_submission_value_matches_but_name_drifted(
+    api_client,
+):
+    """Reproduces a naming-drift bug: a numbered epoch term pre-existing under an
+    old naming convention ("Wash-out 1", submission_value "WASHOUT 1") must be
+    reused by submission_value when a later rename-sync derives that exact
+    submission_value again, instead of colliding with it via AlreadyExistsException."""
+    catalogue_name, library_name = get_catalogue_name_library_name(use_test_utils=True)
+
+    washout_subtype = TestUtils.create_ct_term(
+        codelist_uid="CTCodelist_00003",
+        submission_value="WASHOUTSUBTYPE",
+        sponsor_preferred_name="Washout",
+        order=15,
+        catalogue_name=catalogue_name,
+        library_name=library_name,
+        approve=True,
+    )
+    TestUtils.add_ct_term_parent(
+        term=washout_subtype,
+        parent_uid="EpochType_0001",
+        relationship_type="type",
+    )
+
+    # Pre-existing data with a naming-convention mismatch: display name is
+    # hyphenated ("Wash-out 1") but submission_value ("WASHOUT 1") is exactly
+    # what `_get_or_create_epoch_in_specific_subtype` derives for the first
+    # numbered epoch of the "Washout" subtype.
+    washout_1_decoy = TestUtils.create_ct_term(
+        codelist_uid=settings.study_epoch_epoch_uid,
+        submission_value="WASHOUT 1",
+        sponsor_preferred_name="Wash-out 1",
+        order=995,
+        catalogue_name=catalogue_name,
+        library_name=library_name,
+        approve=True,
+    )
+    TestUtils.add_ct_term_parent(
+        term=washout_1_decoy,
+        parent_uid=washout_subtype.term_uid,
+        relationship_type="subtype",
+    )
+
+    washout_study = TestUtils.create_study()
+
+    # First epoch of the subtype reuses the subtype's own CTTerm ("Washout").
+    response = api_client.post(
+        f"/studies/{washout_study.uid}/study-epochs",
+        json={
+            "study_uid": washout_study.uid,
+            "epoch_subtype": washout_subtype.term_uid,
+        },
+    )
+    assert_response_status_code(response, 201)
+    first_epoch = response.json()
+    assert first_epoch["epoch_ctterm"]["sponsor_preferred_name"] == "Washout"
+
+    # Creating the second epoch of the same subtype triggers a rename-sync of
+    # the first epoch from "Washout" to "Washout 1" -- this is where the old
+    # code tried (and failed) to create a colliding CTTerm with submission_value
+    # "WASHOUT 1". It must now reuse the pre-existing decoy term instead.
+    response = api_client.post(
+        f"/studies/{washout_study.uid}/study-epochs",
+        json={
+            "study_uid": washout_study.uid,
+            "epoch_subtype": washout_subtype.term_uid,
+        },
+    )
+    assert_response_status_code(response, 201)
+
+    response = api_client.get(
+        f"/studies/{washout_study.uid}/study-epochs/{first_epoch['uid']}",
+    )
+    assert_response_status_code(response, 200)
+    renamed_first_epoch = response.json()
+    assert renamed_first_epoch["epoch_ctterm"]["term_uid"] == washout_1_decoy.term_uid
+    assert renamed_first_epoch["epoch_ctterm"]["sponsor_preferred_name"] == "Wash-out 1"

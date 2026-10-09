@@ -1,9 +1,8 @@
-# pylint: disable=too-many-lines
+
 
 from dataclasses import dataclass, field
 from decimal import Decimal
 from enum import Enum
-from typing import List, Optional
 
 from xsdata.models.datatype import XmlDate, XmlDateTime, XmlDuration, XmlTime
 
@@ -14,7 +13,7 @@ class AtcCodes:
         name = "atc_codes"
         target_namespace = "http://eudract.emea.europa.eu/schema/clinical_trial"
 
-    atc_code: List[str] = field(
+    atc_code: list[str] = field(
         default_factory=list,
         metadata={
             "type": "Element",
@@ -232,14 +231,14 @@ class CtrsimpleTypeDefinitionRole:
             "required": True,
         },
     )
-    context: Optional[str] = field(
+    context: str | None = field(
         default=None,
         metadata={
             "name": "Context",
             "type": "Attribute",
         },
     )
-    role_code_list_oid: Optional[str] = field(
+    role_code_list_oid: str | None = field(
         default=None,
         metadata={
             "name": "RoleCodeListOID",
@@ -260,7 +259,7 @@ class CentralTechnicalFacilityDuty:
             "required": True,
         },
     )
-    code_list_oid: Optional[str] = field(
+    code_list_oid: str | None = field(
         default=None,
         metadata={
             "name": "CodeListOID",
@@ -276,7 +275,7 @@ class Contact:
     class Meta:
         namespace = "http://www.cdisc.org/ns/ctr/v1.0"
 
-    user_oid: Optional[str] = field(
+    user_oid: str | None = field(
         default=None,
         metadata={
             "name": "UserOID",
@@ -285,7 +284,7 @@ class Contact:
             "min_length": 1,
         },
     )
-    contact_role: Optional[str] = field(
+    contact_role: str | None = field(
         default=None,
         metadata={
             "name": "ContactRole",
@@ -293,7 +292,7 @@ class Contact:
             "required": True,
         },
     )
-    contact_role_code_list_oid: Optional[str] = field(
+    contact_role_code_list_oid: str | None = field(
         default=None,
         metadata={
             "name": "ContactRoleCodeListOID",
@@ -328,7 +327,7 @@ class OrganizationRef:
     class Meta:
         namespace = "http://www.cdisc.org/ns/ctr/v1.0"
 
-    organization_oid: Optional[str] = field(
+    organization_oid: str | None = field(
         default=None,
         metadata={
             "name": "OrganizationOID",
@@ -349,7 +348,7 @@ class RecruitmentCountry:
     class Meta:
         namespace = "http://www.cdisc.org/ns/ctr/v1.0"
 
-    country_code: Optional[str] = field(
+    country_code: str | None = field(
         default=None,
         metadata={
             "name": "CountryCode",
@@ -357,7 +356,7 @@ class RecruitmentCountry:
             "required": True,
         },
     )
-    code_list_oid: Optional[str] = field(
+    code_list_oid: str | None = field(
         default=None,
         metadata={
             "name": "CodeListOID",
@@ -418,7 +417,7 @@ class SubContractorDuty:
             "required": True,
         },
     )
-    code_list_oid: Optional[str] = field(
+    code_list_oid: str | None = field(
         default=None,
         metadata={
             "name": "CodeListOID",
@@ -538,7 +537,7 @@ class OdmcomplexTypeDefinitionAddress:
         name = "ODMcomplexTypeDefinition-Address"
         target_namespace = "http://www.cdisc.org/ns/odm/v1.3"
 
-    street_name: List[str] = field(
+    street_name: list[str] = field(
         default_factory=list,
         metadata={
             "name": "StreetName",
@@ -546,7 +545,7 @@ class OdmcomplexTypeDefinitionAddress:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    city: Optional[str] = field(
+    city: str | None = field(
         default=None,
         metadata={
             "name": "City",
@@ -554,7 +553,7 @@ class OdmcomplexTypeDefinitionAddress:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    state_prov: Optional[str] = field(
+    state_prov: str | None = field(
         default=None,
         metadata={
             "name": "StateProv",
@@ -562,7 +561,7 @@ class OdmcomplexTypeDefinitionAddress:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    country: Optional[str] = field(
+    country: str | None = field(
         default=None,
         metadata={
             "name": "Country",
@@ -570,7 +569,7 @@ class OdmcomplexTypeDefinitionAddress:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    postal_code: Optional[str] = field(
+    postal_code: str | None = field(
         default=None,
         metadata={
             "name": "PostalCode",
@@ -578,7 +577,7 @@ class OdmcomplexTypeDefinitionAddress:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    other_text: Optional[str] = field(
+    other_text: str | None = field(
         default=None,
         metadata={
             "name": "OtherText",
@@ -594,7 +593,7 @@ class OdmcomplexTypeDefinitionAlias:
         name = "ODMcomplexTypeDefinition-Alias"
         target_namespace = "http://www.cdisc.org/ns/odm/v1.3"
 
-    context: Optional[str] = field(
+    context: str | None = field(
         default=None,
         metadata={
             "name": "Context",
@@ -602,7 +601,7 @@ class OdmcomplexTypeDefinitionAlias:
             "required": True,
         },
     )
-    name: Optional[str] = field(
+    name: str | None = field(
         default=None,
         metadata={
             "name": "Name",
@@ -618,7 +617,7 @@ class OdmcomplexTypeDefinitionArchiveLayout:
         name = "ODMcomplexTypeDefinition-ArchiveLayout"
         target_namespace = "http://www.cdisc.org/ns/odm/v1.3"
 
-    oid: Optional[str] = field(
+    oid: str | None = field(
         default=None,
         metadata={
             "name": "OID",
@@ -627,7 +626,7 @@ class OdmcomplexTypeDefinitionArchiveLayout:
             "min_length": 1,
         },
     )
-    pdf_file_name: Optional[str] = field(
+    pdf_file_name: str | None = field(
         default=None,
         metadata={
             "name": "PdfFileName",
@@ -635,7 +634,7 @@ class OdmcomplexTypeDefinitionArchiveLayout:
             "required": True,
         },
     )
-    presentation_oid: Optional[str] = field(
+    presentation_oid: str | None = field(
         default=None,
         metadata={
             "name": "PresentationOID",
@@ -651,7 +650,7 @@ class OdmcomplexTypeDefinitionArchiveLayoutRef:
         name = "ODMcomplexTypeDefinition-ArchiveLayoutRef"
         target_namespace = "http://www.cdisc.org/ns/odm/v1.3"
 
-    archive_layout_oid: Optional[str] = field(
+    archive_layout_oid: str | None = field(
         default=None,
         metadata={
             "name": "ArchiveLayoutOID",
@@ -668,7 +667,7 @@ class OdmcomplexTypeDefinitionCodeListRef:
         name = "ODMcomplexTypeDefinition-CodeListRef"
         target_namespace = "http://www.cdisc.org/ns/odm/v1.3"
 
-    code_list_oid: Optional[str] = field(
+    code_list_oid: str | None = field(
         default=None,
         metadata={
             "name": "CodeListOID",
@@ -685,27 +684,27 @@ class OdmcomplexTypeDefinitionExternalCodeList:
         name = "ODMcomplexTypeDefinition-ExternalCodeList"
         target_namespace = "http://www.cdisc.org/ns/odm/v1.3"
 
-    dictionary: Optional[str] = field(
+    dictionary: str | None = field(
         default=None,
         metadata={
             "name": "Dictionary",
             "type": "Attribute",
         },
     )
-    version: Optional[str] = field(
+    version: str | None = field(
         default=None,
         metadata={
             "name": "Version",
             "type": "Attribute",
         },
     )
-    href: Optional[str] = field(
+    href: str | None = field(
         default=None,
         metadata={
             "type": "Attribute",
         },
     )
-    ref: Optional[str] = field(
+    ref: str | None = field(
         default=None,
         metadata={
             "type": "Attribute",
@@ -719,21 +718,21 @@ class OdmcomplexTypeDefinitionExternalQuestion:
         name = "ODMcomplexTypeDefinition-ExternalQuestion"
         target_namespace = "http://www.cdisc.org/ns/odm/v1.3"
 
-    dictionary: Optional[str] = field(
+    dictionary: str | None = field(
         default=None,
         metadata={
             "name": "Dictionary",
             "type": "Attribute",
         },
     )
-    version: Optional[str] = field(
+    version: str | None = field(
         default=None,
         metadata={
             "name": "Version",
             "type": "Attribute",
         },
     )
-    code: Optional[str] = field(
+    code: str | None = field(
         default=None,
         metadata={
             "name": "Code",
@@ -755,7 +754,7 @@ class OdmcomplexTypeDefinitionFlagType:
             "min_length": 1,
         },
     )
-    code_list_oid: Optional[str] = field(
+    code_list_oid: str | None = field(
         default=None,
         metadata={
             "name": "CodeListOID",
@@ -778,7 +777,7 @@ class OdmcomplexTypeDefinitionFlagValue:
             "required": True,
         },
     )
-    code_list_oid: Optional[str] = field(
+    code_list_oid: str | None = field(
         default=None,
         metadata={
             "name": "CodeListOID",
@@ -801,7 +800,7 @@ class OdmcomplexTypeDefinitionFormalExpression:
             "required": True,
         },
     )
-    context: Optional[str] = field(
+    context: str | None = field(
         default=None,
         metadata={
             "name": "Context",
@@ -822,7 +821,7 @@ class OdmcomplexTypeDefinitionImputationMethod:
             "required": True,
         },
     )
-    oid: Optional[str] = field(
+    oid: str | None = field(
         default=None,
         metadata={
             "name": "OID",
@@ -839,7 +838,7 @@ class OdmcomplexTypeDefinitionInclude:
         name = "ODMcomplexTypeDefinition-Include"
         target_namespace = "http://www.cdisc.org/ns/odm/v1.3"
 
-    study_oid: Optional[str] = field(
+    study_oid: str | None = field(
         default=None,
         metadata={
             "name": "StudyOID",
@@ -848,7 +847,7 @@ class OdmcomplexTypeDefinitionInclude:
             "min_length": 1,
         },
     )
-    meta_data_version_oid: Optional[str] = field(
+    meta_data_version_oid: str | None = field(
         default=None,
         metadata={
             "name": "MetaDataVersionOID",
@@ -865,7 +864,7 @@ class OdmcomplexTypeDefinitionInvestigatorRef:
         name = "ODMcomplexTypeDefinition-InvestigatorRef"
         target_namespace = "http://www.cdisc.org/ns/odm/v1.3"
 
-    user_oid: Optional[str] = field(
+    user_oid: str | None = field(
         default=None,
         metadata={
             "name": "UserOID",
@@ -882,7 +881,7 @@ class OdmcomplexTypeDefinitionKeySet:
         name = "ODMcomplexTypeDefinition-KeySet"
         target_namespace = "http://www.cdisc.org/ns/odm/v1.3"
 
-    study_oid: Optional[str] = field(
+    study_oid: str | None = field(
         default=None,
         metadata={
             "name": "StudyOID",
@@ -891,7 +890,7 @@ class OdmcomplexTypeDefinitionKeySet:
             "min_length": 1,
         },
     )
-    subject_key: Optional[str] = field(
+    subject_key: str | None = field(
         default=None,
         metadata={
             "name": "SubjectKey",
@@ -899,7 +898,7 @@ class OdmcomplexTypeDefinitionKeySet:
             "min_length": 1,
         },
     )
-    study_event_oid: Optional[str] = field(
+    study_event_oid: str | None = field(
         default=None,
         metadata={
             "name": "StudyEventOID",
@@ -907,7 +906,7 @@ class OdmcomplexTypeDefinitionKeySet:
             "min_length": 1,
         },
     )
-    study_event_repeat_key: Optional[str] = field(
+    study_event_repeat_key: str | None = field(
         default=None,
         metadata={
             "name": "StudyEventRepeatKey",
@@ -915,7 +914,7 @@ class OdmcomplexTypeDefinitionKeySet:
             "min_length": 1,
         },
     )
-    form_oid: Optional[str] = field(
+    form_oid: str | None = field(
         default=None,
         metadata={
             "name": "FormOID",
@@ -923,7 +922,7 @@ class OdmcomplexTypeDefinitionKeySet:
             "min_length": 1,
         },
     )
-    form_repeat_key: Optional[str] = field(
+    form_repeat_key: str | None = field(
         default=None,
         metadata={
             "name": "FormRepeatKey",
@@ -931,7 +930,7 @@ class OdmcomplexTypeDefinitionKeySet:
             "min_length": 1,
         },
     )
-    item_group_oid: Optional[str] = field(
+    item_group_oid: str | None = field(
         default=None,
         metadata={
             "name": "ItemGroupOID",
@@ -939,7 +938,7 @@ class OdmcomplexTypeDefinitionKeySet:
             "min_length": 1,
         },
     )
-    item_group_repeat_key: Optional[str] = field(
+    item_group_repeat_key: str | None = field(
         default=None,
         metadata={
             "name": "ItemGroupRepeatKey",
@@ -947,7 +946,7 @@ class OdmcomplexTypeDefinitionKeySet:
             "min_length": 1,
         },
     )
-    item_oid: Optional[str] = field(
+    item_oid: str | None = field(
         default=None,
         metadata={
             "name": "ItemOID",
@@ -955,7 +954,7 @@ class OdmcomplexTypeDefinitionKeySet:
             "min_length": 1,
         },
     )
-    oid: Optional[str] = field(
+    oid: str | None = field(
         default=None,
         metadata={
             "name": "OID",
@@ -971,7 +970,7 @@ class OdmcomplexTypeDefinitionLocationRef:
         name = "ODMcomplexTypeDefinition-LocationRef"
         target_namespace = "http://www.cdisc.org/ns/odm/v1.3"
 
-    location_oid: Optional[str] = field(
+    location_oid: str | None = field(
         default=None,
         metadata={
             "name": "LocationOID",
@@ -988,7 +987,7 @@ class OdmcomplexTypeDefinitionMeasurementUnitRef:
         name = "ODMcomplexTypeDefinition-MeasurementUnitRef"
         target_namespace = "http://www.cdisc.org/ns/odm/v1.3"
 
-    measurement_unit_oid: Optional[str] = field(
+    measurement_unit_oid: str | None = field(
         default=None,
         metadata={
             "name": "MeasurementUnitOID",
@@ -1005,7 +1004,7 @@ class OdmcomplexTypeDefinitionMetaDataVersionRef:
         name = "ODMcomplexTypeDefinition-MetaDataVersionRef"
         target_namespace = "http://www.cdisc.org/ns/odm/v1.3"
 
-    study_oid: Optional[str] = field(
+    study_oid: str | None = field(
         default=None,
         metadata={
             "name": "StudyOID",
@@ -1014,7 +1013,7 @@ class OdmcomplexTypeDefinitionMetaDataVersionRef:
             "min_length": 1,
         },
     )
-    meta_data_version_oid: Optional[str] = field(
+    meta_data_version_oid: str | None = field(
         default=None,
         metadata={
             "name": "MetaDataVersionOID",
@@ -1023,7 +1022,7 @@ class OdmcomplexTypeDefinitionMetaDataVersionRef:
             "min_length": 1,
         },
     )
-    effective_date: Optional[XmlDate] = field(
+    effective_date: XmlDate | None = field(
         default=None,
         metadata={
             "name": "EffectiveDate",
@@ -1039,7 +1038,7 @@ class OdmcomplexTypeDefinitionPicture:
         name = "ODMcomplexTypeDefinition-Picture"
         target_namespace = "http://www.cdisc.org/ns/odm/v1.3"
 
-    picture_file_name: Optional[str] = field(
+    picture_file_name: str | None = field(
         default=None,
         metadata={
             "name": "PictureFileName",
@@ -1047,7 +1046,7 @@ class OdmcomplexTypeDefinitionPicture:
             "required": True,
         },
     )
-    image_type: Optional[str] = field(
+    image_type: str | None = field(
         default=None,
         metadata={
             "name": "ImageType",
@@ -1069,7 +1068,7 @@ class OdmcomplexTypeDefinitionPresentation:
             "required": True,
         },
     )
-    oid: Optional[str] = field(
+    oid: str | None = field(
         default=None,
         metadata={
             "name": "OID",
@@ -1078,7 +1077,7 @@ class OdmcomplexTypeDefinitionPresentation:
             "min_length": 1,
         },
     )
-    lang: Optional[str] = field(
+    lang: str | None = field(
         default=None,
         metadata={
             "type": "Attribute",
@@ -1093,7 +1092,7 @@ class OdmcomplexTypeDefinitionSignatureRef:
         name = "ODMcomplexTypeDefinition-SignatureRef"
         target_namespace = "http://www.cdisc.org/ns/odm/v1.3"
 
-    signature_oid: Optional[str] = field(
+    signature_oid: str | None = field(
         default=None,
         metadata={
             "name": "SignatureOID",
@@ -1110,7 +1109,7 @@ class OdmcomplexTypeDefinitionSiteRef:
         name = "ODMcomplexTypeDefinition-SiteRef"
         target_namespace = "http://www.cdisc.org/ns/odm/v1.3"
 
-    location_oid: Optional[str] = field(
+    location_oid: str | None = field(
         default=None,
         metadata={
             "name": "LocationOID",
@@ -1133,7 +1132,7 @@ class OdmcomplexTypeDefinitionTranslatedText:
             "required": True,
         },
     )
-    lang: Optional[str] = field(
+    lang: str | None = field(
         default=None,
         metadata={
             "type": "Attribute",
@@ -1148,7 +1147,7 @@ class OdmcomplexTypeDefinitionUserRef:
         name = "ODMcomplexTypeDefinition-UserRef"
         target_namespace = "http://www.cdisc.org/ns/odm/v1.3"
 
-    user_oid: Optional[str] = field(
+    user_oid: str | None = field(
         default=None,
         metadata={
             "name": "UserOID",
@@ -1207,7 +1206,7 @@ class SdmcomplexTypeDefinitionActivityRef:
         name = "SDMcomplexTypeDefinition-ActivityRef"
         target_namespace = "http://www.cdisc.org/ns/studydesign/v1.0"
 
-    activity_oid: Optional[str] = field(
+    activity_oid: str | None = field(
         default=None,
         metadata={
             "name": "ActivityOID",
@@ -1217,7 +1216,7 @@ class SdmcomplexTypeDefinitionActivityRef:
             "doc": "OID of the referenced ActivityDef",
         },
     )
-    order_number: Optional[int] = field(
+    order_number: int | None = field(
         default=None,
         metadata={
             "name": "OrderNumber",
@@ -1240,7 +1239,7 @@ class SdmcomplexTypeDefinitionArmRef:
         name = "SDMcomplexTypeDefinition-ArmRef"
         target_namespace = "http://www.cdisc.org/ns/studydesign/v1.0"
 
-    arm_oid: Optional[str] = field(
+    arm_oid: str | None = field(
         default=None,
         metadata={
             "name": "ArmOID",
@@ -1274,7 +1273,7 @@ class SdmcomplexTypeDefinitionSegmentRef:
         name = "SDMcomplexTypeDefinition-SegmentRef"
         target_namespace = "http://www.cdisc.org/ns/studydesign/v1.0"
 
-    segment_oid: Optional[str] = field(
+    segment_oid: str | None = field(
         default=None,
         metadata={
             "name": "SegmentOID",
@@ -1284,7 +1283,7 @@ class SdmcomplexTypeDefinitionSegmentRef:
             "doc": "OID of the referenced SegmentDef",
         },
     )
-    order_number: Optional[int] = field(
+    order_number: int | None = field(
         default=None,
         metadata={
             "name": "OrderNumber",
@@ -1357,7 +1356,7 @@ class CanonicalizationMethodType:
     class Meta:
         target_namespace = "http://www.w3.org/2000/09/xmldsig#"
 
-    algorithm: Optional[str] = field(
+    algorithm: str | None = field(
         default=None,
         metadata={
             "name": "Algorithm",
@@ -1365,7 +1364,7 @@ class CanonicalizationMethodType:
             "required": True,
         },
     )
-    content: List[object] = field(
+    content: list[object] = field(
         default_factory=list,
         metadata={
             "type": "Wildcard",
@@ -1381,7 +1380,7 @@ class DsakeyValueType:
         name = "DSAKeyValueType"
         target_namespace = "http://www.w3.org/2000/09/xmldsig#"
 
-    p: Optional[bytes] = field(
+    p: bytes | None = field(
         default=None,
         metadata={
             "name": "P",
@@ -1390,7 +1389,7 @@ class DsakeyValueType:
             "format": "base64",
         },
     )
-    q: Optional[bytes] = field(
+    q: bytes | None = field(
         default=None,
         metadata={
             "name": "Q",
@@ -1399,7 +1398,7 @@ class DsakeyValueType:
             "format": "base64",
         },
     )
-    g: Optional[bytes] = field(
+    g: bytes | None = field(
         default=None,
         metadata={
             "name": "G",
@@ -1408,7 +1407,7 @@ class DsakeyValueType:
             "format": "base64",
         },
     )
-    y: Optional[bytes] = field(
+    y: bytes | None = field(
         default=None,
         metadata={
             "name": "Y",
@@ -1418,7 +1417,7 @@ class DsakeyValueType:
             "format": "base64",
         },
     )
-    j: Optional[bytes] = field(
+    j: bytes | None = field(
         default=None,
         metadata={
             "name": "J",
@@ -1427,7 +1426,7 @@ class DsakeyValueType:
             "format": "base64",
         },
     )
-    seed: Optional[bytes] = field(
+    seed: bytes | None = field(
         default=None,
         metadata={
             "name": "Seed",
@@ -1436,7 +1435,7 @@ class DsakeyValueType:
             "format": "base64",
         },
     )
-    pgen_counter: Optional[bytes] = field(
+    pgen_counter: bytes | None = field(
         default=None,
         metadata={
             "name": "PgenCounter",
@@ -1452,7 +1451,7 @@ class DigestMethodType:
     class Meta:
         target_namespace = "http://www.w3.org/2000/09/xmldsig#"
 
-    algorithm: Optional[str] = field(
+    algorithm: str | None = field(
         default=None,
         metadata={
             "name": "Algorithm",
@@ -1460,7 +1459,7 @@ class DigestMethodType:
             "required": True,
         },
     )
-    content: List[object] = field(
+    content: list[object] = field(
         default_factory=list,
         metadata={
             "type": "Wildcard",
@@ -1475,28 +1474,28 @@ class ObjectType:
     class Meta:
         target_namespace = "http://www.w3.org/2000/09/xmldsig#"
 
-    id: Optional[str] = field(
+    id: str | None = field(
         default=None,
         metadata={
             "name": "Id",
             "type": "Attribute",
         },
     )
-    mime_type: Optional[str] = field(
+    mime_type: str | None = field(
         default=None,
         metadata={
             "name": "MimeType",
             "type": "Attribute",
         },
     )
-    encoding: Optional[str] = field(
+    encoding: str | None = field(
         default=None,
         metadata={
             "name": "Encoding",
             "type": "Attribute",
         },
     )
-    content: List[object] = field(
+    content: list[object] = field(
         default_factory=list,
         metadata={
             "type": "Wildcard",
@@ -1512,7 +1511,7 @@ class PgpdataType:
         name = "PGPDataType"
         target_namespace = "http://www.w3.org/2000/09/xmldsig#"
 
-    pgpkey_id: Optional[bytes] = field(
+    pgpkey_id: bytes | None = field(
         default=None,
         metadata={
             "name": "PGPKeyID",
@@ -1521,7 +1520,7 @@ class PgpdataType:
             "format": "base64",
         },
     )
-    pgpkey_packet: List[bytes] = field(
+    pgpkey_packet: list[bytes] = field(
         default_factory=list,
         metadata={
             "name": "PGPKeyPacket",
@@ -1531,7 +1530,7 @@ class PgpdataType:
             "format": "base64",
         },
     )
-    other_element: List[object] = field(
+    other_element: list[object] = field(
         default_factory=list,
         metadata={
             "type": "Wildcard",
@@ -1546,7 +1545,7 @@ class RsakeyValueType:
         name = "RSAKeyValueType"
         target_namespace = "http://www.w3.org/2000/09/xmldsig#"
 
-    modulus: Optional[bytes] = field(
+    modulus: bytes | None = field(
         default=None,
         metadata={
             "name": "Modulus",
@@ -1556,7 +1555,7 @@ class RsakeyValueType:
             "format": "base64",
         },
     )
-    exponent: Optional[bytes] = field(
+    exponent: bytes | None = field(
         default=None,
         metadata={
             "name": "Exponent",
@@ -1574,7 +1573,7 @@ class SpkidataType:
         name = "SPKIDataType"
         target_namespace = "http://www.w3.org/2000/09/xmldsig#"
 
-    spkisexp: List[bytes] = field(
+    spkisexp: list[bytes] = field(
         default_factory=list,
         metadata={
             "name": "SPKISexp",
@@ -1585,7 +1584,7 @@ class SpkidataType:
             "format": "base64",
         },
     )
-    other_element: List[object] = field(
+    other_element: list[object] = field(
         default_factory=list,
         metadata={
             "type": "Wildcard",
@@ -1600,7 +1599,7 @@ class SignatureMethodType:
     class Meta:
         target_namespace = "http://www.w3.org/2000/09/xmldsig#"
 
-    algorithm: Optional[str] = field(
+    algorithm: str | None = field(
         default=None,
         metadata={
             "name": "Algorithm",
@@ -1608,7 +1607,7 @@ class SignatureMethodType:
             "required": True,
         },
     )
-    content: List[object] = field(
+    content: list[object] = field(
         default_factory=list,
         metadata={
             "type": "Wildcard",
@@ -1630,7 +1629,7 @@ class SignaturePropertyType:
     class Meta:
         target_namespace = "http://www.w3.org/2000/09/xmldsig#"
 
-    target: Optional[str] = field(
+    target: str | None = field(
         default=None,
         metadata={
             "name": "Target",
@@ -1638,14 +1637,14 @@ class SignaturePropertyType:
             "required": True,
         },
     )
-    id: Optional[str] = field(
+    id: str | None = field(
         default=None,
         metadata={
             "name": "Id",
             "type": "Attribute",
         },
     )
-    content: List[object] = field(
+    content: list[object] = field(
         default_factory=list,
         metadata={
             "type": "Wildcard",
@@ -1660,14 +1659,14 @@ class SignatureValueType:
     class Meta:
         target_namespace = "http://www.w3.org/2000/09/xmldsig#"
 
-    value: Optional[bytes] = field(
+    value: bytes | None = field(
         default=None,
         metadata={
             "required": True,
             "format": "base64",
         },
     )
-    id: Optional[str] = field(
+    id: str | None = field(
         default=None,
         metadata={
             "name": "Id",
@@ -1681,7 +1680,7 @@ class TransformType:
     class Meta:
         target_namespace = "http://www.w3.org/2000/09/xmldsig#"
 
-    algorithm: Optional[str] = field(
+    algorithm: str | None = field(
         default=None,
         metadata={
             "name": "Algorithm",
@@ -1689,7 +1688,7 @@ class TransformType:
             "required": True,
         },
     )
-    content: List[object] = field(
+    content: list[object] = field(
         default_factory=list,
         metadata={
             "type": "Wildcard",
@@ -1711,7 +1710,7 @@ class X509IssuerSerialType:
     class Meta:
         target_namespace = "http://www.w3.org/2000/09/xmldsig#"
 
-    x509_issuer_name: Optional[str] = field(
+    x509_issuer_name: str | None = field(
         default=None,
         metadata={
             "name": "X509IssuerName",
@@ -1720,7 +1719,7 @@ class X509IssuerSerialType:
             "required": True,
         },
     )
-    x509_serial_number: Optional[int] = field(
+    x509_serial_number: int | None = field(
         default=None,
         metadata={
             "name": "X509SerialNumber",
@@ -1737,7 +1736,7 @@ class ActiveSubstances:
         name = "active_substances"
         target_namespace = "http://eudract.emea.europa.eu/schema/clinical_trial"
 
-    active_substance: List["ActiveSubstances.ActiveSubstance"] = field(
+    active_substance: list[ActiveSubstances.ActiveSubstance] = field(
         default_factory=list,
         metadata={
             "type": "Element",
@@ -1750,7 +1749,7 @@ class ActiveSubstances:
 
     @dataclass
     class ActiveSubstance:
-        inn: Optional[str] = field(
+        inn: str | None = field(
             default=None,
             metadata={
                 "type": "Element",
@@ -1760,7 +1759,7 @@ class ActiveSubstances:
                 "doc": "D.3.8 Active substance INN",
             },
         )
-        cas_number: Optional[str] = field(
+        cas_number: str | None = field(
             default=None,
             metadata={
                 "type": "Element",
@@ -1770,7 +1769,7 @@ class ActiveSubstances:
                 "doc": "D.3.9.1 Active substance CAS number",
             },
         )
-        current_sponsor_code: Optional[str] = field(
+        current_sponsor_code: str | None = field(
             default=None,
             metadata={
                 "type": "Element",
@@ -1780,7 +1779,7 @@ class ActiveSubstances:
                 "doc": "D.3.9.2 Active substance current sponsor code",
             },
         )
-        other_descriptive_name: Optional[str] = field(
+        other_descriptive_name: str | None = field(
             default=None,
             metadata={
                 "type": "Element",
@@ -1790,7 +1789,7 @@ class ActiveSubstances:
                 "doc": "D.3.9.3 Active substance other descriptive name",
             },
         )
-        substance_code: Optional[str] = field(
+        substance_code: str | None = field(
             default=None,
             metadata={
                 "type": "Element",
@@ -1800,7 +1799,7 @@ class ActiveSubstances:
                 "doc": "D.3.9.4 EV Substance Code",
             },
         )
-        molecular_formula: Optional[str] = field(
+        molecular_formula: str | None = field(
             default=None,
             metadata={
                 "type": "Element",
@@ -1810,7 +1809,7 @@ class ActiveSubstances:
                 "doc": "D.3.9.5 Active substance molecular formula",
             },
         )
-        description: Optional[str] = field(
+        description: str | None = field(
             default=None,
             metadata={
                 "type": "Element",
@@ -1820,7 +1819,7 @@ class ActiveSubstances:
                 "doc": "D.3.9.6 Active substance description",
             },
         )
-        concentration_unit: Optional[EutctDomain] = field(
+        concentration_unit: EutctDomain | None = field(
             default=None,
             metadata={
                 "type": "Element",
@@ -1829,7 +1828,7 @@ class ActiveSubstances:
                 "doc": "D.3.10.1 Active substance concentration unit",
             },
         )
-        concentration_type: Optional[EutctDomain] = field(
+        concentration_type: EutctDomain | None = field(
             default=None,
             metadata={
                 "type": "Element",
@@ -1838,7 +1837,7 @@ class ActiveSubstances:
                 "doc": "D.3.10.2 Active substance concentration type",
             },
         )
-        concentration_num_part1: Optional[str] = field(
+        concentration_num_part1: str | None = field(
             default=None,
             metadata={
                 "type": "Element",
@@ -1848,7 +1847,7 @@ class ActiveSubstances:
                 "doc": "D.3.10.3 Active substance concentration number 1",
             },
         )
-        concentration_num_part2: Optional[str] = field(
+        concentration_num_part2: str | None = field(
             default=None,
             metadata={
                 "type": "Element",
@@ -1866,7 +1865,7 @@ class CellOrigin:
         name = "cell_origin"
         target_namespace = "http://eudract.emea.europa.eu/schema/clinical_trial"
 
-    tissue_eng_origin_autologous: Optional[BooleanDomain] = field(
+    tissue_eng_origin_autologous: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -1875,7 +1874,7 @@ class CellOrigin:
             "doc": "D.6.1.1\tTissue Engineered origin autologous",
         },
     )
-    tissue_eng_origin_allogeneic: Optional[BooleanDomain] = field(
+    tissue_eng_origin_allogeneic: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -1884,7 +1883,7 @@ class CellOrigin:
             "doc": "D.6.1.2\tTissue Engineered origin allogeneic",
         },
     )
-    tissue_eng_origin_xenogeneic: Optional[BooleanDomain] = field(
+    tissue_eng_origin_xenogeneic: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -1893,7 +1892,7 @@ class CellOrigin:
             "doc": "D.6.1.3\tTissue Engineered origin xenogeneic",
         },
     )
-    tissue_eng_xenogeneic_species: Optional[str] = field(
+    tissue_eng_xenogeneic_species: str | None = field(
         default=None,
         metadata={
             "type": "Element",
@@ -1911,7 +1910,7 @@ class CellType:
         name = "cell_type"
         target_namespace = "http://eudract.emea.europa.eu/schema/clinical_trial"
 
-    tissue_eng_type_stem: Optional[BooleanDomain] = field(
+    tissue_eng_type_stem: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -1920,7 +1919,7 @@ class CellType:
             "doc": "D.6.2.1\tTissue Engineered type stem",
         },
     )
-    tissue_eng_type_differentiated: Optional[BooleanDomain] = field(
+    tissue_eng_type_differentiated: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -1929,7 +1928,7 @@ class CellType:
             "doc": "D.6.2.2\tTissue Engineered type differentiated",
         },
     )
-    tissue_eng_diff_spec: Optional[str] = field(
+    tissue_eng_diff_spec: str | None = field(
         default=None,
         metadata={
             "type": "Element",
@@ -1939,7 +1938,7 @@ class CellType:
             "doc": "D.6.2.2.1 Tissue Engineered differentiated specification",
         },
     )
-    tissue_eng_other: Optional[BooleanDomain] = field(
+    tissue_eng_other: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -1948,7 +1947,7 @@ class CellType:
             "doc": "D.6.2.3\tTissue Engineered Other",
         },
     )
-    tissue_eng_other_spec: Optional[str] = field(
+    tissue_eng_other_spec: str | None = field(
         default=None,
         metadata={
             "type": "Element",
@@ -1966,7 +1965,7 @@ class CtaIdentification:
         name = "cta_identification"
         target_namespace = "http://eudract.emea.europa.eu/schema/clinical_trial"
 
-    eudract_no: Optional[str] = field(
+    eudract_no: str | None = field(
         default=None,
         metadata={
             "type": "Element",
@@ -1975,7 +1974,7 @@ class CtaIdentification:
             "pattern": r"20[0-9]{2}-[0-9]{6}-[0-9]{2}",
         },
     )
-    nca: Optional[NationalCompetentAuthority] = field(
+    nca: NationalCompetentAuthority | None = field(
         default=None,
         metadata={
             "type": "Element",
@@ -1991,7 +1990,7 @@ class GeneTherapy:
         name = "gene_therapy"
         target_namespace = "http://eudract.emea.europa.eu/schema/clinical_trial"
 
-    gene_ther_genes_of_interest: Optional[str] = field(
+    gene_ther_genes_of_interest: str | None = field(
         default=None,
         metadata={
             "type": "Element",
@@ -2001,7 +2000,7 @@ class GeneTherapy:
             "doc": "D.5.1 Gene therapy gene(s) of interest",
         },
     )
-    gene_ther_in_vivo: Optional[BooleanDomain] = field(
+    gene_ther_in_vivo: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -2010,7 +2009,7 @@ class GeneTherapy:
             "doc": "D.5.2 Gene therapy in-vivo",
         },
     )
-    gene_ther_ex_vivo: Optional[BooleanDomain] = field(
+    gene_ther_ex_vivo: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -2019,7 +2018,7 @@ class GeneTherapy:
             "doc": "D.5.3 Gene therapy ex-vivo",
         },
     )
-    gene_ther_nucleic_acid: Optional[BooleanDomain] = field(
+    gene_ther_nucleic_acid: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -2028,7 +2027,7 @@ class GeneTherapy:
             "doc": "D.5.4.1\tGene therapy nucleic acid",
         },
     )
-    gene_ther_nucleic_acid_naked: Optional[BooleanDomain] = field(
+    gene_ther_nucleic_acid_naked: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -2037,7 +2036,7 @@ class GeneTherapy:
             "doc": "D.5.4.1.1 Gene therapy naked",
         },
     )
-    gene_ther_nucleic_acid_complex: Optional[BooleanDomain] = field(
+    gene_ther_nucleic_acid_complex: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -2046,7 +2045,7 @@ class GeneTherapy:
             "doc": "D.5.4.1.2 Gene therapy complexed",
         },
     )
-    gene_ther_viral: Optional[BooleanDomain] = field(
+    gene_ther_viral: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -2055,7 +2054,7 @@ class GeneTherapy:
             "doc": "D.5.4.2\tGene therapy viral vector",
         },
     )
-    gene_ther_viral_specify: Optional[str] = field(
+    gene_ther_viral_specify: str | None = field(
         default=None,
         metadata={
             "type": "Element",
@@ -2065,7 +2064,7 @@ class GeneTherapy:
             "doc": "D.5.4.2.1 Gene therapy viral vector type",
         },
     )
-    gene_ther_others: Optional[BooleanDomain] = field(
+    gene_ther_others: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -2074,7 +2073,7 @@ class GeneTherapy:
             "doc": "D.5.4.3\tGene Therapy other",
         },
     )
-    gene_ther_others_specify: Optional[str] = field(
+    gene_ther_others_specify: str | None = field(
         default=None,
         metadata={
             "type": "Element",
@@ -2084,7 +2083,7 @@ class GeneTherapy:
             "doc": "D.5.4.3.1 Gene therapy other specification",
         },
     )
-    gene_ther_genetically_modified: Optional[BooleanDomain] = field(
+    gene_ther_genetically_modified: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -2093,7 +2092,7 @@ class GeneTherapy:
             "doc": "D.5.5 GM cells",
         },
     )
-    gene_ther_autologous: Optional[BooleanDomain] = field(
+    gene_ther_autologous: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -2102,7 +2101,7 @@ class GeneTherapy:
             "doc": "D.5.5.1\tGM cells origin autologous",
         },
     )
-    gene_ther_allogeneic: Optional[BooleanDomain] = field(
+    gene_ther_allogeneic: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -2111,7 +2110,7 @@ class GeneTherapy:
             "doc": "D.5.5.2\tGM cells origin allogeneic",
         },
     )
-    gene_ther_xenogeneic: Optional[BooleanDomain] = field(
+    gene_ther_xenogeneic: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -2120,7 +2119,7 @@ class GeneTherapy:
             "doc": "D.5.5.3\tGM cells origin xenogeneic",
         },
     )
-    gene_ther_xeno_species_origin: Optional[str] = field(
+    gene_ther_xeno_species_origin: str | None = field(
         default=None,
         metadata={
             "type": "Element",
@@ -2130,7 +2129,7 @@ class GeneTherapy:
             "doc": "D.5.5.3.1 GM cells xenogeneic species",
         },
     )
-    gene_ther_type_cells_dtls: Optional[str] = field(
+    gene_ther_type_cells_dtls: str | None = field(
         default=None,
         metadata={
             "type": "Element",
@@ -2148,7 +2147,7 @@ class ImpDevice:
         name = "imp_device"
         target_namespace = "http://eudract.emea.europa.eu/schema/clinical_trial"
 
-    device_description: Optional[str] = field(
+    device_description: str | None = field(
         default=None,
         metadata={
             "type": "Element",
@@ -2158,7 +2157,7 @@ class ImpDevice:
             "doc": "D.7.1 Device description",
         },
     )
-    device_name: Optional[str] = field(
+    device_name: str | None = field(
         default=None,
         metadata={
             "type": "Element",
@@ -2168,7 +2167,7 @@ class ImpDevice:
             "doc": "D.7.2 Device name",
         },
     )
-    device_implantable: Optional[BooleanDomain] = field(
+    device_implantable: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -2177,7 +2176,7 @@ class ImpDevice:
             "doc": "D.7.3 Device implantable",
         },
     )
-    is_medical_device: Optional[BooleanDomain] = field(
+    is_medical_device: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -2186,7 +2185,7 @@ class ImpDevice:
             "doc": "D.7.4.1\tContains medical device",
         },
     )
-    has_device_ce_mark: Optional[BooleanDomain] = field(
+    has_device_ce_mark: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -2195,7 +2194,7 @@ class ImpDevice:
             "doc": "D.7.4.1.1 Device has CE mark",
         },
     )
-    device_notified_body: Optional[str] = field(
+    device_notified_body: str | None = field(
         default=None,
         metadata={
             "type": "Element",
@@ -2205,7 +2204,7 @@ class ImpDevice:
             "doc": "D.7.4.1.1.1 Device notified body",
         },
     )
-    has_biomedical_material: Optional[BooleanDomain] = field(
+    has_biomedical_material: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -2214,7 +2213,7 @@ class ImpDevice:
             "doc": "D.7.4.2\tContains Bio-materials",
         },
     )
-    has_scaffolds: Optional[BooleanDomain] = field(
+    has_scaffolds: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -2223,7 +2222,7 @@ class ImpDevice:
             "doc": "D.7.4.3\tContains Scaffolds",
         },
     )
-    has_matrices: Optional[BooleanDomain] = field(
+    has_matrices: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -2232,7 +2231,7 @@ class ImpDevice:
             "doc": "D.7.4.4\tContains Matrices",
         },
     )
-    has_other_device: Optional[BooleanDomain] = field(
+    has_other_device: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -2241,7 +2240,7 @@ class ImpDevice:
             "doc": "D.7.4.5\tDevice Other",
         },
     )
-    other_device_spec: Optional[str] = field(
+    other_device_spec: str | None = field(
         default=None,
         metadata={
             "type": "Element",
@@ -2259,7 +2258,7 @@ class ImpIdentificationNotPossible:
         name = "imp_identification_not_possible"
         target_namespace = "http://eudract.emea.europa.eu/schema/clinical_trial"
 
-    has_any_auth_active_substance: Optional[BooleanDomain] = field(
+    has_any_auth_active_substance: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -2268,7 +2267,7 @@ class ImpIdentificationNotPossible:
             "doc": "D.2.2.1\tTreatment defined only by AS",
         },
     )
-    has_local_site_products: Optional[BooleanDomain] = field(
+    has_local_site_products: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -2277,7 +2276,7 @@ class ImpIdentificationNotPossible:
             "doc": "D.2.2.2\tCombinations of marketed products",
         },
     )
-    is_atc_group_used: Optional[BooleanDomain] = field(
+    is_atc_group_used: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -2286,7 +2285,7 @@ class ImpIdentificationNotPossible:
             "doc": "D.2.2.3\tIMP defined by ATC Group",
         },
     )
-    has_imp_other_identification: Optional[BooleanDomain] = field(
+    has_imp_other_identification: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -2295,7 +2294,7 @@ class ImpIdentificationNotPossible:
             "doc": "D.2.2.4\tIMP identification other",
         },
     )
-    other_description: Optional[str] = field(
+    other_description: str | None = field(
         default=None,
         metadata={
             "type": "Element",
@@ -2313,7 +2312,7 @@ class ImpMemberState:
         name = "imp_member_state"
         target_namespace = "http://eudract.emea.europa.eu/schema/clinical_trial"
 
-    trade_name_in_ms: Optional[str] = field(
+    trade_name_in_ms: str | None = field(
         default=None,
         metadata={
             "type": "Element",
@@ -2323,7 +2322,7 @@ class ImpMemberState:
             "doc": "D.2.1.1.1 IMP Trade name",
         },
     )
-    ev_identifiable_product_code: Optional[str] = field(
+    ev_identifiable_product_code: str | None = field(
         default=None,
         metadata={
             "type": "Element",
@@ -2333,7 +2332,7 @@ class ImpMemberState:
             "doc": "D.2.1.1.1.1 EV Identifiable Product Code",
         },
     )
-    ma_holder: Optional[str] = field(
+    ma_holder: str | None = field(
         default=None,
         metadata={
             "type": "Element",
@@ -2343,7 +2342,7 @@ class ImpMemberState:
             "doc": "D.2.1.1.2 MA holder",
         },
     )
-    ma_number: Optional[str] = field(
+    ma_number: str | None = field(
         default=None,
         metadata={
             "type": "Element",
@@ -2353,7 +2352,7 @@ class ImpMemberState:
             "doc": "D.2.1.1.3 MA number",
         },
     )
-    is_imp_modified: Optional[BooleanDomain] = field(
+    is_imp_modified: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -2362,7 +2361,7 @@ class ImpMemberState:
             "doc": "D.2.1.1.4 IMP modified",
         },
     )
-    imp_modified_specification: Optional[str] = field(
+    imp_modified_specification: str | None = field(
         default=None,
         metadata={
             "type": "Element",
@@ -2372,7 +2371,7 @@ class ImpMemberState:
             "doc": "D.2.1.1.4.1 IMP modified specification",
         },
     )
-    granted_ma_country: Optional[EutctDomain] = field(
+    granted_ma_country: EutctDomain | None = field(
         default=None,
         metadata={
             "type": "Element",
@@ -2381,7 +2380,7 @@ class ImpMemberState:
             "doc": "D.2.1.2\tCountry granting MA",
         },
     )
-    is_granting_ma_concerned_ms: Optional[BooleanDomain] = field(
+    is_granting_ma_concerned_ms: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -2404,7 +2403,7 @@ class InternationalizedTextsType:
             "required": True,
         },
     )
-    locale: Optional[Locale] = field(
+    locale: Locale | None = field(
         default=None,
         metadata={
             "type": "Attribute",
@@ -2419,7 +2418,7 @@ class MemberStates:
         name = "member_states"
         target_namespace = "http://eudract.emea.europa.eu/schema/clinical_trial"
 
-    country: List[EutctDomain] = field(
+    country: list[EutctDomain] = field(
         default_factory=list,
         metadata={
             "type": "Element",
@@ -2435,7 +2434,7 @@ class RoutesOfAdministration:
         name = "routes_of_administration"
         target_namespace = "http://eudract.emea.europa.eu/schema/clinical_trial"
 
-    route_of_administration: List[EutctDomain] = field(
+    route_of_administration: list[EutctDomain] = field(
         default_factory=list,
         metadata={
             "type": "Element",
@@ -2451,7 +2450,7 @@ class SomaticCell:
         name = "somatic_cell"
         target_namespace = "http://eudract.emea.europa.eu/schema/clinical_trial"
 
-    somatic_cell_autologous: Optional[BooleanDomain] = field(
+    somatic_cell_autologous: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -2460,7 +2459,7 @@ class SomaticCell:
             "doc": "D.4.1.1\tSomatic Cell Therapy origin autologous",
         },
     )
-    somatic_cell_allogeneic: Optional[BooleanDomain] = field(
+    somatic_cell_allogeneic: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -2469,7 +2468,7 @@ class SomaticCell:
             "doc": "D.4.1.2\tSomatic Cell Therapy origin allogeneic",
         },
     )
-    somatic_cell_xenogeneic: Optional[BooleanDomain] = field(
+    somatic_cell_xenogeneic: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -2478,7 +2477,7 @@ class SomaticCell:
             "doc": "D.4.1.3\tSomatic Cell Therapy origin xenogeneic",
         },
     )
-    somatic_cell_xen_sp_origin: Optional[str] = field(
+    somatic_cell_xen_sp_origin: str | None = field(
         default=None,
         metadata={
             "type": "Element",
@@ -2488,7 +2487,7 @@ class SomaticCell:
             "doc": "D.4.1.3.1 Somatic Cell Therapy xenogeneic species",
         },
     )
-    somatic_cell_stem: Optional[BooleanDomain] = field(
+    somatic_cell_stem: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -2497,7 +2496,7 @@ class SomaticCell:
             "doc": "D.4.2.1\tSomatic Cell Therapy type stem",
         },
     )
-    somatic_cell_differenciated: Optional[BooleanDomain] = field(
+    somatic_cell_differenciated: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -2506,7 +2505,7 @@ class SomaticCell:
             "doc": "D.4.2.2\tSomatic Cell Therapy type differentiated",
         },
     )
-    somatic_cell_diff_type: Optional[str] = field(
+    somatic_cell_diff_type: str | None = field(
         default=None,
         metadata={
             "type": "Element",
@@ -2516,7 +2515,7 @@ class SomaticCell:
             "doc": "D.4.2.2.1 Type of differentiated cells",
         },
     )
-    somatic_cell_others: Optional[BooleanDomain] = field(
+    somatic_cell_others: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -2525,7 +2524,7 @@ class SomaticCell:
             "doc": "D.4.2.3 Somatic Cell Therapy type other",
         },
     )
-    somatic_cell_others_specify: Optional[str] = field(
+    somatic_cell_others_specify: str | None = field(
         default=None,
         metadata={
             "type": "Element",
@@ -2542,7 +2541,7 @@ class BlindedRole:
     class Meta:
         namespace = "http://www.cdisc.org/ns/ctr/v1.0"
 
-    value: Optional[BlindedRoleEnumeration] = field(
+    value: BlindedRoleEnumeration | None = field(
         default=None,
         metadata={
             "required": True,
@@ -2555,7 +2554,7 @@ class CentralTechnicalFacility:
     class Meta:
         namespace = "http://www.cdisc.org/ns/ctr/v1.0"
 
-    organization_ref: Optional[OrganizationRef] = field(
+    organization_ref: OrganizationRef | None = field(
         default=None,
         metadata={
             "name": "OrganizationRef",
@@ -2563,14 +2562,14 @@ class CentralTechnicalFacility:
             "required": True,
         },
     )
-    contact: Optional[Contact] = field(
+    contact: Contact | None = field(
         default=None,
         metadata={
             "name": "Contact",
             "type": "Element",
         },
     )
-    central_technical_facility_duty: List[CentralTechnicalFacilityDuty] = field(
+    central_technical_facility_duty: list[CentralTechnicalFacilityDuty] = field(
         default_factory=list,
         metadata={
             "name": "CentralTechnicalFacilityDuty",
@@ -2584,7 +2583,7 @@ class Contacts:
     class Meta:
         namespace = "http://www.cdisc.org/ns/ctr/v1.0"
 
-    contact: List[Contact] = field(
+    contact: list[Contact] = field(
         default_factory=list,
         metadata={
             "name": "Contact",
@@ -2600,7 +2599,7 @@ class Fdainformation:
         name = "FDAInformation"
         namespace = "http://www.cdisc.org/ns/ctr/v1.0"
 
-    is_fdaregulated_intervention: Optional[YesNoType] = field(
+    is_fdaregulated_intervention: YesNoType | None = field(
         default=None,
         metadata={
             "name": "IsFDARegulatedIntervention",
@@ -2608,7 +2607,7 @@ class Fdainformation:
             "required": True,
         },
     )
-    is_indndeprotocol: Optional[YesNoType] = field(
+    is_indndeprotocol: YesNoType | None = field(
         default=None,
         metadata={
             "name": "IsINDNDEProtocol",
@@ -2616,7 +2615,7 @@ class Fdainformation:
             "required": True,
         },
     )
-    has_data_monitoring_committee: Optional[YesNoType] = field(
+    has_data_monitoring_committee: YesNoType | None = field(
         default=None,
         metadata={
             "name": "HasDataMonitoringCommittee",
@@ -2630,7 +2629,7 @@ class InstitutionalReviewBoardEthicsCommittee:
     class Meta:
         namespace = "http://www.cdisc.org/ns/ctr/v1.0"
 
-    organization_ref: Optional[OrganizationRef] = field(
+    organization_ref: OrganizationRef | None = field(
         default=None,
         metadata={
             "name": "OrganizationRef",
@@ -2638,7 +2637,7 @@ class InstitutionalReviewBoardEthicsCommittee:
             "required": True,
         },
     )
-    contact: List[Contact] = field(
+    contact: list[Contact] = field(
         default_factory=list,
         metadata={
             "name": "Contact",
@@ -2646,7 +2645,7 @@ class InstitutionalReviewBoardEthicsCommittee:
             "min_occurs": 1,
         },
     )
-    oid: Optional[str] = field(
+    oid: str | None = field(
         default=None,
         metadata={
             "name": "OID",
@@ -2655,7 +2654,7 @@ class InstitutionalReviewBoardEthicsCommittee:
             "min_length": 1,
         },
     )
-    approval: Optional[InstitutionalReviewBoardEthicsCommitteeApprovalType] = field(
+    approval: InstitutionalReviewBoardEthicsCommitteeApprovalType | None = field(
         default=None,
         metadata={
             "name": "Approval",
@@ -2670,7 +2669,7 @@ class Network:
     class Meta:
         namespace = "http://www.cdisc.org/ns/ctr/v1.0"
 
-    organization_ref: Optional[OrganizationRef] = field(
+    organization_ref: OrganizationRef | None = field(
         default=None,
         metadata={
             "name": "OrganizationRef",
@@ -2678,14 +2677,14 @@ class Network:
             "required": True,
         },
     )
-    contact: Optional[Contact] = field(
+    contact: Contact | None = field(
         default=None,
         metadata={
             "name": "Contact",
             "type": "Element",
         },
     )
-    network_activities: Optional[str] = field(
+    network_activities: str | None = field(
         default=None,
         metadata={
             "name": "NetworkActivities",
@@ -2700,7 +2699,7 @@ class OversightAuthority:
     class Meta:
         namespace = "http://www.cdisc.org/ns/ctr/v1.0"
 
-    organization_ref: Optional[OrganizationRef] = field(
+    organization_ref: OrganizationRef | None = field(
         default=None,
         metadata={
             "name": "OrganizationRef",
@@ -2708,7 +2707,7 @@ class OversightAuthority:
             "required": True,
         },
     )
-    country_code: Optional[str] = field(
+    country_code: str | None = field(
         default=None,
         metadata={
             "name": "CountryCode",
@@ -2716,7 +2715,7 @@ class OversightAuthority:
             "required": True,
         },
     )
-    code_list_oid: Optional[str] = field(
+    code_list_oid: str | None = field(
         default=None,
         metadata={
             "name": "CodeListOID",
@@ -2725,7 +2724,7 @@ class OversightAuthority:
             "min_length": 1,
         },
     )
-    name: Optional[str] = field(
+    name: str | None = field(
         default=None,
         metadata={
             "name": "Name",
@@ -2740,7 +2739,7 @@ class RecruitmentCountries:
     class Meta:
         namespace = "http://www.cdisc.org/ns/ctr/v1.0"
 
-    recruitment_country: List[RecruitmentCountry] = field(
+    recruitment_country: list[RecruitmentCountry] = field(
         default_factory=list,
         metadata={
             "name": "RecruitmentCountry",
@@ -2755,21 +2754,21 @@ class RecruitmentStatus:
     class Meta:
         namespace = "http://www.cdisc.org/ns/ctr/v1.0"
 
-    recruitment_status_other: Optional[str] = field(
+    recruitment_status_other: str | None = field(
         default=None,
         metadata={
             "name": "RecruitmentStatusOther",
             "type": "Element",
         },
     )
-    country: Optional[str] = field(
+    country: str | None = field(
         default=None,
         metadata={
             "name": "Country",
             "type": "Attribute",
         },
     )
-    current_status: Optional[CtrrecruitmentType] = field(
+    current_status: CtrrecruitmentType | None = field(
         default=None,
         metadata={
             "name": "CurrentStatus",
@@ -2777,7 +2776,7 @@ class RecruitmentStatus:
             "required": True,
         },
     )
-    recruitment_start_date: Optional[str] = field(
+    recruitment_start_date: str | None = field(
         default=None,
         metadata={
             "name": "RecruitmentStartDate",
@@ -2786,7 +2785,7 @@ class RecruitmentStatus:
             "pattern": r"([ ])?",
         },
     )
-    recruitment_end_date: Optional[str] = field(
+    recruitment_end_date: str | None = field(
         default=None,
         metadata={
             "name": "RecruitmentEndDate",
@@ -2794,7 +2793,7 @@ class RecruitmentStatus:
             "pattern": r"([ ])?",
         },
     )
-    estimated_recruitment_duration: Optional[XmlDuration] = field(
+    estimated_recruitment_duration: XmlDuration | None = field(
         default=None,
         metadata={
             "name": "EstimatedRecruitmentDuration",
@@ -2808,7 +2807,7 @@ class Registration:
     class Meta:
         namespace = "http://www.cdisc.org/ns/ctr/v1.0"
 
-    type: Optional[RegistrationType] = field(
+    type: RegistrationType | None = field(
         default=None,
         metadata={
             "name": "Type",
@@ -2816,7 +2815,7 @@ class Registration:
             "required": True,
         },
     )
-    registration_authority: Optional[str] = field(
+    registration_authority: str | None = field(
         default=None,
         metadata={
             "name": "RegistrationAuthority",
@@ -2824,14 +2823,14 @@ class Registration:
             "required": True,
         },
     )
-    registration_date: Optional[XmlDate] = field(
+    registration_date: XmlDate | None = field(
         default=None,
         metadata={
             "name": "RegistrationDate",
             "type": "Attribute",
         },
     )
-    registration_id: Optional[str] = field(
+    registration_id: str | None = field(
         default=None,
         metadata={
             "name": "RegistrationID",
@@ -2852,14 +2851,14 @@ class Sponsor:
     class Meta:
         namespace = "http://www.cdisc.org/ns/ctr/v1.0"
 
-    funding_id: Optional[str] = field(
+    funding_id: str | None = field(
         default=None,
         metadata={
             "name": "FundingID",
             "type": "Attribute",
         },
     )
-    organization_oid: Optional[str] = field(
+    organization_oid: str | None = field(
         default=None,
         metadata={
             "name": "OrganizationOID",
@@ -2867,7 +2866,7 @@ class Sponsor:
             "min_length": 1,
         },
     )
-    user_oid: Optional[str] = field(
+    user_oid: str | None = field(
         default=None,
         metadata={
             "name": "UserOID",
@@ -2875,7 +2874,7 @@ class Sponsor:
             "min_length": 1,
         },
     )
-    sponsor_type: Optional[SponsorTypeType] = field(
+    sponsor_type: SponsorTypeType | None = field(
         default=None,
         metadata={
             "name": "SponsorType",
@@ -2895,7 +2894,7 @@ class StudyCompletion:
             "pattern": r"([ ])?",
         },
     )
-    type: Optional[StudyDateType] = field(
+    type: StudyDateType | None = field(
         default=None,
         metadata={
             "name": "Type",
@@ -2915,7 +2914,7 @@ class StudyEndDate:
             "pattern": r"([ ])?",
         },
     )
-    type: Optional[StudyDateType] = field(
+    type: StudyDateType | None = field(
         default=None,
         metadata={
             "name": "Type",
@@ -2935,7 +2934,7 @@ class StudyEndDatePrimaryOutcome:
             "pattern": r"([ ])?",
         },
     )
-    type: Optional[StudyDateType] = field(
+    type: StudyDateType | None = field(
         default=None,
         metadata={
             "name": "Type",
@@ -2950,7 +2949,7 @@ class StudyRecruitmentStatus:
     class Meta:
         namespace = "http://www.cdisc.org/ns/ctr/v1.0"
 
-    status: Optional[StudyRecruitmentStatusType] = field(
+    status: StudyRecruitmentStatusType | None = field(
         default=None,
         metadata={
             "name": "Status",
@@ -2971,7 +2970,7 @@ class StudyStartDate:
             "pattern": r"([ ])?",
         },
     )
-    type: Optional[StudyDateType] = field(
+    type: StudyDateType | None = field(
         default=None,
         metadata={
             "name": "Type",
@@ -2986,7 +2985,7 @@ class SubContractor:
     class Meta:
         namespace = "http://www.cdisc.org/ns/ctr/v1.0"
 
-    organization_ref: Optional[OrganizationRef] = field(
+    organization_ref: OrganizationRef | None = field(
         default=None,
         metadata={
             "name": "OrganizationRef",
@@ -2994,14 +2993,14 @@ class SubContractor:
             "required": True,
         },
     )
-    contact: Optional[Contact] = field(
+    contact: Contact | None = field(
         default=None,
         metadata={
             "name": "Contact",
             "type": "Element",
         },
     )
-    sub_contractor_duty: List[SubContractorDuty] = field(
+    sub_contractor_duty: list[SubContractorDuty] = field(
         default_factory=list,
         metadata={
             "name": "SubContractorDuty",
@@ -3124,7 +3123,7 @@ class OdmcomplexTypeDefinitionComment:
             "required": True,
         },
     )
-    sponsor_or_site: Optional[CommentType] = field(
+    sponsor_or_site: CommentType | None = field(
         default=None,
         metadata={
             "name": "SponsorOrSite",
@@ -3139,7 +3138,7 @@ class OdmcomplexTypeDefinitionFormRef:
         name = "ODMcomplexTypeDefinition-FormRef"
         target_namespace = "http://www.cdisc.org/ns/odm/v1.3"
 
-    form_oid: Optional[str] = field(
+    form_oid: str | None = field(
         default=None,
         metadata={
             "name": "FormOID",
@@ -3148,14 +3147,14 @@ class OdmcomplexTypeDefinitionFormRef:
             "min_length": 1,
         },
     )
-    order_number: Optional[int] = field(
+    order_number: int | None = field(
         default=None,
         metadata={
             "name": "OrderNumber",
             "type": "Attribute",
         },
     )
-    mandatory: Optional[YesOrNo] = field(
+    mandatory: YesOrNo | None = field(
         default=None,
         metadata={
             "name": "Mandatory",
@@ -3163,7 +3162,7 @@ class OdmcomplexTypeDefinitionFormRef:
             "required": True,
         },
     )
-    collection_exception_condition_oid: Optional[str] = field(
+    collection_exception_condition_oid: str | None = field(
         default=None,
         metadata={
             "name": "CollectionExceptionConditionOID",
@@ -3185,7 +3184,7 @@ class OdmcomplexTypeDefinitionItemDataAny:
             "required": True,
         },
     )
-    item_oid: Optional[str] = field(
+    item_oid: str | None = field(
         default=None,
         metadata={
             "name": "ItemOID",
@@ -3194,42 +3193,42 @@ class OdmcomplexTypeDefinitionItemDataAny:
             "min_length": 1,
         },
     )
-    transaction_type: Optional[TransactionType] = field(
+    transaction_type: TransactionType | None = field(
         default=None,
         metadata={
             "name": "TransactionType",
             "type": "Attribute",
         },
     )
-    is_null: Optional[YesOnly] = field(
+    is_null: YesOnly | None = field(
         default=None,
         metadata={
             "name": "IsNull",
             "type": "Attribute",
         },
     )
-    audit_record_id: Optional[str] = field(
+    audit_record_id: str | None = field(
         default=None,
         metadata={
             "name": "AuditRecordID",
             "type": "Attribute",
         },
     )
-    signature_id: Optional[str] = field(
+    signature_id: str | None = field(
         default=None,
         metadata={
             "name": "SignatureID",
             "type": "Attribute",
         },
     )
-    annotation_id: Optional[str] = field(
+    annotation_id: str | None = field(
         default=None,
         metadata={
             "name": "AnnotationID",
             "type": "Attribute",
         },
     )
-    measurement_unit_oid: Optional[str] = field(
+    measurement_unit_oid: str | None = field(
         default=None,
         metadata={
             "name": "MeasurementUnitOID",
@@ -3245,14 +3244,14 @@ class OdmcomplexTypeDefinitionItemDataBase64Binary:
         name = "ODMcomplexTypeDefinition-ItemDataBase64Binary"
         target_namespace = "http://www.cdisc.org/ns/odm/v1.3"
 
-    value: Optional[bytes] = field(
+    value: bytes | None = field(
         default=None,
         metadata={
             "required": True,
             "format": "base64",
         },
     )
-    item_oid: Optional[str] = field(
+    item_oid: str | None = field(
         default=None,
         metadata={
             "name": "ItemOID",
@@ -3261,35 +3260,35 @@ class OdmcomplexTypeDefinitionItemDataBase64Binary:
             "min_length": 1,
         },
     )
-    transaction_type: Optional[TransactionType] = field(
+    transaction_type: TransactionType | None = field(
         default=None,
         metadata={
             "name": "TransactionType",
             "type": "Attribute",
         },
     )
-    audit_record_id: Optional[str] = field(
+    audit_record_id: str | None = field(
         default=None,
         metadata={
             "name": "AuditRecordID",
             "type": "Attribute",
         },
     )
-    signature_id: Optional[str] = field(
+    signature_id: str | None = field(
         default=None,
         metadata={
             "name": "SignatureID",
             "type": "Attribute",
         },
     )
-    annotation_id: Optional[str] = field(
+    annotation_id: str | None = field(
         default=None,
         metadata={
             "name": "AnnotationID",
             "type": "Attribute",
         },
     )
-    measurement_unit_oid: Optional[str] = field(
+    measurement_unit_oid: str | None = field(
         default=None,
         metadata={
             "name": "MeasurementUnitOID",
@@ -3305,7 +3304,7 @@ class OdmcomplexTypeDefinitionItemDataBase64Float:
         name = "ODMcomplexTypeDefinition-ItemDataBase64Float"
         target_namespace = "http://www.cdisc.org/ns/odm/v1.3"
 
-    value: Optional[bytes] = field(
+    value: bytes | None = field(
         default=None,
         metadata={
             "required": True,
@@ -3313,7 +3312,7 @@ class OdmcomplexTypeDefinitionItemDataBase64Float:
             "format": "base64",
         },
     )
-    item_oid: Optional[str] = field(
+    item_oid: str | None = field(
         default=None,
         metadata={
             "name": "ItemOID",
@@ -3322,35 +3321,35 @@ class OdmcomplexTypeDefinitionItemDataBase64Float:
             "min_length": 1,
         },
     )
-    transaction_type: Optional[TransactionType] = field(
+    transaction_type: TransactionType | None = field(
         default=None,
         metadata={
             "name": "TransactionType",
             "type": "Attribute",
         },
     )
-    audit_record_id: Optional[str] = field(
+    audit_record_id: str | None = field(
         default=None,
         metadata={
             "name": "AuditRecordID",
             "type": "Attribute",
         },
     )
-    signature_id: Optional[str] = field(
+    signature_id: str | None = field(
         default=None,
         metadata={
             "name": "SignatureID",
             "type": "Attribute",
         },
     )
-    annotation_id: Optional[str] = field(
+    annotation_id: str | None = field(
         default=None,
         metadata={
             "name": "AnnotationID",
             "type": "Attribute",
         },
     )
-    measurement_unit_oid: Optional[str] = field(
+    measurement_unit_oid: str | None = field(
         default=None,
         metadata={
             "name": "MeasurementUnitOID",
@@ -3366,13 +3365,13 @@ class OdmcomplexTypeDefinitionItemDataBoolean:
         name = "ODMcomplexTypeDefinition-ItemDataBoolean"
         target_namespace = "http://www.cdisc.org/ns/odm/v1.3"
 
-    value: Optional[bool] = field(
+    value: bool | None = field(
         default=None,
         metadata={
             "required": True,
         },
     )
-    item_oid: Optional[str] = field(
+    item_oid: str | None = field(
         default=None,
         metadata={
             "name": "ItemOID",
@@ -3381,35 +3380,35 @@ class OdmcomplexTypeDefinitionItemDataBoolean:
             "min_length": 1,
         },
     )
-    transaction_type: Optional[TransactionType] = field(
+    transaction_type: TransactionType | None = field(
         default=None,
         metadata={
             "name": "TransactionType",
             "type": "Attribute",
         },
     )
-    audit_record_id: Optional[str] = field(
+    audit_record_id: str | None = field(
         default=None,
         metadata={
             "name": "AuditRecordID",
             "type": "Attribute",
         },
     )
-    signature_id: Optional[str] = field(
+    signature_id: str | None = field(
         default=None,
         metadata={
             "name": "SignatureID",
             "type": "Attribute",
         },
     )
-    annotation_id: Optional[str] = field(
+    annotation_id: str | None = field(
         default=None,
         metadata={
             "name": "AnnotationID",
             "type": "Attribute",
         },
     )
-    measurement_unit_oid: Optional[str] = field(
+    measurement_unit_oid: str | None = field(
         default=None,
         metadata={
             "name": "MeasurementUnitOID",
@@ -3425,13 +3424,13 @@ class OdmcomplexTypeDefinitionItemDataDate:
         name = "ODMcomplexTypeDefinition-ItemDataDate"
         target_namespace = "http://www.cdisc.org/ns/odm/v1.3"
 
-    value: Optional[XmlDate] = field(
+    value: XmlDate | None = field(
         default=None,
         metadata={
             "required": True,
         },
     )
-    item_oid: Optional[str] = field(
+    item_oid: str | None = field(
         default=None,
         metadata={
             "name": "ItemOID",
@@ -3440,35 +3439,35 @@ class OdmcomplexTypeDefinitionItemDataDate:
             "min_length": 1,
         },
     )
-    transaction_type: Optional[TransactionType] = field(
+    transaction_type: TransactionType | None = field(
         default=None,
         metadata={
             "name": "TransactionType",
             "type": "Attribute",
         },
     )
-    audit_record_id: Optional[str] = field(
+    audit_record_id: str | None = field(
         default=None,
         metadata={
             "name": "AuditRecordID",
             "type": "Attribute",
         },
     )
-    signature_id: Optional[str] = field(
+    signature_id: str | None = field(
         default=None,
         metadata={
             "name": "SignatureID",
             "type": "Attribute",
         },
     )
-    annotation_id: Optional[str] = field(
+    annotation_id: str | None = field(
         default=None,
         metadata={
             "name": "AnnotationID",
             "type": "Attribute",
         },
     )
-    measurement_unit_oid: Optional[str] = field(
+    measurement_unit_oid: str | None = field(
         default=None,
         metadata={
             "name": "MeasurementUnitOID",
@@ -3484,13 +3483,13 @@ class OdmcomplexTypeDefinitionItemDataDatetime:
         name = "ODMcomplexTypeDefinition-ItemDataDatetime"
         target_namespace = "http://www.cdisc.org/ns/odm/v1.3"
 
-    value: Optional[XmlDateTime] = field(
+    value: XmlDateTime | None = field(
         default=None,
         metadata={
             "required": True,
         },
     )
-    item_oid: Optional[str] = field(
+    item_oid: str | None = field(
         default=None,
         metadata={
             "name": "ItemOID",
@@ -3499,35 +3498,35 @@ class OdmcomplexTypeDefinitionItemDataDatetime:
             "min_length": 1,
         },
     )
-    transaction_type: Optional[TransactionType] = field(
+    transaction_type: TransactionType | None = field(
         default=None,
         metadata={
             "name": "TransactionType",
             "type": "Attribute",
         },
     )
-    audit_record_id: Optional[str] = field(
+    audit_record_id: str | None = field(
         default=None,
         metadata={
             "name": "AuditRecordID",
             "type": "Attribute",
         },
     )
-    signature_id: Optional[str] = field(
+    signature_id: str | None = field(
         default=None,
         metadata={
             "name": "SignatureID",
             "type": "Attribute",
         },
     )
-    annotation_id: Optional[str] = field(
+    annotation_id: str | None = field(
         default=None,
         metadata={
             "name": "AnnotationID",
             "type": "Attribute",
         },
     )
-    measurement_unit_oid: Optional[str] = field(
+    measurement_unit_oid: str | None = field(
         default=None,
         metadata={
             "name": "MeasurementUnitOID",
@@ -3550,7 +3549,7 @@ class OdmcomplexTypeDefinitionItemDataDouble:
             "pattern": r"(((\+|-)?[0-9]+(\.[0-9]+)?((D|d|E|e)(\+|-)[0-9]+)?)|(-?INF)|(NaN))",
         },
     )
-    item_oid: Optional[str] = field(
+    item_oid: str | None = field(
         default=None,
         metadata={
             "name": "ItemOID",
@@ -3559,35 +3558,35 @@ class OdmcomplexTypeDefinitionItemDataDouble:
             "min_length": 1,
         },
     )
-    transaction_type: Optional[TransactionType] = field(
+    transaction_type: TransactionType | None = field(
         default=None,
         metadata={
             "name": "TransactionType",
             "type": "Attribute",
         },
     )
-    audit_record_id: Optional[str] = field(
+    audit_record_id: str | None = field(
         default=None,
         metadata={
             "name": "AuditRecordID",
             "type": "Attribute",
         },
     )
-    signature_id: Optional[str] = field(
+    signature_id: str | None = field(
         default=None,
         metadata={
             "name": "SignatureID",
             "type": "Attribute",
         },
     )
-    annotation_id: Optional[str] = field(
+    annotation_id: str | None = field(
         default=None,
         metadata={
             "name": "AnnotationID",
             "type": "Attribute",
         },
     )
-    measurement_unit_oid: Optional[str] = field(
+    measurement_unit_oid: str | None = field(
         default=None,
         metadata={
             "name": "MeasurementUnitOID",
@@ -3609,7 +3608,7 @@ class OdmcomplexTypeDefinitionItemDataDurationDatetime:
             "pattern": r"([ ])?",
         },
     )
-    item_oid: Optional[str] = field(
+    item_oid: str | None = field(
         default=None,
         metadata={
             "name": "ItemOID",
@@ -3618,35 +3617,35 @@ class OdmcomplexTypeDefinitionItemDataDurationDatetime:
             "min_length": 1,
         },
     )
-    transaction_type: Optional[TransactionType] = field(
+    transaction_type: TransactionType | None = field(
         default=None,
         metadata={
             "name": "TransactionType",
             "type": "Attribute",
         },
     )
-    audit_record_id: Optional[str] = field(
+    audit_record_id: str | None = field(
         default=None,
         metadata={
             "name": "AuditRecordID",
             "type": "Attribute",
         },
     )
-    signature_id: Optional[str] = field(
+    signature_id: str | None = field(
         default=None,
         metadata={
             "name": "SignatureID",
             "type": "Attribute",
         },
     )
-    annotation_id: Optional[str] = field(
+    annotation_id: str | None = field(
         default=None,
         metadata={
             "name": "AnnotationID",
             "type": "Attribute",
         },
     )
-    measurement_unit_oid: Optional[str] = field(
+    measurement_unit_oid: str | None = field(
         default=None,
         metadata={
             "name": "MeasurementUnitOID",
@@ -3662,13 +3661,13 @@ class OdmcomplexTypeDefinitionItemDataFloat:
         name = "ODMcomplexTypeDefinition-ItemDataFloat"
         target_namespace = "http://www.cdisc.org/ns/odm/v1.3"
 
-    value: Optional[Decimal] = field(
+    value: Decimal | None = field(
         default=None,
         metadata={
             "required": True,
         },
     )
-    item_oid: Optional[str] = field(
+    item_oid: str | None = field(
         default=None,
         metadata={
             "name": "ItemOID",
@@ -3677,35 +3676,35 @@ class OdmcomplexTypeDefinitionItemDataFloat:
             "min_length": 1,
         },
     )
-    transaction_type: Optional[TransactionType] = field(
+    transaction_type: TransactionType | None = field(
         default=None,
         metadata={
             "name": "TransactionType",
             "type": "Attribute",
         },
     )
-    audit_record_id: Optional[str] = field(
+    audit_record_id: str | None = field(
         default=None,
         metadata={
             "name": "AuditRecordID",
             "type": "Attribute",
         },
     )
-    signature_id: Optional[str] = field(
+    signature_id: str | None = field(
         default=None,
         metadata={
             "name": "SignatureID",
             "type": "Attribute",
         },
     )
-    annotation_id: Optional[str] = field(
+    annotation_id: str | None = field(
         default=None,
         metadata={
             "name": "AnnotationID",
             "type": "Attribute",
         },
     )
-    measurement_unit_oid: Optional[str] = field(
+    measurement_unit_oid: str | None = field(
         default=None,
         metadata={
             "name": "MeasurementUnitOID",
@@ -3721,14 +3720,14 @@ class OdmcomplexTypeDefinitionItemDataHexBinary:
         name = "ODMcomplexTypeDefinition-ItemDataHexBinary"
         target_namespace = "http://www.cdisc.org/ns/odm/v1.3"
 
-    value: Optional[bytes] = field(
+    value: bytes | None = field(
         default=None,
         metadata={
             "required": True,
             "format": "base16",
         },
     )
-    item_oid: Optional[str] = field(
+    item_oid: str | None = field(
         default=None,
         metadata={
             "name": "ItemOID",
@@ -3737,35 +3736,35 @@ class OdmcomplexTypeDefinitionItemDataHexBinary:
             "min_length": 1,
         },
     )
-    transaction_type: Optional[TransactionType] = field(
+    transaction_type: TransactionType | None = field(
         default=None,
         metadata={
             "name": "TransactionType",
             "type": "Attribute",
         },
     )
-    audit_record_id: Optional[str] = field(
+    audit_record_id: str | None = field(
         default=None,
         metadata={
             "name": "AuditRecordID",
             "type": "Attribute",
         },
     )
-    signature_id: Optional[str] = field(
+    signature_id: str | None = field(
         default=None,
         metadata={
             "name": "SignatureID",
             "type": "Attribute",
         },
     )
-    annotation_id: Optional[str] = field(
+    annotation_id: str | None = field(
         default=None,
         metadata={
             "name": "AnnotationID",
             "type": "Attribute",
         },
     )
-    measurement_unit_oid: Optional[str] = field(
+    measurement_unit_oid: str | None = field(
         default=None,
         metadata={
             "name": "MeasurementUnitOID",
@@ -3781,7 +3780,7 @@ class OdmcomplexTypeDefinitionItemDataHexFloat:
         name = "ODMcomplexTypeDefinition-ItemDataHexFloat"
         target_namespace = "http://www.cdisc.org/ns/odm/v1.3"
 
-    value: Optional[bytes] = field(
+    value: bytes | None = field(
         default=None,
         metadata={
             "required": True,
@@ -3789,7 +3788,7 @@ class OdmcomplexTypeDefinitionItemDataHexFloat:
             "format": "base16",
         },
     )
-    item_oid: Optional[str] = field(
+    item_oid: str | None = field(
         default=None,
         metadata={
             "name": "ItemOID",
@@ -3798,35 +3797,35 @@ class OdmcomplexTypeDefinitionItemDataHexFloat:
             "min_length": 1,
         },
     )
-    transaction_type: Optional[TransactionType] = field(
+    transaction_type: TransactionType | None = field(
         default=None,
         metadata={
             "name": "TransactionType",
             "type": "Attribute",
         },
     )
-    audit_record_id: Optional[str] = field(
+    audit_record_id: str | None = field(
         default=None,
         metadata={
             "name": "AuditRecordID",
             "type": "Attribute",
         },
     )
-    signature_id: Optional[str] = field(
+    signature_id: str | None = field(
         default=None,
         metadata={
             "name": "SignatureID",
             "type": "Attribute",
         },
     )
-    annotation_id: Optional[str] = field(
+    annotation_id: str | None = field(
         default=None,
         metadata={
             "name": "AnnotationID",
             "type": "Attribute",
         },
     )
-    measurement_unit_oid: Optional[str] = field(
+    measurement_unit_oid: str | None = field(
         default=None,
         metadata={
             "name": "MeasurementUnitOID",
@@ -3848,7 +3847,7 @@ class OdmcomplexTypeDefinitionItemDataIncompleteDate:
             "pattern": r"([ ])?",
         },
     )
-    item_oid: Optional[str] = field(
+    item_oid: str | None = field(
         default=None,
         metadata={
             "name": "ItemOID",
@@ -3857,35 +3856,35 @@ class OdmcomplexTypeDefinitionItemDataIncompleteDate:
             "min_length": 1,
         },
     )
-    transaction_type: Optional[TransactionType] = field(
+    transaction_type: TransactionType | None = field(
         default=None,
         metadata={
             "name": "TransactionType",
             "type": "Attribute",
         },
     )
-    audit_record_id: Optional[str] = field(
+    audit_record_id: str | None = field(
         default=None,
         metadata={
             "name": "AuditRecordID",
             "type": "Attribute",
         },
     )
-    signature_id: Optional[str] = field(
+    signature_id: str | None = field(
         default=None,
         metadata={
             "name": "SignatureID",
             "type": "Attribute",
         },
     )
-    annotation_id: Optional[str] = field(
+    annotation_id: str | None = field(
         default=None,
         metadata={
             "name": "AnnotationID",
             "type": "Attribute",
         },
     )
-    measurement_unit_oid: Optional[str] = field(
+    measurement_unit_oid: str | None = field(
         default=None,
         metadata={
             "name": "MeasurementUnitOID",
@@ -3907,7 +3906,7 @@ class OdmcomplexTypeDefinitionItemDataIncompleteDatetime:
             "pattern": r"([ ])?",
         },
     )
-    item_oid: Optional[str] = field(
+    item_oid: str | None = field(
         default=None,
         metadata={
             "name": "ItemOID",
@@ -3916,35 +3915,35 @@ class OdmcomplexTypeDefinitionItemDataIncompleteDatetime:
             "min_length": 1,
         },
     )
-    transaction_type: Optional[TransactionType] = field(
+    transaction_type: TransactionType | None = field(
         default=None,
         metadata={
             "name": "TransactionType",
             "type": "Attribute",
         },
     )
-    audit_record_id: Optional[str] = field(
+    audit_record_id: str | None = field(
         default=None,
         metadata={
             "name": "AuditRecordID",
             "type": "Attribute",
         },
     )
-    signature_id: Optional[str] = field(
+    signature_id: str | None = field(
         default=None,
         metadata={
             "name": "SignatureID",
             "type": "Attribute",
         },
     )
-    annotation_id: Optional[str] = field(
+    annotation_id: str | None = field(
         default=None,
         metadata={
             "name": "AnnotationID",
             "type": "Attribute",
         },
     )
-    measurement_unit_oid: Optional[str] = field(
+    measurement_unit_oid: str | None = field(
         default=None,
         metadata={
             "name": "MeasurementUnitOID",
@@ -3966,7 +3965,7 @@ class OdmcomplexTypeDefinitionItemDataIncompleteTime:
             "pattern": r"([ ])?",
         },
     )
-    item_oid: Optional[str] = field(
+    item_oid: str | None = field(
         default=None,
         metadata={
             "name": "ItemOID",
@@ -3975,35 +3974,35 @@ class OdmcomplexTypeDefinitionItemDataIncompleteTime:
             "min_length": 1,
         },
     )
-    transaction_type: Optional[TransactionType] = field(
+    transaction_type: TransactionType | None = field(
         default=None,
         metadata={
             "name": "TransactionType",
             "type": "Attribute",
         },
     )
-    audit_record_id: Optional[str] = field(
+    audit_record_id: str | None = field(
         default=None,
         metadata={
             "name": "AuditRecordID",
             "type": "Attribute",
         },
     )
-    signature_id: Optional[str] = field(
+    signature_id: str | None = field(
         default=None,
         metadata={
             "name": "SignatureID",
             "type": "Attribute",
         },
     )
-    annotation_id: Optional[str] = field(
+    annotation_id: str | None = field(
         default=None,
         metadata={
             "name": "AnnotationID",
             "type": "Attribute",
         },
     )
-    measurement_unit_oid: Optional[str] = field(
+    measurement_unit_oid: str | None = field(
         default=None,
         metadata={
             "name": "MeasurementUnitOID",
@@ -4019,13 +4018,13 @@ class OdmcomplexTypeDefinitionItemDataInteger:
         name = "ODMcomplexTypeDefinition-ItemDataInteger"
         target_namespace = "http://www.cdisc.org/ns/odm/v1.3"
 
-    value: Optional[int] = field(
+    value: int | None = field(
         default=None,
         metadata={
             "required": True,
         },
     )
-    item_oid: Optional[str] = field(
+    item_oid: str | None = field(
         default=None,
         metadata={
             "name": "ItemOID",
@@ -4034,35 +4033,35 @@ class OdmcomplexTypeDefinitionItemDataInteger:
             "min_length": 1,
         },
     )
-    transaction_type: Optional[TransactionType] = field(
+    transaction_type: TransactionType | None = field(
         default=None,
         metadata={
             "name": "TransactionType",
             "type": "Attribute",
         },
     )
-    audit_record_id: Optional[str] = field(
+    audit_record_id: str | None = field(
         default=None,
         metadata={
             "name": "AuditRecordID",
             "type": "Attribute",
         },
     )
-    signature_id: Optional[str] = field(
+    signature_id: str | None = field(
         default=None,
         metadata={
             "name": "SignatureID",
             "type": "Attribute",
         },
     )
-    annotation_id: Optional[str] = field(
+    annotation_id: str | None = field(
         default=None,
         metadata={
             "name": "AnnotationID",
             "type": "Attribute",
         },
     )
-    measurement_unit_oid: Optional[str] = field(
+    measurement_unit_oid: str | None = field(
         default=None,
         metadata={
             "name": "MeasurementUnitOID",
@@ -4084,7 +4083,7 @@ class OdmcomplexTypeDefinitionItemDataIntervalDatetime:
             "pattern": r"([ ])?",
         },
     )
-    item_oid: Optional[str] = field(
+    item_oid: str | None = field(
         default=None,
         metadata={
             "name": "ItemOID",
@@ -4093,35 +4092,35 @@ class OdmcomplexTypeDefinitionItemDataIntervalDatetime:
             "min_length": 1,
         },
     )
-    transaction_type: Optional[TransactionType] = field(
+    transaction_type: TransactionType | None = field(
         default=None,
         metadata={
             "name": "TransactionType",
             "type": "Attribute",
         },
     )
-    audit_record_id: Optional[str] = field(
+    audit_record_id: str | None = field(
         default=None,
         metadata={
             "name": "AuditRecordID",
             "type": "Attribute",
         },
     )
-    signature_id: Optional[str] = field(
+    signature_id: str | None = field(
         default=None,
         metadata={
             "name": "SignatureID",
             "type": "Attribute",
         },
     )
-    annotation_id: Optional[str] = field(
+    annotation_id: str | None = field(
         default=None,
         metadata={
             "name": "AnnotationID",
             "type": "Attribute",
         },
     )
-    measurement_unit_oid: Optional[str] = field(
+    measurement_unit_oid: str | None = field(
         default=None,
         metadata={
             "name": "MeasurementUnitOID",
@@ -4143,7 +4142,7 @@ class OdmcomplexTypeDefinitionItemDataPartialDate:
             "pattern": r"([ ])?",
         },
     )
-    item_oid: Optional[str] = field(
+    item_oid: str | None = field(
         default=None,
         metadata={
             "name": "ItemOID",
@@ -4152,35 +4151,35 @@ class OdmcomplexTypeDefinitionItemDataPartialDate:
             "min_length": 1,
         },
     )
-    transaction_type: Optional[TransactionType] = field(
+    transaction_type: TransactionType | None = field(
         default=None,
         metadata={
             "name": "TransactionType",
             "type": "Attribute",
         },
     )
-    audit_record_id: Optional[str] = field(
+    audit_record_id: str | None = field(
         default=None,
         metadata={
             "name": "AuditRecordID",
             "type": "Attribute",
         },
     )
-    signature_id: Optional[str] = field(
+    signature_id: str | None = field(
         default=None,
         metadata={
             "name": "SignatureID",
             "type": "Attribute",
         },
     )
-    annotation_id: Optional[str] = field(
+    annotation_id: str | None = field(
         default=None,
         metadata={
             "name": "AnnotationID",
             "type": "Attribute",
         },
     )
-    measurement_unit_oid: Optional[str] = field(
+    measurement_unit_oid: str | None = field(
         default=None,
         metadata={
             "name": "MeasurementUnitOID",
@@ -4202,7 +4201,7 @@ class OdmcomplexTypeDefinitionItemDataPartialDatetime:
             "pattern": r"([ ])?",
         },
     )
-    item_oid: Optional[str] = field(
+    item_oid: str | None = field(
         default=None,
         metadata={
             "name": "ItemOID",
@@ -4211,35 +4210,35 @@ class OdmcomplexTypeDefinitionItemDataPartialDatetime:
             "min_length": 1,
         },
     )
-    transaction_type: Optional[TransactionType] = field(
+    transaction_type: TransactionType | None = field(
         default=None,
         metadata={
             "name": "TransactionType",
             "type": "Attribute",
         },
     )
-    audit_record_id: Optional[str] = field(
+    audit_record_id: str | None = field(
         default=None,
         metadata={
             "name": "AuditRecordID",
             "type": "Attribute",
         },
     )
-    signature_id: Optional[str] = field(
+    signature_id: str | None = field(
         default=None,
         metadata={
             "name": "SignatureID",
             "type": "Attribute",
         },
     )
-    annotation_id: Optional[str] = field(
+    annotation_id: str | None = field(
         default=None,
         metadata={
             "name": "AnnotationID",
             "type": "Attribute",
         },
     )
-    measurement_unit_oid: Optional[str] = field(
+    measurement_unit_oid: str | None = field(
         default=None,
         metadata={
             "name": "MeasurementUnitOID",
@@ -4261,7 +4260,7 @@ class OdmcomplexTypeDefinitionItemDataPartialTime:
             "pattern": r"([ ])?",
         },
     )
-    item_oid: Optional[str] = field(
+    item_oid: str | None = field(
         default=None,
         metadata={
             "name": "ItemOID",
@@ -4270,35 +4269,35 @@ class OdmcomplexTypeDefinitionItemDataPartialTime:
             "min_length": 1,
         },
     )
-    transaction_type: Optional[TransactionType] = field(
+    transaction_type: TransactionType | None = field(
         default=None,
         metadata={
             "name": "TransactionType",
             "type": "Attribute",
         },
     )
-    audit_record_id: Optional[str] = field(
+    audit_record_id: str | None = field(
         default=None,
         metadata={
             "name": "AuditRecordID",
             "type": "Attribute",
         },
     )
-    signature_id: Optional[str] = field(
+    signature_id: str | None = field(
         default=None,
         metadata={
             "name": "SignatureID",
             "type": "Attribute",
         },
     )
-    annotation_id: Optional[str] = field(
+    annotation_id: str | None = field(
         default=None,
         metadata={
             "name": "AnnotationID",
             "type": "Attribute",
         },
     )
-    measurement_unit_oid: Optional[str] = field(
+    measurement_unit_oid: str | None = field(
         default=None,
         metadata={
             "name": "MeasurementUnitOID",
@@ -4320,7 +4319,7 @@ class OdmcomplexTypeDefinitionItemDataString:
             "required": True,
         },
     )
-    item_oid: Optional[str] = field(
+    item_oid: str | None = field(
         default=None,
         metadata={
             "name": "ItemOID",
@@ -4329,35 +4328,35 @@ class OdmcomplexTypeDefinitionItemDataString:
             "min_length": 1,
         },
     )
-    transaction_type: Optional[TransactionType] = field(
+    transaction_type: TransactionType | None = field(
         default=None,
         metadata={
             "name": "TransactionType",
             "type": "Attribute",
         },
     )
-    audit_record_id: Optional[str] = field(
+    audit_record_id: str | None = field(
         default=None,
         metadata={
             "name": "AuditRecordID",
             "type": "Attribute",
         },
     )
-    signature_id: Optional[str] = field(
+    signature_id: str | None = field(
         default=None,
         metadata={
             "name": "SignatureID",
             "type": "Attribute",
         },
     )
-    annotation_id: Optional[str] = field(
+    annotation_id: str | None = field(
         default=None,
         metadata={
             "name": "AnnotationID",
             "type": "Attribute",
         },
     )
-    measurement_unit_oid: Optional[str] = field(
+    measurement_unit_oid: str | None = field(
         default=None,
         metadata={
             "name": "MeasurementUnitOID",
@@ -4373,13 +4372,13 @@ class OdmcomplexTypeDefinitionItemDataTime:
         name = "ODMcomplexTypeDefinition-ItemDataTime"
         target_namespace = "http://www.cdisc.org/ns/odm/v1.3"
 
-    value: Optional[XmlTime] = field(
+    value: XmlTime | None = field(
         default=None,
         metadata={
             "required": True,
         },
     )
-    item_oid: Optional[str] = field(
+    item_oid: str | None = field(
         default=None,
         metadata={
             "name": "ItemOID",
@@ -4388,35 +4387,35 @@ class OdmcomplexTypeDefinitionItemDataTime:
             "min_length": 1,
         },
     )
-    transaction_type: Optional[TransactionType] = field(
+    transaction_type: TransactionType | None = field(
         default=None,
         metadata={
             "name": "TransactionType",
             "type": "Attribute",
         },
     )
-    audit_record_id: Optional[str] = field(
+    audit_record_id: str | None = field(
         default=None,
         metadata={
             "name": "AuditRecordID",
             "type": "Attribute",
         },
     )
-    signature_id: Optional[str] = field(
+    signature_id: str | None = field(
         default=None,
         metadata={
             "name": "SignatureID",
             "type": "Attribute",
         },
     )
-    annotation_id: Optional[str] = field(
+    annotation_id: str | None = field(
         default=None,
         metadata={
             "name": "AnnotationID",
             "type": "Attribute",
         },
     )
-    measurement_unit_oid: Optional[str] = field(
+    measurement_unit_oid: str | None = field(
         default=None,
         metadata={
             "name": "MeasurementUnitOID",
@@ -4438,7 +4437,7 @@ class OdmcomplexTypeDefinitionItemDataUri:
             "required": True,
         },
     )
-    item_oid: Optional[str] = field(
+    item_oid: str | None = field(
         default=None,
         metadata={
             "name": "ItemOID",
@@ -4447,35 +4446,35 @@ class OdmcomplexTypeDefinitionItemDataUri:
             "min_length": 1,
         },
     )
-    transaction_type: Optional[TransactionType] = field(
+    transaction_type: TransactionType | None = field(
         default=None,
         metadata={
             "name": "TransactionType",
             "type": "Attribute",
         },
     )
-    audit_record_id: Optional[str] = field(
+    audit_record_id: str | None = field(
         default=None,
         metadata={
             "name": "AuditRecordID",
             "type": "Attribute",
         },
     )
-    signature_id: Optional[str] = field(
+    signature_id: str | None = field(
         default=None,
         metadata={
             "name": "SignatureID",
             "type": "Attribute",
         },
     )
-    annotation_id: Optional[str] = field(
+    annotation_id: str | None = field(
         default=None,
         metadata={
             "name": "AnnotationID",
             "type": "Attribute",
         },
     )
-    measurement_unit_oid: Optional[str] = field(
+    measurement_unit_oid: str | None = field(
         default=None,
         metadata={
             "name": "MeasurementUnitOID",
@@ -4491,7 +4490,7 @@ class OdmcomplexTypeDefinitionItemGroupRef:
         name = "ODMcomplexTypeDefinition-ItemGroupRef"
         target_namespace = "http://www.cdisc.org/ns/odm/v1.3"
 
-    item_group_oid: Optional[str] = field(
+    item_group_oid: str | None = field(
         default=None,
         metadata={
             "name": "ItemGroupOID",
@@ -4500,14 +4499,14 @@ class OdmcomplexTypeDefinitionItemGroupRef:
             "min_length": 1,
         },
     )
-    order_number: Optional[int] = field(
+    order_number: int | None = field(
         default=None,
         metadata={
             "name": "OrderNumber",
             "type": "Attribute",
         },
     )
-    mandatory: Optional[YesOrNo] = field(
+    mandatory: YesOrNo | None = field(
         default=None,
         metadata={
             "name": "Mandatory",
@@ -4515,7 +4514,7 @@ class OdmcomplexTypeDefinitionItemGroupRef:
             "required": True,
         },
     )
-    collection_exception_condition_oid: Optional[str] = field(
+    collection_exception_condition_oid: str | None = field(
         default=None,
         metadata={
             "name": "CollectionExceptionConditionOID",
@@ -4531,7 +4530,7 @@ class OdmcomplexTypeDefinitionItemRef:
         name = "ODMcomplexTypeDefinition-ItemRef"
         target_namespace = "http://www.cdisc.org/ns/odm/v1.3"
 
-    item_oid: Optional[str] = field(
+    item_oid: str | None = field(
         default=None,
         metadata={
             "name": "ItemOID",
@@ -4540,14 +4539,14 @@ class OdmcomplexTypeDefinitionItemRef:
             "min_length": 1,
         },
     )
-    key_sequence: Optional[int] = field(
+    key_sequence: int | None = field(
         default=None,
         metadata={
             "name": "KeySequence",
             "type": "Attribute",
         },
     )
-    method_oid: Optional[str] = field(
+    method_oid: str | None = field(
         default=None,
         metadata={
             "name": "MethodOID",
@@ -4555,7 +4554,7 @@ class OdmcomplexTypeDefinitionItemRef:
             "min_length": 1,
         },
     )
-    imputation_method_oid: Optional[str] = field(
+    imputation_method_oid: str | None = field(
         default=None,
         metadata={
             "name": "ImputationMethodOID",
@@ -4563,14 +4562,14 @@ class OdmcomplexTypeDefinitionItemRef:
             "min_length": 1,
         },
     )
-    role: Optional[str] = field(
+    role: str | None = field(
         default=None,
         metadata={
             "name": "Role",
             "type": "Attribute",
         },
     )
-    role_code_list_oid: Optional[str] = field(
+    role_code_list_oid: str | None = field(
         default=None,
         metadata={
             "name": "RoleCodeListOID",
@@ -4578,14 +4577,14 @@ class OdmcomplexTypeDefinitionItemRef:
             "min_length": 1,
         },
     )
-    order_number: Optional[int] = field(
+    order_number: int | None = field(
         default=None,
         metadata={
             "name": "OrderNumber",
             "type": "Attribute",
         },
     )
-    mandatory: Optional[YesOrNo] = field(
+    mandatory: YesOrNo | None = field(
         default=None,
         metadata={
             "name": "Mandatory",
@@ -4593,7 +4592,7 @@ class OdmcomplexTypeDefinitionItemRef:
             "required": True,
         },
     )
-    collection_exception_condition_oid: Optional[str] = field(
+    collection_exception_condition_oid: str | None = field(
         default=None,
         metadata={
             "name": "CollectionExceptionConditionOID",
@@ -4609,7 +4608,7 @@ class OdmcomplexTypeDefinitionSignatureDef:
         name = "ODMcomplexTypeDefinition-SignatureDef"
         target_namespace = "http://www.cdisc.org/ns/odm/v1.3"
 
-    meaning: Optional[str] = field(
+    meaning: str | None = field(
         default=None,
         metadata={
             "name": "Meaning",
@@ -4618,7 +4617,7 @@ class OdmcomplexTypeDefinitionSignatureDef:
             "required": True,
         },
     )
-    legal_reason: Optional[str] = field(
+    legal_reason: str | None = field(
         default=None,
         metadata={
             "name": "LegalReason",
@@ -4627,7 +4626,7 @@ class OdmcomplexTypeDefinitionSignatureDef:
             "required": True,
         },
     )
-    oid: Optional[str] = field(
+    oid: str | None = field(
         default=None,
         metadata={
             "name": "OID",
@@ -4636,7 +4635,7 @@ class OdmcomplexTypeDefinitionSignatureDef:
             "min_length": 1,
         },
     )
-    methodology: Optional[SignMethod] = field(
+    methodology: SignMethod | None = field(
         default=None,
         metadata={
             "name": "Methodology",
@@ -4651,7 +4650,7 @@ class OdmcomplexTypeDefinitionStudyEventRef:
         name = "ODMcomplexTypeDefinition-StudyEventRef"
         target_namespace = "http://www.cdisc.org/ns/odm/v1.3"
 
-    study_event_oid: Optional[str] = field(
+    study_event_oid: str | None = field(
         default=None,
         metadata={
             "name": "StudyEventOID",
@@ -4660,14 +4659,14 @@ class OdmcomplexTypeDefinitionStudyEventRef:
             "min_length": 1,
         },
     )
-    order_number: Optional[int] = field(
+    order_number: int | None = field(
         default=None,
         metadata={
             "name": "OrderNumber",
             "type": "Attribute",
         },
     )
-    mandatory: Optional[YesOrNo] = field(
+    mandatory: YesOrNo | None = field(
         default=None,
         metadata={
             "name": "Mandatory",
@@ -4675,7 +4674,7 @@ class OdmcomplexTypeDefinitionStudyEventRef:
             "required": True,
         },
     )
-    collection_exception_condition_oid: Optional[str] = field(
+    collection_exception_condition_oid: str | None = field(
         default=None,
         metadata={
             "name": "CollectionExceptionConditionOID",
@@ -4822,7 +4821,7 @@ class X509DataType:
     class Meta:
         target_namespace = "http://www.w3.org/2000/09/xmldsig#"
 
-    x509_issuer_serial: List[X509IssuerSerialType] = field(
+    x509_issuer_serial: list[X509IssuerSerialType] = field(
         default_factory=list,
         metadata={
             "name": "X509IssuerSerial",
@@ -4831,7 +4830,7 @@ class X509DataType:
             "sequential": True,
         },
     )
-    x509_ski: List[bytes] = field(
+    x509_ski: list[bytes] = field(
         default_factory=list,
         metadata={
             "name": "X509SKI",
@@ -4841,7 +4840,7 @@ class X509DataType:
             "format": "base64",
         },
     )
-    x509_subject_name: List[str] = field(
+    x509_subject_name: list[str] = field(
         default_factory=list,
         metadata={
             "name": "X509SubjectName",
@@ -4850,7 +4849,7 @@ class X509DataType:
             "sequential": True,
         },
     )
-    x509_certificate: List[bytes] = field(
+    x509_certificate: list[bytes] = field(
         default_factory=list,
         metadata={
             "name": "X509Certificate",
@@ -4860,7 +4859,7 @@ class X509DataType:
             "format": "base64",
         },
     )
-    x509_crl: List[bytes] = field(
+    x509_crl: list[bytes] = field(
         default_factory=list,
         metadata={
             "name": "X509CRL",
@@ -4870,7 +4869,7 @@ class X509DataType:
             "format": "base64",
         },
     )
-    other_element: List[object] = field(
+    other_element: list[object] = field(
         default_factory=list,
         metadata={
             "type": "Wildcard",
@@ -4949,7 +4948,7 @@ class MedicinalProduct:
         name = "medicinal_product"
         namespace = "http://eudract.emea.europa.eu/schema/clinical_trial"
 
-    imp_category: Optional[EutctDomain] = field(
+    imp_category: EutctDomain | None = field(
         default=None,
         metadata={
             "type": "Element",
@@ -4957,7 +4956,7 @@ class MedicinalProduct:
             "doc": "D.1.2 and D.1.3 IMP Category",
         },
     )
-    has_ma: Optional[BooleanDomain] = field(
+    has_ma: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -4965,7 +4964,7 @@ class MedicinalProduct:
             "doc": "D.2.1 IMP has MA",
         },
     )
-    imp_member_state: Optional[ImpMemberState] = field(
+    imp_member_state: ImpMemberState | None = field(
         default=None,
         metadata={
             "type": "Element",
@@ -4973,7 +4972,7 @@ class MedicinalProduct:
             "doc": "This element holds information about the member state",
         },
     )
-    imp_identification_not_possible: Optional[ImpIdentificationNotPossible] = field(
+    imp_identification_not_possible: ImpIdentificationNotPossible | None = field(
         default=None,
         metadata={
             "type": "Element",
@@ -4983,7 +4982,7 @@ class MedicinalProduct:
             ),
         },
     )
-    has_full_impd: Optional[BooleanDomain] = field(
+    has_full_impd: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -4991,7 +4990,7 @@ class MedicinalProduct:
             "doc": "D.2.3.1 Full IMPD submitted",
         },
     )
-    has_simplified_impd: Optional[BooleanDomain] = field(
+    has_simplified_impd: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -4999,7 +4998,7 @@ class MedicinalProduct:
             "doc": "D.2.3.2 Simplified IMPD submitted",
         },
     )
-    has_summary_of_prod_character: Optional[BooleanDomain] = field(
+    has_summary_of_prod_character: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -5007,7 +5006,7 @@ class MedicinalProduct:
             "doc": "D.2.3.3 Only SmPC submitted",
         },
     )
-    is_prev_auth_in_community: Optional[BooleanDomain] = field(
+    is_prev_auth_in_community: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -5015,7 +5014,7 @@ class MedicinalProduct:
             "doc": "D.2.4 IMP previously used for CT in community",
         },
     )
-    member_states: Optional[MemberStates] = field(
+    member_states: MemberStates | None = field(
         default=None,
         metadata={
             "type": "Element",
@@ -5026,7 +5025,7 @@ class MedicinalProduct:
             ),
         },
     )
-    is_orphan_drug_in_community: Optional[BooleanDomain] = field(
+    is_orphan_drug_in_community: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -5034,7 +5033,7 @@ class MedicinalProduct:
             "doc": "D.2.5 IMP is orphan drug",
         },
     )
-    orphan_drug_designation_no: Optional[str] = field(
+    orphan_drug_designation_no: str | None = field(
         default=None,
         metadata={
             "type": "Element",
@@ -5043,7 +5042,7 @@ class MedicinalProduct:
             "doc": "D.2.5.1 Orphan drug number",
         },
     )
-    has_scientific_advice: Optional[BooleanDomain] = field(
+    has_scientific_advice: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -5051,7 +5050,7 @@ class MedicinalProduct:
             "doc": "D.2.6 IMP subject of scientific advice",
         },
     )
-    has_scientific_advice_chmp: Optional[BooleanDomain] = field(
+    has_scientific_advice_chmp: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -5059,7 +5058,7 @@ class MedicinalProduct:
             "doc": "D.2.6.1.1 SA from CHMP",
         },
     )
-    has_scientific_advice_nca: Optional[BooleanDomain] = field(
+    has_scientific_advice_nca: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -5067,7 +5066,7 @@ class MedicinalProduct:
             "doc": "D.2.6.1.2 SA from NCA",
         },
     )
-    name: Optional[str] = field(
+    name: str | None = field(
         default=None,
         metadata={
             "type": "Element",
@@ -5076,7 +5075,7 @@ class MedicinalProduct:
             "doc": "D.3.1 IMP Name",
         },
     )
-    code: Optional[str] = field(
+    code: str | None = field(
         default=None,
         metadata={
             "type": "Element",
@@ -5085,7 +5084,7 @@ class MedicinalProduct:
             "doc": "D.3.2 IMP Code",
         },
     )
-    atc_codes: Optional[AtcCodes] = field(
+    atc_codes: AtcCodes | None = field(
         default=None,
         metadata={
             "type": "Element",
@@ -5093,7 +5092,7 @@ class MedicinalProduct:
             "doc": "This element holds information about ATC codes",
         },
     )
-    pharmaceutical_form: Optional[EutctDomain] = field(
+    pharmaceutical_form: EutctDomain | None = field(
         default=None,
         metadata={
             "type": "Element",
@@ -5101,7 +5100,7 @@ class MedicinalProduct:
             "doc": "D.3.4 IMP Pharmaceutical Form",
         },
     )
-    is_paediatric_formulation: Optional[BooleanDomain] = field(
+    is_paediatric_formulation: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -5109,7 +5108,7 @@ class MedicinalProduct:
             "doc": "D.3.4.1 Specific paediatric formulation",
         },
     )
-    max_duration_imp: Optional[str] = field(
+    max_duration_imp: str | None = field(
         default=None,
         metadata={
             "type": "Element",
@@ -5118,7 +5117,7 @@ class MedicinalProduct:
             "doc": "D.3.5 Maximum duration of treatment",
         },
     )
-    first_dose_fih_allowed: Optional[str] = field(
+    first_dose_fih_allowed: str | None = field(
         default=None,
         metadata={
             "type": "Element",
@@ -5127,7 +5126,7 @@ class MedicinalProduct:
             "doc": "D.3.6.1 First dose in FIH dose allowed",
         },
     )
-    first_dose_fih_per_day_total: Optional[BooleanDomain] = field(
+    first_dose_fih_per_day_total: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -5135,7 +5134,7 @@ class MedicinalProduct:
             "doc": "D.3.6.1 First dose in FIH Dose per Day or Total",
         },
     )
-    first_dose_fih_total_dose_num: Optional[str] = field(
+    first_dose_fih_total_dose_num: str | None = field(
         default=None,
         metadata={
             "type": "Element",
@@ -5144,7 +5143,7 @@ class MedicinalProduct:
             "doc": "D.3.6.1 First dose in FIH Total Dose Number",
         },
     )
-    first_dose_fih_total_dose_unit: Optional[EutctDomain] = field(
+    first_dose_fih_total_dose_unit: EutctDomain | None = field(
         default=None,
         metadata={
             "type": "Element",
@@ -5152,7 +5151,7 @@ class MedicinalProduct:
             "doc": "D.3.6.1 First dose in FIHTotal Dose Unit",
         },
     )
-    first_dose_fih_roa: Optional[EutctDomain] = field(
+    first_dose_fih_roa: EutctDomain | None = field(
         default=None,
         metadata={
             "type": "Element",
@@ -5160,7 +5159,7 @@ class MedicinalProduct:
             "doc": "D.3.6.1 First dose in FIH Route of administration",
         },
     )
-    max_dose_imp: Optional[str] = field(
+    max_dose_imp: str | None = field(
         default=None,
         metadata={
             "type": "Element",
@@ -5169,7 +5168,7 @@ class MedicinalProduct:
             "doc": "D.3.6.2 Maximum dose allowed",
         },
     )
-    max_dose_perday_total_imp: Optional[BooleanDomain] = field(
+    max_dose_perday_total_imp: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -5177,7 +5176,7 @@ class MedicinalProduct:
             "doc": "D.3.6.2 Maximum Dose per Day or Total",
         },
     )
-    total_dose_number: Optional[str] = field(
+    total_dose_number: str | None = field(
         default=None,
         metadata={
             "type": "Element",
@@ -5186,7 +5185,7 @@ class MedicinalProduct:
             "doc": "D.3.6.2 Total Dose Number",
         },
     )
-    total_dose_unit: Optional[EutctDomain] = field(
+    total_dose_unit: EutctDomain | None = field(
         default=None,
         metadata={
             "type": "Element",
@@ -5194,7 +5193,7 @@ class MedicinalProduct:
             "doc": "D.3.6.2 Total Dose Unit",
         },
     )
-    max_dose_route_of_administration: Optional[EutctDomain] = field(
+    max_dose_route_of_administration: EutctDomain | None = field(
         default=None,
         metadata={
             "type": "Element",
@@ -5202,7 +5201,7 @@ class MedicinalProduct:
             "doc": "D.3.6.2 Route of administration for max dose",
         },
     )
-    routes_of_administration: Optional[RoutesOfAdministration] = field(
+    routes_of_administration: RoutesOfAdministration | None = field(
         default=None,
         metadata={
             "type": "Element",
@@ -5213,7 +5212,7 @@ class MedicinalProduct:
             ),
         },
     )
-    has_chemical_origin: Optional[BooleanDomain] = field(
+    has_chemical_origin: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -5221,7 +5220,7 @@ class MedicinalProduct:
             "doc": "D.3.11.1 Chemical origin Active substance",
         },
     )
-    has_biological_origin: Optional[BooleanDomain] = field(
+    has_biological_origin: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -5229,7 +5228,7 @@ class MedicinalProduct:
             "doc": "D.3.11.2 Biological origin Active substance",
         },
     )
-    is_advanced_therapy_mp: Optional[BooleanDomain] = field(
+    is_advanced_therapy_mp: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -5237,7 +5236,7 @@ class MedicinalProduct:
             "doc": "D.3.11.3 Advanced Therapy MP",
         },
     )
-    is_somatic_therapy_mp: Optional[BooleanDomain] = field(
+    is_somatic_therapy_mp: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -5245,7 +5244,7 @@ class MedicinalProduct:
             "doc": "D.3.11.3.1 Somatic cell therapy MP",
         },
     )
-    is_gene_therapy_mp: Optional[BooleanDomain] = field(
+    is_gene_therapy_mp: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -5253,7 +5252,7 @@ class MedicinalProduct:
             "doc": "D.3.11.3.2 Gene therapy MP",
         },
     )
-    is_tissue_engineered_mp: Optional[BooleanDomain] = field(
+    is_tissue_engineered_mp: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -5261,7 +5260,7 @@ class MedicinalProduct:
             "doc": "D.3.11.3.3 Tissue Engineered MP",
         },
     )
-    is_combination_atimp: Optional[BooleanDomain] = field(
+    is_combination_atimp: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -5269,7 +5268,7 @@ class MedicinalProduct:
             "doc": "D.3.11.3.4 Combination ATIMP",
         },
     )
-    is_cat_classification_isued: Optional[BooleanDomain] = field(
+    is_cat_classification_isued: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -5277,7 +5276,7 @@ class MedicinalProduct:
             "doc": "D.3.11.3.5 CAT Classification issued",
         },
     )
-    cat_classification: Optional[str] = field(
+    cat_classification: str | None = field(
         default=None,
         metadata={
             "type": "Element",
@@ -5286,7 +5285,7 @@ class MedicinalProduct:
             "doc": "D.3.11.3.5.1 CAT Classification",
         },
     )
-    is_device_included: Optional[BooleanDomain] = field(
+    is_device_included: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -5294,7 +5293,7 @@ class MedicinalProduct:
             "doc": "D.3.11.4 Combination product including device",
         },
     )
-    is_radiopharmaceutical_mp: Optional[BooleanDomain] = field(
+    is_radiopharmaceutical_mp: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -5302,7 +5301,7 @@ class MedicinalProduct:
             "doc": "D.3.11.5 Radiopharmaceutical MP",
         },
     )
-    is_immunological_mp: Optional[BooleanDomain] = field(
+    is_immunological_mp: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -5310,7 +5309,7 @@ class MedicinalProduct:
             "doc": "D.3.11.6 Immunological MP",
         },
     )
-    is_plasma_derived_mp: Optional[BooleanDomain] = field(
+    is_plasma_derived_mp: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -5318,7 +5317,7 @@ class MedicinalProduct:
             "doc": "D.3.11.7 Plasma derived MP",
         },
     )
-    is_other_extractive: Optional[BooleanDomain] = field(
+    is_other_extractive: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -5326,7 +5325,7 @@ class MedicinalProduct:
             "doc": "D.3.11.8 Extractive MP",
         },
     )
-    is_recombinant_mp: Optional[BooleanDomain] = field(
+    is_recombinant_mp: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -5334,7 +5333,7 @@ class MedicinalProduct:
             "doc": "D.3.11.9 Recombinant MP",
         },
     )
-    is_gmo_mp: Optional[BooleanDomain] = field(
+    is_gmo_mp: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -5342,7 +5341,7 @@ class MedicinalProduct:
             "doc": "D.3.11.10 GMO MP",
         },
     )
-    is_genetically_mod_auth_accord: Optional[BooleanDomain] = field(
+    is_genetically_mod_auth_accord: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -5350,7 +5349,7 @@ class MedicinalProduct:
             "doc": "D.3.11.10.1\tGMP MP Auth granted",
         },
     )
-    is_genetically_mod_auth_pend: Optional[BooleanDomain] = field(
+    is_genetically_mod_auth_pend: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -5358,7 +5357,7 @@ class MedicinalProduct:
             "doc": "D.3.11.10.2\tGMP MP Auth pending",
         },
     )
-    is_herbal_mp: Optional[BooleanDomain] = field(
+    is_herbal_mp: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -5366,7 +5365,7 @@ class MedicinalProduct:
             "doc": "D.3.11.11 Herbal MP",
         },
     )
-    is_homeopathetic_mp: Optional[BooleanDomain] = field(
+    is_homeopathetic_mp: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -5374,7 +5373,7 @@ class MedicinalProduct:
             "doc": "D.3.11.12 Homeopathic MP",
         },
     )
-    is_other_mp: Optional[BooleanDomain] = field(
+    is_other_mp: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -5382,7 +5381,7 @@ class MedicinalProduct:
             "doc": "D.3.11.13 Other MP",
         },
     )
-    other_mp_specification: Optional[str] = field(
+    other_mp_specification: str | None = field(
         default=None,
         metadata={
             "type": "Element",
@@ -5391,7 +5390,7 @@ class MedicinalProduct:
             "doc": "D.3.11.13.1\tOther MP Specification",
         },
     )
-    mode_of_action: Optional[str] = field(
+    mode_of_action: str | None = field(
         default=None,
         metadata={
             "type": "Element",
@@ -5400,7 +5399,7 @@ class MedicinalProduct:
             "doc": "D.3.12 Mode of action",
         },
     )
-    is_first_in_human: Optional[BooleanDomain] = field(
+    is_first_in_human: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -5408,7 +5407,7 @@ class MedicinalProduct:
             "doc": "D.3.13 First in Human",
         },
     )
-    first_in_human_risk_factors: Optional[str] = field(
+    first_in_human_risk_factors: str | None = field(
         default=None,
         metadata={
             "type": "Element",
@@ -5417,7 +5416,7 @@ class MedicinalProduct:
             "doc": "D.3.13.1 First in Human Risk Factors",
         },
     )
-    somatic_cell: Optional[SomaticCell] = field(
+    somatic_cell: SomaticCell | None = field(
         default=None,
         metadata={
             "type": "Element",
@@ -5425,7 +5424,7 @@ class MedicinalProduct:
             "doc": "D.4\tSomatic Cell Therapy IMP",
         },
     )
-    gene_therapy: Optional[GeneTherapy] = field(
+    gene_therapy: GeneTherapy | None = field(
         default=None,
         metadata={
             "type": "Element",
@@ -5433,7 +5432,7 @@ class MedicinalProduct:
             "doc": "D.5\tGene Therapy IMP",
         },
     )
-    cell_origin: Optional[CellOrigin] = field(
+    cell_origin: CellOrigin | None = field(
         default=None,
         metadata={
             "type": "Element",
@@ -5441,7 +5440,7 @@ class MedicinalProduct:
             "doc": "D.6.1 Tissue Engineered origin",
         },
     )
-    cell_type: Optional[CellType] = field(
+    cell_type: CellType | None = field(
         default=None,
         metadata={
             "type": "Element",
@@ -5449,7 +5448,7 @@ class MedicinalProduct:
             "doc": "D.6.2 Tissue Engineered type",
         },
     )
-    imp_device: Optional[ImpDevice] = field(
+    imp_device: ImpDevice | None = field(
         default=None,
         metadata={
             "type": "Element",
@@ -5457,7 +5456,7 @@ class MedicinalProduct:
             "doc": "D.7\tProducts containing devices",
         },
     )
-    active_substances: Optional[ActiveSubstances] = field(
+    active_substances: ActiveSubstances | None = field(
         default=None,
         metadata={
             "type": "Element",
@@ -5465,7 +5464,7 @@ class MedicinalProduct:
             "doc": "D.3.9 Active substances",
         },
     )
-    id: Optional[str] = field(
+    id: str | None = field(
         default=None,
         metadata={
             "type": "Attribute",
@@ -5479,14 +5478,14 @@ class Authorities:
     class Meta:
         namespace = "http://www.cdisc.org/ns/ctr/v1.0"
 
-    fdainformation: Optional[Fdainformation] = field(
+    fdainformation: Fdainformation | None = field(
         default=None,
         metadata={
             "name": "FDAInformation",
             "type": "Element",
         },
     )
-    institutional_review_board_ethics_committee: List[
+    institutional_review_board_ethics_committee: list[
         InstitutionalReviewBoardEthicsCommittee
     ] = field(
         default_factory=list,
@@ -5495,7 +5494,7 @@ class Authorities:
             "type": "Element",
         },
     )
-    oversight_authority: List[OversightAuthority] = field(
+    oversight_authority: list[OversightAuthority] = field(
         default_factory=list,
         metadata={
             "name": "OversightAuthority",
@@ -5509,7 +5508,7 @@ class CentralTechnicalFacilities:
     class Meta:
         namespace = "http://www.cdisc.org/ns/ctr/v1.0"
 
-    central_technical_facility: List[CentralTechnicalFacility] = field(
+    central_technical_facility: list[CentralTechnicalFacility] = field(
         default_factory=list,
         metadata={
             "name": "CentralTechnicalFacility",
@@ -5524,7 +5523,7 @@ class FundingSupport:
     class Meta:
         namespace = "http://www.cdisc.org/ns/ctr/v1.0"
 
-    sponsor: List[Sponsor] = field(
+    sponsor: list[Sponsor] = field(
         default_factory=list,
         metadata={
             "name": "Sponsor",
@@ -5539,7 +5538,7 @@ class Networks:
     class Meta:
         namespace = "http://www.cdisc.org/ns/ctr/v1.0"
 
-    network: List[Network] = field(
+    network: list[Network] = field(
         default_factory=list,
         metadata={
             "name": "Network",
@@ -5554,7 +5553,7 @@ class Organization:
     class Meta:
         namespace = "http://www.cdisc.org/ns/ctr/v1.0"
 
-    address: List[Address] = field(
+    address: list[Address] = field(
         default_factory=list,
         metadata={
             "name": "Address",
@@ -5562,7 +5561,7 @@ class Organization:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    email: List[str] = field(
+    email: list[str] = field(
         default_factory=list,
         metadata={
             "name": "Email",
@@ -5570,7 +5569,7 @@ class Organization:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    fax: List[str] = field(
+    fax: list[str] = field(
         default_factory=list,
         metadata={
             "name": "Fax",
@@ -5578,7 +5577,7 @@ class Organization:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    certificate: List[str] = field(
+    certificate: list[str] = field(
         default_factory=list,
         metadata={
             "name": "Certificate",
@@ -5586,14 +5585,14 @@ class Organization:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    role: List[Role] = field(
+    role: list[Role] = field(
         default_factory=list,
         metadata={
             "name": "Role",
             "type": "Element",
         },
     )
-    oid: Optional[str] = field(
+    oid: str | None = field(
         default=None,
         metadata={
             "name": "OID",
@@ -5602,7 +5601,7 @@ class Organization:
             "min_length": 1,
         },
     )
-    name: Optional[str] = field(
+    name: str | None = field(
         default=None,
         metadata={
             "name": "Name",
@@ -5618,7 +5617,7 @@ class PublicTitle:
     class Meta:
         namespace = "http://www.cdisc.org/ns/ctr/v1.0"
 
-    translated_text: List[TranslatedText] = field(
+    translated_text: list[TranslatedText] = field(
         default_factory=list,
         metadata={
             "name": "TranslatedText",
@@ -5634,7 +5633,7 @@ class Recruitment:
     class Meta:
         namespace = "http://www.cdisc.org/ns/ctr/v1.0"
 
-    recruitment_countries: Optional[RecruitmentCountries] = field(
+    recruitment_countries: RecruitmentCountries | None = field(
         default=None,
         metadata={
             "name": "RecruitmentCountries",
@@ -5642,7 +5641,7 @@ class Recruitment:
             "required": True,
         },
     )
-    recruitment_status: List[RecruitmentStatus] = field(
+    recruitment_status: list[RecruitmentStatus] = field(
         default_factory=list,
         metadata={
             "name": "RecruitmentStatus",
@@ -5657,7 +5656,7 @@ class Registrations:
     class Meta:
         namespace = "http://www.cdisc.org/ns/ctr/v1.0"
 
-    registration: List[Registration] = field(
+    registration: list[Registration] = field(
         default_factory=list,
         metadata={
             "name": "Registration",
@@ -5672,7 +5671,7 @@ class StudyDetailedDescription:
     class Meta:
         namespace = "http://www.cdisc.org/ns/ctr/v1.0"
 
-    translated_text: List[TranslatedText] = field(
+    translated_text: list[TranslatedText] = field(
         default_factory=list,
         metadata={
             "name": "TranslatedText",
@@ -5688,7 +5687,7 @@ class StudyNameLocalizations:
     class Meta:
         namespace = "http://www.cdisc.org/ns/ctr/v1.0"
 
-    translated_text: List[TranslatedText] = field(
+    translated_text: list[TranslatedText] = field(
         default_factory=list,
         metadata={
             "name": "TranslatedText",
@@ -5704,7 +5703,7 @@ class SubContractors:
     class Meta:
         namespace = "http://www.cdisc.org/ns/ctr/v1.0"
 
-    sub_contractor: List[SubContractor] = field(
+    sub_contractor: list[SubContractor] = field(
         default_factory=list,
         metadata={
             "name": "SubContractor",
@@ -5877,7 +5876,7 @@ class OdmcomplexTypeDefinitionAuditRecord:
         name = "ODMcomplexTypeDefinition-AuditRecord"
         target_namespace = "http://www.cdisc.org/ns/odm/v1.3"
 
-    user_ref: Optional[UserRef] = field(
+    user_ref: UserRef | None = field(
         default=None,
         metadata={
             "name": "UserRef",
@@ -5886,7 +5885,7 @@ class OdmcomplexTypeDefinitionAuditRecord:
             "required": True,
         },
     )
-    location_ref: Optional[LocationRef] = field(
+    location_ref: LocationRef | None = field(
         default=None,
         metadata={
             "name": "LocationRef",
@@ -5895,7 +5894,7 @@ class OdmcomplexTypeDefinitionAuditRecord:
             "required": True,
         },
     )
-    date_time_stamp: Optional[XmlDateTime] = field(
+    date_time_stamp: XmlDateTime | None = field(
         default=None,
         metadata={
             "name": "DateTimeStamp",
@@ -5904,7 +5903,7 @@ class OdmcomplexTypeDefinitionAuditRecord:
             "required": True,
         },
     )
-    reason_for_change: Optional[str] = field(
+    reason_for_change: str | None = field(
         default=None,
         metadata={
             "name": "ReasonForChange",
@@ -5912,7 +5911,7 @@ class OdmcomplexTypeDefinitionAuditRecord:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    source_id: Optional[str] = field(
+    source_id: str | None = field(
         default=None,
         metadata={
             "name": "SourceID",
@@ -5920,21 +5919,21 @@ class OdmcomplexTypeDefinitionAuditRecord:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    edit_point: Optional[EditPointType] = field(
+    edit_point: EditPointType | None = field(
         default=None,
         metadata={
             "name": "EditPoint",
             "type": "Attribute",
         },
     )
-    used_imputation_method: Optional[YesOrNo] = field(
+    used_imputation_method: YesOrNo | None = field(
         default=None,
         metadata={
             "name": "UsedImputationMethod",
             "type": "Attribute",
         },
     )
-    id: Optional[str] = field(
+    id: str | None = field(
         default=None,
         metadata={
             "name": "ID",
@@ -5949,7 +5948,7 @@ class OdmcomplexTypeDefinitionDecode:
         name = "ODMcomplexTypeDefinition-Decode"
         target_namespace = "http://www.cdisc.org/ns/odm/v1.3"
 
-    translated_text: List[TranslatedText] = field(
+    translated_text: list[TranslatedText] = field(
         default_factory=list,
         metadata={
             "name": "TranslatedText",
@@ -5966,7 +5965,7 @@ class OdmcomplexTypeDefinitionDescription:
         name = "ODMcomplexTypeDefinition-Description"
         target_namespace = "http://www.cdisc.org/ns/odm/v1.3"
 
-    translated_text: List[TranslatedText] = field(
+    translated_text: list[TranslatedText] = field(
         default_factory=list,
         metadata={
             "name": "TranslatedText",
@@ -5983,7 +5982,7 @@ class OdmcomplexTypeDefinitionEnumeratedItem:
         name = "ODMcomplexTypeDefinition-EnumeratedItem"
         target_namespace = "http://www.cdisc.org/ns/odm/v1.3"
 
-    alias: List[Alias] = field(
+    alias: list[Alias] = field(
         default_factory=list,
         metadata={
             "name": "Alias",
@@ -5991,7 +5990,7 @@ class OdmcomplexTypeDefinitionEnumeratedItem:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    coded_value: Optional[str] = field(
+    coded_value: str | None = field(
         default=None,
         metadata={
             "name": "CodedValue",
@@ -5999,14 +5998,14 @@ class OdmcomplexTypeDefinitionEnumeratedItem:
             "required": True,
         },
     )
-    rank: Optional[Decimal] = field(
+    rank: Decimal | None = field(
         default=None,
         metadata={
             "name": "Rank",
             "type": "Attribute",
         },
     )
-    order_number: Optional[int] = field(
+    order_number: int | None = field(
         default=None,
         metadata={
             "name": "OrderNumber",
@@ -6021,7 +6020,7 @@ class OdmcomplexTypeDefinitionErrorMessage:
         name = "ODMcomplexTypeDefinition-ErrorMessage"
         target_namespace = "http://www.cdisc.org/ns/odm/v1.3"
 
-    translated_text: List[TranslatedText] = field(
+    translated_text: list[TranslatedText] = field(
         default_factory=list,
         metadata={
             "name": "TranslatedText",
@@ -6038,7 +6037,7 @@ class OdmcomplexTypeDefinitionFlag:
         name = "ODMcomplexTypeDefinition-Flag"
         target_namespace = "http://www.cdisc.org/ns/odm/v1.3"
 
-    flag_value: Optional[FlagValue] = field(
+    flag_value: FlagValue | None = field(
         default=None,
         metadata={
             "name": "FlagValue",
@@ -6047,7 +6046,7 @@ class OdmcomplexTypeDefinitionFlag:
             "required": True,
         },
     )
-    flag_type: Optional[FlagType] = field(
+    flag_type: FlagType | None = field(
         default=None,
         metadata={
             "name": "FlagType",
@@ -6063,7 +6062,7 @@ class OdmcomplexTypeDefinitionLocation:
         name = "ODMcomplexTypeDefinition-Location"
         target_namespace = "http://www.cdisc.org/ns/odm/v1.3"
 
-    meta_data_version_ref: List[MetaDataVersionRef] = field(
+    meta_data_version_ref: list[MetaDataVersionRef] = field(
         default_factory=list,
         metadata={
             "name": "MetaDataVersionRef",
@@ -6072,7 +6071,7 @@ class OdmcomplexTypeDefinitionLocation:
             "min_occurs": 1,
         },
     )
-    oid: Optional[str] = field(
+    oid: str | None = field(
         default=None,
         metadata={
             "name": "OID",
@@ -6081,7 +6080,7 @@ class OdmcomplexTypeDefinitionLocation:
             "min_length": 1,
         },
     )
-    name: Optional[str] = field(
+    name: str | None = field(
         default=None,
         metadata={
             "name": "Name",
@@ -6090,7 +6089,7 @@ class OdmcomplexTypeDefinitionLocation:
             "min_length": 1,
         },
     )
-    location_type: Optional[LocationType] = field(
+    location_type: LocationType | None = field(
         default=None,
         metadata={
             "name": "LocationType",
@@ -6105,7 +6104,7 @@ class OdmcomplexTypeDefinitionQuestion:
         name = "ODMcomplexTypeDefinition-Question"
         target_namespace = "http://www.cdisc.org/ns/odm/v1.3"
 
-    translated_text: List[TranslatedText] = field(
+    translated_text: list[TranslatedText] = field(
         default_factory=list,
         metadata={
             "name": "TranslatedText",
@@ -6122,7 +6121,7 @@ class OdmcomplexTypeDefinitionSignature:
         name = "ODMcomplexTypeDefinition-Signature"
         target_namespace = "http://www.cdisc.org/ns/odm/v1.3"
 
-    user_ref: Optional[UserRef] = field(
+    user_ref: UserRef | None = field(
         default=None,
         metadata={
             "name": "UserRef",
@@ -6131,7 +6130,7 @@ class OdmcomplexTypeDefinitionSignature:
             "required": True,
         },
     )
-    location_ref: Optional[LocationRef] = field(
+    location_ref: LocationRef | None = field(
         default=None,
         metadata={
             "name": "LocationRef",
@@ -6140,7 +6139,7 @@ class OdmcomplexTypeDefinitionSignature:
             "required": True,
         },
     )
-    signature_ref: Optional[SignatureRef] = field(
+    signature_ref: SignatureRef | None = field(
         default=None,
         metadata={
             "name": "SignatureRef",
@@ -6149,7 +6148,7 @@ class OdmcomplexTypeDefinitionSignature:
             "required": True,
         },
     )
-    date_time_stamp: Optional[XmlDateTime] = field(
+    date_time_stamp: XmlDateTime | None = field(
         default=None,
         metadata={
             "name": "DateTimeStamp",
@@ -6158,7 +6157,7 @@ class OdmcomplexTypeDefinitionSignature:
             "required": True,
         },
     )
-    crypto_binding_manifest: Optional[str] = field(
+    crypto_binding_manifest: str | None = field(
         default=None,
         metadata={
             "name": "CryptoBindingManifest",
@@ -6166,7 +6165,7 @@ class OdmcomplexTypeDefinitionSignature:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    id: Optional[str] = field(
+    id: str | None = field(
         default=None,
         metadata={
             "name": "ID",
@@ -6181,7 +6180,7 @@ class OdmcomplexTypeDefinitionSymbol:
         name = "ODMcomplexTypeDefinition-Symbol"
         target_namespace = "http://www.cdisc.org/ns/odm/v1.3"
 
-    translated_text: List[TranslatedText] = field(
+    translated_text: list[TranslatedText] = field(
         default_factory=list,
         metadata={
             "name": "TranslatedText",
@@ -6198,7 +6197,7 @@ class OdmcomplexTypeDefinitionUser:
         name = "ODMcomplexTypeDefinition-User"
         target_namespace = "http://www.cdisc.org/ns/odm/v1.3"
 
-    login_name: Optional[str] = field(
+    login_name: str | None = field(
         default=None,
         metadata={
             "name": "LoginName",
@@ -6206,7 +6205,7 @@ class OdmcomplexTypeDefinitionUser:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    display_name: Optional[str] = field(
+    display_name: str | None = field(
         default=None,
         metadata={
             "name": "DisplayName",
@@ -6214,7 +6213,7 @@ class OdmcomplexTypeDefinitionUser:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    full_name: Optional[str] = field(
+    full_name: str | None = field(
         default=None,
         metadata={
             "name": "FullName",
@@ -6222,7 +6221,7 @@ class OdmcomplexTypeDefinitionUser:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    first_name: Optional[str] = field(
+    first_name: str | None = field(
         default=None,
         metadata={
             "name": "FirstName",
@@ -6230,7 +6229,7 @@ class OdmcomplexTypeDefinitionUser:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    last_name: Optional[str] = field(
+    last_name: str | None = field(
         default=None,
         metadata={
             "name": "LastName",
@@ -6238,7 +6237,7 @@ class OdmcomplexTypeDefinitionUser:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    organization: Optional[str] = field(
+    organization: str | None = field(
         default=None,
         metadata={
             "name": "Organization",
@@ -6246,7 +6245,7 @@ class OdmcomplexTypeDefinitionUser:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    address: List[Address] = field(
+    address: list[Address] = field(
         default_factory=list,
         metadata={
             "name": "Address",
@@ -6254,7 +6253,7 @@ class OdmcomplexTypeDefinitionUser:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    email: List[str] = field(
+    email: list[str] = field(
         default_factory=list,
         metadata={
             "name": "Email",
@@ -6262,7 +6261,7 @@ class OdmcomplexTypeDefinitionUser:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    picture: Optional[Picture] = field(
+    picture: Picture | None = field(
         default=None,
         metadata={
             "name": "Picture",
@@ -6270,7 +6269,7 @@ class OdmcomplexTypeDefinitionUser:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    pager: Optional[str] = field(
+    pager: str | None = field(
         default=None,
         metadata={
             "name": "Pager",
@@ -6278,7 +6277,7 @@ class OdmcomplexTypeDefinitionUser:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    fax: List[str] = field(
+    fax: list[str] = field(
         default_factory=list,
         metadata={
             "name": "Fax",
@@ -6286,7 +6285,7 @@ class OdmcomplexTypeDefinitionUser:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    phone: List[str] = field(
+    phone: list[str] = field(
         default_factory=list,
         metadata={
             "name": "Phone",
@@ -6294,7 +6293,7 @@ class OdmcomplexTypeDefinitionUser:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    location_ref: List[LocationRef] = field(
+    location_ref: list[LocationRef] = field(
         default_factory=list,
         metadata={
             "name": "LocationRef",
@@ -6302,7 +6301,7 @@ class OdmcomplexTypeDefinitionUser:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    certificate: List[str] = field(
+    certificate: list[str] = field(
         default_factory=list,
         metadata={
             "name": "Certificate",
@@ -6310,7 +6309,7 @@ class OdmcomplexTypeDefinitionUser:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    role: List[Role] = field(
+    role: list[Role] = field(
         default_factory=list,
         metadata={
             "name": "Role",
@@ -6318,7 +6317,7 @@ class OdmcomplexTypeDefinitionUser:
             "namespace": "http://www.cdisc.org/ns/ctr/v1.0",
         },
     )
-    organization_ref: List[OrganizationRef] = field(
+    organization_ref: list[OrganizationRef] = field(
         default_factory=list,
         metadata={
             "name": "OrganizationRef",
@@ -6326,7 +6325,7 @@ class OdmcomplexTypeDefinitionUser:
             "namespace": "http://www.cdisc.org/ns/ctr/v1.0",
         },
     )
-    qualifications: List[str] = field(
+    qualifications: list[str] = field(
         default_factory=list,
         metadata={
             "name": "Qualifications",
@@ -6334,7 +6333,7 @@ class OdmcomplexTypeDefinitionUser:
             "namespace": "http://www.cdisc.org/ns/ctr/v1.0",
         },
     )
-    oid: Optional[str] = field(
+    oid: str | None = field(
         default=None,
         metadata={
             "name": "OID",
@@ -6343,7 +6342,7 @@ class OdmcomplexTypeDefinitionUser:
             "min_length": 1,
         },
     )
-    user_type: Optional[UserType] = field(
+    user_type: UserType | None = field(
         default=None,
         metadata={
             "name": "UserType",
@@ -6374,7 +6373,7 @@ class SdmcomplexTypeDefinitionArmAssociation:
         name = "SDMcomplexTypeDefinition-ArmAssociation"
         target_namespace = "http://www.cdisc.org/ns/studydesign/v1.0"
 
-    arm_ref: List[ArmRef] = field(
+    arm_ref: list[ArmRef] = field(
         default_factory=list,
         metadata={
             "name": "ArmRef",
@@ -6384,7 +6383,7 @@ class SdmcomplexTypeDefinitionArmAssociation:
             "doc": "List of references to Arms",
         },
     )
-    blinded_role: List[BlindedRoleEnumeration] = field(
+    blinded_role: list[BlindedRoleEnumeration] = field(
         default_factory=list,
         metadata={
             "name": "BlindedRole",
@@ -6392,7 +6391,7 @@ class SdmcomplexTypeDefinitionArmAssociation:
             "namespace": "http://www.cdisc.org/ns/ctr/v1.0",
         },
     )
-    type: Optional[Blindunblind] = field(
+    type: Blindunblind | None = field(
         default=None,
         metadata={
             "name": "Type",
@@ -6409,7 +6408,7 @@ class SdmcomplexTypeDefinitionValue:
         name = "SDMcomplexTypeDefinition-Value"
         target_namespace = "http://www.cdisc.org/ns/studydesign/v1.0"
 
-    scope: Optional[str] = field(
+    scope: str | None = field(
         default=None,
         metadata={
             "name": "Scope",
@@ -6417,7 +6416,7 @@ class SdmcomplexTypeDefinitionValue:
             "namespace": "http://www.cdisc.org/ns/ctr/v1.0",
         },
     )
-    code_list_oid: Optional[str] = field(
+    code_list_oid: str | None = field(
         default=None,
         metadata={
             "name": "CodeListOID",
@@ -6426,7 +6425,7 @@ class SdmcomplexTypeDefinitionValue:
             "min_length": 1,
         },
     )
-    display_value: Optional[str] = field(
+    display_value: str | None = field(
         default=None,
         metadata={
             "name": "DisplayValue",
@@ -6434,7 +6433,7 @@ class SdmcomplexTypeDefinitionValue:
             "namespace": "http://www.cdisc.org/ns/ctr/v1.0",
         },
     )
-    content: List[object] = field(
+    content: list[object] = field(
         default_factory=list,
         metadata={
             "type": "Wildcard",
@@ -6456,7 +6455,7 @@ class KeyValueType:
     class Meta:
         target_namespace = "http://www.w3.org/2000/09/xmldsig#"
 
-    content: List[object] = field(
+    content: list[object] = field(
         default_factory=list,
         metadata={
             "type": "Wildcard",
@@ -6483,7 +6482,7 @@ class SignaturePropertiesType:
     class Meta:
         target_namespace = "http://www.w3.org/2000/09/xmldsig#"
 
-    signature_property: List[SignatureProperty] = field(
+    signature_property: list[SignatureProperty] = field(
         default_factory=list,
         metadata={
             "name": "SignatureProperty",
@@ -6492,7 +6491,7 @@ class SignaturePropertiesType:
             "min_occurs": 1,
         },
     )
-    id: Optional[str] = field(
+    id: str | None = field(
         default=None,
         metadata={
             "name": "Id",
@@ -6506,7 +6505,7 @@ class TransformsType:
     class Meta:
         target_namespace = "http://www.w3.org/2000/09/xmldsig#"
 
-    transform: List[Transform] = field(
+    transform: list[Transform] = field(
         default_factory=list,
         metadata={
             "name": "Transform",
@@ -6534,7 +6533,7 @@ class MedicinalProductInformation:
         name = "medicinal_product_information"
         namespace = "http://eudract.emea.europa.eu/schema/clinical_trial"
 
-    medicinal_product: List[MedicinalProduct] = field(
+    medicinal_product: list[MedicinalProduct] = field(
         default_factory=list,
         metadata={
             "type": "Element",
@@ -6549,7 +6548,7 @@ class PopulationInformation:
         name = "population_information"
         namespace = "http://eudract.emea.europa.eu/schema/clinical_trial"
 
-    has_under_18: Optional[BooleanDomain] = field(
+    has_under_18: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -6557,7 +6556,7 @@ class PopulationInformation:
             "doc": "F.1.1 Population under eighteen",
         },
     )
-    under_18_subjects_no: Optional[int] = field(
+    under_18_subjects_no: int | None = field(
         default=None,
         metadata={
             "type": "Element",
@@ -6567,7 +6566,7 @@ class PopulationInformation:
             "doc": "F.1.1 Population number under eighteen",
         },
     )
-    has_in_utero: Optional[BooleanDomain] = field(
+    has_in_utero: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -6575,7 +6574,7 @@ class PopulationInformation:
             "doc": "F.1.1.1 Population in utero",
         },
     )
-    in_utero_no: Optional[int] = field(
+    in_utero_no: int | None = field(
         default=None,
         metadata={
             "type": "Element",
@@ -6585,7 +6584,7 @@ class PopulationInformation:
             "doc": "F.1.1.1.1 Population number in utero",
         },
     )
-    has_preterm_newborn_infants: Optional[BooleanDomain] = field(
+    has_preterm_newborn_infants: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -6593,7 +6592,7 @@ class PopulationInformation:
             "doc": "F.1.1.2 Population preterm newborn infants",
         },
     )
-    preterm_newborn_infants_no: Optional[int] = field(
+    preterm_newborn_infants_no: int | None = field(
         default=None,
         metadata={
             "type": "Element",
@@ -6603,7 +6602,7 @@ class PopulationInformation:
             "doc": "F.1.1.2.1 Population number preterm newborn infants",
         },
     )
-    has_newborns: Optional[BooleanDomain] = field(
+    has_newborns: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -6611,7 +6610,7 @@ class PopulationInformation:
             "doc": "F.1.1.3 Population newborns",
         },
     )
-    newborns_no: Optional[int] = field(
+    newborns_no: int | None = field(
         default=None,
         metadata={
             "type": "Element",
@@ -6621,7 +6620,7 @@ class PopulationInformation:
             "doc": "F.1.1.3.1 Population number newborns",
         },
     )
-    has_infants_and_toddlers: Optional[BooleanDomain] = field(
+    has_infants_and_toddlers: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -6629,7 +6628,7 @@ class PopulationInformation:
             "doc": "F.1.1.4 Population infants and toddlers",
         },
     )
-    infants_and_toddlers_no: Optional[int] = field(
+    infants_and_toddlers_no: int | None = field(
         default=None,
         metadata={
             "type": "Element",
@@ -6639,7 +6638,7 @@ class PopulationInformation:
             "doc": "F.1.1.4.1 Population number infants and toddlers",
         },
     )
-    has_childen: Optional[BooleanDomain] = field(
+    has_childen: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -6647,7 +6646,7 @@ class PopulationInformation:
             "doc": "F.1.1.5 Population children",
         },
     )
-    childen_no: Optional[int] = field(
+    childen_no: int | None = field(
         default=None,
         metadata={
             "type": "Element",
@@ -6657,7 +6656,7 @@ class PopulationInformation:
             "doc": "F.1.1.5.1 Population number children",
         },
     )
-    has_adolescents: Optional[BooleanDomain] = field(
+    has_adolescents: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -6665,7 +6664,7 @@ class PopulationInformation:
             "doc": "F.1.1.6 Population adolescents",
         },
     )
-    adolescents_no: Optional[int] = field(
+    adolescents_no: int | None = field(
         default=None,
         metadata={
             "type": "Element",
@@ -6675,7 +6674,7 @@ class PopulationInformation:
             "doc": "F.1.1.6.1 Population number adolescents",
         },
     )
-    has_adults: Optional[BooleanDomain] = field(
+    has_adults: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -6683,7 +6682,7 @@ class PopulationInformation:
             "doc": "F.1.2 Population adults",
         },
     )
-    adults_no: Optional[int] = field(
+    adults_no: int | None = field(
         default=None,
         metadata={
             "type": "Element",
@@ -6693,7 +6692,7 @@ class PopulationInformation:
             "doc": "F.1.2.1 Population number adults",
         },
     )
-    has_elderly: Optional[BooleanDomain] = field(
+    has_elderly: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -6701,7 +6700,7 @@ class PopulationInformation:
             "doc": "F.1.3 Population elderly",
         },
     )
-    elderly_no: Optional[int] = field(
+    elderly_no: int | None = field(
         default=None,
         metadata={
             "type": "Element",
@@ -6711,7 +6710,7 @@ class PopulationInformation:
             "doc": "F.1.3.1 Population number elderly",
         },
     )
-    is_gender_male: Optional[BooleanDomain] = field(
+    is_gender_male: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -6719,7 +6718,7 @@ class PopulationInformation:
             "doc": "F.2.1 Population male",
         },
     )
-    is_gender_female: Optional[BooleanDomain] = field(
+    is_gender_female: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -6727,7 +6726,7 @@ class PopulationInformation:
             "doc": "F.2.2 Population female",
         },
     )
-    has_healthy_volunteers: Optional[BooleanDomain] = field(
+    has_healthy_volunteers: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -6735,7 +6734,7 @@ class PopulationInformation:
             "doc": "F.3.1 Population healthy volunteers",
         },
     )
-    has_patients: Optional[BooleanDomain] = field(
+    has_patients: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -6743,7 +6742,7 @@ class PopulationInformation:
             "doc": "F.3.2 Population patients",
         },
     )
-    has_specific_vunerable_popul: Optional[BooleanDomain] = field(
+    has_specific_vunerable_popul: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -6751,7 +6750,7 @@ class PopulationInformation:
             "doc": "F.3.3 Population specific vunerable populations",
         },
     )
-    has_women_child_bear_contra: Optional[BooleanDomain] = field(
+    has_women_child_bear_contra: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -6762,7 +6761,7 @@ class PopulationInformation:
             ),
         },
     )
-    has_women_child_bear_potent: Optional[BooleanDomain] = field(
+    has_women_child_bear_potent: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -6772,7 +6771,7 @@ class PopulationInformation:
             ),
         },
     )
-    has_pregnant_women: Optional[BooleanDomain] = field(
+    has_pregnant_women: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -6780,7 +6779,7 @@ class PopulationInformation:
             "doc": "F.3.3.3 Population pregnant women",
         },
     )
-    has_nursing_women: Optional[BooleanDomain] = field(
+    has_nursing_women: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -6788,7 +6787,7 @@ class PopulationInformation:
             "doc": "F.3.3.4 Population nursing women",
         },
     )
-    has_emergency_situation: Optional[BooleanDomain] = field(
+    has_emergency_situation: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -6796,7 +6795,7 @@ class PopulationInformation:
             "doc": "F.3.3.5 Population emergency situation",
         },
     )
-    has_incapable_consent: Optional[BooleanDomain] = field(
+    has_incapable_consent: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -6804,16 +6803,14 @@ class PopulationInformation:
             "doc": "F.3.3.6 Population subjects incapable of giving consent",
         },
     )
-    has_incapable_consent_details_localized: Optional[
-        "PopulationInformation.HasIncapableConsentDetailsLocalized"
-    ] = field(
+    has_incapable_consent_details_localized: PopulationInformation.HasIncapableConsentDetailsLocalized | None = field(
         default=None,
         metadata={
             "type": "Element",
             "nillable": True,
         },
     )
-    has_other_patient: Optional[BooleanDomain] = field(
+    has_other_patient: BooleanDomain | None = field(
         default=BooleanDomain.VALUE_0,
         metadata={
             "type": "Element",
@@ -6821,16 +6818,14 @@ class PopulationInformation:
             "doc": "F.3.3.7 Population other subjects",
         },
     )
-    other_patient_details_localized: Optional[
-        "PopulationInformation.OtherPatientDetailsLocalized"
-    ] = field(
+    other_patient_details_localized: PopulationInformation.OtherPatientDetailsLocalized | None = field(
         default=None,
         metadata={
             "type": "Element",
             "nillable": True,
         },
     )
-    in_ms_no: Optional[int] = field(
+    in_ms_no: int | None = field(
         default=None,
         metadata={
             "type": "Element",
@@ -6840,7 +6835,7 @@ class PopulationInformation:
             "doc": "F.4.1 Population planned numbers in MS",
         },
     )
-    in_eea_no: Optional[int] = field(
+    in_eea_no: int | None = field(
         default=None,
         metadata={
             "type": "Element",
@@ -6850,7 +6845,7 @@ class PopulationInformation:
             "doc": "F.4.2.1 Population planned numbers in EEA",
         },
     )
-    in_whole_trial: Optional[int] = field(
+    in_whole_trial: int | None = field(
         default=None,
         metadata={
             "type": "Element",
@@ -6860,9 +6855,7 @@ class PopulationInformation:
             "doc": "F.4.2.2 Population planned numbers in whole trial",
         },
     )
-    post_trial_treatment_details_localized: Optional[
-        "PopulationInformation.PostTrialTreatmentDetailsLocalized"
-    ] = field(
+    post_trial_treatment_details_localized: PopulationInformation.PostTrialTreatmentDetailsLocalized | None = field(
         default=None,
         metadata={
             "type": "Element",
@@ -6872,7 +6865,7 @@ class PopulationInformation:
 
     @dataclass
     class HasIncapableConsentDetailsLocalized:
-        has_incapable_consent_details: List[InternationalizedTextsType250] = field(
+        has_incapable_consent_details: list[InternationalizedTextsType250] = field(
             default_factory=list,
             metadata={
                 "type": "Element",
@@ -6885,7 +6878,7 @@ class PopulationInformation:
 
     @dataclass
     class OtherPatientDetailsLocalized:
-        other_patient_details: List[InternationalizedTextsType100] = field(
+        other_patient_details: list[InternationalizedTextsType100] = field(
             default_factory=list,
             metadata={
                 "type": "Element",
@@ -6895,7 +6888,7 @@ class PopulationInformation:
 
     @dataclass
     class PostTrialTreatmentDetailsLocalized:
-        post_trial_treatment_details: List[InternationalizedTextsType500] = field(
+        post_trial_treatment_details: list[InternationalizedTextsType500] = field(
             default_factory=list,
             metadata={
                 "type": "Element",
@@ -6952,7 +6945,7 @@ class OdmcomplexTypeDefinitionStudyName:
         name = "ODMcomplexTypeDefinition-StudyName"
         target_namespace = "http://www.cdisc.org/ns/odm/v1.3"
 
-    study_name_localizations: List[StudyNameLocalizations] = field(
+    study_name_localizations: list[StudyNameLocalizations] = field(
         default_factory=list,
         metadata={
             "name": "StudyNameLocalizations",
@@ -7022,7 +7015,7 @@ class Intervention:
     class Meta:
         namespace = "http://www.cdisc.org/ns/ctr/v1.0"
 
-    description: Optional[Description] = field(
+    description: Description | None = field(
         default=None,
         metadata={
             "name": "Description",
@@ -7030,14 +7023,14 @@ class Intervention:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    intervention_other_name: List[str] = field(
+    intervention_other_name: list[str] = field(
         default_factory=list,
         metadata={
             "name": "InterventionOtherName",
             "type": "Element",
         },
     )
-    oid: Optional[str] = field(
+    oid: str | None = field(
         default=None,
         metadata={
             "name": "OID",
@@ -7046,7 +7039,7 @@ class Intervention:
             "min_length": 1,
         },
     )
-    name: Optional[str] = field(
+    name: str | None = field(
         default=None,
         metadata={
             "name": "Name",
@@ -7054,7 +7047,7 @@ class Intervention:
             "required": True,
         },
     )
-    intervention_type: Optional[InterventionTypeType] = field(
+    intervention_type: InterventionTypeType | None = field(
         default=None,
         metadata={
             "name": "InterventionType",
@@ -7069,7 +7062,7 @@ class TimePoint:
     class Meta:
         namespace = "http://www.cdisc.org/ns/ctr/v1.0"
 
-    description: Optional[Description] = field(
+    description: Description | None = field(
         default=None,
         metadata={
             "name": "Description",
@@ -7078,7 +7071,7 @@ class TimePoint:
             "required": True,
         },
     )
-    formal_expression: List[FormalExpression] = field(
+    formal_expression: list[FormalExpression] = field(
         default_factory=list,
         metadata={
             "name": "FormalExpression",
@@ -7095,7 +7088,7 @@ class OdmcomplexTypeDefinitionAdminData:
         name = "ODMcomplexTypeDefinition-AdminData"
         target_namespace = "http://www.cdisc.org/ns/odm/v1.3"
 
-    user: List[User] = field(
+    user: list[User] = field(
         default_factory=list,
         metadata={
             "name": "User",
@@ -7103,7 +7096,7 @@ class OdmcomplexTypeDefinitionAdminData:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    location: List[Location] = field(
+    location: list[Location] = field(
         default_factory=list,
         metadata={
             "name": "Location",
@@ -7111,7 +7104,7 @@ class OdmcomplexTypeDefinitionAdminData:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    signature_def: List[SignatureDef] = field(
+    signature_def: list[SignatureDef] = field(
         default_factory=list,
         metadata={
             "name": "SignatureDef",
@@ -7119,7 +7112,7 @@ class OdmcomplexTypeDefinitionAdminData:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    organization: List[Organization] = field(
+    organization: list[Organization] = field(
         default_factory=list,
         metadata={
             "name": "Organization",
@@ -7127,7 +7120,7 @@ class OdmcomplexTypeDefinitionAdminData:
             "namespace": "http://www.cdisc.org/ns/ctr/v1.0",
         },
     )
-    central_technical_facilities: List[CentralTechnicalFacilities] = field(
+    central_technical_facilities: list[CentralTechnicalFacilities] = field(
         default_factory=list,
         metadata={
             "name": "CentralTechnicalFacilities",
@@ -7136,7 +7129,7 @@ class OdmcomplexTypeDefinitionAdminData:
             "sequential": True,
         },
     )
-    networks: List[Networks] = field(
+    networks: list[Networks] = field(
         default_factory=list,
         metadata={
             "name": "Networks",
@@ -7145,7 +7138,7 @@ class OdmcomplexTypeDefinitionAdminData:
             "sequential": True,
         },
     )
-    sub_contractors: List[SubContractors] = field(
+    sub_contractors: list[SubContractors] = field(
         default_factory=list,
         metadata={
             "name": "SubContractors",
@@ -7154,7 +7147,7 @@ class OdmcomplexTypeDefinitionAdminData:
             "sequential": True,
         },
     )
-    study_oid: Optional[str] = field(
+    study_oid: str | None = field(
         default=None,
         metadata={
             "name": "StudyOID",
@@ -7170,7 +7163,7 @@ class OdmcomplexTypeDefinitionAnnotation:
         name = "ODMcomplexTypeDefinition-Annotation"
         target_namespace = "http://www.cdisc.org/ns/odm/v1.3"
 
-    comment: Optional[Comment] = field(
+    comment: Comment | None = field(
         default=None,
         metadata={
             "name": "Comment",
@@ -7178,7 +7171,7 @@ class OdmcomplexTypeDefinitionAnnotation:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    flag: List[Flag] = field(
+    flag: list[Flag] = field(
         default_factory=list,
         metadata={
             "name": "Flag",
@@ -7186,7 +7179,7 @@ class OdmcomplexTypeDefinitionAnnotation:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    seq_num: Optional[int] = field(
+    seq_num: int | None = field(
         default=None,
         metadata={
             "name": "SeqNum",
@@ -7194,14 +7187,14 @@ class OdmcomplexTypeDefinitionAnnotation:
             "required": True,
         },
     )
-    transaction_type: Optional[TransactionType] = field(
+    transaction_type: TransactionType | None = field(
         default=None,
         metadata={
             "name": "TransactionType",
             "type": "Attribute",
         },
     )
-    id: Optional[str] = field(
+    id: str | None = field(
         default=None,
         metadata={
             "name": "ID",
@@ -7216,7 +7209,7 @@ class OdmcomplexTypeDefinitionAuditRecords:
         name = "ODMcomplexTypeDefinition-AuditRecords"
         target_namespace = "http://www.cdisc.org/ns/odm/v1.3"
 
-    audit_record: List[AuditRecord] = field(
+    audit_record: list[AuditRecord] = field(
         default_factory=list,
         metadata={
             "name": "AuditRecord",
@@ -7232,7 +7225,7 @@ class OdmcomplexTypeDefinitionCodeListItem:
         name = "ODMcomplexTypeDefinition-CodeListItem"
         target_namespace = "http://www.cdisc.org/ns/odm/v1.3"
 
-    decode: Optional[Decode] = field(
+    decode: Decode | None = field(
         default=None,
         metadata={
             "name": "Decode",
@@ -7241,7 +7234,7 @@ class OdmcomplexTypeDefinitionCodeListItem:
             "required": True,
         },
     )
-    alias: List[Alias] = field(
+    alias: list[Alias] = field(
         default_factory=list,
         metadata={
             "name": "Alias",
@@ -7249,7 +7242,7 @@ class OdmcomplexTypeDefinitionCodeListItem:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    coded_value: Optional[str] = field(
+    coded_value: str | None = field(
         default=None,
         metadata={
             "name": "CodedValue",
@@ -7257,14 +7250,14 @@ class OdmcomplexTypeDefinitionCodeListItem:
             "required": True,
         },
     )
-    rank: Optional[Decimal] = field(
+    rank: Decimal | None = field(
         default=None,
         metadata={
             "name": "Rank",
             "type": "Attribute",
         },
     )
-    order_number: Optional[int] = field(
+    order_number: int | None = field(
         default=None,
         metadata={
             "name": "OrderNumber",
@@ -7279,7 +7272,7 @@ class OdmcomplexTypeDefinitionConditionDef:
         name = "ODMcomplexTypeDefinition-ConditionDef"
         target_namespace = "http://www.cdisc.org/ns/odm/v1.3"
 
-    description: Optional[Description] = field(
+    description: Description | None = field(
         default=None,
         metadata={
             "name": "Description",
@@ -7288,7 +7281,7 @@ class OdmcomplexTypeDefinitionConditionDef:
             "required": True,
         },
     )
-    formal_expression: List[FormalExpression] = field(
+    formal_expression: list[FormalExpression] = field(
         default_factory=list,
         metadata={
             "name": "FormalExpression",
@@ -7296,7 +7289,7 @@ class OdmcomplexTypeDefinitionConditionDef:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    alias: List[Alias] = field(
+    alias: list[Alias] = field(
         default_factory=list,
         metadata={
             "name": "Alias",
@@ -7304,7 +7297,7 @@ class OdmcomplexTypeDefinitionConditionDef:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    oid: Optional[str] = field(
+    oid: str | None = field(
         default=None,
         metadata={
             "name": "OID",
@@ -7313,7 +7306,7 @@ class OdmcomplexTypeDefinitionConditionDef:
             "min_length": 1,
         },
     )
-    name: Optional[str] = field(
+    name: str | None = field(
         default=None,
         metadata={
             "name": "Name",
@@ -7330,7 +7323,7 @@ class OdmcomplexTypeDefinitionFormDef:
         name = "ODMcomplexTypeDefinition-FormDef"
         target_namespace = "http://www.cdisc.org/ns/odm/v1.3"
 
-    description: Optional[Description] = field(
+    description: Description | None = field(
         default=None,
         metadata={
             "name": "Description",
@@ -7338,7 +7331,7 @@ class OdmcomplexTypeDefinitionFormDef:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    item_group_ref: List[ItemGroupRef] = field(
+    item_group_ref: list[ItemGroupRef] = field(
         default_factory=list,
         metadata={
             "name": "ItemGroupRef",
@@ -7346,7 +7339,7 @@ class OdmcomplexTypeDefinitionFormDef:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    archive_layout: List[ArchiveLayout] = field(
+    archive_layout: list[ArchiveLayout] = field(
         default_factory=list,
         metadata={
             "name": "ArchiveLayout",
@@ -7354,7 +7347,7 @@ class OdmcomplexTypeDefinitionFormDef:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    alias: List[Alias] = field(
+    alias: list[Alias] = field(
         default_factory=list,
         metadata={
             "name": "Alias",
@@ -7362,7 +7355,7 @@ class OdmcomplexTypeDefinitionFormDef:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    oid: Optional[str] = field(
+    oid: str | None = field(
         default=None,
         metadata={
             "name": "OID",
@@ -7371,7 +7364,7 @@ class OdmcomplexTypeDefinitionFormDef:
             "min_length": 1,
         },
     )
-    name: Optional[str] = field(
+    name: str | None = field(
         default=None,
         metadata={
             "name": "Name",
@@ -7380,7 +7373,7 @@ class OdmcomplexTypeDefinitionFormDef:
             "min_length": 1,
         },
     )
-    repeating: Optional[YesOrNo] = field(
+    repeating: YesOrNo | None = field(
         default=None,
         metadata={
             "name": "Repeating",
@@ -7396,7 +7389,7 @@ class OdmcomplexTypeDefinitionItemGroupDef:
         name = "ODMcomplexTypeDefinition-ItemGroupDef"
         target_namespace = "http://www.cdisc.org/ns/odm/v1.3"
 
-    description: Optional[Description] = field(
+    description: Description | None = field(
         default=None,
         metadata={
             "name": "Description",
@@ -7404,7 +7397,7 @@ class OdmcomplexTypeDefinitionItemGroupDef:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    item_ref: List[ItemRef] = field(
+    item_ref: list[ItemRef] = field(
         default_factory=list,
         metadata={
             "name": "ItemRef",
@@ -7412,7 +7405,7 @@ class OdmcomplexTypeDefinitionItemGroupDef:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    alias: List[Alias] = field(
+    alias: list[Alias] = field(
         default_factory=list,
         metadata={
             "name": "Alias",
@@ -7420,7 +7413,7 @@ class OdmcomplexTypeDefinitionItemGroupDef:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    oid: Optional[str] = field(
+    oid: str | None = field(
         default=None,
         metadata={
             "name": "OID",
@@ -7429,7 +7422,7 @@ class OdmcomplexTypeDefinitionItemGroupDef:
             "min_length": 1,
         },
     )
-    name: Optional[str] = field(
+    name: str | None = field(
         default=None,
         metadata={
             "name": "Name",
@@ -7438,7 +7431,7 @@ class OdmcomplexTypeDefinitionItemGroupDef:
             "min_length": 1,
         },
     )
-    repeating: Optional[YesOrNo] = field(
+    repeating: YesOrNo | None = field(
         default=None,
         metadata={
             "name": "Repeating",
@@ -7446,14 +7439,14 @@ class OdmcomplexTypeDefinitionItemGroupDef:
             "required": True,
         },
     )
-    is_reference_data: Optional[YesOrNo] = field(
+    is_reference_data: YesOrNo | None = field(
         default=None,
         metadata={
             "name": "IsReferenceData",
             "type": "Attribute",
         },
     )
-    sasdataset_name: Optional[str] = field(
+    sasdataset_name: str | None = field(
         default=None,
         metadata={
             "name": "SASDatasetName",
@@ -7462,21 +7455,21 @@ class OdmcomplexTypeDefinitionItemGroupDef:
             "pattern": r"[A-Za-z_][A-Za-z0-9_]*",
         },
     )
-    domain: Optional[str] = field(
+    domain: str | None = field(
         default=None,
         metadata={
             "name": "Domain",
             "type": "Attribute",
         },
     )
-    origin: Optional[str] = field(
+    origin: str | None = field(
         default=None,
         metadata={
             "name": "Origin",
             "type": "Attribute",
         },
     )
-    role: Optional[str] = field(
+    role: str | None = field(
         default=None,
         metadata={
             "name": "Role",
@@ -7484,14 +7477,14 @@ class OdmcomplexTypeDefinitionItemGroupDef:
             "min_length": 1,
         },
     )
-    purpose: Optional[str] = field(
+    purpose: str | None = field(
         default=None,
         metadata={
             "name": "Purpose",
             "type": "Attribute",
         },
     )
-    comment: Optional[str] = field(
+    comment: str | None = field(
         default=None,
         metadata={
             "name": "Comment",
@@ -7506,7 +7499,7 @@ class OdmcomplexTypeDefinitionMeasurementUnit:
         name = "ODMcomplexTypeDefinition-MeasurementUnit"
         target_namespace = "http://www.cdisc.org/ns/odm/v1.3"
 
-    symbol: Optional[Symbol] = field(
+    symbol: Symbol | None = field(
         default=None,
         metadata={
             "name": "Symbol",
@@ -7515,7 +7508,7 @@ class OdmcomplexTypeDefinitionMeasurementUnit:
             "required": True,
         },
     )
-    alias: List[Alias] = field(
+    alias: list[Alias] = field(
         default_factory=list,
         metadata={
             "name": "Alias",
@@ -7523,7 +7516,7 @@ class OdmcomplexTypeDefinitionMeasurementUnit:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    oid: Optional[str] = field(
+    oid: str | None = field(
         default=None,
         metadata={
             "name": "OID",
@@ -7532,7 +7525,7 @@ class OdmcomplexTypeDefinitionMeasurementUnit:
             "min_length": 1,
         },
     )
-    name: Optional[str] = field(
+    name: str | None = field(
         default=None,
         metadata={
             "name": "Name",
@@ -7548,7 +7541,7 @@ class OdmcomplexTypeDefinitionMethodDef:
         name = "ODMcomplexTypeDefinition-MethodDef"
         target_namespace = "http://www.cdisc.org/ns/odm/v1.3"
 
-    description: Optional[Description] = field(
+    description: Description | None = field(
         default=None,
         metadata={
             "name": "Description",
@@ -7557,7 +7550,7 @@ class OdmcomplexTypeDefinitionMethodDef:
             "required": True,
         },
     )
-    formal_expression: List[FormalExpression] = field(
+    formal_expression: list[FormalExpression] = field(
         default_factory=list,
         metadata={
             "name": "FormalExpression",
@@ -7565,7 +7558,7 @@ class OdmcomplexTypeDefinitionMethodDef:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    alias: List[Alias] = field(
+    alias: list[Alias] = field(
         default_factory=list,
         metadata={
             "name": "Alias",
@@ -7573,7 +7566,7 @@ class OdmcomplexTypeDefinitionMethodDef:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    oid: Optional[str] = field(
+    oid: str | None = field(
         default=None,
         metadata={
             "name": "OID",
@@ -7582,7 +7575,7 @@ class OdmcomplexTypeDefinitionMethodDef:
             "min_length": 1,
         },
     )
-    name: Optional[str] = field(
+    name: str | None = field(
         default=None,
         metadata={
             "name": "Name",
@@ -7591,7 +7584,7 @@ class OdmcomplexTypeDefinitionMethodDef:
             "min_length": 1,
         },
     )
-    type: Optional[MethodType] = field(
+    type: MethodType | None = field(
         default=None,
         metadata={
             "name": "Type",
@@ -7606,7 +7599,7 @@ class OdmcomplexTypeDefinitionRangeCheck:
         name = "ODMcomplexTypeDefinition-RangeCheck"
         target_namespace = "http://www.cdisc.org/ns/odm/v1.3"
 
-    check_value: List[str] = field(
+    check_value: list[str] = field(
         default_factory=list,
         metadata={
             "name": "CheckValue",
@@ -7614,7 +7607,7 @@ class OdmcomplexTypeDefinitionRangeCheck:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    formal_expression: List[FormalExpression] = field(
+    formal_expression: list[FormalExpression] = field(
         default_factory=list,
         metadata={
             "name": "FormalExpression",
@@ -7622,7 +7615,7 @@ class OdmcomplexTypeDefinitionRangeCheck:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    measurement_unit_ref: Optional[MeasurementUnitRef] = field(
+    measurement_unit_ref: MeasurementUnitRef | None = field(
         default=None,
         metadata={
             "name": "MeasurementUnitRef",
@@ -7630,7 +7623,7 @@ class OdmcomplexTypeDefinitionRangeCheck:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    error_message: Optional[ErrorMessage] = field(
+    error_message: ErrorMessage | None = field(
         default=None,
         metadata={
             "name": "ErrorMessage",
@@ -7638,14 +7631,14 @@ class OdmcomplexTypeDefinitionRangeCheck:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    comparator: Optional[Comparator] = field(
+    comparator: Comparator | None = field(
         default=None,
         metadata={
             "name": "Comparator",
             "type": "Attribute",
         },
     )
-    soft_hard: Optional[SoftOrHard] = field(
+    soft_hard: SoftOrHard | None = field(
         default=None,
         metadata={
             "name": "SoftHard",
@@ -7661,7 +7654,7 @@ class OdmcomplexTypeDefinitionSignatures:
         name = "ODMcomplexTypeDefinition-Signatures"
         target_namespace = "http://www.cdisc.org/ns/odm/v1.3"
 
-    signature: List[Signature2] = field(
+    signature: list[Signature2] = field(
         default_factory=list,
         metadata={
             "name": "Signature",
@@ -7677,7 +7670,7 @@ class OdmcomplexTypeDefinitionStudyEventDef:
         name = "ODMcomplexTypeDefinition-StudyEventDef"
         target_namespace = "http://www.cdisc.org/ns/odm/v1.3"
 
-    description: Optional[Description] = field(
+    description: Description | None = field(
         default=None,
         metadata={
             "name": "Description",
@@ -7685,7 +7678,7 @@ class OdmcomplexTypeDefinitionStudyEventDef:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    form_ref: List[FormRef] = field(
+    form_ref: list[FormRef] = field(
         default_factory=list,
         metadata={
             "name": "FormRef",
@@ -7693,7 +7686,7 @@ class OdmcomplexTypeDefinitionStudyEventDef:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    alias: List[Alias] = field(
+    alias: list[Alias] = field(
         default_factory=list,
         metadata={
             "name": "Alias",
@@ -7701,7 +7694,7 @@ class OdmcomplexTypeDefinitionStudyEventDef:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    activity_ref: List[ActivityRef] = field(
+    activity_ref: list[ActivityRef] = field(
         default_factory=list,
         metadata={
             "name": "ActivityRef",
@@ -7709,7 +7702,7 @@ class OdmcomplexTypeDefinitionStudyEventDef:
             "namespace": "http://www.cdisc.org/ns/studydesign/v1.0",
         },
     )
-    oid: Optional[str] = field(
+    oid: str | None = field(
         default=None,
         metadata={
             "name": "OID",
@@ -7718,7 +7711,7 @@ class OdmcomplexTypeDefinitionStudyEventDef:
             "min_length": 1,
         },
     )
-    name: Optional[str] = field(
+    name: str | None = field(
         default=None,
         metadata={
             "name": "Name",
@@ -7727,7 +7720,7 @@ class OdmcomplexTypeDefinitionStudyEventDef:
             "min_length": 1,
         },
     )
-    repeating: Optional[YesOrNo] = field(
+    repeating: YesOrNo | None = field(
         default=None,
         metadata={
             "name": "Repeating",
@@ -7735,7 +7728,7 @@ class OdmcomplexTypeDefinitionStudyEventDef:
             "required": True,
         },
     )
-    type: Optional[EventType] = field(
+    type: EventType | None = field(
         default=None,
         metadata={
             "name": "Type",
@@ -7743,7 +7736,7 @@ class OdmcomplexTypeDefinitionStudyEventDef:
             "required": True,
         },
     )
-    category: Optional[str] = field(
+    category: str | None = field(
         default=None,
         metadata={
             "name": "Category",
@@ -7770,7 +7763,7 @@ class SdmcomplexTypeDefinitionAbsoluteTimingConstraint:
         name = "SDMcomplexTypeDefinition-AbsoluteTimingConstraint"
         target_namespace = "http://www.cdisc.org/ns/studydesign/v1.0"
 
-    description: Optional[Description] = field(
+    description: Description | None = field(
         default=None,
         metadata={
             "name": "Description",
@@ -7778,7 +7771,7 @@ class SdmcomplexTypeDefinitionAbsoluteTimingConstraint:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    oid: Optional[str] = field(
+    oid: str | None = field(
         default=None,
         metadata={
             "name": "OID",
@@ -7788,7 +7781,7 @@ class SdmcomplexTypeDefinitionAbsoluteTimingConstraint:
             "doc": "Unique identifier for the timing constraint.",
         },
     )
-    name: Optional[str] = field(
+    name: str | None = field(
         default=None,
         metadata={
             "name": "Name",
@@ -7798,7 +7791,7 @@ class SdmcomplexTypeDefinitionAbsoluteTimingConstraint:
             "doc": "The name of the timing constraint.",
         },
     )
-    activity_oid: Optional[str] = field(
+    activity_oid: str | None = field(
         default=None,
         metadata={
             "name": "ActivityOID",
@@ -7810,7 +7803,7 @@ class SdmcomplexTypeDefinitionAbsoluteTimingConstraint:
             ),
         },
     )
-    timepoint_target: Optional[str] = field(
+    timepoint_target: str | None = field(
         default=None,
         metadata={
             "name": "TimepointTarget",
@@ -7820,7 +7813,7 @@ class SdmcomplexTypeDefinitionAbsoluteTimingConstraint:
             "doc": ("The point in time at which the activity ideally should start."),
         },
     )
-    timepoint_granularity: Optional[Timepointgranularitytype] = field(
+    timepoint_granularity: Timepointgranularitytype | None = field(
         default=None,
         metadata={
             "name": "TimepointGranularity",
@@ -7831,7 +7824,7 @@ class SdmcomplexTypeDefinitionAbsoluteTimingConstraint:
             ),
         },
     )
-    timepoint_pre_window: Optional[str] = field(
+    timepoint_pre_window: str | None = field(
         default=None,
         metadata={
             "name": "TimepointPreWindow",
@@ -7843,7 +7836,7 @@ class SdmcomplexTypeDefinitionAbsoluteTimingConstraint:
             ),
         },
     )
-    timepoint_post_window: Optional[str] = field(
+    timepoint_post_window: str | None = field(
         default=None,
         metadata={
             "name": "TimepointPostWindow",
@@ -7868,7 +7861,7 @@ class SdmcomplexTypeDefinitionActivityDef:
         name = "SDMcomplexTypeDefinition-ActivityDef"
         target_namespace = "http://www.cdisc.org/ns/studydesign/v1.0"
 
-    description: Optional[Description] = field(
+    description: Description | None = field(
         default=None,
         metadata={
             "name": "Description",
@@ -7877,7 +7870,7 @@ class SdmcomplexTypeDefinitionActivityDef:
             "doc": "Activity description",
         },
     )
-    form_ref: List[FormRef] = field(
+    form_ref: list[FormRef] = field(
         default_factory=list,
         metadata={
             "name": "FormRef",
@@ -7889,7 +7882,7 @@ class SdmcomplexTypeDefinitionActivityDef:
             ),
         },
     )
-    oid: Optional[str] = field(
+    oid: str | None = field(
         default=None,
         metadata={
             "name": "OID",
@@ -7899,7 +7892,7 @@ class SdmcomplexTypeDefinitionActivityDef:
             "doc": "Unique identifier for the activity",
         },
     )
-    name: Optional[str] = field(
+    name: str | None = field(
         default=None,
         metadata={
             "name": "Name",
@@ -7922,7 +7915,7 @@ class SdmcomplexTypeDefinitionActivityDuration:
         name = "SDMcomplexTypeDefinition-ActivityDuration"
         target_namespace = "http://www.cdisc.org/ns/studydesign/v1.0"
 
-    description: Optional[Description] = field(
+    description: Description | None = field(
         default=None,
         metadata={
             "name": "Description",
@@ -7930,7 +7923,7 @@ class SdmcomplexTypeDefinitionActivityDuration:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    oid: Optional[str] = field(
+    oid: str | None = field(
         default=None,
         metadata={
             "name": "OID",
@@ -7940,7 +7933,7 @@ class SdmcomplexTypeDefinitionActivityDuration:
             "doc": "Unique identifier for the activity duration.",
         },
     )
-    name: Optional[str] = field(
+    name: str | None = field(
         default=None,
         metadata={
             "name": "Name",
@@ -7950,7 +7943,7 @@ class SdmcomplexTypeDefinitionActivityDuration:
             "doc": "The name of the activity duration.",
         },
     )
-    activity_oid: Optional[str] = field(
+    activity_oid: str | None = field(
         default=None,
         metadata={
             "name": "ActivityOID",
@@ -7960,7 +7953,7 @@ class SdmcomplexTypeDefinitionActivityDuration:
             "doc": "The activity to which this duration information relates.",
         },
     )
-    planned_duration: Optional[str] = field(
+    planned_duration: str | None = field(
         default=None,
         metadata={
             "name": "PlannedDuration",
@@ -7970,7 +7963,7 @@ class SdmcomplexTypeDefinitionActivityDuration:
             "doc": "The length of time that the activity would normally take.",
         },
     )
-    planned_duration_pre_window: Optional[str] = field(
+    planned_duration_pre_window: str | None = field(
         default=None,
         metadata={
             "name": "PlannedDurationPreWindow",
@@ -7982,7 +7975,7 @@ class SdmcomplexTypeDefinitionActivityDuration:
             ),
         },
     )
-    planned_duration_post_window: Optional[str] = field(
+    planned_duration_post_window: str | None = field(
         default=None,
         metadata={
             "name": "PlannedDurationPostWindow",
@@ -8006,7 +7999,7 @@ class SdmcomplexTypeDefinitionArm:
         name = "SDMcomplexTypeDefinition-Arm"
         target_namespace = "http://www.cdisc.org/ns/studydesign/v1.0"
 
-    description: Optional[Description] = field(
+    description: Description | None = field(
         default=None,
         metadata={
             "name": "Description",
@@ -8015,7 +8008,7 @@ class SdmcomplexTypeDefinitionArm:
             "doc": "Arm description",
         },
     )
-    oid: Optional[str] = field(
+    oid: str | None = field(
         default=None,
         metadata={
             "name": "OID",
@@ -8025,7 +8018,7 @@ class SdmcomplexTypeDefinitionArm:
             "doc": "Unique identifier for the arm",
         },
     )
-    name: Optional[str] = field(
+    name: str | None = field(
         default=None,
         metadata={
             "name": "Name",
@@ -8035,7 +8028,7 @@ class SdmcomplexTypeDefinitionArm:
             "doc": "Short name for the arm",
         },
     )
-    intervention_oid: Optional[str] = field(
+    intervention_oid: str | None = field(
         default=None,
         metadata={
             "name": "InterventionOID",
@@ -8044,7 +8037,7 @@ class SdmcomplexTypeDefinitionArm:
             "min_length": 1,
         },
     )
-    ctarm_type: Optional[CtarmTypeEnumeration] = field(
+    ctarm_type: CtarmTypeEnumeration | None = field(
         default=None,
         metadata={
             "name": "CTArmType",
@@ -8065,7 +8058,7 @@ class SdmcomplexTypeDefinitionCellDef:
         name = "SDMcomplexTypeDefinition-CellDef"
         target_namespace = "http://www.cdisc.org/ns/studydesign/v1.0"
 
-    description: Optional[Description] = field(
+    description: Description | None = field(
         default=None,
         metadata={
             "name": "Description",
@@ -8074,7 +8067,7 @@ class SdmcomplexTypeDefinitionCellDef:
             "doc": "Cell description",
         },
     )
-    arm_association: Optional[ArmAssociation] = field(
+    arm_association: ArmAssociation | None = field(
         default=None,
         metadata={
             "name": "ArmAssociation",
@@ -8083,7 +8076,7 @@ class SdmcomplexTypeDefinitionCellDef:
             "doc": ("Container for definition association between cells and arms"),
         },
     )
-    segment_ref: List[SegmentRef] = field(
+    segment_ref: list[SegmentRef] = field(
         default_factory=list,
         metadata={
             "name": "SegmentRef",
@@ -8092,7 +8085,7 @@ class SdmcomplexTypeDefinitionCellDef:
             "doc": "List of segments contained in the cell.",
         },
     )
-    oid: Optional[str] = field(
+    oid: str | None = field(
         default=None,
         metadata={
             "name": "OID",
@@ -8102,7 +8095,7 @@ class SdmcomplexTypeDefinitionCellDef:
             "doc": "Unique identifier for the cell",
         },
     )
-    name: Optional[str] = field(
+    name: str | None = field(
         default=None,
         metadata={
             "name": "Name",
@@ -8112,7 +8105,7 @@ class SdmcomplexTypeDefinitionCellDef:
             "doc": "Short name for the cell",
         },
     )
-    epoch_oid: Optional[str] = field(
+    epoch_oid: str | None = field(
         default=None,
         metadata={
             "name": "EpochOID",
@@ -8135,7 +8128,7 @@ class SdmcomplexTypeDefinitionCriterion:
         name = "SDMcomplexTypeDefinition-Criterion"
         target_namespace = "http://www.cdisc.org/ns/studydesign/v1.0"
 
-    description: Optional[Description] = field(
+    description: Description | None = field(
         default=None,
         metadata={
             "name": "Description",
@@ -8144,7 +8137,7 @@ class SdmcomplexTypeDefinitionCriterion:
             "doc": "Criterion description.",
         },
     )
-    oid: Optional[str] = field(
+    oid: str | None = field(
         default=None,
         metadata={
             "name": "OID",
@@ -8154,7 +8147,7 @@ class SdmcomplexTypeDefinitionCriterion:
             "doc": "Unique identifier for the criterion",
         },
     )
-    name: Optional[str] = field(
+    name: str | None = field(
         default=None,
         metadata={
             "name": "Name",
@@ -8164,7 +8157,7 @@ class SdmcomplexTypeDefinitionCriterion:
             "doc": "Short name for the criterion",
         },
     )
-    condition_oid: Optional[str] = field(
+    condition_oid: str | None = field(
         default=None,
         metadata={
             "name": "ConditionOID",
@@ -8186,7 +8179,7 @@ class SdmcomplexTypeDefinitionEpoch:
         name = "SDMcomplexTypeDefinition-Epoch"
         target_namespace = "http://www.cdisc.org/ns/studydesign/v1.0"
 
-    description: Optional[Description] = field(
+    description: Description | None = field(
         default=None,
         metadata={
             "name": "Description",
@@ -8195,7 +8188,7 @@ class SdmcomplexTypeDefinitionEpoch:
             "doc": "Epoch description",
         },
     )
-    oid: Optional[str] = field(
+    oid: str | None = field(
         default=None,
         metadata={
             "name": "OID",
@@ -8205,7 +8198,7 @@ class SdmcomplexTypeDefinitionEpoch:
             "doc": "Unique identifier for the epoch",
         },
     )
-    name: Optional[str] = field(
+    name: str | None = field(
         default=None,
         metadata={
             "name": "Name",
@@ -8215,7 +8208,7 @@ class SdmcomplexTypeDefinitionEpoch:
             "doc": "Short name for the epoch",
         },
     )
-    order_number: Optional[int] = field(
+    order_number: int | None = field(
         default=None,
         metadata={
             "name": "OrderNumber",
@@ -8230,7 +8223,7 @@ class SdmcomplexTypeDefinitionEpoch:
             ),
         },
     )
-    blinding_schema: Optional[BlindingSchemaType] = field(
+    blinding_schema: BlindingSchemaType | None = field(
         default=None,
         metadata={
             "name": "BlindingSchema",
@@ -8250,7 +8243,7 @@ class SdmcomplexTypeDefinitionParameter:
         name = "SDMcomplexTypeDefinition-Parameter"
         target_namespace = "http://www.cdisc.org/ns/studydesign/v1.0"
 
-    description: Optional[Description] = field(
+    description: Description | None = field(
         default=None,
         metadata={
             "name": "Description",
@@ -8259,7 +8252,7 @@ class SdmcomplexTypeDefinitionParameter:
             "doc": "Parameter description",
         },
     )
-    value: List[Value] = field(
+    value: list[Value] = field(
         default_factory=list,
         metadata={
             "name": "Value",
@@ -8267,7 +8260,7 @@ class SdmcomplexTypeDefinitionParameter:
             "namespace": "http://www.cdisc.org/ns/studydesign/v1.0",
         },
     )
-    oid: Optional[str] = field(
+    oid: str | None = field(
         default=None,
         metadata={
             "name": "OID",
@@ -8277,7 +8270,7 @@ class SdmcomplexTypeDefinitionParameter:
             "doc": "Unique identifier for the parameter",
         },
     )
-    term: Optional[str] = field(
+    term: str | None = field(
         default=None,
         metadata={
             "name": "Term",
@@ -8287,7 +8280,7 @@ class SdmcomplexTypeDefinitionParameter:
             "doc": "Parameter term",
         },
     )
-    short_name: Optional[str] = field(
+    short_name: str | None = field(
         default=None,
         metadata={
             "name": "ShortName",
@@ -8309,7 +8302,7 @@ class SdmcomplexTypeDefinitionPathCanFinish:
         name = "SDMcomplexTypeDefinition-PathCanFinish"
         target_namespace = "http://www.cdisc.org/ns/studydesign/v1.0"
 
-    description: Optional[Description] = field(
+    description: Description | None = field(
         default=None,
         metadata={
             "name": "Description",
@@ -8322,7 +8315,7 @@ class SdmcomplexTypeDefinitionPathCanFinish:
             ),
         },
     )
-    activity_ref: List[ActivityRef] = field(
+    activity_ref: list[ActivityRef] = field(
         default_factory=list,
         metadata={
             "name": "ActivityRef",
@@ -8347,7 +8340,7 @@ class SdmcomplexTypeDefinitionRelativeTimingConstraint:
         name = "SDMcomplexTypeDefinition-RelativeTimingConstraint"
         target_namespace = "http://www.cdisc.org/ns/studydesign/v1.0"
 
-    description: Optional[Description] = field(
+    description: Description | None = field(
         default=None,
         metadata={
             "name": "Description",
@@ -8355,7 +8348,7 @@ class SdmcomplexTypeDefinitionRelativeTimingConstraint:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    oid: Optional[str] = field(
+    oid: str | None = field(
         default=None,
         metadata={
             "name": "OID",
@@ -8365,7 +8358,7 @@ class SdmcomplexTypeDefinitionRelativeTimingConstraint:
             "doc": "Unique identifier for the timing constraint.",
         },
     )
-    name: Optional[str] = field(
+    name: str | None = field(
         default=None,
         metadata={
             "name": "Name",
@@ -8375,7 +8368,7 @@ class SdmcomplexTypeDefinitionRelativeTimingConstraint:
             "doc": "The name of the timing constraint.",
         },
     )
-    predecessor_activity_oid: Optional[str] = field(
+    predecessor_activity_oid: str | None = field(
         default=None,
         metadata={
             "name": "PredecessorActivityOID",
@@ -8388,7 +8381,7 @@ class SdmcomplexTypeDefinitionRelativeTimingConstraint:
             ),
         },
     )
-    successor_activity_oid: Optional[str] = field(
+    successor_activity_oid: str | None = field(
         default=None,
         metadata={
             "name": "SuccessorActivityOID",
@@ -8412,7 +8405,7 @@ class SdmcomplexTypeDefinitionRelativeTimingConstraint:
             ),
         },
     )
-    timepoint_relative_target: Optional[str] = field(
+    timepoint_relative_target: str | None = field(
         default=None,
         metadata={
             "name": "TimepointRelativeTarget",
@@ -8425,7 +8418,7 @@ class SdmcomplexTypeDefinitionRelativeTimingConstraint:
             ),
         },
     )
-    timepoint_granularity: Optional[Timepointgranularitytype] = field(
+    timepoint_granularity: Timepointgranularitytype | None = field(
         default=None,
         metadata={
             "name": "TimepointGranularity",
@@ -8436,7 +8429,7 @@ class SdmcomplexTypeDefinitionRelativeTimingConstraint:
             ),
         },
     )
-    timepoint_pre_window: Optional[str] = field(
+    timepoint_pre_window: str | None = field(
         default=None,
         metadata={
             "name": "TimepointPreWindow",
@@ -8448,7 +8441,7 @@ class SdmcomplexTypeDefinitionRelativeTimingConstraint:
             ),
         },
     )
-    timepoint_post_window: Optional[str] = field(
+    timepoint_post_window: str | None = field(
         default=None,
         metadata={
             "name": "TimepointPostWindow",
@@ -8486,7 +8479,7 @@ class SdmcomplexTypeDefinitionSegmentDef:
         name = "SDMcomplexTypeDefinition-SegmentDef"
         target_namespace = "http://www.cdisc.org/ns/studydesign/v1.0"
 
-    description: Optional[Description] = field(
+    description: Description | None = field(
         default=None,
         metadata={
             "name": "Description",
@@ -8495,7 +8488,7 @@ class SdmcomplexTypeDefinitionSegmentDef:
             "doc": "Segment description",
         },
     )
-    activity_ref: List[ActivityRef] = field(
+    activity_ref: list[ActivityRef] = field(
         default_factory=list,
         metadata={
             "name": "ActivityRef",
@@ -8507,7 +8500,7 @@ class SdmcomplexTypeDefinitionSegmentDef:
             ),
         },
     )
-    oid: Optional[str] = field(
+    oid: str | None = field(
         default=None,
         metadata={
             "name": "OID",
@@ -8517,7 +8510,7 @@ class SdmcomplexTypeDefinitionSegmentDef:
             "doc": "Unique identifier for the segment",
         },
     )
-    name: Optional[str] = field(
+    name: str | None = field(
         default=None,
         metadata={
             "name": "Name",
@@ -8540,7 +8533,7 @@ class SdmcomplexTypeDefinitionStudyFinish:
         name = "SDMcomplexTypeDefinition-StudyFinish"
         target_namespace = "http://www.cdisc.org/ns/studydesign/v1.0"
 
-    description: Optional[Description] = field(
+    description: Description | None = field(
         default=None,
         metadata={
             "name": "Description",
@@ -8549,7 +8542,7 @@ class SdmcomplexTypeDefinitionStudyFinish:
             "doc": "Description of the study finish activity",
         },
     )
-    activity_ref: Optional[ActivityRef] = field(
+    activity_ref: ActivityRef | None = field(
         default=None,
         metadata={
             "name": "ActivityRef",
@@ -8574,7 +8567,7 @@ class SdmcomplexTypeDefinitionStudyStart:
         name = "SDMcomplexTypeDefinition-StudyStart"
         target_namespace = "http://www.cdisc.org/ns/studydesign/v1.0"
 
-    description: Optional[Description] = field(
+    description: Description | None = field(
         default=None,
         metadata={
             "name": "Description",
@@ -8583,7 +8576,7 @@ class SdmcomplexTypeDefinitionStudyStart:
             "doc": "Description of the study start activity",
         },
     )
-    activity_ref: Optional[ActivityRef] = field(
+    activity_ref: ActivityRef | None = field(
         default=None,
         metadata={
             "name": "ActivityRef",
@@ -8601,7 +8594,7 @@ class SdmcomplexTypeDefinitionTransitionDefault:
         name = "SDMcomplexTypeDefinition-TransitionDefault"
         target_namespace = "http://www.cdisc.org/ns/studydesign/v1.0"
 
-    description: Optional[Description] = field(
+    description: Description | None = field(
         default=None,
         metadata={
             "name": "Description",
@@ -8610,7 +8603,7 @@ class SdmcomplexTypeDefinitionTransitionDefault:
             "doc": "Description of the default transition",
         },
     )
-    oid: Optional[str] = field(
+    oid: str | None = field(
         default=None,
         metadata={
             "name": "OID",
@@ -8620,7 +8613,7 @@ class SdmcomplexTypeDefinitionTransitionDefault:
             "doc": "Unique identifier for the default transition",
         },
     )
-    name: Optional[str] = field(
+    name: str | None = field(
         default=None,
         metadata={
             "name": "Name",
@@ -8630,7 +8623,7 @@ class SdmcomplexTypeDefinitionTransitionDefault:
             "doc": "Short name or description",
         },
     )
-    target_activity_oid: Optional[str] = field(
+    target_activity_oid: str | None = field(
         default=None,
         metadata={
             "name": "TargetActivityOID",
@@ -8656,7 +8649,7 @@ class SdmcomplexTypeDefinitionTransitionDestination:
         name = "SDMcomplexTypeDefinition-TransitionDestination"
         target_namespace = "http://www.cdisc.org/ns/studydesign/v1.0"
 
-    description: Optional[Description] = field(
+    description: Description | None = field(
         default=None,
         metadata={
             "name": "Description",
@@ -8665,7 +8658,7 @@ class SdmcomplexTypeDefinitionTransitionDestination:
             "doc": "Description of the transition destination",
         },
     )
-    oid: Optional[str] = field(
+    oid: str | None = field(
         default=None,
         metadata={
             "name": "OID",
@@ -8675,7 +8668,7 @@ class SdmcomplexTypeDefinitionTransitionDestination:
             "doc": "Unique identifier for the TransitionDestination",
         },
     )
-    name: Optional[str] = field(
+    name: str | None = field(
         default=None,
         metadata={
             "name": "Name",
@@ -8685,7 +8678,7 @@ class SdmcomplexTypeDefinitionTransitionDestination:
             "doc": "Short name or description",
         },
     )
-    target_activity_oid: Optional[str] = field(
+    target_activity_oid: str | None = field(
         default=None,
         metadata={
             "name": "TargetActivityOID",
@@ -8698,7 +8691,7 @@ class SdmcomplexTypeDefinitionTransitionDestination:
             ),
         },
     )
-    condition_oid: Optional[str] = field(
+    condition_oid: str | None = field(
         default=None,
         metadata={
             "name": "ConditionOID",
@@ -8711,7 +8704,7 @@ class SdmcomplexTypeDefinitionTransitionDestination:
             ),
         },
     )
-    order_number: Optional[int] = field(
+    order_number: int | None = field(
         default=None,
         metadata={
             "name": "OrderNumber",
@@ -8741,7 +8734,7 @@ class SdmcomplexTypeDefinitionTransitionTimingConstraint:
         name = "SDMcomplexTypeDefinition-TransitionTimingConstraint"
         target_namespace = "http://www.cdisc.org/ns/studydesign/v1.0"
 
-    description: Optional[Description] = field(
+    description: Description | None = field(
         default=None,
         metadata={
             "name": "Description",
@@ -8749,7 +8742,7 @@ class SdmcomplexTypeDefinitionTransitionTimingConstraint:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    oid: Optional[str] = field(
+    oid: str | None = field(
         default=None,
         metadata={
             "name": "OID",
@@ -8759,7 +8752,7 @@ class SdmcomplexTypeDefinitionTransitionTimingConstraint:
             "doc": "Unique identifier for the timing constraint.",
         },
     )
-    name: Optional[str] = field(
+    name: str | None = field(
         default=None,
         metadata={
             "name": "Name",
@@ -8769,7 +8762,7 @@ class SdmcomplexTypeDefinitionTransitionTimingConstraint:
             "doc": "The name of the timing constraint.",
         },
     )
-    transition_destination_oid: Optional[str] = field(
+    transition_destination_oid: str | None = field(
         default=None,
         metadata={
             "name": "TransitionDestinationOID",
@@ -8793,7 +8786,7 @@ class SdmcomplexTypeDefinitionTransitionTimingConstraint:
             ),
         },
     )
-    timepoint_relative_target: Optional[str] = field(
+    timepoint_relative_target: str | None = field(
         default=None,
         metadata={
             "name": "TimepointRelativeTarget",
@@ -8806,7 +8799,7 @@ class SdmcomplexTypeDefinitionTransitionTimingConstraint:
             ),
         },
     )
-    timepoint_granularity: Optional[Timepointgranularitytype] = field(
+    timepoint_granularity: Timepointgranularitytype | None = field(
         default=None,
         metadata={
             "name": "TimepointGranularity",
@@ -8817,7 +8810,7 @@ class SdmcomplexTypeDefinitionTransitionTimingConstraint:
             ),
         },
     )
-    timepoint_pre_window: Optional[str] = field(
+    timepoint_pre_window: str | None = field(
         default=None,
         metadata={
             "name": "TimepointPreWindow",
@@ -8829,7 +8822,7 @@ class SdmcomplexTypeDefinitionTransitionTimingConstraint:
             ),
         },
     )
-    timepoint_post_window: Optional[str] = field(
+    timepoint_post_window: str | None = field(
         default=None,
         metadata={
             "name": "TimepointPostWindow",
@@ -8860,7 +8853,7 @@ class ReferenceType:
     class Meta:
         target_namespace = "http://www.w3.org/2000/09/xmldsig#"
 
-    transforms: Optional[Transforms] = field(
+    transforms: Transforms | None = field(
         default=None,
         metadata={
             "name": "Transforms",
@@ -8868,7 +8861,7 @@ class ReferenceType:
             "namespace": "http://www.w3.org/2000/09/xmldsig#",
         },
     )
-    digest_method: Optional[DigestMethod] = field(
+    digest_method: DigestMethod | None = field(
         default=None,
         metadata={
             "name": "DigestMethod",
@@ -8877,7 +8870,7 @@ class ReferenceType:
             "required": True,
         },
     )
-    digest_value: Optional[bytes] = field(
+    digest_value: bytes | None = field(
         default=None,
         metadata={
             "name": "DigestValue",
@@ -8887,21 +8880,21 @@ class ReferenceType:
             "format": "base64",
         },
     )
-    id: Optional[str] = field(
+    id: str | None = field(
         default=None,
         metadata={
             "name": "Id",
             "type": "Attribute",
         },
     )
-    uri: Optional[str] = field(
+    uri: str | None = field(
         default=None,
         metadata={
             "name": "URI",
             "type": "Attribute",
         },
     )
-    type: Optional[str] = field(
+    type: str | None = field(
         default=None,
         metadata={
             "name": "Type",
@@ -8915,7 +8908,7 @@ class RetrievalMethodType:
     class Meta:
         target_namespace = "http://www.w3.org/2000/09/xmldsig#"
 
-    transforms: Optional[Transforms] = field(
+    transforms: Transforms | None = field(
         default=None,
         metadata={
             "name": "Transforms",
@@ -8923,14 +8916,14 @@ class RetrievalMethodType:
             "namespace": "http://www.w3.org/2000/09/xmldsig#",
         },
     )
-    uri: Optional[str] = field(
+    uri: str | None = field(
         default=None,
         metadata={
             "name": "URI",
             "type": "Attribute",
         },
     )
-    type: Optional[str] = field(
+    type: str | None = field(
         default=None,
         metadata={
             "name": "Type",
@@ -8944,7 +8937,7 @@ class Interventions:
     class Meta:
         namespace = "http://www.cdisc.org/ns/ctr/v1.0"
 
-    intervention: List[Intervention] = field(
+    intervention: list[Intervention] = field(
         default_factory=list,
         metadata={
             "name": "Intervention",
@@ -8959,7 +8952,7 @@ class OutcomeMeasure:
     class Meta:
         namespace = "http://www.cdisc.org/ns/ctr/v1.0"
 
-    description: Optional[Description] = field(
+    description: Description | None = field(
         default=None,
         metadata={
             "name": "Description",
@@ -8967,7 +8960,7 @@ class OutcomeMeasure:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    time_point: List[TimePoint] = field(
+    time_point: list[TimePoint] = field(
         default_factory=list,
         metadata={
             "name": "TimePoint",
@@ -8975,7 +8968,7 @@ class OutcomeMeasure:
             "min_occurs": 1,
         },
     )
-    oid: Optional[str] = field(
+    oid: str | None = field(
         default=None,
         metadata={
             "name": "OID",
@@ -8984,7 +8977,7 @@ class OutcomeMeasure:
             "min_length": 1,
         },
     )
-    name: Optional[str] = field(
+    name: str | None = field(
         default=None,
         metadata={
             "name": "Name",
@@ -8992,7 +8985,7 @@ class OutcomeMeasure:
             "required": True,
         },
     )
-    type: Optional[OutcomeType] = field(
+    type: OutcomeType | None = field(
         default=None,
         metadata={
             "name": "Type",
@@ -9000,7 +8993,7 @@ class OutcomeMeasure:
             "required": True,
         },
     )
-    is_safety_issue: Optional[YesNoType] = field(
+    is_safety_issue: YesNoType | None = field(
         default=None,
         metadata={
             "name": "IsSafetyIssue",
@@ -9069,7 +9062,7 @@ class OdmcomplexTypeDefinitionGlobalVariables:
         name = "ODMcomplexTypeDefinition-GlobalVariables"
         target_namespace = "http://www.cdisc.org/ns/odm/v1.3"
 
-    study_name: Optional[StudyName] = field(
+    study_name: StudyName | None = field(
         default=None,
         metadata={
             "name": "StudyName",
@@ -9078,7 +9071,7 @@ class OdmcomplexTypeDefinitionGlobalVariables:
             "required": True,
         },
     )
-    study_description: Optional[str] = field(
+    study_description: str | None = field(
         default=None,
         metadata={
             "name": "StudyDescription",
@@ -9087,7 +9080,7 @@ class OdmcomplexTypeDefinitionGlobalVariables:
             "required": True,
         },
     )
-    protocol_name: Optional[str] = field(
+    protocol_name: str | None = field(
         default=None,
         metadata={
             "name": "ProtocolName",
@@ -9097,7 +9090,7 @@ class OdmcomplexTypeDefinitionGlobalVariables:
             "min_length": 1,
         },
     )
-    authorities: List[Authorities] = field(
+    authorities: list[Authorities] = field(
         default_factory=list,
         metadata={
             "name": "Authorities",
@@ -9106,7 +9099,7 @@ class OdmcomplexTypeDefinitionGlobalVariables:
             "sequential": True,
         },
     )
-    public_title: List[PublicTitle] = field(
+    public_title: list[PublicTitle] = field(
         default_factory=list,
         metadata={
             "name": "PublicTitle",
@@ -9115,7 +9108,7 @@ class OdmcomplexTypeDefinitionGlobalVariables:
             "sequential": True,
         },
     )
-    study_detailed_description: List[StudyDetailedDescription] = field(
+    study_detailed_description: list[StudyDetailedDescription] = field(
         default_factory=list,
         metadata={
             "name": "StudyDetailedDescription",
@@ -9124,7 +9117,7 @@ class OdmcomplexTypeDefinitionGlobalVariables:
             "sequential": True,
         },
     )
-    registrations: List[Registrations] = field(
+    registrations: list[Registrations] = field(
         default_factory=list,
         metadata={
             "name": "Registrations",
@@ -9133,7 +9126,7 @@ class OdmcomplexTypeDefinitionGlobalVariables:
             "sequential": True,
         },
     )
-    funding_support: List[FundingSupport] = field(
+    funding_support: list[FundingSupport] = field(
         default_factory=list,
         metadata={
             "name": "FundingSupport",
@@ -9142,7 +9135,7 @@ class OdmcomplexTypeDefinitionGlobalVariables:
             "sequential": True,
         },
     )
-    contacts: List[Contacts] = field(
+    contacts: list[Contacts] = field(
         default_factory=list,
         metadata={
             "name": "Contacts",
@@ -9284,7 +9277,7 @@ class OutcomeMeasures:
     class Meta:
         namespace = "http://www.cdisc.org/ns/ctr/v1.0"
 
-    outcome_measure: List[OutcomeMeasure] = field(
+    outcome_measure: list[OutcomeMeasure] = field(
         default_factory=list,
         metadata={
             "name": "OutcomeMeasure",
@@ -9306,7 +9299,7 @@ class OdmcomplexTypeDefinitionAnnotations:
         name = "ODMcomplexTypeDefinition-Annotations"
         target_namespace = "http://www.cdisc.org/ns/odm/v1.3"
 
-    annotation: List[Annotation] = field(
+    annotation: list[Annotation] = field(
         default_factory=list,
         metadata={
             "name": "Annotation",
@@ -9322,7 +9315,7 @@ class OdmcomplexTypeDefinitionAssociation:
         name = "ODMcomplexTypeDefinition-Association"
         target_namespace = "http://www.cdisc.org/ns/odm/v1.3"
 
-    key_set: List[KeySet] = field(
+    key_set: list[KeySet] = field(
         default_factory=list,
         metadata={
             "name": "KeySet",
@@ -9332,7 +9325,7 @@ class OdmcomplexTypeDefinitionAssociation:
             "max_occurs": 2,
         },
     )
-    annotation: Optional[Annotation] = field(
+    annotation: Annotation | None = field(
         default=None,
         metadata={
             "name": "Annotation",
@@ -9341,7 +9334,7 @@ class OdmcomplexTypeDefinitionAssociation:
             "required": True,
         },
     )
-    study_oid: Optional[str] = field(
+    study_oid: str | None = field(
         default=None,
         metadata={
             "name": "StudyOID",
@@ -9350,7 +9343,7 @@ class OdmcomplexTypeDefinitionAssociation:
             "min_length": 1,
         },
     )
-    meta_data_version_oid: Optional[str] = field(
+    meta_data_version_oid: str | None = field(
         default=None,
         metadata={
             "name": "MetaDataVersionOID",
@@ -9367,7 +9360,7 @@ class OdmcomplexTypeDefinitionBasicDefinitions:
         name = "ODMcomplexTypeDefinition-BasicDefinitions"
         target_namespace = "http://www.cdisc.org/ns/odm/v1.3"
 
-    measurement_unit: List[MeasurementUnit] = field(
+    measurement_unit: list[MeasurementUnit] = field(
         default_factory=list,
         metadata={
             "name": "MeasurementUnit",
@@ -9383,7 +9376,7 @@ class OdmcomplexTypeDefinitionCodeList:
         name = "ODMcomplexTypeDefinition-CodeList"
         target_namespace = "http://www.cdisc.org/ns/odm/v1.3"
 
-    description: Optional[Description] = field(
+    description: Description | None = field(
         default=None,
         metadata={
             "name": "Description",
@@ -9391,7 +9384,7 @@ class OdmcomplexTypeDefinitionCodeList:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    code_list_item: List[CodeListItem] = field(
+    code_list_item: list[CodeListItem] = field(
         default_factory=list,
         metadata={
             "name": "CodeListItem",
@@ -9399,7 +9392,7 @@ class OdmcomplexTypeDefinitionCodeList:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    external_code_list: Optional[ExternalCodeList] = field(
+    external_code_list: ExternalCodeList | None = field(
         default=None,
         metadata={
             "name": "ExternalCodeList",
@@ -9407,7 +9400,7 @@ class OdmcomplexTypeDefinitionCodeList:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    enumerated_item: List[EnumeratedItem] = field(
+    enumerated_item: list[EnumeratedItem] = field(
         default_factory=list,
         metadata={
             "name": "EnumeratedItem",
@@ -9415,7 +9408,7 @@ class OdmcomplexTypeDefinitionCodeList:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    alias: List[Alias] = field(
+    alias: list[Alias] = field(
         default_factory=list,
         metadata={
             "name": "Alias",
@@ -9423,7 +9416,7 @@ class OdmcomplexTypeDefinitionCodeList:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    oid: Optional[str] = field(
+    oid: str | None = field(
         default=None,
         metadata={
             "name": "OID",
@@ -9432,7 +9425,7 @@ class OdmcomplexTypeDefinitionCodeList:
             "min_length": 1,
         },
     )
-    name: Optional[str] = field(
+    name: str | None = field(
         default=None,
         metadata={
             "name": "Name",
@@ -9441,7 +9434,7 @@ class OdmcomplexTypeDefinitionCodeList:
             "min_length": 1,
         },
     )
-    data_type: Optional[CldataType] = field(
+    data_type: CldataType | None = field(
         default=None,
         metadata={
             "name": "DataType",
@@ -9449,7 +9442,7 @@ class OdmcomplexTypeDefinitionCodeList:
             "required": True,
         },
     )
-    sasformat_name: Optional[str] = field(
+    sasformat_name: str | None = field(
         default=None,
         metadata={
             "name": "SASFormatName",
@@ -9466,7 +9459,7 @@ class OdmcomplexTypeDefinitionItemData:
         name = "ODMcomplexTypeDefinition-ItemData"
         target_namespace = "http://www.cdisc.org/ns/odm/v1.3"
 
-    audit_record: Optional[AuditRecord] = field(
+    audit_record: AuditRecord | None = field(
         default=None,
         metadata={
             "name": "AuditRecord",
@@ -9474,7 +9467,7 @@ class OdmcomplexTypeDefinitionItemData:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    signature: Optional[Signature2] = field(
+    signature: Signature2 | None = field(
         default=None,
         metadata={
             "name": "Signature",
@@ -9482,7 +9475,7 @@ class OdmcomplexTypeDefinitionItemData:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    measurement_unit_ref: Optional[MeasurementUnitRef] = field(
+    measurement_unit_ref: MeasurementUnitRef | None = field(
         default=None,
         metadata={
             "name": "MeasurementUnitRef",
@@ -9490,7 +9483,7 @@ class OdmcomplexTypeDefinitionItemData:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    annotation: List[Annotation] = field(
+    annotation: list[Annotation] = field(
         default_factory=list,
         metadata={
             "name": "Annotation",
@@ -9498,7 +9491,7 @@ class OdmcomplexTypeDefinitionItemData:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    item_oid: Optional[str] = field(
+    item_oid: str | None = field(
         default=None,
         metadata={
             "name": "ItemOID",
@@ -9507,21 +9500,21 @@ class OdmcomplexTypeDefinitionItemData:
             "min_length": 1,
         },
     )
-    transaction_type: Optional[TransactionType] = field(
+    transaction_type: TransactionType | None = field(
         default=None,
         metadata={
             "name": "TransactionType",
             "type": "Attribute",
         },
     )
-    is_null: Optional[YesOnly] = field(
+    is_null: YesOnly | None = field(
         default=None,
         metadata={
             "name": "IsNull",
             "type": "Attribute",
         },
     )
-    value: Optional[str] = field(
+    value: str | None = field(
         default=None,
         metadata={
             "name": "Value",
@@ -9536,7 +9529,7 @@ class OdmcomplexTypeDefinitionItemDef:
         name = "ODMcomplexTypeDefinition-ItemDef"
         target_namespace = "http://www.cdisc.org/ns/odm/v1.3"
 
-    description: Optional[Description] = field(
+    description: Description | None = field(
         default=None,
         metadata={
             "name": "Description",
@@ -9544,7 +9537,7 @@ class OdmcomplexTypeDefinitionItemDef:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    question: Optional[Question] = field(
+    question: Question | None = field(
         default=None,
         metadata={
             "name": "Question",
@@ -9552,7 +9545,7 @@ class OdmcomplexTypeDefinitionItemDef:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    external_question: Optional[ExternalQuestion] = field(
+    external_question: ExternalQuestion | None = field(
         default=None,
         metadata={
             "name": "ExternalQuestion",
@@ -9560,7 +9553,7 @@ class OdmcomplexTypeDefinitionItemDef:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    measurement_unit_ref: List[MeasurementUnitRef] = field(
+    measurement_unit_ref: list[MeasurementUnitRef] = field(
         default_factory=list,
         metadata={
             "name": "MeasurementUnitRef",
@@ -9568,7 +9561,7 @@ class OdmcomplexTypeDefinitionItemDef:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    range_check: List[RangeCheck] = field(
+    range_check: list[RangeCheck] = field(
         default_factory=list,
         metadata={
             "name": "RangeCheck",
@@ -9576,7 +9569,7 @@ class OdmcomplexTypeDefinitionItemDef:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    code_list_ref: Optional[CodeListRef] = field(
+    code_list_ref: CodeListRef | None = field(
         default=None,
         metadata={
             "name": "CodeListRef",
@@ -9584,7 +9577,7 @@ class OdmcomplexTypeDefinitionItemDef:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    role: List[str] = field(
+    role: list[str] = field(
         default_factory=list,
         metadata={
             "name": "Role",
@@ -9592,7 +9585,7 @@ class OdmcomplexTypeDefinitionItemDef:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    alias: List[Alias] = field(
+    alias: list[Alias] = field(
         default_factory=list,
         metadata={
             "name": "Alias",
@@ -9600,7 +9593,7 @@ class OdmcomplexTypeDefinitionItemDef:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    oid: Optional[str] = field(
+    oid: str | None = field(
         default=None,
         metadata={
             "name": "OID",
@@ -9609,7 +9602,7 @@ class OdmcomplexTypeDefinitionItemDef:
             "min_length": 1,
         },
     )
-    name: Optional[str] = field(
+    name: str | None = field(
         default=None,
         metadata={
             "name": "Name",
@@ -9618,7 +9611,7 @@ class OdmcomplexTypeDefinitionItemDef:
             "min_length": 1,
         },
     )
-    data_type: Optional[DataType] = field(
+    data_type: DataType | None = field(
         default=None,
         metadata={
             "name": "DataType",
@@ -9626,21 +9619,21 @@ class OdmcomplexTypeDefinitionItemDef:
             "required": True,
         },
     )
-    length: Optional[int] = field(
+    length: int | None = field(
         default=None,
         metadata={
             "name": "Length",
             "type": "Attribute",
         },
     )
-    significant_digits: Optional[int] = field(
+    significant_digits: int | None = field(
         default=None,
         metadata={
             "name": "SignificantDigits",
             "type": "Attribute",
         },
     )
-    sasfield_name: Optional[str] = field(
+    sasfield_name: str | None = field(
         default=None,
         metadata={
             "name": "SASFieldName",
@@ -9649,7 +9642,7 @@ class OdmcomplexTypeDefinitionItemDef:
             "pattern": r"[A-Za-z_][A-Za-z0-9_]*",
         },
     )
-    sdsvar_name: Optional[str] = field(
+    sdsvar_name: str | None = field(
         default=None,
         metadata={
             "name": "SDSVarName",
@@ -9658,14 +9651,14 @@ class OdmcomplexTypeDefinitionItemDef:
             "pattern": r"[A-Za-z_][A-Za-z0-9_]*",
         },
     )
-    origin: Optional[str] = field(
+    origin: str | None = field(
         default=None,
         metadata={
             "name": "Origin",
             "type": "Attribute",
         },
     )
-    comment: Optional[str] = field(
+    comment: str | None = field(
         default=None,
         metadata={
             "name": "Comment",
@@ -9685,9 +9678,7 @@ class SdmcomplexTypeDefinitionEntryCriteria:
         name = "SDMcomplexTypeDefinition-EntryCriteria"
         target_namespace = "http://www.cdisc.org/ns/studydesign/v1.0"
 
-    include_inclusion_exclusion_criteria: Optional[
-        IncludeInclusionExclusionCriteria
-    ] = field(
+    include_inclusion_exclusion_criteria: IncludeInclusionExclusionCriteria | None = field(
         default=None,
         metadata={
             "name": "IncludeInclusionExclusionCriteria",
@@ -9696,7 +9687,7 @@ class SdmcomplexTypeDefinitionEntryCriteria:
             "doc": "Include Inclusion/Exclusion criteria in entry criteria",
         },
     )
-    criterion: List[Criterion] = field(
+    criterion: list[Criterion] = field(
         default_factory=list,
         metadata={
             "name": "Criterion",
@@ -9717,7 +9708,7 @@ class SdmcomplexTypeDefinitionExclusionCriteria:
         name = "SDMcomplexTypeDefinition-ExclusionCriteria"
         target_namespace = "http://www.cdisc.org/ns/studydesign/v1.0"
 
-    criterion: List[Criterion] = field(
+    criterion: list[Criterion] = field(
         default_factory=list,
         metadata={
             "name": "Criterion",
@@ -9739,9 +9730,7 @@ class SdmcomplexTypeDefinitionExitCriteria:
         name = "SDMcomplexTypeDefinition-ExitCriteria"
         target_namespace = "http://www.cdisc.org/ns/studydesign/v1.0"
 
-    include_inclusion_exclusion_criteria: Optional[
-        IncludeInclusionExclusionCriteria
-    ] = field(
+    include_inclusion_exclusion_criteria: IncludeInclusionExclusionCriteria | None = field(
         default=None,
         metadata={
             "name": "IncludeInclusionExclusionCriteria",
@@ -9750,7 +9739,7 @@ class SdmcomplexTypeDefinitionExitCriteria:
             "doc": "Include Inclusion/Exclusion criteria in exit criteria",
         },
     )
-    criterion: List[Criterion] = field(
+    criterion: list[Criterion] = field(
         default_factory=list,
         metadata={
             "name": "Criterion",
@@ -9771,7 +9760,7 @@ class SdmcomplexTypeDefinitionInclusionCriteria:
         name = "SDMcomplexTypeDefinition-InclusionCriteria"
         target_namespace = "http://www.cdisc.org/ns/studydesign/v1.0"
 
-    criterion: List[Criterion] = field(
+    criterion: list[Criterion] = field(
         default_factory=list,
         metadata={
             "name": "Criterion",
@@ -9794,7 +9783,7 @@ class SdmcomplexTypeDefinitionStructure:
         name = "SDMcomplexTypeDefinition-Structure"
         target_namespace = "http://www.cdisc.org/ns/studydesign/v1.0"
 
-    epoch: List[Epoch] = field(
+    epoch: list[Epoch] = field(
         default_factory=list,
         metadata={
             "name": "Epoch",
@@ -9803,7 +9792,7 @@ class SdmcomplexTypeDefinitionStructure:
             "doc": "List of epoch definitions",
         },
     )
-    arm: List[Arm] = field(
+    arm: list[Arm] = field(
         default_factory=list,
         metadata={
             "name": "Arm",
@@ -9812,7 +9801,7 @@ class SdmcomplexTypeDefinitionStructure:
             "doc": "List of arm definitions",
         },
     )
-    cell_def: List[CellDef] = field(
+    cell_def: list[CellDef] = field(
         default_factory=list,
         metadata={
             "name": "CellDef",
@@ -9821,7 +9810,7 @@ class SdmcomplexTypeDefinitionStructure:
             "doc": "List of cell definitions",
         },
     )
-    segment_def: List[SegmentDef] = field(
+    segment_def: list[SegmentDef] = field(
         default_factory=list,
         metadata={
             "name": "SegmentDef",
@@ -9830,7 +9819,7 @@ class SdmcomplexTypeDefinitionStructure:
             "doc": "List of segment definitions",
         },
     )
-    activity_def: List[ActivityDef] = field(
+    activity_def: list[ActivityDef] = field(
         default_factory=list,
         metadata={
             "name": "ActivityDef",
@@ -9854,7 +9843,7 @@ class SdmcomplexTypeDefinitionSummary:
         name = "SDMcomplexTypeDefinition-Summary"
         target_namespace = "http://www.cdisc.org/ns/studydesign/v1.0"
 
-    description: Optional[Description] = field(
+    description: Description | None = field(
         default=None,
         metadata={
             "name": "Description",
@@ -9863,7 +9852,7 @@ class SdmcomplexTypeDefinitionSummary:
             "doc": "Description of summary",
         },
     )
-    parameter: List[Parameter] = field(
+    parameter: list[Parameter] = field(
         default_factory=list,
         metadata={
             "name": "Parameter",
@@ -9885,7 +9874,7 @@ class SdmcomplexTypeDefinitionSwitch:
         name = "SDMcomplexTypeDefinition-Switch"
         target_namespace = "http://www.cdisc.org/ns/studydesign/v1.0"
 
-    transition_destination: List[TransitionDestination] = field(
+    transition_destination: list[TransitionDestination] = field(
         default_factory=list,
         metadata={
             "name": "TransitionDestination",
@@ -9894,7 +9883,7 @@ class SdmcomplexTypeDefinitionSwitch:
             "doc": "Single target activity and condition for the transition",
         },
     )
-    transition_default: Optional[TransitionDefault] = field(
+    transition_default: TransitionDefault | None = field(
         default=None,
         metadata={
             "name": "TransitionDefault",
@@ -9915,7 +9904,7 @@ class SdmcomplexTypeDefinitionTiming:
         name = "SDMcomplexTypeDefinition-Timing"
         target_namespace = "http://www.cdisc.org/ns/studydesign/v1.0"
 
-    absolute_timing_constraint: List[AbsoluteTimingConstraint] = field(
+    absolute_timing_constraint: list[AbsoluteTimingConstraint] = field(
         default_factory=list,
         metadata={
             "name": "AbsoluteTimingConstraint",
@@ -9924,7 +9913,7 @@ class SdmcomplexTypeDefinitionTiming:
             "doc": "Zero or more absolute timing constraints may be defined.",
         },
     )
-    relative_timing_constraint: List[RelativeTimingConstraint] = field(
+    relative_timing_constraint: list[RelativeTimingConstraint] = field(
         default_factory=list,
         metadata={
             "name": "RelativeTimingConstraint",
@@ -9933,7 +9922,7 @@ class SdmcomplexTypeDefinitionTiming:
             "doc": "Zero or more relative timing constraints may be defined.",
         },
     )
-    transition_timing_constraint: List[TransitionTimingConstraint] = field(
+    transition_timing_constraint: list[TransitionTimingConstraint] = field(
         default_factory=list,
         metadata={
             "name": "TransitionTimingConstraint",
@@ -9942,7 +9931,7 @@ class SdmcomplexTypeDefinitionTiming:
             "doc": ("Zero or more transition timing constraints may be defined."),
         },
     )
-    activity_duration: List[ActivityDuration] = field(
+    activity_duration: list[ActivityDuration] = field(
         default_factory=list,
         metadata={
             "name": "ActivityDuration",
@@ -9958,14 +9947,14 @@ class KeyInfoType:
     class Meta:
         target_namespace = "http://www.w3.org/2000/09/xmldsig#"
 
-    id: Optional[str] = field(
+    id: str | None = field(
         default=None,
         metadata={
             "name": "Id",
             "type": "Attribute",
         },
     )
-    content: List[object] = field(
+    content: list[object] = field(
         default_factory=list,
         metadata={
             "type": "Wildcard",
@@ -10017,7 +10006,7 @@ class ManifestType:
     class Meta:
         target_namespace = "http://www.w3.org/2000/09/xmldsig#"
 
-    reference: List[Reference] = field(
+    reference: list[Reference] = field(
         default_factory=list,
         metadata={
             "name": "Reference",
@@ -10026,7 +10015,7 @@ class ManifestType:
             "min_occurs": 1,
         },
     )
-    id: Optional[str] = field(
+    id: str | None = field(
         default=None,
         metadata={
             "name": "Id",
@@ -10040,7 +10029,7 @@ class SignedInfoType:
     class Meta:
         target_namespace = "http://www.w3.org/2000/09/xmldsig#"
 
-    canonicalization_method: Optional[CanonicalizationMethod] = field(
+    canonicalization_method: CanonicalizationMethod | None = field(
         default=None,
         metadata={
             "name": "CanonicalizationMethod",
@@ -10049,7 +10038,7 @@ class SignedInfoType:
             "required": True,
         },
     )
-    signature_method: Optional[SignatureMethod] = field(
+    signature_method: SignatureMethod | None = field(
         default=None,
         metadata={
             "name": "SignatureMethod",
@@ -10058,7 +10047,7 @@ class SignedInfoType:
             "required": True,
         },
     )
-    reference: List[Reference] = field(
+    reference: list[Reference] = field(
         default_factory=list,
         metadata={
             "name": "Reference",
@@ -10067,7 +10056,7 @@ class SignedInfoType:
             "min_occurs": 1,
         },
     )
-    id: Optional[str] = field(
+    id: str | None = field(
         default=None,
         metadata={
             "name": "Id",
@@ -10184,7 +10173,7 @@ class OdmcomplexTypeDefinitionItemGroupData:
         name = "ODMcomplexTypeDefinition-ItemGroupData"
         target_namespace = "http://www.cdisc.org/ns/odm/v1.3"
 
-    audit_record: Optional[AuditRecord] = field(
+    audit_record: AuditRecord | None = field(
         default=None,
         metadata={
             "name": "AuditRecord",
@@ -10192,7 +10181,7 @@ class OdmcomplexTypeDefinitionItemGroupData:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    signature: Optional[Signature2] = field(
+    signature: Signature2 | None = field(
         default=None,
         metadata={
             "name": "Signature",
@@ -10200,7 +10189,7 @@ class OdmcomplexTypeDefinitionItemGroupData:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    annotation: List[Annotation] = field(
+    annotation: list[Annotation] = field(
         default_factory=list,
         metadata={
             "name": "Annotation",
@@ -10208,7 +10197,7 @@ class OdmcomplexTypeDefinitionItemGroupData:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    item_data: List[ItemData] = field(
+    item_data: list[ItemData] = field(
         default_factory=list,
         metadata={
             "name": "ItemData",
@@ -10216,7 +10205,7 @@ class OdmcomplexTypeDefinitionItemGroupData:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    item_data_uri: List[ItemDataUri] = field(
+    item_data_uri: list[ItemDataUri] = field(
         default_factory=list,
         metadata={
             "name": "ItemDataURI",
@@ -10224,7 +10213,7 @@ class OdmcomplexTypeDefinitionItemGroupData:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    item_data_any: List[ItemDataAny] = field(
+    item_data_any: list[ItemDataAny] = field(
         default_factory=list,
         metadata={
             "name": "ItemDataAny",
@@ -10232,7 +10221,7 @@ class OdmcomplexTypeDefinitionItemGroupData:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    item_data_boolean: List[ItemDataBoolean] = field(
+    item_data_boolean: list[ItemDataBoolean] = field(
         default_factory=list,
         metadata={
             "name": "ItemDataBoolean",
@@ -10240,7 +10229,7 @@ class OdmcomplexTypeDefinitionItemGroupData:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    item_data_string: List[ItemDataString] = field(
+    item_data_string: list[ItemDataString] = field(
         default_factory=list,
         metadata={
             "name": "ItemDataString",
@@ -10248,7 +10237,7 @@ class OdmcomplexTypeDefinitionItemGroupData:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    item_data_integer: List[ItemDataInteger] = field(
+    item_data_integer: list[ItemDataInteger] = field(
         default_factory=list,
         metadata={
             "name": "ItemDataInteger",
@@ -10256,7 +10245,7 @@ class OdmcomplexTypeDefinitionItemGroupData:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    item_data_float: List[ItemDataFloat] = field(
+    item_data_float: list[ItemDataFloat] = field(
         default_factory=list,
         metadata={
             "name": "ItemDataFloat",
@@ -10264,7 +10253,7 @@ class OdmcomplexTypeDefinitionItemGroupData:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    item_data_double: List[ItemDataDouble] = field(
+    item_data_double: list[ItemDataDouble] = field(
         default_factory=list,
         metadata={
             "name": "ItemDataDouble",
@@ -10272,7 +10261,7 @@ class OdmcomplexTypeDefinitionItemGroupData:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    item_data_date: List[ItemDataDate] = field(
+    item_data_date: list[ItemDataDate] = field(
         default_factory=list,
         metadata={
             "name": "ItemDataDate",
@@ -10280,7 +10269,7 @@ class OdmcomplexTypeDefinitionItemGroupData:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    item_data_time: List[ItemDataTime] = field(
+    item_data_time: list[ItemDataTime] = field(
         default_factory=list,
         metadata={
             "name": "ItemDataTime",
@@ -10288,7 +10277,7 @@ class OdmcomplexTypeDefinitionItemGroupData:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    item_data_datetime: List[ItemDataDatetime] = field(
+    item_data_datetime: list[ItemDataDatetime] = field(
         default_factory=list,
         metadata={
             "name": "ItemDataDatetime",
@@ -10296,7 +10285,7 @@ class OdmcomplexTypeDefinitionItemGroupData:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    item_data_hex_binary: List[ItemDataHexBinary] = field(
+    item_data_hex_binary: list[ItemDataHexBinary] = field(
         default_factory=list,
         metadata={
             "name": "ItemDataHexBinary",
@@ -10304,7 +10293,7 @@ class OdmcomplexTypeDefinitionItemGroupData:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    item_data_base64_binary: List[ItemDataBase64Binary] = field(
+    item_data_base64_binary: list[ItemDataBase64Binary] = field(
         default_factory=list,
         metadata={
             "name": "ItemDataBase64Binary",
@@ -10312,7 +10301,7 @@ class OdmcomplexTypeDefinitionItemGroupData:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    item_data_hex_float: List[ItemDataHexFloat] = field(
+    item_data_hex_float: list[ItemDataHexFloat] = field(
         default_factory=list,
         metadata={
             "name": "ItemDataHexFloat",
@@ -10320,7 +10309,7 @@ class OdmcomplexTypeDefinitionItemGroupData:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    item_data_base64_float: List[ItemDataBase64Float] = field(
+    item_data_base64_float: list[ItemDataBase64Float] = field(
         default_factory=list,
         metadata={
             "name": "ItemDataBase64Float",
@@ -10328,7 +10317,7 @@ class OdmcomplexTypeDefinitionItemGroupData:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    item_data_partial_date: List[ItemDataPartialDate] = field(
+    item_data_partial_date: list[ItemDataPartialDate] = field(
         default_factory=list,
         metadata={
             "name": "ItemDataPartialDate",
@@ -10336,7 +10325,7 @@ class OdmcomplexTypeDefinitionItemGroupData:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    item_data_partial_time: List[ItemDataPartialTime] = field(
+    item_data_partial_time: list[ItemDataPartialTime] = field(
         default_factory=list,
         metadata={
             "name": "ItemDataPartialTime",
@@ -10344,7 +10333,7 @@ class OdmcomplexTypeDefinitionItemGroupData:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    item_data_partial_datetime: List[ItemDataPartialDatetime] = field(
+    item_data_partial_datetime: list[ItemDataPartialDatetime] = field(
         default_factory=list,
         metadata={
             "name": "ItemDataPartialDatetime",
@@ -10352,7 +10341,7 @@ class OdmcomplexTypeDefinitionItemGroupData:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    item_data_duration_datetime: List[ItemDataDurationDatetime] = field(
+    item_data_duration_datetime: list[ItemDataDurationDatetime] = field(
         default_factory=list,
         metadata={
             "name": "ItemDataDurationDatetime",
@@ -10360,7 +10349,7 @@ class OdmcomplexTypeDefinitionItemGroupData:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    item_data_interval_datetime: List[ItemDataIntervalDatetime] = field(
+    item_data_interval_datetime: list[ItemDataIntervalDatetime] = field(
         default_factory=list,
         metadata={
             "name": "ItemDataIntervalDatetime",
@@ -10368,7 +10357,7 @@ class OdmcomplexTypeDefinitionItemGroupData:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    item_data_incomplete_datetime: List[ItemDataIncompleteDatetime] = field(
+    item_data_incomplete_datetime: list[ItemDataIncompleteDatetime] = field(
         default_factory=list,
         metadata={
             "name": "ItemDataIncompleteDatetime",
@@ -10376,7 +10365,7 @@ class OdmcomplexTypeDefinitionItemGroupData:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    item_data_incomplete_date: List[ItemDataIncompleteDate] = field(
+    item_data_incomplete_date: list[ItemDataIncompleteDate] = field(
         default_factory=list,
         metadata={
             "name": "ItemDataIncompleteDate",
@@ -10384,7 +10373,7 @@ class OdmcomplexTypeDefinitionItemGroupData:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    item_data_incomplete_time: List[ItemDataIncompleteTime] = field(
+    item_data_incomplete_time: list[ItemDataIncompleteTime] = field(
         default_factory=list,
         metadata={
             "name": "ItemDataIncompleteTime",
@@ -10392,7 +10381,7 @@ class OdmcomplexTypeDefinitionItemGroupData:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    item_group_oid: Optional[str] = field(
+    item_group_oid: str | None = field(
         default=None,
         metadata={
             "name": "ItemGroupOID",
@@ -10401,7 +10390,7 @@ class OdmcomplexTypeDefinitionItemGroupData:
             "min_length": 1,
         },
     )
-    item_group_repeat_key: Optional[str] = field(
+    item_group_repeat_key: str | None = field(
         default=None,
         metadata={
             "name": "ItemGroupRepeatKey",
@@ -10409,7 +10398,7 @@ class OdmcomplexTypeDefinitionItemGroupData:
             "min_length": 1,
         },
     )
-    transaction_type: Optional[TransactionType] = field(
+    transaction_type: TransactionType | None = field(
         default=None,
         metadata={
             "name": "TransactionType",
@@ -10430,7 +10419,7 @@ class SdmcomplexTypeDefinitionEntryExitCriteria:
         name = "SDMcomplexTypeDefinition-EntryExitCriteria"
         target_namespace = "http://www.cdisc.org/ns/studydesign/v1.0"
 
-    description: Optional[Description] = field(
+    description: Description | None = field(
         default=None,
         metadata={
             "name": "Description",
@@ -10439,7 +10428,7 @@ class SdmcomplexTypeDefinitionEntryExitCriteria:
             "doc": "Description of the criteria",
         },
     )
-    entry_criteria: Optional[EntryCriteria] = field(
+    entry_criteria: EntryCriteria | None = field(
         default=None,
         metadata={
             "name": "EntryCriteria",
@@ -10448,7 +10437,7 @@ class SdmcomplexTypeDefinitionEntryExitCriteria:
             "doc": "List of entry criteria",
         },
     )
-    exit_criteria: Optional[ExitCriteria] = field(
+    exit_criteria: ExitCriteria | None = field(
         default=None,
         metadata={
             "name": "ExitCriteria",
@@ -10457,7 +10446,7 @@ class SdmcomplexTypeDefinitionEntryExitCriteria:
             "doc": "List of exit criteria",
         },
     )
-    oid: Optional[str] = field(
+    oid: str | None = field(
         default=None,
         metadata={
             "name": "OID",
@@ -10467,7 +10456,7 @@ class SdmcomplexTypeDefinitionEntryExitCriteria:
             "doc": "Unique identifier",
         },
     )
-    name: Optional[str] = field(
+    name: str | None = field(
         default=None,
         metadata={
             "name": "Name",
@@ -10477,7 +10466,7 @@ class SdmcomplexTypeDefinitionEntryExitCriteria:
             "doc": "Short name or description",
         },
     )
-    structural_element_type: Optional[Structuralelementtype] = field(
+    structural_element_type: Structuralelementtype | None = field(
         default=None,
         metadata={
             "name": "StructuralElementType",
@@ -10489,7 +10478,7 @@ class SdmcomplexTypeDefinitionEntryExitCriteria:
             ),
         },
     )
-    structural_element_oid: Optional[str] = field(
+    structural_element_oid: str | None = field(
         default=None,
         metadata={
             "name": "StructuralElementOID",
@@ -10516,7 +10505,7 @@ class SdmcomplexTypeDefinitionInclusionExclusionCriteria:
         name = "SDMcomplexTypeDefinition-InclusionExclusionCriteria"
         target_namespace = "http://www.cdisc.org/ns/studydesign/v1.0"
 
-    description: Optional[Description] = field(
+    description: Description | None = field(
         default=None,
         metadata={
             "name": "Description",
@@ -10525,7 +10514,7 @@ class SdmcomplexTypeDefinitionInclusionExclusionCriteria:
             "doc": "Description of the inclusion/exclusion criteria",
         },
     )
-    inclusion_criteria: Optional[InclusionCriteria] = field(
+    inclusion_criteria: InclusionCriteria | None = field(
         default=None,
         metadata={
             "name": "InclusionCriteria",
@@ -10534,7 +10523,7 @@ class SdmcomplexTypeDefinitionInclusionExclusionCriteria:
             "doc": "Inclusion criteria container",
         },
     )
-    exclusion_criteria: Optional[ExclusionCriteria] = field(
+    exclusion_criteria: ExclusionCriteria | None = field(
         default=None,
         metadata={
             "name": "ExclusionCriteria",
@@ -10556,7 +10545,7 @@ class SdmcomplexTypeDefinitionTransition:
         name = "SDMcomplexTypeDefinition-Transition"
         target_namespace = "http://www.cdisc.org/ns/studydesign/v1.0"
 
-    description: Optional[Description] = field(
+    description: Description | None = field(
         default=None,
         metadata={
             "name": "Description",
@@ -10565,7 +10554,7 @@ class SdmcomplexTypeDefinitionTransition:
             "doc": "Description of the transition",
         },
     )
-    switch: Optional[Switch] = field(
+    switch: Switch | None = field(
         default=None,
         metadata={
             "name": "Switch",
@@ -10575,7 +10564,7 @@ class SdmcomplexTypeDefinitionTransition:
             "doc": "Set of transition destinations",
         },
     )
-    oid: Optional[str] = field(
+    oid: str | None = field(
         default=None,
         metadata={
             "name": "OID",
@@ -10585,7 +10574,7 @@ class SdmcomplexTypeDefinitionTransition:
             "doc": "Unique identifier for the transition",
         },
     )
-    name: Optional[str] = field(
+    name: str | None = field(
         default=None,
         metadata={
             "name": "Name",
@@ -10595,7 +10584,7 @@ class SdmcomplexTypeDefinitionTransition:
             "doc": "Short name or description for the transition",
         },
     )
-    source_activity_oid: Optional[str] = field(
+    source_activity_oid: str | None = field(
         default=None,
         metadata={
             "name": "SourceActivityOID",
@@ -10621,7 +10610,7 @@ class SdmcomplexTypeDefinitionTrigger:
         name = "SDMcomplexTypeDefinition-Trigger"
         target_namespace = "http://www.cdisc.org/ns/studydesign/v1.0"
 
-    description: Optional[Description] = field(
+    description: Description | None = field(
         default=None,
         metadata={
             "name": "Description",
@@ -10630,7 +10619,7 @@ class SdmcomplexTypeDefinitionTrigger:
             "doc": "Description of the trigger",
         },
     )
-    switch: Optional[Switch] = field(
+    switch: Switch | None = field(
         default=None,
         metadata={
             "name": "Switch",
@@ -10640,7 +10629,7 @@ class SdmcomplexTypeDefinitionTrigger:
             "doc": "Set of transition destinations for the trigger",
         },
     )
-    oid: Optional[str] = field(
+    oid: str | None = field(
         default=None,
         metadata={
             "name": "OID",
@@ -10650,7 +10639,7 @@ class SdmcomplexTypeDefinitionTrigger:
             "doc": "Unique identifier for the trigger",
         },
     )
-    name: Optional[str] = field(
+    name: str | None = field(
         default=None,
         metadata={
             "name": "Name",
@@ -10660,7 +10649,7 @@ class SdmcomplexTypeDefinitionTrigger:
             "doc": "Short name or description",
         },
     )
-    condition_oid: Optional[str] = field(
+    condition_oid: str | None = field(
         default=None,
         metadata={
             "name": "ConditionOID",
@@ -10669,7 +10658,7 @@ class SdmcomplexTypeDefinitionTrigger:
             "doc": "Reference to the condition that activates the trigger",
         },
     )
-    structural_element_type: Optional[Structuralelementtype] = field(
+    structural_element_type: Structuralelementtype | None = field(
         default=None,
         metadata={
             "name": "StructuralElementType",
@@ -10678,7 +10667,7 @@ class SdmcomplexTypeDefinitionTrigger:
             "doc": "The structural element type on which the trigger applies",
         },
     )
-    structural_element_oid: Optional[str] = field(
+    structural_element_oid: str | None = field(
         default=None,
         metadata={
             "name": "StructuralElementOID",
@@ -10699,7 +10688,7 @@ class SignatureType:
     class Meta:
         target_namespace = "http://www.w3.org/2000/09/xmldsig#"
 
-    signed_info: Optional[SignedInfo] = field(
+    signed_info: SignedInfo | None = field(
         default=None,
         metadata={
             "name": "SignedInfo",
@@ -10708,7 +10697,7 @@ class SignatureType:
             "required": True,
         },
     )
-    signature_value: Optional[SignatureValue] = field(
+    signature_value: SignatureValue | None = field(
         default=None,
         metadata={
             "name": "SignatureValue",
@@ -10717,7 +10706,7 @@ class SignatureType:
             "required": True,
         },
     )
-    key_info: Optional[KeyInfo] = field(
+    key_info: KeyInfo | None = field(
         default=None,
         metadata={
             "name": "KeyInfo",
@@ -10725,7 +10714,7 @@ class SignatureType:
             "namespace": "http://www.w3.org/2000/09/xmldsig#",
         },
     )
-    object_value: List[Object] = field(
+    object_value: list[Object] = field(
         default_factory=list,
         metadata={
             "name": "Object",
@@ -10733,7 +10722,7 @@ class SignatureType:
             "namespace": "http://www.w3.org/2000/09/xmldsig#",
         },
     )
-    id: Optional[str] = field(
+    id: str | None = field(
         default=None,
         metadata={
             "name": "Id",
@@ -10789,7 +10778,7 @@ class OdmcomplexTypeDefinitionFormData:
         name = "ODMcomplexTypeDefinition-FormData"
         target_namespace = "http://www.cdisc.org/ns/odm/v1.3"
 
-    audit_record: Optional[AuditRecord] = field(
+    audit_record: AuditRecord | None = field(
         default=None,
         metadata={
             "name": "AuditRecord",
@@ -10797,7 +10786,7 @@ class OdmcomplexTypeDefinitionFormData:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    signature: Optional[Signature2] = field(
+    signature: Signature2 | None = field(
         default=None,
         metadata={
             "name": "Signature",
@@ -10805,7 +10794,7 @@ class OdmcomplexTypeDefinitionFormData:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    archive_layout_ref: Optional[ArchiveLayoutRef] = field(
+    archive_layout_ref: ArchiveLayoutRef | None = field(
         default=None,
         metadata={
             "name": "ArchiveLayoutRef",
@@ -10813,7 +10802,7 @@ class OdmcomplexTypeDefinitionFormData:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    annotation: List[Annotation] = field(
+    annotation: list[Annotation] = field(
         default_factory=list,
         metadata={
             "name": "Annotation",
@@ -10821,7 +10810,7 @@ class OdmcomplexTypeDefinitionFormData:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    item_group_data: List[ItemGroupData] = field(
+    item_group_data: list[ItemGroupData] = field(
         default_factory=list,
         metadata={
             "name": "ItemGroupData",
@@ -10829,7 +10818,7 @@ class OdmcomplexTypeDefinitionFormData:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    form_oid: Optional[str] = field(
+    form_oid: str | None = field(
         default=None,
         metadata={
             "name": "FormOID",
@@ -10838,7 +10827,7 @@ class OdmcomplexTypeDefinitionFormData:
             "min_length": 1,
         },
     )
-    form_repeat_key: Optional[str] = field(
+    form_repeat_key: str | None = field(
         default=None,
         metadata={
             "name": "FormRepeatKey",
@@ -10846,7 +10835,7 @@ class OdmcomplexTypeDefinitionFormData:
             "min_length": 1,
         },
     )
-    transaction_type: Optional[TransactionType] = field(
+    transaction_type: TransactionType | None = field(
         default=None,
         metadata={
             "name": "TransactionType",
@@ -10861,7 +10850,7 @@ class OdmcomplexTypeDefinitionReferenceData:
         name = "ODMcomplexTypeDefinition-ReferenceData"
         target_namespace = "http://www.cdisc.org/ns/odm/v1.3"
 
-    item_group_data: List[ItemGroupData] = field(
+    item_group_data: list[ItemGroupData] = field(
         default_factory=list,
         metadata={
             "name": "ItemGroupData",
@@ -10869,7 +10858,7 @@ class OdmcomplexTypeDefinitionReferenceData:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    audit_records: List[AuditRecords] = field(
+    audit_records: list[AuditRecords] = field(
         default_factory=list,
         metadata={
             "name": "AuditRecords",
@@ -10877,7 +10866,7 @@ class OdmcomplexTypeDefinitionReferenceData:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    signatures: List[Signatures] = field(
+    signatures: list[Signatures] = field(
         default_factory=list,
         metadata={
             "name": "Signatures",
@@ -10885,7 +10874,7 @@ class OdmcomplexTypeDefinitionReferenceData:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    annotations: List[Annotations] = field(
+    annotations: list[Annotations] = field(
         default_factory=list,
         metadata={
             "name": "Annotations",
@@ -10893,7 +10882,7 @@ class OdmcomplexTypeDefinitionReferenceData:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    study_oid: Optional[str] = field(
+    study_oid: str | None = field(
         default=None,
         metadata={
             "name": "StudyOID",
@@ -10902,7 +10891,7 @@ class OdmcomplexTypeDefinitionReferenceData:
             "min_length": 1,
         },
     )
-    meta_data_version_oid: Optional[str] = field(
+    meta_data_version_oid: str | None = field(
         default=None,
         metadata={
             "name": "MetaDataVersionOID",
@@ -10924,7 +10913,7 @@ class SdmcomplexTypeDefinitionWorkflow:
         name = "SDMcomplexTypeDefinition-Workflow"
         target_namespace = "http://www.cdisc.org/ns/studydesign/v1.0"
 
-    study_start: Optional[StudyStart] = field(
+    study_start: StudyStart | None = field(
         default=None,
         metadata={
             "name": "StudyStart",
@@ -10933,7 +10922,7 @@ class SdmcomplexTypeDefinitionWorkflow:
             "doc": "References the Activity that acts as the study start",
         },
     )
-    study_finish: Optional[StudyFinish] = field(
+    study_finish: StudyFinish | None = field(
         default=None,
         metadata={
             "name": "StudyFinish",
@@ -10942,7 +10931,7 @@ class SdmcomplexTypeDefinitionWorkflow:
             "doc": "References the Activity that acts as the study finish",
         },
     )
-    path_can_finish: Optional[PathCanFinish] = field(
+    path_can_finish: PathCanFinish | None = field(
         default=None,
         metadata={
             "name": "PathCanFinish",
@@ -10954,7 +10943,7 @@ class SdmcomplexTypeDefinitionWorkflow:
             ),
         },
     )
-    entry_exit_criteria: List[EntryExitCriteria] = field(
+    entry_exit_criteria: list[EntryExitCriteria] = field(
         default_factory=list,
         metadata={
             "name": "EntryExitCriteria",
@@ -10963,7 +10952,7 @@ class SdmcomplexTypeDefinitionWorkflow:
             "doc": "List of entry- and exit criteria for structural elements",
         },
     )
-    transition: List[Transition] = field(
+    transition: list[Transition] = field(
         default_factory=list,
         metadata={
             "name": "Transition",
@@ -10973,7 +10962,7 @@ class SdmcomplexTypeDefinitionWorkflow:
             "doc": "A set of potential branches in the workflow",
         },
     )
-    trigger: List[Trigger] = field(
+    trigger: list[Trigger] = field(
         default_factory=list,
         metadata={
             "name": "Trigger",
@@ -11009,7 +10998,7 @@ class OdmcomplexTypeDefinitionProtocol:
         name = "ODMcomplexTypeDefinition-Protocol"
         target_namespace = "http://www.cdisc.org/ns/odm/v1.3"
 
-    description: Optional[Description] = field(
+    description: Description | None = field(
         default=None,
         metadata={
             "name": "Description",
@@ -11017,7 +11006,7 @@ class OdmcomplexTypeDefinitionProtocol:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    study_event_ref: List[StudyEventRef] = field(
+    study_event_ref: list[StudyEventRef] = field(
         default_factory=list,
         metadata={
             "name": "StudyEventRef",
@@ -11025,7 +11014,7 @@ class OdmcomplexTypeDefinitionProtocol:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    alias: List[Alias] = field(
+    alias: list[Alias] = field(
         default_factory=list,
         metadata={
             "name": "Alias",
@@ -11033,7 +11022,7 @@ class OdmcomplexTypeDefinitionProtocol:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    summary: List[Summary] = field(
+    summary: list[Summary] = field(
         default_factory=list,
         metadata={
             "name": "Summary",
@@ -11042,7 +11031,7 @@ class OdmcomplexTypeDefinitionProtocol:
             "sequential": True,
         },
     )
-    inclusion_exclusion_criteria: List[InclusionExclusionCriteria] = field(
+    inclusion_exclusion_criteria: list[InclusionExclusionCriteria] = field(
         default_factory=list,
         metadata={
             "name": "InclusionExclusionCriteria",
@@ -11051,7 +11040,7 @@ class OdmcomplexTypeDefinitionProtocol:
             "sequential": True,
         },
     )
-    structure: List[Structure] = field(
+    structure: list[Structure] = field(
         default_factory=list,
         metadata={
             "name": "Structure",
@@ -11060,7 +11049,7 @@ class OdmcomplexTypeDefinitionProtocol:
             "sequential": True,
         },
     )
-    workflow: List[Workflow] = field(
+    workflow: list[Workflow] = field(
         default_factory=list,
         metadata={
             "name": "Workflow",
@@ -11069,7 +11058,7 @@ class OdmcomplexTypeDefinitionProtocol:
             "sequential": True,
         },
     )
-    timing: List[Timing] = field(
+    timing: list[Timing] = field(
         default_factory=list,
         metadata={
             "name": "Timing",
@@ -11078,7 +11067,7 @@ class OdmcomplexTypeDefinitionProtocol:
             "sequential": True,
         },
     )
-    protocol_id: Optional[str] = field(
+    protocol_id: str | None = field(
         default=None,
         metadata={
             "name": "ProtocolId",
@@ -11087,7 +11076,7 @@ class OdmcomplexTypeDefinitionProtocol:
             "required": True,
         },
     )
-    protocol_version: Optional[str] = field(
+    protocol_version: str | None = field(
         default=None,
         metadata={
             "name": "ProtocolVersion",
@@ -11095,7 +11084,7 @@ class OdmcomplexTypeDefinitionProtocol:
             "namespace": "http://www.cdisc.org/ns/ctr/v1.0",
         },
     )
-    protocol_version_date: Optional[XmlDate] = field(
+    protocol_version_date: XmlDate | None = field(
         default=None,
         metadata={
             "name": "ProtocolVersionDate",
@@ -11103,7 +11092,7 @@ class OdmcomplexTypeDefinitionProtocol:
             "namespace": "http://www.cdisc.org/ns/ctr/v1.0",
         },
     )
-    protocol_version_change_date: Optional[XmlDate] = field(
+    protocol_version_change_date: XmlDate | None = field(
         default=None,
         metadata={
             "name": "ProtocolVersionChangeDate",
@@ -11119,7 +11108,7 @@ class OdmcomplexTypeDefinitionStudyEventData:
         name = "ODMcomplexTypeDefinition-StudyEventData"
         target_namespace = "http://www.cdisc.org/ns/odm/v1.3"
 
-    audit_record: Optional[AuditRecord] = field(
+    audit_record: AuditRecord | None = field(
         default=None,
         metadata={
             "name": "AuditRecord",
@@ -11127,7 +11116,7 @@ class OdmcomplexTypeDefinitionStudyEventData:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    signature: Optional[Signature2] = field(
+    signature: Signature2 | None = field(
         default=None,
         metadata={
             "name": "Signature",
@@ -11135,7 +11124,7 @@ class OdmcomplexTypeDefinitionStudyEventData:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    annotation: List[Annotation] = field(
+    annotation: list[Annotation] = field(
         default_factory=list,
         metadata={
             "name": "Annotation",
@@ -11143,7 +11132,7 @@ class OdmcomplexTypeDefinitionStudyEventData:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    form_data: List[FormData] = field(
+    form_data: list[FormData] = field(
         default_factory=list,
         metadata={
             "name": "FormData",
@@ -11151,7 +11140,7 @@ class OdmcomplexTypeDefinitionStudyEventData:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    study_event_oid: Optional[str] = field(
+    study_event_oid: str | None = field(
         default=None,
         metadata={
             "name": "StudyEventOID",
@@ -11160,7 +11149,7 @@ class OdmcomplexTypeDefinitionStudyEventData:
             "min_length": 1,
         },
     )
-    study_event_repeat_key: Optional[str] = field(
+    study_event_repeat_key: str | None = field(
         default=None,
         metadata={
             "name": "StudyEventRepeatKey",
@@ -11168,7 +11157,7 @@ class OdmcomplexTypeDefinitionStudyEventData:
             "min_length": 1,
         },
     )
-    transaction_type: Optional[TransactionType] = field(
+    transaction_type: TransactionType | None = field(
         default=None,
         metadata={
             "name": "TransactionType",
@@ -11195,7 +11184,7 @@ class OdmcomplexTypeDefinitionMetaDataVersion:
         name = "ODMcomplexTypeDefinition-MetaDataVersion"
         target_namespace = "http://www.cdisc.org/ns/odm/v1.3"
 
-    include: Optional[Include] = field(
+    include: Include | None = field(
         default=None,
         metadata={
             "name": "Include",
@@ -11203,7 +11192,7 @@ class OdmcomplexTypeDefinitionMetaDataVersion:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    protocol: Optional[Protocol] = field(
+    protocol: Protocol | None = field(
         default=None,
         metadata={
             "name": "Protocol",
@@ -11211,7 +11200,7 @@ class OdmcomplexTypeDefinitionMetaDataVersion:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    study_event_def: List[StudyEventDef] = field(
+    study_event_def: list[StudyEventDef] = field(
         default_factory=list,
         metadata={
             "name": "StudyEventDef",
@@ -11219,7 +11208,7 @@ class OdmcomplexTypeDefinitionMetaDataVersion:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    form_def: List[FormDef] = field(
+    form_def: list[FormDef] = field(
         default_factory=list,
         metadata={
             "name": "FormDef",
@@ -11227,7 +11216,7 @@ class OdmcomplexTypeDefinitionMetaDataVersion:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    item_group_def: List[ItemGroupDef] = field(
+    item_group_def: list[ItemGroupDef] = field(
         default_factory=list,
         metadata={
             "name": "ItemGroupDef",
@@ -11235,7 +11224,7 @@ class OdmcomplexTypeDefinitionMetaDataVersion:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    item_def: List[ItemDef] = field(
+    item_def: list[ItemDef] = field(
         default_factory=list,
         metadata={
             "name": "ItemDef",
@@ -11243,7 +11232,7 @@ class OdmcomplexTypeDefinitionMetaDataVersion:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    code_list: List[CodeList] = field(
+    code_list: list[CodeList] = field(
         default_factory=list,
         metadata={
             "name": "CodeList",
@@ -11251,7 +11240,7 @@ class OdmcomplexTypeDefinitionMetaDataVersion:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    imputation_method: List[ImputationMethod] = field(
+    imputation_method: list[ImputationMethod] = field(
         default_factory=list,
         metadata={
             "name": "ImputationMethod",
@@ -11259,7 +11248,7 @@ class OdmcomplexTypeDefinitionMetaDataVersion:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    presentation: List[Presentation] = field(
+    presentation: list[Presentation] = field(
         default_factory=list,
         metadata={
             "name": "Presentation",
@@ -11267,7 +11256,7 @@ class OdmcomplexTypeDefinitionMetaDataVersion:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    condition_def: List[ConditionDef] = field(
+    condition_def: list[ConditionDef] = field(
         default_factory=list,
         metadata={
             "name": "ConditionDef",
@@ -11275,7 +11264,7 @@ class OdmcomplexTypeDefinitionMetaDataVersion:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    method_def: List[MethodDef] = field(
+    method_def: list[MethodDef] = field(
         default_factory=list,
         metadata={
             "name": "MethodDef",
@@ -11283,7 +11272,7 @@ class OdmcomplexTypeDefinitionMetaDataVersion:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    recruitment: Optional[Recruitment] = field(
+    recruitment: Recruitment | None = field(
         default=None,
         metadata={
             "name": "Recruitment",
@@ -11291,7 +11280,7 @@ class OdmcomplexTypeDefinitionMetaDataVersion:
             "namespace": "http://www.cdisc.org/ns/ctr/v1.0",
         },
     )
-    interventions: Optional[Interventions] = field(
+    interventions: Interventions | None = field(
         default=None,
         metadata={
             "name": "Interventions",
@@ -11299,7 +11288,7 @@ class OdmcomplexTypeDefinitionMetaDataVersion:
             "namespace": "http://www.cdisc.org/ns/ctr/v1.0",
         },
     )
-    outcome_measures: Optional[OutcomeMeasures] = field(
+    outcome_measures: OutcomeMeasures | None = field(
         default=None,
         metadata={
             "name": "OutcomeMeasures",
@@ -11307,7 +11296,7 @@ class OdmcomplexTypeDefinitionMetaDataVersion:
             "namespace": "http://www.cdisc.org/ns/ctr/v1.0",
         },
     )
-    oid: Optional[str] = field(
+    oid: str | None = field(
         default=None,
         metadata={
             "name": "OID",
@@ -11316,7 +11305,7 @@ class OdmcomplexTypeDefinitionMetaDataVersion:
             "min_length": 1,
         },
     )
-    name: Optional[str] = field(
+    name: str | None = field(
         default=None,
         metadata={
             "name": "Name",
@@ -11325,7 +11314,7 @@ class OdmcomplexTypeDefinitionMetaDataVersion:
             "min_length": 1,
         },
     )
-    description: Optional[str] = field(
+    description: str | None = field(
         default=None,
         metadata={
             "name": "Description",
@@ -11340,7 +11329,7 @@ class OdmcomplexTypeDefinitionSubjectData:
         name = "ODMcomplexTypeDefinition-SubjectData"
         target_namespace = "http://www.cdisc.org/ns/odm/v1.3"
 
-    audit_record: Optional[AuditRecord] = field(
+    audit_record: AuditRecord | None = field(
         default=None,
         metadata={
             "name": "AuditRecord",
@@ -11348,7 +11337,7 @@ class OdmcomplexTypeDefinitionSubjectData:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    signature: Optional[Signature2] = field(
+    signature: Signature2 | None = field(
         default=None,
         metadata={
             "name": "Signature",
@@ -11356,7 +11345,7 @@ class OdmcomplexTypeDefinitionSubjectData:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    investigator_ref: Optional[InvestigatorRef] = field(
+    investigator_ref: InvestigatorRef | None = field(
         default=None,
         metadata={
             "name": "InvestigatorRef",
@@ -11364,7 +11353,7 @@ class OdmcomplexTypeDefinitionSubjectData:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    site_ref: Optional[SiteRef] = field(
+    site_ref: SiteRef | None = field(
         default=None,
         metadata={
             "name": "SiteRef",
@@ -11372,7 +11361,7 @@ class OdmcomplexTypeDefinitionSubjectData:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    annotation: List[Annotation] = field(
+    annotation: list[Annotation] = field(
         default_factory=list,
         metadata={
             "name": "Annotation",
@@ -11380,7 +11369,7 @@ class OdmcomplexTypeDefinitionSubjectData:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    study_event_data: List[StudyEventData] = field(
+    study_event_data: list[StudyEventData] = field(
         default_factory=list,
         metadata={
             "name": "StudyEventData",
@@ -11388,7 +11377,7 @@ class OdmcomplexTypeDefinitionSubjectData:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    subject_key: Optional[str] = field(
+    subject_key: str | None = field(
         default=None,
         metadata={
             "name": "SubjectKey",
@@ -11397,7 +11386,7 @@ class OdmcomplexTypeDefinitionSubjectData:
             "min_length": 1,
         },
     )
-    transaction_type: Optional[TransactionType] = field(
+    transaction_type: TransactionType | None = field(
         default=None,
         metadata={
             "name": "TransactionType",
@@ -11424,7 +11413,7 @@ class OdmcomplexTypeDefinitionClinicalData:
         name = "ODMcomplexTypeDefinition-ClinicalData"
         target_namespace = "http://www.cdisc.org/ns/odm/v1.3"
 
-    subject_data: List[SubjectData] = field(
+    subject_data: list[SubjectData] = field(
         default_factory=list,
         metadata={
             "name": "SubjectData",
@@ -11432,7 +11421,7 @@ class OdmcomplexTypeDefinitionClinicalData:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    audit_records: List[AuditRecords] = field(
+    audit_records: list[AuditRecords] = field(
         default_factory=list,
         metadata={
             "name": "AuditRecords",
@@ -11440,7 +11429,7 @@ class OdmcomplexTypeDefinitionClinicalData:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    signatures: List[Signatures] = field(
+    signatures: list[Signatures] = field(
         default_factory=list,
         metadata={
             "name": "Signatures",
@@ -11448,7 +11437,7 @@ class OdmcomplexTypeDefinitionClinicalData:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    annotations: List[Annotations] = field(
+    annotations: list[Annotations] = field(
         default_factory=list,
         metadata={
             "name": "Annotations",
@@ -11456,7 +11445,7 @@ class OdmcomplexTypeDefinitionClinicalData:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    study_oid: Optional[str] = field(
+    study_oid: str | None = field(
         default=None,
         metadata={
             "name": "StudyOID",
@@ -11465,7 +11454,7 @@ class OdmcomplexTypeDefinitionClinicalData:
             "min_length": 1,
         },
     )
-    meta_data_version_oid: Optional[str] = field(
+    meta_data_version_oid: str | None = field(
         default=None,
         metadata={
             "name": "MetaDataVersionOID",
@@ -11482,7 +11471,7 @@ class OdmcomplexTypeDefinitionStudy:
         name = "ODMcomplexTypeDefinition-Study"
         target_namespace = "http://www.cdisc.org/ns/odm/v1.3"
 
-    global_variables: Optional[GlobalVariables] = field(
+    global_variables: GlobalVariables | None = field(
         default=None,
         metadata={
             "name": "GlobalVariables",
@@ -11491,7 +11480,7 @@ class OdmcomplexTypeDefinitionStudy:
             "required": True,
         },
     )
-    basic_definitions: Optional[BasicDefinitions] = field(
+    basic_definitions: BasicDefinitions | None = field(
         default=None,
         metadata={
             "name": "BasicDefinitions",
@@ -11499,7 +11488,7 @@ class OdmcomplexTypeDefinitionStudy:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    meta_data_version: List[MetaDataVersion] = field(
+    meta_data_version: list[MetaDataVersion] = field(
         default_factory=list,
         metadata={
             "name": "MetaDataVersion",
@@ -11507,7 +11496,7 @@ class OdmcomplexTypeDefinitionStudy:
             "namespace": "http://www.cdisc.org/ns/odm/v1.3",
         },
     )
-    study_start_date: List[StudyStartDate] = field(
+    study_start_date: list[StudyStartDate] = field(
         default_factory=list,
         metadata={
             "name": "StudyStartDate",
@@ -11516,7 +11505,7 @@ class OdmcomplexTypeDefinitionStudy:
             "sequential": True,
         },
     )
-    study_end_date: List[StudyEndDate] = field(
+    study_end_date: list[StudyEndDate] = field(
         default_factory=list,
         metadata={
             "name": "StudyEndDate",
@@ -11525,7 +11514,7 @@ class OdmcomplexTypeDefinitionStudy:
             "sequential": True,
         },
     )
-    study_end_date_primary_outcome: List[StudyEndDatePrimaryOutcome] = field(
+    study_end_date_primary_outcome: list[StudyEndDatePrimaryOutcome] = field(
         default_factory=list,
         metadata={
             "name": "StudyEndDatePrimaryOutcome",
@@ -11534,7 +11523,7 @@ class OdmcomplexTypeDefinitionStudy:
             "sequential": True,
         },
     )
-    medicinal_product_information: List[MedicinalProductInformation] = field(
+    medicinal_product_information: list[MedicinalProductInformation] = field(
         default_factory=list,
         metadata={
             "type": "Element",
@@ -11542,7 +11531,7 @@ class OdmcomplexTypeDefinitionStudy:
             "sequential": True,
         },
     )
-    population_information: List[PopulationInformation] = field(
+    population_information: list[PopulationInformation] = field(
         default_factory=list,
         metadata={
             "type": "Element",
@@ -11550,7 +11539,7 @@ class OdmcomplexTypeDefinitionStudy:
             "sequential": True,
         },
     )
-    oid: Optional[str] = field(
+    oid: str | None = field(
         default=None,
         metadata={
             "name": "OID",
@@ -11559,7 +11548,7 @@ class OdmcomplexTypeDefinitionStudy:
             "min_length": 1,
         },
     )
-    study_type: Optional[StudyTypeType] = field(
+    study_type: StudyTypeType | None = field(
         default=None,
         metadata={
             "name": "StudyType",
@@ -11568,7 +11557,7 @@ class OdmcomplexTypeDefinitionStudy:
             "required": True,
         },
     )
-    responsible_party_type: Optional[ResponsiblePartyTypeType] = field(
+    responsible_party_type: ResponsiblePartyTypeType | None = field(
         default=None,
         metadata={
             "name": "ResponsiblePartyType",
@@ -11596,42 +11585,42 @@ class Odm:
         name = "ODM"
         namespace = "http://www.cdisc.org/ns/odm/v1.3"
 
-    study: List[Study] = field(
+    study: list[Study] = field(
         default_factory=list,
         metadata={
             "name": "Study",
             "type": "Element",
         },
     )
-    admin_data: List[AdminData] = field(
+    admin_data: list[AdminData] = field(
         default_factory=list,
         metadata={
             "name": "AdminData",
             "type": "Element",
         },
     )
-    reference_data: List[ReferenceData] = field(
+    reference_data: list[ReferenceData] = field(
         default_factory=list,
         metadata={
             "name": "ReferenceData",
             "type": "Element",
         },
     )
-    clinical_data: List[ClinicalData] = field(
+    clinical_data: list[ClinicalData] = field(
         default_factory=list,
         metadata={
             "name": "ClinicalData",
             "type": "Element",
         },
     )
-    association: List[Association] = field(
+    association: list[Association] = field(
         default_factory=list,
         metadata={
             "name": "Association",
             "type": "Element",
         },
     )
-    signature: List[Signature1] = field(
+    signature: list[Signature1] = field(
         default_factory=list,
         metadata={
             "name": "Signature",
@@ -11639,14 +11628,14 @@ class Odm:
             "namespace": "http://www.w3.org/2000/09/xmldsig#",
         },
     )
-    description: Optional[str] = field(
+    description: str | None = field(
         default=None,
         metadata={
             "name": "Description",
             "type": "Attribute",
         },
     )
-    file_type: Optional[FileType] = field(
+    file_type: FileType | None = field(
         default=None,
         metadata={
             "name": "FileType",
@@ -11654,21 +11643,21 @@ class Odm:
             "required": True,
         },
     )
-    granularity: Optional[Granularity] = field(
+    granularity: Granularity | None = field(
         default=None,
         metadata={
             "name": "Granularity",
             "type": "Attribute",
         },
     )
-    archival: Optional[YesOnly] = field(
+    archival: YesOnly | None = field(
         default=None,
         metadata={
             "name": "Archival",
             "type": "Attribute",
         },
     )
-    file_oid: Optional[str] = field(
+    file_oid: str | None = field(
         default=None,
         metadata={
             "name": "FileOID",
@@ -11677,7 +11666,7 @@ class Odm:
             "min_length": 1,
         },
     )
-    creation_date_time: Optional[XmlDateTime] = field(
+    creation_date_time: XmlDateTime | None = field(
         default=None,
         metadata={
             "name": "CreationDateTime",
@@ -11685,7 +11674,7 @@ class Odm:
             "required": True,
         },
     )
-    prior_file_oid: Optional[str] = field(
+    prior_file_oid: str | None = field(
         default=None,
         metadata={
             "name": "PriorFileOID",
@@ -11693,42 +11682,42 @@ class Odm:
             "min_length": 1,
         },
     )
-    as_of_date_time: Optional[XmlDateTime] = field(
+    as_of_date_time: XmlDateTime | None = field(
         default=None,
         metadata={
             "name": "AsOfDateTime",
             "type": "Attribute",
         },
     )
-    odmversion: Optional[Odmversion] = field(
+    odmversion: Odmversion | None = field(
         default=None,
         metadata={
             "name": "ODMVersion",
             "type": "Attribute",
         },
     )
-    originator: Optional[str] = field(
+    originator: str | None = field(
         default=None,
         metadata={
             "name": "Originator",
             "type": "Attribute",
         },
     )
-    source_system: Optional[str] = field(
+    source_system: str | None = field(
         default=None,
         metadata={
             "name": "SourceSystem",
             "type": "Attribute",
         },
     )
-    source_system_version: Optional[str] = field(
+    source_system_version: str | None = field(
         default=None,
         metadata={
             "name": "SourceSystemVersion",
             "type": "Attribute",
         },
     )
-    id: Optional[str] = field(
+    id: str | None = field(
         default=None,
         metadata={
             "name": "Id",

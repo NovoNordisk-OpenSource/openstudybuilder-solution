@@ -20,6 +20,7 @@ export default {
     nnLightBlue2: '#1A1A1A',
     nnLightBlue4: '#E6E6E6',
     nnDarkBlue1: '#0047FF',
+    nnWhite: '#FFFFFF',
     nnBaseBlue: '#0047FF',
     nnTrueBlue: '#000000',
     nnBaseGray: '#4D4D4D',

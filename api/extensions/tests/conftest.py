@@ -1,5 +1,3 @@
-# pylint: disable=redefined-outer-name
-
 import logging
 import os
 from collections import defaultdict

@@ -1,10 +1,15 @@
 import datetime
+import logging
+from collections.abc import Callable
 from typing import Any
 
 from neomodel import db
 
 from clinical_mdr_api.domain_repositories.study_selections.study_compound_dosing_repository import (
     SelectionHistory,
+)
+from clinical_mdr_api.domain_repositories.study_selections.study_soa_repository import (
+    StudySoARepository,
 )
 from clinical_mdr_api.domains.study_selections.study_compound_dosing import (
     StudyCompoundDosingVO,
@@ -13,6 +18,7 @@ from clinical_mdr_api.domains.study_selections.study_compound_dosing import (
 from clinical_mdr_api.models.study_selections.study_selection import (
     StudyCompoundDosing,
     StudyCompoundDosingInput,
+    StudySelectionActivityInstance,
     StudySelectionCompound,
     StudySelectionElement,
 )
@@ -27,9 +33,64 @@ from clinical_mdr_api.services._utils import (
 from clinical_mdr_api.services.studies.study_selection_base import StudySelectionMixin
 from common import exceptions
 from common.auth.user import user
+from common.config import settings
+
+log = logging.getLogger(__name__)
+
+
+def _sort_header_values(header_values: list[Any]) -> list[Any]:
+    """Order textual header values alphabetically, leaving other types alone."""
+    if all(isinstance(value, str) for value in header_values):
+        return sorted(header_values, key=str.casefold)
+    return header_values
+
+
+def _dose_frequency_term_exists_callback(
+    repos: MetaRepository,
+) -> Callable[[str], bool]:
+    """Build the domain's "is this a dose frequency term?" predicate.
+
+    Binds the codelist submission value here so the domain layer stays free of
+    configuration, and reuses the same cached lookup the response path uses, so
+    the term is usually already in the cache by the time this runs.
+    """
+    return (
+        lambda term_uid: repos.ct_codelist_name_repository.get_codelist_term_by_uid_and_submval(
+            term_uid, settings.dose_frequency_cl_submval
+        )
+        is not None
+    )
 
 
 class StudyCompoundDosingRelationMixin:
+    def _validate_study_activity_instances_not_used_for_dose_collection(
+        self, study_uid: str, study_activity_instance_uids: list[str]
+    ) -> None:
+        """Block removal of study activity instances selected for dose collection.
+
+        A study compound dosing may point at a study activity instance as the
+        instance collecting its dose. That link is optional and owned by the
+        compound dosing, so removing the instance must not silently drop it.
+        """
+        referencing_uids = self._repos.study_compound_dosing_repository.find_compound_dosing_uids_by_activity_instance_uids(
+            study_uid=study_uid,
+            study_activity_instance_uids=study_activity_instance_uids,
+        )
+        if referencing_uids:
+            log.warning(
+                "Blocked removal of study activity instances %s in study %s: used for dose collection by %s",
+                study_activity_instance_uids,
+                study_uid,
+                referencing_uids,
+            )
+        exceptions.BusinessLogicException.raise_if(
+            bool(referencing_uids),
+            msg=(
+                "Study Activity Instance cannot be removed as it is selected for dose collection "
+                f"by the following Study Compound Dosings: {sorted(referencing_uids)}."
+            ),
+        )
+
     def _delete_compound_dosing_selections(self, study_uid: str, key: str, value: str):
         """Delete all selected compound dosings for given study and key/value attr."""
         compound_dosing_selection_ar = (
@@ -133,6 +194,31 @@ class StudyCompoundDosingSelectionService(StudySelectionMixin):
             terms_at_specific_datetime=terms_at_specific_datetime,
         )
 
+    def _get_study_activity_instances_by_uid(
+        self,
+        study_uid: str,
+        study_value_version: str | None = None,
+    ) -> dict[str, StudySelectionActivityInstance]:
+        """Load every study activity instance of the study in a single query.
+
+        Resolving the dose collection link one selection at a time would load the
+        whole study activity instance aggregate per row, so the whole set is
+        fetched once and indexed by uid instead.
+        """
+        results, _ = StudySoARepository.query_study_activities(
+            study_uid=study_uid,
+            study_value_version=study_value_version,
+            get_instances=True,
+        )
+        study_activity_instances = [
+            StudySelectionActivityInstance(**result[0]) for result in results
+        ]
+        return {
+            study_activity_instance.study_activity_instance_uid: study_activity_instance
+            for study_activity_instance in study_activity_instances
+            if study_activity_instance.study_activity_instance_uid
+        }
+
     def _transform_to_response_model(
         self,
         study_uid: str,
@@ -140,6 +226,9 @@ class StudyCompoundDosingSelectionService(StudySelectionMixin):
         order: int,
         terms_at_specific_datetime: datetime.datetime | None,
         study_value_version: str | None = None,
+        study_activity_instances_by_uid: (
+            dict[str, StudySelectionActivityInstance] | None
+        ) = None,
     ) -> StudyCompoundDosing:
         if (
             compound_dosing_vo.study_compound_uid is None
@@ -150,6 +239,10 @@ class StudyCompoundDosingSelectionService(StudySelectionMixin):
         ):
             raise exceptions.BusinessLogicException(
                 msg="Missing required fields in StudyCompoundDosingVO: study_compound_uid, compound_uid, compound_alias_uid, medicinal_product_uid or study_element_uid."
+            )
+        if study_activity_instances_by_uid is None:
+            study_activity_instances_by_uid = self._get_study_activity_instances_by_uid(
+                study_uid, study_value_version=study_value_version
             )
         return StudyCompoundDosing.from_vo(
             compound_dosing_vo,
@@ -170,6 +263,13 @@ class StudyCompoundDosingSelectionService(StudySelectionMixin):
                 study_value_version=study_value_version,
                 terms_at_specific_datetime=terms_at_specific_datetime,
             ),
+            (
+                study_activity_instances_by_uid.get(
+                    compound_dosing_vo.study_activity_instance_uid
+                )
+                if compound_dosing_vo.study_activity_instance_uid
+                else None
+            ),
             find_numeric_value_by_uid=self._repos.numeric_value_with_unit_repository.find_by_uid_2,
             find_unit_by_uid=self._repos.unit_definition_repository.find_by_uid_2,
             find_codelist_term_by_uid_and_submval=self._repos.ct_codelist_name_repository.get_codelist_term_by_uid_and_submval,
@@ -189,6 +289,11 @@ class StudyCompoundDosingSelectionService(StudySelectionMixin):
             study_uid=study_selection.study_uid,
             study_value_version=study_value_version,
         )
+        # Fetched once for the whole page: passing it down keeps the dose
+        # collection link resolution at one query per request, not per row.
+        study_activity_instances_by_uid = self._get_study_activity_instances_by_uid(
+            study_selection.study_uid, study_value_version=study_value_version
+        )
         for order, selection in enumerate(
             study_selection.study_compound_dosings_selection, start=1
         ):
@@ -199,6 +304,7 @@ class StudyCompoundDosingSelectionService(StudySelectionMixin):
                     order,
                     study_value_version=study_value_version,
                     terms_at_specific_datetime=terms_at_specific_datetime,
+                    study_activity_instances_by_uid=study_activity_instances_by_uid,
                 )
             )
         return result
@@ -210,6 +316,7 @@ class StudyCompoundDosingSelectionService(StudySelectionMixin):
         study_value_version: str | None = None,
         filter_by: dict[str, dict[str, Any]] | None = None,
         filter_operator: FilterOperator = FilterOperator.AND,
+        sort_by: dict[str, bool] | None = None,
         page_number: int = 1,
         page_size: int = 0,
         total_count: bool = False,
@@ -228,6 +335,7 @@ class StudyCompoundDosingSelectionService(StudySelectionMixin):
                 items=selection,
                 filter_by=filter_by,
                 filter_operator=filter_operator,
+                sort_by=sort_by,
                 total_count=total_count,
                 page_number=page_number,
                 page_size=page_size,
@@ -261,7 +369,7 @@ class StudyCompoundDosingSelectionService(StudySelectionMixin):
                 page_size=page_size,
             )
 
-            return header_values
+            return _sort_header_values(header_values)
 
         selection_ars = repos.study_compound_dosing_repository.find_all()
         # In order for filtering to work, we need to unwind the aggregated AR object first
@@ -282,7 +390,7 @@ class StudyCompoundDosingSelectionService(StudySelectionMixin):
             page_size=page_size,
         )
         # Return values for field_name
-        return header_values
+        return _sort_header_values(header_values)
 
     def _transform_history_to_response_model(
         self,
@@ -290,6 +398,9 @@ class StudyCompoundDosingSelectionService(StudySelectionMixin):
         study_uid: str,
     ) -> list[StudyCompoundDosing]:
         result = []
+        study_activity_instances_by_uid = self._get_study_activity_instances_by_uid(
+            study_uid
+        )
         for history in study_selection_history:
             result.append(
                 StudyCompoundDosing.from_study_selection_history(
@@ -309,6 +420,13 @@ class StudyCompoundDosingSelectionService(StudySelectionMixin):
                         study_uid,
                         history.study_element_uid,
                         terms_at_specific_datetime=None,
+                    ),
+                    (
+                        study_activity_instances_by_uid.get(
+                            history.study_activity_instance_uid
+                        )
+                        if history.study_activity_instance_uid
+                        else None
                     ),
                     find_numeric_value_by_uid=self._repos.numeric_value_with_unit_repository.find_by_uid_2,
                     find_unit_by_uid=self._repos.unit_definition_repository.find_by_uid_2,
@@ -373,9 +491,12 @@ class StudyCompoundDosingSelectionService(StudySelectionMixin):
                 medicinal_product_uid=study_compound_vo.medicinal_product_uid,
                 dose_frequency_uid=selection_create_input.dose_frequency_uid,
                 dose_value_uid=selection_create_input.dose_value_uid,
+                free_text_dose_value=selection_create_input.free_text_dose_value,
+                free_text_dose_frequency=selection_create_input.free_text_dose_frequency,
                 composition=selection_create_input.composition,
+                study_activity_instance_uid=selection_create_input.study_activity_instance_uid,
                 author_id=self.author,
-                start_date=datetime.datetime.now(datetime.timezone.utc),
+                start_date=datetime.datetime.now(datetime.UTC),
                 generate_uid_callback=repos.study_compound_dosing_repository.generate_uid,
             )
             # add VO to aggregate
@@ -385,6 +506,9 @@ class StudyCompoundDosingSelectionService(StudySelectionMixin):
                     repos.study_compound_dosing_repository.get_selection_uid_by_compound_dose_and_frequency
                 ),
                 medicinal_product_callback=repos.medicinal_product_repository.find_by_uid_2,
+                dose_frequency_term_exists_callback=_dose_frequency_term_exists_callback(
+                    repos
+                ),
             )
 
             # sync with DB and save the update
@@ -454,8 +578,11 @@ class StudyCompoundDosingSelectionService(StudySelectionMixin):
             study_compound_uid=current_study_compound_dosing.study_compound_uid,
             study_element_uid=current_study_compound_dosing.study_element_uid,
             dose_value_uid=current_study_compound_dosing.dose_value_uid,
+            free_text_dose_value=current_study_compound_dosing.free_text_dose_value,
             dose_frequency_uid=current_study_compound_dosing.dose_frequency_uid,
+            free_text_dose_frequency=current_study_compound_dosing.free_text_dose_frequency,
             composition=current_study_compound_dosing.composition,
+            study_activity_instance_uid=current_study_compound_dosing.study_activity_instance_uid,
         )
 
         # fill the missing from the inputs
@@ -472,16 +599,23 @@ class StudyCompoundDosingSelectionService(StudySelectionMixin):
             study_compound_uid=request_study_compound_dosing.study_compound_uid,
         )
 
-        return StudyCompoundDosingVO(
+        # Built through from_input_values, not the bare constructor, so that the
+        # free text fields get the same normalization on edit as on create — a
+        # blank string must become None or it defeats the exclusivity rule and the
+        # uniqueness key.
+        return StudyCompoundDosingVO.from_input_values(
             study_uid=current_study_compound_dosing.study_uid,
             study_selection_uid=current_study_compound_dosing.study_selection_uid,
             study_element_uid=request_study_compound_dosing.study_element_uid,
             study_compound_uid=request_study_compound_dosing.study_compound_uid,
             dose_frequency_uid=request_study_compound_dosing.dose_frequency_uid,
             dose_value_uid=request_study_compound_dosing.dose_value_uid,
+            free_text_dose_value=request_study_compound_dosing.free_text_dose_value,
+            free_text_dose_frequency=request_study_compound_dosing.free_text_dose_frequency,
             composition=request_study_compound_dosing.composition,
+            study_activity_instance_uid=request_study_compound_dosing.study_activity_instance_uid,
             author_id=self.author,
-            start_date=datetime.datetime.now(datetime.timezone.utc),
+            start_date=datetime.datetime.now(datetime.UTC),
             compound_uid=current_study_compound_dosing.compound_uid,
             compound_alias_uid=current_study_compound_dosing.compound_alias_uid,
             medicinal_product_uid=current_study_compound_dosing.medicinal_product_uid,
@@ -522,6 +656,9 @@ class StudyCompoundDosingSelectionService(StudySelectionMixin):
                     repos.study_compound_dosing_repository.get_selection_uid_by_compound_dose_and_frequency
                 ),
                 medicinal_product_callback=repos.medicinal_product_repository.find_by_uid_2,
+                dose_frequency_term_exists_callback=_dose_frequency_term_exists_callback(
+                    repos
+                ),
             )
 
             # sync with DB and save the update

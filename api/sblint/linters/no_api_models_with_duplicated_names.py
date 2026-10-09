@@ -1,6 +1,7 @@
 import ast
 import builtins
 import sys
+from typing import ClassVar
 
 from rich import print as rptint
 
@@ -27,10 +28,10 @@ class Imported:
 
 class NoDuplicatedApiModelNames(SBLinter):
 
-    all_class_defs: dict[str, dict[str, ClassDef]] = {}
-    all_imports: dict[str, dict[str, Imported]] = {}
+    all_class_defs: ClassVar[dict[str, dict[str, ClassDef]]] = {}
+    all_imports: ClassVar[dict[str, dict[str, Imported]]] = {}
 
-    visited_model_names: dict[str, dict[str, list[tuple[str, int]]]] = {}
+    visited_model_names: ClassVar[dict[str, dict[str, list[tuple[str, int]]]]] = {}
 
     @classmethod
     def _get_api_name(cls, file_path: str) -> str:
@@ -38,7 +39,7 @@ class NoDuplicatedApiModelNames(SBLinter):
             version = file_path.split("/")[1]
             return f"consumer_api/{version}"
         if "/" in file_path:
-            return file_path.split("/")[0]
+            return file_path.split("/", maxsplit=1)[0]
         return "other"
 
     @classmethod

@@ -113,6 +113,15 @@ body {
   ) !important;
 }
 
+// The sticky <thead> (fixed-header) repaints every scroll frame; Chromium's
+// subpixel rounding of each <th>'s own background can leave a hairline gap
+// between adjacent header cells during that repaint, exposing the page's
+// white background through the seam. Painting the same color on the sticky
+// thead itself means any such gap shows navy instead of white.
+.v-table--fixed-header > .v-table__wrapper > table > thead {
+  background-color: rgb(var(--v-theme-nnTrueBlue));
+}
+
 .v-data-table {
   .v-table__wrapper {
     border: none !important;
@@ -417,8 +426,14 @@ input[type='datetime-local'] {
 // Indication of changed values in version history overview
 .difference {
   width: fit-content;
+  // A value cleared by the change renders as an empty cell, which would
+  // collapse the box away.
+  min-width: 20px;
+  min-height: 1.2em;
   padding-left: 3px;
   padding-right: 3px;
+  padding-top: 0px;
+  padding-bottom: 0px;
 }
 
 // Footnotes

@@ -1,5 +1,6 @@
 import abc
-from typing import Callable, TypeVar
+from collections.abc import Callable
+from typing import TypeVar
 
 from neomodel import db
 from neomodel.exceptions import DoesNotExist
@@ -304,7 +305,6 @@ class GenericSyntaxInstanceService(GenericSyntaxService[_AggregateRootType], abc
                             )
                         )
                     ),
-                    # pylint: disable=undefined-loop-variable
                     parameter_name=item.type,  # type: ignore[arg-type]
                     conjunction=parameter.conjunction,  # type: ignore[arg-type]
                     labels=parameter.labels or [],

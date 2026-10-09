@@ -24,7 +24,7 @@
       >
         <div class="supplier-type-section pa-4">
           <div class="text-headline-small mb-4">
-            {{ $t('StudyDataSuppliers.supplier_data_type') }}
+            {{ $t('StudyDataSuppliers.data_supplier_type') }}
             <strong>{{ typeName }}</strong>
           </div>
 
@@ -107,7 +107,12 @@
     </v-card>
 
     <!-- Bottom navigation -->
-    <div class="d-flex justify-space-between mt-6 mb-6">
+    <v-footer
+      app
+      color="white"
+      elevation="4"
+      class="d-flex justify-space-between pa-4"
+    >
       <v-btn
         variant="outlined"
         color="nnBaseBlue"
@@ -129,7 +134,7 @@
       >
         {{ $t('StudyDataSuppliers.save_button') }}
       </v-btn>
-    </div>
+    </v-footer>
 
     <!-- Data Supplier Form Dialog -->
     <DataSupplierForm
@@ -185,7 +190,7 @@ const defaultSupplierTypeUid = ref(null)
 const pendingSupplierTypeName = ref(null)
 const helpItems = ref([
   'StudyDataSuppliers.page_title',
-  'StudyDataSuppliers.supplier_data_type',
+  'StudyDataSuppliers.data_supplier_type',
 ])
 
 // Get grouped suppliers with dedicated suppliers first, then other suppliers

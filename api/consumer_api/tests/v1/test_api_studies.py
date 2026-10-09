@@ -1,6 +1,3 @@
-# pylint: disable=unused-argument
-# pylint: disable=redefined-outer-name
-# pylint: disable=too-many-arguments
 from typing import Any
 
 import pytest
@@ -568,15 +565,30 @@ def test_get_studies_returns_data_suppliers(api_client):
     data_supplier = TestUtils.create_data_supplier(
         name="Consumer Data Supplier A", supplier_type_uid=ct_term.term_uid
     )
+    blinded_data_supplier = TestUtils.create_data_supplier(
+        name="Consumer Data Supplier B", supplier_type_uid=ct_term.term_uid
+    )
+    unblinded_data_supplier = TestUtils.create_data_supplier(
+        name="Consumer Data Supplier C", supplier_type_uid=ct_term.term_uid
+    )
 
     service = StudyDataSupplierSelectionService()
     service.sync_selections(
         study_uid=studies[0].uid,
         sync_input=StudySelectionDataSupplierSyncInput(
             suppliers=[
+                # `blinded` (`is_blinded` in the response) not specified -> must be returned as null
                 StudySelectionDataSupplierInput(
                     data_supplier_uid=data_supplier.uid,  # type: ignore[arg-type]
-                )
+                ),
+                StudySelectionDataSupplierInput(
+                    data_supplier_uid=blinded_data_supplier.uid,  # type: ignore[arg-type]
+                    blinded=True,
+                ),
+                StudySelectionDataSupplierInput(
+                    data_supplier_uid=unblinded_data_supplier.uid,  # type: ignore[arg-type]
+                    blinded=False,
+                ),
             ]
         ),
     )
@@ -585,14 +597,28 @@ def test_get_studies_returns_data_suppliers(api_client):
     assert_response_status_code(response, 200)
     res = response.json()
 
-    # Find the study we assigned tags to
+    # Find the study we assigned data suppliers to
     study_item = next((s for s in res["items"] if s["uid"] == studies[0].uid), None)
     assert study_item is not None
     assert "data_suppliers" in study_item
     assert isinstance(study_item["data_suppliers"], list)
-    assert study_item["data_suppliers"][0]["name"] == data_supplier.name
 
-    # Verify a study without tags returns an empty list
+    suppliers_by_name = {s["name"]: s for s in study_item["data_suppliers"]}
+    assert set(suppliers_by_name) == {
+        data_supplier.name,
+        blinded_data_supplier.name,
+        unblinded_data_supplier.name,
+    }
+
+    # `is_blinded` is exposed per study data supplier selection
+    for supplier in study_item["data_suppliers"]:
+        assert "is_blinded" in supplier
+
+    assert suppliers_by_name[data_supplier.name]["is_blinded"] is None
+    assert suppliers_by_name[blinded_data_supplier.name]["is_blinded"] is True
+    assert suppliers_by_name[unblinded_data_supplier.name]["is_blinded"] is False
+
+    # Verify a study without data suppliers returns an empty list
     study_without_data_supplier = next(
         (s for s in res["items"] if s["uid"] == studies[1].uid), None
     )

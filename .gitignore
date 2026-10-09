@@ -1,3 +1,9 @@
 .DS_Store
 .vscode
 .ignore
+
+# Claude Code per-developer state. The shared skills, agents and rules under
+# .claude/ ARE tracked; only these machine-local bits are not.
+.claude/settings.local.json
+.claude/.cc-writes/
+**/.claude/.cc-writes/

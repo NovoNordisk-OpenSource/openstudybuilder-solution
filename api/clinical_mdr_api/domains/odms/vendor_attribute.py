@@ -1,5 +1,6 @@
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Callable, Self
+from typing import TYPE_CHECKING, Self
 
 from clinical_mdr_api.domains.odms.ar_base import OdmARBase
 from clinical_mdr_api.domains.versioned_object_aggregate import (
@@ -44,11 +45,11 @@ class OdmVendorAttributeVO:
     def validate(
         self,
         find_odm_vendor_namespace_callback: Callable[
-            [str], "OdmVendorNamespaceAR | None"
+            [str], OdmVendorNamespaceAR | None
         ],
-        find_odm_vendor_element_callback: Callable[[str], "OdmVendorElementAR | None"],
+        find_odm_vendor_element_callback: Callable[[str], OdmVendorElementAR | None],
         find_odm_vendor_attribute_callback: Callable[
-            ..., tuple[list["OdmVendorAttributeAR"], int]
+            ..., tuple[list[OdmVendorAttributeAR], int]
         ],
     ) -> None:
         if self.vendor_namespace_uid is not None:
@@ -135,13 +136,13 @@ class OdmVendorAttributeAR(OdmARBase):
         library: LibraryVO,
         generate_uid_callback: Callable[[], str] = lambda: "",
         find_odm_vendor_namespace_callback: Callable[
-            [str], "OdmVendorNamespaceAR | None"
+            [str], OdmVendorNamespaceAR | None
         ] = lambda _: None,
         find_odm_vendor_element_callback: Callable[
-            [str], "OdmVendorElementAR | None"
+            [str], OdmVendorElementAR | None
         ] = lambda _: None,
         find_odm_vendor_attribute_callback: Callable[
-            ..., tuple[list["OdmVendorAttributeAR"], int]
+            ..., tuple[list[OdmVendorAttributeAR], int]
         ] = lambda _: ([], 0),
     ) -> Self:
         item_metadata = LibraryItemMetadataVO.get_initial_item_metadata(

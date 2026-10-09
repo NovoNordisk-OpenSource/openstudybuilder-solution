@@ -9,7 +9,7 @@ FROM $PYTHON_IMAGE AS common-stage
 RUN apt-get update \
     && apt-get -y upgrade \
     && apt-get -y install curl git libpango-1.0-0 libpangoft2-1.0-0 libffi-dev zlib1g-dev libxml2-dev libxslt-dev build-essential \
-    && pip install --upgrade pip pipenv wheel \
+    && pip install --upgrade pip uv wheel \
     && apt-get clean && rm -rf /var/lib/apt/lists && rm -rf ~/.cache
 
 # Define a non-root user ID and name
@@ -19,10 +19,14 @@ ENV USER=$USER
 # Create the non-root user with the specified UID and home directory
 RUN useradd --home-dir /home/"$USER" --user-group --create-home --uid "$UID" "$USER"
 
+USER $USER
+
 # Set the working directory to /app for the project files
 WORKDIR /app
 
-# Copy all files from the build context (current directory) into the container's /app directory
+# Copy all files from the build context (current directory) into the container's /app directory,
+# owned by the non-root user: uv creates its virtualenv at ./.venv (inside /app), unlike Pipenv
+# which stored venvs outside the project directory, so /app must be writable by $USER.
 COPY ./ ./
 
 # Begin the production stage
@@ -33,17 +37,16 @@ RUN echo "Compile prod-stage" 1>&2 \
     rm -r clinical_mdr_api/tests consumer_api/tests \
     && python -m compileall -f -j 0 .
 
-USER $USER
-# Install only production dependencies with Pipenv
+# Install only production dependencies with uv
 RUN echo "Building prod-stage" 1>&2 \
-    && pipenv sync \
+    && uv sync --locked --no-dev \
     && rm -rf ~/.cache
 
 # Begin the development stage
 FROM common-stage AS dev-stage
 USER $USER
-# Install all dependencies with Pipenv
-RUN echo "Building dev-stage" 1>&2 && pipenv sync --dev && rm -rf ~/.cache
+# Install all dependencies with uv
+RUN echo "Building dev-stage" 1>&2 && uv sync --locked --group dev && rm -rf ~/.cache
 
 # Select either the production or development stage to build the final image based on TARGET
 FROM ${TARGET}-stage AS final-stage
@@ -72,4 +75,4 @@ HEALTHCHECK --start-period=60s --timeout=3s --interval=10s --retries=2 CMD \
     "http://localhost:$UVICORN_PORT/$HEALTHCHECK_PATH" > /dev/null || exit 1
 
 # Run the application using Uvicorn
-CMD ["pipenv", "run", "uvicorn"]
+CMD ["uv", "run", "uvicorn"]

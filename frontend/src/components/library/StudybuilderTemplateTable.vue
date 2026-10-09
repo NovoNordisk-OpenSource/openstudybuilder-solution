@@ -61,7 +61,7 @@ import { useAppStore } from '@/stores/app'
 const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
-const { tabKeys, updateTabKey } = useTabKeys()
+const { tabKeys, updateTabKey } = useTabKeys({ persist: true })
 const props = defineProps({
   headers: {
     type: Array,

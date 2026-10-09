@@ -1,5 +1,6 @@
+from collections.abc import Callable, Set
 from dataclasses import dataclass, field
-from typing import AbstractSet, Callable, Self
+from typing import Self
 
 from neo4j.graph import Node
 
@@ -18,11 +19,16 @@ from clinical_mdr_api.domains.versioned_object_aggregate import (
     LibraryVO,
     VersioningActionMixin,
 )
+from common.config import settings
 from common.exceptions import (
     AlreadyExistsException,
     BusinessLogicException,
     ValidationException,
 )
+
+# Activity Instance Class hierarchy levels (e.g. General Observation -> Category -> Subcategory)
+ACTIVITY_INSTANCE_CLASS_LEVEL_2 = 2
+ACTIVITY_INSTANCE_CLASS_LEVEL_3 = 3
 
 
 @dataclass(frozen=True)
@@ -102,7 +108,7 @@ class ActivityInstanceAttributesVO(ConceptVO):
 
         return activity_instance_vo
 
-    def validate(  # pylint: disable=too-many-locals
+    def validate(
         self,
         ct_term_exists_by_uid_callback: Callable[[str], bool],
         unit_definition_exists_by_uid_callback: Callable[[str], bool],
@@ -174,7 +180,8 @@ class ActivityInstanceAttributesVO(ConceptVO):
                 )
                 if (
                     aic
-                    and aic.activity_instance_class_vo.level == 2
+                    and aic.activity_instance_class_vo.level
+                    == ACTIVITY_INSTANCE_CLASS_LEVEL_2
                     and next(
                         (
                             itm.is_adam_param_specific_enabled
@@ -209,6 +216,12 @@ class ActivityInstanceAttributesVO(ConceptVO):
                     ct_term_exists_by_uid_callback(ct_term.uid),
                     msg=f"{type(self).__name__} tried to connect to non-existent or non-final CT Term with UID '{ct_term.uid}'.",
                 )
+            BusinessLogicException.raise_if(
+                activity_item_class is not None
+                and activity_item_class.name == settings.domain_activity_item_class_name
+                and len(activity_item.ct_terms) > 1,
+                msg="An Activity Item of the 'domain' Activity Item Class must not be linked to more than one CT Term.",
+            )
             for unit in activity_item.unit_definitions:
                 BusinessLogicException.raise_if_not(
                     unit.uid and unit_definition_exists_by_uid_callback(unit.uid),
@@ -275,7 +288,7 @@ class ActivityInstanceAttributesVO(ConceptVO):
 
         # Check parent class mandatory items if current class has level 3 and strict_mode is True
         current_level = activity_instance_class.activity_instance_class_vo.level
-        if current_level == 3 and strict_mode:
+        if current_level == ACTIVITY_INSTANCE_CLASS_LEVEL_3 and strict_mode:
 
             parent_class_uid = get_parent_class_uid_callback(
                 self.activity_instance_class_uid
@@ -284,7 +297,11 @@ class ActivityInstanceAttributesVO(ConceptVO):
                 parent_class = find_activity_instance_class_by_uid_callback(
                     parent_class_uid
                 )
-                if parent_class and parent_class.activity_instance_class_vo.level == 2:
+                if (
+                    parent_class
+                    and parent_class.activity_instance_class_vo.level
+                    == ACTIVITY_INSTANCE_CLASS_LEVEL_2
+                ):
                     # Get mandatory item classes from parent (level 2)
                     parent_required_item_class_uids = {
                         rel.uid
@@ -382,7 +399,7 @@ class ActivityInstanceGroupingsVO:
 
         return activity_instance_vo
 
-    def validate(  # pylint: disable=too-many-locals
+    def validate(
         self,
         get_final_activity_value_by_uid_callback: Callable[[str], Node | None],
         activity_subgroup_exists: Callable[[str], bool],
@@ -541,7 +558,7 @@ class ActivityInstanceVO(ConceptVO):
 
         return activity_instance_vo
 
-    def validate(  # pylint: disable=too-many-locals
+    def validate(
         self,
         get_final_activity_value_by_uid_callback: Callable[[str], Node | None],
         activity_subgroup_exists: Callable[[str], bool],
@@ -823,7 +840,7 @@ class ActivityInstanceAR(ConceptARBase):
             )
             self._concept_vo = concept_vo
 
-    def get_groupings_possible_actions(self) -> AbstractSet[ObjectAction]:
+    def get_groupings_possible_actions(self) -> Set[ObjectAction]:
         """
         Returns list of possible actions for the groupings versioning track.
         """
@@ -1094,7 +1111,7 @@ class ActivityInstanceGroupingsAR(VersioningActionMixin):
             )
             self._concept_vo = concept_vo
 
-    def get_possible_actions(self) -> AbstractSet[ObjectAction]:
+    def get_possible_actions(self) -> Set[ObjectAction]:
         """
         Returns list of possible actions
         """

@@ -4,14 +4,11 @@ from neomodel import db
 
 from clinical_mdr_api.models.study_selections.study import (
     Study,
-)
-from clinical_mdr_api.models.study_selections.study import (
     StudyCreateInput as MainStudyCreateInput,
 )
 from clinical_mdr_api.services.studies.study import StudyService
 from common.exceptions import BusinessLogicException
-from consumer_api.v1 import db as DB
-from consumer_api.v1 import models
+from consumer_api.v1 import db as DB, models
 
 log = logging.getLogger(__name__)
 

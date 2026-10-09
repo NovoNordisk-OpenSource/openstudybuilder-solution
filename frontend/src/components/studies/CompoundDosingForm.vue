@@ -276,33 +276,109 @@
 
     <template #[`step.compound_dosing`]>
       <v-form ref="compoundDosingForm">
-        <v-row>
+        <v-row class="mb-10">
           <v-col cols="6">
-            <v-autocomplete
-              v-if="form.study_compound"
-              v-model="form.dose_value_uid"
-              :label="$t('StudyCompoundDosingForm.dose_value')"
-              :items="form.study_compound.medicinal_product.dose_values"
-              :item-title="(item) => `${item.value} ${item.unit_label}`"
-              data-cy="dose-value"
-              item-value="uid"
-              density="compact"
-              clearable
-            />
+            <v-sheet border rounded="lg" class="pa-6">
+              <v-radio-group
+                v-model="doseValueSource"
+                :label="$t('StudyCompoundDosingForm.dose_value_source')"
+                class="dose-source-group"
+                data-cy="dose-value-source"
+                inline
+                hide-details
+                @update:model-value="updateDefaultComposition"
+              >
+                <v-radio
+                  :label="$t('StudyCompoundDosingForm.dose_value_from_library')"
+                  :value="doseSources.LIBRARY"
+                  class="ml-2"
+                  data-cy="dose-value-from-library"
+                />
+                <v-radio
+                  :label="$t('StudyCompoundDosingForm.dose_value_free_text')"
+                  :value="doseSources.FREE_TEXT"
+                  class="ml-4"
+                  data-cy="dose-value-free-text"
+                />
+              </v-radio-group>
+              <v-autocomplete
+                v-if="
+                  form.study_compound && doseValueSource === doseSources.LIBRARY
+                "
+                v-model="form.dose_value_uid"
+                :label="$t('StudyCompoundDosingForm.dose_value')"
+                :items="form.study_compound.medicinal_product.dose_values"
+                :item-title="(item) => `${item.value} ${item.unit_label}`"
+                data-cy="dose-value"
+                item-value="uid"
+                density="compact"
+                class="mt-4"
+                hide-details
+                clearable
+              />
+              <v-text-field
+                v-else-if="doseValueSource === doseSources.FREE_TEXT"
+                v-model="form.free_text_dose_value"
+                :label="$t('StudyCompoundDosingForm.free_text_dose_value')"
+                data-cy="free-text-dose-value"
+                class="mt-4"
+                hide-details
+                clearable
+              />
+            </v-sheet>
           </v-col>
           <v-col cols="6">
-            <v-autocomplete
-              v-if="form.study_compound"
-              v-model="form.dose_frequency_uid"
-              :label="$t('StudyCompoundDosingForm.dose_frequency')"
-              :items="
-                form.study_compound.medicinal_product.dose_frequencies || []
-              "
-              item-title="name"
-              data-cy="dose-frequency"
-              item-value="term_uid"
-              clearable
-            />
+            <v-sheet border rounded="lg" class="pa-6">
+              <v-radio-group
+                v-model="doseFrequencySource"
+                :label="$t('StudyCompoundDosingForm.dose_frequency_source')"
+                class="dose-source-group"
+                data-cy="dose-frequency-source"
+                inline
+                hide-details
+              >
+                <v-radio
+                  :label="
+                    $t('StudyCompoundDosingForm.dose_frequency_from_library')
+                  "
+                  :value="doseSources.LIBRARY"
+                  class="ml-2"
+                  data-cy="dose-frequency-from-library"
+                />
+                <v-radio
+                  :label="
+                    $t('StudyCompoundDosingForm.dose_frequency_free_text')
+                  "
+                  :value="doseSources.FREE_TEXT"
+                  class="ml-4"
+                  data-cy="dose-frequency-free-text"
+                />
+              </v-radio-group>
+              <v-autocomplete
+                v-if="
+                  form.study_compound &&
+                  doseFrequencySource === doseSources.LIBRARY
+                "
+                v-model="form.dose_frequency_uid"
+                :label="$t('StudyCompoundDosingForm.dose_frequency')"
+                :items="groupedDoseFrequencies"
+                item-title="name"
+                data-cy="dose-frequency"
+                item-value="term_uid"
+                class="mt-4"
+                hide-details
+                clearable
+              />
+              <v-text-field
+                v-else-if="doseFrequencySource === doseSources.FREE_TEXT"
+                v-model="form.free_text_dose_frequency"
+                :label="$t('StudyCompoundDosingForm.free_text_dose_frequency')"
+                data-cy="free-text-dose-frequency"
+                class="mt-4"
+                hide-details
+                clearable
+              />
+            </v-sheet>
           </v-col>
         </v-row>
         <v-row>
@@ -311,6 +387,23 @@
               v-model="form.composition"
               :label="$t('StudyCompoundDosingForm.composition')"
               data-cy="composition"
+              clearable
+            />
+          </v-col>
+        </v-row>
+        <v-row>
+          <v-col cols="12">
+            <v-autocomplete
+              v-model="form.study_activity_instance_uid"
+              :label="
+                $t('StudyCompoundDosingForm.dose_collection_activity_instance')
+              "
+              :items="studyActivityInstances"
+              :item-title="
+                (item) => item.activity_instance?.name || item.activity?.name
+              "
+              data-cy="dose-collection-activity-instance"
+              item-value="study_activity_instance_uid"
               clearable
             />
           </v-col>
@@ -324,6 +417,7 @@
 import { computed, inject, ref, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import arms from '@/api/arms'
+import study from '@/api/study'
 import terms from '@/api/controlledTerminology/terms'
 import HorizontalStepperForm from '@/components/tools/HorizontalStepperForm.vue'
 import YesNoField from '@/components/tools/YesNoField.vue'
@@ -332,6 +426,17 @@ import { useStudiesGeneralStore } from '@/stores/studies-general'
 import pharmaceuticalProducts from '@/api/concepts/pharmaceuticalProducts'
 import compoundAliases from '@/api/concepts/compoundAliases'
 import { usePharmaceuticalProducts } from '@/composables/pharmaceuticalProducts'
+import activityInstanceClasses from '@/constants/activityInstanceClasses'
+
+// A dosing's dose value is either picked from the library (at medicinal product
+// level) or given as a study level free text one — the API rejects a payload
+// carrying both — so the user picks which of the two they are filling in. The
+// dose frequency works the same way, and the two choices are independent: a
+// library dose value may be paired with a free text frequency, and the reverse.
+const doseSources = {
+  LIBRARY: 'library',
+  FREE_TEXT: 'free_text',
+}
 
 const { getIngredientName } = usePharmaceuticalProducts()
 
@@ -352,13 +457,24 @@ const helpItems = [
   'StudyCompoundDosingForm.element',
   'StudyCompoundDosingForm.compound',
   'StudyCompoundDosingForm.dose_value',
+  'StudyCompoundDosingForm.free_text_dose_value',
   'StudyCompoundDosingForm.dose_frequency',
+  'StudyCompoundDosingForm.free_text_dose_frequency',
+  'StudyCompoundDosingForm.dose_collection_activity_instance',
 ]
 
 const form = ref({})
+// UI state only — which of the two dose value fields, and which of the two dose
+// frequency fields, the user is filling in. Deliberately kept out of `form`,
+// which is spread straight into the payload.
+const doseValueSource = ref(doseSources.LIBRARY)
+const doseFrequencySource = ref(doseSources.LIBRARY)
 const steps = ref(getInitialSteps())
 const studyElements = ref([])
 const studyElementTypes = ref([])
+const studyActivityInstances = ref([])
+// Every term of the dose frequency codelist, not just the medicinal product's own
+const doseFrequencyTerms = ref([])
 const allIngredients = ref([])
 const compoundAlias = ref({})
 const studyCompoundDosing = ref(null)
@@ -377,37 +493,87 @@ const title = computed(() => {
   return t('StudyCompoundDosingForm.add_title')
 })
 
+// The medicinal product's own frequencies first, then the rest of the codelist,
+// under two subheaders. `type: 'subheader'` / `type: 'divider'` are Vuetify's own
+// pseudo-items, so no #item slot is needed.
+//
+// The two sources disagree on the title field — the medicinal product returns
+// `{ term_uid, name }` while the codelist endpoint returns `sponsor_preferred_name`
+// — so the codelist half is normalized to `name`. The subheaders carry `name` too,
+// rather than `title`: Vuetify resolves every item's title through `item-title`
+// and falls back to the raw object when the key is missing, which would render
+// "[object Object]" as the header text.
+const groupedDoseFrequencies = computed(() => {
+  const productFrequencies =
+    form.value.study_compound?.medicinal_product?.dose_frequencies || []
+  const productUids = new Set(productFrequencies.map((item) => item.term_uid))
+  const otherFrequencies = doseFrequencyTerms.value
+    .filter((term) => !productUids.has(term.term_uid))
+    .map((term) => ({
+      term_uid: term.term_uid,
+      name: term.sponsor_preferred_name,
+    }))
+
+  const grouped = []
+  if (productFrequencies.length > 0) {
+    grouped.push(
+      {
+        type: 'subheader',
+        name: t('StudyCompoundDosingForm.medicinal_product_frequencies_header'),
+      },
+      ...productFrequencies
+    )
+  }
+  if (otherFrequencies.length > 0) {
+    if (grouped.length > 0) {
+      grouped.push({ type: 'divider' })
+    }
+    grouped.push(
+      {
+        type: 'subheader',
+        name: t('StudyCompoundDosingForm.other_frequencies_header'),
+      },
+      ...otherFrequencies
+    )
+  }
+  return grouped
+})
+
 function updateDefaultComposition() {
-  if (
-    !form.value.dose_value_uid ||
-    !form.value.study_compound ||
-    allIngredients.value.length === 0
-  )
+  if (!form.value.study_compound || allIngredients.value.length === 0) return
+  if (doseValueSource.value !== doseSources.LIBRARY) {
+    form.value.composition = allIngredients.value
+      .map((ing) => `${getIngredientName(ing, true)} ?`)
+      .sort()
+      .join(' / ')
     return
+  }
+  if (!form.value.dose_value_uid) return
   const selectedDoseValue =
     form.value.study_compound.medicinal_product.dose_values.find(
       (dv) => dv.uid === form.value.dose_value_uid
     )
   if (!selectedDoseValue) return
-  const compositions = allIngredients.value
-    .filter((ing) => {
-      if (!ing.strength || !ing.strength.unit_label) return false
-      const parts = ing.strength.unit_label.split('/')
-      if (parts.length === 2) {
-        return parts[1].trim() === selectedDoseValue.unit_label
-      }
-      return ing.strength.unit_label === selectedDoseValue.unit_label
-    })
-    .map((ing) => {
-      const parts = ing.strength.unit_label.split('/')
-      const resultUnit =
-        parts.length === 2 ? parts[0].trim() : ing.strength.unit_label
-      const resultValue = selectedDoseValue.value * ing.strength.value
-      return `${getIngredientName(ing, true)} ${resultValue} ${resultUnit}`
-    })
+  const compositions = allIngredients.value.map((ing) => {
+    const ingredientName = getIngredientName(ing, true)
+    if (!ing.strength || !ing.strength.unit_label) {
+      return `${ingredientName} ?`
+    }
+    const parts = ing.strength.unit_label.split('/')
+    const denominatorUnit =
+      parts.length === 2 ? parts[1].trim() : ing.strength.unit_label
+    if (denominatorUnit !== selectedDoseValue.unit_label) {
+      return `${ingredientName} ?`
+    }
+    const resultUnit =
+      parts.length === 2 ? parts[0].trim() : ing.strength.unit_label
+    const rawResultValue = selectedDoseValue.value * ing.strength.value
+    const resultValue =
+      Math.round((rawResultValue + Number.EPSILON) * 1000) / 1000
+    return `${ingredientName} ${resultValue} ${resultUnit}`
+  })
 
-  form.value.composition =
-    compositions.length > 0 ? compositions.sort().join(' / ') : ''
+  form.value.composition = compositions.sort().join(' / ')
 }
 
 watch(
@@ -445,8 +611,18 @@ watch(
       if (value.dose_value) {
         form.value.dose_value_uid = value.dose_value.uid
       }
+      doseValueSource.value = value.free_text_dose_value
+        ? doseSources.FREE_TEXT
+        : doseSources.LIBRARY
       if (value.dose_frequency) {
         form.value.dose_frequency_uid = value.dose_frequency.term_uid
+      }
+      doseFrequencySource.value = value.free_text_dose_frequency
+        ? doseSources.FREE_TEXT
+        : doseSources.LIBRARY
+      if (value.study_activity_instance) {
+        form.value.study_activity_instance_uid =
+          value.study_activity_instance.study_activity_instance_uid
       }
       compoundAliases
         .getObject(value.study_compound.compound_alias.uid)
@@ -480,6 +656,28 @@ onMounted(() => {
   terms.getTermsByCodelist('elementTypes').then((resp) => {
     studyElementTypes.value = resp.data.items
   })
+  // `all: true` lifts the default page size so the whole codelist comes back;
+  // results arrive sorted by sponsor_preferred_name.
+  terms.getTermsByCodelist('frequency', { all: true }).then((resp) => {
+    doseFrequencyTerms.value = resp.data.items
+  })
+  study
+    .getStudyActivityInstances(studiesGeneralStore.selectedStudy.uid, {
+      page_size: 0,
+      has_activity_instance: true,
+      filters: JSON.stringify({
+        'activity_instance.activity_instance_class.name': {
+          v: [activityInstanceClasses.INTERVENTIONS],
+        },
+      }),
+    })
+    .then((resp) => {
+      studyActivityInstances.value = (resp.data.items || []).sort((a, b) => {
+        const nameA = a.activity_instance?.name || a.activity?.name || ''
+        const nameB = b.activity_instance?.name || b.activity?.name || ''
+        return nameA.localeCompare(nameB)
+      })
+    })
 })
 
 function getAllProductIngredients() {
@@ -498,6 +696,8 @@ function close() {
   emit('close')
   notificationHub.clearErrors()
   form.value = {}
+  doseValueSource.value = doseSources.LIBRARY
+  doseFrequencySource.value = doseSources.LIBRARY
   stepper.value.reset()
 }
 function getInitialSteps() {
@@ -532,6 +732,26 @@ async function submit() {
   data.study_element_uid = data.study_element.element_uid
   delete data.study_element
   data.study_compound_uid = data.study_compound.study_compound_uid
+  delete data.study_activity_instance
+
+  // Each pair — dose_value_uid/free_text_dose_value and
+  // dose_frequency_uid/free_text_dose_frequency — is mutually exclusive server
+  // side (both non-null is a 400), and a PATCH back-fills every field missing
+  // from the body from the record's current state. JSON.stringify drops keys set
+  // to `undefined`, which looks exactly like a missing field and back-fills the
+  // value we are dropping — so the abandoned field is sent as an explicit null.
+  if (doseValueSource.value === doseSources.FREE_TEXT) {
+    data.dose_value_uid = null
+    data.free_text_dose_value = data.free_text_dose_value || null
+  } else {
+    data.free_text_dose_value = null
+  }
+  if (doseFrequencySource.value === doseSources.FREE_TEXT) {
+    data.dose_frequency_uid = null
+    data.free_text_dose_frequency = data.free_text_dose_frequency || null
+  } else {
+    data.free_text_dose_frequency = null
+  }
 
   let action = null
   let notification = null
@@ -561,3 +781,11 @@ async function submit() {
   }
 }
 </script>
+
+<style scoped>
+/* Vuetify renders the radio's icon and its label as adjacent siblings with no
+   gap between them, so the text sits tight against the button. */
+.dose-source-group :deep(.v-selection-control .v-label) {
+  margin-inline-start: 4px;
+}
+</style>

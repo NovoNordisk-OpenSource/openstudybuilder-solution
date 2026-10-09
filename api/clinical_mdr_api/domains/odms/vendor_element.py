@@ -1,5 +1,6 @@
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable, Self
+from typing import Self
 
 from clinical_mdr_api.domains.odms.ar_base import OdmARBase
 from clinical_mdr_api.domains.versioned_object_aggregate import (
@@ -61,7 +62,7 @@ class OdmVendorElementVO:
         self,
         odm_vendor_namespace_exists_by_callback: Callable[[str, str, bool], bool],
         find_odm_vendor_element_callback: Callable[
-            ..., tuple[list["OdmVendorElementAR"], int]
+            ..., tuple[list[OdmVendorElementAR], int]
         ],
     ) -> None:
         if (
@@ -128,7 +129,7 @@ class OdmVendorElementAR(OdmARBase):
             [str, str, bool], bool
         ] = lambda x, y, z: True,
         find_odm_vendor_element_callback: Callable[
-            ..., tuple[list["OdmVendorElementAR"], int]
+            ..., tuple[list[OdmVendorElementAR], int]
         ] = lambda _: ([], 0),
     ) -> Self:
         item_metadata = LibraryItemMetadataVO.get_initial_item_metadata(

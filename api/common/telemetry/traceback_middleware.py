@@ -32,7 +32,7 @@ class ExceptionTracebackMiddleware:
         try:
             await self.app(scope, receive, send)
             return
-        except Exception as exc:  # pylint: disable=broad-except
+        except Exception as exc:
             self.add_traceback_attributes(exc)
 
             query_string = scope.get("query_string")

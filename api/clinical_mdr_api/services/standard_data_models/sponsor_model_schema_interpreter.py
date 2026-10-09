@@ -42,7 +42,7 @@ class FieldDescriptor:
 
 
 # Parsed interpreters, cached forever by (library_name, schema_version).
-_INTERPRETER_CACHE: dict[tuple[str, int], "SponsorModelSchemaInterpreter"] = {}
+_INTERPRETER_CACHE: dict[tuple[str, int], SponsorModelSchemaInterpreter] = {}
 
 
 class SponsorModelSchemaInterpreter:
@@ -142,7 +142,7 @@ class SponsorModelSchemaInterpreter:
     @classmethod
     def _from_string(
         cls, schema_string: str, schema_version: int, library_name: str
-    ) -> "SponsorModelSchemaInterpreter":
+    ) -> SponsorModelSchemaInterpreter:
         try:
             parsed = yaml.safe_load(schema_string)
         except yaml.YAMLError:
@@ -162,7 +162,7 @@ class SponsorModelSchemaInterpreter:
         schema_string: str,
         schema_version: int,
         library_name: str,
-    ) -> "SponsorModelSchemaInterpreter":
+    ) -> SponsorModelSchemaInterpreter:
         """Build (and cache) directly from a schema blob already in hand.
 
         Used when a ``FOLLOWS_SCHEMA``-linked node gives us the version and blob
@@ -181,7 +181,7 @@ class SponsorModelSchemaInterpreter:
         cls,
         schema_version: int,
         library_name: str | None = None,
-    ) -> "SponsorModelSchemaInterpreter | None":
+    ) -> SponsorModelSchemaInterpreter | None:
         """Load, parse and cache the schema for ``(library, version)``.
 
         Returns ``None`` when the version is not published (callers decide whether

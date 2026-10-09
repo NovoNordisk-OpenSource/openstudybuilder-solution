@@ -1,5 +1,5 @@
 import unittest
-from typing import Callable
+from collections.abc import Callable
 
 from clinical_mdr_api.domains.concepts.simple_concepts.study_day import (
     StudyDayAR,
@@ -23,8 +23,7 @@ def create_random_study_day_vo() -> StudyDayVO:
 
 
 def create_random_study_day_ar(
-    # pylint: disable=unnecessary-lambda
-    generate_uid_callback: Callable[[], str] = lambda: random_str(),
+    generate_uid_callback: Callable[[], str] = random_str,
     library: str = "Library",
     is_editable: bool = True,
 ) -> StudyDayAR:
@@ -42,7 +41,7 @@ def create_random_study_day_ar(
 
 class TestStudyDay(unittest.TestCase):
     def test__init__ar_created(self):
-        # pylint: disable=no-member
+
         # given
 
         # when
@@ -53,8 +52,8 @@ class TestStudyDay(unittest.TestCase):
         self.assertIsNotNone(study_day_ar.item_metadata._start_date)
         self.assertEqual(study_day_ar.item_metadata.version, "1.0")
         self.assertEqual(study_day_ar.item_metadata.status, LibraryItemStatus.FINAL)
-        self.assertEqual(study_day_ar.name, f"Day {str(study_day_ar.concept_vo.value)}")
+        self.assertEqual(study_day_ar.name, f"Day {study_day_ar.concept_vo.value!s}")
         self.assertEqual(
             study_day_ar.concept_vo.name_sentence_case,
-            f"day {str(study_day_ar.concept_vo.value)}",
+            f"day {study_day_ar.concept_vo.value!s}",
         )

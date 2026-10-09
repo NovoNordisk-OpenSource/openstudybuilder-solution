@@ -44,7 +44,7 @@ const router = useRouter()
 const route = useRoute()
 const appStore = useAppStore()
 const studiesGeneralStore = useStudiesGeneralStore()
-const { tabKeys, updateTabKey } = useTabKeys()
+const { tabKeys, updateTabKey } = useTabKeys({ persist: true })
 
 const selectedStudy = computed(() => studiesGeneralStore.selectedStudy)
 

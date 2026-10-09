@@ -1,6 +1,6 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from time import time
-from typing import Any
+from typing import Any, ClassVar
 from xml.dom.minidom import Document
 from xml.sax.saxutils import quoteattr
 
@@ -71,7 +71,13 @@ class OdmXmlExporterService:
     XML_LANG = "xml:lang"
     OSB_NAMESPACE = "osb"
     OSB_VERSION = "osb:version"
-    SDTM_MSG_COLOURS = ["#bfffff", "#ffff96", "#96ff96", "#ffbf9c", "#ffffff"]
+    SDTM_MSG_COLOURS: ClassVar[list[str]] = [
+        "#bfffff",
+        "#ffff96",
+        "#96ff96",
+        "#ffbf9c",
+        "#ffffff",
+    ]
 
     def __init__(
         self,
@@ -353,7 +359,6 @@ class OdmXmlExporterService:
                     **{"_string": vendor_element.value} if vendor_element.value else {},
                     **{
                         vendor_element_attribute.name: Attribute(
-                            # pylint: disable=line-too-long
                             f"{self.odm_data_extractor.odm_vendor_elements[vendor_element_attribute.vendor_element_uid]['vendor_namespace']['prefix']}:{vendor_element_attribute.name}",
                             vendor_element_attribute.value,
                         )
@@ -1225,9 +1230,7 @@ class OdmXmlExporterService:
             odm_version=Attribute("ODMVersion", "1.3.2"),
             file_type=Attribute("FileType", "Snapshot"),
             file_oid=Attribute("FileOID", f"OID.{int(time() * 1_000)}"),
-            creation_date_time=Attribute(
-                "CreationDateTime", datetime.now(timezone.utc)
-            ),
+            creation_date_time=Attribute("CreationDateTime", datetime.now(UTC)),
             granularity=Attribute("Granularity", "All"),
             study=Study(
                 oid=Attribute(

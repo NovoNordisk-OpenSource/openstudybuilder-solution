@@ -1,7 +1,12 @@
 <template>
   <v-slide-group-item>
-    <div class="mr-2">
-      <v-menu v-if="isDate(item.key)" :close-on-content-click="false">
+    <div ref="rootEl" class="mr-2">
+      <v-menu
+        v-if="isDate(item.key)"
+        v-model="menuOpen"
+        :close-on-content-click="false"
+        scroll-strategy="close"
+      >
         <template #activator="{ props }">
           <v-text-field
             :label="
@@ -33,6 +38,7 @@
         v-else
         ref="select"
         v-model="data"
+        v-model:menu="menuOpen"
         clearable
         multiple
         :label="item.title"
@@ -44,10 +50,11 @@
         single-line
         class="filterAutocompleteLabel ml-1"
         :loading="loading"
+        :menu-props="{ scrollStrategy: 'close' }"
         @input="getColumnData(item.columnDataKey || item.key)"
         @update:model-value="filterTable"
       >
-        <template #menu-header>
+        <template v-if="!booleanChoices" #menu-header>
           <SelectMenuSearch
             v-model="searchString"
             :placeholder="$t('FilterAutocomplete.search')"
@@ -66,14 +73,10 @@
               </v-list-item-action>
             </template>
             <template #title>
-              {{
-                typeof props.title === 'number'
-                  ? props.title
-                  : props.title.replace(/[<>]/g, '')
-              }}
+              {{ displayFilterTitle(props.title) }}
             </template>
             <v-tooltip activator="parent" location="bottom">
-              {{ props.title.replace(/[<>]/g, '') }}
+              {{ displayFilterTitle(props.title) }}
             </v-tooltip>
           </v-list-item>
         </template>
@@ -98,7 +101,8 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { onBeforeUnmount, ref, watch } from 'vue'
+import _get from 'lodash/get'
 import _isEmpty from 'lodash/isEmpty'
 import columnData from '@/api/columnData'
 import SelectMenuSearch from '@/components/tools/SelectMenuSearch.vue'
@@ -169,9 +173,14 @@ const data = ref([])
 const items = ref([])
 const searchString = ref('')
 const select = ref()
+const rootEl = ref()
+const menuOpen = ref(false)
 const timeout = ref(null)
 const adapter = useDate()
 const loading = ref(false)
+const booleanChoices = ref(null)
+let slideGroupCleanup = null
+let columnDataRequestId = 0
 
 watch(searchString, () => {
   if (timeout.value) clearTimeout(timeout.value)
@@ -186,13 +195,93 @@ watch(
   }
 )
 watch(
-  () => props.loadFilters,
-  (value) => {
-    if (value) {
-      getColumnData(props.item.columnDataKey || props.item.key)
+  () => props.filters,
+  (newFilters, oldFilters) => {
+    // Only live-refresh while this column's own dropdown is open — it's the
+    // only state where a stale list is visible. A closed column already gets
+    // a guaranteed-fresh, non-cached fetch from the `menuOpen` watcher below
+    // the next time it's opened, so refetching here too just means every
+    // column re-fetches its headers on every keystroke elsewhere (e.g. the
+    // table's global search box updates `filters` on every debounced
+    // change), which both wastes requests and can race the request that
+    // triggered the change in the first place.
+    if (newFilters !== oldFilters && menuOpen.value) {
+      getColumnData(props.item.columnDataKey || props.item.key, {
+        useBooleanCache: false,
+      })
     }
   }
 )
+watch(
+  () => {
+    const fieldKey = props.item.columnDataKey || props.item.key
+    return (props.tableItems || [])
+      .map((row) => `${row?.status ?? ''}:${_get(row, fieldKey) ?? ''}`)
+      .join('|')
+  },
+  (newFingerprint, oldFingerprint) => {
+    if (
+      props.loadFilters &&
+      newFingerprint !== oldFingerprint &&
+      menuOpen.value
+    ) {
+      getColumnData(props.item.columnDataKey || props.item.key, {
+        useBooleanCache: false,
+      })
+    }
+  }
+)
+
+watch(menuOpen, (open) => {
+  if (open) {
+    if (!isDate(props.item.key)) {
+      getColumnData(props.item.columnDataKey || props.item.key, {
+        useBooleanCache: false,
+        ignoreSearch: true,
+      })
+    }
+    bindSlideGroupClose()
+  } else {
+    unbindSlideGroupClose()
+  }
+})
+
+function closeMenu() {
+  menuOpen.value = false
+}
+
+function bindSlideGroupClose() {
+  unbindSlideGroupClose()
+  // These class names are undocumented Vuetify internals, not a public API —
+  // a Vuetify version bump could rename them with no compile error, only a
+  // silently regressed "close on scroll" behavior.
+  const group = rootEl.value?.closest('.v-slide-group')
+  if (!group) {
+    return
+  }
+  const container = group.querySelector('.v-slide-group__container')
+  const next = group.querySelector('.v-slide-group__next')
+  const prev = group.querySelector('.v-slide-group__prev')
+  container?.addEventListener('scroll', closeMenu, { passive: true })
+  next?.addEventListener('click', closeMenu)
+  prev?.addEventListener('click', closeMenu)
+  slideGroupCleanup = () => {
+    container?.removeEventListener('scroll', closeMenu)
+    next?.removeEventListener('click', closeMenu)
+    prev?.removeEventListener('click', closeMenu)
+    slideGroupCleanup = null
+  }
+}
+
+function unbindSlideGroupClose() {
+  if (slideGroupCleanup) {
+    slideGroupCleanup()
+  }
+}
+
+onBeforeUnmount(() => {
+  unbindSlideGroupClose()
+})
 
 function clear() {
   data.value = []
@@ -214,7 +303,43 @@ function isDate(key) {
   )
 }
 
-function getColumnData(value) {
+function isBooleanHeaderValues(values) {
+  return (
+    Array.isArray(values) &&
+    values.length > 0 &&
+    values.length <= 2 &&
+    values.every((value) => typeof value === 'boolean')
+  )
+}
+
+function isYesNoSearch(query) {
+  const normalized = (query || '').trim().toLowerCase()
+  return normalized === 'yes' || normalized === 'no'
+}
+
+function displayFilterTitle(title) {
+  if (title == null) {
+    return ''
+  }
+  if (typeof title === 'string') {
+    return title.replace(/[<>]/g, '')
+  }
+  return String(title)
+}
+
+// The key this column's selection is stored under in the filters object. Both the
+// read side (getColumnData) and the write side (filterTable) must agree on it, or
+// the column narrows its own list of candidate values.
+function ownFilterKey() {
+  return props.item.filteringName || props.item.columnDataKey || props.item.key
+}
+
+function getColumnData(value, options = {}) {
+  const {
+    useBooleanCache = true,
+    ignoreSearch = false,
+    yesNoRetry = false,
+  } = options
   if (!props.resource[0]) {
     return
   }
@@ -224,9 +349,15 @@ function getColumnData(value) {
   if (value === 'add') {
     return []
   }
+  if (useBooleanCache && booleanChoices.value) {
+    items.value = [...booleanChoices.value]
+    return
+  }
   loading.value = true
-  let jsonFilter = JSON.parse(props.filters)
-  delete jsonFilter[value]
+  items.value = []
+  const requestId = ++columnDataRequestId
+  let jsonFilter = JSON.parse(props.filters || '{}')
+  delete jsonFilter[ownFilterKey()]
   if (props.item.exludeFromHeader) {
     props.item.exludeFromHeader.forEach((header) => {
       delete jsonFilter[header]
@@ -240,7 +371,7 @@ function getColumnData(value) {
       : props.item.filteringName
         ? props.item.filteringName
         : value,
-    search_string: searchString.value,
+    search_string: ignoreSearch ? '' : searchString.value,
     page_size: 50,
   }
   if (props.parameters) {
@@ -277,36 +408,73 @@ function getColumnData(value) {
   if (props.item.disableColumnFilters) {
     params.filters = {}
   }
-  columnData.getHeaderData(params, externalFilter).then((resp) => {
-    items.value = booleanValidator(resp.data)
-    items.value = items.value.filter((element) => {
-      return element !== ''
-    })
-    if (typeof items.value[0] === 'object') {
-      const deconstructedItems = []
-      items.value.forEach((item) => {
-        if (item) {
-          if (item.length > 1) {
-            item.forEach((i) => {
-              deconstructedItems.push(i.name)
-            })
-          } else if (item.length !== 0) {
-            deconstructedItems.push(item[0].name)
+  columnData
+    .getHeaderData(params, externalFilter)
+    .then((resp) => {
+      if (requestId !== columnDataRequestId) {
+        return
+      }
+      const rawValues = (resp.data || []).filter((element) => element !== '')
+      if (yesNoRetry && !isBooleanHeaderValues(rawValues)) {
+        items.value = []
+        booleanChoices.value = null
+        return
+      }
+      // Narrow race: on a slow network, a user's "yes"/"no" search can resolve
+      // before the boolean-detecting fetch fired on menu-open (see the
+      // `menuOpen` watcher above). A literal "yes"/"no" search string won't
+      // match real boolean values server-side, so it comes back empty; retry
+      // once without the search term to get the real (boolean) header values.
+      if (
+        !isBooleanHeaderValues(rawValues) &&
+        !ignoreSearch &&
+        isYesNoSearch(searchString.value) &&
+        rawValues.length === 0
+      ) {
+        getColumnData(value, {
+          useBooleanCache: false,
+          ignoreSearch: true,
+          yesNoRetry: true,
+        })
+        return
+      }
+      if (isBooleanHeaderValues(rawValues)) {
+        booleanChoices.value = booleanValidator(rawValues)
+        searchString.value = ''
+        items.value = [...booleanChoices.value]
+        return
+      }
+      booleanChoices.value = null
+      items.value = booleanValidator(rawValues)
+      if (typeof items.value[0] === 'object') {
+        const deconstructedItems = []
+        items.value.forEach((item) => {
+          if (item) {
+            if (item.length > 1) {
+              item.forEach((i) => {
+                deconstructedItems.push(i.name)
+              })
+            } else if (item.length !== 0) {
+              deconstructedItems.push(item[0].name)
+            }
           }
-        }
-      })
-      items.value = Array.from(new Set(deconstructedItems))
-    }
-    if (props.fixedData) {
-      items.value = props.fixedData.concat(items.value)
-    }
-    if (props.initialData) {
-      items.value = items.value.filter(
-        (item) => props.initialData.indexOf(item) !== -1
-      )
-    }
-  })
-  loading.value = false
+        })
+        items.value = Array.from(new Set(deconstructedItems))
+      }
+      if (props.fixedData) {
+        items.value = props.fixedData.concat(items.value)
+      }
+      if (props.initialData) {
+        items.value = items.value.filter(
+          (item) => props.initialData.indexOf(item) !== -1
+        )
+      }
+    })
+    .finally(() => {
+      if (requestId === columnDataRequestId) {
+        loading.value = false
+      }
+    })
 }
 
 function filterDate() {
@@ -337,11 +505,8 @@ function booleanConverter(value) {
 }
 
 function booleanValidator(array) {
-  if (array.length <= 2 && (array[0] === false || array[0] === true)) {
-    array.forEach((el) => {
-      const index = array.indexOf(el)
-      array[index] = booleanConverter(array[index])
-    })
+  if (array.length <= 2 && array.every((value) => typeof value === 'boolean')) {
+    return array.map((value) => booleanConverter(value))
   }
   return array
 }
@@ -357,16 +522,12 @@ function filterTable() {
       requestData.push(booleanConverter(data.value[index]))
     })
     emit('filter', {
-      column: props.item.filteringName
-        ? props.item.filteringName
-        : props.item.columnDataKey || props.item.key,
+      column: ownFilterKey(),
       data: requestData,
     })
   } else {
     emit('filter', {
-      column: props.item.filteringName
-        ? props.item.filteringName
-        : props.item.columnDataKey || props.item.key,
+      column: ownFilterKey(),
       data: data.value,
     })
   }

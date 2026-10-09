@@ -1,4 +1,5 @@
 <template>
+  <!-- is_nsv: false restricts header autocomplete values to non-NSV items; NonStandardVariablesTable passes true. Both share the same column-data-resource. -->
   <NNTable
     ref="table"
     table-id="library-activity-item-classes-table"
@@ -7,6 +8,7 @@
     :items-length="total"
     item-value="uid"
     column-data-resource="activity-item-classes"
+    :column-data-parameters="{ is_nsv: false }"
     :history-config="{
       dataFetcher: fetchAuditTrail,
       changeField: 'change_description',

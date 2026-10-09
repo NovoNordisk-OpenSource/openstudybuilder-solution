@@ -343,8 +343,12 @@ export default {
       this.showHistory = false
     },
     async fetchGlobalAuditTrail(options) {
-      const resp = await compoundAliases.getAllVersions(options)
-      return this.transformItems(resp.data.items)
+      const params = filteringParameters.prepareParameters(options)
+      const resp = await compoundAliases.getAllVersions(params)
+      return {
+        items: this.transformItems(resp.data.items),
+        total: resp.data.total,
+      }
     },
   },
 }

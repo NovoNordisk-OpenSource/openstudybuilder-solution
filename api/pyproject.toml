@@ -1,10 +1,50 @@
 [project]
 name = 'clinical-mdr-api'
+version = '0.1.0'
 readme = 'README.md'
 requires-python = '>=3.14'
 license = 'TBD'
 authors = [
     {name = 'Novo Nordisk', email = 'OpenStudyBuilder@gmail.com'}
+]
+dependencies = [
+    "fastapi~=0.142.2",
+    "uvicorn~=0.54.0",
+    "pydantic~=2.13.4",
+    "pydantic-settings~=2.15.0",
+    "requests~=2.34.2",
+    "openpyxl~=3.1.5",
+    "dict2xml~=1.7.8",
+    "hypothesis~=6.168.5",
+    "python-dateutil~=2.9.0.post0",
+    "yattag~=1.16.1",
+    "python-docx~=1.2.0",
+    "colour~=0.1.5",
+    "authlib~=1.8.0",
+    "pyjwt~=2.15.0",
+    "cryptography~=50.0.0",
+    "httpx~=0.28.1",
+    "starlette-context==0.5.1",
+    "python-multipart~=0.0.32",
+    "beautifulsoup4~=4.15.0",
+    "lxml~=6.1.1",
+    "opencensus~=0.11.4",
+    "opencensus-ext-azure~=1.1.15",
+    "pyyaml~=6.0.3",
+    "xsdata~=26.2",
+    "weasyprint~=70.0",
+    "cffi~=2.1.1",
+    "asyncache~=0.3.1",
+    "cachetools~=5.5.2",
+    "usdm==0.67.0",
+    "annotated-types~=0.8.0",
+    "jinja2==3.1.6",
+    "nh3~=0.3.5",
+    "neomodel==6.1.0",
+    "deepdiff~=9.1.0",
+    "pyasn1~=0.6.3",
+    "pillow~=12.3.0",
+    "mako~=1.4.3",
 ]
 
 [build-system]
@@ -13,6 +53,51 @@ build-backend = "setuptools.build_meta:__legacy__"
 
 [project.urls]
 homepage = 'https://gitlab.com/Novo-Nordisk/nn-public/openstudybuilder'
+
+[tool.uv]
+# setup.py/setup.cfg (pbr-based) exist only to build a `clinical_mdr_api` wheel
+# via the `dist`/`package` poe tasks below - a separate, manual packaging path.
+# `uv sync` must not also try to build+install this whole tree as its own
+# dependency using the [build-system] above (which only packages one of the
+# four top-level packages this app needs). Force virtual/non-package mode,
+# keeping this a plain dependency environment rather than an installable package.
+package = false
+# Security floors for transitive dependencies: bound the resolver to fixed
+# versions without declaring these as direct dependencies of this project.
+constraint-dependencies = [
+    "werkzeug>=3.1.9",  # CVE-2026-102598
+]
+
+[dependency-groups]
+dev = [
+    "msgpack~=1.2.3",
+    "pytest>=9.0.3",
+    "pytest-bdd~=9.0.0",
+    "pytest-cov~=7.1.0",
+    "ruff~=0.16.10",
+    "rich~=15.0.0",
+    "flake8~=7.4.1",
+    "pep8~=1.7.1",
+    "autopep8~=2.3.2",
+    "mypy~=2.4.0",
+    "pbr~=7.0.3",
+    "rope~=1.15.0",
+    "isort~=9.0.2",
+    "black>=26.5.1",
+    "pytest-asyncio~=1.4.0",
+    "pytest-xdist~=3.8.0",
+    "parameterized~=0.9.0",
+    "schemathesis~=4.21.4",
+    "allure-pytest==2.16.2",
+    "pre-commit~=4.6.0",
+    "opencensus-ext-zipkin~=0.2.2",
+    "uvicorn[standard]~=0.54.0",
+    "markdown~=3.11.0",
+    "pytest-order~=1.5.0",
+    "pip>=26.2.1",
+    "pip-audit~=2.10.0",
+    "poethepoet>=0.30",
+]
 
 [tool.pytest.ini_options]
 
@@ -40,45 +125,66 @@ target-version = ['py314']
 
 [tool.isort]
 profile = 'black'
-src_paths = ['clinical_mdr_api', 'consumer_api', 'common', 'sblint', 'extensions']
+src_paths = ['clinical_mdr_api', 'consumer_api', 'common', 'sblint', 'extensions', 'ctrxml']
 known_third_party = ['neomodel']
+combine_as_imports = true
 
-[tool.pylint.'MASTER']
-extension-pkg-allow-list = 'pydantic, lxml'
-unsafe-load-any-extension = 'yes'
-generated-members = '(.*)\.nodes\.(.*),(.*)\.connect$,(.*)\.__label__$,(.*)\.filter$,(.*)\.single$,_member_map_,.*.has_.*,ParameterTemplateRoot\.get,RelationshipDefinition\.get_or_none'
+[tool.ruff]
+line-length = 200
+target-version = 'py314'
 
-[tool.pylint.'MESSAGES CONTROL']
-# Temporarily disabling trivial warnings
-disable = 'missing-function-docstring,missing-class-docstring,missing-module-docstring,fixme,global-statement,import-outside-toplevel,protected-access,too-few-public-methods,too-many-ancestors,too-many-function-args,arguments-differ,cyclic-import,too-many-positional-arguments,no-member'
+[tool.ruff.lint]
+select = [
+    "PL",
+    "UP",
+    "F",
+    "E",
+    "RUF",
+    "I",
+    "C4",
+    "ASYNC",
+    "PT",
+    "YTT",
+    "T10",
+    "FA",
+    "INT",
+    "ISC",
+    "LOG",
+    "PIE",
+    "FLY",
+    "G",
+    "PGH",
+    "FURB",
+    "EXE",
+]
+ignore = [
+    "PLC0415", # import-outside-toplevel
+    "PLR0917", # too-many-positional-arguments
+    "PLW0603", # global-statement
+]
 
-[tool.pylint.'FORMAT']
-max-line-length = 200
-max-module-lines = 6500
+[tool.ruff.lint.isort]
+combine-as-imports = true
 
-[tool.pylint.'BASIC']
-good-names = '_,c,e,i,j,k,l,r,v,x,y,z,ar,ex,rs,_AggregateRootType,db,studyUID'
-# Allow UPPER_CASE and PascalCase for classes, with optional leading underscore
-class-rgx = '_?([A-Z][a-zA-Z0-9]*|[A-Z_][A-Z0-9_]*)$'
-# Allow UPPER_CASE, PascalCase, and snake_case for constants (Path descriptors, test globals)
-const-rgx = '([A-Z_][A-Z0-9_]*|[A-Z][a-zA-Z0-9]*|[a-z_][a-z0-9_]*)$'
-# Allow UPPER_CASE in addition to snake_case for variables (test constants at function scope)
-variable-rgx = '([a-z_][a-z0-9_]*|[A-Z_][A-Z0-9_]*)$'
+[tool.ruff.lint.per-file-ignores]
+"extensions/extensions_api.py" = ["E402"]
+"consumer_api/consumer_api.py" = ["E402"]
+"clinical_mdr_api/main.py" = ["E402"]
+# Magic-value comparisons (status codes, counts, indices, etc.) are idiomatic
+# and expected in test assertions; only enforce PLR2004 on production code.
+# Test fixtures/data files also contain long literal payloads (XML/CSV/JSON
+# samples) that should not be reflowed.
+"**/tests/**" = ["PLR2004", "C4", "PT"]
+"clinical_mdr_api/tests/data/odm_xml.py" = ["E501"]
 
-[tool.pylint.'DESIGN']
+[tool.ruff.lint.pylint]
 max-args = 50
-max-attributes = 85
 max-branches = 50
 max-locals = 50
 max-public-methods = 81
 max-returns = 9
 max-statements = 300
-
-[tool.pylint.'REFACTORING']
 max-nested-blocks = 10
-
-[tool.pylint.'SIMILARITIES']
-min-similarity-lines = 1000
 
 
 [tool.mypy]
@@ -87,3 +193,91 @@ check_untyped_defs = true
 disallow_untyped_defs = true
 
 disable_error_code = ["no-untyped-def","attr-defined","import-untyped","override","return-value","union-attr"]
+
+[tool.poe.tasks.dev]
+cmd = "uvicorn --host=0.0.0.0 --port=${port} clinical_mdr_api.main:app --reload"
+args = [
+  { name = "port", default = "8000" }
+]
+
+[tool.poe]
+envfile = ".env"
+
+[tool.poe.tasks]
+prod = "uvicorn --host=0.0.0.0 --port=8000 --limit-concurrency=120 --workers=4 --loop=asyncio clinical_mdr_api.main:app"
+test = "pytest -s"
+dist = "python setup.py bdist_wheel"
+package = "pip wheel -r requirements.txt -w dist"
+testunit = "pytest -s --cov-report html:reports/coverage-unit-html --cov-report xml:reports/coverage.xml --cov-append --cov --junitxml=reports/unit_report.xml clinical_mdr_api/tests/unit/ common/tests/unit"
+testint = "pytest -s -n auto --dist loadfile --cov-report html:reports/coverage-int-html --cov-report xml:reports/coverage.xml --cov-append --cov --junitxml=reports/int_report.xml clinical_mdr_api/tests/integration/"
+testauth = "pytest -s --cov-report html:reports/coverage-auth-html --cov-report xml:reports/coverage.xml --cov-append --cov --junitxml=reports/auth_report.xml clinical_mdr_api/tests/auth/ common/tests/auth extensions/tests/auth/"
+test-telemetry = "pytest -s --cov-report html:reports/coverage-telemetry-html --cov-report xml:reports/coverage.xml --cov-append --cov --junitxml=reports/telemetry_report.xml clinical_mdr_api/tests/telemetry/"
+testunitallure = "pytest -s --cov-report html:reports/coverage-unit --cov-report xml:reports/coverage.xml --cov-append --cov=clinical_mdr_api --junitxml=reports/unit_report.xml --alluredir reports/allure-results clinical_mdr_api/tests/unit/"
+testintallure = "pytest -s -n 4 --dist loadfile --cov-report html:reports/coverage-int --cov-report xml:reports/coverage.xml --cov-append --cov=clinical_mdr_api --junitxml=reports/int_report.xml --alluredir reports/allure-results clinical_mdr_api/tests/integration/"
+lint = "ruff check clinical_mdr_api consumer_api common extensions sblint"
+mypy = "mypy clinical_mdr_api consumer_api common extensions sblint"
+sblint = "python -m sblint.main clinical_mdr_api consumer_api common extensions sblint"
+black = "python -m black clinical_mdr_api consumer_api common extensions sblint"
+isort = "python -m isort clinical_mdr_api consumer_api common extensions sblint"
+audit = "python -m pip_audit --ignore-vuln CVE-2026-4539"
+neomodel-schema = "python dump_neomodel_nodes_json.py"
+seed-schemathesis = "python seed_schemathesis_data.py"
+schemathesis-help = "schemathesis run --help"
+consumer-api-dev = "uvicorn --host=0.0.0.0 --port=8008 consumer_api.consumer_api:app --reload"
+consumer-api-lint = "ruff check consumer_api common"
+consumer-api-test = "pytest -s -n 1 --dist loadfile --cov-report html:consumer_api/reports/coverage-int-html --cov-report xml:consumer_api/reports/coverage.xml --cov-append --cov --junitxml=consumer_api/reports/test_report.xml --ignore=consumer_api/tests/auth consumer_api/tests common/tests/unit"
+consumer-api-testauth = "pytest -s -n 1 --dist loadfile --cov-report html:consumer_api/reports/coverage-auth-html --cov-report xml:consumer_api/reports/coverage.xml --cov-append --cov --junitxml=consumer_api/reports/auth_report.xml consumer_api/tests/auth common/tests/auth"
+consumer-api-traceability = "python consumer_api/requirements/generate_traceability.py"
+extensions-api-dev = "uvicorn --host=0.0.0.0 --port=8009 extensions.extensions_api:app --reload"
+extensions-lint = "ruff check extensions"
+extensions-test = "pytest -s -n 1 --dist loadfile --cov-report html:extensions/reports/coverage-extensions-html --cov-report xml:extensions/reports/coverage.xml --cov-append --cov --junitxml=extensions/reports/test_report.xml --ignore=extensions/tests/auth --ignore=extensions/reports extensions/"
+extensions-testauth = "pytest -s -n 1 --dist loadfile --cov-report html:extensions/reports/coverage-auth-html --cov-report xml:extensions/reports/coverage.xml --cov-append --cov --junitxml=extensions/reports/auth_report.xml extensions/tests/auth"
+build-sbom = "python3 ../_tools/build_sbom.py --uv --fallback-dir doc/licenses --level 2 --output sbom.md"
+
+[tool.poe.tasks.format]
+sequence = ["isort", "black"]
+
+# openapi/consumer-openapi/extensions-openapi need OAUTH_ENABLED=True. poe's
+# declarative `env` table sets it directly in the child process (no dependency
+# on a POSIX `env` binary or shell `env VAR=value cmd` prefix).
+[tool.poe.tasks.openapi]
+cmd = "python generate_openapi_json.py"
+env = { OAUTH_ENABLED = "True" }
+
+[tool.poe.tasks.consumer-openapi]
+cmd = "python generate_openapi.py consumer_api.consumer_api:app consumer_api/openapi.json consumer_api/apiVersion"
+env = { OAUTH_ENABLED = "True" }
+
+[tool.poe.tasks.extensions-openapi]
+cmd = "python generate_openapi.py extensions.extensions_api:app extensions/openapi.json extensions/apiVersion"
+env = { OAUTH_ENABLED = "True" }
+
+# --seed=1 is pinned deliberately: reproducible contract-test failures for a
+# merge gate, not exploratory fuzzing. Without it a PR could go red on data no
+# previous run produced, for a defect it did not introduce.
+[tool.poe.tasks.schemathesis]
+cmd = """
+    schemathesis run --checks=all --url=http://localhost:8000
+    --request-timeout=200 --max-examples=10 --seed=1
+    --suppress-health-check=too_slow,filter_too_much,data_too_large
+    --report=junit --report-junit-path=reports/schemathesis_report.xml
+    openapi.json
+"""
+
+[tool.poe.tasks.consumer-api-schemathesis]
+cmd = """
+    schemathesis run --checks=all --url=http://localhost:8008
+    --request-timeout=30 --max-examples=100 --seed=1
+    --suppress-health-check=too_slow,filter_too_much,data_too_large
+    --report=junit --report-junit-path=consumer_api/reports/schemathesis_report.xml
+    consumer_api/openapi.json
+"""
+
+[tool.poe.tasks.extensions-schemathesis]
+cmd = """
+    schemathesis run --checks=all --url=http://localhost:8009
+    --request-timeout=30 --max-examples=100 --seed=1
+    --suppress-health-check=too_slow,filter_too_much,data_too_large
+    --report=junit --report-junit-path=extensions/reports/schemathesis_report.xml
+    extensions/openapi.json
+"""

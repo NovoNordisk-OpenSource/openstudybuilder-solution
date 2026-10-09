@@ -952,7 +952,6 @@
       v-if="showBatchEditForm"
       :open="showBatchEditForm"
       :selection="formattedStudyActivitySelection"
-      :current-selection-matrix="currentSelectionMatrix"
       :study-visits="studyVisits"
       @updated="() => loadSoaContent(true)"
       @close="showBatchEditForm = false"

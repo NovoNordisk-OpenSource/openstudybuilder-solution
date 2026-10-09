@@ -904,46 +904,6 @@ const routes = [
         },
       },
       // {
-      //   path: 'crf_specifications',
-      //   name: 'CrfSpecifications',
-      //   component: () => import('../views/studies/CrfSpecifications.vue'),
-      //   meta: {
-      //     authRequired: true
-      //   }
-      // },
-      // {
-      //   path: 'blank_crf',
-      //   name: 'BlankCrf',
-      //   component: () => import('../views/studies/BlankCrf.vue'),
-      //   meta: {
-      //     authRequired: true
-      //   }
-      // },
-      // {
-      //   path: 'cdash_crf',
-      //   name: 'CdashAnnotatedCrf',
-      //   component: () => import('../views/studies/CdashAnnotatedCrf.vue'),
-      //   meta: {
-      //     authRequired: true
-      //   }
-      // },
-      // {
-      //   path: 'sdtm_crf',
-      //   name: 'SdtmAnnotatedCrf',
-      //   component: () => import('../views/studies/SdtmAnnotatedCrf.vue'),
-      //   meta: {
-      //     authRequired: true
-      //   }
-      // },
-      // {
-      //   path: 'odm_specification',
-      //   name: 'OdmSpecification',
-      //   component: () => import('../views/studies/OdmSpecification.vue'),
-      //   meta: {
-      //     authRequired: true
-      //   }
-      // },
-      // {
       //   path: 'ctr_odm_xml',
       //   name: 'CtrOdmXml',
       //   component: () => import('../views/studies/CtrOdmXml.vue'),
@@ -1285,8 +1245,7 @@ async function saveStudyUid(studyUid) {
       const resp = await study.getStudy(studyUid)
       await store.selectStudy(resp.data)
     } catch (_err) {
-      store.unselectStudy
-      store.studyId = null
+      store.unselectStudy()
       router.push('/studies')
     }
   }
@@ -1333,6 +1292,7 @@ router.beforeEach(async (to, from, next) => {
     } else {
       next(false)
     }
+    return
   }
   next()
 })

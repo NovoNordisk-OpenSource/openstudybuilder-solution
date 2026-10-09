@@ -41,13 +41,10 @@
       {{ displayList(item.unit_subsets) }}
     </template>
     <template #[`item.ct_units`]="{ item }">
-      {{ displayList(item.ct_units) }}
+      {{ displayList(item.ct_units, 'submission_value') }}
     </template>
     <template #[`item.convertible_unit`]="{ item }">
       {{ $filters.yesno(item.convertible_unit) }}
-    </template>
-    <template #[`item.si_unit`]="{ item }">
-      {{ $filters.yesno(item.si_unit) }}
     </template>
     <template #[`item.us_conventional_unit`]="{ item }">
       {{ $filters.yesno(item.us_conventional_unit) }}
@@ -124,8 +121,14 @@ const total = computed(() => {
   return unitsStore.total
 })
 
+// ct_units_libraries is derived rather than returned by the API. It is set on
+// the items themselves, not computed in a cell slot, so that exporting the
+// selected rows (which reads each item by header key) includes it.
 const units = computed(() => {
-  return unitsStore.units
+  return unitsStore.units.map((item) => ({
+    ...item,
+    ct_units_libraries: displayLibraries(item.ct_units),
+  }))
 })
 
 const historyTitle = computed(() => {
@@ -139,7 +142,6 @@ const historyTitle = computed(() => {
 
 const headers = [
   { title: '', key: 'actions', width: '1%' },
-  { title: t('_global.library'), key: 'library_name' },
   { title: t('_global.name'), key: 'name' },
   { title: t('UnitTable.master_unit'), key: 'master_unit' },
   { title: t('UnitTable.display_unit'), key: 'display_unit' },
@@ -156,10 +158,15 @@ const headers = [
     width: '10%',
   },
   {
+    title: t('UnitTable.ct_units_libraries'),
+    key: 'ct_units_libraries',
+    filteringName: 'ct_units.library_name',
+    sortKey: 'ct_unit_library_names',
+  },
+  {
     title: t('UnitTable.convertible_unit'),
     key: 'convertible_unit',
   },
-  { title: t('UnitTable.si_unit'), key: 'si_unit' },
   {
     title: t('UnitTable.us_conventional_unit'),
     key: 'us_conventional_unit',
@@ -169,7 +176,6 @@ const headers = [
     key: 'unit_dimension.term_name',
     filteringName: 'unit_dimension.name',
   },
-  { title: t('UnitTable.legacy_code'), key: 'legacy_code' },
   {
     title: t('UnitTable.molecular_weight'),
     key: 'use_molecular_weight',
@@ -250,8 +256,14 @@ const historyItems = ref([])
 const showHistory = ref(false)
 const table = ref()
 
-function displayList(items) {
-  return items.map((item) => item.term_name).join(', ')
+function displayList(items, key = 'term_name') {
+  return items.map((item) => item[key]).join(', ')
+}
+
+function displayLibraries(ctUnits) {
+  return [...new Set(ctUnits.map((item) => item.library_name))]
+    .filter(Boolean)
+    .join(', ')
 }
 
 function getUnits(filters, options, filtersUpdated) {
@@ -316,7 +328,8 @@ async function openUnitHistory(item) {
 
 function transformItems(items) {
   for (const item of items) {
-    item.ct_units = item.ct_units.map((set) => set.name).join(', ')
+    item.ct_units_libraries = displayLibraries(item.ct_units)
+    item.ct_units = item.ct_units.map((set) => set.submission_value).join(', ')
     item.unit_subsets = item.unit_subsets.map((set) => set.name).join(', ')
   }
   return items

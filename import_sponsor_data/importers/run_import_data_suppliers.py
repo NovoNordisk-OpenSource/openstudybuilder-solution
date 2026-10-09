@@ -1,4 +1,3 @@
-# pylint: disable=logging-fstring-interpolation
 import csv
 
 from .functions.parsers import map_boolean

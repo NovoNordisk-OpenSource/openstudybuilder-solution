@@ -1,5 +1,5 @@
 import threading
-from typing import Callable
+from collections.abc import Callable
 
 from neomodel import db
 
@@ -17,7 +17,7 @@ class ExceptionCatchingThread(threading.Thread):
     def run(self):
         try:
             super().run()
-        # pylint: disable=broad-except
+
         except BaseException as e:
             self.exc = e
 

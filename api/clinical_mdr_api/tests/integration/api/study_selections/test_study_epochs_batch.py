@@ -2,9 +2,6 @@
 Tests for study epoch batch preview and batch POST/PATCH endpoints.
 """
 
-# pylint: disable=unused-argument
-# pylint: disable=redefined-outer-name
-
 from typing import Any
 
 import pytest

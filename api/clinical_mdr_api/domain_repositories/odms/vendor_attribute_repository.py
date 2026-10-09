@@ -134,10 +134,16 @@ class VendorAttributeRepository(OdmGenericRepository[OdmVendorAttributeAR]):
 
     def _get_computed_field_expressions(self) -> dict[str, str]:
         """Computed fields requiring complex Cypher expressions."""
-        # pylint: disable=line-too-long
+
         return {
-            "vendor_namespace": "head([(odm_value)<-[:HAS_VENDOR_ATTRIBUTE]-(vnv:OdmVendorNamespaceValue)<-[:HAS_VERSION]-(vnr:OdmVendorNamespaceRoot) | {uid: vnr.uid, name: vnv.name, prefix: vnv.prefix, url: vnv.url}]) AS vendor_namespace",
-            "vendor_element": "head([(odm_value)<-[:HAS_VENDOR_ATTRIBUTE]-(xtv:OdmVendorElementValue)<-[:HAS_VERSION]-(xtr:OdmVendorElementRoot) | {uid: xtr.uid, name: xtv.name, compatible_types: xtv.compatible_types}]) AS vendor_element",
+            "vendor_namespace": """head([(odm_value)<-[:HAS_VENDOR_ATTRIBUTE]->
+                (vnv:OdmVendorNamespaceValue)<-[:HAS_VERSION]-(vnr:OdmVendorNamespaceRoot) |
+                {uid: vnr.uid, name: vnv.name, prefix: vnv.prefix, url: vnv.url}
+            ]) AS vendor_namespace""",
+            "vendor_element": """head([(odm_value)<-[:HAS_VENDOR_ATTRIBUTE]->
+                (xtv:OdmVendorElementValue)<-[:HAS_VERSION]-(xtr:OdmVendorElementRoot) |
+                {uid: xtr.uid, name: xtv.name, compatible_types: xtv.compatible_types}
+            ]) AS vendor_element""",
         }
 
     def specific_alias_clause(self, **kwargs) -> str:

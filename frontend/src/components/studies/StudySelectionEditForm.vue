@@ -4,6 +4,8 @@
     :title="title"
     :help-items="helpItems"
     :open="open"
+    :save-disabled="editTemplate"
+    :save-disabled-tooltip="$t('StudySelectionEditForm.save_disabled_tooltip')"
     @close="close"
     @submit="submit"
   >
@@ -251,13 +253,6 @@ export default {
         }
       },
       immediate: true,
-    },
-    editTemplate(value) {
-      if (value) {
-        this.$refs.form.disableActions()
-      } else {
-        this.$refs.form.enableActions()
-      }
     },
   },
   mounted() {

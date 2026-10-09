@@ -1,6 +1,6 @@
 from abc import ABC
-from datetime import datetime, timezone
-from typing import Any
+from datetime import UTC, datetime
+from typing import Any, ClassVar
 
 from neomodel import db
 
@@ -60,13 +60,13 @@ class DictionaryTermGenericRepository(
 ):
     root_class = DictionaryTermRoot
     value_class = DictionaryTermValue
-    specific_root_class_mapping = {
+    specific_root_class_mapping: ClassVar[dict[str, type[DictionaryTermRoot]]] = {
         "snomed": SnomedTermRoot,
         "med-rt": MEDRTTermRoot,
         "unii": UNIITermRoot,
         "ucum": UCUMTermRoot,
     }
-    specific_value_class_mapping = {
+    specific_value_class_mapping: ClassVar[dict[str, type[DictionaryTermValue]]] = {
         "snomed": SnomedTermValue,
         "med-rt": MEDRTTermValue,
         "unii": UNIITermValue,
@@ -380,7 +380,7 @@ class DictionaryTermGenericRepository(
         dictionary_codelist.has_term.connect(
             root,
             {
-                "start_date": datetime.now(timezone.utc),
+                "start_date": datetime.now(UTC),
                 "end_date": None,
                 "author_id": item.item_metadata.author_id,
             },

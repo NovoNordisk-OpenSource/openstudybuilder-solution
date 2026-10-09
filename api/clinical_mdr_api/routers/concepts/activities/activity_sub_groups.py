@@ -166,9 +166,11 @@ State before:
  - an activity subgroup with uid must exist.
 
 Business logic:
- - If parameter at_specified_date_time is specified then the latest/newest representation of the concept at this point in time is returned. The point in time needs to be specified in ISO 8601 format including the timezone, e.g.: '2020-10-31T16:00:00+02:00' for October 31, 2020 at 4pm in UTC+2 timezone. If the timezone is ommitted, UTC�0 is assumed.
+ - If parameter at_specified_date_time is specified then the latest/newest representation of the concept at this point in time is returned. The point in time needs to be specified in ISO 8601
+   format including the timezone, e.g.: '2020-10-31T16:00:00+02:00' for October 31, 2020 at 4pm in UTC+2 timezone. If the timezone is ommitted, UTC�0 is assumed.
  - If parameter status is specified then the representation of the concept in that status is returned (if existent). This is useful if the concept has a status 'Draft' and a status 'Final'.
- - If parameter version is specified then the latest/newest representation of the concept in that version is returned. Only exact matches are considered. The version is specified in the following format: <major>.<minor> where <major> and <minor> are digits. E.g. '0.1', '0.2', '1.0', ...
+ - If parameter version is specified then the latest/newest representation of the concept in that version is returned. Only exact matches are considered. The version is specified in the following
+   format: <major>.<minor> where <major> and <minor> are digits. E.g. '0.1', '0.2', '1.0', ...
 
 State after:
  - No change
@@ -262,7 +264,6 @@ Possible errors:
         ],
     }
 )
-# pylint: disable=unused-argument
 def get_activity_subgroup_overview(
     request: Request,
     activity_subgroup_uid: Annotated[str, ActivitySubGroupUID],
@@ -314,7 +315,6 @@ If no version is provided, the latest version of the activity subgroup is used.
         ],
     }
 )
-# pylint: disable=unused-argument
 def get_activities_for_activity_subgroup(
     request: Request,  # request is actually required by the allow_exports decorator
     activity_subgroup_uid: Annotated[str, ActivitySubGroupUID],
@@ -381,7 +381,6 @@ Results are paginated and suitable for export with each group on a separate row.
         ],
     }
 )
-# pylint: disable=unused-argument
 def get_activity_groups_for_subgroup(
     request: Request,  # request is actually required by the allow_exports decorator
     activity_subgroup_uid: Annotated[str, ActivitySubGroupUID],
@@ -436,7 +435,6 @@ Possible errors:
         404: _generic_descriptions.ERROR_404,
     },
 )
-# pylint: disable=unused-argument
 def get_cosmos_activity_subgroup_overview(
     request: Request,  # request is actually required by the YAMLResponse
     activity_subgroup_uid: Annotated[str, ActivitySubGroupUID],
@@ -485,6 +483,7 @@ Possible errors:
             "- The library doesn't exist.\n"
             "- The library doesn't allow to add new items.\n",
         },
+        409: _generic_descriptions.ERROR_409,
     },
 )
 def create(

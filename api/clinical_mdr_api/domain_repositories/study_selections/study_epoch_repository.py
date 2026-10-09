@@ -313,9 +313,12 @@ class StudyEpochRepository:
                 epoch_subtype_term,
                 epoch_type_term,
                 size([(study_epoch)-[:STUDY_EPOCH_HAS_STUDY_VISIT]->(study_visit:StudyVisit)<-[:HAS_STUDY_VISIT]-(study_value:StudyValue) | study_visit]) AS count_visits,
-                head([(study_epoch)-[:HAS_AE_LAG_TIME_UNIT]->(unit_root:UnitDefinitionRoot)-[:LATEST]->(unit_value:UnitDefinitionValue) | {uid: unit_root.uid, name: unit_value.name}]) AS ae_lag_time_unit,
-                head([(study_epoch)-[:HAS_HYPO_LAG_TIME_UNIT]->(unit_root:UnitDefinitionRoot)-[:LATEST]->(unit_value:UnitDefinitionValue) | {uid: unit_root.uid, name: unit_value.name}]) AS hypo_lag_time_unit,
-                head([(study_epoch)-[:HAS_CE_LAG_TIME_UNIT]->(unit_root:UnitDefinitionRoot)-[:LATEST]->(unit_value:UnitDefinitionValue) | {uid: unit_root.uid, name: unit_value.name}]) AS ce_lag_time_unit,
+                head([(study_epoch)-[:HAS_AE_LAG_TIME_UNIT]->(unit_root:UnitDefinitionRoot)-[:LATEST]->
+                    (unit_value:UnitDefinitionValue) | {uid: unit_root.uid, name: unit_value.name}]) AS ae_lag_time_unit,
+                head([(study_epoch)-[:HAS_HYPO_LAG_TIME_UNIT]->(unit_root:UnitDefinitionRoot)-[:LATEST]->
+                    (unit_value:UnitDefinitionValue) | {uid: unit_root.uid, name: unit_value.name}]) AS hypo_lag_time_unit,
+                head([(study_epoch)-[:HAS_CE_LAG_TIME_UNIT]->(unit_root:UnitDefinitionRoot)-[:LATEST]->
+                    (unit_value:UnitDefinitionValue) | {uid: unit_root.uid, name: unit_value.name}]) AS ce_lag_time_unit,
                 coalesce(head([(user:User)-[*0]-() WHERE user.user_id=study_action.author_id | user.username]), study_action.author_id) AS author_username
         """))
         if audit_trail:

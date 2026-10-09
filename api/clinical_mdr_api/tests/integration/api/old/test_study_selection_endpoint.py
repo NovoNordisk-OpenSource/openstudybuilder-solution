@@ -1,10 +1,3 @@
-# pylint: disable=unused-argument
-# pylint: disable=redefined-outer-name
-# pylint: disable=too-many-arguments
-
-# pytest fixture functions have other fixture functions as arguments,
-# which pylint interprets as unused arguments
-
 import pytest
 from fastapi.testclient import TestClient
 from neomodel import db
@@ -776,7 +769,7 @@ def test_add_selection_2_no_timeframe_set(api_client):
     assert res["timeframe"] is None
 
 
-def test_check_list_has_2(api_client):  # pylint:disable=too-many-statements
+def test_check_list_has_2(api_client):
     response = api_client.get("/studies/study_root/study-endpoints")
     assert_response_status_code(response, 200)
     res = response.json()

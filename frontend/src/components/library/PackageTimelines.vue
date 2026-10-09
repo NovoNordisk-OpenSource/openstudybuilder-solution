@@ -58,7 +58,7 @@ const props = defineProps({
 })
 const emit = defineEmits(['addPackage', 'catalogueChanged', 'packageChanged'])
 const ctCataloguesStore = useCtCataloguesStore()
-const { tabKeys, updateTabKey } = useTabKeys()
+const { tabKeys, updateTabKey } = useTabKeys({ persist: true })
 
 const packages = ref({})
 const tab = ref(null)

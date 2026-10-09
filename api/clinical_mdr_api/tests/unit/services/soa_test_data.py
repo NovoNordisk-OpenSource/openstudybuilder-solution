@@ -1,5 +1,3 @@
-# pylint: disable=too-many-lines
-
 import datetime
 
 from clinical_mdr_api.domains.study_selections.study_selection_base import SoAItemType

@@ -308,8 +308,8 @@ Broadly speaking, they fall into the following categories:
 ## Code Style
 
 - We should follow the rules mentioned here: https://pep8.org. 
-- All code must be formatted using [Black](https://black.readthedocs.io/en/stable/) and [isort](https://pycqa.github.io/isort/) tools (run `pipenv run format` to auto-format all code).
-- All code must pass [Pylint](https://pylint.pycqa.org/en/latest/) static code analysis. Pylint rules which we are globally ignoring are stored in the [pyproject.toml](pyproject.toml) file.
+- All code must be formatted using [Black](https://black.readthedocs.io/en/stable/) and [isort](https://pycqa.github.io/isort/) tools (run `uv run poe format` to auto-format all code).
+- All code must pass [Ruff](https://docs.astral.sh/ruff/) static code analysis. Ruff rules which we are globally ignoring are stored in the [pyproject.toml](pyproject.toml) file.
 
 
 ---
@@ -381,38 +381,36 @@ we can directly map the database output into the API model which is returned to 
 
 ---
 
-## Pylint
-Pylint is a static code analyser for Python.
+## Ruff
+Ruff is a static code analyser (and formatter) for Python, written in Rust.
 
-Pylint analyses your code without actually running it. It checks for errors, enforces a coding standard, looks for code smells, and can make suggestions about how the code could be refactored.  
+Ruff analyses your code without actually running it. It checks for errors, enforces a coding standard, looks for code smells, and can make suggestions about how the code could be refactored. It reimplements a large subset of the rules from tools like Pylint and flake8 as fast native checks.
 
-Pylint can infer actual values from your code using its internal code representation (astroid). If your code is importing logging as argparse, Pylint will know that argparse.error(...) is in fact a logging call and not an argparse call.
+[Ruff Documentation](https://docs.astral.sh/ruff/)
 
-[Pylint Documentation](https://pylint.pycqa.org/en/latest/)
-
-### Run Pylint
-To run Pylint you can execute the following command which will analyse the entire codebase and output results:  
+### Run Ruff
+To run Ruff you can execute the following command which will analyse the entire codebase and output results:  
 ```
-pipenv run lint
+uv run poe lint
 ```
 
 or run the following command to save the report to a file:  
 ```
-pipenv run lint > linting_report.txt
+uv run poe lint > linting_report.txt
 ```
-The [API build workflow](../../../../.github/workflows/api-build.yml) runs this linting check as one of the first steps, and the whole build job will fail if Pylint reports any issues.
+The [API build workflow](../../../../.github/workflows/api-build.yml) runs this linting check as one of the first steps, and the whole build job will fail if Ruff reports any issues.
 
 ### pyproject.toml
-[`pyproject.toml`](../../../../api/pyproject.toml) is the file where we define custom settings for Pylint and other tools used in our project. 
+[`pyproject.toml`](../../../../api/pyproject.toml) is the file where we define custom settings for Ruff and other tools used in our project. 
 
-Sections related to Pylint are marked with `[tool.pylint.'<setting>']`, where `'<setting>'` refers to a Pylint setting that we wish to customize.
+Settings related to Ruff are marked with `[tool.ruff]` and `[tool.ruff.lint]`; only the `PL` (pylint-equivalent) rule family is selected, with specific rules ignored under `[tool.ruff.lint].ignore`.
 
 ## VS Code
-To integrate Pylint with VS Code you will need to install the [Python Extension](https://marketplace.visualstudio.com/items?itemName=ms-python.python) which comes with Pylint out of the box.
+To integrate Ruff with VS Code you will need to install the [Ruff extension](https://marketplace.visualstudio.com/items?itemName=charliermarsh.ruff).
 
 When installation is done, VS Code will automatically detect the `pyproject.toml` configuration file and start analysing our code as you write. 
 
-Any issues found by Pylint in the opened files will be shown in the _PROBLEMS_ tab, e.g.
+Any issues found by Ruff in the opened files will be shown in the _PROBLEMS_ tab, e.g.
 
 [![image.png](/images/documentation/image-3021a4cd-9647-4eef-a1f8-02d14852adbe.png)](/images/documentation/image-3021a4cd-9647-4eef-a1f8-02d14852adbe.png)
 
@@ -421,9 +419,7 @@ Follow these steps to add the path:
 - Open `.vscode/settings.json` file (create it if it doesn't exist).
 - Add the following item to the JSON object:
 ```json
-"python.linting.pylintArgs": [
-    "--rcfile=${workspaceFolder}/clinical-mdr-api/pyproject.toml"
-]
+"ruff.configuration": "${workspaceFolder}/clinical-mdr-api/pyproject.toml"
 ```
 
 ---

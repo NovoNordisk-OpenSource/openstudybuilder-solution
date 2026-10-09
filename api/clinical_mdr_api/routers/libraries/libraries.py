@@ -19,7 +19,6 @@ router = APIRouter()
     dependencies=[security, rbac.LIBRARY_READ],
     summary="Returns all libraries",
 )
-# pylint: disable=unused-argument
 def get_libraries(
     is_editable: Annotated[
         bool | None,

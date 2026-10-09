@@ -157,6 +157,7 @@
         "download_svg": "Download SVG",
         "audit_trail": "Audit trail",
         "remove": "Remove",
+        "saving": "Saving…",
         "change_order": "Change order",
         "order_updated": "The order was updated",
         "reject": "Reject",
@@ -519,10 +520,8 @@
             "ucum_unit": "Select the equivalent unit in UCUM from the drop-down. For syntax rules see <a href='https://ucum.org/ucum.html.' target='_blank'>[Syntax Rules]<a>",
             "display_unit": "Slide if this unit is be used as a display unit, e.g. units used should be displayed in the output.",
             "master_unit": "Slide if this unit is the master unit of a unit dimension. All units are converted through the master unit. E.g the master unit for Length is m (meter)and if cm is to be converted to mm, then cm is first converted to meter, using the 'conversion factor to master' and then to mm. This is often the first unit created for a unit dimension and there can only be one master unit.It does not matter which unit is the Master Unit.",
-            "si_unit": "Slide to indicate whether a unit is a SI unit.",
             "us_unit": "Slide to indicate whether a unit is a US unit.",
             "dimension": "Selection of the Unit Dimension, that the unit belongs to, which means the unit can be converted to the other units in the same Unit Dimension, using the conversion factors defined (except when convertible unit flag is unticked) E.g. cm and mm are in the unit dimension 'length' and can be converted to each other. The naming of these are not used but should be meaningful.",
-            "legacy_code": "Reference to the name of the code in the legacy system.",
             "molecular_weight": "Type either 0 or 1. Molecular weight is needed for the conversion if a unit contains 'mol'(e.g. mmol/L) as part of the unit then this field=1 otherwise this field=0",
             "conversion_factor": "Conversion factor from unit defined to the master unit. All simple unit conversions are converted through the master unit."
         },
@@ -606,7 +605,10 @@
             "element": "Select relevant element where the compound will be used",
             "compound": "Mandatory selection of the compound to be used in the selected element. An overview will be provided after selection",
             "dose_value": "Optional selection of a dose value",
-            "dose_frequency": "Choose value from drop-down, e.g. Daily"
+            "free_text_dose_value": "Optional dose value defined as free text for this study only, used instead of a dose value from the library. Select 'Free text' above to enter it. The two are mutually exclusive.",
+            "dose_frequency": "Choose value from drop-down, e.g. Daily. The frequencies defined on the Medicinal Product are listed first, followed by the remaining terms of the frequency codelist.",
+            "free_text_dose_frequency": "Optional dose frequency defined as free text for this study only, for a frequency that is not in the library at all. Select 'Free text' above to enter it. The two are mutually exclusive.",
+            "dose_collection_activity_instance": "Optional selection of the study activity instance used to collect the dose for this compound."
         },
         "StudyObjectiveTable": {
             "general": "Use the add button (under the menu) to add the objective needed. The objective can be based on standard templates, selected from other studies or created from scratch. Some criteria contain parameters highlighted with orange text (parameter labels) or green text (parameter values) for which new values can be selected, or the parameter omitted, by using the Edit button next to each editable objective in the table."
@@ -752,7 +754,7 @@
             "overview_tab": "To add a supplier, click the pencil icon and then the \"+\" button next to the relevant data type. You can add more than one supplier for each data type. Choose suppliers from the pull-down list — dedicated suppliers for specific data types are shown at the top. If the one you want isn't there, look in the \"Other suppliers\" section further down. If the supplier you need isn't in the list at all, click the \"+ ADD USER DEFINED SUPPLIER\" button to add it. If a data type listed on the page doesn't apply to your study, simply leave it untouched.",
             "list_tab": "List tab provides a detailed table view of all data suppliers with filtering, sorting, and management capabilities.",
             "page_title": "Configure data suppliers for your study by type. Add, remove, or modify supplier assignments.",
-            "supplier_data_type": "The type of data this supplier provides (e.g., EDC System, Lab Data Exchange Files, eCOA Data Exchange Files)."
+            "data_supplier_type": "The type of data this supplier provides (e.g., EDC System, Lab Data Exchange Files, eCOA Data Exchange Files)."
         },
         "StudyDataSuppliersEdit": {
             "general": "Configure data suppliers by type. Add or remove suppliers and define user-defined suppliers when needed."
@@ -1287,11 +1289,6 @@
             "study_population": "Study Population",
             "study_attributes": "Study Attributes",
             "other_study_attributes": "Other Study Attributes",
-            "crf_specifications": "CRF Specifications",
-            "blank_crf": "Blank CRF",
-            "cdash_crf": "CDASH annotated CRF",
-            "sdtm_crf": "SDTM annotated CRF",
-            "odm_specification": "ODM Specification",
             "ctr_odm_xml": "CTR ODM XML",
             "sdtm_specification": "SDTM Specifications",
             "sdtm_study": "SDTM Study Design Datasets",
@@ -1354,7 +1351,7 @@
         "showing_count": "Showing {showing} of {total} supplier | Showing {showing} of {total} suppliers",
         "info_message": "Define only study data suppliers who are directly responsible for delivering data. For example, do not report special subcontractor laboratory if they deliver results via a central laboratory.",
         "update_success": "Study Data Suppliers updated",
-        "supplier_data_type": "Supplier data type:",
+        "data_supplier_type": "Data supplier type:",
         "data_supplier_label": "Data supplier:",
         "data_supplier_field": "Data Supplier",
         "study_data_supplier_type_field": "Study Data Supplier Type",
@@ -1984,7 +1981,8 @@
         "edit_user_tpl_warning": "You are editing a user defined template",
         "save_syntax": "Save syntax",
         "cancel_modifications": "Cancel modifications",
-        "unformatted_text": "Unformatted text preview (SDTM)"
+        "unformatted_text": "Unformatted text preview (SDTM)",
+        "save_disabled_tooltip": "Save template before saving"
     },
     "StudyObjectiveEditForm": {
         "title": "Edit study objective",
@@ -2210,6 +2208,7 @@
         "dose_value": "Dose value",
         "composition": "Composition",
         "dose_frequency": "Dose frequency",
+        "dose_collection_activity_instance": "Dose collection activity instance",
         "confirm_delete": "The study compound dosing '{element} / {compound}' will be removed",
         "delete_success": "Study compound dosing deleted",
         "study_compound_dosing_history_title": "History for study compound dosing [{studyCompoundDosingUid}]",
@@ -2234,8 +2233,19 @@
         "compound_name": "Compound name",
         "compound_alias_name": "Compound alias name",
         "dose_value": "Dose value",
+        "dose_value_source": "Dose value source",
+        "dose_value_from_library": "Library",
+        "dose_value_free_text": "Free text",
+        "free_text_dose_value": "Dose value (free text)",
         "composition": "Composition",
         "dose_frequency": "Dose frequency",
+        "dose_frequency_source": "Dose frequency source",
+        "dose_frequency_from_library": "Library",
+        "dose_frequency_free_text": "Free text",
+        "free_text_dose_frequency": "Dose frequency (free text)",
+        "medicinal_product_frequencies_header": "Medicinal product frequencies",
+        "other_frequencies_header": "Other frequencies",
+        "dose_collection_activity_instance": "Dose collection activity instance",
         "add_success": "Study compound dosing added",
         "update_success": "Study compound dosing updated",
         "no_product_name": "No product name"
@@ -2846,15 +2856,14 @@
         "master_unit": "Master unit",
         "display_unit": "Display unit",
         "convertible_unit": "Convertible unit",
-        "si_unit": "SI unit",
         "us_conventional_unit": "US conventional unit",
         "unit_dimension": "Unit dimension",
-        "legacy_code": "Legacy code",
         "molecular_weight": "Use molecular weight",
         "conversion_factor": "Conversion factor to master",
         "ucum_unit": "UCUM unit",
         "unit_subsets": "Unit subsets",
-        "ct_units": "CT Unit terms",
+        "ct_units": "CT Submission Values",
+        "ct_units_libraries": "CT Libraries",
         "mandatory": "Mandatory",
         "history_title": "History for unit [{name}]",
         "complex_conversion": "Use complex unit conversion"
@@ -2866,16 +2875,16 @@
         "convertible_unit": "Convertible unit",
         "display_unit": "Display unit",
         "master_unit": "Master unit",
-        "si_unit": "SI unit",
+        "master_unit_exists": "This dimension already has a master unit",
         "us_unit": "US conventional unit",
         "dimension": "Dimension",
-        "legacy_code": "Legacy code",
         "add_success": "Unit added",
         "update_success": "Unit updated",
         "molecular_weight": "Use molecular weight",
         "conversion_factor": "Conversion factor to master",
         "reason_for_change": "Reason for change",
-        "complex_conversion": "Use complex unit conversion"
+        "complex_conversion": "Use complex unit conversion",
+        "molecular_weight_confirm": "Are you sure you did not forget to tick the 'Use molecular weight' checkbox?<br> Click on 'Continue' to submit anyway."
     },
     "UCUMUnitField": {
         "label": "UCUM unit"
@@ -2980,6 +2989,7 @@
         "pharma_class": "Pharmacological class:"
     },
     "ActiveSubstanceTable": {
+        "history_title": "History for active substance [{activeSubstance}]",
         "approve_success": "Active substance is now in Final state",
         "delete_success": "Active substance deleted",
         "new_version_success": "New version created",
@@ -3167,6 +3177,7 @@
         "edit_filters": "Select filters",
         "clear_filters": "Clear and dismiss filters",
         "select_rows": "Add select boxes to table to allow selection of rows for export",
+        "pagination_disabled": "Save your changes before changing page",
         "reorder_content": "Activate the reorder feature allowing reordering of table content by drag-and-drop of table rows",
         "add_content": "Add content",
         "edit": "Edit",
@@ -3842,8 +3853,7 @@
         "instances_actions": "Study Activity Instances - State/Actions and Reviewed checkbox",
         "instances_ellipsis": "Study Activity Instances - Ellipsis icon (three dots)",
         "instances_exclamation": "Study Activity Instances - All, Red, and Yellow exclamation mark icons",
-        "instances_updates": "Study Activity Instances - Review Activity instance updates",
-        "tab3_title": "Study CRFs"
+        "instances_updates": "Study Activity Instances - Review Activity instance updates"
     },
     "StudyActivityInstances": {
         "instance": "Instance",
@@ -5076,8 +5086,9 @@
         "title": "Trial Summary Parameters",
         "library": "Library",
         "sponsor_name": "Sponsor name",
-        "ct_name": "CT name",
-        "code": "Code",
+        "ct_name": "NCI preferred term",
+        "code": "Code subm value",
+        "test_name_submission_value": "Name subm value",
         "cdisc": "CDISC",
         "concept_id": "Concept ID",
         "definition": "Definition",
@@ -5088,6 +5099,7 @@
         "cardinality": "Cardinality",
         "valid_null_flavor": "Valid null flavor",
         "notes": "Notes",
+        "short_code": "Short code",
         "osb_page_reference": "OSB page reference",
         "osb_field_name": "OSB field name",
         "name_status": "Name status",
@@ -5110,7 +5122,9 @@
         "term_attributes_values": "Term attributes values",
         "sponsor_sentence_case_name": "Sentence case name",
         "nci_preferred_name": "NCI preferred name",
-        "ct_term_codelists_context": "CT term codelists context"
+        "ct_term_codelists_context": "CT term codelists context",
+        "cdisc_edit_disabled": "Editing is not allowed for terms in the CDISC library",
+        "term_library": "Term library"
     },
     "TrialSummaryParameterForm": {
         "add_title": "Add Trial Summary Parameter",
@@ -5125,13 +5139,15 @@
         "osb_field_name": "OSB Study Field/Selection",
         "semantic_data_type": "Semantic data type",
         "notes": "Notes",
+        "short_code": "Short code",
         "term_attributes_values": "Term attributes values",
         "library": "Library",
         "ct_name": "CT name",
         "code": "Code",
         "concept_id": "Concept ID",
         "nci_preferred_term": "NCI preferred term",
-        "submission_value": "Submission value",
+        "submission_value": "Test code submission value",
+        "test_name_submission_value": "Test name submission value",
         "order": "Order",
         "definition": "Definition",
         "add_success": "Trial Summary Parameter added",
@@ -5507,6 +5523,28 @@
     },
     "DataSupplierView": {
         "title": "Data Suppliers",
+        "tab_data_suppliers": "Data Suppliers",
+        "tab_rules_manager": "Rules Manager",
+        "RulesManager": {
+            "data_supplier_type": "Data supplier type",
+            "rule_name": "Rule name",
+            "activity_groups": "Activity Groups",
+            "activity_subgroups": "Activity Subgroups",
+            "activities": "Activities",
+            "add_grouping": "Add a new grouping",
+            "add_rule": "Add rule",
+            "change_description": "Rule updated via Rules Manager",
+            "rule_removed": "Data supplier rule removed",
+            "rules_updated": "Data supplier rules updated",
+            "no_types": "No data supplier types are defined yet.",
+            "no_rules": "No rules defined for this data supplier type yet.",
+            "rules_not_allowed_for_type": "Activity instances will be linked to the data supplier based on their association with CRF forms.",
+            "activity_mapping_section": "Activity mapping",
+            "activity_groupings_required": "Each rule must have at least one activity mapping.",
+            "rule_name_required": "Rule name is required.",
+            "rule_validation_required": "Each rule must have a rule name and at least one activity mapping.",
+            "info_message": "Use Edit to add, change or remove data supplier rules, then Save to apply your changes or Cancel to discard them."
+        },
         "DataSupplierTable": {
             "add_data_supplier": "Add Data Supplier",
             "api_base_url": "API base URL",
@@ -5539,7 +5577,7 @@
         "reactivate_success": "Activity instance class reactivated"
     },
     "ActivityItemClassTable": {
-        "nci_concept_id": "NCI Code",
+        "nci_concept_id": "NCI code",
         "history_title": "History for activity item class '{name}'",
         "approve_success": "Activity item class approved",
         "new_version_success": "New version of activity item class created",
@@ -5550,17 +5588,18 @@
     "NonStandardVariablesTable": {
         "nsv_code": "NSV code",
         "nsv_label": "NSV label",
-        "nci_concept_id": "NCI Code",
-        "nci_concept_name": "NCI Concept Name",
+        "nci_concept_id": "NCI code",
+        "nci_concept_name": "NCI concept name",
         "multiple": "Multiple",
         "is_cdisc_defined": "CDISC defined",
-        "data_type": "Data type",
+        "data_type": "Semantic data type",
         "length": "Length",
         "codelist_codes": "Codelist codes",
-        "origin_type": "Origin Type",
-        "origin_source": "Origin Source",
+        "origin_type": "Origin type",
+        "origin_source": "Origin source",
+        "nsvxmldt": "NSV XML data type",
         "algorithm": "Algorithm",
-        "derivation_rule": "Derivation Rule",
+        "derivation_rule": "Derivation rule",
         "add_nsv": "Add Non-Standard Variable",
         "confirm_delete": "Are you sure you want to delete this Non-Standard Variable?",
         "delete_success": "Non-Standard Variable deleted",
@@ -5640,6 +5679,10 @@
         "previous_aria_label": "Go to previous page"
     },
     "ElementDropdownList": {
-        "transition_rule_form_title": "Transition Rule"
+        "element": "Element",
+        "transition_rule_form_title": "Transition Rule",
+        "edit_transition_rule": "Edit transition rule",
+        "add_transition_rule": "Add transition rule",
+        "no_transition_rule": "No transition rule set"
     }
 }

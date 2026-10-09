@@ -1,4 +1,5 @@
-from typing import Annotated, Any, Callable, Self, overload
+from collections.abc import Callable
+from typing import Annotated, Any, Self, overload
 
 from pydantic import Field, field_validator
 
@@ -279,7 +280,7 @@ class OdmItem(OdmBaseModel):
         Field(json_schema_extra={"nullable": True}),
     ] = None
     terms: Annotated[list[OdmItemTermRelationshipModel], Field()]
-    activity_instances: Annotated[list["ActivityInstanceRel"], Field()]
+    activity_instances: Annotated[list[ActivityInstanceRel], Field()]
     vendor_elements: Annotated[list[OdmVendorElementRelationModel], Field()]
     vendor_attributes: Annotated[list[OdmVendorAttributeRelationModel], Field()]
     vendor_element_attributes: Annotated[

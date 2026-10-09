@@ -31,6 +31,10 @@ When('User sets study subpart acronym', () => {
     cy.contains('.v-overlay .v-input', 'Study subpart acronym').type(studySubpartAcronym = 'subpart')
 })
 
+When('User sets study subpart acronym to {string}', (value) => {
+    cy.contains('.v-overlay .v-input', 'Study subpart acronym').type(value)
+})
+
 When('User sets study subpart for removal test', () => {
     cy.contains('.v-overlay .v-input', 'Study subpart acronym').type(studySubpartAcronym = 'dsubpart')
 })
@@ -41,6 +45,12 @@ When('User updates study subpart acronym', () => {
 
 When('User sets study subpart acronym to value exceeding characters limit', () => {
     cy.contains('.v-overlay .v-input', 'Study subpart acronym').type('a'.repeat(11))
+})
+
+When('Study subpart with acronym {string} is searched for and found', (value) => {
+    cy.readFile('cypress/fixtures/study_metadata.json').then(data => {
+        cy.searchAndCheckPresence(`CDISC DEV-${data.studyNumber}-${value}`, true)
+    })
 })
 
 When('Study subpart is searched for and found', () => cy.searchAndCheckPresence(studySubpartAcronym.toUpperCase(), true))

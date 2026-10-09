@@ -5,8 +5,8 @@
 |------------------------------------|----------------|--------------------------------------------|
 | @babel/helper-string-parser        | 7.29.7         | [MIT](#@babel/helper-string-parser)        |
 | @babel/helper-validator-identifier | 7.29.7         | [MIT](#@babel/helper-validator-identifier) |
-| @babel/parser                      | 7.29.7         | [MIT](#@babel/parser)                      |
-| @babel/types                       | 7.29.7         | [MIT](#@babel/types)                       |
+| @babel/parser                      | 7.29.9         | [MIT](#@babel/parser)                      |
+| @babel/types                       | 7.29.8         | [MIT](#@babel/types)                       |
 | @docsearch/css                     | 4.6.3          | MIT (missing)                              |
 | @docsearch/js                      | 4.6.3          | MIT (missing)                              |
 | @docsearch/sidepanel-js            | 4.6.3          | MIT (missing)                              |
@@ -14,10 +14,11 @@
 | @iconify-json/simple-icons         | 1.2.86         | CC0-1.0 (missing)                          |
 | @iconify/types                     | 2.0.0          | [MIT](#@iconify/types)                     |
 | @jamescoyle/vue-icon               | 0.1.2          | [MIT](#@jamescoyle/vue-icon)               |
-| @jridgewell/sourcemap-codec        | 1.5.5          | [MIT](#@jridgewell/sourcemap-codec)        |
+| @jridgewell/sourcemap-codec        | 1.6.0          | [MIT](#@jridgewell/sourcemap-codec)        |
 | @mdi/js                            | 7.4.47         | [Apache-2.0](#@mdi/js)                     |
 | @rolldown/pluginutils              | 1.0.1          | [MIT](#@rolldown/pluginutils)              |
 | @rollup/rollup-linux-x64-gnu       | 4.62.0         | MIT (missing)                              |
+| @rollup/rollup-linux-x64-musl      | 4.62.0         | MIT (missing)                              |
 | @shikijs/core                      | 3.23.0         | [MIT](#@shikijs/core)                      |
 | @shikijs/engine-javascript         | 3.23.0         | [MIT](#@shikijs/engine-javascript)         |
 | @shikijs/engine-oniguruma          | 3.23.0         | [MIT](#@shikijs/engine-oniguruma)          |
@@ -36,18 +37,18 @@
 | @types/web-bluetooth               | 0.0.21         | [MIT](#@types/web-bluetooth)               |
 | @ungap/structured-clone            | 1.3.1          | [ISC](#@ungap/structured-clone)            |
 | @vitejs/plugin-vue                 | 6.0.7          | [MIT](#@vitejs/plugin-vue)                 |
-| @vue/compiler-core                 | 3.5.38         | [MIT](#@vue/compiler-core)                 |
-| @vue/compiler-dom                  | 3.5.38         | [MIT](#@vue/compiler-dom)                  |
-| @vue/compiler-sfc                  | 3.5.38         | [MIT](#@vue/compiler-sfc)                  |
-| @vue/compiler-ssr                  | 3.5.38         | [MIT](#@vue/compiler-ssr)                  |
+| @vue/compiler-core                 | 3.5.43         | [MIT](#@vue/compiler-core)                 |
+| @vue/compiler-dom                  | 3.5.43         | [MIT](#@vue/compiler-dom)                  |
+| @vue/compiler-sfc                  | 3.5.43         | [MIT](#@vue/compiler-sfc)                  |
+| @vue/compiler-ssr                  | 3.5.43         | [MIT](#@vue/compiler-ssr)                  |
 | @vue/devtools-api                  | 8.1.3          | [MIT](#@vue/devtools-api)                  |
 | @vue/devtools-kit                  | 8.1.3          | [MIT](#@vue/devtools-kit)                  |
 | @vue/devtools-shared               | 8.1.3          | [MIT](#@vue/devtools-shared)               |
-| @vue/reactivity                    | 3.5.38         | [MIT](#@vue/reactivity)                    |
-| @vue/runtime-core                  | 3.5.38         | [MIT](#@vue/runtime-core)                  |
-| @vue/runtime-dom                   | 3.5.38         | [MIT](#@vue/runtime-dom)                   |
-| @vue/server-renderer               | 3.5.38         | [MIT](#@vue/server-renderer)               |
-| @vue/shared                        | 3.5.38         | [MIT](#@vue/shared)                        |
+| @vue/reactivity                    | 3.5.43         | [MIT](#@vue/reactivity)                    |
+| @vue/runtime-core                  | 3.5.43         | [MIT](#@vue/runtime-core)                  |
+| @vue/runtime-dom                   | 3.5.43         | [MIT](#@vue/runtime-dom)                   |
+| @vue/server-renderer               | 3.5.43         | [MIT](#@vue/server-renderer)               |
+| @vue/shared                        | 3.5.43         | [MIT](#@vue/shared)                        |
 | @vueuse/core                       | 14.3.0         | [MIT](#@vueuse/core)                       |
 | @vueuse/integrations               | 14.3.0         | [MIT](#@vueuse/integrations)               |
 | @vueuse/metadata                   | 14.3.0         | [MIT](#@vueuse/metadata)                   |
@@ -78,20 +79,20 @@
 | micromark-util-symbol              | 2.0.1          | [MIT](#micromark-util-symbol)              |
 | micromark-util-types               | 2.0.2          | [MIT](#micromark-util-types)               |
 | minisearch                         | 7.2.0          | [MIT](#minisearch)                         |
-| nanoid                             | 3.3.18         | [MIT](#nanoid)                             |
+| nanoid                             | 3.3.20         | [MIT](#nanoid)                             |
 | oniguruma-parser                   | 0.12.2         | [MIT](#oniguruma-parser)                   |
 | oniguruma-to-es                    | 4.3.6          | [MIT](#oniguruma-to-es)                    |
 | perfect-debounce                   | 2.1.0          | [MIT](#perfect-debounce)                   |
 | picocolors                         | 1.1.1          | [ISC](#picocolors)                         |
 | picomatch                          | 4.0.4          | [MIT](#picomatch)                          |
-| postcss                            | 8.5.23         | [MIT](#postcss)                            |
+| postcss                            | 8.5.29         | [MIT](#postcss)                            |
 | property-information               | 7.2.0          | [MIT](#property-information)               |
 | regex                              | 6.1.0          | [MIT](#regex)                              |
 | regex-recursion                    | 6.0.2          | [MIT](#regex-recursion)                    |
 | regex-utilities                    | 2.3.0          | [MIT](#regex-utilities)                    |
 | rollup                             | 4.62.0         | [MIT](#rollup)                             |
 | shiki                              | 3.23.0         | [MIT](#shiki)                              |
-| source-map-js                      | 1.2.1          | [BSD-3-Clause](#source-map-js)             |
+| source-map-js                      | 1.2.2          | [BSD-3-Clause](#source-map-js)             |
 | space-separated-tokens             | 2.0.2          | [MIT](#space-separated-tokens)             |
 | stringify-entities                 | 4.0.4          | [MIT](#stringify-entities)                 |
 | tabbable                           | 6.4.0          | [MIT](#tabbable)                           |
@@ -107,7 +108,7 @@
 | viewerjs                           | 1.11.8         | [MIT](#viewerjs)                           |
 | vite                               | 7.3.5          | [MIT](#vite)                               |
 | vitepress                          | 2.0.0-alpha.17 | [MIT](#vitepress)                          |
-| vue                                | 3.5.38         | [MIT](#vue)                                |
+| vue                                | 3.5.43         | [MIT](#vue)                                |
 | zwitch                             | 2.0.4          | [MIT](#zwitch)                             |
 
 

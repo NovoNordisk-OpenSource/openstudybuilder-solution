@@ -104,7 +104,6 @@ def get_study_m11_protocol(
     with open(
         str(M11_TEMPLATES_DIR_PATH)
         + "/ICH_Step4_M11_Final_TechnicalSpecification_2025_1119.json",
-        "r",
         encoding="utf-8",
     ) as f:
         specification = f.read()

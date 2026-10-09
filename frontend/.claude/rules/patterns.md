@@ -75,4 +75,5 @@ When making API calls:
   arrow: `:rules="[(value) => formRules.max(value, 200)]"`.
 - `:rules` goes on the input, not on `<v-form>`. Error messages come from the rule's own
   `_errors.*` i18n key, so do not pass a message.
-- Full signatures are documented in `.claude/agents/vue-ui-developer.md`.
+- Full signatures are documented in `.claude/agents/vue-ui-developer.md` (that path is relative to
+  the monorepo root, not to `frontend/`).

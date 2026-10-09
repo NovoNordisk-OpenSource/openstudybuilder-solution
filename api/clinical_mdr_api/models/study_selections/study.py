@@ -1,10 +1,11 @@
 """Study model."""
 
+from collections.abc import Callable, Collection
 from datetime import datetime
 from decimal import Decimal
-from typing import Annotated, Any, Callable, Collection, Self, overload
+from typing import Annotated, Any, Self, overload
 
-from pydantic import ConfigDict, Field, model_validator
+from pydantic import ConfigDict, Field, TypeAdapter, model_validator
 
 from clinical_mdr_api.descriptions.general import CHANGES_FIELD_DESC
 from clinical_mdr_api.domain_repositories.controlled_terminologies import (
@@ -60,7 +61,7 @@ from common.exceptions import (
 from common.utils import convert_to_datetime
 
 
-def update_study_subpart_properties(study: "Study | CompactStudy"):
+def update_study_subpart_properties(study: Study | CompactStudy):
     if (
         study.study_parent_part
         and study.study_parent_part.study_id
@@ -150,9 +151,9 @@ class StudySoaSplit(StudySoaSplitInput):
 class StudyOtherAttributeInput(PostInputModel):
     """Input payload for create/update of a Study Other Attribute selection.
 
-    Exactly one of ``parameter_value`` or ``null_flavor_term_uid`` should be
-    provided. All other columns shown in the UI table are derived from the
-    referenced TS-parameter CT term (codelists `C66738` / `C67152`).
+    Exactly one of ``parameter_value`` or ``null_flavor_term_uid`` must have a
+    non-null value. All other columns shown in the UI table are derived from
+    the referenced TS-parameter CT term (codelists `C66738` / `C67152`).
     """
 
     model_config = ConfigDict(title="Study Other Attribute input")
@@ -359,9 +360,14 @@ class StudyOtherAttributeDeleteInput(BaseModel):
 class StudyOtherAttributeBatchInput(BatchInputModel):
     """Single operation in a batch request for Study Other Attributes.
 
-    For POST: content must be a StudyOtherAttributeInput (ts_parameter_term_uid + value/null_flavor).
-    For PATCH: content must be a StudyOtherAttributeInput (ts_parameter_term_uid identifies the target).
-    For DELETE: content must be a StudyOtherAttributeDeleteInput (ts_parameter_term_uid only).
+    `content` is validated against `StudyOtherAttributeInput` (POST/PATCH) or
+    `StudyOtherAttributeDeleteInput` (DELETE) by `dispatch_content_by_method`
+    below, chosen explicitly based on `method` *before* Pydantic's own union
+    resolution runs. Left to resolve the union on its own, Pydantic would try
+    each member and keep whichever validates — so a POST/PATCH payload
+    missing `parameter_value`/`null_flavor_term_uid` would silently validate
+    as a delete operation (the only member left that still accepts it),
+    bypassing `StudyOtherAttributeInput.check_xor`.
     """
 
     method: Annotated[
@@ -375,6 +381,22 @@ class StudyOtherAttributeBatchInput(BatchInputModel):
         StudyOtherAttributeInput | StudyOtherAttributeDeleteInput,
         Field(description="Payload matching the method type."),
     ]
+
+    @model_validator(mode="before")
+    @classmethod
+    def dispatch_content_by_method(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            content = data.get("content")
+            if isinstance(content, dict):
+                if data.get("method") in ("POST", "PATCH"):
+                    data["content"] = TypeAdapter(
+                        StudyOtherAttributeInput
+                    ).validate_python(content)
+                elif data.get("method") == "DELETE":
+                    data["content"] = TypeAdapter(
+                        StudyOtherAttributeDeleteInput
+                    ).validate_python(content)
+        return data
 
 
 class StudyOtherAttributeBatchOutput(BaseModel):
@@ -2192,7 +2214,6 @@ class Study(BaseModel):
         find_study_parent_part_by_uid: Callable[[str], StudyDefinitionAR | None],
         find_term_by_uids: Callable[..., list[CTTermNameAR] | None],
         find_dictionary_term_by_uid: Callable[[str], DictionaryTermAR | None],
-        # pylint: disable=unused-argument
         at_specified_date_time: datetime | None = None,
         study_value_version: str | None = None,
         status: StudyStatus | None = None,

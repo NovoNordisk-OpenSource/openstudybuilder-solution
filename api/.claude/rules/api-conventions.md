@@ -41,6 +41,6 @@ Error responses are built by `ErrorResponse` in `common/models/error.py` and car
 
 The OpenAPI specifications are generated from code, not written manually:
 
-- Use `pipenv run openapi` to regenerate after endpoint changes
+- Use `uv run poe openapi` to regenerate after endpoint changes
 - Specifications are committed to version control
 - Schemathesis uses these for contract testing

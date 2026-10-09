@@ -38,7 +38,6 @@ class StudySoAGroupService(
     def _get_selected_object_exist_check(self):
         return True
 
-    # pylint: disable=unused-argument
     def _transform_all_to_response_model(
         self,
         study_selection: StudySoAGroupAR | None,

@@ -1,7 +1,7 @@
-from datetime import date, datetime
+from datetime import UTC, date, datetime
 from typing import Annotated, Any, Self
 
-from pydantic import Field
+from pydantic import Field, field_validator
 
 from clinical_mdr_api.domains.controlled_terminologies.ct_package import CTPackageAR
 from clinical_mdr_api.models.utils import BaseModel
@@ -50,6 +50,15 @@ class CTPackage(BaseModel):
     author_username: Annotated[
         str | None, Field(json_schema_extra={"nullable": True})
     ] = None
+
+    @field_validator("import_date")
+    @classmethod
+    def _assume_utc_when_naive(cls, value: datetime) -> datetime:
+        # Packages imported before import dates were stored with a timezone hold
+        # a naive value in the database. The field is documented as
+        # `format: date-time`, which requires an offset, so stamp UTC on naive
+        # values rather than emitting a string that violates the schema.
+        return value if value.tzinfo else value.replace(tzinfo=UTC)
 
 
 class CodelistChangeItem(BaseModel):

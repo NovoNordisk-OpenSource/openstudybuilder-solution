@@ -44,7 +44,6 @@ class SponsorModelDatasetVariableRepository(  # type: ignore[misc]
     value_class = SponsorModelDatasetVariableInstance
     return_model = SponsorModelDatasetVariable
 
-    # pylint: disable=unused-argument
     def generic_match_clause(self, versioning_relationship: str):
         standard_data_model_label = self.root_class.__label__
         standard_data_model_value_label = self.value_class.__label__
@@ -93,7 +92,11 @@ class SponsorModelDatasetVariableRepository(  # type: ignore[misc]
             standard_value.enrich_rule AS enrich_rule,
             collect(DISTINCT CASE WHEN ref_cl IS NOT NULL THEN {uid: ref_cl_root.uid, submission_value: ref_cl.submission_value} END) AS referenced_codelists,
             collect(DISTINCT CASE WHEN ref_t IS NOT NULL THEN {uid: ref_t_root.uid, submission_value: ref_t.code_submission_value} END) AS referenced_terms,
-            {ordinal: has_dataset_variable_rel.ordinal, key_order: key.order, version_number: has_dataset_variable_rel.version_number, uid: dataset_root.uid, sponsor_model_name: sponsor_model_value.name} AS dataset
+            {
+                ordinal: has_dataset_variable_rel.ordinal, key_order: key.order,
+                version_number: has_dataset_variable_rel.version_number, uid: dataset_root.uid,
+                sponsor_model_name: sponsor_model_value.name
+            } AS dataset
         """
 
     def create_query_filter_statement(self, **kwargs) -> tuple[str, dict[Any, Any]]:

@@ -153,14 +153,48 @@ class FormRepository(OdmGenericRepository[OdmFormAR]):
 
     def _get_computed_field_expressions(self) -> dict[str, str]:
         """Form computed field expressions - requires list comprehensions."""
-        # pylint: disable=line-too-long
+
         return {
             "translated_texts": "[(odm_value)-[:HAS_TRANSLATED_TEXT]->(dv:OdmTranslatedText) | {text_type: dv.text_type, language: dv.language, text: dv.text}] AS translated_texts",
             "aliases": "[(odm_value)-[:HAS_ALIAS]->(av:OdmAlias) | {name: av.name, context: av.context}] AS aliases",
-            "item_groups": "[(odm_value)-[igref:ITEM_GROUP_REF]->(igv:OdmItemGroupValue)<-[hv:HAS_VERSION]-(igr:OdmItemGroupRoot) | {uid: igr.uid, oid: igv.oid, name: igv.name, order_number: igref.order_number, mandatory: igref.mandatory, collection_exception_condition_oid: igref.collection_exception_condition_oid, version: hv.version}] AS item_groups",
-            "vendor_elements": "[(odm_value)-[hve:HAS_VENDOR_ELEMENT]->(vev:OdmVendorElementValue)<-[:HAS_VERSION]-(ver:OdmVendorElementRoot) | {uid: ver.uid, name: vev.name, compatible_types: vev.compatible_types, value: hve.value}] AS vendor_elements",
-            "vendor_attributes": "[(odm_value)-[hva:HAS_VENDOR_ATTRIBUTE]->(vav:OdmVendorAttributeValue)<-[:HAS_VERSION]-(var:OdmVendorAttributeRoot) | {uid: var.uid, name: vav.name, data_type: vav.data_type, value_regex: vav.value_regex, compatible_types: vav.compatible_types, value: hva.value}] AS vendor_attributes",
-            "vendor_element_attributes": "[(odm_value)-[hvea:HAS_VENDOR_ELEMENT_ATTRIBUTE]->(vav:OdmVendorAttributeValue)<-[:HAS_VERSION]-(var:OdmVendorAttributeRoot) | {uid: var.uid, name: vav.name, data_type: vav.data_type, value_regex: vav.value_regex, compatible_types: vav.compatible_types, value: hvea.value}] AS vendor_element_attributes",
+            "item_groups": """[(odm_value)-[igref:ITEM_GROUP_REF]->(igv:OdmItemGroupValue)<-[hv:HAS_VERSION]->
+                (igr:OdmItemGroupRoot) |
+                {
+                    uid: igr.uid,
+                    oid: igv.oid,
+                    name: igv.name,
+                    order_number: igref.order_number,
+                    mandatory: igref.mandatory,
+                    collection_exception_condition_oid: igref.collection_exception_condition_oid,
+                    version: hv.version
+                }
+            ] AS item_groups""",
+            "vendor_elements": """[(odm_value)-[hve:HAS_VENDOR_ELEMENT]->(vev:OdmVendorElementValue)
+                <-[:HAS_VERSION]-(ver:OdmVendorElementRoot) |
+                {uid: ver.uid, name: vev.name, compatible_types: vev.compatible_types, value: hve.value}
+            ] AS vendor_elements""",
+            "vendor_attributes": """[(odm_value)-[hva:HAS_VENDOR_ATTRIBUTE]->(vav:OdmVendorAttributeValue)
+                <-[:HAS_VERSION]-(var:OdmVendorAttributeRoot) |
+                {
+                    uid: var.uid,
+                    name: vav.name,
+                    data_type: vav.data_type,
+                    value_regex: vav.value_regex,
+                    compatible_types: vav.compatible_types,
+                    value: hva.value
+                }
+            ] AS vendor_attributes""",
+            "vendor_element_attributes": """[(odm_value)-[hvea:HAS_VENDOR_ELEMENT_ATTRIBUTE]->
+                (vav:OdmVendorAttributeValue)<-[:HAS_VERSION]-(var:OdmVendorAttributeRoot) |
+                {
+                    uid: var.uid,
+                    name: vav.name,
+                    data_type: vav.data_type,
+                    value_regex: vav.value_regex,
+                    compatible_types: vav.compatible_types,
+                    value: hvea.value
+                }
+            ] AS vendor_element_attributes""",
         }
 
     def specific_alias_clause(self, **kwargs) -> str:

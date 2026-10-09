@@ -2,9 +2,6 @@
 Tests for /admin/global-preferences and /user-preferences endpoints
 """
 
-# pylint: disable=unused-argument
-# pylint: disable=redefined-outer-name
-
 import logging
 
 import pytest

@@ -6,6 +6,9 @@ from neomodel import db
 from clinical_mdr_api.domain_repositories.study_selections.study_soa_footnote_repository import (
     StudySoAFootnoteRepository,
 )
+from clinical_mdr_api.domain_repositories.study_selections.study_soa_repository import (
+    SoALayout,
+)
 from clinical_mdr_api.domains.study_selections.study_soa_footnote import (
     ReferencedItemVO,
     StudySoAFootnoteVO,
@@ -93,6 +96,7 @@ class StudySoAFootnoteService:
         filter_operator: FilterOperator = FilterOperator.AND,
         total_count: bool = False,
         study_value_version: str | None = None,
+        layout: SoALayout | None = None,
     ) -> GenericFilteringReturn[StudySoAFootnote]:
         # Extract the study uids to use database level filtering for these
         # instead of service level filtering
@@ -104,6 +108,7 @@ class StudySoAFootnoteService:
         items = self.repository.find_all_footnotes(
             study_uids=study_uids,
             study_value_version=study_value_version,
+            layout=layout.value if layout else None,
         )
         items = [
             self._transform_vo_to_pydantic_model(study_soa_footnote_vo=item)
@@ -135,11 +140,13 @@ class StudySoAFootnoteService:
         total_count: bool = False,
         study_value_version: str | None = None,
         minimal_response: bool = False,
+        layout: SoALayout | None = None,
     ) -> GenericFilteringReturn[StudySoAFootnote]:
         items = self.repository.find_all_footnotes(
             study_uids=study_uid,
             study_value_version=study_value_version,
             full_query=not minimal_response,
+            layout=layout.value if layout else None,
         )
         items = [
             self._transform_vo_to_pydantic_model(
@@ -238,6 +245,7 @@ class StudySoAFootnoteService:
         footnote_template_name: str | None = None,
         footnote_template_name_plain: str | None = None,
         footnote_template_library_name: str | None = None,
+        layout: str | None = None,
     ):
         footnote_vo = StudySoAFootnoteVO.from_input_values(
             study_uid=study_uid,
@@ -268,6 +276,7 @@ class StudySoAFootnoteService:
             ),
             author_id=self.author_id,
             accepted_version=accepted_version,
+            layout=layout,
         )
         return footnote_vo
 
@@ -300,6 +309,7 @@ class StudySoAFootnoteService:
                 footnote_input=StudySoAFootnoteCreateInput(
                     footnote_template_uid=footnote_template.uid,
                     referenced_items=footnote_input.referenced_items,
+                    layout=footnote_input.layout,
                 ),
             )
         else:
@@ -337,6 +347,7 @@ class StudySoAFootnoteService:
                 footnote_input=StudySoAFootnoteCreateInput(
                     footnote_uid=footnote_ar.uid,
                     referenced_items=footnote_input.referenced_items,
+                    layout=footnote_input.layout,
                 ),
             )
         return soa_footnote
@@ -355,6 +366,7 @@ class StudySoAFootnoteService:
                 footnote_input, "footnote_template_uid", None
             ),
             referenced_items=footnote_input.referenced_items,
+            layout=getattr(getattr(footnote_input, "layout", None), "value", None),
         )
         self.validate(
             study_uid=study_uid,
@@ -424,6 +436,13 @@ class StudySoAFootnoteService:
             ),
             msg=f"There is no Final Footnote Template with UID '{footnote_template_uid}'.",
         )
+        BusinessLogicException.raise_if(
+            footnote_template_uid
+            and self._repos.footnote_template_repository.latest_version_is_retired(
+                normalize_string(footnote_template_uid)
+            ),
+            msg=f"Footnote Template with UID '{footnote_template_uid}' has status Retired and cannot be added to a study.",
+        )
         NotFoundException.raise_if(
             footnote_uid
             and not self._repos.footnote_repository.check_exists_final_version(
@@ -469,13 +488,22 @@ class StudySoAFootnoteService:
             footnote_edit_input.footnote_uid == soa_footnote.footnote_uid
             or footnote_edit_input.footnote_uid is None
         ):
+            # A footnote's layout counts as an editable field for change detection.
+            layout_unchanged = (
+                footnote_edit_input.layout is None
+                or footnote_edit_input.layout.value == soa_footnote.layout
+            )
             if (
-                footnote_edit_input.footnote_template_uid
-                == soa_footnote.footnote_template_uid
-                or footnote_edit_input.footnote_template_uid is None
-            ) and (
-                accept_version is False
-                or soa_footnote.accepted_version == accept_version
+                (
+                    footnote_edit_input.footnote_template_uid
+                    == soa_footnote.footnote_template_uid
+                    or footnote_edit_input.footnote_template_uid is None
+                )
+                and (
+                    accept_version is False
+                    or soa_footnote.accepted_version == accept_version
+                )
+                and layout_unchanged
             ):
                 ValidationException.raise_if(
                     sync_latest_version is False
@@ -537,6 +565,11 @@ class StudySoAFootnoteService:
             ),
             uid=study_soa_footnote_uid,
             accepted_version=soa_footnote.accepted_version,
+            layout=(
+                footnote_edit_input.layout.value
+                if footnote_edit_input.layout is not None
+                else soa_footnote.layout
+            ),
         )
         self.validate(
             study_uid=study_uid,

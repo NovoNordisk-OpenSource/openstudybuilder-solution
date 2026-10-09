@@ -345,6 +345,9 @@ class CTCodelistTermBase(BaseModel):
         TSParameterCardinality | None, Field(json_schema_extra={"nullable": True})
     ] = None
     notes: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    short_code: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
     osb_page_reference: Annotated[
         str | None, Field(json_schema_extra={"nullable": True})
     ] = None
@@ -357,8 +360,12 @@ class CTCodelistTermBase(BaseModel):
     response_codelist: Annotated[
         CTResponseCodelist | None, Field(json_schema_extra={"nullable": True})
     ] = None
-    response_dictionary_uids: Annotated[list[str], Field()] = []
-    valid_null_flavor_terms: Annotated[list[CTValidNullFlavorTerm], Field()] = []
+    response_dictionary_uids: Annotated[list[str], Field()] = Field(
+        default_factory=list
+    )
+    valid_null_flavor_terms: Annotated[list[CTValidNullFlavorTerm], Field()] = Field(
+        default_factory=list
+    )
 
 
 class CTCodelistTerm(CTCodelistTermBase):
@@ -385,6 +392,7 @@ class CTCodelistTerm(CTCodelistTermBase):
                 "required_level": vo.required_level,
                 "cardinality": vo.cardinality,
                 "notes": vo.notes,
+                "short_code": vo.short_code,
                 "osb_page_reference": vo.osb_page_reference,
                 "osb_field_name": vo.osb_field_name,
                 "semantic_data_type": semantic_data_type,
@@ -398,6 +406,7 @@ class CTCodelistTerm(CTCodelistTermBase):
                 ),
                 "response_dictionary_uids": list(vo.response_dictionary_uids),
                 "valid_null_flavor_terms": _build_codelist_valid_null_flavor_terms(vo),
+                "submission_value_test_name": vo.submission_value_test_name,
             }
         codelist_terms = cls(
             term_uid=vo.term_uid,
@@ -424,6 +433,14 @@ class CTCodelistTerm(CTCodelistTermBase):
         return codelist_terms
 
     submission_value: Annotated[str, Field()]
+    submission_value_test_name: Annotated[
+        str | None,
+        Field(
+            json_schema_extra={"nullable": True},
+            description="Submission value of this term in the Trial Summary test name codelist (TSPARM). "
+            "Only populated when include_ts_parameters is True.",
+        ),
+    ] = None
 
 
 class CTPairedCodelistTerm(CTCodelistTermBase):

@@ -5,5 +5,6 @@ docs/.vitepress/dist
 docs/.vitepress/cache
 .DS_Store
 .playwright-mcp/
+neodash-docs/
 __pycache__/
 *.pyc

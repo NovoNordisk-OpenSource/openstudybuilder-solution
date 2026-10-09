@@ -1,6 +1,6 @@
 import logging
+from collections.abc import Iterable
 from fnmatch import fnmatch
-from typing import Iterable
 
 from opencensus.log import get_log_attrs
 from opencensus.trace import Span, execution_context
@@ -27,6 +27,7 @@ from common.telemetry.request_metrics import (
 )
 
 TRACE_RESPONSE_HEADER_NAME = "traceresponse"
+HOST_PORT_TUPLE_LENGTH = 2
 
 log = logging.getLogger(__name__)
 
@@ -264,7 +265,7 @@ class TracingMiddleware:
             status = response["status"]
 
         client = scope.get("client", "")
-        if len(client) == 2:
+        if len(client) == HOST_PORT_TUPLE_LENGTH:
             client = f"{client[0]}:{client[1]}"
 
         path = "?".join(TracingMiddleware.get_path_qs(scope))

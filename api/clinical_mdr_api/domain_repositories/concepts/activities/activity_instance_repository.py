@@ -125,7 +125,7 @@ class ActivityInstanceRepository(ConceptGenericRepository[ActivityInstanceAR]):
         grouping_root_node.has_latest_value.connect(grouping_value_node)
         grouping_root_node.latest_draft.connect(grouping_value_node)
         version_properties = {
-            "start_date": datetime.datetime.now(datetime.timezone.utc),
+            "start_date": datetime.datetime.now(datetime.UTC),
             "status": "Draft",
             "author_id": self.author_id,
             "version": "0.1",
@@ -581,13 +581,28 @@ class ActivityInstanceRepository(ConceptGenericRepository[ActivityInstanceAR]):
                         MATCH (ct_codelist_term:CTCodelistTerm)-[:HAS_TERM_ROOT]->(term_root)
                         RETURN {uid: term_root.uid, name: term_name_value.name, codelist_uid: codelist_root.uid, submission_value: ct_codelist_term.submission_value}
                     },
-                    ct_codelist: head([(activity_item)-[:HAS_CODELIST]->(ccr:CTCodelistRoot)-[:HAS_NAME_ROOT]->(:CTCodelistNameRoot)-[:LATEST]-(ccnv:CTCodelistNameValue) | {uid: ccr.uid, name: ccnv.name}]),
-                    unit_definitions: [(activity_item)-[:HAS_UNIT_DEFINITION]->(unit_definition_root:UnitDefinitionRoot)-[:LATEST]->(unit_definition_value:UnitDefinitionValue)-[:HAS_CT_DIMENSION]-(:CTTermRoot)-[:HAS_NAME_ROOT]->(CTTermNamesRoot)-[:LATEST]->(dimension_value:CTTermNameValue) | {uid: unit_definition_root.uid, name: unit_definition_value.name, dimension_name: dimension_value.name}],
+                    ct_codelist: head([
+                        (activity_item)-[:HAS_CODELIST]->(ccr:CTCodelistRoot)-[:HAS_NAME_ROOT]->
+                            (:CTCodelistNameRoot)-[:LATEST]-(ccnv:CTCodelistNameValue)
+                        | {uid: ccr.uid, name: ccnv.name}
+                    ]),
+                    unit_definitions: [
+                        (activity_item)-[:HAS_UNIT_DEFINITION]->(unit_definition_root:UnitDefinitionRoot)-[:LATEST]->
+                            (unit_definition_value:UnitDefinitionValue)-[:HAS_CT_DIMENSION]->
+                            (:CTTermRoot)-[:HAS_NAME_ROOT]->(CTTermNamesRoot)-[:LATEST]->
+                            (dimension_value:CTTermNameValue)
+                        | {uid: unit_definition_root.uid, name: unit_definition_value.name, dimension_name: dimension_value.name}
+                    ],
                     is_adam_param_specific: activity_item.is_adam_param_specific,
                     is_activity_instance_id_specific: activity_item.is_activity_instance_id_specific,
                     text_value: activity_item.text_value
                 }] AS activity_items,
-            head([(concept_root)-[:HAS_GROUPING_ROOT]-(groupings_root:ActivityInstanceGroupingRoot)-[:LATEST]->(groupings_value:ActivityInstanceGroupingValue)-[:HAS_ACTIVITY]->(activity_grouping:ActivityGrouping)<-[:HAS_GROUPING]-(activity_value) | activity_value.name]) as activity_name,
+            head([
+                (concept_root)-[:HAS_GROUPING_ROOT]-(groupings_root:ActivityInstanceGroupingRoot)-[:LATEST]->
+                    (groupings_value:ActivityInstanceGroupingValue)-[:HAS_ACTIVITY]->
+                    (activity_grouping:ActivityGrouping)<-[:HAS_GROUPING]-(activity_value)
+                | activity_value.name
+            ]) as activity_name,
             apoc.coll.toSet([(concept_root)-[:HAS_GROUPING_ROOT]-(groupings_root:ActivityInstanceGroupingRoot)-[:LATEST]->(groupings_value:ActivityInstanceGroupingValue)-[:HAS_ACTIVITY]->(activity_grouping:ActivityGrouping)
             | {
                 activity: head(apoc.coll.sortMulti([(activity_grouping)<-[:HAS_GROUPING]-(activity_value:ActivityValue)<-[has_version:HAS_VERSION]-
@@ -631,6 +646,12 @@ class ActivityInstanceRepository(ConceptGenericRepository[ActivityInstanceAR]):
                     }
                 ], ['major_version', 'minor_version', 'start_date'])
             ) AS groupings_version
+        WITH *,
+            head([
+                domain_item IN activity_items
+                WHERE domain_item.activity_item_class_name = "domain" AND size(domain_item.ct_terms) > 0
+                | domain_item.ct_terms[0].name
+            ]) AS sdtm_domain
         """
 
     def minimal_count_query(
@@ -734,8 +755,20 @@ class ActivityInstanceRepository(ConceptGenericRepository[ActivityInstanceAR]):
             )
             filter_parameters.append(filter_by_activity_names)
             filter_query_parameters["activity_names"] = activity_names
-        if kwargs.get("activity_subgroup_names") is not None:
-            activity_subgroup_names = kwargs.get("activity_subgroup_names")
+        activity_subgroup_names = kwargs.get("activity_subgroup_names")
+        activity_group_names = kwargs.get("activity_group_names")
+        if activity_subgroup_names is not None and activity_group_names is not None:
+            filter_by_activity_subgroup_and_group_names = (
+                "size([(concept_root)-[:HAS_GROUPING_ROOT]->(:ActivityInstanceGroupingRoot)"
+                "-[:LATEST]->(:ActivityInstanceGroupingValue)-[:HAS_ACTIVITY]->(activity_grouping:ActivityGrouping) "
+                "WHERE head([(activity_grouping)-[:HAS_SELECTED_SUBGROUP]->(asgv:ActivitySubGroupValue) | asgv.name]) IN $activity_subgroup_names "
+                "AND head([(activity_grouping)-[:HAS_SELECTED_GROUP]->(agv:ActivityGroupValue) | agv.name]) IN $activity_group_names "
+                "| activity_grouping]) > 0"
+            )
+            filter_parameters.append(filter_by_activity_subgroup_and_group_names)
+            filter_query_parameters["activity_subgroup_names"] = activity_subgroup_names
+            filter_query_parameters["activity_group_names"] = activity_group_names
+        elif activity_subgroup_names is not None:
             filter_by_activity_subgroup_names = (
                 "size([(concept_root)-[:HAS_GROUPING_ROOT]->(:ActivityInstanceGroupingRoot)"
                 "-[:LATEST]->(:ActivityInstanceGroupingValue)-[:HAS_ACTIVITY]->(:ActivityGrouping)"
@@ -744,8 +777,7 @@ class ActivityInstanceRepository(ConceptGenericRepository[ActivityInstanceAR]):
             )
             filter_parameters.append(filter_by_activity_subgroup_names)
             filter_query_parameters["activity_subgroup_names"] = activity_subgroup_names
-        if kwargs.get("activity_group_names") is not None:
-            activity_group_names = kwargs.get("activity_group_names")
+        elif activity_group_names is not None:
             filter_by_activity_group_names = (
                 "size([(concept_root)-[:HAS_GROUPING_ROOT]->(:ActivityInstanceGroupingRoot)"
                 "-[:LATEST]->(:ActivityInstanceGroupingValue)-[:HAS_ACTIVITY]->(:ActivityGrouping)"
@@ -874,8 +906,18 @@ class ActivityInstanceRepository(ConceptGenericRepository[ActivityInstanceAR]):
             {
                 activity_item_class_uid: activity_item_class_root.uid,
                 activity_item_class: activity_item_class_value,
-                activity_item_class_role: head([(activity_item_class_value)-[:HAS_ROLE]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(:CTTermRoot)-[:HAS_NAME_ROOT]->(:CTTermNameRoot)-[:LATEST]->(role_value) | role_value.name]),
-                activity_item_class_data_type: head([(activity_item_class_value)-[:HAS_DATA_TYPE]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(:CTTermRoot)-[:HAS_NAME_ROOT]->(:CTTermNameRoot)-[:LATEST]->(data_type_value) | data_type_value.name]),
+                activity_item_class_role: head([
+                    (activity_item_class_value)-[:HAS_ROLE]->(:CTTermContext)-[:HAS_SELECTED_TERM]->
+                        (:CTTermRoot)-[:HAS_NAME_ROOT]->(:CTTermNameRoot)-[:LATEST]->
+                        (role_value)
+                    | role_value.name
+                ]),
+                activity_item_class_data_type: head([
+                    (activity_item_class_value)-[:HAS_DATA_TYPE]->(:CTTermContext)-[:HAS_SELECTED_TERM]->
+                        (:CTTermRoot)-[:HAS_NAME_ROOT]->(:CTTermNameRoot)-[:LATEST]->
+                        (data_type_value)
+                    | data_type_value.name
+                ]),
                 activity_item: activity_item,
                 ct_terms: COLLECT {
                     MATCH (activity_item)-[:HAS_CT_TERM]->(ct_term_context:CTTermContext)
@@ -886,7 +928,11 @@ class ActivityInstanceRepository(ConceptGenericRepository[ActivityInstanceAR]):
                     MATCH (ct_codelist_term:CTCodelistTerm)-[:HAS_TERM_ROOT]->(term_root)
                     RETURN {uid: term_root.uid, name: term_name_value.name, codelist_uid: codelist_root.uid, submission_value: ct_codelist_term.submission_value}
                 },
-                ct_codelist: head([(activity_item)-[:HAS_CODELIST]->(ccr:CTCodelistRoot)-[:HAS_NAME_ROOT]->(:CTCodelistNameRoot)-[:LATEST]->(ccnv:CTCodelistNameValue) | {uid: ccr.uid, name: ccnv.name}]),
+                ct_codelist: head([
+                    (activity_item)-[:HAS_CODELIST]->(ccr:CTCodelistRoot)-[:HAS_NAME_ROOT]->
+                        (:CTCodelistNameRoot)-[:LATEST]->(ccnv:CTCodelistNameValue)
+                    | {uid: ccr.uid, name: ccnv.name}
+                ]),
                 unit_definitions: [
                     (activity_item)-[:HAS_UNIT_DEFINITION]->(unit_definition_root:UnitDefinitionRoot)-[:LATEST]->(unit_definition_value:UnitDefinitionValue)
                     -[:HAS_CT_DIMENSION]-(:CTTermContext)-[:HAS_SELECTED_TERM]-(:CTTermRoot)-[:HAS_NAME_ROOT]->(CTTermNamesRoot)-[:LATEST]->(dimension_value:CTTermNameValue)
@@ -946,14 +992,28 @@ class ActivityInstanceRepository(ConceptGenericRepository[ActivityInstanceAR]):
             (activity_instance_class_root:ActivityInstanceClassRoot)-[:LATEST]->(activity_instance_class_value:ActivityInstanceClassValue) 
             | activity_instance_class_value.name]) AS activity_instance_class_name
         WITH *,
-            [(activity_instance_groupings_value)-[:HAS_ACTIVITY]->(:ActivityGrouping)-[:HAS_SELECTED_SUBGROUP]->(activity_subgroup_value:ActivitySubGroupValue) | activity_subgroup_value.name] AS activity_subgroups,
+            [(activity_instance_groupings_value)-[:HAS_ACTIVITY]->(:ActivityGrouping)-[:HAS_SELECTED_SUBGROUP]->
+                (activity_subgroup_value:ActivitySubGroupValue) | activity_subgroup_value.name] AS activity_subgroups,
             apoc.coll.toSet([(activity_instance_value)-[:CONTAINS_ACTIVITY_ITEM]->(activity_item)
             <-[HAS_ACTIVITY_ITEM]-(activity_item_class_root)-[:LATEST]->(activity_item_class_value) | 
             {
                 nci_concept_id: activity_item_class_value.nci_concept_id,
                 name: activity_item_class_value.name,
-                type: head([(activity_item_class_value)-[:HAS_DATA_TYPE]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(:CTTermRoot)-[:HAS_NAME_ROOT]->(:CTTermNameRoot)-[:LATEST]->(data_type_value) | data_type_value.name]),
-                example_set: [(activity_item)-[:HAS_CT_TERM]->(term_root:CTTermRoot)-[:HAS_NAME_ROOT]->(term_name_root:CTTermNameRoot)-[:LATEST]->(term_name_value:CTTermNameValue) | {uid: term_root.uid, name: term_name_value.name}] + [(activity_item)-[:HAS_UNIT_DEFINITION]->(unit_definition_root:UnitDefinitionRoot)-[:LATEST]->(unit_definition_value:UnitDefinitionValue) | {uid: unit_definition_root.uid, name: unit_definition_value.name}]
+                type: head([
+                    (activity_item_class_value)-[:HAS_DATA_TYPE]->(:CTTermContext)-[:HAS_SELECTED_TERM]->
+                        (:CTTermRoot)-[:HAS_NAME_ROOT]->(:CTTermNameRoot)-[:LATEST]->
+                        (data_type_value)
+                    | data_type_value.name
+                ]),
+                example_set: [
+                    (activity_item)-[:HAS_CT_TERM]->(term_root:CTTermRoot)-[:HAS_NAME_ROOT]->
+                        (term_name_root:CTTermNameRoot)-[:LATEST]->(term_name_value:CTTermNameValue)
+                    | {uid: term_root.uid, name: term_name_value.name}
+                ] + [
+                    (activity_item)-[:HAS_UNIT_DEFINITION]->(unit_definition_root:UnitDefinitionRoot)-[:LATEST]->
+                        (unit_definition_value:UnitDefinitionValue)
+                    | {uid: unit_definition_root.uid, name: unit_definition_value.name}
+                ]
             }
             ]) AS activity_items
         WITH DISTINCT
@@ -1000,7 +1060,9 @@ class ActivityInstanceRepository(ConceptGenericRepository[ActivityInstanceAR]):
             MATCH (:ActivityRoot {uid:$activity_uid})-[:LATEST_FINAL]->(:ActivityValue)-[:HAS_GROUPING]->(activity_grouping:ActivityGrouping)
             MATCH (activity_grouping)-[:HAS_SELECTED_SUBGROUP]->(:ActivitySubGroupValue)<-[:HAS_VERSION]-(:ActivitySubGroupRoot {uid:$activity_subgroup_uid})
             MATCH (activity_grouping)-[:HAS_SELECTED_GROUP]->(:ActivityGroupValue)<-[:HAS_VERSION]-(:ActivityGroupRoot {uid:$activity_group_uid})
-            MATCH (activity_grouping)<-[:HAS_ACTIVITY]-(activity_instance_groupings_value:ActivityInstanceGroupingValue)<-[:LATEST_FINAL]-(activity_instance_groupings_root:ActivityInstanceGroupingRoot)
+            MATCH (activity_grouping)<-[:HAS_ACTIVITY]-
+                (activity_instance_groupings_value:ActivityInstanceGroupingValue)<-[:LATEST_FINAL]-
+                (activity_instance_groupings_root:ActivityInstanceGroupingRoot)
             MATCH (activity_instance_groupings_root)<-[:HAS_GROUPING_ROOT]-(activity_instance_root:ActivityInstanceRoot)-[:LATEST]->(activity_instance_value:ActivityInstanceValue)
             MATCH (activity_instance_root)-[:LATEST_FINAL]->(activity_instance_value)
             OPTIONAL MATCH (activity_instance_root)-[retired:HAS_VERSION {status: "Retired"}]->(activity_instance_value) WHERE retired.end_date IS NULL
@@ -1080,7 +1142,12 @@ class ActivityInstanceRepository(ConceptGenericRepository[ActivityInstanceAR]):
         if field_name == "activity_name":
             return """
                 WITH concept_root, concept_value,
-                     head([(concept_root)-[:HAS_GROUPING_ROOT]->(:ActivityInstanceGroupingRoot)-[:LATEST]->(:ActivityInstanceGroupingValue)-[:HAS_ACTIVITY]->(activity_grouping)<-[:HAS_GROUPING]-(activity_value) | activity_value.name]) as activity_name
+                     head([
+                         (concept_root)-[:HAS_GROUPING_ROOT]->(:ActivityInstanceGroupingRoot)-[:LATEST]->
+                             (:ActivityInstanceGroupingValue)-[:HAS_ACTIVITY]->(activity_grouping)<-[:HAS_GROUPING]-
+                             (activity_value)
+                         | activity_value.name
+                     ]) as activity_name
                 """
 
         if field_name == "activity_instance_class.name":
@@ -1089,6 +1156,16 @@ class ActivityInstanceRepository(ConceptGenericRepository[ActivityInstanceAR]):
                      head([(concept_value)-[:ACTIVITY_INSTANCE_CLASS]->
                             (activity_instance_class_root:ActivityInstanceClassRoot)-[:LATEST]->(activity_instance_class_value:ActivityInstanceClassValue)
                             | activity_instance_class_value.name]) AS activity_instance_class_name
+                """
+
+        if field_name == "sdtm_domain":
+            return """
+                WITH concept_value,
+                     head([(concept_value)-[:CONTAINS_ACTIVITY_ITEM]->(domain_activity_item:ActivityItem)
+                            <-[:HAS_ACTIVITY_ITEM]-(:ActivityItemClassRoot)-[:LATEST]->(:ActivityItemClassValue {name: "domain"})
+                            | head([(domain_activity_item)-[:HAS_CT_TERM]->(:CTTermContext)-[:HAS_SELECTED_TERM]->
+                                    (:CTTermRoot)-[:HAS_NAME_ROOT]->(:CTTermNameRoot)-[:LATEST]->(domain_term_name_value:CTTermNameValue)
+                                    | domain_term_name_value.name])]) AS sdtm_domain
                 """
 
         return None
@@ -1588,7 +1665,13 @@ class ActivityInstanceAttributesRepository(
                         MATCH (ct_codelist_term:CTCodelistTerm)-[:HAS_TERM_ROOT]->(term_root)
                         RETURN {uid: term_root.uid, name: term_name_value.name, codelist_uid: codelist_root.uid, submission_value: ct_codelist_term.submission_value}
                     },
-                    unit_definitions: [(activity_item)-[:HAS_UNIT_DEFINITION]->(unit_definition_root:UnitDefinitionRoot)-[:LATEST]->(unit_definition_value:UnitDefinitionValue)-[:HAS_CT_DIMENSION]-(:CTTermRoot)-[:HAS_NAME_ROOT]->(CTTermNamesRoot)-[:LATEST]->(dimension_value:CTTermNameValue) | {uid: unit_definition_root.uid, name: unit_definition_value.name, dimension_name: dimension_value.name}],
+                    unit_definitions: [
+                        (activity_item)-[:HAS_UNIT_DEFINITION]->(unit_definition_root:UnitDefinitionRoot)-[:LATEST]->
+                            (unit_definition_value:UnitDefinitionValue)-[:HAS_CT_DIMENSION]->
+                            (:CTTermRoot)-[:HAS_NAME_ROOT]->(CTTermNamesRoot)-[:LATEST]->
+                            (dimension_value:CTTermNameValue)
+                        | {uid: unit_definition_root.uid, name: unit_definition_value.name, dimension_name: dimension_value.name}
+                    ],
                     is_adam_param_specific: activity_item.is_adam_param_specific,
                     is_activity_instance_id_specific: activity_item.is_activity_instance_id_specific
                 }] AS activity_items
@@ -1735,7 +1818,7 @@ class ActivityInstanceGroupingsRepository(
                 "activity_instance_uid": activity_instance_groupings.uid,
                 "new_status": status,
                 "new_version": activity_instance_groupings.item_metadata.version,
-                "start_date": datetime.datetime.now(datetime.timezone.utc),
+                "start_date": datetime.datetime.now(datetime.UTC),
                 "change_description": "Cascade edit: updating activity instance groupings",
                 "author_id": author_id,
                 "activity_uids": [
@@ -2146,7 +2229,11 @@ class ActivityInstanceGroupingsRepository(
     def specific_alias_clause(self, **kwargs) -> str:
         return """
         WITH *,
-            head([(concept_root)-[:LATEST]->(groupings_value:ActivityInstanceGroupingValue)-[:HAS_ACTIVITY]->(activity_grouping:ActivityGrouping)<-[:HAS_GROUPING]-(activity_value) | activity_value.name]) as activity_name,
+            head([
+                (concept_root)-[:LATEST]->(groupings_value:ActivityInstanceGroupingValue)-[:HAS_ACTIVITY]->
+                    (activity_grouping:ActivityGrouping)<-[:HAS_GROUPING]-(activity_value)
+                | activity_value.name
+            ]) as activity_name,
             apoc.coll.toSet([(concept_root)-[:LATEST]->(groupings_value:ActivityInstanceGroupingValue)-[:HAS_ACTIVITY]->(activity_grouping:ActivityGrouping)
             | {
                 activity: head(apoc.coll.sortMulti([(activity_grouping)<-[:HAS_GROUPING]-(activity_value:ActivityValue)<-[has_version:HAS_VERSION]-
@@ -2201,8 +2288,20 @@ class ActivityInstanceGroupingsRepository(
             )
             filter_parameters.append(filter_by_activity_names)
             filter_query_parameters["activity_names"] = activity_names
-        if kwargs.get("activity_subgroup_names") is not None:
-            activity_subgroup_names = kwargs.get("activity_subgroup_names")
+        activity_subgroup_names = kwargs.get("activity_subgroup_names")
+        activity_group_names = kwargs.get("activity_group_names")
+        if activity_subgroup_names is not None and activity_group_names is not None:
+            filter_by_activity_subgroup_and_group_names = (
+                "size([(concept_root)-[:HAS_GROUPING_ROOT]->(:ActivityInstanceGroupingRoot)"
+                "-[:LATEST]->(:ActivityInstanceGroupingValue)-[:HAS_ACTIVITY]->(activity_grouping:ActivityGrouping) "
+                "WHERE head([(activity_grouping)-[:HAS_SELECTED_SUBGROUP]->(asgv:ActivitySubGroupValue) | asgv.name]) IN $activity_subgroup_names "
+                "AND head([(activity_grouping)-[:HAS_SELECTED_GROUP]->(agv:ActivityGroupValue) | agv.name]) IN $activity_group_names "
+                "| activity_grouping]) > 0"
+            )
+            filter_parameters.append(filter_by_activity_subgroup_and_group_names)
+            filter_query_parameters["activity_subgroup_names"] = activity_subgroup_names
+            filter_query_parameters["activity_group_names"] = activity_group_names
+        elif activity_subgroup_names is not None:
             filter_by_activity_subgroup_names = (
                 "size([(concept_root)-[:HAS_GROUPING_ROOT]->(:ActivityInstanceGroupingRoot)"
                 "-[:LATEST]->(:ActivityInstanceGroupingValue)-[:HAS_ACTIVITY]->(:ActivityGrouping)"
@@ -2211,8 +2310,7 @@ class ActivityInstanceGroupingsRepository(
             )
             filter_parameters.append(filter_by_activity_subgroup_names)
             filter_query_parameters["activity_subgroup_names"] = activity_subgroup_names
-        if kwargs.get("activity_group_names") is not None:
-            activity_group_names = kwargs.get("activity_group_names")
+        elif activity_group_names is not None:
             filter_by_activity_group_names = (
                 "size([(concept_root)-[:HAS_GROUPING_ROOT]->(:ActivityInstanceGroupingRoot)"
                 "-[:LATEST]->(:ActivityInstanceGroupingValue)-[:HAS_ACTIVITY]->(:ActivityGrouping)"

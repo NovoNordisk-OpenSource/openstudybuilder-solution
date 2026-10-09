@@ -1,5 +1,3 @@
-# pylint: disable=unused-argument,redefined-outer-name
-
 import logging
 from copy import copy
 

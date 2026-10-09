@@ -1,7 +1,8 @@
+from collections.abc import Callable, MutableSequence
 from dataclasses import dataclass, field, replace
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
-from typing import Any, Callable, MutableSequence, Self
+from typing import Any, Self
 
 from clinical_mdr_api.domains.study_definition_aggregates.registry_identifiers import (
     RegistryIdentifiersVO,
@@ -244,7 +245,7 @@ class StudyDefinitionAR:
         new_ver_metadata = StudyVersionMetadataVO(
             study_status=StudyStatus.DRAFT,
             version_number=None,
-            version_timestamp=datetime.now(timezone.utc),
+            version_timestamp=datetime.now(UTC),
             version_author=UserInfoService.get_author_username_from_id(author_id),
         )
 
@@ -497,7 +498,7 @@ class StudyDefinitionAR:
 
         # Use a single timestamp across the release transition to avoid micro-gaps
         # between related temporal relationships persisted from this aggregate state.
-        operation_timestamp = version_timestamp or datetime.now(timezone.utc)
+        operation_timestamp = version_timestamp or datetime.now(UTC)
 
         # we update timestamp on draft metadata to keep the working draft at operation time
         self._draft_metadata = StudyMetadataVO(
@@ -561,7 +562,7 @@ class StudyDefinitionAR:
         )
         version_number = Decimal(len(self._locked_metadata_versions) + 1)
         # Use one timestamp for all metadata transitions in this lock operation.
-        operation_timestamp = version_timestamp or datetime.now(timezone.utc)
+        operation_timestamp = version_timestamp or datetime.now(UTC)
 
         # and replace released metadata
         self._released_metadata = StudyMetadataVO(
@@ -612,7 +613,7 @@ class StudyDefinitionAR:
             study_population=current_metadata.study_population,
             ver_metadata=StudyVersionMetadataVO(
                 study_status=StudyStatus.DRAFT,
-                version_timestamp=datetime.now(timezone.utc),
+                version_timestamp=datetime.now(UTC),
                 version_author=UserInfoService.get_author_username_from_id(author_id),
             ),
             study_intervention=current_metadata.study_intervention,
@@ -744,7 +745,7 @@ class StudyDefinitionAR:
         return replace(metadata, ver_metadata=new_ver)
 
     @staticmethod
-    def from_snapshot(study_snapshot: StudyDefinitionSnapshot) -> "StudyDefinitionAR":
+    def from_snapshot(study_snapshot: StudyDefinitionSnapshot) -> StudyDefinitionAR:
         """
         A factory static method for rehydrating persisted instance of aggregate.
         Assumes that data are consistent with relevant business rules (does little or no validation).
@@ -980,7 +981,7 @@ class StudyDefinitionAR:
             ver_metadata=StudyVersionMetadataVO(
                 study_status=StudyStatus.DRAFT,
                 version_number=None,
-                version_timestamp=datetime.now(timezone.utc),
+                version_timestamp=datetime.now(UTC),
                 version_author=UserInfoService.get_author_username_from_id(author_id),
             ),
             study_description=initial_study_description,

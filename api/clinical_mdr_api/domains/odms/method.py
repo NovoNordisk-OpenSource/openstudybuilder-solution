@@ -1,5 +1,6 @@
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable, Self
+from typing import Self
 
 from clinical_mdr_api.domains.odms.ar_base import OdmARBase
 from clinical_mdr_api.domains.versioned_object_aggregate import (

@@ -1,7 +1,8 @@
 import re
 from abc import ABC, abstractmethod
+from collections.abc import Sequence
 from datetime import datetime
-from typing import Any, Generic, Sequence, TypeVar
+from typing import Any, TypeVar
 
 from neomodel import db
 from pydantic import BaseModel
@@ -45,7 +46,7 @@ from common.utils import get_field_type
 _AggregateRootType = TypeVar("_AggregateRootType")
 
 
-class ConceptGenericService(Generic[_AggregateRootType], ABC):
+class ConceptGenericService[AggregateRootType](ABC):
     aggregate_class: type
     version_class: type
     repository_interface: type
@@ -119,11 +120,11 @@ class ConceptGenericService(Generic[_AggregateRootType], ABC):
                             for term in getattr(reference_base_model, field_name)
                         ],
                     )
-                if (
-                    get_field_type(
-                        reference_base_model.model_fields[field_name].annotation
-                    )
-                    is SimpleCodelistTermModel
+                item_type = get_field_type(
+                    reference_base_model.model_fields[field_name].annotation
+                )
+                if isinstance(item_type, type) and issubclass(
+                    item_type, SimpleCodelistTermModel
                 ):
                     setattr(
                         base_model_with_missing_values,
@@ -180,7 +181,7 @@ class ConceptGenericService(Generic[_AggregateRootType], ABC):
 
     @staticmethod
     def fill_in_additional_fields(
-        concept_edit_input: BaseModel, current_ar: _AggregateRootType
+        concept_edit_input: BaseModel, current_ar: AggregateRootType
     ) -> None:
         """
         Subclasses should override this method to preserve field values which are not explicitly sent in the PATCH payload.
@@ -193,13 +194,13 @@ class ConceptGenericService(Generic[_AggregateRootType], ABC):
         """
 
     @property
-    def repository(self) -> ConceptGenericRepository[_AggregateRootType]:
+    def repository(self) -> ConceptGenericRepository[AggregateRootType]:
         assert self._repos is not None
         return self.repository_interface()
 
     @abstractmethod
     def _transform_aggregate_root_to_pydantic_model(
-        self, item_ar: _AggregateRootType
+        self, item_ar: AggregateRootType
     ) -> BaseModel:
         raise NotImplementedError
 
@@ -209,13 +210,13 @@ class ConceptGenericService(Generic[_AggregateRootType], ABC):
         concept_input: BaseModel,
         library: LibraryVO,
         preview: bool = False,
-    ) -> _AggregateRootType:
+    ) -> AggregateRootType:
         raise NotImplementedError()
 
     @abstractmethod
     def _edit_aggregate(
-        self, item: _AggregateRootType, concept_edit_input: BaseModel
-    ) -> _AggregateRootType:
+        self, item: AggregateRootType, concept_edit_input: BaseModel
+    ) -> AggregateRootType:
         raise NotImplementedError
 
     def get_input_or_previous_property(
@@ -350,7 +351,7 @@ class ConceptGenericService(Generic[_AggregateRootType], ABC):
         at_specific_date: datetime | None = None,
         status: LibraryItemStatus | None = None,
         for_update: bool = False,
-    ) -> _AggregateRootType:
+    ) -> AggregateRootType:
         item = self.repository.find_by_uid_2(
             uid=uid,
             at_specific_date=at_specific_date,
@@ -456,11 +457,10 @@ class ConceptGenericService(Generic[_AggregateRootType], ABC):
                         find_dictionary_term_by_uid=self._repos.dictionary_term_generic_repository.find_by_uid,
                     ).name
             for ct_term in item.ct_terms:
-                if (
-                    activity_class_vo
-                    and activity_class_vo.name != "unit_dimension"
-                    and activity_class_vo.name != "standard_unit"
-                ):
+                if activity_class_vo and activity_class_vo.name not in {
+                    "unit_dimension",
+                    "standard_unit",
+                }:
                     current_activity_item_ctterms.add(ct_term.uid)
         activity_item_classes_order = [
             "location",
@@ -587,6 +587,11 @@ class ConceptGenericService(Generic[_AggregateRootType], ABC):
         return final_name.strip()
 
     def generate_default_adam_code(self, response_model):
+        # ADAM parameter codes are limited to 8 characters; when a research-lab
+        # flag suffix ("X" + sequence number) is appended, the base code must
+        # leave room for it, hence the shorter threshold below.
+        adam_param_code_max_length = 8
+        adam_param_code_base_max_length = 6
         adam_initial_4 = ""
         param_param_cd_list = [
             "--LOC",
@@ -686,12 +691,15 @@ class ConceptGenericService(Generic[_AggregateRootType], ABC):
         while self.repository.exists_by("adam_param_code", final_generated_name, False):
             activity_sequence_number += 1
             # add research flag
-            if response_model.is_research_lab and len(adam_final) <= 6:
+            if (
+                response_model.is_research_lab
+                and len(adam_final) <= adam_param_code_base_max_length
+            ):
                 final_generated_name = f"{adam_final}X{activity_sequence_number}"
             else:
                 final_generated_name = f"{adam_final}{activity_sequence_number}"
             number_of_letters_to_remove = 0
-            while len(final_generated_name) > 8:
+            while len(final_generated_name) > adam_param_code_max_length:
                 number_of_letters_to_remove += 1
                 final_generated_name = f"{adam_final[:7-number_of_letters_to_remove]}{activity_sequence_number}"
         return final_generated_name
@@ -812,19 +820,19 @@ class ConceptGenericService(Generic[_AggregateRootType], ABC):
             "Name",
         )
 
-    def cascade_edit_and_approve(self, item: _AggregateRootType):
+    def cascade_edit_and_approve(self, item: AggregateRootType):
         pass
 
-    def cascade_new_version(self, item: _AggregateRootType):
+    def cascade_new_version(self, item: AggregateRootType):
         pass
 
-    def cascade_inactivate(self, item: _AggregateRootType):
+    def cascade_inactivate(self, item: AggregateRootType):
         pass
 
-    def cascade_reactivate(self, item: _AggregateRootType):
+    def cascade_reactivate(self, item: AggregateRootType):
         pass
 
-    def cascade_delete(self, item: _AggregateRootType):
+    def cascade_delete(self, item: AggregateRootType):
         pass
 
     @ensure_transaction(db)

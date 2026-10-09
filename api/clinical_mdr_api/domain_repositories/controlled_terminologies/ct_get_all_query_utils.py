@@ -184,6 +184,9 @@ def create_term_name_aggregate_instances_from_cypher_result(
                 "cardinality"
             ),
             notes=term_dict.get(f"value_node{specific_suffix}", {}).get("notes"),
+            short_code=term_dict.get(f"value_node{specific_suffix}", {}).get(
+                "short_code"
+            ),
             osb_field_name=term_dict.get("osb_field_name"),
             osb_page_reference=term_dict.get("osb_page_reference"),
             semantic_data_type_uid=term_dict.get("semantic_data_type_uid"),
@@ -343,6 +346,11 @@ def format_term_filter_sort_keys(key: str, prefix: str | None = None) -> str:
         "sponsor_preferred_name_sentence_case",
         "definition",
         "concept_id",
+        "reference",
+        "required_level",
+        "cardinality",
+        "notes",
+        "short_code",
     ]:
         parsed_key = key.replace("sponsor_preferred_", "")
         return (
@@ -370,7 +378,7 @@ def format_term_filter_sort_keys(key: str, prefix: str | None = None) -> str:
         return f"rel_data_{prefix}.{key}" if prefix else f"rel_data.{key}"
     # Nested field names -> recursive call with prefix
     if key.startswith("name.") or key.startswith("attributes."):
-        prefix = key.split(".")[0]
+        prefix = key.split(".", maxsplit=1)[0]
         suffix = key.split(".")[1]
         if suffix == "order":
             return "order"
@@ -630,7 +638,7 @@ def format_codelist_filter_sort_keys(key: str, prefix: str | None = None) -> str
         return f"rel_data_{prefix}.{key}" if prefix else f"rel_data.{key}"
     # Nested field names -> recursive call with prefix
     if key.startswith("name.") or key.startswith("attributes."):
-        prefix = key.split(".")[0]
+        prefix = key.split(".", maxsplit=1)[0]
         suffix = key.split(".")[1]
         return format_codelist_filter_sort_keys(suffix, prefix)
     # All other cases, including paired_codelist.*, are handled below
@@ -644,10 +652,11 @@ def _format_paired_codelist_filter_sort_key(key: str) -> str:
     `paired_codelist.<x>` property path, so it needs its own mapping rather than
     falling through to the unchanged `key`.
     """
+    paired_codelist_key_parts = 2
     if not key.startswith("paired_codelist."):
         return key
     parts = key.split(".")
-    if len(parts) != 2 or parts[1] not in ("uid", "name"):
+    if len(parts) != paired_codelist_key_parts or parts[1] not in ("uid", "name"):
         raise ValidationException(msg=f"Invalid filter or sorting key: {key}")
     return f"paired_codelist_{parts[1]}"
 

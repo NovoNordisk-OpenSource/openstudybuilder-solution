@@ -1,17 +1,52 @@
 [project]
+name = "load-tests"
+version = "0.1.0"
+requires-python = ">=3.14"
+dependencies = [
+    "locust==2.44.3",
+    "neomodel~=6.1.0",
+]
 
-[tool.pylint.'MASTER']
-extension-pkg-allow-list = 'locust'
+[dependency-groups]
+dev = [
+    "isort~=8.0.1",
+    "black>=26.5.1",
+    "junit-xml~=1.9",
+    "typing-extensions~=4.15.0",
+    "ruff~=0.16.8",
+    "pip-audit~=2.10.0",
+    "poethepoet>=0.30",
+]
 
-[tool.pylint.'MESSAGES CONTROL']
-disable = 'missing-function-docstring,missing-class-docstring,missing-module-docstring,unused-variable,line-too-long,missing-module-docstring,no-name-in-module'
+[tool.poe]
+envfile = ".env"
 
-[tool.pylint.'FORMAT']
-max-line-length = 150
-max-module-lines = 5000
+[tool.poe.tasks]
+load-test-ui = "locust -f tests/locustfile.py"
+load-test-cl = "locust -f tests/locustfile.py --csv=test_report --html=test_report.html --headless -u 10 -r 1 --run-time 1m"
+audit = "python -m pip_audit"
+lint = "ruff check tests"
+black = "python -m black tests"
+isort = "python -m isort tests"
+token = "python -m tests.auth"
+summary = "python -m tests.summary"
 
-[tool.pylint.'BASIC']
-good-names = 'x,i,j,k,ex,Run,_,e'
+[tool.poe.tasks.format]
+sequence = ["black", "isort"]
+
+[tool.ruff]
+line-length = 150
+target-version = 'py314'
+
+[tool.ruff.lint]
+select = ['PL']
+ignore = [
+    'PLC0415', # import-outside-toplevel
+    'PLR0917', # too-many-positional-arguments
+]
+
+[tool.ruff.lint.pylint]
+max-args = 6
 
 [tool.black]
 line-length = 120

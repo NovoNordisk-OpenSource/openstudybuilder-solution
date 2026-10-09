@@ -1,4 +1,3 @@
-# pylint: disable=broad-exception-raised
 import json
 import logging
 from os import environ
@@ -38,7 +37,6 @@ class MsGraphClientService:
         # Dummy expired token to trigger OAuth client to do an authentication flow at first API request
         self.token: dict = {"expires_at": 1, "access_token": None}
 
-    # pylint: disable=unused-argument
     async def set_token(
         self, token: Mapping, refresh_token: Any = None, access_token: Any = None
     ):
@@ -84,7 +82,7 @@ class MsGraphClientService:
 
 
 # Singleton service for reusing the OIDC metadata and recycling access/refresh tokens for further requests
-service = None  # pylint: disable=invalid-name
+service = None
 if not (OAUTH_METADATA_URL and OAUTH_API_APP_ID and OAUTH_API_APP_SECRET):
     log.warning(
         "MS Graph API integration is not properly configured"

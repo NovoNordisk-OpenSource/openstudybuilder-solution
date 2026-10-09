@@ -15,7 +15,6 @@ class TestEnsureTransaction:
     def assert_transaction_started():
         """asserts a db transaction is started"""
 
-        # pylint: disable=unused-variable
         __tracebackhide__ = True
 
         with pytest.raises(SystemError, match="Transaction in progress"):

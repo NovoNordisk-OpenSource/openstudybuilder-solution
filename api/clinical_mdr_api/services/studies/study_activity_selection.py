@@ -1,7 +1,8 @@
 import dataclasses
 from collections import defaultdict
-from datetime import datetime, timezone
-from typing import Callable, Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
+from datetime import UTC, datetime
+from typing import ClassVar
 
 from fastapi import status
 from neomodel import db
@@ -56,8 +57,8 @@ from clinical_mdr_api.models.study_selections.study_selection import (
     DetailedSoAHistory,
     StudyActivityReplaceActivityInput,
     StudyActivitySchedule,
+    StudyActivityScheduleBatchEditInput,
     StudyActivityScheduleCreateInput,
-    StudyActivityScheduleDeleteInput,
     StudyActivitySyncLatestVersionInput,
     StudySelectionActivity,
     StudySelectionActivityBatchDeleteInput,
@@ -102,6 +103,9 @@ from clinical_mdr_api.services.studies.study_activity_selection_base import (
 from clinical_mdr_api.services.studies.study_activity_subgroup import (
     StudyActivitySubGroupService,
 )
+from clinical_mdr_api.services.studies.study_compound_dosing_selection import (
+    StudyCompoundDosingRelationMixin,
+)
 from clinical_mdr_api.services.studies.study_soa_group import StudySoAGroupService
 from common.auth.user import user
 from common.config import settings
@@ -117,15 +121,16 @@ from common.telemetry import trace_block, trace_calls
 
 
 class StudyActivitySelectionService(
+    StudyCompoundDosingRelationMixin,
     StudyActivitySelectionBaseService[
         StudySelectionActivityAR, StudySelectionActivityVO, StudySelectionActivity
-    ]
+    ],
 ):
     _repos: MetaRepository
     repository_interface = StudySelectionActivityRepository
     selected_object_repository_interface = ActivityRepository
 
-    _vo_to_ar_filter_map = {
+    _vo_to_ar_filter_map: ClassVar[dict[str, str]] = {
         "order": "order",
         "activity.name": "activity_name",
         "study_activity_group.activity_group_name": "activity_group_name",
@@ -271,6 +276,25 @@ class StudyActivitySelectionService(
             ),
         )
 
+    @staticmethod
+    def _is_parent_scope_changed(
+        *,
+        activity_library_name: str | None,
+        previous_subgroup_uid: str | None,
+        updated_subgroup_uid: str | None,
+        previous_soa_group_uid: str | None,
+        updated_soa_group_uid: str | None,
+    ) -> bool:
+        """Whether a selection needs to move to a different StudySelectionActivityAR
+        (different study_activity_subgroup, or out of the Requested library into no
+        subgroup with a different SoA group), as opposed to being updated in place.
+        """
+        return (previous_subgroup_uid != updated_subgroup_uid) or (
+            activity_library_name == settings.requested_library_name
+            and updated_subgroup_uid is None
+            and previous_soa_group_uid != updated_soa_group_uid
+        )
+
     def _update_aggregate(
         self,
         selection_aggregate: StudySelectionActivityAR,
@@ -290,14 +314,12 @@ class StudyActivitySelectionService(
                 study_uid=selection_aggregate.study_uid,
                 updated_selection=updated_selection,
             )
-        if (
-            previous_selection.study_activity_subgroup_uid
-            != updated_selection.study_activity_subgroup_uid
-        ) or (
-            updated_selection.activity_library_name == settings.requested_library_name
-            and updated_selection.study_activity_subgroup_uid is None
-            and previous_selection.study_soa_group_uid
-            != updated_selection.study_soa_group_uid
+        if self._is_parent_scope_changed(
+            activity_library_name=updated_selection.activity_library_name,
+            previous_subgroup_uid=previous_selection.study_activity_subgroup_uid,
+            updated_subgroup_uid=updated_selection.study_activity_subgroup_uid,
+            previous_soa_group_uid=previous_selection.study_soa_group_uid,
+            updated_soa_group_uid=updated_selection.study_soa_group_uid,
         ):
             find_requested = (
                 updated_selection.activity_library_name
@@ -1450,6 +1472,16 @@ class StudyActivitySelectionService(
             study_activity_uid=study_activity_selection.study_selection_uid,
         )
         if study_activity_instances:
+            # The instances are recreated with new uids, so any dose collection
+            # link would be lost silently — block instead.
+            self._validate_study_activity_instances_not_used_for_dose_collection(
+                study_uid=study_uid,
+                study_activity_instance_uids=[
+                    instance.uid
+                    for instance in study_activity_instances
+                    if instance.uid is not None
+                ],
+            )
             study_activity_instance_ar = (
                 self._repos.study_activity_instance_repository.find_by_study(
                     study_uid, for_update=True
@@ -1778,6 +1810,12 @@ class StudyActivitySelectionService(
                     inst for inst in study_activity_instances if inst.uid is not None
                 ]
                 if non_placeholder_instances:
+                    self._validate_study_activity_instances_not_used_for_dose_collection(
+                        study_uid=study_uid,
+                        study_activity_instance_uids=[
+                            instance.uid for instance in non_placeholder_instances
+                        ],
+                    )
                     study_activity_instance_ar = (
                         repos.study_activity_instance_repository.find_by_study(
                             study_uid, for_update=True
@@ -2056,7 +2094,7 @@ class StudyActivitySelectionService(
         )
         keep_old_version_date = None
         if request_object.keep_old_version is True:
-            keep_old_version_date = datetime.now(timezone.utc)
+            keep_old_version_date = datetime.now(UTC)
         # fill the missing from the inputs
         fill_missing_values_in_base_model_from_reference_base_model(
             base_model_with_missing_values=request_object,
@@ -2105,6 +2143,16 @@ class StudyActivitySelectionService(
             is_study_activity_group_changed=is_study_activity_group_changed,
             study_activity_group_uid=updated_group.study_selection_uid,
         )
+        # Only preserve order when staying in the same aggregate, since a moved
+        # selection is repositioned by order in the new aggregate's own list
+        # (see add_object_selection).
+        is_parent_scope_changed = self._is_parent_scope_changed(
+            activity_library_name=current_object.activity_library_name,
+            previous_subgroup_uid=current_object.study_activity_subgroup_uid,
+            updated_subgroup_uid=updated_subgroup.study_selection_uid,
+            previous_soa_group_uid=current_object.study_soa_group_uid,
+            updated_soa_group_uid=updated_soa_selection.study_selection_uid,
+        )
         updated_study_activity_vo = StudySelectionActivityVO.from_input_values(
             study_uid=current_object.study_uid,
             activity_uid=(
@@ -2122,6 +2170,7 @@ class StudyActivitySelectionService(
             study_soa_group_uid=updated_soa_selection.study_selection_uid,
             study_soa_group_order=updated_soa_selection.order,
             study_selection_uid=current_object.study_selection_uid,
+            order=None if is_parent_scope_changed else current_object.order,
             study_activity_subgroup_uid=updated_subgroup.study_selection_uid,
             study_activity_subgroup_order=updated_subgroup.order,
             activity_subgroup_uid=updated_subgroup.activity_subgroup_uid,
@@ -2354,6 +2403,7 @@ class StudyActivitySelectionService(
                                 operation.content, StudySelectionActivityCreateInput
                             ):
                                 item = self.make_selection(study_uid, operation.content)
+                                response_code = status.HTTP_201_CREATED
                             else:
                                 raise ValidationException(
                                     msg="POST operation requires StudySelectionActivityCreateInput as request payload."
@@ -2363,17 +2413,20 @@ class StudyActivitySelectionService(
                             == SoAItemType.STUDY_ACTIVITY_SCHEDULE.value
                         ):
                             if isinstance(
-                                operation.content, StudyActivityScheduleCreateInput
+                                operation.content, StudyActivityScheduleBatchEditInput
                             ):
-                                item = study_activity_schedules_service.create(
-                                    study_uid, operation.content
+                                item = study_activity_schedules_service.overwrite_schedules_for_activities(
+                                    study_uid,
+                                    operation.content.study_activity_uids,
+                                    operation.content.study_visit_uids,
                                 )
+                                response_code = status.HTTP_201_CREATED
                             else:
                                 raise ValidationException(
-                                    msg="POST operation requires StudyActivityScheduleCreateInput as request payload."
+                                    msg="POST operation on StudyActivitySchedule requires StudyActivityScheduleBatchEditInput as request payload."
                                 )
-
-                        response_code = status.HTTP_201_CREATED
+                        else:
+                            raise MethodNotAllowedException(method=operation.method)
                     elif operation.method == "DELETE":
                         if operation.object == SoAItemType.STUDY_ACTIVITY.value:
                             if isinstance(
@@ -2383,25 +2436,13 @@ class StudyActivitySelectionService(
                                 self.delete_selection(
                                     study_uid, operation.content.study_activity_uid
                                 )
+                                response_code = status.HTTP_204_NO_CONTENT
                             else:
                                 raise ValidationException(
                                     msg="DELETE operation requires StudySelectionActivityBatchDeleteInput as request payload."
                                 )
-                        elif (
-                            operation.object
-                            == SoAItemType.STUDY_ACTIVITY_SCHEDULE.value
-                        ):
-                            if isinstance(
-                                operation.content, StudyActivityScheduleDeleteInput
-                            ):
-                                item = study_activity_schedules_service.delete(
-                                    study_uid, operation.content.uid
-                                )
-                            else:
-                                raise ValidationException(
-                                    msg="DELETE operation requires StudyActivityScheduleDeleteInput as request payload."
-                                )
-                        response_code = status.HTTP_204_NO_CONTENT
+                        else:
+                            raise MethodNotAllowedException(method=operation.method)
                     else:
                         raise MethodNotAllowedException(method=operation.method)
                     results.append(
@@ -2416,6 +2457,7 @@ class StudyActivitySelectionService(
                             content=BatchErrorResponse(message=str(error)),
                         )
                     )
+                    raise error
         finally:
             # Save any pending batch instance AR before clearing caches
             if self._batch_instance_ar is not None:

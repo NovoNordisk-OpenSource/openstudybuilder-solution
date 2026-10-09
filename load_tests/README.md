@@ -5,21 +5,21 @@ Simple load testing tool for the OpenStudyBuilder API, based on [Locust](https:/
 
 ## Installation
 
-Python 3.14 and Pipenv are prerequisites — see the
+Python 3.14 and uv are prerequisites — see the
 [root README](../README.md#prerequisites).
 
 ```sh
-pipenv sync --dev
+uv sync --group dev
 ```
 
 # Execution
-1. Run `pipenv run load-test-ui` to start [locust web interface](http://localhost:8089/) on your machine. 
+1. Run `uv run poe load-test-ui` to start [locust web interface](http://localhost:8089/) on your machine. 
 
    Specify number of users, test duration and other parameters for load tests in this web interface. 
 
    **OR**
 
-1. Run `pipenv run load-test-cl` to execute load tests in command-line mode.
+1. Run `uv run poe load-test-cl` to execute load tests in command-line mode.
 
    Without changing the parameters, this command will run load tests for 1 minute with 10 concurrent users.
    

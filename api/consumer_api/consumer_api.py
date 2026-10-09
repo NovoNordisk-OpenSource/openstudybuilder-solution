@@ -21,12 +21,12 @@ configure_database(
     liveness_check_timeout=settings.neo4j_liveness_check_timeout,
 )
 
-# pylint: disable=wrong-import-position,wrong-import-order,ungrouped-imports
+
 import logging
 import os
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, HTTPException, Request, status
+from fastapi import FastAPI, Request, status
 from fastapi.encoders import jsonable_encoder
 from fastapi.middleware import Middleware
 from fastapi.middleware.gzip import GZipMiddleware
@@ -35,6 +35,7 @@ from fastapi.responses import JSONResponse
 from fastapi.routing import APIRoute
 from opencensus.ext.azure.trace_exporter import AzureExporter
 from opencensus.trace.samplers import AlwaysOnSampler
+from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette_context.middleware import RawContextMiddleware
 
 from common.auth.dependencies import security
@@ -137,11 +138,15 @@ This license information is applicable to the swagger documentation of the clini
 
 Copyright (C) 2025 Novo Nordisk A/S, Danish company registration no. 24256790
 
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ## Licenses and Acknowledgements for Incorporated Software
 
@@ -158,9 +163,16 @@ Microsoft Identity Platform documentation can be read
 )
 
 
-@app.exception_handler(HTTPException)
-async def http_exception_handler(request: Request, exception: HTTPException):
-    """Returns an HTTP error code associated to given exception."""
+@app.exception_handler(StarletteHTTPException)
+async def http_exception_handler(request: Request, exception: StarletteHTTPException):
+    """Returns an HTTP error code associated to given exception.
+
+    Registered on ``starlette.exceptions.HTTPException`` (not
+    ``fastapi.HTTPException``) so it also catches exceptions raised inside
+    FastAPI's request-body parsing machinery, which imports ``HTTPException``
+    directly from Starlette (see ``fastapi/routing.py``). Registering on the
+    parent class covers both types via MRO.
+    """
 
     await log_exception(request, exception)
 

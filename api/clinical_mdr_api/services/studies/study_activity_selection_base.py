@@ -1,8 +1,9 @@
 import abc
 import threading
 from collections import defaultdict
+from collections.abc import Callable, Iterable
 from datetime import datetime
-from typing import Any, Callable, Generic, Iterable, TypeVar
+from typing import Any, ClassVar
 
 from cachetools import TTLCache
 from neomodel import db
@@ -34,19 +35,15 @@ from common.auth.user import user
 from common.config import settings
 from common.telemetry import trace_calls
 
-_AggregateRootType = TypeVar("_AggregateRootType", bound=StudySelectionBaseAR)
-_VOType = TypeVar("_VOType")  # pylint: disable=invalid-name
-OutputModel = TypeVar("OutputModel")
 
-
-class StudyActivitySelectionBaseService(
-    StudySelectionMixin, Generic[_AggregateRootType, _VOType, OutputModel]
-):
+class StudyActivitySelectionBaseService[
+    AggregateRootType: StudySelectionBaseAR, VOType, OutputModel
+](StudySelectionMixin):
     _repos: MetaRepository
     repository_interface: type
     selected_object_repository_interface: type | None
 
-    _vo_to_ar_filter_map: dict[Any, Any] = {}
+    _vo_to_ar_filter_map: ClassVar[dict[str, str]] = {}
 
     # Shared class-level cache for study standards effective dates across all service instances
     # Uses config values for consistent cache behavior across the application
@@ -81,7 +78,7 @@ class StudyActivitySelectionBaseService(
         return user().id()
 
     @property
-    def repository(self) -> StudySelectionActivityBaseRepository[_AggregateRootType]:
+    def repository(self) -> StudySelectionActivityBaseRepository[AggregateRootType]:
         assert self._repos is not None
         return self.repository_interface()
 
@@ -126,7 +123,7 @@ class StudyActivitySelectionBaseService(
                 # TTLCache may have internal timers that need explicit cleanup
                 if hasattr(self._batch_cache, "expire"):
                     self._batch_cache.expire()
-            except Exception as e:  # pylint: disable=broad-exception-caught
+            except Exception as e:
                 # Log but don't fail - cleanup is best-effort
                 import logging
 
@@ -150,7 +147,7 @@ class StudyActivitySelectionBaseService(
         """Generate namespaced key for reordered parent tracking."""
         return ("reordered", *args)
 
-    def _append_to_patch_ar_selections_cache(self, new_vo: _VOType) -> None:
+    def _append_to_patch_ar_selections_cache(self, new_vo: VOType) -> None:
         """Append a newly created VO to the patch AR selections cache.
 
         Called after POST so subsequent PATCHes see the new entity without
@@ -230,7 +227,7 @@ class StudyActivitySelectionBaseService(
     @abc.abstractmethod
     def _transform_all_to_response_model(
         self,
-        study_selection: _AggregateRootType | None,
+        study_selection: AggregateRootType | None,
         study_value_version: str | None = None,
     ) -> list[OutputModel]:
         raise NotImplementedError
@@ -239,7 +236,7 @@ class StudyActivitySelectionBaseService(
     def _transform_from_vo_to_response_model(
         self,
         study_uid: str,
-        specific_selection: _VOType,
+        specific_selection: VOType,
         terms_at_specific_datetime: datetime | None,
         accepted_version: bool | None = None,
     ) -> OutputModel:
@@ -266,8 +263,8 @@ class StudyActivitySelectionBaseService(
     @abc.abstractmethod
     def update_dependent_objects(
         self,
-        study_selection: _VOType,
-        previous_study_selection: _VOType,
+        study_selection: VOType,
+        previous_study_selection: VOType,
     ):
         raise NotImplementedError
 
@@ -275,8 +272,8 @@ class StudyActivitySelectionBaseService(
     def _patch_prepare_new_value_object(
         self,
         request_object: BaseModel,
-        current_object: _VOType,
-    ) -> _VOType:
+        current_object: VOType,
+    ) -> VOType:
         raise NotImplementedError
 
     @abc.abstractmethod
@@ -291,9 +288,9 @@ class StudyActivitySelectionBaseService(
     @abc.abstractmethod
     def _filter_ars_from_same_parent(
         self,
-        selection_aggregate: _AggregateRootType,
-        selection_vo: _VOType,
-    ) -> _AggregateRootType:
+        selection_aggregate: AggregateRootType,
+        selection_vo: VOType,
+    ) -> AggregateRootType:
         raise NotImplementedError
 
     @staticmethod
@@ -355,7 +352,7 @@ class StudyActivitySelectionBaseService(
         study_value_version: str | None = None,
         for_field_name: str | None = None,
         **kwargs,
-    ) -> GenericFilteringReturn[OutputModel] | list[_AggregateRootType]:
+    ) -> GenericFilteringReturn[OutputModel] | list[AggregateRootType]:
         repos = self._repos
         try:
             activity_selection_ar = self.repository.find_by_study(
@@ -366,9 +363,8 @@ class StudyActivitySelectionBaseService(
                 validate_is_dict("filter_by", filter_by)
             if sort_by is not None:
                 validate_is_dict("sort_by", sort_by)
-            else:
-                if (sort_by := self.get_default_sorting()) is not None:
-                    validate_is_dict("sort_by", sort_by)
+            elif (sort_by := self.get_default_sorting()) is not None:
+                validate_is_dict("sort_by", sort_by)
 
             simple_filters = build_simple_filters(
                 self._vo_to_ar_filter_map, filter_by, sort_by
@@ -486,7 +482,7 @@ class StudyActivitySelectionBaseService(
     @trace_calls(args=[1, 2], kwargs=["study_uid", "study_selection_uid"])
     def _find_ar_to_patch(
         self, study_uid: str, study_selection_uid: str, for_update: bool = True
-    ) -> tuple[_AggregateRootType, _VOType]:
+    ) -> tuple[AggregateRootType, VOType]:
         """Find aggregate root and value object for patching operations.
 
         In batch mode, this method uses cached selection lists to avoid repeated
@@ -542,11 +538,10 @@ class StudyActivitySelectionBaseService(
 
     def _update_aggregate(
         self,
-        selection_aggregate: _AggregateRootType,
-        updated_selection: _VOType,
-        # pylint: disable=unused-argument
-        previous_selection: _VOType | None = None,
-    ) -> _VOType:
+        selection_aggregate: AggregateRootType,
+        updated_selection: VOType,
+        previous_selection: VOType | None = None,
+    ) -> VOType:
         # let the aggregate update the value object
         selection_aggregate.update_selection(
             updated_study_object_selection=updated_selection,

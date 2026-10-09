@@ -292,7 +292,8 @@ function closeHistory() {
   showHistory.value = false
 }
 async function fetchGlobalAuditTrail(options) {
-  const resp = await compoundsApi.getAllVersions(options)
-  return resp.data.items
+  const params = filteringParameters.prepareParameters(options)
+  const resp = await compoundsApi.getAllVersions(params)
+  return { items: resp.data.items, total: resp.data.total }
 }
 </script>

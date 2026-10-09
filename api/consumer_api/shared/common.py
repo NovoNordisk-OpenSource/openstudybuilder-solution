@@ -97,7 +97,7 @@ def db_sort_clause(
 
 def get_api_version() -> str:
     version_path = os.path.join("./consumer_api", "apiVersion")
-    with open(version_path, "r", encoding="utf-8") as file:
+    with open(version_path, encoding="utf-8") as file:
         return file.read().strip()
 
 

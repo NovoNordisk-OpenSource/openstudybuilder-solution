@@ -5,8 +5,11 @@ from fastapi import Body, Path, Request
 from clinical_mdr_api.models.study_selections import study_disease_milestone
 from clinical_mdr_api.models.utils import CustomPage
 from clinical_mdr_api.repositories._utils import FilterOperator
-from clinical_mdr_api.routers import _generic_descriptions, decorators
-from clinical_mdr_api.routers import study_router as router
+from clinical_mdr_api.routers import (
+    _generic_descriptions,
+    decorators,
+    study_router as router,
+)
 from clinical_mdr_api.services.studies.study_disease_milestone import (
     StudyDiseaseMilestoneService,
 )
@@ -36,7 +39,8 @@ State before:
  - Study must exist.
  
 Business logic:
- - By default (no study status is provided) list all study disease_milestones for the study uid in status draft. If the study not exist in status draft then return the study disease_milestones for the study in status released. If the study uid only exist as deleted then this is returned.
+ - By default (no study status is provided) list all study disease_milestones for the study uid in status draft. If the study not exist in status draft then return the study disease_milestones
+   for the study in status released. If the study uid only exist as deleted then this is returned.
  - If a specific study status parameter is provided then return study disease_milestone for this study status.
  - If the locked study status parameter is requested then a study version should also be provided, and then the study disease_milestones for the specific locked study version is returned.
  - Indicate by an boolean variable if the study disease_milestone can be updated (if the selected study is in status draft).  
@@ -78,7 +82,6 @@ Possible errors:
         ],
     }
 )
-# pylint: disable=unused-argument
 def get_all(
     request: Request,  # request is actually required by the allow_exports decorator
     study_uid: Annotated[str, studyUID],
@@ -127,7 +130,6 @@ def get_all(
         },
     },
 )
-# pylint: disable=unused-argument
 def get_distinct_values_for_header(
     field_name: _generic_descriptions.HEADER_FIELD_NAME_QUERY,
     study_uid: Annotated[str, studyUID],  # TODO: Use this argument!
@@ -193,7 +195,8 @@ State before:
  - Study and study disease_milestone must exist
  
 Business logic:
- - By default (no study status is provided) list all details for specified study disease_milestone for the study uid in status draft. If the study not exist in status draft then return the study disease_milestones for the study in status released. If the study uid only exist as deleted then this is returned.
+ - By default (no study status is provided) list all details for specified study disease_milestone for the study uid in status draft. If the study not exist in status draft then return the study
+   disease_milestones for the study in status released. If the study uid only exist as deleted then this is returned.
  - If a specific study status parameter is provided then return study disease_milestones for this study status.
  - If the locked study status parameter is requested then a study version should also be provided, and then the specified study disease_milestone  for the specific locked study version is returned.
  - Indicate by an boolean variable if the study disease_milestone can be updated (if the selected study is in status draft).
@@ -217,7 +220,6 @@ Possible errors:
         },
     },
 )
-# pylint: disable=unused-argument
 def get_study_disease_milestone(
     study_uid: Annotated[str, studyUID],
     study_disease_milestone_uid: Annotated[
@@ -371,7 +373,8 @@ State before:
 Business logic:
  - Old order number must match existing order number in the database for specified study disease_milestone.
  - New order number must be increased or decreased with one.
- - If order number is decreased with 1, then the old order number must be > 1 and a preceding study disease_milestone must exist (the specified study disease_milestone cannot be the first on the list).
+ - If order number is decreased with 1, then the old order number must be > 1 and a preceding study disease_milestone must exist (the specified study disease_milestone cannot be the first on the
+   list).
    - The specified study disease_milestone get the order number set to be the new order number and the preceding study disease_milestone get the order number to be the old order number.
  - If order number is increased with 1, then a following study disease_milestone must exist (the specified study disease_milestone cannot be the last on the list).
    - The specified study disease_milestone get the order number set to be the new order number and the following study disease_milestone  get the order number to be the old order number.
@@ -449,7 +452,6 @@ Possible errors:
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
-# pylint: disable=unused-argument
 def patch_update_disease_milestone(
     study_uid: Annotated[str, studyUID],
     study_disease_milestone_uid: Annotated[

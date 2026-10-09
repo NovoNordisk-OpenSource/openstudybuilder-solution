@@ -1,11 +1,12 @@
 import logging
 import os
 import re
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
 from types import GenericAlias, NoneType, UnionType
-from typing import Any, Callable, Generic, TypeVar, get_args, get_origin, overload
+from typing import Any, get_args, get_origin, overload
 
 import neo4j.time
 from pydantic import BaseModel
@@ -40,17 +41,14 @@ class TimeUnit:
     from_timedelta: Callable = lambda u, x: u.conversion_factor_to_master * x
 
 
-StudyVisit = TypeVar("StudyVisit")
-
-
 @dataclass
-class Subvisit(Generic[StudyVisit]):
+class Subvisit[StudyVisit]:
     visit: StudyVisit
     number: int
 
 
 @dataclass
-class BaseTimelineAR(Generic[StudyVisit]):
+class BaseTimelineAR[StudyVisit]:
     """
     TimelineAR is aggregate root implementing idea of time relations between objects.
     Generally timeline consists of visits ordered by their internal relations.
@@ -60,6 +58,11 @@ class BaseTimelineAR(Generic[StudyVisit]):
 
     study_uid: str
     _visits: list[StudyVisit]
+
+    # Subvisit numbering increment thresholds: fewer subvisits get a larger
+    # numbering step to leave room for future insertions.
+    SMALL_SUBVISIT_COUNT_THRESHOLD = 10
+    MEDIUM_SUBVISIT_COUNT_THRESHOLD = 20
 
     @trace_calls
     def _generate_timeline(self):
@@ -97,8 +100,10 @@ class BaseTimelineAR(Generic[StudyVisit]):
             elif visit.visit_class == VisitClass.SPECIAL_VISIT:
                 # SpecialVisits anchored to same StudyVisit have the same timing, in scope of the same anchor visit
                 # the early discontinuation visits should be ordered in the end of special visit set
-                all_special_visits_anchoring_visit = special_visits_for_visit_anchor.get(
-                    visit.visit_sublabel_reference, []  # type: ignore[arg-type]
+                all_special_visits_anchoring_visit = (
+                    special_visits_for_visit_anchor.get(
+                        visit.visit_sublabel_reference, []  # type: ignore[arg-type]
+                    )
                 )
                 all_special_visits_anchoring_visit.append(visit)
                 special_visits_for_visit_anchor.setdefault(
@@ -212,9 +217,9 @@ class BaseTimelineAR(Generic[StudyVisit]):
                 amount_of_subvisits = amount_of_subvisits_for_visit[
                     visit.visit_sublabel_reference
                 ]
-                if amount_of_subvisits < 10:
+                if amount_of_subvisits < self.SMALL_SUBVISIT_COUNT_THRESHOLD:
                     increment_step = 10
-                elif 10 <= amount_of_subvisits < 20:
+                elif amount_of_subvisits < self.MEDIUM_SUBVISIT_COUNT_THRESHOLD:
                     increment_step = 5
                 else:
                     increment_step = 1
@@ -379,7 +384,7 @@ def load_env(key: str, default: str | None = None):
     log.info("ENV variable fetched: %s=%s", key, value)
     if value is None and default is None:
         log.error("%s is not set and no default was provided", key)
-        raise EnvironmentError(f"Failed because {key} is not set.")
+        raise OSError(f"Failed because {key} is not set.")
     if value is not None:
         return value
     log.warning("%s is not set, using default value: %s", key, default)

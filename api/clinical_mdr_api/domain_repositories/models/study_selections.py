@@ -1,3 +1,5 @@
+from typing import ClassVar
+
 from neomodel import (
     One,
     OneOrMore,
@@ -142,13 +144,12 @@ class StudyObjective(StudySelection):
     )
 
 
-# pylint: disable=abstract-method
 class StudyEndpointUnitRel(ClinicalMdrRel):
     index = IntegerProperty()
 
 
 class StudyEndpoint(StudySelection):
-    __optional_labels__ = ["TemplateParameterTermRoot"]
+    __optional_labels__: ClassVar[list[str]] = ["TemplateParameterTermRoot"]
     text = StringProperty()
     study_endpoint_has_study_objective = RelationshipTo(
         StudyObjective,
@@ -687,6 +688,13 @@ class StudyCohort(StudySelection):
 
 class StudyCompoundDosing(StudySelection):
     composition = StringProperty()
+    # Study level free text dose value, an alternative to the library dose value
+    # reached over HAS_DOSE_VALUE. The two are mutually exclusive.
+    free_text_dose_value = StringProperty()
+    # Likewise for the dose frequency, whose library counterpart is reached over
+    # HAS_DOSE_FREQUENCY. Independent of the dose value: a dosing may take its
+    # value from the library and its frequency as free text, or the reverse.
+    free_text_dose_frequency = StringProperty()
     study_value = RelationshipFrom(
         STUDY_VALUE_CLASS_NAME,
         "HAS_STUDY_COMPOUND_DOSING",
@@ -698,6 +706,12 @@ class StudyCompoundDosing(StudySelection):
     )
     has_dose_value = RelationshipTo(
         NumericValueWithUnitRoot, "HAS_DOSE_VALUE", cardinality=ZeroOrOne
+    )
+    has_dose_collection_study_activity_instance = RelationshipTo(
+        StudyActivityInstance,
+        "HAS_DOSE_COLLECTION_STUDY_ACTIVITY_INSTANCE",
+        model=ClinicalMdrRel,
+        cardinality=ZeroOrOne,
     )
     study_compound = RelationshipFrom(
         StudyCompound,
@@ -714,6 +728,8 @@ class StudyCompoundDosing(StudySelection):
 
 
 class StudySoAFootnote(StudySelection):
+    layout = StringProperty()
+
     references_study_activity = RelationshipTo(
         StudyActivity,
         "REFERENCES_STUDY_ACTIVITY",

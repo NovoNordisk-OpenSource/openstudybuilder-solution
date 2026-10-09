@@ -2,14 +2,8 @@
 Tests for study arm batch POST conflict resolution and copy-from-study endpoint.
 """
 
-# pylint: disable=unused-argument
-# pylint: disable=redefined-outer-name
-
-# pytest fixture functions have other fixture functions as arguments,
-# which pylint interprets as unused arguments
-
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 import pytest
@@ -67,7 +61,7 @@ def test_data():
         order=1,
         catalogue_name=catalogue_name,
         library_name=library_name,
-        effective_date=datetime(2020, 3, 25, tzinfo=timezone.utc),
+        effective_date=datetime(2020, 3, 25, tzinfo=UTC),
         approve=True,
     )
     placebo_arm_type = TestUtils.create_ct_term(
@@ -77,7 +71,7 @@ def test_data():
         order=2,
         catalogue_name=catalogue_name,
         library_name=library_name,
-        effective_date=datetime(2020, 3, 25, tzinfo=timezone.utc),
+        effective_date=datetime(2020, 3, 25, tzinfo=UTC),
         approve=True,
     )
 
@@ -91,7 +85,7 @@ def test_data():
             """,
             params={
                 "uid": term.term_uid,
-                "date": datetime(2020, 3, 26, tzinfo=timezone.utc),
+                "date": datetime(2020, 3, 26, tzinfo=UTC),
             },
         )
 
@@ -104,7 +98,7 @@ def test_data():
         """,
         params={
             "uid": ct_term_codelist.codelist_uid,
-            "date": datetime(2020, 3, 26, tzinfo=timezone.utc),
+            "date": datetime(2020, 3, 26, tzinfo=UTC),
         },
     )
 

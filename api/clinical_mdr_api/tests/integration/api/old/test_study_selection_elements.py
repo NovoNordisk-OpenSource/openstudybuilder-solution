@@ -1,11 +1,3 @@
-# pylint: disable=unused-argument
-# pylint: disable=redefined-outer-name
-# pylint: disable=too-many-arguments
-# pylint: disable=invalid-name
-
-# pytest fixture functions have other fixture functions as arguments,
-# which pylint interprets as unused arguments
-
 import pytest
 from fastapi.testclient import TestClient
 from neomodel import db
@@ -750,7 +742,7 @@ def test_reorder_specific1(api_client):
 
 def test_all_history_of_all_selection_study_elements(
     api_client,
-):  # pylint:disable=too-many-statements
+):
     response = api_client.get("/studies/study_root/study-element/audit-trail")
     assert_response_status_code(response, 200)
     res = response.json()

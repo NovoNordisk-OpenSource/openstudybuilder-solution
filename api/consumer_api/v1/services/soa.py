@@ -1,5 +1,6 @@
 import logging
 from collections.abc import Callable
+from http import HTTPStatus
 from typing import Any
 
 from neomodel import db
@@ -23,8 +24,7 @@ from common.exceptions import (
     MDRApiBaseException,
     ValidationException,
 )
-from consumer_api.v1 import db as DB
-from consumer_api.v1 import models
+from consumer_api.v1 import db as DB, models
 
 log = logging.getLogger(__name__)
 
@@ -149,7 +149,7 @@ class SoAService:
         for activity_input, activity_response in zip(
             soa_input.activities, created_activities_response, strict=True
         ):
-            if activity_response.response_code == 201 and isinstance(
+            if activity_response.response_code == HTTPStatus.CREATED and isinstance(
                 activity_response.content, study_selection.StudySelectionActivity
             ):
                 study_activity_uid = activity_response.content.study_activity_uid
@@ -196,7 +196,7 @@ class SoAService:
         schedule_failures = [
             self._extract_batch_error(resp.content)
             for resp in schedule_responses
-            if resp.response_code != 201
+            if resp.response_code != HTTPStatus.CREATED
         ]
         if schedule_failures:
             raise ValidationException(

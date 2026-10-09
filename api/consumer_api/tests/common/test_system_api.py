@@ -1,5 +1,3 @@
-# pylint: disable=unused-argument
-# pylint: disable=redefined-outer-name
 import pytest
 from fastapi.testclient import TestClient
 

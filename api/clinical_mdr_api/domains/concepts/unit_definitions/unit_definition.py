@@ -1,6 +1,7 @@
 import math
+from collections.abc import Callable, Set
 from dataclasses import dataclass
-from typing import AbstractSet, Callable, Self
+from typing import Self
 
 from clinical_mdr_api.domains.concepts.concept_base import ConceptARBase, ConceptVO
 from clinical_mdr_api.domains.controlled_terminologies.ct_term_name import CTTermNameAR
@@ -11,7 +12,6 @@ from clinical_mdr_api.domains.versioned_object_aggregate import (
 )
 from clinical_mdr_api.utils import are_floats_equal, normalize_string
 from common.exceptions import (
-    AlreadyExistsException,
     BusinessLogicException,
     ValidationException,
 )
@@ -36,10 +36,8 @@ class UnitDefinitionValueVO(ConceptVO):
     convertible_unit: bool
     display_unit: bool
     master_unit: bool
-    si_unit: bool
     us_conventional_unit: bool
     use_complex_unit_conversion: bool
-    legacy_code: str | None
     use_molecular_weight: bool | None
     conversion_factor_to_master: float | None
     order: int | None
@@ -54,14 +52,12 @@ class UnitDefinitionValueVO(ConceptVO):
         convertible_unit: bool,
         display_unit: bool,
         master_unit: bool,
-        si_unit: bool,
         us_conventional_unit: bool,
         use_complex_unit_conversion: bool,
         ct_units: list[str],
         unit_subsets: list[str],
         ucum_uid: str | None,
         unit_dimension_uid: str | None,
-        legacy_code: str | None,
         use_molecular_weight: bool | None,
         conversion_factor_to_master: float | None,
         comment: str | None,
@@ -87,6 +83,13 @@ class UnitDefinitionValueVO(ConceptVO):
                 or not are_floats_equal(conversion_factor_to_master, 1.0)
             ),
             msg=f"conversion factor to master must be 1.0 for master unit (provided value: {conversion_factor_to_master})",
+        )
+
+        ValidationException.raise_if(
+            not master_unit
+            and not convertible_unit
+            and conversion_factor_to_master is not None,
+            msg="conversion factor to master must not be provided for a non-convertible unit.",
         )
 
         ValidationException.raise_if(
@@ -135,10 +138,8 @@ class UnitDefinitionValueVO(ConceptVO):
             convertible_unit=convertible_unit,
             display_unit=display_unit,
             master_unit=master_unit,
-            si_unit=si_unit,
             us_conventional_unit=us_conventional_unit,
             use_complex_unit_conversion=use_complex_unit_conversion,
-            legacy_code=normalize_string(legacy_code),
             use_molecular_weight=use_molecular_weight,
             conversion_factor_to_master=conversion_factor_to_master,
             order=order,
@@ -155,7 +156,6 @@ class UnitDefinitionValueVO(ConceptVO):
         convertible_unit: bool,
         display_unit: bool,
         master_unit: bool,
-        si_unit: bool,
         us_conventional_unit: bool,
         use_complex_unit_conversion: bool,
         ct_units: list[CTTerm],
@@ -164,7 +164,6 @@ class UnitDefinitionValueVO(ConceptVO):
         unit_dimension_uid: str | None,
         ucum_name: str | None,
         unit_dimension_name: str | None,
-        legacy_code: str | None,
         use_molecular_weight: bool | None,
         conversion_factor_to_master: float | None,
         order: int | None,
@@ -186,10 +185,8 @@ class UnitDefinitionValueVO(ConceptVO):
             convertible_unit=convertible_unit,
             display_unit=display_unit,
             master_unit=master_unit,
-            si_unit=si_unit,
             us_conventional_unit=us_conventional_unit,
             use_complex_unit_conversion=use_complex_unit_conversion is True,
-            legacy_code=legacy_code,
             use_molecular_weight=use_molecular_weight,
             conversion_factor_to_master=conversion_factor_to_master,
             order=order,
@@ -201,7 +198,7 @@ class UnitDefinitionValueVO(ConceptVO):
 class UnitDefinitionAR(ConceptARBase):
     _concept_vo: UnitDefinitionValueVO
 
-    def get_possible_actions(self) -> AbstractSet[ObjectAction]:
+    def get_possible_actions(self) -> Set[ObjectAction]:
         raise NotImplementedError("Possible actions retrieval not implemented.")
 
     @property
@@ -231,7 +228,6 @@ class UnitDefinitionAR(ConceptARBase):
         master_unit_exists_for_dimension_predicate: Callable[
             [str], bool
         ] = lambda _: True,
-        unit_definition_exists_by_legacy_code: Callable[[str], bool] = lambda _: True,
     ) -> None:
         """
         Edits a draft version of the object, creating a new draft version.
@@ -244,17 +240,6 @@ class UnitDefinitionAR(ConceptARBase):
             [("name", new_unit_definition_value.name, self.name)],
             concept_exists_by_callback,
             "Unit Definition",
-        )
-
-        BusinessLogicException.raise_if(
-            (
-                new_unit_definition_value.legacy_code is not None
-                and new_unit_definition_value.legacy_code != self.concept_vo.legacy_code
-                and unit_definition_exists_by_legacy_code(
-                    new_unit_definition_value.legacy_code
-                )
-            ),
-            msg=f"Attempt to change Unit Definition legacy code into non-unique value: {new_unit_definition_value.legacy_code}",
         )
 
         BusinessLogicException.raise_if(
@@ -294,7 +279,6 @@ class UnitDefinitionAR(ConceptARBase):
             [str, str, bool], bool
         ] = lambda x, y, z: True,
         master_unit_exists_for_dimension_predicate: Callable[[str], bool],
-        unit_definition_exists_by_legacy_code: Callable[[str], bool],
         uid_supplier: Callable[[], str] = lambda: "",
     ) -> Self:
         if unit_definition_value.name is None:
@@ -304,16 +288,6 @@ class UnitDefinitionAR(ConceptARBase):
             [("name", unit_definition_value.name, None)],
             concept_exists_by_callback,
             "Unit Definition",
-        )
-
-        AlreadyExistsException.raise_if(
-            unit_definition_value.legacy_code is not None
-            and unit_definition_exists_by_legacy_code(
-                unit_definition_value.legacy_code
-            ),
-            "Unit Definition",
-            unit_definition_value.legacy_code,
-            "Legacy Code",
         )
 
         BusinessLogicException.raise_if(

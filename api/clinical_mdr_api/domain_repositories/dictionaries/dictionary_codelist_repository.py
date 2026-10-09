@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from neomodel import db
@@ -400,7 +400,7 @@ class DictionaryCodelistGenericRepository(
                 dictionary_codelist_node.has_term.connect(
                     dictionary_term_node,
                     {
-                        "start_date": datetime.now(timezone.utc),
+                        "start_date": datetime.now(UTC),
                         "end_date": None,
                         "author_id": added_term[1],
                     },
@@ -421,7 +421,7 @@ class DictionaryCodelistGenericRepository(
                     dictionary_term_node,
                     {
                         "start_date": has_term_relationship.start_date,
-                        "end_date": datetime.now(timezone.utc),
+                        "end_date": datetime.now(UTC),
                         "author_id": removed_term[1],
                     },
                 )

@@ -19,6 +19,7 @@
         dataUrl: exportDataUrl,
       }"
       disable-filtering
+      :disable-pagination="editMode"
       :items="paginatedMatrix"
       :loading="loading"
       :history-config="{
@@ -148,7 +149,7 @@
 </template>
 
 <script setup>
-import { computed, inject, ref, onMounted } from 'vue'
+import { computed, inject, ref, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import armsApi from '@/api/arms'
 import ElementsDropdownList from '@/components/tools/ElementsDropdownList.vue'
@@ -200,7 +201,22 @@ const loading = ref(true)
 const updateObject = ref([])
 const saveObject = ref(false)
 const editLoading = ref(false)
-const transitionRulesMode = ref(false)
+const transitionRulesModeStorageKey = 'designMatrixTransitionRulesMode'
+const storedTransitionRulesMode = localStorage.getItem(
+  transitionRulesModeStorageKey
+)
+let initialTransitionRulesMode = true
+if (storedTransitionRulesMode !== null) {
+  try {
+    initialTransitionRulesMode = JSON.parse(storedTransitionRulesMode)
+  } catch {
+    initialTransitionRulesMode = true
+  }
+}
+const transitionRulesMode = ref(initialTransitionRulesMode)
+watch(transitionRulesMode, (value) => {
+  localStorage.setItem(transitionRulesModeStorageKey, JSON.stringify(value))
+})
 
 const filteredStudyEpochs = computed(() => {
   return studyEpochs.value.filter(

@@ -20,11 +20,11 @@ def main(filename: str = "openapi.json", stdout: bool = True, basepath: str = ".
 
     api_spec_new = custom_openapi()
     try:
-        with open(schema_path, "r", encoding="utf-8") as f:
+        with open(schema_path, encoding="utf-8") as f:
             api_spec_old = json.load(f)
         api_spec_new = increment_api_version_if_needed(api_spec_new, api_spec_old)
     except FileNotFoundError:
-        with open(version_path, "r", encoding="utf-8") as f:
+        with open(version_path, encoding="utf-8") as f:
             old_version = f.read().strip()
         new_version = increment_version_number(old_version)
         api_spec_new["info"]["version"] = new_version

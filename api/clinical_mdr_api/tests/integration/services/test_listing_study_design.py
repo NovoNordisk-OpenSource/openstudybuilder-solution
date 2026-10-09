@@ -1,5 +1,5 @@
 import unittest
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from clinical_mdr_api.models import study_selections
@@ -352,7 +352,7 @@ class TestStudyListing(unittest.TestCase):
         )
 
     def test_study_metadata_listing(self):
-        self.maxDiff = None  # pylint: disable=invalid-name
+        self.maxDiff = None
         study_listing_service = StudyMetadataListingService()
         output = study_listing_service.get_study_metadata(
             project_id=self.project_id,
@@ -363,7 +363,7 @@ class TestStudyListing(unittest.TestCase):
             api_ver="TBA",
             study_id=f"{study.current_metadata.identification_metadata.project_number}-{study.current_metadata.identification_metadata.study_number}",
             study_ver=1,
-            request_dt=datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S"),
+            request_dt=datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%S"),
             specified_dt="2099-12-30",
             title=generate_description_json_model().study_title,
             reg_id=RegistryIdentifiersListingModel.from_study_registry_identifiers_vo(

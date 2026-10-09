@@ -2,13 +2,6 @@
 Tests for endpoints accepting `at_specified_date_time` query parameter
 """
 
-# pylint: disable=unused-argument
-# pylint: disable=redefined-outer-name
-# pylint: disable=too-many-arguments
-
-# pytest fixture functions have other fixture functions as arguments,
-# which pylint interprets as unused arguments
-
 import logging
 import urllib.parse
 from datetime import datetime, timedelta
@@ -150,8 +143,8 @@ def test_get_ct_terms(api_client):
         "/ct/terms/{term_uid}/attributes",
     ]
 
-    for url in endpoints:
-        url = url.replace("{term_uid}", ct_term_delivery_device.term_uid)
+    for url_template in endpoints:
+        url = url_template.replace("{term_uid}", ct_term_delivery_device.term_uid)
 
         res = api_client.get(url)
         assert res.status_code == 200
@@ -179,8 +172,8 @@ def test_get_ct_codelists(api_client):
         "/ct/codelists/{codelist_uid}/attributes",
     ]
 
-    for url in endpoints:
-        url = url.replace(
+    for url_template in endpoints:
+        url = url_template.replace(
             "{codelist_uid}", ct_term_delivery_device.codelists[0].codelist_uid
         )
 
@@ -269,11 +262,10 @@ def verify_returned_items(api_client, url, test_scenarios):
                 assert res["queried_effective_date"] == scenario[0]
             else:
                 assert res["queried_effective_date"] is None
+        elif scenario[1]:
+            assert response.status_code == 200, f"{final_url} should return 200"
         else:
-            if scenario[1]:
-                assert response.status_code == 200, f"{final_url} should return 200"
-            else:
-                assert response.status_code == 404, f"{final_url} should return 404"
+            assert response.status_code == 404, f"{final_url} should return 404"
 
 
 def add_seconds(date_time_str: str, seconds: int) -> str:

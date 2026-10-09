@@ -90,9 +90,28 @@ export default {
           options
         )
       } else {
-        target.subitem
-          ? this.$router.push(target.subitem.url)
-          : this.$router.push(target.item.url)
+        if (target.subitem) {
+          if (
+            target.subitem.url &&
+            target.subitem.url.params &&
+            target.subitem.url.params.study_id &&
+            this.selectedStudy
+          ) {
+            target.subitem.url.params.study_id = this.selectedStudy.uid
+          }
+          this.$router.push(target.subitem.url)
+        } else {
+          if (
+            target.item &&
+            target.item.url &&
+            target.item.url.params &&
+            target.item.url.params.study_id &&
+            this.selectedStudy
+          ) {
+            target.item.url.params.study_id = this.selectedStudy.uid
+          }
+          this.$router.push(target.item.url)
+        }
       }
       if (Object.prototype.hasOwnProperty.call(target.item, 'meta')) {
         const breads = target.item.meta.breadcrumb

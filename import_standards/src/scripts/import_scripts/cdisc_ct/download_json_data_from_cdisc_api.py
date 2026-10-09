@@ -3,7 +3,7 @@ This script is not meant to be called by the automatic pipelines.
 
 This script is meant to be called e.g. via:
 
-> `python -m pipenv run download_ct_json_data_from_cdisc_api <JSON directory name>`
+> `uv run poe download_ct_json_data_from_cdisc_api <JSON directory name>`
 
 The script expects the following parameters:
 

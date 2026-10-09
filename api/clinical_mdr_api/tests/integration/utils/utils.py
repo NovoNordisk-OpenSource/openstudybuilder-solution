@@ -1,11 +1,7 @@
-# pylint: disable=broad-except
-# pylint: disable=too-many-arguments
-# pylint: disable=too-many-public-methods
-# pylint: disable=dangerous-default-value
 import csv
 import io
 import logging
-from datetime import date, datetime, timedelta, timezone
+from datetime import UTC, date, datetime, timedelta
 from random import randint
 from typing import Any, Literal
 from xml.etree import ElementTree
@@ -123,6 +119,11 @@ from clinical_mdr_api.models.data_completeness_tag import (
     DataCompletenessTag,
     DataCompletenessTagInput,
 )
+from clinical_mdr_api.models.data_supplier_rules.data_supplier_rule import (
+    DataSupplierRule,
+    DataSupplierRuleActivityGroupingInput,
+    DataSupplierRuleInput,
+)
 from clinical_mdr_api.models.data_suppliers.data_supplier import (
     DataSupplier,
     DataSupplierInput,
@@ -184,20 +185,14 @@ from clinical_mdr_api.models.standard_data_models.dataset_variable import (
 )
 from clinical_mdr_api.models.standard_data_models.sponsor_model import (
     SponsorModel as SponsorModelAPIModel,
-)
-from clinical_mdr_api.models.standard_data_models.sponsor_model import (
     SponsorModelCreateInput,
 )
 from clinical_mdr_api.models.standard_data_models.sponsor_model_dataset import (
     SponsorModelDataset as SponsorModelDatasetAPIModel,
-)
-from clinical_mdr_api.models.standard_data_models.sponsor_model_dataset import (
     SponsorModelDatasetInput,
 )
 from clinical_mdr_api.models.standard_data_models.sponsor_model_dataset_variable import (
     SponsorModelDatasetVariable as SponsorModelDatasetVariableAPIModel,
-)
-from clinical_mdr_api.models.standard_data_models.sponsor_model_dataset_variable import (
     SponsorModelDatasetVariableInput,
 )
 from clinical_mdr_api.models.standard_data_models.variable_class import (
@@ -414,6 +409,9 @@ from clinical_mdr_api.services.controlled_terminologies.ct_term_name import (
     CTTermNameService,
 )
 from clinical_mdr_api.services.data_completeness_tags import DataCompletenessTagService
+from clinical_mdr_api.services.data_supplier_rules.data_supplier_rule import (
+    DataSupplierRuleService,
+)
 from clinical_mdr_api.services.data_suppliers.data_supplier import DataSupplierService
 from clinical_mdr_api.services.dictionaries.dictionary_codelist_generic_service import (
     DictionaryCodelistGenericService as DictionaryCodelistService,
@@ -690,14 +688,12 @@ class TestUtils:
     @classmethod
     def assert_timestamp_is_in_utc_zone(cls, val: str):
         datetime_ts: datetime = datetime.strptime(val, settings.date_time_format)
-        assert datetime_ts.tzinfo == timezone.utc
+        assert datetime_ts.tzinfo == UTC
 
     @classmethod
     def assert_timestamp_is_newer_than(cls, val: str, seconds: int):
         datetime_ts: datetime = datetime.strptime(val, settings.date_time_format)
-        assert abs(datetime.now(timezone.utc) - datetime_ts) < timedelta(
-            seconds=seconds
-        )
+        assert abs(datetime.now(UTC) - datetime_ts) < timedelta(seconds=seconds)
 
     @classmethod
     def assert_chronological_sequence(cls, val1: str, val2: str):
@@ -932,6 +928,33 @@ class TestUtils:
             supplier_type_uid=supplier_type_uid,
             origin_source_uid=origin_source_uid,
             origin_type_uid=origin_type_uid,
+            library_name=library_name,
+        )
+
+        return service.create_approve(payload)
+
+    @classmethod
+    def create_data_supplier_rule(
+        cls,
+        name: str,
+        description: str | None = None,
+        activity_groupings: list[dict[Any, Any]] | None = None,
+        data_supplier_type_uid: str | None = None,
+        library_name: str = SPONSOR_LIBRARY_NAME,
+    ) -> DataSupplierRule:
+        service: DataSupplierRuleService = DataSupplierRuleService()
+        payload: DataSupplierRuleInput = DataSupplierRuleInput(
+            name=name,
+            description=description,
+            activity_groupings=(
+                [
+                    DataSupplierRuleActivityGroupingInput(**grouping)
+                    for grouping in activity_groupings
+                ]
+                if activity_groupings
+                else []
+            ),
+            data_supplier_type_uid=data_supplier_type_uid,
             library_name=library_name,
         )
 
@@ -2428,14 +2451,12 @@ class TestUtils:
         convertible_unit=False,
         display_unit=True,
         master_unit=False,
-        si_unit=False,
         us_conventional_unit=False,
         use_complex_unit_conversion=False,
         ct_units=None,
         unit_subsets=None,
         ucum=None,
         unit_dimension=None,
-        legacy_code=None,
         use_molecular_weight=False,
         conversion_factor_to_master=0.001,
         comment=None,
@@ -2446,20 +2467,21 @@ class TestUtils:
     ) -> UnitDefinitionModel:
         service: UnitDefinitionService = UnitDefinitionService()
 
+        if not master_unit and not convertible_unit:
+            conversion_factor_to_master = None
+
         payload: UnitDefinitionPostInput = UnitDefinitionPostInput(
             name=name,
             library_name=library_name,
             convertible_unit=convertible_unit,
             display_unit=display_unit,
             master_unit=master_unit,
-            si_unit=si_unit,
             us_conventional_unit=us_conventional_unit,
             use_complex_unit_conversion=use_complex_unit_conversion,
             ct_units=ct_units if ct_units else [],
             unit_subsets=unit_subsets if unit_subsets else [],
             ucum=ucum,
             unit_dimension=unit_dimension,
-            legacy_code=legacy_code,
             use_molecular_weight=use_molecular_weight,
             conversion_factor_to_master=conversion_factor_to_master,
             comment=comment,
@@ -3170,7 +3192,7 @@ class TestUtils:
 
         # effective_date in the past ensures start_date on HAS_VERSION rels predates
         # any sponsor CT package effective_date used in tests (approve() preserves it).
-        past_date = datetime(2020, 6, 26, tzinfo=timezone.utc)
+        past_date = datetime(2020, 6, 26, tzinfo=UTC)
         for term_uid, name in [
             ("C123631", "study-field-term-01"),
             ("C123632", "study-field-term-02"),
@@ -3350,14 +3372,12 @@ class TestUtils:
                     convertible_unit=False,
                     display_unit=True,
                     master_unit=False,
-                    si_unit=True,
                     us_conventional_unit=True,
                     use_complex_unit_conversion=False,
                     ct_units=[],
                     unit_subsets=[],
                     ucum=None,
                     unit_dimension=None,
-                    legacy_code=None,
                     use_molecular_weight=False,
                     conversion_factor_to_master=0.001,
                     comment=unit,
@@ -3413,13 +3433,11 @@ class TestUtils:
                     convertible_unit=False,
                     display_unit=True,
                     master_unit=False,
-                    si_unit=True,
                     us_conventional_unit=True,
                     ct_units=[],
                     unit_subsets=[],
                     ucum=None,
                     unit_dimension=None,
-                    legacy_code=None,
                     use_molecular_weight=False,
                     conversion_factor_to_master=0.001,
                     comment=unit,
@@ -3534,7 +3552,6 @@ class TestUtils:
     def create_study_ct_data_map(
         cls,
         codelist_uid: str | None,
-        # pylint: disable=dangerous-default-value
         ct_data_map: dict[Any, Any] | None = None,
         ct_codelist_map: dict[Any, Any] | None = None,
         library_name: str = SPONSOR_LIBRARY_NAME,
@@ -4595,8 +4612,8 @@ class TestUtils:
         if not package_name:
             package_name = f"{catalogue} {date_now}"
         if not effective_date:
-            effective_date = effective_date = datetime(
-                date_now.year, date_now.month, date_now.day, tzinfo=timezone.utc
+            effective_date = datetime(
+                date_now.year, date_now.month, date_now.day, tzinfo=UTC
             )
 
         all_ct_packages = {
@@ -4723,7 +4740,7 @@ class TestUtils:
                         ],
                     }
                     all_failures.append(failure_info)
-            except Exception as e:  # pylint: disable=broad-exception-caught
+            except Exception as e:
                 # Catch any unexpected errors during integrity checks
                 # We catch Exception here because integrity checks can raise various exceptions
                 # (BusinessLogicException, database errors, etc.) and we want to report all of them

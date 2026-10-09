@@ -46,7 +46,20 @@ Allowed parameters include : filter on fields, sort by field name with sort dire
 "Sponsor","826d80a7-0b6a-419d-8ef1-80aa241d7ac7","First  [ComparatorIntervention]","2020-10-22T10:19:29+00:00",,"Draft","0.1","Initial version","NdSJ"
 """},
                 "text/xml": {"example": """
-                    <?xml version="1.0" encoding="UTF-8" ?><root><data type="list"><item type="dict"><uid type="str">e9117175-918f-489e-9a6e-65e0025233a6</uid><name type="str">Alamakota</name><start_date type="str">2020-11-19T11:51:43.000Z</start_date><status type="str">Draft</status><version type="str">0.2</version><change_description type="str">Test</change_description><author_username type="str">someone@example.com</author_username></item></data></root>
+                    <?xml version="1.0" encoding="UTF-8"?>
+<root>
+   <data type="list">
+      <item type="dict">
+         <uid type="str">e9117175-918f-489e-9a6e-65e0025233a6</uid>
+         <name type="str">Alamakota</name>
+         <start_date type="str">2020-11-19T11:51:43.000Z</start_date>
+         <status type="str">Draft</status>
+         <version type="str">0.2</version>
+         <change_description type="str">Test</change_description>
+         <author_username type="str">someone@example.com</author_username>
+      </item>
+   </data>
+</root>
 """},
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {},
             }
@@ -67,11 +80,9 @@ Allowed parameters include : filter on fields, sort by field name with sort dire
             "ucum=ucum.name",
             "ct_units",
             "convertible_unit",
-            "si_unit",
             "us_conventional_unit",
             "use_complex_unit_conversion",
             "unit_dimension=unit_dimension.name",
-            "legacy_code",
             "use_molecular_weight",
             "conversion_factor_to_master",
             "start_date",
@@ -86,7 +97,6 @@ Allowed parameters include : filter on fields, sort by field name with sort dire
         ],
     }
 )
-# pylint: disable=unused-argument
 def get_all(
     request: Request,  # request is actually required by the allow_exports decorator
     service: Annotated[UnitDefinitionService, Depends(UnitDefinitionService)],
@@ -250,7 +260,29 @@ The returned versions are ordered by `start_date` descending (newest entries fir
 "Sponsor";"826d80a7-0b6a-419d-8ef1-80aa241d7ac7";"First  [ComparatorIntervention]";"2020-10-22T10:19:29+00:00";;"Draft";"0.1";"Initial version";"NdSJ"
 """},
                 "text/xml": {"example": """
-                    <?xml version="1.0" encoding="UTF-8" ?><root><data type="list"><item type="dict"><name type="str">Alamakota</name><start_date type="str">2020-11-19 11:51:43+00:00</start_date><end_date type="str">None</end_date><status type="str">Draft</status><version type="str">0.2</version><change_description type="str">Test</change_description><author_username type="str">someone@example.com</author_username></item><item type="dict"><name type="str">Alamakota</name><start_date type="str">2020-11-19 11:51:07+00:00</start_date><end_date type="str">2020-11-19 11:51:43+00:00</end_date><status type="str">Draft</status><version type="str">0.1</version><change_description type="str">Initial version</change_description><author_username type="str">someone@example.com</author_username></item></data></root>
+                    <?xml version="1.0" encoding="UTF-8"?>
+<root>
+   <data type="list">
+      <item type="dict">
+         <name type="str">Alamakota</name>
+         <start_date type="str">2020-11-19 11:51:43+00:00</start_date>
+         <end_date type="str">None</end_date>
+         <status type="str">Draft</status>
+         <version type="str">0.2</version>
+         <change_description type="str">Test</change_description>
+         <author_username type="str">someone@example.com</author_username>
+      </item>
+      <item type="dict">
+         <name type="str">Alamakota</name>
+         <start_date type="str">2020-11-19 11:51:07+00:00</start_date>
+         <end_date type="str">2020-11-19 11:51:43+00:00</end_date>
+         <status type="str">Draft</status>
+         <version type="str">0.1</version>
+         <change_description type="str">Initial version</change_description>
+         <author_username type="str">someone@example.com</author_username>
+      </item>
+   </data>
+</root>
 """},
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {},
             }
@@ -271,10 +303,8 @@ The returned versions are ordered by `start_date` descending (newest entries fir
             "convertible_unit",
             "display_unit",
             "master_unit",
-            "si_unit",
             "us_conventional_unit",
             "use_complex_unit_conversion",
-            "legacy_code",
             "use_molecular_weight",
             "conversion_factor_to_master",
             "start_date",
@@ -292,7 +322,6 @@ The returned versions are ordered by `start_date` descending (newest entries fir
         ],
     }
 )
-# pylint: disable=unused-argument
 def get_versions(
     request: Request,  # request is actually required by the allow_exports decorator
     service: Annotated[UnitDefinitionService, Depends(UnitDefinitionService)],

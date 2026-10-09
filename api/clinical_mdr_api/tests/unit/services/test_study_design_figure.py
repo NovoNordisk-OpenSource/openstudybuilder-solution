@@ -2327,9 +2327,9 @@ def test_select_first_visits():
 
 
 def test_mk_timeline():
-    # pylint: disable=unused-argument
+
     def draw_svg(table, timeline, doc_width, doc_height):
-        # pylint: disable=unused-variable
+
         __tracebackhide__ = True
         assert timeline == TIMELINE
 
@@ -2338,7 +2338,6 @@ def test_mk_timeline():
     service.get_svg_document(STUDY_UID)
 
 
-# pylint: disable=unsupported-membership-test
 def test_get_svg_document():
     service = MockStudyDesignFigureService()
     doc: str = service.get_svg_document("")

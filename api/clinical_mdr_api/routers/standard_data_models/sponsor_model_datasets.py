@@ -63,7 +63,6 @@ Possible errors:
         ],
     }
 )
-# pylint: disable=unused-argument
 def get_sponsor_model_datasets(
     request: Request,  # request is actually required by the allow_exports decorator
     sponsor_model_name: Annotated[

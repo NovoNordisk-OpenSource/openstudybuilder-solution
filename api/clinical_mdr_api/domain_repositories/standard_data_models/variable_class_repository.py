@@ -18,7 +18,6 @@ class VariableClassRepository(StandardDataModelRepository):
     value_class = VariableClassInstance
     return_model = VariableClassAPIModel
 
-    # pylint: disable=unused-argument
     def generic_match_clause(self, versioning_relationship: str):
         standard_data_model_label = self.root_class.__label__
         standard_data_model_value_label = self.value_class.__label__
@@ -104,7 +103,8 @@ class VariableClassRepository(StandardDataModelRepository):
             standard_value.notes AS notes,
             standard_value.usage_restrictions AS usage_restrictions,
             standard_value.examples AS examples,
-            [(standard_value)-[:QUALIFIES_VARIABLE {catalogue:$data_model_name, version_number:$data_model_version}]->(qualified_variable:VariableClassInstance)<-[:HAS_INSTANCE]-(qualified_variable_root) | {
+            [(standard_value)-[:QUALIFIES_VARIABLE {catalogue:$data_model_name, version_number:$data_model_version}]->
+                (qualified_variable:VariableClassInstance)<-[:HAS_INSTANCE]-(qualified_variable_root) | {
                 uid:qualified_variable_root.uid, name:qualified_variable.label }] AS qualifies_variables,
             {dataset_class_name:dataset_class_value.label, ordinal:toInteger(has_variable_class_rel.ordinal)} AS dataset_class,
             head([(standard_root)<-[:HAS_VARIABLE_CLASS]-(catalogue:DataModelCatalogue) | catalogue.name]) AS catalogue_name,

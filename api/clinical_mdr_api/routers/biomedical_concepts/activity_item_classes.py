@@ -31,6 +31,11 @@ router = APIRouter()
 
 ActivityItemClassUID = Path(description="The unique id of the ActivityItemClass")
 DatasetUID = Path(description="The unique id of the Dataset")
+_IS_NSV_DESCRIPTION = (
+    "When set to true, return only Non Standard Variable nodes. "
+    "When set to false, return only Activity Item Class nodes that are not NSV. "
+    "When omitted, both are returned."
+)
 
 
 @router.get(
@@ -90,7 +95,8 @@ Possible errors:
                     "nci_concept_name",
                     "non_standard_variable.is_multiple",
                     "non_standard_variable.is_cdisc_defined",
-                    "data_type.name",
+                    "semtcdt.name",
+                    "non_standard_variable.nsvxmldt",
                     "role.name",
                     "non_standard_variable.length",
                     "non_standard_variable.origin_type.name",
@@ -106,7 +112,6 @@ Possible errors:
         },
     }
 )
-# pylint: disable=unused-argument
 def get_activity_item_classes(
     request: Request,  # request is actually required by the allow_exports decorator
     sort_by: _generic_descriptions.SORT_BY_QUERY = None,
@@ -115,16 +120,7 @@ def get_activity_item_classes(
     filters: _generic_descriptions.FILTERS_QUERY = None,
     operator: _generic_descriptions.FILTER_OPERATOR_QUERY = settings.default_filter_operator,
     total_count: _generic_descriptions.TOTAL_COUNT_QUERY = False,
-    is_nsv: Annotated[
-        bool | None,
-        Query(
-            description=(
-                "When set to true, return only Non Standard Variable nodes. "
-                "When set to false, return only Activity Item Class nodes that are not NSV. "
-                "When omitted, both are returned."
-            )
-        ),
-    ] = None,
+    is_nsv: bool | None = Query(default=None, description=_IS_NSV_DESCRIPTION),
 ) -> CustomPage[ActivityItemClass]:
     activity_item_class_service = ActivityItemClassService()
     results = activity_item_class_service.get_all_items(
@@ -179,7 +175,6 @@ Possible errors:
         ],
     }
 )
-# pylint: disable=unused-argument
 def get_activity_item_classes_versions(
     request: Request,  # request is actually required by the allow_exports decorator
     page_number: _generic_descriptions.PAGE_NUMBER_QUERY = settings.default_page_number,
@@ -219,6 +214,11 @@ def get_distinct_values_for_header(
     filters: _generic_descriptions.FILTERS_QUERY = None,
     operator: _generic_descriptions.FILTER_OPERATOR_QUERY = settings.default_filter_operator,
     page_size: _generic_descriptions.HEADER_PAGE_SIZE_QUERY = settings.default_header_page_size,
+    is_nsv: bool | None = Query(default=None, description=_IS_NSV_DESCRIPTION),
+    lite: Annotated[
+        bool,
+        Query(description=_generic_descriptions.HEADERS_QUERY_LITE),
+    ] = False,
 ) -> list[Any]:
     activity_item_class_service = ActivityItemClassService()
     return activity_item_class_service.get_distinct_values_for_header(
@@ -227,6 +227,8 @@ def get_distinct_values_for_header(
         filter_by=filters,
         filter_operator=FilterOperator.from_str(operator),
         page_size=page_size,
+        is_nsv=is_nsv,
+        lite=lite,
     )
 
 
@@ -316,7 +318,6 @@ Possible errors:
         404: _generic_descriptions.ERROR_404,
     },
 )
-# pylint: disable=unused-argument
 def get_all_codelists(
     request: Request,  # request is actually required by the allow_exports decorator
     activity_item_class_uid: Annotated[str, ActivityItemClassUID],
@@ -758,7 +759,6 @@ Possible errors:
     }
 )
 def get_activity_item_class_overview(
-    # pylint: disable=unused-argument
     request: Request,  # request is actually required by the allow_exports decorator
     activity_item_class_uid: Annotated[str, ActivityItemClassUID],
     version: Annotated[
@@ -824,7 +824,6 @@ Possible errors:
     }
 )
 def get_activity_instance_classes_using_item(
-    # pylint: disable=unused-argument
     request: Request,  # request is actually required by the allow_exports decorator
     activity_item_class_uid: Annotated[str, ActivityItemClassUID],
     version: Annotated[

@@ -228,7 +228,6 @@ class ProjectRepository:
                 name=p_name,
                 clinical_programme_uid=cp_uid,
                 description=p_desc,
-                # pylint: disable=unnecessary-lambda
                 generate_uid_callback=lambda uid=p_uid: uid,  # type: ignore[misc]
                 clinical_programme_exists_callback=lambda _: True,
             )

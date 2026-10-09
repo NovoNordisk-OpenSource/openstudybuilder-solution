@@ -1,4 +1,3 @@
-# pylint: disable=invalid-name
 from neomodel import db
 
 from clinical_mdr_api.domain_repositories.preferences_registry import (

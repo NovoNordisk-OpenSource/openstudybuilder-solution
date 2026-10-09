@@ -12,9 +12,6 @@ Result of each query is appended to `db_checks_results.csv` file.
 
 """
 
-# pylint: disable=unused-argument
-# pylint: disable=redefined-outer-name
-# pylint: disable=too-many-arguments
 import os
 
 from pytest_bdd import scenarios, then

@@ -48,7 +48,6 @@ class UnitDefinitionService(ConceptGenericService[UnitDefinitionAR]):
         return UnitDefinitionAR.from_input_values(
             author_id=self.author_id,
             unit_definition_value=UnitDefinitionValueVO.from_input_values(
-                si_unit=concept_input.si_unit,
                 name=concept_input.name,
                 definition=concept_input.definition,
                 ct_units=concept_input.ct_units,
@@ -58,7 +57,6 @@ class UnitDefinitionService(ConceptGenericService[UnitDefinitionAR]):
                 convertible_unit=concept_input.convertible_unit,
                 us_conventional_unit=concept_input.us_conventional_unit,
                 use_complex_unit_conversion=concept_input.use_complex_unit_conversion,
-                legacy_code=concept_input.legacy_code,
                 use_molecular_weight=concept_input.use_molecular_weight,
                 conversion_factor_to_master=concept_input.conversion_factor_to_master,
                 unit_ct_uid_exists_callback=self._repos.ct_term_name_repository.term_exists,
@@ -74,7 +72,6 @@ class UnitDefinitionService(ConceptGenericService[UnitDefinitionAR]):
             uid_supplier=self.repository.generate_uid,
             concept_exists_by_callback=exists_by_callback,
             master_unit_exists_for_dimension_predicate=self._repos.unit_definition_repository.master_unit_exists_by_unit_dimension,
-            unit_definition_exists_by_legacy_code=self._repos.unit_definition_repository.exists_by_legacy_code,
         )
 
     def _edit_aggregate(
@@ -92,11 +89,9 @@ class UnitDefinitionService(ConceptGenericService[UnitDefinitionAR]):
                 convertible_unit=concept_edit_input.convertible_unit,
                 display_unit=concept_edit_input.display_unit,
                 master_unit=concept_edit_input.master_unit,
-                si_unit=concept_edit_input.si_unit,
                 us_conventional_unit=concept_edit_input.us_conventional_unit,
                 use_complex_unit_conversion=concept_edit_input.use_complex_unit_conversion,
                 unit_dimension_uid=concept_edit_input.unit_dimension,
-                legacy_code=concept_edit_input.legacy_code,
                 use_molecular_weight=concept_edit_input.use_molecular_weight,
                 conversion_factor_to_master=concept_edit_input.conversion_factor_to_master,
                 comment=concept_edit_input.comment,
@@ -111,9 +106,6 @@ class UnitDefinitionService(ConceptGenericService[UnitDefinitionAR]):
             ),
             master_unit_exists_for_dimension_predicate=(
                 self._repos.unit_definition_repository.master_unit_exists_by_unit_dimension
-            ),
-            unit_definition_exists_by_legacy_code=(
-                self._repos.unit_definition_repository.exists_by_legacy_code
             ),
         )
 

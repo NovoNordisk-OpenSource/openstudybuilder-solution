@@ -139,7 +139,6 @@ else:
         "See OAUTH_ENABLED and OAUTH_RBAC_ENABLED environment variables."
     )
 
-    # pylint: disable=unused-argument
     class RequiresAnyRole:  # type: ignore[no-redef]
         def __init__(self, roles):
             # An empty method to keep instantiation compatible with disabled functionality

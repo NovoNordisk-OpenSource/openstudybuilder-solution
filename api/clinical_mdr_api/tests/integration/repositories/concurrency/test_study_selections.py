@@ -4,6 +4,8 @@ Tests for the following two cases:
 - The study (and selected nodes) are locked when reordering a new study selection.
 """
 
+from typing import ClassVar
+
 import pytest
 from neomodel import db
 
@@ -72,16 +74,13 @@ from clinical_mdr_api.tests.unit.domain.utils import AUTHOR_ID
 from clinical_mdr_api.utils import strip_html
 from common import exceptions
 
-# pylint: disable=unused-argument
-# pylint: disable=redefined-outer-name
-
 
 class TestData:
     _repos = MetaRepository()
     library_name = "Sponsor"
     author_id = "TEST"
     template_name = "Example Template"
-    parameter_terms: list[ParameterTermEntryVO] = []
+    parameter_terms: ClassVar[list[ParameterTermEntryVO]] = []
     study_title_repository: StudyTitleRepository
     studies_repository: StudyDefinitionRepository
     ct_term_attributes_repository: CTTermAttributesRepository
@@ -432,7 +431,6 @@ def test_study_selection_reorder_cancelled_on_concurrent_study_lock(setup):
     )
 
 
-# pylint: disable=unnecessary-pass
 def test_stack_cleanup():
     """This must be the last test to run (without @pytest.mark.forked mark!),
     so that this module is properly removed from the stack.

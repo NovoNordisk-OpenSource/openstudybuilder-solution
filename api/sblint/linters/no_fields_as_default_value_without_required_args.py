@@ -1,5 +1,6 @@
 import ast
 import sys
+from typing import ClassVar
 
 from rich import print as rptint
 
@@ -7,7 +8,7 @@ from sblint.sblinter import SBLinter
 
 
 class NoFieldsAsDefaultValueWithoutRequiredArgs(SBLinter):
-    REQUIRED_ARGS = {"alias", "default", "default_factory"}
+    REQUIRED_ARGS: ClassVar[set[str]] = {"alias", "default", "default_factory"}
 
     @classmethod
     def validate(cls, code_tree: ast.Module, _file_path: str) -> list[int]:

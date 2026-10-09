@@ -152,6 +152,12 @@ class NonStandardVariables(BaseImporter):
         self.origin_type_codelist_uid: str | None = None
         self.origin_source_terms: CaselessDict = CaselessDict()
         self.origin_source_codelist_uid: str | None = None
+        # Several distinct SDTM codes share the same label (e.g. "Lower Normal
+        # Limit" for LORANCOL, NEONRLO, REENRLO, HSRRNRLO, THDNRLO), and `name`
+        # is derived from the label - track names already used this run so a
+        # collision gets disambiguated by code instead of 409-ing and being
+        # silently dropped.
+        self._used_names: set[str] = set()
 
     # ---------------------------------------------------------------
     # Lookups
@@ -652,8 +658,19 @@ class NonStandardVariables(BaseImporter):
         if canonical.get("origin_source"):
             nsv["origin_source"] = canonical["origin_source"]
 
+        base_name = canonical.get("name_override") or self._slugify_name(label)
+        name = base_name
+        suffix = self._slugify_name(variable_name)
+        counter = 1
+        while name in self._used_names:
+            name = f"{base_name}_{suffix}"
+            if counter > 1:
+                name = f"{name}_{counter}"
+            counter += 1
+        self._used_names.add(name)
+
         body = {
-            "name": canonical.get("name_override") or self._slugify_name(label),
+            "name": name,
             "display_name": label,
             "order": order,
             "library_name": MDR_MIGRATION_NONSTANDARD_VARIABLES_LIBRARY,
@@ -801,7 +818,9 @@ class NonStandardVariables(BaseImporter):
 
     async def async_run(self):
         self._load_lookups()
-        timeout = aiohttp.ClientTimeout(None)
+        # A stalled request (e.g. the corporate proxy silently dropping a
+        # response) must not hang the whole batch forever - bound it.
+        timeout = aiohttp.ClientTimeout(total=120)
         conn = aiohttp.TCPConnector(limit=4, force_close=True)
         async with aiohttp.ClientSession(timeout=timeout, connector=conn) as session:
             for filename in (

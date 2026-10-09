@@ -1,6 +1,6 @@
 import abc
 import re
-from typing import Any, Generic, TypeVar
+from typing import Any, TypeVar
 
 from neomodel import db
 
@@ -21,8 +21,8 @@ from common.config import settings
 _AggregateRootType = TypeVar("_AggregateRootType")
 
 
-class GenericSyntaxTemplateRepository(
-    GenericSyntaxRepository, Generic[_AggregateRootType], abc.ABC
+class GenericSyntaxTemplateRepository[AggregateRootType](
+    GenericSyntaxRepository, abc.ABC
 ):
     def next_available_sequence_id(
         self,
@@ -65,7 +65,7 @@ class GenericSyntaxTemplateRepository(
     def _get_or_create_value(
         self,
         root: VersionRoot,
-        ar: _AggregateRootType,
+        ar: AggregateRootType,
         force_new_value_node: bool = False,
     ) -> SyntaxTemplateValue:
         if not force_new_value_node:
@@ -91,7 +91,7 @@ class GenericSyntaxTemplateRepository(
         return new_value
 
     def _has_data_changed(
-        self, ar: _AggregateRootType, value: SyntaxTemplateValue
+        self, ar: AggregateRootType, value: SyntaxTemplateValue
     ) -> bool:
         base_comparison = (
             ar.name != value.name or ar.guidance_text != value.guidance_text
@@ -100,7 +100,7 @@ class GenericSyntaxTemplateRepository(
 
     def _maintain_parameters(
         self,
-        versioned_object: _AggregateRootType,
+        versioned_object: AggregateRootType,
         root: VersionRoot,
         value: SyntaxTemplateValue,
     ) -> None:

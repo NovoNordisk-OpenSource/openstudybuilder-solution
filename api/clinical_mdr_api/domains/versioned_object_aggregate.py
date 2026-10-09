@@ -1,7 +1,8 @@
 import abc
 import datetime
+from collections.abc import Callable, Set
 from dataclasses import dataclass, field, replace
-from typing import AbstractSet, Any, Callable, Self
+from typing import Any, Self
 
 from clinical_mdr_api.domains.enums import LibraryItemStatus, ObjectAction
 from clinical_mdr_api.services.user_info import UserInfoService
@@ -71,9 +72,7 @@ class LibraryItemMetadataVO:
             _author_id=author_id,
             _author_username=UserInfoService.get_author_username_from_id(author_id),
             _start_date=(
-                start_date
-                if start_date
-                else datetime.datetime.now(datetime.timezone.utc)
+                start_date if start_date else datetime.datetime.now(datetime.UTC)
             ),
             _end_date=None,
             _major_version=0,
@@ -186,7 +185,7 @@ class LibraryItemMetadataVO:
             major, minor = self._get_new_version(LibraryItemStatus.DRAFT)
             return replace(
                 self,
-                _start_date=datetime.datetime.now(datetime.timezone.utc),
+                _start_date=datetime.datetime.now(datetime.UTC),
                 _end_date=None,
                 _status=LibraryItemStatus.DRAFT,
                 _major_version=major,
@@ -206,7 +205,7 @@ class LibraryItemMetadataVO:
             major, minor = self._get_new_version(LibraryItemStatus.FINAL)
             return replace(
                 self,
-                _start_date=datetime.datetime.now(datetime.timezone.utc),
+                _start_date=datetime.datetime.now(datetime.UTC),
                 _end_date=None,
                 _status=LibraryItemStatus.FINAL,
                 _major_version=major,
@@ -224,7 +223,7 @@ class LibraryItemMetadataVO:
             major, minor = self._get_new_version(LibraryItemStatus.RETIRED)
             return replace(
                 self,
-                _start_date=datetime.datetime.now(datetime.timezone.utc),
+                _start_date=datetime.datetime.now(datetime.UTC),
                 _end_date=None,
                 _status=LibraryItemStatus.RETIRED,
                 _major_version=major,
@@ -372,7 +371,7 @@ class VersioningActionMixin:
         self._is_deleted = True
 
     @abc.abstractmethod
-    def get_possible_actions(self) -> AbstractSet[ObjectAction]:
+    def get_possible_actions(self) -> Set[ObjectAction]:
         raise NotImplementedError("You cannot get possible actions for abstract class")
 
     def __raise_error_if_deleted(self) -> None:

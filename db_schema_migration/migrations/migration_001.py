@@ -87,7 +87,6 @@ def migrate_study_fields(db_connection):
             db_connection.cypher_query(statement)
 
 
-# pylint: disable=unused-argument
 def migrate_activities(db_connection):
     # Remove unnecessary IN_SUB_GROUP/IN_GROUP outgoing relations from ActivityValue/ActivitySubGroupValue nodes:
     # - (n:ActivityValue)-[r:IN_SUB_GROUP]->(m:ActivitySubGroupValue)

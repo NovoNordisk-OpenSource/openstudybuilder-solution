@@ -2,13 +2,6 @@
 Tests for /studies/{study_uid}/study-cohorts endpoints
 """
 
-# pylint: disable=unused-argument
-# pylint: disable=redefined-outer-name
-# pylint: disable=too-many-arguments
-
-# pytest fixture functions have other fixture functions as arguments,
-# which pylint interprets as unused arguments
-
 import logging
 from typing import Any
 from unittest import mock
@@ -400,6 +393,46 @@ def test_batch_operations(api_client):
     assert res[0]["content"]["name"] == cohort_name_2
     assert res[1]["response_code"] == 200
     assert res[1]["content"]["name"] == cohort_name_1
+
+
+def test_batch_create_with_unknown_arm_uid(api_client):
+    test_study = TestUtils.create_study()
+
+    # Batch creation saves before validating, so an unknown Arm reaches the
+    # repository instead of being rejected by the domain validation.
+    response = api_client.post(
+        f"/studies/{test_study.uid}/study-cohorts/batch",
+        json=[
+            {
+                "method": "POST",
+                "content": {
+                    "name": "Cohort with unknown arm",
+                    "short_name": "Cohort with unknown arm",
+                    "code": "Cohort_code_unknown_arm",
+                    "arm_uids": ["StudyArm_000001"],
+                },
+            },
+        ],
+    )
+    assert_response_status_code(response, 404)
+    assert response.json()["type"] == "NotFoundException"
+
+    response = api_client.post(
+        f"/studies/{test_study.uid}/study-cohorts/batch",
+        json=[
+            {
+                "method": "POST",
+                "content": {
+                    "name": "Cohort with unknown branch arm",
+                    "short_name": "Cohort with unknown branch arm",
+                    "code": "Cohort_code_unknown_branch_arm",
+                    "branch_arm_uids": ["StudyBranchArm_000001"],
+                },
+            },
+        ],
+    )
+    assert_response_status_code(response, 404)
+    assert response.json()["type"] == "NotFoundException"
 
 
 def test_study_arm_delete_cascade_deletes_study_branch_arms(api_client):

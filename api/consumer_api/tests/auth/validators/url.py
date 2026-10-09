@@ -1,6 +1,6 @@
 def assert_url(value, message):
     """Assert value is URL"""
-    # pylint: disable=unused-variable
+
     __tracebackhide__ = True
 
     assert value, f"{message}: empty"
@@ -9,7 +9,7 @@ def assert_url(value, message):
 
 def assert_https_url(value, message):
     """Assert value is URL starts with 'https://'"""
-    # pylint: disable=unused-variable
+
     __tracebackhide__ = True
 
     assert_url(value, message)

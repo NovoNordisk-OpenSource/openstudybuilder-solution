@@ -24,14 +24,6 @@ from clinical_mdr_api.tests.integration.utils.api import (
 from clinical_mdr_api.tests.integration.utils.utils import TestUtils
 from clinical_mdr_api.tests.utils.checks import assert_response_status_code
 
-# pylint: disable=unused-argument
-# pylint: disable=redefined-outer-name
-# pylint: disable=too-many-arguments
-
-# pytest fixture functions have other fixture functions as arguments,
-# which pylint interprets as unused arguments
-
-
 log = logging.getLogger(__name__)
 
 # Global variables shared between fixtures and tests
@@ -342,8 +334,8 @@ def test_get_activity_instance_classes(
     if sort_by:
         # sort_by is JSON string in the form: {"sort_field_name": is_ascending_order}
         sort_by_dict = json.loads(sort_by)
-        sort_field: str = list(sort_by_dict.keys())[0]
-        sort_order_ascending: bool = list(sort_by_dict.values())[0]
+        sort_field: str = next(iter(sort_by_dict.keys()))
+        sort_order_ascending: bool = next(iter(sort_by_dict.values()))
 
         # extract list of values of 'sort_field_name' field from the returned result
         result_vals = list(map(lambda x: x[sort_field], res["items"]))
@@ -397,10 +389,13 @@ def test_filtering_wildcard(
 
         # Each returned row has a field that starts with the specified filter value
         for row in res["items"]:
+            current_row = row
             if nested_path:
                 for prop in nested_path:
-                    row = row[prop]
-            assert row[expected_matched_field].startswith(expected_result_prefix)
+                    current_row = current_row[prop]
+            assert current_row[expected_matched_field].startswith(
+                expected_result_prefix
+            )
     else:
         assert len(res["items"]) == 0
 
@@ -451,15 +446,17 @@ def test_filtering_exact(
 
         # Each returned row has a field whose value is equal to the specified filter value
         for row in res["items"]:
+            current_row = row
             if nested_path:
                 for prop in nested_path:
-                    row = row[prop]
+                    current_row = current_row[prop]
             if isinstance(expected_result, list):
                 assert all(
-                    item in row[expected_matched_field] for item in expected_result
+                    item in current_row[expected_matched_field]
+                    for item in expected_result
                 )
             else:
-                assert row[expected_matched_field] == expected_result
+                assert current_row[expected_matched_field] == expected_result
     else:
         assert len(res["items"]) == 0
 

@@ -192,11 +192,9 @@ class Units(BaseImporter):
                     ),
                     "display_unit": map_boolean(row[headers.index("DISPLAY_UNIT")]),
                     "master_unit": map_boolean(row[headers.index("MASTER_UNIT")]),
-                    "si_unit": map_boolean(row[headers.index("SI_UNIT")]),
                     "us_conventional_unit": map_boolean(
                         row[headers.index("US_CONVENTIONAL_UNIT")]
                     ),
-                    "legacy_code": row[headers.index("UNIT")],
                     "use_molecular_weight": map_boolean(
                         row[headers.index("USE_MOLECULAR_WEIGHT")]
                     ),
@@ -254,9 +252,7 @@ class Units(BaseImporter):
             "convertible_unit",
             "display_unit",
             "master_unit",
-            "si_unit",
             "us_conventional_unit",
-            "legacy_code",
             "molecular_weight_conv_expon",
             "conversion_factor_to_master",
             "definition",

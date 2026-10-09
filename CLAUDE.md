@@ -11,6 +11,18 @@ Two components carry their own detailed rule sets. When working in either, read 
 - `api/CLAUDE.md` → `api/.claude/rules/*.md` (project-overview, project-structure, commands, architecture, database, api-conventions, code-standards, authentication, testing, monitoring)
 - `frontend/CLAUDE.md` → `frontend/.claude/rules/*.md` (overview, commands, architecture-core, components, patterns, routing-auth, conventions-gotchas)
 
+Those two `.claude/` directories hold **rules only**. Skills and subagents live at the repository root — see below.
+
+## Claude Code layout
+
+Skills and subagents are all at the repository ROOT, so every command is available whichever component you are working in. This is deliberate: a `.claude/skills/` directory *below* the launch directory does not load at startup (it only appears once Claude touches a file in that subdirectory), and a nested `.claude/agents/` is invisible to a session started above it. Do not move either back under a component.
+
+- **`.claude/skills/osb-*/`** — the 10 user-invokable slash commands. For a project skill the DIRECTORY NAME *is* the command, so the `osb-` prefix has to stay on the directory; keep each skill's frontmatter `name` byte-identical to its directory name.
+- **`.claude/skills/branch-change-detection/`** and **`.claude/skills/logging-standards-helper/`** — internal helpers, deliberately UNPREFIXED because they are not slash commands (`user-invocable: false`). The missing prefix is the signal. Renaming either breaks references silently: `branch-change-detection` is reached only by a literal `Read` of its path from 5 call sites, and `logging-standards-helper` is preloaded by 4 agents through their `skills:` frontmatter, where a failed lookup is logged to the debug log rather than surfaced.
+- **`.claude/agents/`** — 9 subagents, referenced from the skills by their frontmatter `name` as `subagent_type`.
+
+**Path convention inside skills and agents: every file path is repo-root-relative.** Commands that genuinely depend on the working directory carry an explicit "run from `api/`" or "from `frontend/`" note — that is process cwd, not a path. Two files point at root `.claude/` paths from inside a component (`api/.claude/rules/monitoring.md`, `frontend/.claude/rules/patterns.md`); both are correct as written and are annotated as such. Do not "fix" them by prefixing the component.
+
 ## Components
 
 | Dir | Purpose | Stack |
@@ -32,30 +44,30 @@ Two components carry their own detailed rule sets. When working in either, read 
 
 One codebase, three ASGI apps, shared `common/` (config, auth, database, telemetry, exceptions). Each has its own port, `openapi.json`, tests, and lint target:
 
-| App | Port | Pipfile scripts |
+| App | Port | poe tasks |
 |-----|------|-----------------|
 | `clinical_mdr_api/` (main) | 8000 | `dev`, `lint`, `testunit`, `testint`, `openapi` |
-| `consumer_api/` (read-only) | 8008 | `consumer-api-*`, `consumer-openapi` |
+| `consumer_api/` (read-heavy, **not** read-only) | 8008 | `consumer-api-*`, `consumer-openapi` |
 | `extensions/` | 8009 | `extensions-*`, `extensions-openapi` |
 
 The main API follows three-layer DDD — `domains/` (business logic, no outward deps) → `domain_repositories/` (Neo4j persistence, Memento pattern, optimistic locking) → `routers/`+`services/`+`models/`. Build features inside-out in that order; see `api/.claude/rules/architecture.md`.
 
 ## Commands
 
-Every Python component is pipenv with its own `[scripts]` block in its `Pipfile` — **check there rather than guessing**; scripts differ per component and some are pinned to a version number (see migrations below).
+Every Python component is **uv** with its own `pyproject.toml`/`uv.lock`, and tasks live under `[tool.poe.tasks]`, run via `uv run poe <name>` (poethepoet) — **check there rather than guessing**; tasks differ per component and some are pinned to a version number (see migrations below). `load_tests/` was the pilot for this migration to uv/poe, followed by `api/` and then the rest of the Python components.
 
 ```bash
 # api
-cd api && pipenv sync --dev
-pipenv run dev                                  # :8000
-pipenv run testunit                             # unit
-pipenv run testint                              # integration — needs Neo4j, runs xdist parallel
-pipenv run testauth                             # OAuth/RBAC
-pipenv run test -- path/to/test.py::test_name   # single test (plain pytest -s)
-pipenv run format && pipenv run lint && pipenv run mypy
-pipenv run sblint                               # custom in-repo static analysis (sblint/)
-pipenv run openapi                              # regenerate openapi.json after route/model changes
-pipenv run schemathesis                         # contract tests against a running :8000
+cd api && uv sync --group dev
+uv run poe dev                                  # :8000
+uv run poe testunit                             # unit
+uv run poe testint                              # integration — needs Neo4j, runs xdist parallel
+uv run poe testauth                             # OAuth/RBAC
+uv run poe test -- path/to/test.py::test_name   # single test (plain pytest -s)
+uv run poe format && uv run poe lint && uv run poe mypy
+uv run poe sblint                               # custom in-repo static analysis (sblint/)
+uv run poe openapi                              # regenerate openapi.json after route/model changes
+uv run poe schemathesis                         # contract tests against a running :8000
 
 # frontend (npm)
 cd frontend && npm install
@@ -65,10 +77,10 @@ npm run test:smoke                              # builds demo bundle, then Playw
 npx playwright test --config tests/smoke/playwright.config.js -g "name"   # single smoke test
 
 # db
-cd db && ./create_neo4j_local.sh && pipenv run init_neo4j
+cd db && ./create_neo4j_local.sh && uv run poe init_neo4j
 ```
 
-`db_schema_migration` scripts are **pinned per migration number** — `test`/`verify`/`migrate` all point at `*_024` today, corrections at `*_022`. Bump those Pipfile entries when starting a new migration.
+`db_schema_migration` scripts are **pinned per migration number** — `test`/`verify`/`migrate` all point at `*_024` today, corrections at `*_022`. Bump those `pyproject.toml` `[tool.poe.tasks]` entries when starting a new migration.
 
 ## Database population order
 
@@ -78,6 +90,8 @@ Order matters — each step depends on the previous:
 2. `import_standards/` — CDISC controlled terminology
 3. `api/` — start API
 4. `import_sponsor_data/` — sponsor codelists + mock data (goes through the API, not straight to Neo4j)
+
+Steps 2 and 4 are load-bearing, not just populating: a number of codelists are resolved by submission value to build forms and validate mandatory fields, so a missing or empty one stops a feature rather than degrading it (no `VisitType` terms → no study visit can be created). `import_sponsor_data/SYSTEM_CODELISTS.md` lists which codelists are required, what each is needed for, and how the failures present — the read path is silent, the write path raises a 400 naming the submission value. Consult it before concluding that odd behaviour against a fresh or restored database is a code bug.
 
 ## Environment
 

@@ -1,5 +1,3 @@
-# pylint: disable=too-many-lines
-
 from collections import defaultdict
 from copy import deepcopy
 from typing import Any
@@ -37,8 +35,10 @@ from clinical_mdr_api.models.study_selections.study_visit import (
     StudyVisit,
     StudyVisitLite,
 )
-from clinical_mdr_api.services.studies.study_flowchart import _T as _gettext
-from clinical_mdr_api.services.studies.study_flowchart import StudyFlowchartService
+from clinical_mdr_api.services.studies.study_flowchart import (
+    _T as _gettext,
+    StudyFlowchartService,
+)
 from clinical_mdr_api.services.utils.table_f import (
     Ref,
     TableCell,
@@ -70,7 +70,7 @@ class MockStudyEpoch(BaseModel):
 
 
 class MockStudyFlowchartService(StudyFlowchartService):
-    # pylint: disable=super-init-not-called
+
     def __init__(self):
         pass
 
@@ -158,7 +158,7 @@ def check_flowchart_table_first_rows(
     visit: StudyVisit
     for _, e in {
         (
-            collapse_visit_groups and visit.consecutive_visit_group or visit.uid,
+            (collapse_visit_groups and visit.consecutive_visit_group) or visit.uid,
             visit.study_epoch.sponsor_preferred_name,
         )
         for visit in study_visits
@@ -201,8 +201,7 @@ def check_flowchart_table_first_rows(
         first_visit_of_each_group: dict[str, StudyVisit] = {}
         for visit in study_visits:
             first_visit_of_each_group.setdefault(
-                collapse_visit_groups
-                and visit.consecutive_visit_group
+                (collapse_visit_groups and visit.consecutive_visit_group)
                 or visit.visit_short_name,
                 visit,
             )
@@ -435,19 +434,18 @@ def check_flowchart_table_visit_rows(
                     table.rows[row_idx + 1].cells[i].text
                     == f"{getattr(visits[0], visit_timing_prop):d}-{getattr(visits[-1], visit_timing_prop):d}"
                 )
+        elif time_unit == "week":
+            assert table.rows[row_idx + 1].cells[i].text == str(
+                visit.study_duration_weeks
+                if soa_preferences.baseline_as_time_zero
+                else visit.study_week_number
+            )
         else:
-            if time_unit == "week":
-                assert table.rows[row_idx + 1].cells[i].text == str(
-                    visit.study_duration_weeks
-                    if soa_preferences.baseline_as_time_zero
-                    else visit.study_week_number
-                )
-            else:
-                assert table.rows[row_idx + 1].cells[i].text == str(
-                    visit.study_duration_days
-                    if soa_preferences.baseline_as_time_zero
-                    else visit.study_day_number
-                )
+            assert table.rows[row_idx + 1].cells[i].text == str(
+                visit.study_duration_days
+                if soa_preferences.baseline_as_time_zero
+                else visit.study_day_number
+            )
 
         # THEN text in forth row
         if visit.min_visit_window_value == visit.max_visit_window_value == 0:
@@ -588,7 +586,6 @@ def check_hidden_row_propagation(table: TableWithFootnotes):
                 assert not parent.cells[i].footnotes
 
 
-# pylint: disable=redefined-outer-name
 @pytest.fixture(scope="module")
 def mock_study_flowchart_service():
     return MockStudyFlowchartService()
@@ -1053,7 +1050,7 @@ def test_split_flowchart_table_with_splits(table: TableWithFootnotes = TINY_SOA_
     assert slice1.footnotes == table.footnotes
     # contains columns 0, 2, 3 and 4 (by index)
     for slice_row, orig_row in zip(slice1.rows, table.rows):
-        assert slice_row.cells == [orig_row.cells[0]] + orig_row.cells[2:]
+        assert slice_row.cells == [orig_row.cells[0], *orig_row.cells[2:]]
 
 
 def test_split_flowchart_table_with_two_splits(
@@ -1096,10 +1093,10 @@ def test_split_flowchart_table_with_two_splits(
     assert list(slice0.footnotes.keys()) == [""]
     # contains columns 0, 2 and 3 (by index)
     for i, (slice_row, orig_row) in enumerate(zip(slice1.rows, table.rows)):
+        expected_row = orig_row.model_copy(deep=True) if i == 0 else orig_row
         if i == 0:
-            orig_row = orig_row.model_copy(deep=True)
-            orig_row.cells[2].span = 2
-        assert slice_row.cells == [orig_row.cells[0]] + orig_row.cells[2:4]
+            expected_row.cells[2].span = 2
+        assert slice_row.cells == [expected_row.cells[0], *expected_row.cells[2:4]]
 
     # Third slice: Visits, V4
     slice2 = slices[2]
@@ -1115,11 +1112,11 @@ def test_split_flowchart_table_with_two_splits(
     assert slice2.footnotes == table.footnotes
     # contains columns 0, 2 and 3 (by index)
     for i, (slice_row, orig_row) in enumerate(zip(slice2.rows, table.rows)):
+        expected_row = orig_row.model_copy(deep=True) if i == 0 else orig_row
         if i == 0:
-            orig_row = orig_row.model_copy(deep=True)
-            orig_row.cells[4] = orig_row.cells[2]
-            orig_row.cells[4].span = 1
-        assert slice_row.cells == [orig_row.cells[0], orig_row.cells[4]]
+            expected_row.cells[4] = expected_row.cells[2]
+            expected_row.cells[4].span = 1
+        assert slice_row.cells == [expected_row.cells[0], expected_row.cells[4]]
 
 
 # Tests for Protocol Lab table functionality
@@ -1503,6 +1500,70 @@ def test_footnote_filtering_for_visible_rows():
             assert (
                 "footnote2" in actual_footnote_uids
             ), f"footnote2 (hidden row) should be included in {layout} layout"
+
+
+def test_add_footnotes_layout_filtering():
+    """A footnote without a layout applies to every layout; a footnote with a specific
+    layout only applies to that layout."""
+
+    def make_footnote(uid, layout):
+        return StudySoAFootnote(
+            uid=uid,
+            study_uid="test_study",
+            footnote=CompactFootnote(uid=f"c_{uid}", name=uid, name_plain=uid),
+            referenced_items=[
+                ReferencedItem(
+                    item_uid="activity1", item_type=SoAItemType.STUDY_ACTIVITY
+                )
+            ],
+            layout=layout,
+        )
+
+    fn_none = make_footnote("fn_none", None)
+    fn_protocol = make_footnote("fn_protocol", SoALayout.PROTOCOL)
+    fn_lab = make_footnote("fn_lab", SoALayout.PROTOCOL_LAB_TABLE)
+    all_footnotes = [fn_none, fn_protocol, fn_lab]
+
+    def make_table():
+        # activity1 is on a visible row so it survives PROTOCOL visible-row filtering
+        return TableWithFootnotes(
+            rows=[
+                TableRow(cells=[TableCell("Header")]),
+                TableRow(
+                    cells=[
+                        TableCell(
+                            "Activity1",
+                            refs=[
+                                Ref(
+                                    type_=SoAItemType.STUDY_ACTIVITY.value,
+                                    uid="activity1",
+                                )
+                            ],
+                        )
+                    ],
+                    hide=False,
+                ),
+            ],
+            num_header_rows=1,
+            num_header_cols=1,
+        )
+
+    def footnote_uids_for(layout):
+        table = make_table()
+        StudyFlowchartService().add_footnotes(table, all_footnotes, layout=layout)
+        return {fn.uid for fn in table.footnotes.values()}
+
+    # PROTOCOL -> no-layout + protocol-specific
+    assert footnote_uids_for(SoALayout.PROTOCOL) == {"fn_none", "fn_protocol"}
+
+    # PROTOCOL_LAB_TABLE -> no-layout + lab-table-specific
+    assert footnote_uids_for(SoALayout.PROTOCOL_LAB_TABLE) == {"fn_none", "fn_lab"}
+
+    # DETAILED -> only no-layout (no detailed-specific footnote)
+    assert footnote_uids_for(SoALayout.DETAILED) == {"fn_none"}
+
+    # No layout requested -> no filtering, all footnotes kept
+    assert footnote_uids_for(None) == {"fn_none", "fn_protocol", "fn_lab"}
 
 
 # Tests for show_all_visits_lab_table visit filtering

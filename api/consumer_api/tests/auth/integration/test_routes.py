@@ -40,17 +40,19 @@ def test_oauth_integration_test_routes(main_app):
 
     assert (
         not unconfigured_method_path_set
-    ), "Some routes are not listed in ALL_ROUTES_METHODS_ROLES:\n%s" % "\n".join(
-        _recommend_path_method_roles_entry(path, method)
-        for path, method in unconfigured_method_path_set
+    ), "Some routes are not listed in ALL_ROUTES_METHODS_ROLES:\n{}".format(
+        "\n".join(
+            _recommend_path_method_roles_entry(path, method)
+            for path, method in unconfigured_method_path_set
+        )
     )
 
     unknown_method_path_set = configured_method_path_set - discovered_method_path_set
 
     assert (
         not unknown_method_path_set
-    ), "Remove obsolete routes from ALL_ROUTES_METHODS_ROLES: \n%s" % "\n".join(
-        map(str, unknown_method_path_set)
+    ), "Remove obsolete routes from ALL_ROUTES_METHODS_ROLES: \n{}".format(
+        "\n".join(map(str, unknown_method_path_set))
     )
 
 

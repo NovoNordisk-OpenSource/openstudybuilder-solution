@@ -1,6 +1,7 @@
 import datetime
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
-from typing import Any, Callable, Iterable, Self
+from typing import Any, Self
 
 from clinical_mdr_api.services.user_info import UserInfoService
 from clinical_mdr_api.utils import normalize_string
@@ -81,7 +82,7 @@ class StudySelectionElementVO:
             study_selection_uid = generate_uid_callback()
 
         if start_date is None:
-            start_date = datetime.datetime.now(datetime.timezone.utc)
+            start_date = datetime.datetime.now(datetime.UTC)
 
         # returns a new instance of the VO
 
@@ -166,7 +167,7 @@ class StudySelectionElementAR:
         )
 
     def _add_selection(self, study_element_selection) -> None:
-        new_selections = self._study_elements_selection + (study_element_selection,)
+        new_selections = (*self._study_elements_selection, study_element_selection)
         self._study_elements_selection = new_selections
 
     def add_element_selection(

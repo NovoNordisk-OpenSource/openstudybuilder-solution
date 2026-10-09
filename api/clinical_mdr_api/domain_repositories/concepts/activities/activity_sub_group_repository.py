@@ -30,6 +30,9 @@ from clinical_mdr_api.models.concepts.activities.activity_sub_group import (
 from common.exceptions import BusinessLogicException
 from common.utils import convert_to_datetime
 
+# Index of the optional "definition" column returned by the group version query
+OPTIONAL_DEFINITION_COLUMN_INDEX = 4
+
 
 class ActivitySubGroupRepository(ConceptGenericRepository[ActivitySubGroupAR]):
     root_class = ActivitySubGroupRoot
@@ -283,7 +286,9 @@ class ActivitySubGroupRepository(ConceptGenericRepository[ActivitySubGroupAR]):
                 "name": row[1],
                 "version": row[2],
                 "status": row[3],
-                "definition": row[4] if len(row) > 4 else None,
+                "definition": (
+                    row[4] if len(row) > OPTIONAL_DEFINITION_COLUMN_INDEX else None
+                ),
             }
             for row in result
             if row[0] is not None

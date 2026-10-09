@@ -16,6 +16,8 @@ When('Action is confirmed by clicking save', () => cy.clickButton('save-button')
 
 Then('The form is no longer available', () => cy.get('[data-cy="form-body"]').should('not.exist'))
 
+Then('The form is opened and visible', () => cy.get('[data-cy="form-body"]').should("be.visible"))
+
 Then('The confirmation dilog is no longer available', () => cy.get('.v-overlay .v-card').should('not.exist'))
 
 When('Form save button is clicked', () => cy.clickFormActionButton('save'))

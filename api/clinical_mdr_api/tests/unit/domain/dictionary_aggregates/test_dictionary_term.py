@@ -1,5 +1,5 @@
 import unittest
-from typing import Callable
+from collections.abc import Callable
 
 from clinical_mdr_api.domains.dictionaries.dictionary_term import (
     DictionaryTermAR,
@@ -26,8 +26,7 @@ def create_random_dictionary_term_vo() -> DictionaryTermVO:
 
 
 def create_random_dictionary_term_ar(
-    # pylint: disable=unnecessary-lambda
-    generate_uid_callback: Callable[[], str] = lambda: random_str(),
+    generate_uid_callback: Callable[[], str] = random_str,
     library: str = "Library",
     is_editable: bool = True,
 ) -> DictionaryTermAR:

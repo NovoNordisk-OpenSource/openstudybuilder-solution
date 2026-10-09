@@ -2,19 +2,11 @@
 Tests for listing terms with filtering
 """
 
-# pylint: disable=unused-argument
-# pylint: disable=redefined-outer-name
-# pylint: disable=too-many-arguments
-
-# pytest fixture functions have other fixture functions as arguments,
-# which pylint interprets as unused arguments
-
 import json
 import logging
 
 import pytest
 from fastapi.testclient import TestClient
-from neomodel import db
 
 from clinical_mdr_api.main import app
 from clinical_mdr_api.models.controlled_terminologies.ct_codelist import CTCodelist

@@ -1,9 +1,10 @@
 import io
 import logging
 import os
+from collections.abc import Mapping
 from functools import reduce
 from itertools import zip_longest
-from typing import Any, Mapping
+from typing import Any
 
 from bs4 import BeautifulSoup, NavigableString, Tag
 from docx import Document
@@ -28,6 +29,7 @@ log = logging.getLogger(__name__)
 
 class DocxBuilder:
     DEFAULT_TEMPLATE_FILENAME = "template.docx"
+    MARGIN_COUNT = 4  # top, right, bottom, left
 
     def __init__(
         self,
@@ -48,7 +50,9 @@ class DocxBuilder:
         if landscape:
             self.set_landscape()
         if margins:
-            assert len(margins) == 4, "margins should be a sequence of 4 floats"
+            assert (
+                len(margins) == self.MARGIN_COUNT
+            ), "margins should be a sequence of 4 floats"
             self.set_margins([Inches(i) for i in margins])
 
     def set_margins(self, margins) -> Section:
@@ -61,7 +65,7 @@ class DocxBuilder:
 
     def set_landscape(self):
         # Set page layout to Landscape
-        # pylint: disable=no-member
+
         section = self.document.sections[-1]
         if section.orientation != WD_ORIENTATION.LANDSCAPE:
             section.orientation = WD_ORIENTATION.LANDSCAPE
@@ -81,7 +85,7 @@ class DocxBuilder:
                 self.document.styles.add_style(name, typ)
 
     def clear_document(self):
-        # pylint: disable=protected-access
+
         log.debug("Removing all content from document")
         self.document._element.body.clear_content()
 
@@ -122,7 +126,7 @@ class DocxBuilder:
     @staticmethod
     def repeat_table_header(row: _Row):
         """Set table row to repeat on every page"""
-        # pylint: disable=protected-access
+
         table_row = row._tr
         tr_pr = table_row.get_or_add_trPr()
         tbl_header = OxmlElement("w:tblHeader")
@@ -132,7 +136,7 @@ class DocxBuilder:
     @staticmethod
     def set_vertical_cell_direction(cell: _Cell, direction: str):
         """Set text direction to vertical for a cell: tbRl -- top to bottom, btLr -- bottom to top"""
-        # pylint: disable=protected-access
+
         assert direction in ("tbRl", "btLr")
         table_cell = cell._tc
         tc_pr = table_cell.get_or_add_tcPr()
@@ -152,7 +156,7 @@ class DocxBuilder:
 
     @staticmethod
     def delete_paragraph(paragraph: Paragraph) -> None:
-        element = paragraph._element  # pylint: disable=protected-access
+        element = paragraph._element
         element.getparent().remove(element)
         element._p = element._element = None
 

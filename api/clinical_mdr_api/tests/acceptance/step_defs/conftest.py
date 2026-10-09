@@ -2,7 +2,6 @@
 This module contains shared fixtures, steps, and hooks.
 """
 
-# pylint: disable=unused-argument
 from json import loads
 
 from pytest_bdd import parsers, then, when

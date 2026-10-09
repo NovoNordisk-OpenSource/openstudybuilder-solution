@@ -1,8 +1,3 @@
-# pylint: disable=unused-argument, redefined-outer-name, too-many-arguments, line-too-long, too-many-statements
-
-# pytest fixture functions have other fixture functions as arguments,
-# which pylint interprets as unused arguments
-
 # Tests for the `?fields=` query parameter with every nested relationship field
 # on every ODM endpoint (both single-entity and list variants).
 #
@@ -316,7 +311,7 @@ def _list_items_only_uid_and(items, field: str) -> None:
 
 
 # ===========================================================================
-# Forms – ?fields= with every nested relationship field
+# Forms - ?fields= with every nested relationship field
 # ===========================================================================
 
 
@@ -456,7 +451,7 @@ def test_form_fields_possible_actions_content(api_client, test_data):
 
 
 # ===========================================================================
-# Items – ?fields= with every nested relationship field
+# Items - ?fields= with every nested relationship field
 # ===========================================================================
 
 
@@ -609,7 +604,7 @@ def test_item_fields_possible_actions_content(api_client, test_data):
 
 
 # ===========================================================================
-# Item Groups – ?fields= with every nested relationship field
+# Item Groups - ?fields= with every nested relationship field
 # ===========================================================================
 
 
@@ -764,7 +759,7 @@ def test_item_group_fields_possible_actions_content(api_client, test_data):
 
 
 # ===========================================================================
-# Study Events – ?fields= with every nested relationship field
+# Study Events - ?fields= with every nested relationship field
 # ===========================================================================
 
 
@@ -823,7 +818,7 @@ def test_study_event_fields_possible_actions_content(api_client, test_data):
 
 
 # ===========================================================================
-# Conditions – ?fields= with every nested relationship field
+# Conditions - ?fields= with every nested relationship field
 # ===========================================================================
 
 
@@ -921,7 +916,7 @@ def test_condition_fields_possible_actions_content(api_client, test_data):
 
 
 # ===========================================================================
-# Methods – ?fields= with every nested relationship field
+# Methods - ?fields= with every nested relationship field
 # ===========================================================================
 
 
@@ -1015,7 +1010,7 @@ def test_method_fields_possible_actions_content(api_client, test_data):
 
 
 # ===========================================================================
-# Vendor Namespaces – ?fields= with every nested relationship field
+# Vendor Namespaces - ?fields= with every nested relationship field
 # ===========================================================================
 
 
@@ -1086,7 +1081,7 @@ def test_vendor_namespace_fields_possible_actions_content(api_client, test_data)
 
 
 # ===========================================================================
-# Vendor Elements – ?fields= with every nested relationship field
+# Vendor Elements - ?fields= with every nested relationship field
 # ===========================================================================
 
 
@@ -1181,7 +1176,7 @@ def test_vendor_element_fields_possible_actions_content(api_client, test_data):
 
 
 # ===========================================================================
-# Vendor Attributes – ?fields= with every nested relationship field
+# Vendor Attributes - ?fields= with every nested relationship field
 # ===========================================================================
 
 

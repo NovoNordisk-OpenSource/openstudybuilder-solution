@@ -76,7 +76,6 @@ Possible errors:
         ],
     }
 )
-# pylint: disable=unused-argument
 def get_activity_instance_classes(
     request: Request,  # request is actually required by the allow_exports decorator
     sort_by: _generic_descriptions.SORT_BY_QUERY = None,
@@ -138,7 +137,6 @@ Possible errors:
         ],
     }
 )
-# pylint: disable=unused-argument
 def get_activity_instance_classes_versions(
     request: Request,  # request is actually required by the allow_exports decorator
     page_number: _generic_descriptions.PAGE_NUMBER_QUERY = settings.default_page_number,
@@ -307,7 +305,6 @@ def get_versions(
         404: _generic_descriptions.ERROR_404,
     },
 )
-# pylint: disable=unused-argument
 def get_mapped_datasets(
     request: Request,  # request is actually required by the allow_exports decorator
     activity_instance_class_uid: Annotated[
@@ -367,6 +364,7 @@ Possible errors:
             "- The library doesn't exist.\n"
             "- The library doesn't allow to add new items.\n",
         },
+        409: _generic_descriptions.ERROR_409,
     },
 )
 def create(
@@ -693,7 +691,6 @@ Possible errors:
     }
 )
 def get_parent_class_overview(
-    # pylint: disable=unused-argument
     request: Request,  # request is actually required by the allow_exports decorator
     activity_instance_class_uid: Annotated[str, ActivityInstanceClassUID],
     version: Annotated[
@@ -750,7 +747,6 @@ Possible errors:
     }
 )
 def get_activity_instance_class_overview(
-    # pylint: disable=unused-argument
     request: Request,  # request is actually required by the allow_exports decorator
     activity_instance_class_uid: Annotated[str, ActivityInstanceClassUID],
     version: Annotated[
@@ -809,7 +805,6 @@ Possible errors:
     }
 )
 def get_child_instance_classes(
-    # pylint: disable=unused-argument
     request: Request,  # request is actually required by the allow_exports decorator
     activity_instance_class_uid: Annotated[str, ActivityInstanceClassUID],
     version: Annotated[
@@ -883,7 +878,6 @@ Possible errors:
     }
 )
 def get_activity_item_classes_paginated(
-    # pylint: disable=unused-argument
     request: Request,  # request is actually required by the allow_exports decorator
     activity_instance_class_uid: Annotated[str, ActivityInstanceClassUID],
     version: Annotated[

@@ -107,7 +107,7 @@ class StudyEpochService(StudySelectionMixin):
                 59,
                 59,
                 999999,
-                tzinfo=datetime.timezone.utc,
+                tzinfo=datetime.UTC,
             )
         elif study_uid:
             self.terms_at_specific_datetime = (
@@ -478,66 +478,86 @@ class StudyEpochService(StudySelectionMixin):
 
                 if epoch_subtype_codelist:
                     subm_value = (
-                        f"{epoch_subtype_codelist.submission_value} {str(epoch_order)}"
+                        f"{epoch_subtype_codelist.submission_value} {epoch_order!s}"
                     )
                 else:
                     subm_value = None
 
-                lib = self._repos.library_repository.find_by_name(
-                    name=self.library_name
-                )
-                library = LibraryVO.from_input_values_2(
-                    library_name=lib.library_name,
-                    is_library_editable_callback=lambda _: lib.is_editable,
-                )
+                # `epoch_name` above is derived from the subtype's *current*
+                # sponsor_preferred_name, so if that name drifted since the
+                # numbered term was created (renamed subtype, or the term was
+                # created under a different naming convention), the by-name
+                # lookup misses an existing term. submission_value is what the
+                # codelist actually enforces as unique, so fall back to it
+                # before creating a term that would collide with it.
+                if subm_value is not None:
+                    epoch_uid = self._repos.ct_term_name_repository.find_uid_by_submission_value(
+                        value=subm_value,
+                        codelist_uid=settings.study_epoch_epoch_uid,
+                    )
 
-                ct_term_attributes_ar = CTTermAttributesAR.from_input_values(
-                    author_id=self.author,
-                    ct_term_attributes_vo=CTTermAttributesVO.from_input_values(
-                        catalogue_names=epoch_subtype_codelists_and_catalogues.catalogues,
-                        preferred_term=epoch_subtype_attribute_term.ct_term_vo.preferred_term,
-                        definition=epoch_subtype_attribute_term.ct_term_vo.definition,
-                        catalogue_exists_callback=self._repos.ct_catalogue_repository.catalogue_exists,
-                        concept_id=None,
-                    ),
-                    library=library,
-                    generate_uid_callback=self._repos.ct_term_attributes_repository.generate_uid,
-                )
-                ct_term_attributes_ar.approve(author_id=self.author)
-                self._repos.ct_term_attributes_repository.save(ct_term_attributes_ar)
+                if epoch_uid is not None:
+                    epoch = self.study_epoch_epochs_by_uid[epoch_uid]
+                else:
+                    lib = self._repos.library_repository.find_by_name(
+                        name=self.library_name
+                    )
+                    library = LibraryVO.from_input_values_2(
+                        library_name=lib.library_name,
+                        is_library_editable_callback=lambda _: lib.is_editable,
+                    )
 
-                ct_term_name_ar = CTTermNameAR.from_input_values(
-                    generate_uid_callback=lambda: ct_term_attributes_ar.uid,
-                    ct_term_name_vo=CTTermNameVO.from_repository_values(
-                        catalogue_names=ct_term_attributes_ar.ct_term_vo.catalogue_names,
-                        name=epoch_name,
-                        name_sentence_case=epoch_name.lower(),
-                    ),
-                    library=library,
-                    author_id=self.author,
-                )
-                ct_term_name_ar.approve(author_id=self.author)
-                self._repos.ct_term_name_repository.save(ct_term_name_ar)
+                    ct_term_attributes_ar = CTTermAttributesAR.from_input_values(
+                        author_id=self.author,
+                        ct_term_attributes_vo=CTTermAttributesVO.from_input_values(
+                            catalogue_names=epoch_subtype_codelists_and_catalogues.catalogues,
+                            preferred_term=epoch_subtype_attribute_term.ct_term_vo.preferred_term,
+                            definition=epoch_subtype_attribute_term.ct_term_vo.definition,
+                            catalogue_exists_callback=self._repos.ct_catalogue_repository.catalogue_exists,
+                            concept_id=None,
+                        ),
+                        library=library,
+                        generate_uid_callback=self._repos.ct_term_attributes_repository.generate_uid,
+                    )
+                    ct_term_attributes_ar.approve(author_id=self.author)
+                    self._repos.ct_term_attributes_repository.save(
+                        ct_term_attributes_ar
+                    )
 
-                self._repos.ct_codelist_attribute_repository.add_term(
-                    codelist_uid=settings.study_epoch_epoch_uid,
-                    term_uid=ct_term_attributes_ar.uid,
-                    author_id=self.author,
-                    order=None,
-                    submission_value=subm_value,
-                )
+                    ct_term_name_ar = CTTermNameAR.from_input_values(
+                        generate_uid_callback=lambda: ct_term_attributes_ar.uid,
+                        ct_term_name_vo=CTTermNameVO.from_repository_values(
+                            catalogue_names=ct_term_attributes_ar.ct_term_vo.catalogue_names,
+                            name=epoch_name,
+                            name_sentence_case=epoch_name.lower(),
+                        ),
+                        library=library,
+                        author_id=self.author,
+                    )
+                    ct_term_name_ar.approve(author_id=self.author)
+                    self._repos.ct_term_name_repository.save(ct_term_name_ar)
 
-                # connecting the created epoch to the corresponding epoch sub type
-                self._repos.ct_term_attributes_repository.add_parent(
-                    term_uid=ct_term_attributes_ar.uid,
-                    parent_uid=epoch_subtype_attribute_term.uid,
-                    relationship_type=TermParentType.PARENT_SUB_TYPE,
-                )
-                # adding newly created sponsor defined epoch term
-                epoch = self.study_epoch_epochs_by_uid.setdefault(
-                    ct_term_name_ar.uid,
-                    SimpleCTTermNameWithConflictFlag.from_ct_term_ar(ct_term_name_ar),
-                )
+                    self._repos.ct_codelist_attribute_repository.add_term(
+                        codelist_uid=settings.study_epoch_epoch_uid,
+                        term_uid=ct_term_attributes_ar.uid,
+                        author_id=self.author,
+                        order=None,
+                        submission_value=subm_value,
+                    )
+
+                    # connecting the created epoch to the corresponding epoch sub type
+                    self._repos.ct_term_attributes_repository.add_parent(
+                        term_uid=ct_term_attributes_ar.uid,
+                        parent_uid=epoch_subtype_attribute_term.uid,
+                        relationship_type=TermParentType.PARENT_SUB_TYPE,
+                    )
+                    # adding newly created sponsor defined epoch term
+                    epoch = self.study_epoch_epochs_by_uid.setdefault(
+                        ct_term_name_ar.uid,
+                        SimpleCTTermNameWithConflictFlag.from_ct_term_ar(
+                            ct_term_name_ar
+                        ),
+                    )
         return epoch
 
     def _get_epoch_object(
@@ -608,7 +628,7 @@ class StudyEpochService(StudySelectionMixin):
             subtype=subtype,
             epoch_type=epoch_type,
             order=study_epoch_create_input.order,  # type: ignore[arg-type]
-            start_date=datetime.datetime.now(datetime.timezone.utc),
+            start_date=datetime.datetime.now(datetime.UTC),
             status=StudyStatus.DRAFT,
             author_id=self.author,
             author_username=UserInfoService().get_author_username_from_id(
@@ -787,7 +807,7 @@ class StudyEpochService(StudySelectionMixin):
         return 0
 
     def _get_epoch_number_from_epoch_name(self, epoch_name: str):
-        return epoch_name.split()[-1]
+        return epoch_name.rsplit(maxsplit=1)[-1]
 
     @ensure_transaction(db)
     def create(self, study_uid: str, study_epoch_input: StudyEpochCreateInput):

@@ -1,5 +1,3 @@
-# pylint: disable=unused-argument
-# pylint: disable=redefined-outer-name
 """Tests for Consumer API GET /v1/papillons/study-metadata."""
 
 from typing import Any

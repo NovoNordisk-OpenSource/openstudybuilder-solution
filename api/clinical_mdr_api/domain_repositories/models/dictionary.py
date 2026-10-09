@@ -1,3 +1,5 @@
+from typing import ClassVar
+
 from neomodel import RelationshipFrom, RelationshipTo
 
 from clinical_mdr_api.domain_repositories.models.controlled_terminology import (
@@ -14,7 +16,7 @@ from common.neomodel import StringProperty
 
 
 class DictionaryTermValue(VersionValue):
-    __optional_labels__ = ["TemplateParameterTermValue"]
+    __optional_labels__: ClassVar[list[str]] = ["TemplateParameterTermValue"]
     name = StringProperty()
     dictionary_id = StringProperty()
     name_sentence_case = StringProperty()
@@ -23,7 +25,7 @@ class DictionaryTermValue(VersionValue):
 
 
 class DictionaryTermRoot(VersionRoot):
-    __optional_labels__ = ["TemplateParameterTermRoot"]
+    __optional_labels__: ClassVar[list[str]] = ["TemplateParameterTermRoot"]
     LIBRARY_REL_LABEL = "CONTAINS_DICTIONARY_TERM"
 
     has_library = RelationshipFrom(Library, LIBRARY_REL_LABEL)
@@ -51,7 +53,7 @@ class DictionaryTermRoot(VersionRoot):
 
 
 class DictionaryCodelistValue(VersionValue):
-    __optional_labels__ = ["TemplateParameter"]
+    __optional_labels__: ClassVar[list[str]] = ["TemplateParameter"]
     name = StringProperty()
 
 

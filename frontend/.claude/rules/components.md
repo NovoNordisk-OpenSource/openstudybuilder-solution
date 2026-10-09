@@ -69,7 +69,7 @@ singletons, so each call site gets its own state. Check this list before writing
   - `src/locales/en/index.js` — merges and exports the above.
   - There is no `src/locales/en.json`.
 - Use `$t()` function in templates and `t()` in script
-- API field translations can be generated with `node scripts/getApiFields.js`
+- API field translations can be generated with `node scripts/updateApiFields.js`
 - Frontend extensions ship their own `locales/en/` rather than adding keys to the core `app.json`
 
 ## Styling

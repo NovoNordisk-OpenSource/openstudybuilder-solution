@@ -3,8 +3,11 @@ from typing import Annotated
 from fastapi import Body, Path, Request
 
 from clinical_mdr_api.models.study_selections import study_standard_version
-from clinical_mdr_api.routers import _generic_descriptions, decorators
-from clinical_mdr_api.routers import study_router as router
+from clinical_mdr_api.routers import (
+    _generic_descriptions,
+    decorators,
+    study_router as router,
+)
 from clinical_mdr_api.services.studies.study_standard_version_selection import (
     StudyStandardVersionService,
 )
@@ -33,7 +36,8 @@ State before:
  - Study must exist.
  
 Business logic:
- - By default (no study status is provided) list all study standard_versions for the study uid in status draft. If the study not exist in status draft then return the study standard_versions for the study in status released. If the study uid only exist as deleted then this is returned.
+ - By default (no study status is provided) list all study standard_versions for the study uid in status draft. If the study not exist in status draft then return the study standard_versions for
+   the study in status released. If the study uid only exist as deleted then this is returned.
  - If a specific study status parameter is provided then return study standard_version for this study status.
  - If the locked study status parameter is requested then a study version should also be provided, and then the study standard_versions for the specific locked study version is returned.
  - Indicate by an boolean variable if the study standard_version can be updated (if the selected study is in status draft).  
@@ -70,7 +74,6 @@ Possible errors:
         ],
     }
 )
-# pylint: disable=unused-argument
 def get_all(
     request: Request,  # request is actually required by the allow_exports decorator
     study_uid: Annotated[str, studyUID],
@@ -128,7 +131,8 @@ State before:
  - Study and study standard_version must exist
  
 Business logic:
- - By default (no study status is provided) list all details for specified study standard_version for the study uid in status draft. If the study not exist in status draft then return the study standard_versions for the study in status released. If the study uid only exist as deleted then this is returned.
+ - By default (no study status is provided) list all details for specified study standard_version for the study uid in status draft. If the study not exist in status draft then return the study
+   standard_versions for the study in status released. If the study uid only exist as deleted then this is returned.
  - If a specific study status parameter is provided then return study standard_versions for this study status.
  - If the locked study status parameter is requested then a study version should also be provided, and then the specified study standard_version  for the specific locked study version is returned.
  - Indicate by an boolean variable if the study standard_version can be updated (if the selected study is in status draft).
@@ -152,7 +156,6 @@ Possible errors:
         },
     },
 )
-# pylint: disable=unused-argument
 def get_study_standard_version(
     study_uid: Annotated[str, studyUID],
     study_standard_version_uid: Annotated[str, study_standard_version_uid_description],
@@ -284,7 +287,6 @@ Possible errors:
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
-# pylint: disable=unused-argument
 def delete_study_standard_version(
     study_uid: Annotated[str, studyUID],
     study_standard_version_uid: Annotated[str, study_standard_version_uid_description],
@@ -328,7 +330,6 @@ Possible errors:
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
-# pylint: disable=unused-argument
 def patch_update_standard_version(
     study_uid: Annotated[str, studyUID],
     study_standard_version_uid: Annotated[str, study_standard_version_uid_description],

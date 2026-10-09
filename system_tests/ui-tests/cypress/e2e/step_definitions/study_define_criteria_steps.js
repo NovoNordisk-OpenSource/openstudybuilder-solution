@@ -36,3 +36,5 @@ When('The {string} criteria is created from scratch', (value) => {
     criteriaName = `E2E ${value} criteria from scratch`
     cy.get('[data-placeholder="Criteria template"]').type(`E2E ${value} criteria from scratch`)
 })
+
+When('Study criteria value is set to {string}', (value) => cy.get('[data-placeholder="Criteria template"]').type(value))

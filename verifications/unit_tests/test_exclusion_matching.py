@@ -5,12 +5,9 @@ from unittest.mock import patch
 
 import pytest
 
-# utils.utils requires API_AUTH_TOKEN at import time; pylint imports modules
-# during analysis without executing our env setup, so we disable the import
-# check for this line.
 os.environ.setdefault("API_AUTH_TOKEN", "test-token-placeholder")
 
-from utils.utils import (  # noqa: E402  # pylint: disable=import-error,wrong-import-position; pylint: disable=import-error,wrong-import-position
+from utils.utils import (
     ExpectedFailureException,
     _ids_match_exclusion,
     _is_node_excluded,

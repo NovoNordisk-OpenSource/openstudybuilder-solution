@@ -1,5 +1,9 @@
 const { When, Then } = require("@badeball/cypress-cucumber-preprocessor");
 
+When('The edit button is disabled', () => cy.get('button[disabled] .mdi-pencil-outline').filter(':visible').should('exist'))
+
+When('The plus button is disabled', () => cy.get('button[disabled] .mdi-plus').filter(':visible').should('exist'))
+
 Then("The {string} is displayed", (value) => cy.get("body").should("contain", value));
 
 When('The {string} submenu is clicked in the {string} section', (submenu, section) => {

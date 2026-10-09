@@ -1,5 +1,5 @@
 import unittest
-from typing import Collection
+from collections.abc import Collection
 from unittest.mock import Mock, patch
 
 from clinical_mdr_api.domain_repositories.controlled_terminologies.ct_catalogue_repository import (

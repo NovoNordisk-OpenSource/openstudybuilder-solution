@@ -1,4 +1,4 @@
-from typing import Any, TypeVar
+from typing import Any
 
 from neomodel import Q, db
 from neomodel.sync_.match import NodeNameResolver, Path
@@ -41,9 +41,6 @@ from clinical_mdr_api.repositories._utils import (
 from common.config import settings
 from common.exceptions import ValidationException
 from common.utils import validate_page_number_and_page_size
-
-# pylint: disable=invalid-name
-_StandardsReturnType = TypeVar("_StandardsReturnType")
 
 
 def get_ctlist_terms_by_name_and_definition(code_list_name: str):
@@ -108,7 +105,6 @@ class StudyDiseaseMilestoneRepository:
             len_query = StudyDiseaseMilestone.nodes.filter(*q_filters)
             all_nodes = len(len_query)
 
-        # pylint: disable=possibly-used-before-assignment
         return all_activities, all_nodes if total_count else 0
 
     def create_query_filter_statement_neomodel(

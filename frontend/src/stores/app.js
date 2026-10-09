@@ -534,11 +534,6 @@ export const useAppStore = defineStore('app', {
                 studyRequired: true,
               },
               // {
-              //   title: i18n.t('Sidebar.study.crf_specifications'),
-              //   url: { name: 'CrfSpecifications' },
-              //   hidden: true
-              // },
-              // {
               //   title: i18n.t('Sidebar.study.study_disclosure'),
               //   url: { name: 'StudyDisclosure' },
               //   hidden: true
@@ -546,11 +541,6 @@ export const useAppStore = defineStore('app', {
               // {
               //   title: i18n.t('Sidebar.study.trial_supplies_spec'),
               //   url: { name: 'TrialSuppliesSpecifications' },
-              //   hidden: true
-              // },
-              // {
-              //   title: i18n.t('Sidebar.study.odm_specification'),
-              //   url: { name: 'OdmSpecification' },
               //   hidden: true
               // },
               // {

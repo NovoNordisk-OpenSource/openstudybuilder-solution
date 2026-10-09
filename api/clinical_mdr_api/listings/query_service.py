@@ -84,7 +84,6 @@ class QueryService:
 
         with open(
             os.getcwd() + "/clinical_mdr_api/listings/metadata.json",
-            "r",
             encoding="UTF-8",
         ) as metadata:
             meta = json.load(metadata)
@@ -452,9 +451,12 @@ class QueryService:
             query = MATCH_LATEST_STUDY
         query = query + """
         // Query to retrieve TV data from the Study Visit table
-        // We are looking for the latest visit name, study day, and study week values associated with a specific study value version or all (latest) study versions.
-        // The query filters by domain (TV), selecting the 'StudID', 'VisitNum', 'StudyDayValue' (or 'StudyWeekValue'), 'ArmCD', 'Arm', and any other fields we want to include.
-        // We use optional matches for the visit name, day, and week to avoid errors in case these fields are missing. We also add a condition to handle the situation when only one of these fields is present.
+        // We are looking for the latest visit name, study day, and study week values associated with
+        // a specific study value version or all (latest) study versions.
+        // The query filters by domain (TV), selecting the 'StudID', 'VisitNum', 'StudyDayValue' (or 'StudyWeekValue'),
+        // 'ArmCD', 'Arm', and any other fields we want to include.
+        // We use optional matches for the visit name, day, and week to avoid errors in case these fields are missing.
+        // We also add a condition to handle the situation when only one of these fields is present.
         MATCH (sv)-[:HAS_STUDY_VISIT]->(v:StudyVisit)
         OPTIONAL MATCH  (v)-->(nr:VisitNameRoot)-[:LATEST]->(nv:VisitNameValue),
                         (v)-->(dr:StudyDayRoot)-[:LATEST]->(dv:StudyDayValue),
@@ -644,13 +646,17 @@ class QueryService:
         OPTIONAL MATCH (s_end)-[:HAS_UNIT]->(:UnitDefinitionRoot)-[:LATEST]->(uni_value:UnitDefinitionValue)-[:HAS_CT_UNIT]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(uni_ctt_roo:CTTermRoot)
         OPTIONAL MATCH (s_end)-[:HAS_SELECTED_TIMEFRAME]->(tim_fra_val:TimeframeValue)<--(tim_fra_roo:TimeframeRoot)
         // fetch any Activities instantiated in ObjectiveTemplate or EndpointTemplate
-        OPTIONAL MATCH (study_end_obj)-[:HAS_SELECTED_ENDPOINT|HAS_SELECTED_OBJECTIVE|HAS_SELECTED_TIMEFRAME]->(:SyntaxInstanceValue)-[:USES_VALUE]->(activity_tem_par_root)<-[:HAS_PARAMETER_TERM]-(t:TemplateParameter)
+        OPTIONAL MATCH (study_end_obj)-[:HAS_SELECTED_ENDPOINT|HAS_SELECTED_OBJECTIVE|HAS_SELECTED_TIMEFRAME]->(:SyntaxInstanceValue)-[:USES_VALUE]->(activity_tem_par_root)
+            <-[:HAS_PARAMETER_TERM]-(t:TemplateParameter)
             WHERE t.name IN ["Activity"] AND (study_end_obj = s_obj OR study_end_obj = s_end)
-        OPTIONAL MATCH (study_end_obj2)-[:HAS_SELECTED_ENDPOINT|HAS_SELECTED_OBJECTIVE|HAS_SELECTED_TIMEFRAME]->(:SyntaxInstanceValue)-[:USES_VALUE]->(activity_subgroup_tem_par_root)<-[:HAS_PARAMETER_TERM]-(t2:TemplateParameter)
+        OPTIONAL MATCH (study_end_obj2)-[:HAS_SELECTED_ENDPOINT|HAS_SELECTED_OBJECTIVE|HAS_SELECTED_TIMEFRAME]->(:SyntaxInstanceValue)
+            -[:USES_VALUE]->(activity_subgroup_tem_par_root)<-[:HAS_PARAMETER_TERM]-(t2:TemplateParameter)
             WHERE t2.name IN ['ActivitySubGroup'] AND (study_end_obj2 = s_obj OR study_end_obj2 = s_end)
-        OPTIONAL MATCH (study_end_obj3)-[:HAS_SELECTED_ENDPOINT|HAS_SELECTED_OBJECTIVE|HAS_SELECTED_TIMEFRAME]->(:SyntaxInstanceValue)-[:USES_VALUE]->(activity_group_tem_par_root)<-[:HAS_PARAMETER_TERM]-(t3:TemplateParameter)
+        OPTIONAL MATCH (study_end_obj3)-[:HAS_SELECTED_ENDPOINT|HAS_SELECTED_OBJECTIVE|HAS_SELECTED_TIMEFRAME]->(:SyntaxInstanceValue)
+            -[:USES_VALUE]->(activity_group_tem_par_root)<-[:HAS_PARAMETER_TERM]-(t3:TemplateParameter)
             WHERE t3.name IN [ "ActivityGroup"] AND (study_end_obj3 = s_obj OR study_end_obj3 = s_end)
-        OPTIONAL MATCH (study_end_obj4)-[:HAS_SELECTED_ENDPOINT|HAS_SELECTED_OBJECTIVE|HAS_SELECTED_TIMEFRAME]->(:SyntaxInstanceValue)-[:USES_VALUE]->(activity_instance_tem_par_root)<-[:HAS_PARAMETER_TERM]-(t4:TemplateParameter)
+        OPTIONAL MATCH (study_end_obj4)-[:HAS_SELECTED_ENDPOINT|HAS_SELECTED_OBJECTIVE|HAS_SELECTED_TIMEFRAME]->(:SyntaxInstanceValue)
+            -[:USES_VALUE]->(activity_instance_tem_par_root)<-[:HAS_PARAMETER_TERM]-(t4:TemplateParameter)
             WHERE t4.name IN ['ActivityInstance'] AND (study_end_obj4 = s_obj OR study_end_obj4 = s_end)
         OPTIONAL MATCH (activity_tem_par_root)-[:LATEST]->(activity_tem_par_value)
         OPTIONAL MATCH (activity_subgroup_tem_par_root)-[:LATEST]->(activity_subgroup_tem_par_value)
@@ -796,7 +802,8 @@ class QueryService:
             query = MATCH_LATEST_STUDY
         query = query + """
         MATCH (sv)-->(sc:StudyCriteria)
-        MATCH (sc)-->(cv:CriteriaValue)<-[:LATEST]-(cr:CriteriaRoot)<--(ctr:CriteriaTemplateRoot)-[:HAS_TYPE]->(ctx:CTTermContext)-[:HAS_SELECTED_TERM]->(tr:CTTermRoot)-->(atr:CTTermAttributesRoot)-[:LATEST]->(atv:CTTermAttributesValue)
+        MATCH (sc)-->(cv:CriteriaValue)<-[:LATEST]-(cr:CriteriaRoot)<--(ctr:CriteriaTemplateRoot)-[:HAS_TYPE]->(ctx:CTTermContext)-[:HAS_SELECTED_TERM]->(tr:CTTermRoot)
+            -->(atr:CTTermAttributesRoot)-[:LATEST]->(atv:CTTermAttributesValue)
         WHERE atv.concept_id = 'C25532' or atv.concept_id = 'C25370'
         MATCH (ctx)-[:HAS_SELECTED_CODELIST]->(clr:CTCodelistRoot)-[ht:HAS_TERM]-(clterm:CTCodelistTerm)-[:HAS_TERM_ROOT]->(tr)
         RETURN  toUpper(sv.study_id_prefix) + '-' + toUpper(sv.study_number) AS STUDYID,
@@ -847,14 +854,18 @@ class QueryService:
                OR (msf.osb_page_reference = '{settings.study_other_attributes_page_reference}'
                    AND sf.field_name = tsp.name
                    AND (sf)-[:HAS_META_STUDY_FIELD]->(msf))
-        OPTIONAL MATCH (sf)-->(:CTTermContext)-[:HAS_SELECTED_TERM]->(ctr:CTTermRoot)-->
+        OPTIONAL MATCH (sf)-[:HAS_TYPE]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(ctr:CTTermRoot)-->
             (ctar:CTTermAttributesRoot)-[:LATEST_FINAL]->(ctav:CTTermAttributesValue)
         OPTIONAL MATCH (ctr)-->(ctnr:CTTermNameRoot)-[:LATEST_FINAL]->(ctnv:CTTermNameValue)
         OPTIONAL MATCH (sf)-->(dtr:DictionaryTermRoot)-->(dtv:DictionaryTermValue)
-        OPTIONAL MATCH (sf)-[:HAS_REASON_FOR_NULL_VALUE]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(ct_null:CTTermRoot{{uid:'{settings.ct_uid_na_value}'}})
-        OPTIONAL MATCH (sf)-[:HAS_REASON_FOR_NULL_VALUE]->(pinf_ctx:CTTermContext)-[:HAS_SELECTED_TERM]->(ct_pinf:CTTermRoot)
-        WHERE (pinf_ctx)-[:HAS_SELECTED_CODELIST]->(:CTCodelistRoot)-[:HAS_TERM]->
-            (:CTCodelistTerm {{submission_value:'{settings.ct_submval_positive_infinity}'}})-[:HAS_TERM_ROOT]->(ctr)
+        // Resolve the field's null flavor (if any) generically from the NULLFLVR
+        // codelist, so TSVALNF can report any code (NA, UNK, PINF, ...), not just
+        // 'NA'. nf_clt is used below to keep the null flavor out of TSVAL/TSVALCD/
+        // TSVCDREF, since a field's value and its null flavor are mutually exclusive.
+        OPTIONAL MATCH (sf)-[:HAS_REASON_FOR_NULL_VALUE]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(nf_term:CTTermRoot)
+        OPTIONAL MATCH (null_flavor_cl:CTCodelistRoot)-[:HAS_ATTRIBUTES_ROOT]->(:CTCodelistAttributesRoot)
+            -[:LATEST_FINAL]->(:CTCodelistAttributesValue {{submission_value: '{settings.null_flavor_cl_submval}'}})
+        OPTIONAL MATCH (null_flavor_cl)-[:HAS_TERM]->(nf_clt:CTCodelistTerm)-[:HAS_TERM_ROOT]->(nf_term)
         RETURN DISTINCT
             sv.study_id_prefix+'-'+sv.study_number AS STUDYID,
             'TS' AS DOMAIN,
@@ -869,27 +880,29 @@ class QueryService:
                 ELSE 'Not Controlled'
             END AS controlled_by,
             CASE
+                WHEN nf_clt IS NOT NULL THEN NULL
                 WHEN ctnv IS NOT NULL THEN ctnv.name
-                WHEN ctr IS NOT NULL AND ct_null IS NULL THEN ctav.concept_id
+                WHEN ctr IS NOT NULL THEN ctav.concept_id
                 WHEN dtr IS NOT NULL THEN dtv.name
                 WHEN sf IS NOT NULL AND sf.value = [] THEN NULL
                 WHEN sf IS NOT NULL THEN sf.value
                 ELSE NULL
             END AS TSVAL,
             CASE
-                WHEN ct_null IS NOT NULL THEN 'NA'
-                WHEN sf:StudyTimeField AND ct_pinf IS NOT NULL THEN 'PINF'
+                WHEN nf_clt IS NOT NULL THEN nf_clt.submission_value
                 ELSE ''
             END AS TSVALNF,
             CASE
-                WHEN ctr IS NOT NULL AND ct_null IS NULL THEN ctav.concept_id
+                WHEN nf_clt IS NOT NULL THEN ''
+                WHEN ctr IS NOT NULL THEN ctav.concept_id
                 WHEN dtr IS NOT NULL THEN dtv.dictionary_id
                 ELSE ''
             END AS TSVALCD,
             CASE
+                WHEN nf_clt IS NOT NULL THEN ''
                 WHEN tsp.reference IS NOT NULL THEN tsp.reference
                 WHEN sf:StudyTimeField THEN 'ISO8601'
-                WHEN ctr IS NOT NULL AND ct_null IS NULL THEN 'CDISC'
+                WHEN ctr IS NOT NULL THEN 'CDISC'
                 WHEN dtr IS NOT NULL THEN head([(library:Library)-[:CONTAINS_DICTIONARY_TERM]->(dtr) | library.name])
                 ELSE ''
             END AS TSVCDREF,
@@ -926,7 +939,8 @@ class QueryService:
         UNION
         // --- Study Objectives ---
         WITH sr, sv
-        MATCH (sv)-[:HAS_STUDY_OBJECTIVE]->(so:StudyObjective)-[:HAS_OBJECTIVE_LEVEL]->(ctx:CTTermContext)-[:HAS_SELECTED_TERM]->(objlv)-->(octar:CTTermAttributesRoot)-[:LATEST_FINAL]->(octav:CTTermAttributesValue)
+        MATCH (sv)-[:HAS_STUDY_OBJECTIVE]->(so:StudyObjective)-[:HAS_OBJECTIVE_LEVEL]->(ctx:CTTermContext)-[:HAS_SELECTED_TERM]->(objlv)
+            -->(octar:CTTermAttributesRoot)-[:LATEST_FINAL]->(octav:CTTermAttributesValue)
         MATCH (ctx)-[:HAS_SELECTED_CODELIST]->(clr:CTCodelistRoot)-[:HAS_TERM]-(cclt:CTCodelistTerm)-[:HAS_TERM_ROOT]->(objlv)
         MATCH (objlv)-[:HAS_ATTRIBUTES_ROOT]->(:CTTermAttributesRoot)-[:LATEST_FINAL]->(objav:CTTermAttributesValue)
         MATCH (so)-[:HAS_SELECTED_OBJECTIVE]->(obj)
@@ -1134,7 +1148,7 @@ class QueryService:
 
         }}
         WITH *
-        WHERE TSVAL IS NOT NULL
+        WHERE TSVAL IS NOT NULL OR TSVALNF <> ''
         RETURN *
         ORDER BY TSPARMCD
         """

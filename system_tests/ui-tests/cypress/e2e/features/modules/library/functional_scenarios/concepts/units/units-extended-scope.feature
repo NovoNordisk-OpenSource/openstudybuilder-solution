@@ -61,6 +61,7 @@ Feature: Library - Concepts - Units (part 2)
         When [API] Unit in status Draft exists
         And Unit is found
         And The 'Edit' option is clicked from the three dot menu list
+        And User sets convertible unit to true
         Then A form for unit edition is opened
         When Conversion factor to master is filled with numeric value
         And Update unit request is intercepted
@@ -73,6 +74,7 @@ Feature: Library - Concepts - Units (part 2)
         When Add unit button is clicked
         Then A form for unit creation is opened
         When Unit mandatory data is filled in
+        And User sets convertible unit to true
         And Conversion factor to master is filled with numeric value
         And Create unit request is intercepted
         And Form save button is clicked
@@ -85,6 +87,7 @@ Feature: Library - Concepts - Units (part 2)
         And Unit is found
         And The 'Edit' option is clicked from the three dot menu list
         Then A form for unit edition is opened
+        And User sets convertible unit to true
         When Conversion factor to master is filled with text value
         Then Conversion factor to master field is empty
         And Form save button is clicked
@@ -96,6 +99,7 @@ Feature: Library - Concepts - Units (part 2)
         And Add unit button is clicked
         Then A form for unit creation is opened
         When Unit mandatory data is filled in
+        And User sets convertible unit to true
         And Conversion factor to master is filled with text value
         Then Conversion factor to master field is empty
         And Form save button is clicked

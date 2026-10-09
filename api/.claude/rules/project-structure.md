@@ -6,8 +6,7 @@
 - `common/config.py` - Centralized settings (loaded from environment variables)
 - `common/database.py` - Neo4j/neomodel configuration
 - `common/exceptions.py` - Base exception classes
-- `Pipfile` - All scripts and dependency definitions
-- `pyproject.toml` - Tool configurations (pylint, mypy, isort, pytest)
+- `pyproject.toml` - Dependency definitions, poe task scripts, and tool configurations (ruff, mypy, isort, pytest)
 - `openapi.json` - Generated OpenAPI specification (do not edit manually)
 
 ## Special Directories

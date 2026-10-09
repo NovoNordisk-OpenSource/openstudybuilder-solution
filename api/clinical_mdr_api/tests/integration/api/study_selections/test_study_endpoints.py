@@ -2,15 +2,8 @@
 Tests for /studies/{study_uid}/study-endpoints endpoints
 """
 
-# pylint: disable=unused-argument
-# pylint: disable=redefined-outer-name
-# pylint: disable=too-many-arguments
-
-# pytest fixture functions have other fixture functions as arguments,
-# which pylint interprets as unused arguments
-
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 from unittest import mock
 
@@ -91,7 +84,7 @@ def test_data():
 
     catalogue_name, library_name = get_catalogue_name_library_name(use_test_utils=True)
 
-    ct_term_start_date = datetime(2020, 3, 25, tzinfo=timezone.utc)
+    ct_term_start_date = datetime(2020, 3, 25, tzinfo=UTC)
 
     objlevel_codelist = create_codelist(
         settings.study_objective_level_name,
@@ -189,12 +182,12 @@ def test_data():
         catalogue=catalogue_name,
         name=cdisc_package_name,
         approve_elements=False,
-        effective_date=datetime(2020, 3, 27, tzinfo=timezone.utc),
+        effective_date=datetime(2020, 3, 27, tzinfo=UTC),
     )
     # patch the date of the latest HAS_VERSION FINAL relationship so it can be detected by the selected study_standard_Version
     params = {
         "uid": initial_ct_term_study_standard_test.term_uid,
-        "date": datetime(2020, 3, 26, tzinfo=timezone.utc),
+        "date": datetime(2020, 3, 26, tzinfo=UTC),
     }
     # adjust term end date of the 0.1 draft
     db.cypher_query(

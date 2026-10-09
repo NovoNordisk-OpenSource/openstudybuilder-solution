@@ -119,7 +119,6 @@ def find_codelist_uid(
     return results[0][0]
 
 
-# pylint: disable=too-many-arguments
 def find_term_uid(
     db_driver,
     *,

@@ -2,16 +2,9 @@
 Tests for sponsor ct package
 """
 
-# pylint: disable=unused-argument
-# pylint: disable=redefined-outer-name
-# pylint: disable=too-many-arguments
-
-# pytest fixture functions have other fixture functions as arguments,
-# which pylint interprets as unused arguments
-
 import logging
 import urllib.parse
-from datetime import date, datetime, timedelta, timezone
+from datetime import UTC, date, datetime, timedelta
 
 import pytest
 from fastapi.testclient import TestClient
@@ -61,7 +54,7 @@ def test_data():
         catalogue=catalogue,
         name=cdisc_package_name,
         approve_elements=False,
-        effective_date=datetime(2020, 3, 27, tzinfo=timezone.utc),
+        effective_date=datetime(2020, 3, 27, tzinfo=UTC),
     )
     sponsor_package = TestUtils.create_sponsor_ct_package(
         extends_package=cdisc_package_name,
@@ -157,6 +150,8 @@ def test_post_sponsor_ct_package(api_client):
     assert res["uid"]
     assert res["uid"] == expected_package_name
     assert res["name"] == res["uid"]
+    # The spec documents `import_date` as `date-time`, which requires an offset.
+    assert datetime.fromisoformat(res["import_date"]).tzinfo == UTC
     assert set(res.keys()) == set(SPONSOR_CT_PACKAGES_FIELDS_ALL)
     for key in SPONSOR_CT_PACKAGES_FIELDS_NOT_NULL:
         assert res[key] is not None
@@ -782,7 +777,7 @@ def initialize_persistence_tests(api_client):
         catalogue=catalogue,
         name=cdisc_package_name + "_old",
         approve_elements=False,
-        effective_date=datetime.now(timezone.utc) - timedelta(days=7),
+        effective_date=datetime.now(UTC) - timedelta(days=7),
     )
 
     # Create an older sponsor package, but more recent that the CDISC one

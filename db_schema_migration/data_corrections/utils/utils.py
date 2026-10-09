@@ -280,7 +280,8 @@ def get_arg_value(arg_values, arg_names, arg_name):
 
 
 # Decorator to capture any changes made by a correction.
-# pylint: disable=broad-exception-caught
+
+
 def capture_changes(
     verify_func=None, docs_only=False, has_subtasks=False, task_level=0
 ):

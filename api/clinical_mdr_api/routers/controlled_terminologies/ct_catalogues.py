@@ -1,6 +1,6 @@
 """CTCatalogue router."""
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Annotated
 
 from fastapi import APIRouter, Query
@@ -30,7 +30,6 @@ router = APIRouter()
         404: _generic_descriptions.ERROR_404,
     },
 )
-# pylint: disable=unused-argument
 def get_catalogues(
     library_name: Annotated[
         str | None,
@@ -98,7 +97,7 @@ def get_catalogues_changes(
     ] = None,
 ) -> CTCatalogueChanges:
     if end_datetime is None:
-        end_datetime = datetime.now(timezone.utc)
+        end_datetime = datetime.now(UTC)
     ct_catalogue_service = CTCatalogueService()
     return ct_catalogue_service.get_ct_catalogues_changes(
         library_name=library_name,

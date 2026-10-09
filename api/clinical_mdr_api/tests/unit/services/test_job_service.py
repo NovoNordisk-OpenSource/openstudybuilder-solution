@@ -6,9 +6,7 @@ The router already gates on `rbac.ANY`; this layer is the last line of defense
 against uid-guessing / cross-tenant reads.
 """
 
-# pylint: disable=protected-access
-
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import patch
 
 import pytest
@@ -25,8 +23,8 @@ def _make_job(uid: str, author_id: str) -> JobAR:
         author_id=author_id,
         job_name="job",
         status=JobStatus.COMPLETED,
-        started_at=datetime.now(timezone.utc),
-        ended_at=datetime.now(timezone.utc),
+        started_at=datetime.now(UTC),
+        ended_at=datetime.now(UTC),
         response_json='{"ok":true}',
         log=None,
     )

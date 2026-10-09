@@ -1,5 +1,6 @@
+from collections.abc import Sequence
 from datetime import datetime
-from typing import Any, Sequence
+from typing import Any, ClassVar
 
 from neomodel import db
 
@@ -47,7 +48,7 @@ from common.config import settings
 class StudyEndpointSelectionService(StudySelectionMixin):
     _repos: MetaRepository
 
-    _vo_to_ar_filter_map = {
+    _vo_to_ar_filter_map: ClassVar[dict[str, str]] = {
         "order": "endpoint_level_order",
         "start_date": "start_date",
         "author_id": "author_id",

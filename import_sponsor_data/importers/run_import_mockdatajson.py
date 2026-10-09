@@ -1381,11 +1381,10 @@ class MockdataJson(BaseImporter):
                 # Workaround for old format data
                 if "flowchart_group" in item:
                     flow_name = item["flowchart_group"]["sponsor_preferred_name"]
+                elif "soa_group_term_name" in item["study_soa_group"]:
+                    flow_name = item["study_soa_group"]["soa_group_term_name"]
                 else:
-                    if "soa_group_term_name" in item["study_soa_group"]:
-                        flow_name = item["study_soa_group"]["soa_group_term_name"]
-                    else:
-                        flow_name = item["study_soa_group"]["soa_group_name"]
+                    flow_name = item["study_soa_group"]["soa_group_name"]
                 data["soa_group_term_uid"] = self.lookup_codelist_term_uid(
                     CODELIST_FLOWCHART_GROUP, flow_name
                 )

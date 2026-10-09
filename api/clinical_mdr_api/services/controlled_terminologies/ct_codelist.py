@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Any, TypeVar
+from typing import Any
 
 from neomodel import db
 
@@ -45,8 +45,6 @@ from common.exceptions import (
     BusinessLogicException,
     NotFoundException,
 )
-
-_AggregateRootType = TypeVar("_AggregateRootType")
 
 
 def _paired_codelist_info_from(
@@ -567,54 +565,55 @@ class CTCodelistService:
                 submission_value not in existing_submission_values,
                 msg=f"Term with UID '{term_uid}' belongs to a non-editable library. Cannot add a new submission value '{submission_value}'. All possible submission values are already defined.",
             )
-        else:
-            # Sponsor terms validation
-            if submission_value not in existing_submission_values:
-                # New submission value:
-                # Either it is a term with no pre-existing submission value
-                # Or it is targeting a paired codelist
-                # Or it is targeting a codelist in a different catalogue
-                # If none of the above, then it is not allowed
+        # Sponsor terms validation
+        elif submission_value not in existing_submission_values:
+            # New submission value:
+            # Either it is a term with no pre-existing submission value
+            # Or it is targeting a paired codelist
+            # Or it is targeting a codelist in a different catalogue
+            # If none of the above, then it is not allowed
 
-                # This means it is not a term with no pre-existing submission value
-                if len(existing_submission_values) > 0:
-                    # Check if targeting a codelist in a different catalogue.
-                    # A codelist can belong to multiple catalogues, so we use set disjointness:
-                    # only bypass the restriction when none of the target codelist's catalogues
-                    # overlap with any catalogue the term is already in.
-                    target_catalogues = set(
-                        self._repos.ct_codelist_attribute_repository.get_catalogue_names_for_codelist(
-                            codelist_uid
-                        )
+            # This means it is not a term with no pre-existing submission value
+            if len(existing_submission_values) > 0:
+                # Check if targeting a codelist in a different catalogue.
+                # A codelist can belong to multiple catalogues, so we use set disjointness:
+                # only bypass the restriction when none of the target codelist's catalogues
+                # overlap with any catalogue the term is already in.
+                target_catalogues = set(
+                    self._repos.ct_codelist_attribute_repository.get_catalogue_names_for_codelist(
+                        codelist_uid
                     )
-                    existing_catalogues = set(
-                        self._repos.ct_term_name_repository.get_catalogue_names_for_term_codelists(
-                            term_uid
-                        )
+                )
+                existing_catalogues = set(
+                    self._repos.ct_term_name_repository.get_catalogue_names_for_term_codelists(
+                        term_uid
                     )
-                    is_different_catalogue = len(
-                        target_catalogues
-                    ) > 0 and target_catalogues.isdisjoint(existing_catalogues)
+                )
+                is_different_catalogue = len(
+                    target_catalogues
+                ) > 0 and target_catalogues.isdisjoint(existing_catalogues)
 
-                    if not is_different_catalogue:
-                        # Check if is targeting a paired codelist
-                        paired_codelist_uid = self._repos.ct_codelist_attribute_repository.get_paired_codelist_uid(
-                            codelist_uid
+                if not is_different_catalogue:
+                    # Check if is targeting a paired codelist
+                    paired_codelist_uid = self._repos.ct_codelist_attribute_repository.get_paired_codelist_uid(
+                        codelist_uid
+                    )
+
+                    term_in_paired = False
+                    if paired_codelist_uid:
+                        # Check if term is in the paired codelist with the same submission value
+                        term_in_paired = self._repos.ct_codelist_attribute_repository.is_term_in_codelist(
+                            term_uid, paired_codelist_uid
                         )
 
-                        term_in_paired = False
-                        if paired_codelist_uid:
-                            # Check if term is in the paired codelist with the same submission value
-                            term_in_paired = self._repos.ct_codelist_attribute_repository.is_term_in_codelist(
-                                term_uid, paired_codelist_uid
-                            )
-
-                        # If so, continue to creation ; otherwise raise an exception
-                        BusinessLogicException.raise_if(
-                            not term_in_paired,
-                            # pylint: disable=line-too-long
-                            msg=f"Term with UID '{term_uid}' is already part of a codelist with submission value '{existing_submission_values[0]}'. Cannot add a new submission value '{submission_value}', except for a paired codelist or a different catalogue. Please reuse the existing submission value.",
-                        )
+                    # If so, continue to creation ; otherwise raise an exception
+                    BusinessLogicException.raise_if(
+                        not term_in_paired,
+                        msg=f"Term with UID '{term_uid}' is already part of a codelist with "
+                        f"submission value '{existing_submission_values[0]}'. Cannot add a new "
+                        f"submission value '{submission_value}', except for a paired codelist or "
+                        f"a different catalogue. Please reuse the existing submission value.",
+                    )
 
         self._repos.ct_codelist_attribute_repository.add_term(
             codelist_uid=codelist_uid,

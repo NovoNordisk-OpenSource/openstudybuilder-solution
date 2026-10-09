@@ -1,6 +1,7 @@
 import datetime
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
-from typing import Any, Callable, Iterable, Self
+from typing import Any, Self
 
 from clinical_mdr_api.domain_repositories.models.study_selections import StudyArm
 from clinical_mdr_api.services.user_info import UserInfoService
@@ -80,7 +81,7 @@ class StudySelectionArmVO:
             study_selection_uid = generate_uid_callback()
 
         if start_date is None:
-            start_date = datetime.datetime.now(datetime.timezone.utc)
+            start_date = datetime.datetime.now(datetime.UTC)
 
         # returns a new instance of the VO
 
@@ -109,7 +110,7 @@ class StudySelectionArmVO:
         self,
         ct_term_exists_callback: Callable[[str], bool] = lambda _: True,
         arm_exists_callback_by: Callable[
-            [str, str, "StudySelectionArmVO"], StudyArm | None
+            [str, str, StudySelectionArmVO], StudyArm | None
         ] = lambda x, y, z: None,
     ) -> None:
         """
@@ -195,7 +196,7 @@ class StudySelectionArmAR:
         )
 
     def _add_selection(self, study_arm_selection) -> None:
-        new_selections = self._study_arms_selection + (study_arm_selection,)
+        new_selections = (*self._study_arms_selection, study_arm_selection)
         self._study_arms_selection = new_selections
 
     def add_arm_selection(

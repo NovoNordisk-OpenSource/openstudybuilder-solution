@@ -12,7 +12,10 @@ from common.auth.dependencies import security
 router = APIRouter()
 
 
-ISOLanguageModel = TypedDict("ISOLanguageModel", {"name": str, "_1": str, "_2T": str})
+class ISOLanguageModel(TypedDict):
+    name: str
+    _1: str
+    _2T: str
 
 
 @router.get(

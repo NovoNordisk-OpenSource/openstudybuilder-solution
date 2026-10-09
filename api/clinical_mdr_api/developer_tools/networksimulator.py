@@ -3,6 +3,10 @@ import sys
 import threading
 import time
 
+# sys.argv always includes the script name as the first element, so this is
+# the minimum length required for at least one CLI argument to be present
+MIN_ARGV_LENGTH = 2
+
 
 class NetworkSimulator:
     def __init__(self, host, port, server_port, latency=0.005):
@@ -123,7 +127,7 @@ class NetworkSimulator:
 
 def main():
     args = sys.argv
-    if len(args) < 2:
+    if len(args) < MIN_ARGV_LENGTH:
         print(
             "Start a server that acts as a middleman between a service and a client, with a given latency in milliseconds."
         )

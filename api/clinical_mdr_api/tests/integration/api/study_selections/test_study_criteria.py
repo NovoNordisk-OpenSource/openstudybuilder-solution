@@ -2,15 +2,10 @@
 Tests for /studies/{study_uid}/study-criteria endpoints
 """
 
-# pylint: disable=unused-argument
-# pylint: disable=redefined-outer-name
-# pylint: disable=too-many-arguments
-# pylint: disable=too-many-statements
-
 import copy
 import json
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 from unittest import mock
 
@@ -109,7 +104,7 @@ def test_data():
     parameter_name = "TextValue"
     TestUtils.create_template_parameter(parameter_name)
 
-    ct_term_start_date = datetime(2020, 3, 25, tzinfo=timezone.utc)
+    ct_term_start_date = datetime(2020, 3, 25, tzinfo=UTC)
 
     # Create CT Terms
     ct_codelist = TestUtils.create_ct_codelist(
@@ -157,7 +152,7 @@ def test_data():
     ):
         params = {
             "uid": term_uid,
-            "date": datetime(2020, 3, 26, tzinfo=timezone.utc),
+            "date": datetime(2020, 3, 26, tzinfo=UTC),
         }
         db.cypher_query(
             """
@@ -173,7 +168,7 @@ def test_data():
     # adjust codelist name start and end date
     params = {
         "uid": ct_codelist.codelist_uid,
-        "date": datetime(2020, 3, 26, tzinfo=timezone.utc),
+        "date": datetime(2020, 3, 26, tzinfo=UTC),
     }
     db.cypher_query(
         """
@@ -1241,7 +1236,7 @@ def test_study_criteria_version_selecting_ct_package(api_client):
     TestUtils.set_study_standard_version(
         study_uid=study_for_ctterm_versioning.uid,
         package_name="SDTM CT 2020-03-27",
-        effective_date=datetime(2020, 3, 27, tzinfo=timezone.utc),
+        effective_date=datetime(2020, 3, 27, tzinfo=UTC),
     )
 
     # get study selection with previous ctterm

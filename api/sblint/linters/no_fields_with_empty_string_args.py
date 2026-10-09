@@ -1,5 +1,6 @@
 import ast
 import sys
+from typing import ClassVar
 
 from rich import print as rptint
 
@@ -7,7 +8,7 @@ from sblint.sblinter import SBLinter
 
 
 class NoFieldsWithEmptyStringArgs(SBLinter):
-    NON_EMPTY_STRING_ARGS = ["description"]
+    NON_EMPTY_STRING_ARGS: ClassVar[list[str]] = ["description"]
 
     @classmethod
     def validate(cls, code_tree: ast.Module, _file_path: str) -> list[int]:

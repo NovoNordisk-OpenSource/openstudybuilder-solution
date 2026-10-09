@@ -676,3 +676,9 @@ VersioningCheckInstanceTopic,AKICONDI,Acute Kidney Injury Conditions,VersioningC
 VersioningCheckGroupTopic,AKICONDI,Activity for group check,Instance for group check,Test,CATEGORIC FINDINGS,,VersioningCheckGroup,Testsubgroup
 VersioningCheckSubgroupTopic,AKICONDI,Activity for subgroup check,Instance for subgroup check,Test,CATEGORIC FINDINGS,,AE Requiring Additional Data,VersioningCheckSubGroup
 DisplayCheckTopic,AKICONDI,DisplayActivity,DisplayInstance,Test,CATEGORIC FINDINGS,,DisplayGroup,DisplaySubGroup
+CAFFEINE,CAFFEINE,Caffeine,"Caffeine","Caffeine",INTERVENTIONS,,Administration of IMP,Administration of IMP
+CAFFEINE ZE,ZCAFF,Caffeine,"Caffeine ZE","Caffeine ZE",INTERVENTIONS,,Administration of IMP,Administration of IMP
+BASAL INSULIN,BASALINS,Basal Insulin,"Basal Insulin","Basal Insulin",INTERVENTIONS,,Administration of IMP,Administration of IMP
+SUBSTANCE A,SUBSTANCEA,Substance A,"Substance A","Substance A",INTERVENTIONS,,Administration of IMP,Administration of IMP
+SUBSTANCE B,SUBSTANCEB,Substance B,"Substance B","Substance B",INTERVENTIONS,,Administration of IMP,Administration of IMP
+SUBSTANCE C,SUBSTANCEC,Substance C,"Substance C","Substance C",INTERVENTIONS,,Administration of IMP,Administration of IMP

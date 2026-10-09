@@ -7,8 +7,6 @@ from clinical_mdr_api.domain_repositories.models.study_audit_trail import Create
 from clinical_mdr_api.domain_repositories.models.study_selections import (
     StudyArm,
     StudyCohort,
-)
-from clinical_mdr_api.domain_repositories.models.study_selections import (
     StudyDesignClass as StudyDesignClassNeomodel,
 )
 from clinical_mdr_api.models.study_selections.study_selection import (

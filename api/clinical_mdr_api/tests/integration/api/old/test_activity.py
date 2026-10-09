@@ -1,9 +1,3 @@
-# pylint: disable=unused-argument, redefined-outer-name, too-many-arguments, line-too-long, too-many-statements
-
-# pytest fixture functions have other fixture functions as arguments,
-# which pylint interprets as unused arguments
-
-
 import pytest
 from fastapi.testclient import TestClient
 from neomodel import db
@@ -457,6 +451,27 @@ def test_get_all_activities_from_a_given_activity_group_using_name(api_client):
     assert res["items"][0]["reason_for_rejecting"] is None
     assert res["items"][0]["used_by_studies"] == []
     assert res["items"][0]["replaced_by_activity"] is None
+
+
+def test_get_all_activities_from_activity_group_and_subgroup_names_only_matches_same_grouping(
+    api_client,
+):
+    # "new_name" (created in test_post_create_activity) has two groupings:
+    # (activity_subgroup_root1/name1, activity_group_root1/name1) and
+    # (activity_subgroup_root3/name3, activity_group_root3/name3).
+    # Combining a subgroup name from one grouping with a group name from the
+    # other must not match - the two names have to come from the same grouping.
+    response = api_client.get(
+        "/concepts/activities/activities"
+        "?activity_subgroup_names[]=name1&activity_group_names[]=name3&total_count=true"
+    )
+
+    assert_response_status_code(response, 200)
+
+    res = response.json()
+
+    assert res["items"] == []
+    assert res["total"] == 0
 
 
 def test_post_approve_activity(api_client):

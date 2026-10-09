@@ -105,7 +105,7 @@
 | bcrypt-pbkdf                            | 1.0.2        | [BSD-3-Clause](#bcrypt-pbkdf)                    |
 | blob-util                               | 2.0.2        | [Apache-2.0](#blob-util)                         |
 | bluebird                                | 3.7.2        | [MIT](#bluebird)                                 |
-| brace-expansion                         | 5.0.9        | [MIT](#brace-expansion)                          |
+| brace-expansion                         | 5.0.12       | [MIT](#brace-expansion)                          |
 | braces                                  | 3.0.3        | [MIT](#braces)                                   |
 | browser-stdout                          | 1.3.1        | [ISC](#browser-stdout)                           |
 | browserslist                            | 4.28.7       | [MIT](#browserslist)                             |
@@ -468,7 +468,7 @@
 | tunnel-agent                            | 0.6.0        | [Apache-2.0](#tunnel-agent)                      |
 | tweetnacl                               | 0.14.5       | [Unlicense](#tweetnacl)                          |
 | typescript                              | 5.9.3        | [Apache-2.0](#typescript)                        |
-| undici                                  | 6.28.0       | [MIT](#undici)                                   |
+| undici                                  | 6.28.1       | [MIT](#undici)                                   |
 | unicorn-magic                           | 0.4.0        | [MIT](#unicorn-magic)                            |
 | universalify                            | 2.0.1        | [MIT](#universalify)                             |
 | untildify                               | 4.0.0        | [MIT](#untildify)                                |

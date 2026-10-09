@@ -2,8 +2,6 @@
 DB integrity: run all checks defined in clinical-mdr-api ``db_integrity_checks.QUERIES``.
 """
 
-# pylint: disable=unused-argument
-
 import os
 
 from pytest_bdd import scenarios, then

@@ -1,5 +1,5 @@
 import abc
-from typing import Any, Generic, TypeVar
+from typing import Any, TypeVar
 
 from neomodel import db
 from pydantic import BaseModel
@@ -29,10 +29,10 @@ from common.exceptions import BusinessLogicException, NotFoundException
 _AggregateRootType = TypeVar("_AggregateRootType")
 
 
-class GenericSyntaxService(Generic[_AggregateRootType], abc.ABC):
+class GenericSyntaxService[AggregateRootType](abc.ABC):
     @abc.abstractmethod
     def _transform_aggregate_root_to_pydantic_model(
-        self, item_ar: _AggregateRootType
+        self, item_ar: AggregateRootType
     ) -> BaseModel:
         raise NotImplementedError
 
@@ -58,7 +58,7 @@ class GenericSyntaxService(Generic[_AggregateRootType], abc.ABC):
         self._repos.close()
 
     @property
-    def repository(self) -> GenericRepository[_AggregateRootType]:
+    def repository(self) -> GenericRepository[AggregateRootType]:
         assert self._repos is not None
         return self.repository_interface()
 
@@ -98,7 +98,7 @@ class GenericSyntaxService(Generic[_AggregateRootType], abc.ABC):
         status: LibraryItemStatus | None = None,
         for_update: bool = False,
         return_study_count: bool = True,
-    ) -> _AggregateRootType:
+    ) -> AggregateRootType:
         item = self.repository.find_by_uid(
             uid,
             for_update=for_update,

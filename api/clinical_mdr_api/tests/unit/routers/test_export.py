@@ -2,13 +2,16 @@
 
 Focused on the ``variants`` feature of the ``allow_exports`` decorator,
 which selects an alternate header set based on a query-string flag while
-leaving the legacy declaration shape untouched.
+leaving the legacy declaration shape untouched, and on the ``|`` fallback
+syntax for target paths that run through a nullable object.
 """
 
 import pytest
 
 from clinical_mdr_api.routers import export as export_module
 from clinical_mdr_api.routers.export import (
+    _convert_headers_to_dict,
+    _extract_values_from_data,
     _query_param_is_truthy,
     _resolve_export_definition,
     allow_exports,
@@ -123,12 +126,94 @@ def test_resolve_takes_first_matching_variant_in_declaration_order():
 
 
 # ---------------------------------------------------------------------------
+# _extract_values_from_data — target path resolution and "|" fallbacks
+# ---------------------------------------------------------------------------
+
+
+def _extract_one(item, header):
+    """Run a single item through the extractor for one ``name=target`` header."""
+    return next(
+        iter(_extract_values_from_data([item], _convert_headers_to_dict([header])))
+    )
+
+
+def test_extract_resolves_plain_and_dotted_targets():
+    item = {"order": 1, "compound": {"name": "Aspirin"}}
+    assert _extract_one(item, "order") == {"order": 1}
+    assert _extract_one(item, "compound_name=compound.name") == {
+        "compound_name": "Aspirin"
+    }
+
+
+def test_extract_degrades_to_none_when_dotted_path_hits_none():
+    """A single target through a null object degrades rather than raising.
+
+    Note the pre-existing asymmetry this pins down: a path that walks into an
+    explicit ``None`` yields ``None``, whereas a merely absent key yields "".
+    Both render as an empty cell downstream.
+    """
+    assert _extract_one(
+        {"instance": {"activity_instance": None}}, "col=instance.activity_instance.name"
+    ) == {"col": None}
+    assert _extract_one({}, "col=instance.activity_instance.name") == {"col": ""}
+
+
+def test_extract_falls_back_to_second_path_when_first_is_unresolvable():
+    """The placeholder case: activity_instance is null, activity carries the name."""
+    item = {
+        "study_activity_instance": {
+            "activity_instance": None,
+            "activity": {"name": "Body Temperature"},
+        }
+    }
+    result = _extract_one(
+        item,
+        "dose_collection_activity_instance="
+        "study_activity_instance.activity_instance.name"
+        "|study_activity_instance.activity.name",
+    )
+    assert result == {"dose_collection_activity_instance": "Body Temperature"}
+
+
+def test_extract_prefers_first_path_when_it_resolves():
+    item = {
+        "study_activity_instance": {
+            "activity_instance": {"name": "Temperature Instance"},
+            "activity": {"name": "Body Temperature"},
+        }
+    }
+    result = _extract_one(
+        item,
+        "dose_collection_activity_instance="
+        "study_activity_instance.activity_instance.name"
+        "|study_activity_instance.activity.name",
+    )
+    assert result == {"dose_collection_activity_instance": "Temperature Instance"}
+
+
+def test_extract_degrades_when_no_fallback_resolves():
+    """Exhausting every alternative keeps the last unresolved value, not an error."""
+    item = {"study_activity_instance": None}
+    result = _extract_one(
+        item,
+        "dose_collection_activity_instance="
+        "study_activity_instance.activity_instance.name"
+        "|study_activity_instance.activity.name",
+    )
+    assert not result["dose_collection_activity_instance"]
+
+
+def test_extract_converts_booleans_for_plain_targets():
+    assert _extract_one({"flag": True}, "flag") == {"flag": "Yes"}
+    assert _extract_one({"flag": False}, "flag") == {"flag": "No"}
+
+
+# ---------------------------------------------------------------------------
 # allow_exports decorator integration
 # ---------------------------------------------------------------------------
 
 # Test functions intentionally take fixtures by their declared name; that's the
 # standard pytest pattern and triggers redefined-outer-name across the file.
-# pylint: disable=redefined-outer-name
 
 
 @pytest.fixture
@@ -139,7 +224,7 @@ def captured_export(monkeypatch):
 
     # *args/**kwargs swallow the real export() signature; we only inspect the
     # first three positional args.
-    # pylint: disable=unused-argument
+
     def fake_export(export_format, data, export_definition, *args, **kwargs):
         captured["export_format"] = export_format
         captured["data"] = data
@@ -154,7 +239,7 @@ def _decorated_endpoint(definition):
     @allow_exports(definition)
     # `request` is unused inside the body but must be declared so the decorator
     # can find it via kwargs lookup.
-    # pylint: disable=unused-argument
+
     def endpoint(request):
         return [{"a": 1, "b": 2, "nsv": {"code": "X"}}]
 

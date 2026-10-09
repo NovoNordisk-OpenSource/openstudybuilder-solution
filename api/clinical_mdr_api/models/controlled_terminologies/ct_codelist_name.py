@@ -58,7 +58,7 @@ class CTCodelistName(BaseModel):
 
     catalogue_names: Annotated[
         list[str], Field(json_schema_extra={"remove_from_wildcard": True})
-    ] = []
+    ] = Field(default_factory=list)
 
     codelist_uid: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
         None

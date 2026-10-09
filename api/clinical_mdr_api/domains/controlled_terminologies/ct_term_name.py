@@ -1,7 +1,8 @@
+from collections.abc import Callable, Set
 from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
-from typing import AbstractSet, Callable, Self
+from typing import Self
 
 from clinical_mdr_api.domains.versioned_object_aggregate import (
     LibraryItemAggregateRootBase,
@@ -67,6 +68,7 @@ class CTTermNameVO:
     required_level: TSParameterRequiredLevel | None = None
     cardinality: TSParameterCardinality | None = None
     notes: str | None = None
+    short_code: str | None = None
     # TS relationship targets — carried through the edit flow, wired by _maintain_parameters
     osb_field_name: str | None = None
     osb_page_reference: str | None = None
@@ -90,6 +92,7 @@ class CTTermNameVO:
         required_level: str | None = None,
         cardinality: str | None = None,
         notes: str | None = None,
+        short_code: str | None = None,
         osb_field_name: str | None = None,
         osb_page_reference: str | None = None,
         semantic_data_type_uid: str | None = None,
@@ -112,6 +115,7 @@ class CTTermNameVO:
             ),
             cardinality=TSParameterCardinality(cardinality) if cardinality else None,
             notes=notes,
+            short_code=short_code,
             osb_field_name=osb_field_name,
             osb_page_reference=osb_page_reference,
             semantic_data_type_uid=semantic_data_type_uid,
@@ -135,6 +139,7 @@ class CTTermNameVO:
         required_level: str | None = None,
         cardinality: str | None = None,
         notes: str | None = None,
+        short_code: str | None = None,
         osb_field_name: str | None = None,
         osb_page_reference: str | None = None,
         semantic_data_type_uid: str | None = None,
@@ -153,6 +158,7 @@ class CTTermNameVO:
             ),
             cardinality=TSParameterCardinality(cardinality) if cardinality else None,
             notes=notes,
+            short_code=short_code,
             osb_field_name=osb_field_name,
             osb_page_reference=osb_page_reference,
             semantic_data_type_uid=semantic_data_type_uid,
@@ -262,7 +268,7 @@ class CTTermNameAR(LibraryItemAggregateRootBase):
         """
         super()._create_new_version(author_id=author_id)
 
-    def get_possible_actions(self) -> AbstractSet[ObjectAction]:
+    def get_possible_actions(self) -> Set[ObjectAction]:
         """
         Returns list of possible actions
         """

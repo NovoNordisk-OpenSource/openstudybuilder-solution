@@ -1,8 +1,3 @@
-# pylint: disable=unused-argument, redefined-outer-name, too-many-arguments, line-too-long, too-many-statements
-
-# pytest fixture functions have other fixture functions as arguments,
-# which pylint interprets as unused arguments
-
 import pytest
 from fastapi.testclient import TestClient
 from neomodel import db
@@ -1420,7 +1415,9 @@ def test_reactivating_a_specific_odm_item(api_client):
 
 def test_getting_minimal_response_for_items(api_client):
     response = api_client.get(
-        "odms/items/OdmItem_000001?fields=oid,name,prompt,datatype,length,significant_digits,sas_field_name,sds_var_name,origin,comment,translated_texts, aliases, unit_definitions, codelist, terms, vendor_elements, vendor_attributes, vendor_element_attributes"
+        "odms/items/OdmItem_000001?fields=oid,name,prompt,datatype,length,significant_digits,sas_field_name,"
+        "sds_var_name,origin,comment,translated_texts, aliases, unit_definitions, codelist, terms, "
+        "vendor_elements, vendor_attributes, vendor_element_attributes"
     )
 
     assert_response_status_code(response, 200)

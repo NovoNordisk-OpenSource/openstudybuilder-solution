@@ -19,9 +19,9 @@ class StudyDayVO(NumericValueVO):
     ) -> Self:
         value = cls.derive_value_property(value=value)
         simple_concept_vo = cls(
-            name=f"Day {str(value)}",
+            name=f"Day {value!s}",
             value=value,
-            name_sentence_case=f"day {str(value)}",
+            name_sentence_case=f"day {value!s}",
             definition=definition,
             abbreviation=abbreviation,
             is_template_parameter=is_template_parameter,

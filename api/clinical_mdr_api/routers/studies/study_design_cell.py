@@ -13,8 +13,11 @@ from clinical_mdr_api.models.study_selections.study_selection import (
     StudyDesignMatrixStructureExportRow,
 )
 from clinical_mdr_api.models.utils import CustomPage
-from clinical_mdr_api.routers import _generic_descriptions, decorators
-from clinical_mdr_api.routers import study_router as router
+from clinical_mdr_api.routers import (
+    _generic_descriptions,
+    decorators,
+    study_router as router,
+)
 from clinical_mdr_api.routers.studies import utils
 from clinical_mdr_api.services.studies.study_design_cell import StudyDesignCellService
 from common.auth import rbac
@@ -83,7 +86,6 @@ def get_all_design_cells(
         ],
     }
 )
-# pylint: disable=unused-argument
 def get_design_matrix_structure_export(
     request: Request,  # required by allow_exports decorator
     study_uid: Annotated[str, utils.studyUID],
@@ -173,7 +175,6 @@ def post_new_design_cell_create(
     },
 )
 @decorators.validate_if_study_is_not_locked("study_uid")
-#  pylint: disable=unused-argument
 def edit_design_cell(
     study_uid: Annotated[str, utils.studyUID],
     study_design_cell_uid: Annotated[str, utils.study_design_cell_uid],
@@ -293,7 +294,8 @@ def design_cell_batch_operations(
     - Study must exist.
      
     Business logic:
-     - By default (no study status is provided) list all study design-cells for the study uid in status draft. If the study not exist in status draft then return the study design-cells for the study in status released. If the study uid only exist as deleted then this is returned.
+     - By default (no study status is provided) list all study design-cells for the study uid in status draft. If the study not exist in status draft then return the study design-cells for the
+       study in status released. If the study uid only exist as deleted then this is returned.
      - If a specific study status parameter is provided then return study design-cell for this study status.
     - If the locked study status parameter is requested then a study version should also be provided, and then the study design-cells for the specific locked study version is returned.
     - Indicate by a boolean variable if the study design-cell can be updated (if the selected study is in status draft).  
@@ -385,7 +387,8 @@ def get_all_selected_design_cells_connected_branch_arm(
     - Study must exist.
      
     Business logic:
-     - By default (no study status is provided) list all study design-cells for the study uid in status draft. If the study not exist in status draft then return the study design-cells for the study in status released. If the study uid only exist as deleted then this is returned.
+     - By default (no study status is provided) list all study design-cells for the study uid in status draft. If the study not exist in status draft then return the study design-cells for the
+       study in status released. If the study uid only exist as deleted then this is returned.
      - If a specific study status parameter is provided then return study design-cell for this study status.
     - If the locked study status parameter is requested then a study version should also be provided, and then the study design-cells for the specific locked study version is returned.
     - Indicate by a boolean variable if the study design-cell can be updated (if the selected study is in status draft).  

@@ -116,6 +116,10 @@ const props = defineProps({
     type: Number,
     default: 0,
   },
+  comparisonItems: {
+    type: Array,
+    default: () => [],
+  },
   title: {
     type: String,
     default: '',
@@ -159,27 +163,19 @@ const props = defineProps({
     type: Boolean,
     default: true,
   },
+  // Field identifying the entity a row belongs to. Audit trails list several
+  // entities in one table, and a row must only be diffed against an older
+  // version of the same one. Auto-detected when not given.
+  identityKey: {
+    type: String,
+    required: false,
+    default: '',
+  },
 })
 const emit = defineEmits(['close', 'refresh'])
 
 const historyItems = ref([])
 const dataOptions = ref({ itemsPerPage: 10, page: 1 })
-
-watch(
-  () => props.items,
-  () => {
-    getPaginatedHistoryData()
-  },
-  { immediate: true }
-)
-
-watch(
-  () => dataOptions.value,
-  () => {
-    getPaginatedHistoryData()
-  },
-  { immediate: true }
-)
 
 const cleanedHeaders = computed(() => {
   let result = []
@@ -227,6 +223,108 @@ const exportFullName = computed(() => {
   result += 'history'
   return result
 })
+// Versions are listed newest first, so a row is compared with the next row
+// belonging to the same entity. The oldest version of an entity has nothing to
+// compare against and is never highlighted.
+const decoratedItems = computed(() => {
+  const items = props.items
+  const comparisonItems = props.comparisonItems.length
+    ? props.comparisonItems
+    : items
+  return items.map((item) => {
+    const identity = getIdentity(item)
+    const comparisonIndex = comparisonItems.findIndex(
+      (candidate) =>
+        getIdentity(candidate) === identity &&
+        getVersionIdentity(candidate) === getVersionIdentity(item)
+    )
+    const previous = comparisonItems
+      .slice(comparisonIndex + 1)
+      .find((candidate) => getIdentity(candidate) === identity)
+    const firstIdentityIndex = comparisonItems.findIndex(
+      (candidate) => getIdentity(candidate) === identity
+    )
+    return {
+      ...item,
+      _changedKeys: getChangedKeys(item, previous),
+      _isCurrent: comparisonIndex === firstIdentityIndex,
+    }
+  })
+})
+
+watch(
+  () => decoratedItems.value,
+  () => {
+    getPaginatedHistoryData()
+  },
+  { immediate: true }
+)
+
+watch(
+  () => dataOptions.value,
+  () => {
+    getPaginatedHistoryData()
+  },
+  { immediate: true }
+)
+
+function getIdentity(item) {
+  if (props.identityKey) {
+    return item[props.identityKey]
+  }
+  if (item.uid !== undefined) {
+    return item.uid
+  }
+  const uidKey = Object.keys(item).find(
+    (key) =>
+      key !== 'study_uid' &&
+      key.endsWith('_uid') &&
+      typeof item[key] === 'string'
+  )
+  return uidKey ? item[uidKey] : null
+}
+
+function getVersionIdentity(item) {
+  return item.start_date || item.version || item.change_type || item.end_date
+}
+
+function getChangedKeys(item, previous) {
+  // A server computed diff covers versions that are not on this page, so it
+  // wins over comparing the rows we happen to hold.
+  if (Array.isArray(item.changes)) {
+    return cleanedHeaders.value
+      .filter(
+        (header) =>
+          !isTimestampColumn(header) &&
+          [header.key.split('.')[0], ...(header.changeKeys ?? [])].some((key) =>
+            item.changes.includes(key)
+          )
+      )
+      .map((header) => header.key)
+  }
+  if (!previous) {
+    return []
+  }
+  return cleanedHeaders.value
+    .filter(
+      (header) =>
+        !isTimestampColumn(header) &&
+        // A missing value and an empty one read the same in the table, so only
+        // a real difference counts.
+        (getDisplay(item, header) ?? '') !==
+          (getDisplay(previous, header) ?? '')
+    )
+    .map((header) => header.key)
+}
+
+// Columns that differ on every version by construction, so flagging them as
+// changed says nothing.
+function isTimestampColumn(header) {
+  return (
+    header.key.indexOf('date') !== -1 ||
+    header.key.indexOf('change_type') !== -1
+  )
+}
 
 function refreshHistoryData(options) {
   dataOptions.value = options
@@ -234,45 +332,32 @@ function refreshHistoryData(options) {
 }
 
 function getPaginatedHistoryData() {
-  if (props.items.length > dataOptions.value.itemsPerPage) {
+  const items = decoratedItems.value
+  if (items.length > dataOptions.value.itemsPerPage) {
     const sliceStart =
       dataOptions.value.itemsPerPage * (dataOptions.value.page - 1)
     let sliceEnd = dataOptions.value.itemsPerPage * dataOptions.value.page
     if (dataOptions.value.itemsPerPage === -1) {
-      sliceEnd = props.items.length
+      sliceEnd = items.length
     }
-    historyItems.value = JSON.parse(
-      JSON.stringify(props.items.slice(sliceStart, sliceEnd))
-    )
+    historyItems.value = items.slice(sliceStart, sliceEnd)
   } else {
-    historyItems.value = props.items
+    historyItems.value = items
   }
 }
 
 function getHighlight(header, item) {
-  if (item) {
-    if (
-      header.key.indexOf('date') !== -1 ||
-      header.key.indexOf('change_type') !== -1
-    ) {
-      return false
-    } else if (item.changes) {
-      let fieldName = header.key
-      if (fieldName.indexOf('.') !== -1) {
-        fieldName = fieldName.substring(0, fieldName.indexOf('.'))
-      }
-      return item.changes.indexOf(fieldName) !== -1
-    } else {
-      return false
-    }
+  if (!item || isTimestampColumn(header)) {
+    return false
   }
+  return (item._changedKeys || []).includes(header.key)
 }
 function getCellClasses(header, item) {
   if (props.simpleStyling) {
     return 'ml-3'
   }
   if (getHighlight(header, item)) {
-    return 'bg-blue-lighten-4 difference ml-3'
+    return 'bg-blue-lighten-4 difference ml-0 my-2'
   }
   return ''
 }
@@ -282,7 +367,7 @@ function getTextClass(item) {
   }
   if (item.change_type === 'Delete') {
     return 'text-red'
-  } else if (!item.end_date) {
+  } else if (item._isCurrent) {
     return 'font-weight-black'
   } else {
     return ''
@@ -307,7 +392,7 @@ function getDisplay(item, header) {
       }
     }
     if (header.historyFilter) {
-      value = header.historyFilter(value)
+      value = header.historyFilter(value, item)
     }
     return value ? value.toString() : value
   }

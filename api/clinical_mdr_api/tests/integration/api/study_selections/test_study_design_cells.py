@@ -2,13 +2,6 @@
 Tests for /studies/{study_uid}/study-design-cells endpoints
 """
 
-# pylint: disable=unused-argument
-# pylint: disable=redefined-outer-name
-# pylint: disable=too-many-arguments
-
-# pytest fixture functions have other fixture functions as arguments,
-# which pylint interprets as unused arguments
-
 import copy
 import logging
 import time
@@ -312,7 +305,6 @@ def test_design_cell_modify_actions_on_locked_study(api_client):
     assert response.json()["message"] == f"Study with UID '{study.uid}' is locked."
 
 
-# pylint: disable=too-many-statements
 def test_study_design_cell_with_study_epoch_relationship(api_client):
     """
     HAVING:

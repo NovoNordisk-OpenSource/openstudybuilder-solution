@@ -95,7 +95,7 @@ class SponsorModelSchemaAR:
     def content_hash(self) -> str:
         return self._schema_vo.content_hash
 
-    def matches_content(self, other: "SponsorModelSchemaAR") -> bool:
+    def matches_content(self, other: SponsorModelSchemaAR) -> bool:
         """True when both aggregates address the same schema blob."""
         return self.content_hash == other.content_hash
 

@@ -1,5 +1,3 @@
-# pylint: disable=missing-timeout,logging-fstring-interpolation
-
 """Creates dummy data and dummy studies. API URL must be set in the API_BASE_URL environment variable."""
 
 import base64
@@ -1435,109 +1433,109 @@ def parse_args():
     parser.add_argument(
         "--objective-templates",
         type=int,
-        default=getenv("num_objective_templates", 151),
+        default=getenv("num_objective_templates", "151"),
         help="Number of objective templates to create",
     )
     parser.add_argument(
         "--endpoint-templates",
         type=int,
-        default=getenv("num_endpoint_templates", 151),
+        default=getenv("num_endpoint_templates", "151"),
         help="Number of endpoint templates to create",
     )
     parser.add_argument(
         "--criteria-templates",
         type=int,
-        default=getenv("num_criteria_templates", 151),
+        default=getenv("num_criteria_templates", "151"),
         help="Number of criteria templates to create",
     )
     parser.add_argument(
         "--activity-instruction-templates",
         type=int,
-        default=getenv("num_activity_instruction_templates", 151),
+        default=getenv("num_activity_instruction_templates", "151"),
         help="Number of activity instruction_templates to create",
     )
     parser.add_argument(
         "--footnote-templates",
         type=int,
-        default=getenv("num_footnote_templates", 151),
+        default=getenv("num_footnote_templates", "151"),
         help="Number of footnote templates to create",
     )
     parser.add_argument(
         "--timeframe-templates",
         type=int,
-        default=getenv("num_timeframe_templates", 151),
+        default=getenv("num_timeframe_templates", "151"),
         help="Number of timeframe templates to create",
     )
     parser.add_argument(
         "--epochs",
         type=int,
-        default=getenv("num_epochs", 19),
+        default=getenv("num_epochs", "19"),
         help="Number of epochs to create",
     )
     parser.add_argument(
         "--activity-groups",
         type=int,
-        default=getenv("num_activity_groups", 31),
+        default=getenv("num_activity_groups", "31"),
         help="Number of activity groups to create",
     )
     parser.add_argument(
         "--activity-subgroups",
         type=int,
-        default=getenv("num_activity_subgroups", 53),
+        default=getenv("num_activity_subgroups", "53"),
         help="Number of activity sub-groups to create",
     )
     parser.add_argument(
         "--activities",
         type=int,
-        default=getenv("num_activities", 300),
+        default=getenv("num_activities", "300"),
         help="Number of activities to create",
     )
     parser.add_argument(
         "--activity-instances",
         type=int,
-        default=getenv("num_activity_instances", 91),
+        default=getenv("num_activity_instances", "91"),
         help="Number of activity instances to create",
     )
     # parser.add_argument(
     #     "--activity-requests",
     #     type=int,
-    #     default=getenv("num_activity_requests", 51),
+    #     default=getenv("num_activity_requests", "51"),
     #     help="Number of activity requests to create",
     # )
     parser.add_argument(
         "--studies",
         type=int,
-        default=getenv("num_studies", 13),
+        default=getenv("num_studies", "13"),
         help="Number of studies to create",
     )
     parser.add_argument(
         "--study-arms",
         type=int,
-        default=getenv("num_arms", 2),
+        default=getenv("num_arms", "2"),
         help="Number of arms to create",
     )
     parser.add_argument(
         "--study-elements",
         type=int,
-        default=getenv("num_elements", 8),
+        default=getenv("num_elements", "8"),
         help="Number of elements to create",
     )
     parser.add_argument(
         "--study-epochs",
         type=int,
-        default=getenv("num_study_epochs", 11),
+        default=getenv("num_study_epochs", "11"),
         help="Number of epochs to create per study",
     )
     parser.add_argument(
         "--study-activities",
         type=int,
-        default=getenv("num_study_activities", 197),
+        default=getenv("num_study_activities", "197"),
         help="Number of activities to create per study",
     )
     parser.add_argument(
         "--study-visits",
         type=int,
-        default=getenv("num_study_visits", 37),
+        default=getenv("num_study_visits", "37"),
         help="Number of visits to create  per study",
     )
 

@@ -27,6 +27,7 @@ linting_report.txt
 .scannerwork
 .coverage*
 /reports
+/schemathesis-reports
 /consumer_api/reports
 /extensions/reports
 traceability.html

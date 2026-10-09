@@ -2,6 +2,10 @@ function getTemplateParametersFromTemplate(template) {
   const result = []
   let currentParam = null
 
+  if (typeof template !== 'string') {
+    return result
+  }
+
   for (const c of template) {
     if (c === '[') {
       currentParam = ''

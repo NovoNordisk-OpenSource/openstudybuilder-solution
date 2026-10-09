@@ -15,7 +15,6 @@ from jsonpath_ng import parse
 from neomodel import config as neoconfig
 from neomodel import db
 
-# pylint: disable=duplicate-code
 REGEX_SNAKE_CASE = r"^[a-z]+(_[a-z]+)*$"
 REGEX_SNAKE_CASE_WITH_DOT = r"^[a-z.]+(_[a-z.]+)*$"
 REPORT_FILE_PATH = "db_checks_result.csv"
@@ -280,9 +279,8 @@ def _is_node_excluded(
             if not excluded_id:
                 if label_matches:
                     return True
-            else:
-                if label_matches and _ids_match_exclusion(excluded_id, id_list):
-                    return True
+            elif label_matches and _ids_match_exclusion(excluded_id, id_list):
+                return True
     return False
 
 
@@ -320,9 +318,8 @@ def _get_matching_exclusion(
             if not excluded_id:
                 if label_matches:
                     return excluded
-            else:
-                if label_matches and _ids_match_exclusion(excluded_id, id_list):
-                    return excluded
+            elif label_matches and _ids_match_exclusion(excluded_id, id_list):
+                return excluded
     return None
 
 
@@ -375,7 +372,6 @@ def _materialize_noncompliant_columns_from_details(row: Dict[str, Any]) -> None:
     row["noncompliant_root_properties"] = props_list
 
 
-# pylint: disable=too-many-locals, too-many-branches
 def _filter_excluded_nodes(
     row: Dict, excluded_nodes: List[Dict[str, Any]], original_count: int
 ) -> None:
@@ -481,7 +477,6 @@ def _filter_excluded_nodes(
         )
 
 
-# pylint: disable=too-many-arguments, too-many-positional-arguments, too-many-locals
 def execute_query_and_append_result_to_file(
     query: str,
     file_path: str,
@@ -605,7 +600,7 @@ def execute_query_and_append_result_to_file(
     return result
 
 
-def execute_query_with_params_and_append_result_to_file(  # pylint: disable=too-many-arguments,too-many-positional-arguments
+def execute_query_with_params_and_append_result_to_file(
     query: str,
     file_path: str,
     params: dict,

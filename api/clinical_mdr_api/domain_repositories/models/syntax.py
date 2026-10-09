@@ -25,18 +25,17 @@ from clinical_mdr_api.domain_repositories.models.template_parameter import (
 )
 from common.neomodel import BooleanProperty, IntegerProperty, StringProperty
 
-
 #########################
 ##### Common Syntax #####
 #########################
-# pylint: disable=abstract-method
+
+
 class UsesParameterRelation(ClinicalMdrRel):
     position = IntegerProperty()
     allow_multiple = BooleanProperty()
     allow_none = BooleanProperty()
 
 
-# pylint: disable=abstract-method
 class UsesValueRelation(ClinicalMdrRel):
     position = IntegerProperty()
     index = IntegerProperty()

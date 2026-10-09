@@ -21,9 +21,8 @@
           :label="$t('CodelistTermOrderSubmvalForm.codelist')"
           disabled
         />
-        <v-combobox
+        <v-text-field
           v-model="form.submissionValue"
-          :items="submissionValues"
           data-cy="term-submission-value"
           :label="$t('CodelistTermDetail.submission_value')"
           :rules="[formRules.required]"
@@ -76,10 +75,6 @@ const props = defineProps({
   termName: {
     type: String,
     default: null,
-  },
-  submissionValues: {
-    type: Array,
-    default: () => [],
   },
 })
 

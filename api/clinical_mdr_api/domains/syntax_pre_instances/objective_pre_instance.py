@@ -1,5 +1,6 @@
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Callable, Self
+from typing import Self
 
 from clinical_mdr_api.domains.libraries.object import ParametrizedTemplateVO
 from clinical_mdr_api.domains.syntax_pre_instances.pre_instance_ar import PreInstanceAR

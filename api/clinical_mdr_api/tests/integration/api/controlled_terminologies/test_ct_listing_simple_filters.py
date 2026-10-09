@@ -16,9 +16,6 @@ in test_ct_term_ts_properties.py and test_paired_codelists.py respectively —
 not duplicated here.
 """
 
-# pylint: disable=unused-argument
-# pylint: disable=redefined-outer-name
-
 import json
 import logging
 from typing import Any

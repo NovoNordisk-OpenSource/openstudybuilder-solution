@@ -2,14 +2,8 @@
 Tests for /studies/{study_uid}/study-activity-instances endpoints
 """
 
-# pylint: disable=unused-argument
-# pylint: disable=redefined-outer-name
-# pylint: disable=too-many-arguments
-
-# pytest fixture functions have other fixture functions as arguments,
-# which pylint interprets as unused arguments
-
 import logging
+from typing import Any
 
 import pytest
 from fastapi.testclient import TestClient
@@ -103,6 +97,7 @@ project: Project
 term_efficacy_uid: str
 study_visit_1: StudyVisit
 study_visit_2: StudyVisit
+test_data_dict: dict[str, Any]
 # Data supplier and origin fields test data
 supplier_type_codelist: CTCodelist
 supplier_type_term: CTTerm
@@ -126,8 +121,8 @@ def test_data():
     db_name = "studyactivityinstanceapi"
     inject_and_clear_db(db_name)
 
-    global study
-    study, _test_data_dict = inject_base_data()
+    global study, test_data_dict
+    study, test_data_dict = inject_base_data()
 
     db.cypher_query(STARTUP_ACTIVITY_GROUPS)
     db.cypher_query(STARTUP_ACTIVITY_SUB_GROUPS)
@@ -574,6 +569,141 @@ def test_delete_study_activity_instance(api_client):
     res = response.json()["items"]
     assert len(res) == 1
     TestUtils.delete_study(test_study.uid)
+
+
+def test_delete_study_activity_instance_keeps_locked_version(api_client):
+    test_study = TestUtils.create_study(
+        project_number=project.project_number,
+        acronym="SAI-LOCK-DEL",
+    )
+
+    single_select_group = TestUtils.create_activity_group(
+        name="SingleSelect Lock Group"
+    )
+    single_select_subgroup = TestUtils.create_activity_subgroup(
+        name="SingleSelect Lock SubGroup"
+    )
+    single_select_activity = TestUtils.create_activity(
+        name="Single Select Lock Activity",
+        activity_subgroups=[single_select_subgroup.uid],
+        activity_groups=[single_select_group.uid],
+        library_name="Sponsor",
+        is_data_collected=True,
+        is_multiple_selection_allowed=False,
+    )
+    single_select_instance_class = TestUtils.create_activity_instance_class(
+        name="SingleSelect Lock Instance Class"
+    )
+    TestUtils.create_activity_instance(
+        name="SingleSelect Lock required instance",
+        activity_instance_class_uid=single_select_instance_class.uid,
+        name_sentence_case="singleselect lock required instance",
+        topic_code="single_select_lock_required_topic",
+        is_required_for_activity=True,
+        activities=[single_select_activity.uid],
+        activity_subgroups=[single_select_subgroup.uid],
+        activity_groups=[single_select_group.uid],
+        activity_items=[],
+    )
+    extra_instance = TestUtils.create_activity_instance(
+        name="SingleSelect Lock extra instance",
+        activity_instance_class_uid=single_select_instance_class.uid,
+        name_sentence_case="singleselect lock extra instance",
+        topic_code="single_select_lock_extra_topic",
+        is_required_for_activity=False,
+        activities=[single_select_activity.uid],
+        activity_subgroups=[single_select_subgroup.uid],
+        activity_groups=[single_select_group.uid],
+        activity_items=[],
+    )
+
+    response = api_client.post(
+        f"/studies/{test_study.uid}/study-activities",
+        json={
+            "activity_uid": single_select_activity.uid,
+            "activity_subgroup_uid": single_select_subgroup.uid,
+            "activity_group_uid": single_select_group.uid,
+            "soa_group_term_uid": term_efficacy_uid,
+        },
+    )
+    assert_response_status_code(response, 201)
+    study_activity_uid = response.json()["study_activity_uid"]
+
+    # Auto-creation should have created one instance (the required one).
+    # Now manually add a second instance to exceed the allowed count, which
+    # also makes both instances' state REMOVE_INSTANCE.
+    response = api_client.post(
+        f"/studies/{test_study.uid}/study-activity-instances/batch",
+        json=[
+            {
+                "method": "POST",
+                "content": {
+                    "activity_instance_uid": extra_instance.uid,
+                    "study_activity_uid": study_activity_uid,
+                },
+            }
+        ],
+    )
+    assert_response_status_code(response, 207)
+
+    response = api_client.get(
+        f"/studies/{test_study.uid}/study-activity-instances",
+    )
+    assert_response_status_code(response, 200)
+    before_lock = response.json()["items"]
+    assert len(before_lock) == 2
+    for item in before_lock:
+        assert item["state"] == StudyActivityInstanceState.REMOVE_INSTANCE.value
+    sai_uids_at_lock = {item["study_activity_instance_uid"] for item in before_lock}
+    sai_to_delete = next(
+        item["study_activity_instance_uid"]
+        for item in before_lock
+        if item["activity_instance"]
+        and item["activity_instance"]["uid"] == extra_instance.uid
+    )
+
+    locked_version = TestUtils.lock_and_unlock_study(
+        test_study.uid,
+        reason_for_lock_term_uid=test_data_dict["reason_for_lock_terms"][0].term_uid,
+        reason_for_unlock_term_uid=test_data_dict["reason_for_unlock_terms"][
+            0
+        ].term_uid,
+    )
+
+    response = api_client.delete(
+        f"/studies/{test_study.uid}/study-activity-instances/{sai_to_delete}",
+    )
+    assert_response_status_code(response, 204)
+
+    response = api_client.get(
+        f"/studies/{test_study.uid}/study-activity-instances",
+    )
+    assert_response_status_code(response, 200)
+    draft_items = response.json()["items"]
+    latest_uids = {item["study_activity_instance_uid"] for item in draft_items}
+    assert sai_to_delete not in latest_uids
+    assert len(draft_items) == 1
+    assert draft_items[0]["state"] != StudyActivityInstanceState.REMOVE_INSTANCE.value
+
+    response = api_client.get(
+        f"/studies/{test_study.uid}/study-activity-instances",
+        params={"study_value_version": locked_version},
+    )
+    assert_response_status_code(response, 200)
+    locked_items = response.json()["items"]
+    locked_uids = {item["study_activity_instance_uid"] for item in locked_items}
+    assert sai_uids_at_lock == locked_uids
+    assert sai_to_delete in locked_uids
+    for item in locked_items:
+        assert item["state"] == StudyActivityInstanceState.REMOVE_INSTANCE.value
+
+    response = api_client.get(
+        f"/studies/{test_study.uid}/study-activity-instances/{sai_to_delete}",
+        params={"study_value_version": locked_version},
+    )
+    assert_response_status_code(response, 200)
+    assert response.json()["study_activity_instance_uid"] == sai_to_delete
+    assert response.json()["activity_instance"]["uid"] == extra_instance.uid
 
 
 def test_create_study_activity_instance(api_client):
@@ -1927,6 +2057,25 @@ def test_batch_operations(api_client):
         params={"sort_by": '{"activity_instance.name": true}'},
     )
     assert_response_status_code(response, 200)
+
+
+def test_batch_patch_without_study_activity_instance_uid(api_client):
+    test_study = TestUtils.create_study(project_number=project.project_number)
+
+    # The batch item's `content` is a union of the edit and the create payload.
+    # A PATCH body missing `study_activity_instance_uid` validates as the create
+    # payload, which does not carry the uid the PATCH needs.
+    response = api_client.post(
+        f"/studies/{test_study.uid}/study-activity-instances/batch",
+        json=[
+            {
+                "method": "PATCH",
+                "content": {"study_activity_uid": "StudyActivity_000001"},
+            },
+        ],
+    )
+    assert_response_status_code(response, 400)
+    assert response.json()["type"] == "ValidationException"
 
 
 def test_study_activity_instances_review_changes_batch(api_client):

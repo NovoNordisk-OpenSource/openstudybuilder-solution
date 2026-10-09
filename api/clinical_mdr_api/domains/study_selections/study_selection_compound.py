@@ -1,6 +1,7 @@
 import datetime
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
-from typing import Any, Callable, Iterable, Self
+from typing import Any, Self
 
 from clinical_mdr_api.domains.concepts.medicinal_product import MedicinalProductAR
 from clinical_mdr_api.domains.controlled_terminologies.utils import CtTermInfo
@@ -79,7 +80,7 @@ class StudySelectionCompoundVO:
             study_selection_uid = generate_uid_callback()
 
         if start_date is None:
-            start_date = datetime.datetime.now(datetime.timezone.utc)
+            start_date = datetime.datetime.now(datetime.UTC)
 
         # returns a new instance of the VO
         return StudySelectionCompoundVO(
@@ -104,7 +105,7 @@ class StudySelectionCompoundVO:
     def validate(
         self,
         selection_uid_by_details_callback: Callable[
-            ["StudySelectionCompoundVO"], str | None
+            [StudySelectionCompoundVO], str | None
         ] = lambda _: None,
         reason_for_missing_callback: Callable[[str], bool] = lambda _: True,
         compound_exist_callback: Callable[[str], bool] = lambda _: True,
@@ -216,7 +217,7 @@ class StudySelectionCompoundsAR:
         self,
         study_compound_selection: StudySelectionCompoundVO,
         selection_uid_by_details_callback: Callable[
-            ["StudySelectionCompoundVO"], str | None
+            [StudySelectionCompoundVO], str | None
         ],
         reason_for_missing_callback: Callable[[str], bool] = lambda _: True,
         compound_exist_callback: Callable[[str], bool] = lambda _: True,
@@ -245,8 +246,9 @@ class StudySelectionCompoundsAR:
             medicinal_product_exist_callback=medicinal_product_exist_callback,
             medicinal_product_callback=medicinal_product_callback,
         )
-        self._study_compounds_selection = self._study_compounds_selection + [
-            study_compound_selection
+        self._study_compounds_selection = [
+            *self._study_compounds_selection,
+            study_compound_selection,
         ]
 
     @classmethod
@@ -325,7 +327,7 @@ class StudySelectionCompoundsAR:
         self,
         updated_study_compound_selection: StudySelectionCompoundVO,
         selection_uid_by_details_callback: Callable[
-            ["StudySelectionCompoundVO"], str | None
+            [StudySelectionCompoundVO], str | None
         ],
         reason_for_missing_callback: Callable[[str], bool] = lambda _: True,
         compound_exist_callback: Callable[[str], bool] = lambda _: True,

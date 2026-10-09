@@ -69,16 +69,16 @@ extensions/
 
 ### Prerequisites
 - Python 3.14 installed
-- Pipenv installed
+- uv installed
 - Neo4j database running (configure `NEO4J_DSN` environment variable)
-- Dependencies installed: `pipenv sync --dev` (run from the `api` directory)
+- Dependencies installed: `uv sync --group dev` (run from the `api` directory)
 
 ### Start the Extensions API Server
 
 Run the development server with auto-reload:
 
 ```bash
-pipenv run extensions-api-dev
+uv run poe extensions-api-dev
 ```
 
 This will start the FastAPI application on `http://localhost:8009`
@@ -235,7 +235,7 @@ def test_get_example(api_client):
 Start the extensions API server:
 
 ```bash
-pipenv run extensions-api-dev
+uv run poe extensions-api-dev
 ```
 
 The extension will be automatically loaded and available at:
@@ -247,35 +247,35 @@ The extension will be automatically loaded and available at:
 Run all extension tests:
 
 ```bash
-pipenv run extensions-test
+uv run poe extensions-test
 ```
 
 Run schemathesis API tests:
 
 ```bash
-pipenv run extensions-schemathesis
+uv run poe extensions-schemathesis
 ```
 
-## Available Pipenv Commands
+## Available Commands
 
 The following commands are available for working with extensions:
 
-### `pipenv run extensions-api-dev`
+### `uv run poe extensions-api-dev`
 Starts the extensions API development server with auto-reload enabled on port 8009. This command launches a uvicorn server that automatically detects and loads all extensions from the `extensions/` folder. Any code changes will trigger an automatic reload, making it ideal for development. The API will be accessible at `http://localhost:8009` with interactive documentation at `/docs`.
 
-### `pipenv run extensions-openapi`
+### `uv run poe extensions-openapi`
 Generates the OpenAPI specification file for the extensions API. This command creates or updates the `extensions/openapi.json` file based on all registered endpoints from loaded extensions. The generated OpenAPI schema includes all extension routes, request/response models, authentication requirements, and endpoint documentation. This file is useful for API documentation, client SDK generation, and API testing tools.
 
-### `pipenv run extensions-lint`
-Runs PyLint static code analysis on all extension code. This command checks all Python files in the `extensions/` directory for code quality issues, potential bugs, style violations, and adherence to coding standards. It helps maintain consistent code quality across all extensions and catches common programming errors before they reach production.
+### `uv run poe extensions-lint`
+Runs Ruff static code analysis on all extension code. This command checks all Python files in the `extensions/` directory for code quality issues, potential bugs, style violations, and adherence to coding standards. It helps maintain consistent code quality across all extensions and catches common programming errors before they reach production.
 
-### `pipenv run extensions-test`
+### `uv run poe extensions-test`
 Executes the complete test suite for all extensions. This command runs pytest with coverage reporting enabled, testing all extension endpoints and functionality. Tests are run in parallel using pytest-xdist for faster execution, with coverage reports generated in both HTML and XML formats in `extensions/reports/`. The command automatically discovers and runs all test files in each extension's `tests/` directory, excluding authentication tests by default.
 
-### `pipenv run extensions-testauth`
+### `uv run poe extensions-testauth`
 Executes the authentication test suite for all extensions, with coverage reports generated in both HTML and XML formats in `extensions/reports/`.
 
-### `pipenv run extensions-schemathesis`
+### `uv run poe extensions-schemathesis`
 Performs automated API testing using Schemathesis, a property-based testing tool for OpenAPI/Swagger specs. This command generates test cases automatically from the OpenAPI schema and sends them to the running extensions API server. It validates that all endpoints conform to their OpenAPI specifications, checking for proper response codes, data types, and edge cases. The tool runs 100 test examples per endpoint and generates detailed reports in `extensions/reports/`, helping identify API contract violations and potential bugs.
 
 ## Available Utilities

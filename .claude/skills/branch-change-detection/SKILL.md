@@ -2,28 +2,28 @@
 name: branch-change-detection
 user-invocable: false
 disable-model-invocation: true
-description: "Internal shared helper — do NOT invoke directly; use /summarize-pr or the relevant per-component summarize/review skill instead (e.g. /summarize-pr-api). Defines the strict command protocol those skills delegate to for enumerating branch file changes, scoped to EITHER committed changes (ahead of origin/main) OR uncommitted changes (working tree + untracked), never mixed and never already-merged."
+description: "Internal shared helper — do NOT invoke directly; use /osb-summarize-pr or the relevant per-component summarize/review skill instead (e.g. /osb-summarize-pr-api). Defines the strict command protocol those skills delegate to for enumerating branch file changes, scoped to EITHER committed changes (ahead of origin/main) OR uncommitted changes (working tree + untracked), never mixed and never already-merged."
 ---
 
 # Branch Change Detection Protocol
 
-> **This skill is a shared helper; it is not meant to be invoked directly. Use the relevant per-component summarize/review skill instead** (e.g. `/summarize-pr-api`) — they include this protocol by reference.
+> **This skill is a shared helper; it is not meant to be invoked directly. Use the relevant per-component summarize/review skill instead** (e.g. `/osb-summarize-pr-api`) — they include this protocol by reference.
 
-This file defines the strict command protocol for enumerating branch changes against `origin/main`. It is included by reference from `/summarize-pr` and from the per-component summarize and review skills. Whoever follows it — a subagent those skills invoked, or the main loop itself — MUST use the `Read` tool to open this file and follow it exactly before producing any output.
+This file defines the strict command protocol for enumerating branch changes against `origin/main`. It is included by reference from `/osb-summarize-pr` and from the per-component summarize and review skills. Whoever follows it — a subagent those skills invoked, or the main loop itself — MUST use the `Read` tool to open this file and follow it exactly before producing any output.
 
 Note the two consumption patterns, both valid:
 
-- **Per-component skills** (`/summarize-pr-api`, `/summarize-pr-frontend`, `/review-api`, `/review-frontend`) push the protocol down into their single agent, which runs it and then applies an area filter.
-- **`/summarize-pr`** runs the protocol once in the main loop, then splits the resulting inventory across several parallel agents. Those agents are handed a final file list and are forbidden from re-running detection — running it N times would produce N inventories that can disagree.
+- **Per-component skills** (`/osb-summarize-pr-api`, `/osb-summarize-pr-frontend`, `/osb-review-api`, `/osb-review-frontend`) push the protocol down into their single agent, which runs it and then applies an area filter.
+- **`/osb-summarize-pr`** runs the protocol once in the main loop, then splits the resulting inventory across several parallel agents. Those agents are handed a final file list and are forbidden from re-running detection — running it N times would produce N inventories that can disagree.
 
 ## When to use
 
-- A parent skill (`/summarize-pr`, a per-component summarize/review skill, or another skill that explicitly delegates to this one) has instructed you to follow this protocol before producing output.
+- A parent skill (`/osb-summarize-pr`, a per-component summarize/review skill, or another skill that explicitly delegates to this one) has instructed you to follow this protocol before producing output.
 - You need a canonical, scope-safe enumeration of branch file changes to bound a downstream task.
 
 ## When NOT to use
 
-- **Do not invoke this skill directly from the slash-command menu.** It produces no user-facing output on its own — run the relevant per-component summarize/review skill instead (e.g. `/summarize-pr-api`).
+- **Do not invoke this skill directly from the slash-command menu.** It produces no user-facing output on its own — run the relevant per-component summarize/review skill instead (e.g. `/osb-summarize-pr-api`).
 - Do not use this protocol for arbitrary "what did I change?" questions outside the two supported scopes (committed-vs-`origin/main` and uncommitted-vs-`HEAD`). For example, diffs between two arbitrary commits, diffs against a non-`main` base branch, or cross-branch comparisons are out of scope.
 - Do not use this protocol when the task legitimately needs the full working-tree state regardless of commit boundaries (e.g. running a linter over all files) — the scope guards will abort or exclude relevant files.
 - Do not copy the commands into another skill ad-hoc; extend this file and delegate instead, so all consumers stay in sync.

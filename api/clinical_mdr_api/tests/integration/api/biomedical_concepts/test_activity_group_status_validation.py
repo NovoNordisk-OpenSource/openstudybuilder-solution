@@ -21,14 +21,6 @@ from clinical_mdr_api.tests.integration.utils.api import (
 from clinical_mdr_api.tests.integration.utils.utils import TestUtils
 from common.exceptions import BusinessLogicException
 
-# pylint: disable=unused-argument
-# pylint: disable=redefined-outer-name
-# pylint: disable=too-many-arguments
-# pylint: disable=unsubscriptable-object
-
-# pytest fixture functions have other fixture functions as arguments,
-# which pylint interprets as unused arguments
-
 
 @pytest.fixture(scope="module")
 def api_client(test_data):

@@ -2,16 +2,9 @@
 Tests for /studies/{study_uid}/study-activities endpoints
 """
 
-# pylint: disable=unused-argument
-# pylint: disable=redefined-outer-name
-# pylint: disable=too-many-arguments
-
-# pytest fixture functions have other fixture functions as arguments,
-# which pylint interprets as unused arguments
-
 import json
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 from unittest import mock
 
@@ -322,7 +315,7 @@ def test_data():
 
     global initial_ct_term_study_standard_test
     ct_term_name = "Flowchart Group Name"
-    ct_term_start_date = datetime(2020, 3, 25, tzinfo=timezone.utc)
+    ct_term_start_date = datetime(2020, 3, 25, tzinfo=UTC)
     initial_ct_term_study_standard_test = TestUtils.create_ct_term(
         codelist_uid=ct_term_codelist.codelist_uid,
         submission_value=ct_term_name,
@@ -337,7 +330,7 @@ def test_data():
     # patch the date of the latest HAS_VERSION FINAL relationship so it can be detected by the selected study_standard_Version
     params = {
         "uid": initial_ct_term_study_standard_test.term_uid,
-        "date": datetime(2020, 3, 26, tzinfo=timezone.utc),
+        "date": datetime(2020, 3, 26, tzinfo=UTC),
     }
     db.cypher_query(
         """
@@ -2411,7 +2404,7 @@ def test_study_activity_version_selecting_ct_package(api_client):
     TestUtils.set_study_standard_version(
         study_uid=study_for_ctterm_versioning.uid,
         package_name="SDTM CT 2020-03-27",
-        effective_date=datetime(2020, 3, 27, tzinfo=timezone.utc),
+        effective_date=datetime(2020, 3, 27, tzinfo=UTC),
     )
 
     # get study selection with previous ctterm
@@ -3281,6 +3274,113 @@ def test_study_activity_replacement_with_different_activities(api_client):
     assert_response_status_code(response, 204)
 
 
+def test_study_activity_replacement_activity_only_preserves_order(api_client):
+    # Replacing only the activity, while soa group/activity group/activity subgroup
+    # stay unchanged, must preserve the StudyActivity's order instead of resetting it to 1.
+    test_study = TestUtils.create_study(project_number=project.project_number)
+
+    first_sa = TestUtils.create_study_activity(
+        study_uid=test_study.uid,
+        activity_uid=randomized_activity.uid,
+        activity_group_uid=general_activity_group.uid,
+        activity_subgroup_uid=randomisation_activity_subgroup.uid,
+        soa_group_term_uid=term_efficacy_uid,
+    )
+    second_sa = TestUtils.create_study_activity(
+        study_uid=test_study.uid,
+        activity_uid=body_mes_activity.uid,
+        activity_group_uid=general_activity_group.uid,
+        activity_subgroup_uid=randomisation_activity_subgroup.uid,
+        soa_group_term_uid=term_efficacy_uid,
+    )
+    third_sa = TestUtils.create_study_activity(
+        study_uid=test_study.uid,
+        activity_uid=weight_activity.uid,
+        activity_group_uid=general_activity_group.uid,
+        activity_subgroup_uid=randomisation_activity_subgroup.uid,
+        soa_group_term_uid=term_efficacy_uid,
+    )
+
+    response = api_client.get(f"/studies/{test_study.uid}/study-activities")
+    assert_response_status_code(response, 200)
+    study_activities = response.json()["items"]
+    assert len(study_activities) == 3
+    third_sa_before = next(
+        sa
+        for sa in study_activities
+        if sa["study_activity_uid"] == third_sa.study_activity_uid
+    )
+    assert third_sa_before["order"] == 3
+    assert third_sa_before["study_activity_subgroup"]["order"] == 1
+
+    replacement_activity = TestUtils.create_activity(
+        name="Weight replacement activity",
+        activity_subgroups=[randomisation_activity_subgroup.uid],
+        activity_groups=[general_activity_group.uid],
+        library_name="Sponsor",
+    )
+
+    sibling_uids = {first_sa.study_activity_uid, second_sa.study_activity_uid}
+    response = api_client.get(
+        f"/studies/{test_study.uid}/study-activities/audit-trail/",
+    )
+    assert_response_status_code(response, 200)
+    sibling_audit_trail_before = [
+        entry
+        for entry in response.json()
+        if entry["study_activity_uid"] in sibling_uids
+    ]
+
+    # replace selected activity, keeping soa group/activity group/activity subgroup unchanged
+    response = api_client.patch(
+        f"/studies/{test_study.uid}/study-activities/{third_sa.study_activity_uid}/activity-replacements",
+        json={
+            "replacements": [
+                {
+                    "activity_uid": replacement_activity.uid,
+                    "activity_subgroup_uid": randomisation_activity_subgroup.uid,
+                    "activity_group_uid": general_activity_group.uid,
+                    "soa_group_term_uid": term_efficacy_uid,
+                }
+            ]
+        },
+    )
+    assert_response_status_code(response, 200)
+    res = response.json()
+    assert len(res) == 1
+    res = res[0]
+    assert res["activity"]["uid"] == replacement_activity.uid
+    assert res["order"] == 3
+    assert res["study_activity_subgroup"]["order"] == 1
+
+    response = api_client.get(f"/studies/{test_study.uid}/study-activities")
+    assert_response_status_code(response, 200)
+    study_activities = response.json()["items"]
+    assert len(study_activities) == 3
+    third_sa_after = next(
+        sa
+        for sa in study_activities
+        if sa["study_activity_uid"] == third_sa.study_activity_uid
+    )
+    assert third_sa_after["activity"]["uid"] == replacement_activity.uid
+    assert third_sa_after["order"] == 3
+    assert third_sa_after["study_activity_subgroup"]["order"] == 1
+    assert study_activities[0]["study_activity_uid"] == first_sa.study_activity_uid
+    assert study_activities[0]["order"] == 1
+
+    # Siblings left untouched by the replacement must not gain new audit trail entries
+    response = api_client.get(
+        f"/studies/{test_study.uid}/study-activities/audit-trail/",
+    )
+    assert_response_status_code(response, 200)
+    sibling_audit_trail_after = [
+        entry
+        for entry in response.json()
+        if entry["study_activity_uid"] in sibling_uids
+    ]
+    assert sibling_audit_trail_after == sibling_audit_trail_before
+
+
 def test_study_activity_placeholder_replacement_with_multiple_activities(api_client):
     """
     Test replacing a placeholder StudyActivity (activity in Requested library) with multiple activities.
@@ -3948,7 +4048,6 @@ def test_study_activity_reordering(api_client):
     assert study_activities[0]["order"] == 1
 
 
-# pylint: disable=too-many-statements
 def test_study_activity_placeholder_reordering(api_client):
     test_study = TestUtils.create_study(project_number=project.project_number)
     # create study activity
@@ -4767,8 +4866,8 @@ def test_batch_operations_for_combined_study_activity_and_activity_schedules(
                 "method": "POST",
                 "object": "StudyActivitySchedule",
                 "content": {
-                    "study_visit_uid": study_visit_uid,
-                    "study_activity_uid": randomisation_sactivity,
+                    "study_activity_uids": [randomisation_sactivity],
+                    "study_visit_uids": [study_visit_uid],
                 },
             },
         ],
@@ -4785,7 +4884,6 @@ def test_batch_operations_for_combined_study_activity_and_activity_schedules(
     assert_response_status_code(response, 200)
     study_activity_schedules = response.json()
     assert len(study_activity_schedules) == 1
-    schedule_uid = study_activity_schedules[0]["study_activity_schedule_uid"]
 
     response = api_client.post(
         f"/studies/{test_study.uid}/soa-edits/batch",
@@ -4798,10 +4896,11 @@ def test_batch_operations_for_combined_study_activity_and_activity_schedules(
                 },
             },
             {
-                "method": "DELETE",
+                "method": "POST",
                 "object": "StudyActivitySchedule",
                 "content": {
-                    "uid": schedule_uid,
+                    "study_activity_uids": [randomisation_sactivity],
+                    "study_visit_uids": [],
                 },
             },
         ],
@@ -4818,6 +4917,235 @@ def test_batch_operations_for_combined_study_activity_and_activity_schedules(
     assert_response_status_code(response, 200)
     study_activity_schedules = response.json()
     assert len(study_activity_schedules) == 0
+
+
+def test_soa_edits_batch_schedule_overwrite_diffs_visits(api_client):
+    test_study = TestUtils.create_study(project_number=project.project_number)
+
+    study_epoch = create_study_epoch("EpochSubType_0001", study_uid=test_study.uid)
+
+    def create_visit(time_value):
+        inputs = {
+            "study_uid": test_study.uid,
+            "study_epoch_uid": study_epoch.uid,
+            "visit_type": {"term_uid": "VisitType_0001"},
+            "show_visit": True,
+            "time_reference": {"term_uid": "VisitSubType_0005"},
+            "time_value": time_value,
+            "time_unit_uid": DAYUID,
+            "visit_class": "SINGLE_VISIT",
+            "visit_subclass": "SINGLE_VISIT",
+            "is_global_anchor_visit": False,
+        }
+        datadict = visits_basic_data.copy()
+        datadict.update(inputs)
+        response = api_client.post(
+            f"/studies/{test_study.uid}/study-visits",
+            json=datadict,
+        )
+        assert_response_status_code(response, 201)
+        return response.json()["uid"]
+
+    visit1_uid = create_visit(100)
+    visit2_uid = create_visit(200)
+    visit3_uid = create_visit(300)
+
+    response = api_client.post(
+        f"/studies/{test_study.uid}/soa-edits/batch",
+        json=[
+            {
+                "method": "POST",
+                "object": "StudyActivity",
+                "content": {
+                    "soa_group_term_uid": term_efficacy_uid,
+                    "activity_uid": weight_activity.uid,
+                    "activity_subgroup_uid": randomisation_activity_subgroup.uid,
+                    "activity_group_uid": general_activity_group.uid,
+                },
+            },
+        ],
+    )
+    assert_response_status_code(response, 207)
+    study_activity_uid = response.json()[0]["content"]["study_activity_uid"]
+
+    response = api_client.post(
+        f"/studies/{test_study.uid}/soa-edits/batch",
+        json=[
+            {
+                "method": "POST",
+                "object": "StudyActivitySchedule",
+                "content": {
+                    "study_activity_uids": [study_activity_uid],
+                    "study_visit_uids": [visit1_uid, visit2_uid],
+                },
+            },
+        ],
+    )
+    assert_response_status_code(response, 207)
+
+    response = api_client.get(f"/studies/{test_study.uid}/study-activity-schedules")
+    assert_response_status_code(response, 200)
+    schedules_by_visit = {
+        schedule["study_visit_uid"]: schedule["study_activity_schedule_uid"]
+        for schedule in response.json()
+    }
+    assert set(schedules_by_visit.keys()) == {visit1_uid, visit2_uid}
+    visit2_schedule_uid = schedules_by_visit[visit2_uid]
+
+    response = api_client.post(
+        f"/studies/{test_study.uid}/soa-edits/batch",
+        json=[
+            {
+                "method": "POST",
+                "object": "StudyActivitySchedule",
+                "content": {
+                    "study_activity_uids": [study_activity_uid],
+                    "study_visit_uids": [visit2_uid, visit3_uid],
+                },
+            },
+        ],
+    )
+    assert_response_status_code(response, 207)
+    returned_schedules = response.json()[0]["content"]
+    assert {schedule["study_visit_uid"] for schedule in returned_schedules} == {
+        visit2_uid,
+        visit3_uid,
+    }
+
+    response = api_client.get(f"/studies/{test_study.uid}/study-activity-schedules")
+    assert_response_status_code(response, 200)
+    schedules_by_visit = {
+        schedule["study_visit_uid"]: schedule["study_activity_schedule_uid"]
+        for schedule in response.json()
+    }
+    assert set(schedules_by_visit.keys()) == {visit2_uid, visit3_uid}
+    # the visit that stayed scheduled across both calls keeps the same schedule uid
+    assert schedules_by_visit[visit2_uid] == visit2_schedule_uid
+
+
+def test_soa_edits_batch_schedule_overwrite_applies_same_visits_to_multiple_activities(
+    api_client,
+):
+    test_study = TestUtils.create_study(project_number=project.project_number)
+
+    study_epoch = create_study_epoch("EpochSubType_0001", study_uid=test_study.uid)
+
+    def create_visit(time_value):
+        inputs = {
+            "study_uid": test_study.uid,
+            "study_epoch_uid": study_epoch.uid,
+            "visit_type": {"term_uid": "VisitType_0001"},
+            "show_visit": True,
+            "time_reference": {"term_uid": "VisitSubType_0005"},
+            "time_value": time_value,
+            "time_unit_uid": DAYUID,
+            "visit_class": "SINGLE_VISIT",
+            "visit_subclass": "SINGLE_VISIT",
+            "is_global_anchor_visit": False,
+        }
+        datadict = visits_basic_data
+        datadict.update(inputs)
+        response = api_client.post(
+            f"/studies/{test_study.uid}/study-visits",
+            json=datadict,
+        )
+        assert_response_status_code(response, 201)
+        return response.json()["uid"]
+
+    visit1_uid = create_visit(100)
+    visit2_uid = create_visit(200)
+
+    response = api_client.post(
+        f"/studies/{test_study.uid}/soa-edits/batch",
+        json=[
+            {
+                "method": "POST",
+                "object": "StudyActivity",
+                "content": {
+                    "soa_group_term_uid": term_efficacy_uid,
+                    "activity_uid": weight_activity.uid,
+                    "activity_subgroup_uid": randomisation_activity_subgroup.uid,
+                    "activity_group_uid": general_activity_group.uid,
+                },
+            },
+            {
+                "method": "POST",
+                "object": "StudyActivity",
+                "content": {
+                    "soa_group_term_uid": term_efficacy_uid,
+                    "activity_uid": weight_activity.uid,
+                    "activity_subgroup_uid": body_measurements_activity_subgroup.uid,
+                    "activity_group_uid": general_activity_group.uid,
+                },
+            },
+        ],
+    )
+    assert_response_status_code(response, 207)
+    activity1_uid = response.json()[0]["content"]["study_activity_uid"]
+    activity2_uid = response.json()[1]["content"]["study_activity_uid"]
+
+    # one POST/StudyActivitySchedule entry, sharing the same visit list across both
+    # activities, instead of one entry per activity/visit pair
+    response = api_client.post(
+        f"/studies/{test_study.uid}/soa-edits/batch",
+        json=[
+            {
+                "method": "POST",
+                "object": "StudyActivitySchedule",
+                "content": {
+                    "study_activity_uids": [activity1_uid, activity2_uid],
+                    "study_visit_uids": [visit1_uid, visit2_uid],
+                },
+            },
+        ],
+    )
+    assert_response_status_code(response, 207)
+    returned_schedules = response.json()[0]["content"]
+    assert {
+        (schedule["study_activity_uid"], schedule["study_visit_uid"])
+        for schedule in returned_schedules
+    } == {
+        (activity1_uid, visit1_uid),
+        (activity1_uid, visit2_uid),
+        (activity2_uid, visit1_uid),
+        (activity2_uid, visit2_uid),
+    }
+
+    response = api_client.get(f"/studies/{test_study.uid}/study-activity-schedules")
+    assert_response_status_code(response, 200)
+    schedules = response.json()
+    assert len(schedules) == 4
+    assert {
+        (schedule["study_activity_uid"], schedule["study_visit_uid"])
+        for schedule in schedules
+    } == {
+        (activity1_uid, visit1_uid),
+        (activity1_uid, visit2_uid),
+        (activity2_uid, visit1_uid),
+        (activity2_uid, visit2_uid),
+    }
+
+
+def test_soa_edits_batch_schedule_delete_not_supported(api_client):
+    test_study = TestUtils.create_study(project_number=project.project_number)
+
+    # DELETE/StudyActivitySchedule is no longer a supported shape for this endpoint -
+    # its content no longer matches any member of the request's content union, so the
+    # request is rejected by request validation before it reaches the service dispatcher.
+    response = api_client.post(
+        f"/studies/{test_study.uid}/soa-edits/batch",
+        json=[
+            {
+                "method": "DELETE",
+                "object": "StudyActivitySchedule",
+                "content": {
+                    "uid": "StudyActivitySchedule_000001",
+                },
+            },
+        ],
+    )
+    assert_response_status_code(response, 400)
+    assert response.json()["type"] == "RequestValidationError"
 
 
 def test_study_activities_review_changes_batch(api_client):

@@ -87,8 +87,12 @@ class CTCodelistAggregatedRepository:
             } AS rel_data_name,
             head([(codelist_root)-[:PAIRED_CODE_CODELIST]->(paired_codes_cl_root:CTCodelistRoot) | paired_codes_cl_root.uid]) AS paired_codes_codelist_uid,
             head([(codelist_root)<-[:PAIRED_CODE_CODELIST]-(paired_names_cl_root:CTCodelistRoot) | paired_names_cl_root.uid]) AS paired_names_codelist_uid,
-            head([(codelist_root)-[:PAIRED_CODE_CODELIST]->(pcr:CTCodelistRoot)-[:HAS_ATTRIBUTES_ROOT]->(:CTCodelistAttributesRoot)-[:LATEST]->(pcv:CTCodelistAttributesValue) | pcv.name]) AS paired_codes_codelist_name,
-            head([(codelist_root)<-[:PAIRED_CODE_CODELIST]-(pnr:CTCodelistRoot)-[:HAS_ATTRIBUTES_ROOT]->(:CTCodelistAttributesRoot)-[:LATEST]->(pnv:CTCodelistAttributesValue) | pnv.name]) AS paired_names_codelist_name
+            head([(codelist_root)-[:PAIRED_CODE_CODELIST]->(pcr:CTCodelistRoot)-[:HAS_ATTRIBUTES_ROOT]->
+                (:CTCodelistAttributesRoot)-[:LATEST]->(pcv:CTCodelistAttributesValue) |
+                pcv.name]) AS paired_codes_codelist_name,
+            head([(codelist_root)<-[:PAIRED_CODE_CODELIST]-(pnr:CTCodelistRoot)-[:HAS_ATTRIBUTES_ROOT]->
+                (:CTCodelistAttributesRoot)-[:LATEST]->(pnv:CTCodelistAttributesValue) |
+                pnv.name]) AS paired_names_codelist_name
         // Precedence (codes wins over names) must stay in sync with
         // _paired_codelist_info_from() in services/controlled_terminologies/ct_codelist.py,
         // which builds the same `paired_codelist` field for the API response.
@@ -839,6 +843,7 @@ class CTCodelistAggregatedRepository:
                 {{tnv: tnv}}
             ) YIELD value AS ts_props
             WITH
+            is_ts_term,
             ct_term_root.uid AS term_uid,
             ct_cl_term.submission_value AS submission_value,
             ht.order AS order,
@@ -861,6 +866,7 @@ class CTCodelistAggregatedRepository:
             tnv.required_level AS required_level,
             tnv.cardinality AS cardinality,
             tnv.notes AS notes,
+            tnv.short_code AS short_code,
             ts_props.osb_page_reference AS osb_page_reference,
             ts_props.osb_field_name AS osb_field_name,
             ts_props.semantic_data_type_uid AS semantic_data_type_uid,
@@ -869,7 +875,13 @@ class CTCodelistAggregatedRepository:
             ts_props.response_codelist_name AS response_codelist_name,
             ts_props.response_dictionary_uids AS response_dictionary_uids,
             ts_props.valid_null_flavor_term_uids AS valid_null_flavor_term_uids,
-            ts_props.valid_null_flavor_term_names AS valid_null_flavor_term_names
+            ts_props.valid_null_flavor_term_names AS valid_null_flavor_term_names,
+            CASE
+                WHEN is_ts_term AND coalesce($include_ts_parameters, true)
+                THEN head([(ct_term_root)<-[:HAS_TERM_ROOT]-(tn_clt:CTCodelistTerm)<-[tn_ht:HAS_TERM]-(:CTCodelistRoot {{uid: $ts_parm_codelist_uid}}) WHERE tn_ht.end_date IS NULL
+                    | tn_clt.submission_value])
+                ELSE null
+            END AS submission_value_test_name
 
         """
 
@@ -895,6 +907,7 @@ class CTCodelistAggregatedRepository:
             settings.ts_parmcd_codelist_uid,
             settings.ts_parm_codelist_uid,
         ]
+        query.parameters["ts_parm_codelist_uid"] = settings.ts_parm_codelist_uid
         query.parameters["include_ts_parameters"] = include_ts_parameters
         if package:
             query.parameters.update({"package": package})
@@ -972,8 +985,13 @@ class CTCodelistAggregatedRepository:
         # Build match_clause
         if package:
             match_clause = """
-                MATCH (codelist_root:CTCodelistRoot {uid: $codelist_uid})-[:HAS_ATTRIBUTES_ROOT]->(:CTCodelistAttributesRoot)-[:HAS_VERSION]->(:CTCodelistAttributesValue)<-[:CONTAINS_ATTRIBUTES]-(pcl:CTPackageCodelist)<-[:CONTAINS_CODELIST]-(:CTPackage {name: $package})
-                MATCH (codelist_root)-[ht:HAS_TERM]->(ct_cl_term:CTCodelistTerm)-[:HAS_TERM_ROOT]->(ct_term_root:CTTermRoot)-[:HAS_ATTRIBUTES_ROOT]->(tar:CTTermAttributesRoot)-[hav:HAS_VERSION {status: "Final"}]->(tav:CTTermAttributesValue)<-[:CONTAINS_ATTRIBUTES]-(:CTPackageTerm)<-[:CONTAINS_TERM]-(pcl)
+                MATCH (codelist_root:CTCodelistRoot {uid: $codelist_uid})-[:HAS_ATTRIBUTES_ROOT]->
+                    (:CTCodelistAttributesRoot)-[:HAS_VERSION]->(:CTCodelistAttributesValue)
+                    <-[:CONTAINS_ATTRIBUTES]-(pcl:CTPackageCodelist)<-[:CONTAINS_CODELIST]-(:CTPackage {name: $package})
+                MATCH (codelist_root)-[ht:HAS_TERM]->(ct_cl_term:CTCodelistTerm)-[:HAS_TERM_ROOT]->
+                    (ct_term_root:CTTermRoot)-[:HAS_ATTRIBUTES_ROOT]->(tar:CTTermAttributesRoot)
+                    -[hav:HAS_VERSION {status: "Final"}]->(tav:CTTermAttributesValue)
+                    <-[:CONTAINS_ATTRIBUTES]-(:CTPackageTerm)<-[:CONTAINS_TERM]-(pcl)
                 MATCH (library:Library)-[:CONTAINS_TERM]->(ct_term_root)-[:HAS_NAME_ROOT]->(tnr:CTTermNameRoot)-[:LATEST]->(tnv:CTTermNameValue)
             """
         else:
@@ -1054,6 +1072,7 @@ class CTCodelistAggregatedRepository:
                 {{tnv: tnv}}
             ) YIELD value AS ts_props
             WITH
+            is_ts_term,
             ct_term_root.uid AS term_uid,
             ct_cl_term.submission_value AS submission_value,
             ht.order AS order,
@@ -1076,6 +1095,7 @@ class CTCodelistAggregatedRepository:
             tnv.required_level AS required_level,
             tnv.cardinality AS cardinality,
             tnv.notes AS notes,
+            tnv.short_code AS short_code,
             ts_props.osb_page_reference AS osb_page_reference,
             ts_props.osb_field_name AS osb_field_name,
             ts_props.semantic_data_type_uid AS semantic_data_type_uid,
@@ -1084,7 +1104,13 @@ class CTCodelistAggregatedRepository:
             ts_props.response_codelist_name AS response_codelist_name,
             ts_props.response_dictionary_uids AS response_dictionary_uids,
             ts_props.valid_null_flavor_term_uids AS valid_null_flavor_term_uids,
-            ts_props.valid_null_flavor_term_names AS valid_null_flavor_term_names
+            ts_props.valid_null_flavor_term_names AS valid_null_flavor_term_names,
+            CASE
+                WHEN is_ts_term AND coalesce($include_ts_parameters, true)
+                THEN head([(ct_term_root)<-[:HAS_TERM_ROOT]-(tn_clt:CTCodelistTerm)<-[tn_ht:HAS_TERM]-(:CTCodelistRoot {{uid: $ts_parm_codelist_uid}}) WHERE tn_ht.end_date IS NULL
+                    | tn_clt.submission_value])
+                ELSE null
+            END AS submission_value_test_name
 
         """
 
@@ -1104,6 +1130,7 @@ class CTCodelistAggregatedRepository:
             settings.ts_parmcd_codelist_uid,
             settings.ts_parm_codelist_uid,
         ]
+        query.parameters["ts_parm_codelist_uid"] = settings.ts_parm_codelist_uid
         query.parameters["include_ts_parameters"] = include_ts_parameters
         if package:
             query.parameters.update({"package": package})

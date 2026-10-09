@@ -78,7 +78,6 @@ Possible errors:
         ],
     }
 )
-# pylint: disable=unused-argument
 def get_codelists(
     request: Request,  # request is actually required by the allow_exports decorator
     library_name: Annotated[str, DictionaryCodelistLibrary],

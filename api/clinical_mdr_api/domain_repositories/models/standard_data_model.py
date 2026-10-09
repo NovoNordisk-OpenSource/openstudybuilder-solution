@@ -179,7 +179,6 @@ class DataModelRoot(VersionRoot):
     )
 
 
-# pylint: disable=abstract-method
 class CatalogueVerRel(ClinicalMdrRel):
     version_number = StringProperty()
     catalogue = StringProperty()
@@ -317,13 +316,11 @@ class DatasetScenario(VersionRoot):
     )
 
 
-# pylint: disable=abstract-method
 class HasVariableClassRel(ClinicalMdrRel):
     ordinal = StringProperty()
     version_number = StringProperty()
 
 
-# pylint: disable=abstract-method
 class HasMappingTargetRel(ClinicalMdrRel):
     version_number = StringProperty()
 
@@ -392,7 +389,6 @@ class VariableClass(VersionRoot):
     )
 
 
-# pylint: disable=abstract-method
 class HasDatasetVariableRel(HasVariableClassRel):
     pass
 

@@ -1,5 +1,5 @@
 import unittest
-from typing import Iterable
+from collections.abc import Iterable
 
 from neomodel import db
 
@@ -1306,9 +1306,9 @@ class TestStudyVisitManagement(unittest.TestCase):
         )
 
         all_visits = visit_service.get_all_visits(study_uid=self.study.uid).items
-        unscheduled = [
+        unscheduled = next(
             v for v in all_visits if v.visit_class == VisitClass.UNSCHEDULED_VISIT
-        ][0]
+        )
         self.assertEqual(
             unscheduled.visit_short_name, f"V{settings.unscheduled_visit_number}"
         )
@@ -1826,7 +1826,7 @@ class TestStudyVisitManagement(unittest.TestCase):
             "max_visit_window_value",
         ]
         self.assertEqual(
-            f"Visit '{second_visit.visit_short_name}' and '{third_visit.visit_short_name}' have the following properties different {str(different_properties)}",
+            f"Visit '{second_visit.visit_short_name}' and '{third_visit.visit_short_name}' have the following properties different {different_properties!s}",
             message.exception.msg,
         )
 

@@ -1,13 +1,10 @@
 from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import Any, Generic, cast
+from typing import Any, cast
 
 from cachetools.keys import hashkey
 from neomodel import db
 
-from clinical_mdr_api.domain_repositories._generic_repository_interface import (
-    _AggregateRootType,
-)
 from clinical_mdr_api.domain_repositories.controlled_terminologies.ct_get_all_query_utils import (
     create_term_filter_statement,
     format_term_filter_sort_keys,
@@ -52,9 +49,7 @@ from common.exceptions import (
 )
 
 
-class CTTermGenericRepository(
-    LibraryItemRepositoryImplBase, Generic[_AggregateRootType], ABC
-):
+class CTTermGenericRepository[AggregateRootType](LibraryItemRepositoryImplBase, ABC):
     root_class = type
     value_class = type
     relationship_from_root: str
@@ -181,7 +176,9 @@ class CTTermGenericRepository(
         :return:
         """
         query = """
-            MATCH (term_root:CTTermRoot {uid: $uid})<-[:HAS_TERM_ROOT]-(codelist_term:CTCodelistTerm)<-[ht:HAS_TERM]-(:CTCodelistRoot)-[:HAS_ATTRIBUTES_ROOT]->(:CTCodelistAttributesRoot)-[:LATEST]->(cl_attr_value:CTCodelistAttributesValue {submission_value: $cl_submval})
+            MATCH (term_root:CTTermRoot {uid: $uid})<-[:HAS_TERM_ROOT]-(codelist_term:CTCodelistTerm)<-[ht:HAS_TERM]-(:CTCodelistRoot)
+                -[:HAS_ATTRIBUTES_ROOT]->(:CTCodelistAttributesRoot)-[:LATEST]->
+                (cl_attr_value:CTCodelistAttributesValue {submission_value: $cl_submval})
             RETURN ht.order as order
             """
         result, _ = db.cypher_query(query, {"uid": uid, "cl_submval": cl_submval})
@@ -197,17 +194,17 @@ class CTTermGenericRepository(
         relationship: VersionRelationship,
         value: ControlledTerminology,
         **_kwargs,
-    ) -> _AggregateRootType:
+    ) -> AggregateRootType:
         raise NotImplementedError
 
     @abstractmethod
     def _create_aggregate_root_instance_from_cypher_result(
         self, term_dict: dict[str, Any]
-    ) -> _AggregateRootType:
+    ) -> AggregateRootType:
         """
         Creates aggregate root instances from cypher query result.
         :param terms_dict:
-        :return _AggregateRootType:
+        :return AggregateRootType:
         """
         raise NotImplementedError
 
@@ -287,7 +284,7 @@ class CTTermGenericRepository(
         total_count: bool = False,
         include_ts_parameters: bool = True,
         **_kwargs,
-    ) -> GenericFilteringReturn[_AggregateRootType]:
+    ) -> GenericFilteringReturn[AggregateRootType]:
         """
         Method runs a cypher query to fetch all needed data to create objects of type AggregateRootType.
         In the case of the following repository it will be some Terms aggregates.
@@ -305,7 +302,7 @@ class CTTermGenericRepository(
         :param filter_by:
         :param filter_operator:
         :param total_count:
-        :return GenericFilteringReturn[_AggregateRootType]:
+        :return GenericFilteringReturn[AggregateRootType]:
         """
         BusinessLogicException.raise_if(
             self.relationship_from_root not in vars(CTTermRoot),
@@ -437,12 +434,12 @@ class CTTermGenericRepository(
 
     def _retrieve_term_from_cypher_res(
         self, result_array, attribute_names
-    ) -> list[_AggregateRootType]:
+    ) -> list[AggregateRootType]:
         """
         Method maps the result of the cypher query into real aggregate objects.
         :param result_array:
         :param attribute_names:
-        :return list[_AggregateRootType]:
+        :return list[AggregateRootType]:
         """
         terms_ars = []
         for term in result_array:
@@ -457,12 +454,12 @@ class CTTermGenericRepository(
 
     def get_syntax_template_type(
         self, syntax_node: SyntaxTemplateRoot
-    ) -> _AggregateRootType:
+    ) -> AggregateRootType:
         """
         This method returns the template type for the provided syntax.
 
         :param syntax_node: Syntax Root node
-        :return _AggregateRootType:
+        :return AggregateRootType:
         """
         type_node = syntax_node.has_type.get_or_none()
         if type_node:
@@ -518,17 +515,21 @@ class CTTermGenericRepository(
         for_update: bool = False,
         codelist_name: str | None = None,
         include_retired_versions: bool = False,
-    ) -> _AggregateRootType | None:
-        ct_term_root: CTTermRoot
+    ) -> AggregateRootType | None:
+        ct_term_root: CTTermRoot | None
         if not codelist_name:
             ct_term_root = CTTermRoot.nodes.get_or_none(uid=term_uid)
         else:
-            ct_term_root = CTTermRoot.nodes.filter(
+            # Filtering across a relationship makes neomodel return a row rather
+            # than the node itself, hence the subscript. `get_or_none` returns
+            # None when the term is not in the codelist, and callers handle that.
+            row = CTTermRoot.nodes.filter(
                 has_term_root__has_term__has_name_root__has_latest_value__name=codelist_name,
-            ).get_or_none(uid=term_uid)[0]
+            ).get_or_none(uid=term_uid)
+            ct_term_root = row[0] if row else None
         if ct_term_root is None:
             return None
-        # pylint: disable=unnecessary-dunder-call
+
         ct_term_version_root_node = ct_term_root.__getattribute__(
             self.relationship_from_root
         ).single()
@@ -558,7 +559,7 @@ class CTTermGenericRepository(
         status: LibraryItemStatus | None = None,
         at_specific_date: datetime | None = None,
         include_retired_versions: bool = False,
-    ) -> list[_AggregateRootType] | None:
+    ) -> list[AggregateRootType] | None:
         if not term_uids:
             return []
         params = {"term_uids": term_uids}
@@ -582,10 +583,10 @@ class CTTermGenericRepository(
 
         return term_ars
 
-    def get_all_versions(self, term_uid: str) -> list[_AggregateRootType] | None:
+    def get_all_versions(self, term_uid: str) -> list[AggregateRootType] | None:
         ct_term_root: CTTermRoot = CTTermRoot.nodes.get_or_none(uid=term_uid)
         if ct_term_root is not None:
-            # pylint: disable=unnecessary-dunder-call
+
             ct_term_ver_root_node = ct_term_root.__getattribute__(
                 self.relationship_from_root
             ).single()
@@ -596,7 +597,7 @@ class CTTermGenericRepository(
     @sb_clear_cache(
         caches=["cache_store_item_by_uid", "cache_store_term_by_uid_and_submval"]
     )
-    def save(self, item: _AggregateRootType) -> None:
+    def save(self, item: AggregateRootType) -> None:
         if item.uid is not None and item.repository_closure_data is None:
             self._create(item)
         elif item.uid is not None and not item.is_deleted:

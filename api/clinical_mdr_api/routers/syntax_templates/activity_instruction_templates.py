@@ -47,7 +47,8 @@ ActivityInstructionTemplateUID = Path(
 
 PARAMETERS_NOTE = """**Parameters in the 'name' property**:
 
-The 'name' of an activity instruction template may contain parameters, that can - and usually will - be replaced with concrete values once an activity instruction is created out of the activity instruction template.
+The 'name' of an activity instruction template may contain parameters, that can - and usually will - be replaced with concrete values once an activity instruction is created out of the activity
+  instruction template.
 
 Parameters are referenced by simple strings in square brackets [] that match existing parameters defined in the MDR repository.
 
@@ -129,7 +130,6 @@ Allowed parameters include : filter on fields, sort by field name with sort dire
         ],
     }
 )
-# pylint: disable=unused-argument
 def get_activity_instruction_templates(
     request: Request,  # request is actually required by the allow_exports decorator
     status: Annotated[
@@ -333,7 +333,6 @@ The returned versions are ordered by `start_date` descending (newest entries fir
         ],
     }
 )
-# pylint: disable=unused-argument
 def get_activity_instruction_template_versions(
     request: Request,  # request is actually required by the allow_exports decorator
     activity_instruction_template_uid: Annotated[str, ActivityInstructionTemplateUID],

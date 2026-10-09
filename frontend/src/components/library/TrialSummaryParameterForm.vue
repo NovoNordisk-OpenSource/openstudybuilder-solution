@@ -136,6 +136,14 @@
               data-cy="ts-param-notes"
             />
           </v-col>
+          <v-col v-if="showShortCode" cols="3">
+            <v-text-field
+              v-model="form.ts_parameter.short_code"
+              :label="$t('TrialSummaryParameterForm.short_code')"
+              clearable
+              data-cy="ts-param-short-code"
+            />
+          </v-col>
         </v-row>
 
         <v-divider class="my-4" />
@@ -171,19 +179,30 @@
         <v-row>
           <v-col cols="3">
             <v-text-field
-              v-model="form.nci_preferred_name"
-              :label="$t('TrialSummaryParameterForm.nci_preferred_term')"
-              clearable
-              data-cy="ts-param-nci-preferred-name"
-            />
-          </v-col>
-          <v-col cols="3">
-            <v-text-field
               v-model="form.submission_value"
               :label="$t('TrialSummaryParameterForm.submission_value')"
               :rules="[formRules.required]"
               clearable
               data-cy="ts-param-submission-value"
+            />
+          </v-col>
+          <v-col cols="3">
+            <v-text-field
+              v-model="form.submission_value_test_name"
+              :label="
+                $t('TrialSummaryParameterForm.test_name_submission_value')
+              "
+              :rules="[formRules.required]"
+              clearable
+              data-cy="ts-param-test-name-submission-value"
+            />
+          </v-col>
+          <v-col cols="3">
+            <v-text-field
+              v-model="form.nci_preferred_name"
+              :label="$t('TrialSummaryParameterForm.nci_preferred_term')"
+              clearable
+              data-cy="ts-param-nci-preferred-name"
             />
           </v-col>
           <v-col cols="3">
@@ -201,8 +220,8 @@
             <v-textarea
               v-model="form.definition"
               :label="$t('TrialSummaryParameterForm.definition')"
-              counter="300"
-              maxlength="300"
+              counter="1000"
+              maxlength="1000"
               rows="5"
               :rules="[formRules.required]"
               clearable
@@ -233,11 +252,17 @@ import CodelistSelectionForm from '@/components/library/CodelistSelectionForm.vu
 import controlledTerminology from '@/api/controlledTerminology'
 import { useEditableLibraries } from '@/composables/editableLibraries'
 import trialSummaryParameterConstants from '@/constants/trialSummaryParameters'
+import { useFeatureFlagsStore } from '@/stores/feature-flags'
 
 const { t } = useI18n()
 const notificationHub = inject('notificationHub')
 const formRules = inject('formRules')
 const formStore = useFormStore()
+const featureFlagsStore = useFeatureFlagsStore()
+
+const showShortCode = computed(() =>
+  featureFlagsStore.getFeatureFlag('ct_term_short_code')
+)
 
 const emit = defineEmits(['close', 'added'])
 
@@ -402,7 +427,7 @@ async function submit() {
         },
         {
           codelist_uid: 'C67152',
-          submission_value: form.value.submission_value,
+          submission_value: form.value.submission_value_test_name,
         },
       ],
       ts_parameter: {

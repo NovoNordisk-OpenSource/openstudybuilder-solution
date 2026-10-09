@@ -78,18 +78,14 @@ class ClinicalMdrNodeWithUID(ClinicalMdrNode):
         """
         object_name = cls.__name__.removesuffix("Root")
 
-        return str(
-            db.cypher_query("""
-        MERGE (m:Counter{{counterId:'{LABEL}Counter'}})
-        ON CREATE SET m:{LABEL}Counter, m.count=0
+        return str(db.cypher_query(f"""
+        MERGE (m:Counter{{counterId:'{object_name}Counter'}})
+        ON CREATE SET m:{object_name}Counter, m.count=0
         WITH m
         CALL apoc.atomic.add(m,'count',1,1) yield oldValue, newValue
         WITH newValue(newValue) as uid_number
-        RETURN "{LABEL}_"+apoc.text.lpad(""+(uid_number), {number_of_digits}, "0")
-        """.format(LABEL=object_name, number_of_digits=settings.number_of_uid_digits))[
-                0
-            ][0][0]
-        )
+        RETURN "{object_name}_"+apoc.text.lpad(""+(uid_number), {settings.number_of_uid_digits}, "0")
+        """)[0][0][0])
 
     @classmethod
     def generate_node_uids_if_not_present(cls) -> None:
@@ -100,17 +96,16 @@ class ClinicalMdrNodeWithUID(ClinicalMdrNode):
         node_label = cls.__name__
         object_name = node_label.removesuffix("Root")
 
-        db.cypher_query(
-            """
+        db.cypher_query(f"""
         // the new UIDs will start at the value from the memory node.
-        MERGE (m:Counter{{counterId:'{LABEL}Counter'}})
-        ON CREATE SET m:{LABEL}Counter, m.count=1
+        MERGE (m:Counter{{counterId:'{object_name}Counter'}})
+        ON CREATE SET m:{object_name}Counter, m.count=1
         WITH m
         CALL apoc.lock.nodes([m])
 
         // Then, get all newly created nodes of a specific label without assigned UID.
-        MATCH (n:{NODE_LABEL})
-        USING SCAN n:{NODE_LABEL}
+        MATCH (n:{node_label})
+        USING SCAN n:{node_label}
         WHERE n.uid is null
         WITH collect(n) as new_nodes, m
 
@@ -122,13 +117,8 @@ class ClinicalMdrNodeWithUID(ClinicalMdrNode):
         WITH new_nodes, range(0,size(new_nodes)-1) as indices, m.count - size(new_nodes) as start_uid_number
         UNWIND indices as index
         WITH new_nodes[index] as node, index + start_uid_number as uid_number
-        SET node.uid = "{LABEL}_"+apoc.text.lpad(""+(uid_number), {number_of_digits}, "0")
-        """.format(
-                LABEL=object_name,
-                NODE_LABEL=node_label,
-                number_of_digits=settings.number_of_uid_digits,
-            )
-        )
+        SET node.uid = "{object_name}_"+apoc.text.lpad(""+(uid_number), {settings.number_of_uid_digits}, "0")
+        """)
 
     def save(self):
         """
@@ -142,13 +132,13 @@ class ClinicalMdrNodeWithUID(ClinicalMdrNode):
                 else type(self).__name__
             )
 
-            new_uid = db.cypher_query("""
-            MERGE (m:Counter{{counterId:'{LABEL}Counter'}})
-            ON CREATE SET m:{LABEL}Counter, m.count=1
+            new_uid = db.cypher_query(f"""
+            MERGE (m:Counter{{counterId:'{object_name}Counter'}})
+            ON CREATE SET m:{object_name}Counter, m.count=1
             ON MATCH SET m.count = m.count + 1
             WITH m
             RETURN m.count as number
-            """.format(LABEL=object_name))[0][0][0]
+            """)[0][0][0]
             self.uid = (
                 str(object_name)
                 + "_"
@@ -157,7 +147,6 @@ class ClinicalMdrNodeWithUID(ClinicalMdrNode):
         return super().save()
 
 
-# pylint: disable=abstract-method
 class ClinicalMdrRel(StructuredRel):
     __abstract_node__ = True
     """
@@ -177,12 +166,10 @@ class ClinicalMdrRel(StructuredRel):
         }
 
 
-# pylint: disable=abstract-method
 class TemplateUsesParameterRelation(ClinicalMdrRel):
     position = IntegerProperty()
 
 
-# pylint: disable=abstract-method
 class ConjunctionRelation(ClinicalMdrRel):
     position = IntegerProperty()
     set_number = IntegerProperty()
@@ -193,7 +180,6 @@ class Library(ClinicalMdrNode):
     is_editable = BooleanProperty()
 
 
-# pylint: disable=abstract-method
 class VersionRelationship(ClinicalMdrRel):
     """
     A `VersionRelationship` represents a relationship between a `VersionRoot`
@@ -273,7 +259,7 @@ class VersionRoot(ClinicalMdrNodeWithUID):
     )
 
     def get_final_before(self, date_before: datetime.datetime):
-        # pylint: disable=no-member
+
         past_final_versions = self.has_version.match(
             start_date__lte=date_before,
             end_date__gte=date_before,
@@ -286,7 +272,7 @@ class VersionRoot(ClinicalMdrNodeWithUID):
         return None
 
     def get_retired_before(self, date_before: datetime.datetime):
-        # pylint: disable=no-member
+
         past_retired_versions = self.has_version.match(
             start_date__lte=date_before,
             end_date__gte=date_before,
@@ -299,7 +285,7 @@ class VersionRoot(ClinicalMdrNodeWithUID):
         return None
 
     def get_value_for_version(self, version: str):
-        # pylint: disable=no-member
+
         matching_values = self.latest_final.match(version=version)
         if len(matching_values) == 0:
             matching_values = self.latest_draft.match(version=version)
@@ -312,7 +298,7 @@ class VersionRoot(ClinicalMdrNodeWithUID):
         return None
 
     def get_relation_for_version(self, version: str):
-        # pylint: disable=no-member
+
         value = self.get_value_for_version(version)
         relationships = self.latest_final.all_relationships(value)
         if len(relationships) == 0:
@@ -327,17 +313,13 @@ class VersionRoot(ClinicalMdrNodeWithUID):
         return None
 
     def get_instantiations_count(self):
-        cypher_query = """
-        MATCH (ot:{template_label} {{uid: "{uid}" }})
-        CALL (ot) {{MATCH (ot)-[:{relation_label}]->(obr)-[:LATEST_FINAL]-> (obv) RETURN count(obv) as finals}}
-        CALL (ot) {{MATCH (ot)-[:{relation_label}]->(obr)-[:LATEST_DRAFT]-> (obv) RETURN count(obv) as drafts}}
-        CALL (ot) {{MATCH (ot)-[:{relation_label}]->(obr)-[:LATEST_RETIRED]-> (obv) RETURN count(obv) as retired}}
+        cypher_query = f"""
+        MATCH (ot:{self.__label__} {{uid: "{self.uid}" }})
+        CALL (ot) {{MATCH (ot)-[:{self.TEMPLATE_REL_LABEL}]->(obr)-[:LATEST_FINAL]-> (obv) RETURN count(obv) as finals}}
+        CALL (ot) {{MATCH (ot)-[:{self.TEMPLATE_REL_LABEL}]->(obr)-[:LATEST_DRAFT]-> (obv) RETURN count(obv) as drafts}}
+        CALL (ot) {{MATCH (ot)-[:{self.TEMPLATE_REL_LABEL}]->(obr)-[:LATEST_RETIRED]-> (obv) RETURN count(obv) as retired}}
         RETURN  finals, drafts, retired
-        """.format(
-            template_label=self.__label__,
-            uid=self.uid,
-            relation_label=self.TEMPLATE_REL_LABEL,
-        )
+        """
 
         counts, _ = db.cypher_query(cypher_query)
         return counts[0]

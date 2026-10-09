@@ -1,8 +1,9 @@
 import copy
 import random
 import unittest
+from collections.abc import Callable, Sequence, Set
 from dataclasses import dataclass, field
-from typing import AbstractSet, Any, Callable, Generic, Sequence, TypeVar, cast
+from typing import Any, cast
 
 from clinical_mdr_api.domain_repositories.models.study_field import StudyBooleanField
 from clinical_mdr_api.domain_repositories.study_definitions.study_definition_repository import (
@@ -31,11 +32,9 @@ from clinical_mdr_api.services._utils import service_level_generic_filtering
 from clinical_mdr_api.tests.unit.domain.utils import random_str
 from common.exceptions import BusinessLogicException
 
-T = TypeVar("T")
-
 
 @dataclass
-class GenericInMemoryDB(Generic[T]):
+class GenericInMemoryDB[T]:
     _db: dict[str, Any] = field(init=False, default_factory=dict)
 
     def find_by_id(self, aggregate_id: str) -> T | None:
@@ -47,7 +46,7 @@ class GenericInMemoryDB(Generic[T]):
     def find_by_filter(self, filter_callback: Callable[[T], bool]) -> list[T]:
         return [x for x in self.get_all_instances() if filter_callback(x)]
 
-    def get_all_ids(self) -> AbstractSet[str]:
+    def get_all_ids(self) -> Set[str]:
         return self._db.keys()
 
     def get_all_instances(self) -> list[T]:
@@ -400,8 +399,7 @@ class TestStudyDefinitionsRepositoryBase(unittest.TestCase):
             project_number=random_str(),
         )
         return StudyDefinitionAR.from_initial_values(
-            # pylint: disable=unnecessary-lambda
-            generate_uid_callback=lambda: random_str(),
+            generate_uid_callback=random_str,
             initial_id_metadata=new_id_metadata,
             project_exists_callback=lambda _: True,
             study_number_exists_callback=lambda _x, y: False,

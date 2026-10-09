@@ -1,6 +1,6 @@
 import abc
 from datetime import datetime
-from typing import Any, Generic, TypeVar
+from typing import Any
 
 from neomodel import db
 from pydantic import BaseModel
@@ -17,14 +17,12 @@ from clinical_mdr_api.utils import normalize_string
 from common.auth.user import user
 from common.exceptions import NotFoundException
 
-_AggregateRootType = TypeVar("_AggregateRootType")
 
-
-class CTCodelistGenericService(Generic[_AggregateRootType], abc.ABC):
+class CTCodelistGenericService[AggregateRootType](abc.ABC):
     @abc.abstractmethod
     def _transform_aggregate_root_to_pydantic_model(
-        self, item_ar: _AggregateRootType
-    ) -> _AggregateRootType:
+        self, item_ar: AggregateRootType
+    ) -> AggregateRootType:
         raise NotImplementedError
 
     def get_input_or_previous_property(
@@ -46,7 +44,7 @@ class CTCodelistGenericService(Generic[_AggregateRootType], abc.ABC):
         self._repos.close()
 
     @property
-    def repository(self) -> CTCodelistGenericRepository[_AggregateRootType]:
+    def repository(self) -> CTCodelistGenericRepository[AggregateRootType]:
         assert self._repos is not None
         return self.repository_interface()
 
@@ -62,7 +60,7 @@ class CTCodelistGenericService(Generic[_AggregateRootType], abc.ABC):
         filter_by: dict[str, dict[str, Any]] | None = None,
         filter_operator: FilterOperator = FilterOperator.AND,
         total_count: bool = False,
-    ) -> GenericFilteringReturn[_AggregateRootType]:
+    ) -> GenericFilteringReturn[AggregateRootType]:
         self.enforce_catalogue_library_package(catalogue_name, library, package)
 
         all_ct_codelists = self.repository.find_all(
@@ -132,7 +130,7 @@ class CTCodelistGenericService(Generic[_AggregateRootType], abc.ABC):
         at_specific_date: datetime | None = None,
         status: LibraryItemStatus | None = None,
         for_update: bool = False,
-    ) -> _AggregateRootType:
+    ) -> AggregateRootType:
         item = self.repository.find_by_uid(
             codelist_uid=codelist_uid,
             at_specific_date=at_specific_date,

@@ -89,7 +89,7 @@ instances, and attached attributes. The table has the following column headers:
 
 | Header  | Short explanation   |
 |---------|---------------------|
-| State/Action | This column indicates the current status of an activity or activity instance, or the action required. Possible states/actions are: Review not needed, Review needed, Reviewed, Add instance, Remove instance, Not applicable, Reviewed |
+| State/Action | This column indicates the current status of an activity or activity instance, or the action required. Possible states/actions are: Review not needed, Review needed, Reviewed, Add instance, Remove instance, Not applicable |
 | Library | Will usually be 'Sponsor' |
 | SoA Group | The selected SoA group from the Study Activity |
 | Activity Group | The Activity Group, that the selected study activity belongs to, e.g. AE Requiring Additional Data |
@@ -100,7 +100,7 @@ instances, and attached attributes. The table has the following column headers:
 | Topic Code | Code used to convert collected data to SDTM, e.g. ALBUMIN_N_URINE |
 | Test name code | Displays the test name code item linked to the activity instance |
 | Specimen | Displays the specimen activity item linked to the activity instance |
-| Standard unit | Displays the standar unit item linked to the activity instance |
+| Standard unit | Displays the standard unit item linked to the activity instance |
 | ADaM param Code | The code used in ADaM e.g. ALBU |
 | Important | An activity–activity instance pair can be marked as Important by editing the Activity–Instance relationship or by switching the table to edit mode. |
 | Baseline visits | Link an activity–activity instance pair to baseline visits by editing the Activity–Instance relationship or by switching the table to edit mode. |
@@ -152,7 +152,7 @@ a single activity may contain several questions (activity instances).
 | <font style="background-color:yellow;">Yellow</font> | Review needed | Requires attention from the user; user must verify that the activity–activity instance pair satisfies the study requirements |
 | <font style="background-color:green;">Green</font> | Reviewed | No additional action is required by the user, as the activity–activity instance pair has been confirmed as reviewed |
 | <font style="background-color:red;">Red</font> | Add instance | Requires action from the user; the activity is expected to be linked with an activity instance |
-| <font style="background-color:red;">Red</font> | Remove instance | Requires user action; the activity may be linked to only a single instance at the study level |
+| <font style="background-color:red;">Red</font> | Remove instance | Requires user action; the activity may only be linked to a single instance at the study level but is currently linked to multiple instances |
 | <font style="background-color:grey;">Grey</font> | Not applicable | Requires no action from the user; the activity is not expected to be linked with an activity instance |
 
 Independent of the state or actions, it is advisable to check all content for a

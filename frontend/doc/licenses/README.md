@@ -22,7 +22,7 @@ it will still get used, but it's not recommended.)
 ## Testing the SBOM build
 
 ```shell
-pipenv run build-sbom
+npm run build-sbom
 ```
 
 The sbom-build script lives in the `build-tools` repository,

@@ -3,6 +3,7 @@
     :model-value="dialog"
     :max-width="options.width"
     persistent
+    scrollable
     :style="{ zIndex: options.zIndex }"
     @keydown.esc="cancel"
   >
@@ -10,63 +11,69 @@
       <v-card-title v-if="options.title" class="dialogText">
         {{ options.title }}
       </v-card-title>
-      <v-card-text v-if="savedMessage" class="pt-2 dialogText">
-        <v-row no-gutters class="align-center pa-2">
-          <v-col cols="12">
-            <slot name="body">
-              <div
-                class="text-body-large mt-1"
-                v-html="sanitizeHTML(savedMessage)"
-              />
-            </slot>
-          </v-col>
-        </v-row>
+      <template v-if="savedMessage">
+        <v-card-text class="pt-2 dialogText">
+          <v-row no-gutters class="align-center pa-2">
+            <v-col cols="12">
+              <slot name="body">
+                <div
+                  class="text-body-large mt-1"
+                  v-html="sanitizeHTML(savedMessage)"
+                />
+              </slot>
+            </v-col>
+          </v-row>
+        </v-card-text>
         <v-divider class="pa-2" />
-        <v-row>
-          <v-col class="text-center">
-            <v-btn
-              v-if="!options.noCancel"
-              :color="options.cancelIsPrimaryAction ? btnClasses : ''"
-              :variant="options.cancelIsPrimaryAction ? 'elevated' : 'outlined'"
-              :disabled="props.cancelDisabled"
-              data-cy="cancel-popup"
-              class="mr-4"
-              rounded="xl"
-              @click="cancel"
-            >
-              {{ options.cancelLabel }}
-            </v-btn>
-            <slot name="actions">
+        <v-card-actions>
+          <v-row>
+            <v-col class="text-center">
               <v-btn
-                v-if="options.redirect === null"
-                :color="options.cancelIsPrimaryAction ? '' : btnClasses"
+                v-if="!options.noCancel"
+                :color="options.cancelIsPrimaryAction ? btnClasses : ''"
                 :variant="
-                  options.cancelIsPrimaryAction ? 'outlined' : 'elevated'
+                  options.cancelIsPrimaryAction ? 'elevated' : 'outlined'
                 "
-                :disabled="props.agreeDisabled"
+                :disabled="props.cancelDisabled"
+                data-cy="cancel-popup"
+                class="mr-4"
                 rounded="xl"
-                data-cy="continue-popup"
-                @click="agree"
+                @click="cancel"
               >
-                {{ options.agreeLabel }}
+                {{ options.cancelLabel }}
               </v-btn>
-              <v-btn
-                v-else
-                data-cy="continue-popup"
-                :color="options.cancelIsPrimaryAction ? '' : btnClasses"
-                :variant="
-                  options.cancelIsPrimaryAction ? 'outlined' : 'elevated'
-                "
-                :disabled="props.agreeAndRedirectDisabled"
-                rounded="xl"
-                @click="agreeAndRedirect"
-              >
-                {{ options.agreeLabel }}
-              </v-btn>
-            </slot>
-          </v-col>
-        </v-row>
-      </v-card-text>
+              <slot name="actions">
+                <v-btn
+                  v-if="options.redirect === null"
+                  :color="options.cancelIsPrimaryAction ? '' : btnClasses"
+                  :variant="
+                    options.cancelIsPrimaryAction ? 'outlined' : 'elevated'
+                  "
+                  :disabled="props.agreeDisabled"
+                  rounded="xl"
+                  data-cy="continue-popup"
+                  @click="agree"
+                >
+                  {{ options.agreeLabel }}
+                </v-btn>
+                <v-btn
+                  v-else
+                  data-cy="continue-popup"
+                  :color="options.cancelIsPrimaryAction ? '' : btnClasses"
+                  :variant="
+                    options.cancelIsPrimaryAction ? 'outlined' : 'elevated'
+                  "
+                  :disabled="props.agreeAndRedirectDisabled"
+                  rounded="xl"
+                  @click="agreeAndRedirect"
+                >
+                  {{ options.agreeLabel }}
+                </v-btn>
+              </slot>
+            </v-col>
+          </v-row>
+        </v-card-actions>
+      </template>
     </v-card>
   </v-dialog>
 </template>

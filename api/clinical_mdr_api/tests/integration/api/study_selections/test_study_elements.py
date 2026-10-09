@@ -2,15 +2,8 @@
 Tests for /studies/{study_uid}/study-elements endpoints
 """
 
-# pylint: disable=unused-argument
-# pylint: disable=redefined-outer-name
-# pylint: disable=too-many-arguments
-
-# pytest fixture functions have other fixture functions as arguments,
-# which pylint interprets as unused arguments
-
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 from unittest import mock
 
@@ -71,7 +64,7 @@ def test_data():
     TestUtils.set_study_standard_version(
         study_uid=study.uid,
     )
-    ct_term_start_date = datetime(2020, 3, 25, tzinfo=timezone.utc)
+    ct_term_start_date = datetime(2020, 3, 25, tzinfo=UTC)
     element_subtype_codelist = TestUtils.create_ct_codelist(
         name=settings.study_element_subtype_name,
         sponsor_preferred_name=settings.study_element_subtype_name,
@@ -122,7 +115,7 @@ def test_data():
     # patch the date of the latest HAS_VERSION FINAL relationship so it can be detected by the selected study_standard_Version
     params = {
         "uid": initial_ct_term_study_standard_test.term_uid,
-        "date": datetime(2020, 3, 26, tzinfo=timezone.utc),
+        "date": datetime(2020, 3, 26, tzinfo=UTC),
     }
     # adjust term name start_date of the 1.0 final
     db.cypher_query(
@@ -399,7 +392,7 @@ def test_study_element_version_selecting_ct_package(api_client):
     TestUtils.set_study_standard_version(
         study_uid=study_for_ctterm_versioning.uid,
         package_name="SDTM CT 2020-03-27",
-        effective_date=datetime(2020, 3, 27, tzinfo=timezone.utc),
+        effective_date=datetime(2020, 3, 27, tzinfo=UTC),
     )
 
     # get study selection with previous ctterm

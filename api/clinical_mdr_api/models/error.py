@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Annotated
 
 from pydantic import Field
@@ -21,7 +21,5 @@ class BatchErrorResponse(BaseModel):
 
     def __init__(self, **data) -> None:
         if "time" not in data:
-            data["time"] = datetime.now(timezone.utc).strftime(
-                settings.date_time_format
-            )
+            data["time"] = datetime.now(UTC).strftime(settings.date_time_format)
         super().__init__(**data)

@@ -2,15 +2,8 @@
 Tests for /studies/{study_uid}/study-data-suppliers endpoints
 """
 
-# pylint: disable=unused-argument
-# pylint: disable=redefined-outer-name
-# pylint: disable=too-many-arguments
-
-# pytest fixture functions have other fixture functions as arguments,
-# which pylint interprets as unused arguments
-
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 import pytest
@@ -98,7 +91,7 @@ def test_data(api_client):
         sponsor_preferred_name="Type",
         order=1,
         catalogue_name=settings.sdtm_ct_catalogue_name,
-        effective_date=datetime(2020, 3, 25, tzinfo=timezone.utc),
+        effective_date=datetime(2020, 3, 25, tzinfo=UTC),
         approve=True,
     )
     supplier_type2 = TestUtils.create_ct_term(
@@ -107,7 +100,7 @@ def test_data(api_client):
         sponsor_preferred_name="Type2",
         order=2,
         catalogue_name=settings.sdtm_ct_catalogue_name,
-        effective_date=datetime(2020, 3, 25, tzinfo=timezone.utc),
+        effective_date=datetime(2020, 3, 25, tzinfo=UTC),
         approve=True,
     )
 
@@ -166,7 +159,7 @@ def test_data(api_client):
 
     params = {
         "uid": supplier_type.term_uid,
-        "date": datetime(2020, 3, 26, tzinfo=timezone.utc),
+        "date": datetime(2020, 3, 26, tzinfo=UTC),
     }
     db.cypher_query(
         """
@@ -181,7 +174,7 @@ def test_data(api_client):
 
     params = {
         "uid": supplier_type_codelist.codelist_uid,
-        "date": datetime(2020, 3, 26, tzinfo=timezone.utc),
+        "date": datetime(2020, 3, 26, tzinfo=UTC),
     }
     db.cypher_query(
         """
@@ -928,7 +921,7 @@ def test_study_data_supplier_type_version_selecting_ct_package(api_client):
     ct_package_uid = TestUtils.create_ct_package(
         name="SDTM CT 2020-03-27",
         approve_elements=False,
-        effective_date=datetime(2020, 3, 27, tzinfo=timezone.utc),
+        effective_date=datetime(2020, 3, 27, tzinfo=UTC),
     )
 
     response = api_client.patch(

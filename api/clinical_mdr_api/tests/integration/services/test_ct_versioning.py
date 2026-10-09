@@ -1,5 +1,3 @@
-# pylint: disable=unused-argument,redefined-outer-name
-
 import logging
 
 import pytest

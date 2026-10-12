@@ -570,7 +570,6 @@
       :term-uid="termUid"
       :codelist-uid="selectedCodelist?.codelist_uid"
       :submission-value="selectedCodelist?.submission_value"
-      :submission-values="listSubmissionValues()"
       :codelist-name="selectedCodelist?.codelist_name"
       :term-name="termNames.sponsor_preferred_name"
       :order="selectedCodelist?.order"

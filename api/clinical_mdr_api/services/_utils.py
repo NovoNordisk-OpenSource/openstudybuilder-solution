@@ -2,11 +2,11 @@ import dataclasses
 import functools
 import inspect
 import json
-from collections.abc import Hashable
+from collections.abc import Callable, Hashable, Mapping, MutableMapping, Set
 from dataclasses import dataclass
 from enum import Enum
 from time import time
-from typing import AbstractSet, Any, Callable, Mapping, MutableMapping, Self, TypeVar
+from typing import Any, Self, TypeVar
 
 from neomodel.sync_.database import Database
 from neomodel.sync_.transaction import TransactionProxy
@@ -29,6 +29,7 @@ from clinical_mdr_api.repositories._utils import (
     FilterDict,
     FilterOperator,
 )
+from common.config import settings
 from common.exceptions import ValidationException
 from common.telemetry import trace_block, trace_calls
 from common.utils import get_field_type
@@ -213,13 +214,13 @@ def fill_missing_values_in_base_model_from_reference_base_model(
 
 @dataclass(frozen=True)
 class FieldsDirective:
-    _included_fields: AbstractSet[str]
-    _excluded_fields: AbstractSet[str]
-    _nested_fields_directives: Mapping[str, "FieldsDirective"]
+    _included_fields: Set[str]
+    _excluded_fields: Set[str]
+    _nested_fields_directives: Mapping[str, FieldsDirective]
 
     @classmethod
     def _from_include_and_exclude_spec_sets(
-        cls, include_spec_set: AbstractSet[str], exclude_spec_set: AbstractSet[str]
+        cls, include_spec_set: Set[str], exclude_spec_set: Set[str]
     ) -> Self:
         _included_fields: set[str] = set()
         _excluded_fields: set[str] = set()
@@ -291,14 +292,15 @@ class FieldsDirective:
             exclude_spec = False
             if field_spec[0] == "-":
                 exclude_spec = True
-            if field_spec[0] == "-" or field_spec[0] == "+":
-                field_spec = field_spec[1:]
-            if len(field_spec) < 1:
+            parsed_field_spec = field_spec
+            if parsed_field_spec[0] == "-" or parsed_field_spec[0] == "+":
+                parsed_field_spec = parsed_field_spec[1:]
+            if len(parsed_field_spec) < 1:
                 continue
             if exclude_spec:
-                exclude_specs_set.add(field_spec)
+                exclude_specs_set.add(parsed_field_spec)
             else:
-                include_specs_set.add(field_spec)
+                include_specs_set.add(parsed_field_spec)
 
         return cls._from_include_and_exclude_spec_sets(
             include_spec_set=include_specs_set, exclude_spec_set=exclude_specs_set
@@ -358,12 +360,10 @@ class FieldsDirective:
 
 _ANYTHING_GOES_FIELDS_DIRECTIVE = FieldsDirective.from_fields_query_parameter(None)
 
-_SomeBaseModelSubtype = TypeVar("_SomeBaseModelSubtype", bound=BaseModel)
 
-
-def filter_base_model_using_fields_directive(
-    input_base_model: _SomeBaseModelSubtype, fields_directive: FieldsDirective
-) -> _SomeBaseModelSubtype:
+def filter_base_model_using_fields_directive[SomeBaseModelSubtype: BaseModel](
+    input_base_model: SomeBaseModelSubtype, fields_directive: FieldsDirective
+) -> SomeBaseModelSubtype:
     args_dict_for_result_object = {}
     for field_name in input_base_model.model_fields_set:
         if fields_directive.is_field_included(field_name):
@@ -383,6 +383,7 @@ def create_duration_object_from_api_input(
     value: int | None,
     unit: str,
     find_duration_name_by_code: Callable[..., UnitDefinitionAR | None],
+    find_all_study_time_units: Callable[..., tuple[list[UnitDefinitionAR], int]],
 ) -> str | None:
     """
     Transforms the API duration input to the ISO duration format.
@@ -392,18 +393,30 @@ def create_duration_object_from_api_input(
         unit (str): The duration unit.
         find_duration_name_by_code (Callable[[str], UnitDefinitionAR | None]): A function that finds the duration name
             by its code.
+        find_all_study_time_units (Callable[..., tuple[list[UnitDefinitionAR], int]]): A function that returns the
+            units of a given subset, used to reject units the stored ISO duration could not be resolved back to.
 
     Returns:
         str | None: The ISO duration format, or None if the duration unit is not valid.
 
     Example:
-        >>> create_duration_object_from_api_input(5, "Hour", find_duration_name_by_code)
+        >>> create_duration_object_from_api_input(5, "Hour", find_duration_name_by_code, find_all_study_time_units)
         "P5H"
     """
     unit_definition_ar = find_duration_name_by_code(unit) if unit is not None else None
     if unit_definition_ar is not None:
         duration_unit = unit_definition_ar.name
-        duration = f"P{str(value)}{duration_unit[0].upper()}"
+        # The stored ISO duration is resolved back to a unit only within the study time
+        # subset; a unit outside it (e.g. months, hours) would silently read back as null.
+        study_time_units, _ = find_all_study_time_units(
+            subset=settings.study_time_unit_subset
+        )
+        ValidationException.raise_if(
+            all(study_time_unit.uid != unit for study_time_unit in study_time_units),
+            msg=f"Unit '{duration_unit}' is not a valid unit for a duration field. "
+            f"Only units in the '{settings.study_time_unit_subset}' subset are supported.",
+        )
+        duration = f"P{value!s}{duration_unit[0].upper()}"
         return duration
     return None
 
@@ -591,39 +604,70 @@ def generic_item_filtering(
             raise ValidationException(msg=f"Invalid filter_operator: {filter_operator}")
 
         # Do sorting
-        distinct_sort_orders = set(list(sort_by.values()))
-        # If all orders for SortKeys are the same we can order the list in a single sort function call
-        if len(distinct_sort_orders) == 1:
-            filtered_items.sort(
-                key=lambda x: [
-                    (
-                        elm
-                        if (elm := extract_nested_key_value(x, sort_key)) is not None
-                        else (
-                            "-1"
-                            if issubclass(extract_nested_key_type(x, sort_key), str)
-                            else -1
-                        )
-                    )
-                    for sort_key in sort_by.keys()
-                ],
-                reverse=not distinct_sort_orders.pop(),
+        distinct_sort_orders = set(sort_by.values())
+        # A key may resolve to a list rather than a scalar — a path through a
+        # collection, e.g. `medicinal_product.dose_frequencies.name` yields one
+        # name per term. Such a key needs a list-shaped sentinel for rows where
+        # the path resolves to nothing, because "-1"/-1 cannot be compared
+        # against a list. Decided per key across the whole page, since a single
+        # row cannot tell us the key's shape.
+        list_valued_keys = {
+            sort_key
+            for sort_key in sort_by
+            if any(
+                isinstance(extract_nested_key_value(item, sort_key), list)
+                for item in filtered_items
             )
-        # If orders for SortKeys are different we have to order list calling sort function a few times, once per each SortKey
-        elif len(distinct_sort_orders) > 1:
-            for sort_key, sort_order in sort_by.items():
+        }
+
+        def _sort_value(item, sort_key):
+            value = extract_nested_key_value(item, sort_key)
+            if isinstance(value, list):
+                # Drop nulls so one unnamed term cannot break the comparison of
+                # the surrounding list against another row's list of names.
+                return [element for element in value if element is not None]
+            if value is not None:
+                return value
+            if sort_key in list_valued_keys:
+                # Sorts alongside a genuinely empty collection.
+                return []
+            return (
+                "-1" if issubclass(extract_nested_key_type(item, sort_key), str) else -1
+            )
+
+        # A sort key naming a nested model rather than a scalar (e.g. `dose_value`
+        # instead of `dose_value.value`) yields objects Python cannot order. That
+        # is bad input, not a server fault, so answer 400 instead of letting the
+        # TypeError surface as a 500.
+        try:
+            # If all orders for SortKeys are the same we can order the list in a single sort function call
+            if len(distinct_sort_orders) == 1:
                 filtered_items.sort(
-                    key=lambda x, y=sort_key: (  # type: ignore[misc]
-                        elm
-                        if (elm := extract_nested_key_value(x, y)) is not None
-                        else (
-                            "-1"
-                            if issubclass(extract_nested_key_type(x, y), str)
-                            else -1
-                        )
-                    ),
-                    reverse=not sort_order,
+                    key=lambda x: [
+                        _sort_value(x, sort_key) for sort_key in sort_by.keys()
+                    ],
+                    reverse=not distinct_sort_orders.pop(),
                 )
+            # If orders for SortKeys are different we have to order list calling sort function a few times, once per each SortKey.
+            # Applied last key first: the sort is stable, so the sort applied
+            # last decides the primary ordering. Iterating in declaration order
+            # would make the LAST declared key primary, contradicting both the
+            # documented behaviour ("sorts by field_1 ... then by field_2") and
+            # the single-order branch above, which compares keys as a list in
+            # declaration order.
+            elif len(distinct_sort_orders) > 1:
+                for sort_key, sort_order in reversed(list(sort_by.items())):
+                    filtered_items.sort(
+                        key=functools.partial(_sort_value, sort_key=sort_key),
+                        reverse=not sort_order,
+                    )
+        except TypeError as exc:
+            raise ValidationException(
+                msg="Cannot sort by "
+                f"{', '.join(repr(key) for key in sort_by)}: the field does not "
+                "hold a directly comparable value. Sort by a scalar sub-field "
+                "instead, e.g. 'dose_value.value' rather than 'dose_value'."
+            ) from exc
 
         span.add_attribute("call.num_output", len(filtered_items))
 
@@ -791,7 +835,7 @@ def service_level_generic_header_filtering(
             elif isinstance(extracted_value, SimpleNumericValueWithUnit):
                 # Append `{value} {unit_label}`
                 extracted_values.append(
-                    f"{str(extracted_value.value)} {extracted_value.unit_label}"
+                    f"{extracted_value.value!s} {extracted_value.unit_label}"
                 )
             elif extracted_value is not None:
                 # Append element to list
@@ -853,7 +897,7 @@ def extract_properties_for_wildcard(item, prefix: str = ""):
                 and len(getattr(item, attribute)) > 0
             ):
                 output = output + extract_properties_for_wildcard(
-                    list(getattr(item, attribute).values())[0], attribute
+                    next(iter(getattr(item, attribute).values())), attribute
                 )
             # An attribute can be a nested class, which will inherit from Pydantic's BaseModel
             # In that case, we do a recursive call and add the attribute key of the class as a prefix, like "nested_class."
@@ -1024,6 +1068,17 @@ def rgetattr_type(obj, attr):
         if isinstance(obj, dict):
             return [_getattr(element, attr) for element in obj.values()]
         inner_obj = getattr(obj, attr, None)
+
+        # Resolving a dotted path hands the next iteration the *type* of the
+        # previous segment, not a value. Keep walking model fields in that case,
+        # otherwise a path through a nullable model (e.g. a null
+        # activity_instance) resolves to NoneType instead of the declared type,
+        # and callers that branch on `issubclass(..., str)` pick the wrong
+        # sentinel — which makes sorting compare an int against a str.
+        if isinstance(obj, type) and issubclass(obj, BaseModel):
+            prop = obj.model_fields.get(attr)
+            if prop:
+                return get_field_type(prop.annotation)
 
         if isinstance(obj, BaseModel):
             prop = obj.model_fields.get(attr)

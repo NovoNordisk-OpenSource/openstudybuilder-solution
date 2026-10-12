@@ -1,7 +1,8 @@
 import datetime
 import sys
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field, replace
-from typing import Annotated, Any, Callable, Iterable, Self
+from typing import Annotated, Any, Self
 
 from pydantic import Field
 
@@ -14,6 +15,8 @@ from common.exceptions import (
     BusinessLogicException,
     ValidationException,
 )
+
+MIN_ENDPOINT_UNITS_REQUIRING_SEPARATOR = 2
 
 
 class EndpointUnitItem(BaseModel):
@@ -136,18 +139,18 @@ class StudySelectionEndpointVO:
             study_selection_uid = generate_uid_callback()
 
         if start_date is None:
-            start_date = datetime.datetime.now(datetime.timezone.utc)
+            start_date = datetime.datetime.now(datetime.UTC)
 
         if endpoint_units:
             # built-in dict remembers insertion order (guaranteed since Python 3.7)
             _units = {}
             for unit in endpoint_units:
-                unit = {
+                normalized_unit = {
                     k: normalize_string(v) if isinstance(v, str) else v
                     for k, v in unit.items()
                 }
-                if unit["uid"]:
-                    _units[unit["uid"]] = unit
+                if normalized_unit["uid"]:
+                    _units[normalized_unit["uid"]] = normalized_unit
             units = tuple(_units.values())
 
         else:
@@ -219,7 +222,8 @@ class StudySelectionEndpointVO:
             msg="In case of more than one endpoint units, a unit separator is required.",
         )
         ValidationException.raise_if(
-            self.unit_separator is not None and len(self.endpoint_units) < 2,
+            self.unit_separator is not None
+            and len(self.endpoint_units) < MIN_ENDPOINT_UNITS_REQUIRING_SEPARATOR,
             msg=f"Separator should only be set if more than 1 units are selected '{self.endpoint_units}'.",
         )
         # Check if there exist a Term with the selected uid
@@ -307,7 +311,7 @@ class StudySelectionEndpointsAR:
                 endpoint_level_order = sys.maxsize
             return study_objective_uid, endpoint_level_order
 
-        new_selections = self._study_endpoints_selection + (study_endpoint_selection,)
+        new_selections = (*self._study_endpoints_selection, study_endpoint_selection)
         sorted_selections = tuple(sorted(new_selections, key=_selection_sort_logic))
         self._study_endpoints_selection = sorted_selections
 
@@ -405,7 +409,7 @@ class StudySelectionEndpointsAR:
                         != selected_value.endpoint_level_order
                         or selection.study_objective_uid
                         != selected_value.study_objective_uid,
-                        msg=f"Not allowed to move the selection to order ({str(new_order)})",
+                        msg=f"Not allowed to move the selection to order ({new_order!s})",
                     )
                     updated_selections.append(selected_value)
                     if (
@@ -423,7 +427,7 @@ class StudySelectionEndpointsAR:
                         != selected_value.endpoint_level_order
                         or selection.study_objective_uid
                         != selected_value.study_objective_uid,
-                        msg=f"Not allowed to move the selection to order ({str(new_order)})",
+                        msg=f"Not allowed to move the selection to order ({new_order!s})",
                     )
                     if (
                         selection.study_selection_uid

@@ -1,5 +1,6 @@
 import datetime
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 from neomodel import db
 
@@ -131,7 +132,7 @@ class StudyStandardVersionService:
     ):
         return StudyStandardVersionVO(
             study_uid=study_uid,
-            start_date=datetime.datetime.now(datetime.timezone.utc),
+            start_date=datetime.datetime.now(datetime.UTC),
             study_status=StudyStatus.DRAFT,
             description=study_standard_version_create_input.description,
             author_id=self.author,

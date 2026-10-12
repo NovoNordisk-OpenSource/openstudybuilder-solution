@@ -12,18 +12,15 @@ Feature: Library - Concepts - Units
         Given The '/library/units' page is opened
         Then A table is visible with following headers
             | headers                     |
-            | Library                     |
             | Name                        |
             | Master unit                 |
             | Display unit                |
             | Unit subsets                |
             | UCUM unit                   |
-            | CT Unit terms               |
+            | CDISC CT Submission Values  |
             | Convertible unit            |
-            | SI unit                     |
             | US conventional unit        |
             | Unit dimension              |
-            | Legacy code                 |
             | Use molecular weight        |
             | Use complex unit conversion |
             | Conversion factor to master |
@@ -61,8 +58,7 @@ Feature: Library - Concepts - Units
         Given The '/library/units' page is opened
         When Add unit button is clicked
         And Form save button is clicked
-        Then The validation message appears for unit library field
-        And The validation message appears for unit name field
+        Then The validation message appears for unit name field
         And The validation message appears for codelist term field
         And The form is not closed
 
@@ -217,18 +213,15 @@ Feature: Library - Concepts - Units
 
         Examples:
             | name                        |
-            | Library                     |
             | Name                        |
             | Master unit                 |
             | Display unit                |
             | Unit subsets                |
             | UCUM unit                   |
-            | CT Unit terms               |
+            | CDISC CT Submission Values  |
             | Convertible unit            |
-            | SI unit                     |
             | US conventional unit        |
             | Unit dimension              |
-            | Legacy code                 |
             | Use molecular weight        |
             | Use complex unit conversion |
             | Conversion factor to master |

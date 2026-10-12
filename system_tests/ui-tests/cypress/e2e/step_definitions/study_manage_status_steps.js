@@ -64,3 +64,14 @@ Then('The study is displayed as locked with {string} as a reason', (reason) => c
 Then('[API] User fetches term uid for reason for locking {string}', (reason) => cy.getReasonForLockingTermUid(reason))
 
 Then('[API] User fetches term uid for reason for unlocking {string}', (reason) => cy.getReasonForUnLockingTermUid(reason))
+
+When('User selects locked study version', () => {
+  cy.contains('table tbody tr', 'LOCKED').find('[data-cy="table-item-action-button"]').click()
+  cy.contains('.v-list', 'Select').click()
+})
+
+Then('Locked version of study is visible as selected in the header', () => {
+  cy.readFile('cypress/fixtures/study_metadata.json').then(data => {
+    cy.contains('header button', `CDISC DEV-${data.studyNumber} v1`).find('.mdi-lock-outline').should('be.visible')
+  })
+})

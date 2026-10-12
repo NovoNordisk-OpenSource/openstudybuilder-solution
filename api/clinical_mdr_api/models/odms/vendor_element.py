@@ -1,5 +1,6 @@
 import json
-from typing import Annotated, Any, Callable, Self, overload
+from collections.abc import Callable
+from typing import Annotated, Any, Self, overload
 
 from pydantic import Field, field_validator
 

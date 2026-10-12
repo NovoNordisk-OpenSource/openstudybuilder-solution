@@ -1,7 +1,7 @@
 import logging
+from collections.abc import Collection
 from datetime import datetime
 from threading import Lock
-from typing import Collection
 
 from cachetools import TTLCache, cached
 from cachetools.keys import hashkey

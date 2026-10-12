@@ -10,11 +10,9 @@ Endpoints under test:
   PATCH /ct/terms/{uid}/names/trial-summary-parameters  (save path)
 """
 
-# pylint: disable=unused-argument
-# pylint: disable=redefined-outer-name
-
 import json
 import logging
+from typing import Any
 
 import pytest
 from fastapi.testclient import TestClient
@@ -53,6 +51,34 @@ TS_FIELDS = (
     "valid_null_flavor_terms",
 )
 
+# TS name fields exposed to /ct/terms filtering and sorting
+TS_FILTER_SORT_FIELDS = (
+    "reference",
+    "required_level",
+    "cardinality",
+    "notes",
+    "short_code",
+)
+
+# Dedicated TS terms for the filter and sort tests, so the PATCH tests modifying TS_TERM_UID
+# cannot affect them. Each field has distinct values, the first term sorting before the second.
+TS_FILTER_SORT_TERMS = {
+    "C99901": {
+        "reference": "EUDRACT",
+        "required_level": "If Applicable",
+        "cardinality": "Many",
+        "notes": "First TS filter and sort term.",
+        "short_code": "AAA",
+    },
+    "C99902": {
+        "reference": "ISO8601",
+        "required_level": "Optional",
+        "cardinality": "One",
+        "notes": "Second TS filter and sort term.",
+        "short_code": "BBB",
+    },
+}
+
 
 @pytest.fixture(scope="module")
 def api_client(test_data):
@@ -78,6 +104,15 @@ def test_data():
         uid="C66738",
         catalogue=catalogue_name,
         library=library_name,
+    )
+
+    # --- TS test name codelist (C67152 = TSPARM), paired with the code codelist ---
+    ts_name_codelist = create_codelist(
+        name="Trial Summary Parameter Test Name",
+        uid="C67152",
+        catalogue=catalogue_name,
+        library=library_name,
+        paired_code_codelist_uid="C66738",
     )
 
     # --- Data type codelist (needed for semantic_data_type_uid) ---
@@ -129,7 +164,7 @@ def test_data():
         ],
     )
 
-    # --- TS term in C66738 ---
+    # --- TS term in C66738, also registered in the test name codelist C67152 ---
     create_ct_term(
         name="Study Short Title",
         uid=TS_TERM_UID,
@@ -142,6 +177,11 @@ def test_data():
                 "uid": ts_code_codelist.codelist_uid,
                 "order": 1,
                 "submission_value": "SHORTTL",
+            },
+            {
+                "uid": ts_name_codelist.codelist_uid,
+                "order": 1,
+                "submission_value": "Study Short Title",
             },
         ],
     )
@@ -163,6 +203,30 @@ def test_data():
         ),
     )
     ts_service.approve(TS_TERM_UID)
+
+    # --- TS terms for the filter and sort tests ---
+    for order, (term_uid, ts_values) in enumerate(
+        TS_FILTER_SORT_TERMS.items(), start=2
+    ):
+        create_ct_term(
+            name=f"TS filter and sort term {order}",
+            uid=term_uid,
+            preferred_term=f"TS filter and sort term {order}",
+            definition="A TS term for the filter and sort tests.",
+            catalogue_name=catalogue_name,
+            library_name=library_name,
+            codelists=[
+                {
+                    "uid": ts_code_codelist.codelist_uid,
+                    "order": order,
+                    "submission_value": f"TSFLTSRT{order}",
+                }
+            ],
+        )
+        ts_service.patch_trial_summary_parameter(
+            term_uid, CTTermNameTSParameterInput(**ts_values)
+        )
+        ts_service.approve(term_uid)
 
     # --- Non-TS term (in default codelist C66737) ---
     global NON_TS_TERM_UID
@@ -223,6 +287,80 @@ def test_get_ct_terms_non_ts_term_has_null_ts_properties(api_client):
     assert non_ts_item["name"]["osb_field_name"] is None
     assert non_ts_item["name"]["semantic_data_type"] is None
     assert non_ts_item["name"]["response_codelist"] is None
+
+
+def test_get_ct_terms_wildcard_filter_excludes_ts_only_fields(api_client):
+    """GET /ct/terms wildcard search must not reference TS-only name fields.
+
+    Regression for 400 (Neo4j "Variable `short_code` not defined"): TS-only
+    string fields (reference/notes/short_code/osb_field_name/osb_page_reference)
+    leaked into the wildcard WHERE clause as undefined variables. They are now
+    excluded from wildcard search, so the request must succeed.
+    """
+    wildcard_filter = json.dumps({"*": {"v": ["capsule"], "op": "co"}})
+
+    response = api_client.get(
+        "/ct/terms",
+        params={
+            "page_size": 10,
+            "total_count": True,
+            "filters": wildcard_filter,
+            "include_ts_parameters": False,
+        },
+    )
+
+    assert_response_status_code(response, 200)
+    assert isinstance(response.json()["items"], list)
+
+
+def _get_ts_ct_terms(api_client, **params) -> list[dict[str, Any]]:
+    response = api_client.get(
+        "/ct/terms",
+        params={
+            "codelist_uid": "C66738",
+            "page_size": 50,
+            "include_ts_parameters": True,
+            **params,
+        },
+    )
+    assert_response_status_code(response, 200)
+    return response.json()["items"]
+
+
+@pytest.mark.parametrize("field", TS_FILTER_SORT_FIELDS)
+def test_get_ct_terms_equality_filter_on_ts_field(api_client, field):
+    """GET /ct/terms equality filter on a TS name field returns only the terms with that value."""
+    for term_uid, ts_values in TS_FILTER_SORT_TERMS.items():
+        value = ts_values[field]
+        items = _get_ts_ct_terms(
+            api_client,
+            filters=json.dumps({f"name.{field}": {"v": [value], "op": "eq"}}),
+        )
+
+        # THEN the term with that value is returned
+        assert term_uid in {item["term_uid"] for item in items}, (field, value)
+
+        # THEN every returned term has that value, which excludes the other test term
+        assert all(item["name"][field] == value for item in items), (field, value)
+
+
+@pytest.mark.parametrize("ascending", [True, False])
+@pytest.mark.parametrize("field", TS_FILTER_SORT_FIELDS)
+def test_get_ct_terms_sort_by_ts_field(api_client, field, ascending):
+    """GET /ct/terms sorts by a TS name field in both directions."""
+    items = _get_ts_ct_terms(
+        api_client, sort_by=json.dumps({f"name.{field}": ascending})
+    )
+
+    sorted_uids = [
+        item["term_uid"] for item in items if item["term_uid"] in TS_FILTER_SORT_TERMS
+    ]
+    expected_uids = sorted(
+        TS_FILTER_SORT_TERMS,
+        key=lambda uid: TS_FILTER_SORT_TERMS[uid][field],
+        reverse=not ascending,
+    )
+    assert sorted_uids == expected_uids
 
 
 # ---------- GET /ct/terms/names (generic / bulk names) ----------
@@ -344,6 +482,7 @@ def test_get_codelist_terms_ts_term_has_ts_properties(api_client):
     assert ts_item["cardinality"] == "One"
     assert ts_item["notes"] == "Short title of the study."
     assert ts_item["osb_page_reference"] == "p.42"
+    assert ts_item["submission_value_test_name"] == "Study Short Title"
 
 
 def test_get_codelist_terms_filter_by_submission_value(api_client):
@@ -472,6 +611,60 @@ def test_patch_ts_parameter_saves_osb_page_reference(api_client):
     assert restore_response.json()["osb_page_reference"] == "p.42"
 
 
+def test_patch_ts_parameter_saves_short_code(api_client):
+    """PATCH endpoint persists short_code and returns it in the response."""
+    new_value = "STL"
+
+    # --- Update ---
+    patch_response = api_client.patch(
+        f"/ct/terms/{TS_TERM_UID}/names/trial-summary-parameters",
+        json={
+            "osb_field_name": "study_short_title",
+            "semantic_data_type_uid": "DT_TEXT",
+            "response_codelist_uid": "CTCodelist_YesNo",
+            "valid_null_flavor_term_uids": ["NF_NA"],
+            "reference": "ClinicalTrials.gov",
+            "required_level": "Required",
+            "cardinality": "One",
+            "notes": "Short title of the study.",
+            "osb_page_reference": "p.42",
+            "short_code": new_value,
+        },
+    )
+    assert_response_status_code(patch_response, 200)
+    patch_data = patch_response.json()
+    assert (
+        patch_data["short_code"] == new_value
+    ), f"PATCH response did not include updated short_code: {patch_data}"
+
+    # --- Verify persistence via GET ---
+    get_response = api_client.get(
+        f"/ct/terms/{TS_TERM_UID}/names",
+        params={"include_ts_parameters": True},
+    )
+    assert_response_status_code(get_response, 200)
+    assert get_response.json()["short_code"] == new_value
+
+    # --- Restore original so subsequent tests remain valid ---
+    restore_response = api_client.patch(
+        f"/ct/terms/{TS_TERM_UID}/names/trial-summary-parameters",
+        json={
+            "osb_field_name": "study_short_title",
+            "semantic_data_type_uid": "DT_TEXT",
+            "response_codelist_uid": "CTCodelist_YesNo",
+            "valid_null_flavor_term_uids": ["NF_NA"],
+            "reference": "ClinicalTrials.gov",
+            "required_level": "Required",
+            "cardinality": "One",
+            "notes": "Short title of the study.",
+            "osb_page_reference": "p.42",
+            "short_code": None,
+        },
+    )
+    assert_response_status_code(restore_response, 200)
+    assert restore_response.json()["short_code"] is None
+
+
 # ---------- POST /ct/terms with ts_parameter (create path) ----------
 
 
@@ -504,6 +697,7 @@ def test_post_ct_term_with_ts_parameter_persists_all_fields(api_client):
                 "required_level": "Required",
                 "cardinality": "One",
                 "notes": "Created via POST /ct/terms with ts_parameter.",
+                "short_code": "PTSC",
             },
         },
     )
@@ -530,6 +724,7 @@ def test_post_ct_term_with_ts_parameter_persists_all_fields(api_client):
     assert data["required_level"] == "Required"
     assert data["cardinality"] == "One"
     assert data["notes"] == "Created via POST /ct/terms with ts_parameter."
+    assert data["short_code"] == "PTSC"
 
 
 def test_post_ct_term_without_ts_parameter_has_null_ts_properties(api_client):
@@ -573,6 +768,48 @@ def test_post_ct_term_without_ts_parameter_has_null_ts_properties(api_client):
     assert data["required_level"] is None
     assert data["cardinality"] is None
     assert data["notes"] is None
+
+
+def test_post_ct_term_with_semantic_data_type_only_persists_it(api_client):
+    """A "custom" TS parameter may set `semantic_data_type_uid` without ever
+    setting `osb_field_name` or `osb_page_reference` — the latter is documented
+    as requiring `osb_field_name`, but `semantic_data_type_uid` is not. The
+    semantic data type must still be wired and readable afterwards."""
+    create_response = api_client.post(
+        "/ct/terms",
+        json={
+            "catalogue_names": ["SDTM CT"],
+            "codelists": [
+                {
+                    "codelist_uid": "C66738",
+                    "submission_value": "SDTONLYCREATE",
+                    "order": 101,
+                }
+            ],
+            "library_name": "Sponsor",
+            "definition": "Custom TS parameter with only a semantic data type.",
+            "sponsor_preferred_name": "Semantic Data Type Only Term",
+            "sponsor_preferred_name_sentence_case": "semantic data type only term",
+            "ts_parameter": {
+                "semantic_data_type_uid": "DT_TEXT",
+            },
+        },
+    )
+    assert_response_status_code(create_response, 201)
+    new_term_uid = create_response.json()["term_uid"]
+
+    api_client.post(f"/ct/terms/{new_term_uid}/names/approvals")
+
+    get_response = api_client.get(
+        f"/ct/terms/{new_term_uid}/names",
+        params={"include_ts_parameters": True},
+    )
+    assert_response_status_code(get_response, 200)
+    data = get_response.json()
+
+    assert data["osb_field_name"] is None
+    assert data["osb_page_reference"] is None
+    assert data["semantic_data_type"]["uid"] == "DT_TEXT"
 
 
 # ---------- GET /meta-study-fields ----------

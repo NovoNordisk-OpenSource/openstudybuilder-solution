@@ -13,10 +13,6 @@ Each database test should execute a CYPHER query that returns one row with these
 Result of each query is appended to `db_checks_results.csv` file.
 """
 
-# pylint: disable=unused-argument
-# pylint: disable=redefined-outer-name
-# pylint: disable=too-many-arguments
-# pylint: disable=duplicate-code
 import os
 
 from pytest_bdd import parsers, scenarios, step, then

@@ -8,8 +8,8 @@ on:
   pull_request:
     branches: [main]
     paths:
-      - "verifications/Pipfile"
-      - "verifications/Pipfile.lock"
+      - "verifications/pyproject.toml"
+      - "verifications/uv.lock"
       - ".github/workflows/verifications-dependency-review.yml"
 
 permissions:

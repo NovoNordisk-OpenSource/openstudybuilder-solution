@@ -2,13 +2,6 @@
 Tests for sponsor ct package
 """
 
-# pylint: disable=unused-argument
-# pylint: disable=redefined-outer-name
-# pylint: disable=too-many-arguments
-
-# pytest fixture functions have other fixture functions as arguments,
-# which pylint interprets as unused arguments
-
 import logging
 
 import pytest
@@ -343,7 +336,9 @@ def test_cdisc_terms_submission_value_rules(api_client):
     assert_response_status_code(response, 400)
     response_json = response.json()
     assert (
-        f"Term with UID '{cdisc_term_in_one.term_uid}' belongs to a non-editable library. Cannot add a new submission value '{invalid_submission_value}'. All possible submission values are already defined."  # pylint: disable=line-too-long
+        f"Term with UID '{cdisc_term_in_one.term_uid}' belongs to a non-editable library. "
+        f"Cannot add a new submission value '{invalid_submission_value}'. "
+        "All possible submission values are already defined."
         in response_json["message"]
     )
 
@@ -371,7 +366,9 @@ def test_cdisc_terms_submission_value_rules(api_client):
     assert_response_status_code(response, 400)
     response_json = response.json()
     assert (
-        f"Term with UID '{cdisc_term_in_both.term_uid}' belongs to a non-editable library. Cannot add a new submission value '{invalid_submission_value}'. All possible submission values are already defined."  # pylint: disable=line-too-long
+        f"Term with UID '{cdisc_term_in_both.term_uid}' belongs to a non-editable library. "
+        f"Cannot add a new submission value '{invalid_submission_value}'. "
+        "All possible submission values are already defined."
         in response_json["message"]
     )
 
@@ -423,9 +420,10 @@ def test_sponsor_terms_submission_value_rules(api_client):
     assert_response_status_code(response, 400)
     response_json = response.json()
     assert (
-        # pylint: disable=line-too-long
-        f"Term with UID '{sponsor_term_in_unpaired_1.term_uid}' is already part of a codelist with submission value '{sponsor_term_in_unpaired_1.codelists[0].submission_value}'. Cannot add a new submission value '{invalid_submission_value}', except for a paired codelist or a different catalogue. Please reuse the existing submission value."
-        in response_json["message"]
+        f"Term with UID '{sponsor_term_in_unpaired_1.term_uid}' is already part of a codelist with submission value "
+        f"'{sponsor_term_in_unpaired_1.codelists[0].submission_value}'. "
+        f"Cannot add a new submission value '{invalid_submission_value}', except for a paired codelist or a different catalogue. "
+        "Please reuse the existing submission value." in response_json["message"]
     )
 
     # Add Sponsor term to a codelist with same submission value ✅
@@ -458,8 +456,9 @@ def test_sponsor_terms_submission_value_rules_paired_codelists(api_client):
     assert_response_status_code(response, 400)
     response_json = response.json()
     assert (
-        # pylint: disable=line-too-long
-        f"Term with UID '{sponsor_term_in_paired_name.term_uid}' is already part of a codelist with submission value '{name_submission_value}'. Cannot add a new submission value '{code_submission_value}', except for a paired codelist or a different catalogue. Please reuse the existing submission value."
+        f"Term with UID '{sponsor_term_in_paired_name.term_uid}' is already part of a codelist with submission value "
+        f"'{name_submission_value}'. Cannot add a new submission value '{code_submission_value}', "
+        "except for a paired codelist or a different catalogue. Please reuse the existing submission value."
         in response_json["message"]
     )
 
@@ -490,8 +489,9 @@ def test_sponsor_terms_submission_value_rules_paired_codelists(api_client):
     assert_response_status_code(response, 400)
     response_json = response.json()
     assert (
-        # pylint: disable=line-too-long
-        f"Term with UID '{sponsor_term_in_paired_code.term_uid}' is already part of a codelist with submission value '{code_submission_value}'. Cannot add a new submission value '{name_submission_value}', except for a paired codelist or a different catalogue. Please reuse the existing submission value."
+        f"Term with UID '{sponsor_term_in_paired_code.term_uid}' is already part of a codelist with submission value "
+        f"'{code_submission_value}'. Cannot add a new submission value '{name_submission_value}', "
+        "except for a paired codelist or a different catalogue. Please reuse the existing submission value."
         in response_json["message"]
     )
 
@@ -522,8 +522,9 @@ def test_sponsor_terms_submission_value_rules_different_catalogue(api_client):
     assert_response_status_code(response, 400)
     response_json = response.json()
     assert (
-        # pylint: disable=line-too-long
-        f"Term with UID '{sponsor_term_for_cross_catalogue.term_uid}' is already part of a codelist with submission value 'SDTM_SUBVAL'. Cannot add a new submission value 'CDASH_SUBVAL', except for a paired codelist or a different catalogue. Please reuse the existing submission value."
+        f"Term with UID '{sponsor_term_for_cross_catalogue.term_uid}' is already part of a codelist with submission value "
+        "'SDTM_SUBVAL'. Cannot add a new submission value 'CDASH_SUBVAL', "
+        "except for a paired codelist or a different catalogue. Please reuse the existing submission value."
         in response_json["message"]
     )
 

@@ -9,8 +9,7 @@ from clinical_mdr_api.models.study_selections.study_selection import (
 )
 from clinical_mdr_api.models.utils import CustomPage
 from clinical_mdr_api.repositories._utils import FilterOperator
-from clinical_mdr_api.routers import _generic_descriptions
-from clinical_mdr_api.routers import study_router as router
+from clinical_mdr_api.routers import _generic_descriptions, study_router as router
 from clinical_mdr_api.routers.studies import utils
 from clinical_mdr_api.services.studies.study_activity_instruction import (
     StudyActivityInstructionService,

@@ -109,7 +109,7 @@ class SponsorModelSchemaRepository:
             schema=ar.schema_vo.schema,
             content_hash=ar.schema_vo.content_hash,
             author_id=ar.schema_vo.author_id,
-            created=datetime.datetime.now(datetime.timezone.utc),
+            created=datetime.datetime.now(datetime.UTC),
         ).save()
         root.has_schema_version.connect(value)
 

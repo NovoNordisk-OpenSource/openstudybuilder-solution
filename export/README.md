@@ -4,18 +4,18 @@ It connects to the api given by the API_BASE_URL environment variable.
 
 # Usage
 
-Python 3.14 and Pipenv are prerequisites — see the
+Python 3.14 and uv are prerequisites — see the
 [root README](../README.md#prerequisites).
 
 ```sh
-pipenv sync --dev
-pipenv run export
+uv sync --group dev
+uv run poe export
 ```
 
 To export the list of studies without their contents:
 
 ```sh
-pipenv run export-study-list
+uv run poe export-study-list
 ```
 
 # Filtering on study number
@@ -88,4 +88,3 @@ When calling the first api endpoint, a browser window will open prompting the us
 
 # TODO
 - Add whatever parts that are missing in the exported data.
-

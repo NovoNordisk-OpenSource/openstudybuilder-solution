@@ -1,4 +1,3 @@
-# pylint: disable=too-many-lines, line-too-long
 EXPORT_FORM = """<?xml version="1.0" encoding="utf-8"?>
 <ODM xmlns:odm="http://www.cdisc.org/ns/odm/v1.3" xmlns:osb="url2" xmlns:prefix="url1" ODMVersion="1.3.2" FileType="Snapshot" FileOID="OID.1653902417076" CreationDateTime="2022-09-22T08:02:21.594676" Granularity="All">
     <Study OID="name1-odm_form1">

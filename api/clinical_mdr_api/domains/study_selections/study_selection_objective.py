@@ -1,6 +1,7 @@
 import datetime
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field, replace
-from typing import Any, Callable, Iterable, Self
+from typing import Any, Self
 
 from clinical_mdr_api.services.user_info import UserInfoService
 from clinical_mdr_api.utils import normalize_string
@@ -49,7 +50,7 @@ class StudySelectionObjectiveVO:
             study_selection_uid = generate_uid_callback()
 
         if start_date is None:
-            start_date = datetime.datetime.now(datetime.timezone.utc)
+            start_date = datetime.datetime.now(datetime.UTC)
 
         return cls(
             study_uid=study_uid,
@@ -156,7 +157,8 @@ class StudySelectionObjectivesAR:
                 updated_selections.append(study_objective_selection)
             self._study_objectives_selection = tuple(updated_selections)
         else:
-            self._study_objectives_selection = self._study_objectives_selection + (
+            self._study_objectives_selection = (
+                *self._study_objectives_selection,
                 study_objective_selection,
             )
 

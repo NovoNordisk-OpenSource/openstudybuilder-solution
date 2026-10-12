@@ -110,6 +110,17 @@
                           "
                         />
                       </div>
+                      <v-select
+                        v-else-if="item.semantic_data_type === 'CT Term'"
+                        v-model="item.parameter_value"
+                        item-title="name.sponsor_preferred_name"
+                        item-value="name.sponsor_preferred_name"
+                        :items="getCtTermOptions(item)"
+                        :disabled="!!item.null_flavor_term_uid"
+                        clearable
+                        hide-details
+                        :data-cy="`other-attr-required-value-${index}`"
+                      />
                       <v-text-field
                         v-else
                         v-model="item.parameter_value"
@@ -297,6 +308,17 @@
                           "
                         />
                       </div>
+                      <v-select
+                        v-else-if="item.semantic_data_type === 'CT Term'"
+                        v-model="item.parameter_value"
+                        item-title="sponsor_preferred_name"
+                        item-value="term_uid"
+                        :items="getCtTermOptions(item)"
+                        :disabled="!!item.null_flavor_term_uid"
+                        clearable
+                        hide-details
+                        :data-cy="`other-attr-optional-value-${index}`"
+                      />
                     </td>
                     <td class="table-cell table-cell--field">
                       <div class="panel-label text-body-1 mb-1">
@@ -410,6 +432,7 @@ const optionalAttributes = ref([{}])
 const requiredParameters = ref([])
 const optionalParameters = ref([])
 const paramsToDelete = ref([])
+const ctTermOptionsByCodelist = ref({})
 
 const booleanOptions = computed(() => [
   { title: t('_global.yes'), value: true },
@@ -427,11 +450,31 @@ function initForm() {
   const source = Array.isArray(props.editData) ? props.editData : []
   source.forEach((item) => {
     item.null_flavor_term_uid = item.null_flavor?.uid
+    if (item.semantic_data_type === 'CT Term') {
+      ensureCtTermOptionsLoaded(item.response_codelist?.uid)
+    }
   })
   const required = source.filter((item) => item.required_level === 'Required')
   const optional = source.filter((item) => item.required_level !== 'Required')
   requiredAttributes.value = required.length ? required : [{}]
   optionalAttributes.value = optional.length ? optional : [{}]
+}
+
+function ensureCtTermOptionsLoaded(codelistUid) {
+  if (!codelistUid || ctTermOptionsByCodelist.value[codelistUid]) {
+    return
+  }
+  ctTermOptionsByCodelist.value[codelistUid] = []
+  termsApi
+    .getTermsByCodelistUid({ codelist_uid: codelistUid, page_size: 0 })
+    .then((resp) => {
+      ctTermOptionsByCodelist.value[codelistUid] = resp.data.items
+    })
+}
+
+function getCtTermOptions(item) {
+  const codelistUid = item.response_codelist?.uid
+  return ctTermOptionsByCodelist.value[codelistUid] || []
 }
 
 onMounted(() => {
@@ -463,7 +506,7 @@ function setAttributeValues(value, index, type) {
   if (type === 'required') {
     requiredAttributes.value[index].notes = value.notes || ''
     requiredAttributes.value[index].response_codelist =
-      value.response_codelist?.sponsor_preferred_name || ''
+      value.response_codelist || null
     requiredAttributes.value[index].semantic_data_type =
       value.semantic_data_type?.sponsor_preferred_name || ''
     requiredAttributes.value[index].parameter_value = undefined
@@ -476,10 +519,15 @@ function setAttributeValues(value, index, type) {
     if (requiredAttributes.value[index].semantic_data_type === 'Duration') {
       requiredAttributes.value[index].parameter_value = 'P0Y0M0D'
     }
+    if (requiredAttributes.value[index].semantic_data_type === 'CT Term') {
+      ensureCtTermOptionsLoaded(
+        requiredAttributes.value[index].response_codelist?.uid
+      )
+    }
   } else {
     optionalAttributes.value[index].notes = value.notes || ''
     optionalAttributes.value[index].response_codelist =
-      value.response_codelist?.sponsor_preferred_name || ''
+      value.response_codelist || null
     optionalAttributes.value[index].semantic_data_type =
       value.semantic_data_type?.sponsor_preferred_name || ''
     optionalAttributes.value[index].parameter_value = undefined
@@ -491,6 +539,11 @@ function setAttributeValues(value, index, type) {
     }
     if (optionalAttributes.value[index].semantic_data_type === 'Duration') {
       optionalAttributes.value[index].parameter_value = 'P0Y0M0D'
+    }
+    if (optionalAttributes.value[index].semantic_data_type === 'CT Term') {
+      ensureCtTermOptionsLoaded(
+        optionalAttributes.value[index].response_codelist?.uid
+      )
     }
   }
 }

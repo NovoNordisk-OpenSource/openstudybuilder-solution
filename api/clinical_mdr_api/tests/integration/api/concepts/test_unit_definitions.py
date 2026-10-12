@@ -2,12 +2,6 @@
 Tests for /concepts/unit-definitions endpoints
 """
 
-# pylint: disable=unused-argument
-# pylint: disable=redefined-outer-name
-# pylint: disable=too-many-arguments
-
-# pytest fixture functions have other fixture functions as arguments,
-# which pylint interprets as unused arguments
 import json
 import logging
 from functools import reduce
@@ -85,7 +79,6 @@ UNIT_DEF_FIELDS_ALL = [
     "conversion_factor_to_master",
     "unit_dimension",
     "ucum",
-    "legacy_code",
     "master_unit",
     "version",
     "start_date",
@@ -96,7 +89,6 @@ UNIT_DEF_FIELDS_ALL = [
     "unit_subsets",
     "use_molecular_weight",
     "change_description",
-    "si_unit",
     "name",
     "order",
     "ct_units",
@@ -226,8 +218,8 @@ def test_get_unit_definitions(
     if sort_by:
         # sort_by is JSON string in the form: {"sort_field_name": is_ascending_order}
         sort_by_dict = json.loads(sort_by)
-        sort_field: str = list(sort_by_dict.keys())[0]
-        sort_order_ascending: bool = list(sort_by_dict.values())[0]
+        sort_field: str = next(iter(sort_by_dict.keys()))
+        sort_order_ascending: bool = next(iter(sort_by_dict.values()))
 
         # extract list of values of 'sort_field_name' field from the returned result
         result_vals = list(map(lambda x: x[sort_field], res["items"]))

@@ -1,4 +1,3 @@
-# pylint: disable=redefined-outer-name
 import datetime
 import logging
 import random
@@ -51,7 +50,7 @@ def mock_jwks_service():
 
 @pytest.fixture(scope="session")
 def mock_token(mock_jwks_service):
-    key = mock_jwks_service.keys[list(mock_jwks_service.keys.keys())[0]]
+    key = mock_jwks_service.keys[next(iter(mock_jwks_service.keys.keys()))]
 
     def factory(roles: list[str] | None = None):
         claims = mk_claims(
@@ -104,7 +103,7 @@ def test_endpoints_rbac_wrong_roles(
         roles = random.choices(required_roles, k=i + 1)
         valid_role_sets += [
             roles,
-            required_roles + [random.choice(invalid_roles)],
+            [*required_roles, random.choice(invalid_roles)],
             required_roles
             + random.choices(invalid_roles, k=random.randint(1, len(invalid_roles))),
         ]
@@ -179,7 +178,7 @@ def test_endpoints_rbac_correct_roles(
         roles = random.choices(required_roles, k=i + 1)
         valid_role_sets += [
             roles,
-            required_roles + [random.choice(invalid_roles)],
+            [*required_roles, random.choice(invalid_roles)],
             required_roles
             + random.choices(invalid_roles, k=random.randint(1, len(invalid_roles))),
         ]
@@ -393,42 +392,38 @@ def _mk_schema_example_payload(schema, openapi_schemas):
     return payload
 
 
-# pylint: disable=too-many-return-statements
 def _schema_default_value(schema, name=None):
     if "default" in schema:
         return schema["default"]
 
     typ = schema.get("type")
+    sentinel = object()
+    default_value = sentinel
 
     if typ == "string":
         frmt = schema.get("format", "").lower()
 
         if not frmt or frmt == "html":
-            if name in PARAMETER_DEFAULTS:
-                return PARAMETER_DEFAULTS[name]
-            return typ
-        if frmt == "date":
-            return datetime.date.today().isoformat()
-        if frmt == "date-time":
-            return datetime.date.today().isoformat()
-        if frmt == "json-string":
-            return "{}"
-        if frmt == "binary":
-            return ""
+            default_value = PARAMETER_DEFAULTS.get(name, typ)
+        elif frmt in {"date", "date-time"}:
+            default_value = datetime.date.today().isoformat()
+        elif frmt == "json-string":
+            default_value = "{}"
+        elif frmt == "binary":
+            default_value = ""
+    elif typ == "array":
+        default_value = []
+    elif typ == "integer":
+        default_value = 42
+    elif typ == "number":
+        default_value = 3.14
+    elif typ == "boolean":
+        default_value = False
 
-    if typ == "array":
-        return []
+    if default_value is sentinel:
+        raise ValueError(f"Unsupported JSON schema: {schema}")
 
-    if typ == "integer":
-        return 42
-
-    if typ == "number":
-        return 3.14
-
-    if typ == "boolean":
-        return False
-
-    raise ValueError(f"Unsupported JSON schema: {schema}")
+    return default_value
 
 
 def _prepare_http_request(openapi_schema, path, method):
@@ -454,7 +449,7 @@ def _assert_insufficient_roles_error(
     required_roles, roles_in_token, response: httpx.Response
 ):
     """Asserts error response because of insufficient roles"""
-    # pylint: disable=unused-variable
+
     __tracebackhide__ = True
 
     assert response.status_code == 403, (

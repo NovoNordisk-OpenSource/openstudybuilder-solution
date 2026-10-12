@@ -2,10 +2,6 @@
 Tests for /feature-flags* endpoints (Final-only Root/Value)
 """
 
-# pylint: disable=unused-argument
-# pylint: disable=redefined-outer-name
-# pylint: disable=too-many-arguments
-
 import logging
 
 import pytest

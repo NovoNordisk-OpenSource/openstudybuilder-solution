@@ -1,5 +1,3 @@
-# pylint: disable=redefined-outer-name
-
 import logging
 from typing import Any
 

@@ -1,10 +1,11 @@
 import re
 from collections import abc
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
-from enum import Enum
-from typing import Any, Callable, Iterable, Self
+from enum import Enum, StrEnum
+from typing import Any, Self
 
 from clinical_mdr_api.domains.study_definition_aggregates._utils import (
     call_default_init,
@@ -35,13 +36,13 @@ class StudyAction(Enum):
     DELETE = "delete"
 
 
-class StudyCopyComponentEnum(str, Enum):
+class StudyCopyComponentEnum(StrEnum):
     STUDY_DESIGN = "high_level_study_design"
     STUDY_INTERVENTION = "study_intervention"
     STUDY_POPULATION = "study_population"
 
 
-class StudyComponentEnum(str, Enum):
+class StudyComponentEnum(StrEnum):
     IDENTIFICATION_METADATA = "identification_metadata"
     REGISTRY_IDENTIFIERS = "registry_identifiers"
     VERSION_METADATA = "version_metadata"
@@ -51,7 +52,7 @@ class StudyComponentEnum(str, Enum):
     STUDY_DESCRIPTION = "study_description"
 
 
-class StudyCompactComponentEnum(str, Enum):
+class StudyCompactComponentEnum(StrEnum):
     IDENTIFICATION_METADATA = "identification_metadata"
     VERSION_METADATA = "version_metadata"
     STUDY_DESCRIPTION = "study_description"
@@ -59,6 +60,7 @@ class StudyCompactComponentEnum(str, Enum):
 
 _STUDY_NUMBER_PATTERN = re.compile(r"\d{1,4}")
 _STUDY_SUBPART_ACRONYM_PATTERN = re.compile(r"[A-Z0-9]+")
+MAX_STUDY_SUBPART_ACRONYM_LENGTH = 10
 
 
 FIX_SOME_VALUE_DEFAULT = """
@@ -208,8 +210,8 @@ class StudyIdentificationMetadataVO:
 
         exceptions.ValidationException.raise_if(
             self.study_subpart_acronym is not None
-            and len(self.study_subpart_acronym) > 10,
-            msg=f"Study Subpart Acronym must not exceed 10 characters, got {len(self.study_subpart_acronym) if self.study_subpart_acronym else 0}.",
+            and len(self.study_subpart_acronym) > MAX_STUDY_SUBPART_ACRONYM_LENGTH,
+            msg=f"Study Subpart Acronym must not exceed {MAX_STUDY_SUBPART_ACRONYM_LENGTH} characters, got {len(self.study_subpart_acronym) if self.study_subpart_acronym else 0}.",
         )
 
         exceptions.ValidationException.raise_if(
@@ -314,7 +316,7 @@ class StudyIdentificationMetadataVO:
 @dataclass_with_default_init(frozen=True)
 class StudyVersionMetadataVO:
     study_status: StudyStatus = StudyStatus.DRAFT
-    # pylint: disable=invalid-field-call
+
     version_timestamp: datetime | None = field(default_factory=datetime.today)
     version_author: str | None = None
     version_description: str | None = None
@@ -329,7 +331,7 @@ class StudyVersionMetadataVO:
         version_number: Decimal | None = None,
     ):
         if version_timestamp == FIX_SOME_VALUE_DEFAULT:
-            version_timestamp = datetime.now(timezone.utc)
+            version_timestamp = datetime.now(UTC)
         assert version_timestamp is None or isinstance(version_timestamp, datetime)
 
         call_default_init(
@@ -440,8 +442,6 @@ class HighLevelStudyDesignVO:
         :param development_stage_exists_callback: (optional) callback for checking development_stage_code
         :param null_value_exists_callback: (optional) callback for checking null_value_code for all specific values
         """
-
-        # pylint: disable=unused-argument
 
         def validate_value_and_associated_null_value_valid(
             value: Any,

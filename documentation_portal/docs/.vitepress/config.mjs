@@ -9,6 +9,7 @@ export default defineConfig({
   themeConfig: {
     logo: '/logo-osb.png',
     lastUpdated: { text: 'Last Updated' },
+    outline: { level: [2, 3] },
     search: {
       provider: 'local'
     },
@@ -51,6 +52,7 @@ export default defineConfig({
                 { text: 'Activity Library Dashboard', link: '/guides/userguide/reports/activity-library-dashboard' },
                 { text: 'Activity Metadata Check', link: '/guides/userguide/reports/activity-metadata-check' },
                 { text: 'Audit Trail Report', link: '/guides/userguide/reports/audit-trail-report' },
+                { text: 'CRF Impact Analysis', link: '/guides/userguide/reports/crf-impact-analysis' },
                 { text: 'CRF Library Versions', link: '/guides/userguide/reports/crf-library-versions' },
                 { text: 'Data Exchange Data Models', link: '/guides/userguide/reports/data-exchange-data-models' },
                 { text: 'Laboratory Data Specification', link: '/guides/userguide/reports/laboratory-data-specification' },

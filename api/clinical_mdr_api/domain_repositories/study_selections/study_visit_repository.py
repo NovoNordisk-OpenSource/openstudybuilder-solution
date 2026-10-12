@@ -161,8 +161,11 @@ class StudyVisitRepository:
         """
         if study_value_version:
             query = """
-                MATCH (:StudyRoot)-[l:HAS_VERSION{status:'RELEASED', version:$study_value_version}]-(:StudyValue)-[:HAS_STUDY_VISIT]->(svis:StudyVisit{uid:$uid})
-                MATCH (svis:StudyVisit)-[:STUDY_VISIT_HAS_SCHEDULE]->(activity_schedule:StudyActivitySchedule)-[:HAS_STUDY_ACTIVITY_SCHEDULE]-(:StudyValue)-[l:HAS_VERSION{status:'RELEASED', version:$study_value_version}]-(:StudyRoot)
+                MATCH (:StudyRoot)-[l:HAS_VERSION{status:'RELEASED', version:$study_value_version}]->
+                    (:StudyValue)-[:HAS_STUDY_VISIT]->(svis:StudyVisit{uid:$uid})
+                MATCH (svis:StudyVisit)-[:STUDY_VISIT_HAS_SCHEDULE]->(activity_schedule:StudyActivitySchedule)
+                    -[:HAS_STUDY_ACTIVITY_SCHEDULE]-(:StudyValue)
+                    -[l:HAS_VERSION{status:'RELEASED', version:$study_value_version}]-(:StudyRoot)
                 RETURN count(activity_schedule)
                 """
             result, _ = db.cypher_query(

@@ -1,7 +1,5 @@
 """Fixtures creating a Study and related nodes"""
 
-# pylint: disable=unused-import,redefined-outer-name,unused-argument
-
 import logging
 
 import pytest
@@ -20,7 +18,6 @@ from clinical_mdr_api.models.study_selections.study_selection import (
 from clinical_mdr_api.models.study_selections.study_visit import StudyVisit
 from clinical_mdr_api.tests.integration.utils import data_library
 from clinical_mdr_api.tests.integration.utils.data_library import (
-    get_codelist_with_term_cypher,
     inject_base_data,
 )
 from clinical_mdr_api.tests.integration.utils.factory_activity import (
@@ -41,14 +38,14 @@ from clinical_mdr_api.tests.integration.utils.factory_visit import (
 from clinical_mdr_api.tests.integration.utils.utils import TestUtils
 
 __all__ = [
-    "tst_study",
-    "tst_project",
-    "study_epochs",
-    "study_arms",
-    "study_elements",
-    "study_design_cells",
     "study_activities",
+    "study_arms",
+    "study_design_cells",
+    "study_elements",
+    "study_epochs",
     "study_visits",
+    "tst_project",
+    "tst_study",
 ]
 
 log = logging.getLogger(__name__)

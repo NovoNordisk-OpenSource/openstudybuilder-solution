@@ -98,7 +98,6 @@ EndpointUID = Path(description="The unique id of the endpoint.")
         ],
     }
 )
-# pylint: disable=unused-argument
 def get_all(
     request: Request,  # request is actually required by the allow_exports decorator
     sort_by: _generic_descriptions.SORT_BY_QUERY = None,
@@ -305,7 +304,6 @@ The returned versions are ordered by `start_date` descending (newest entries fir
         ],
     }
 )
-# pylint: disable=unused-argument
 def get_versions(
     request: Request,  # request is actually required by the allow_exports decorator
     endpoint_uid: Annotated[str, EndpointUID],

@@ -1,8 +1,7 @@
 from datetime import datetime
 from typing import Annotated
 
-from pydantic import BaseModel as PydanticBaseModel
-from pydantic import Field
+from pydantic import BaseModel as PydanticBaseModel, Field
 
 
 class UserInfo(PydanticBaseModel):

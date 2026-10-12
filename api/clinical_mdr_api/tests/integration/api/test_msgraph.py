@@ -1,9 +1,7 @@
-# pylint: disable=unused-import,redefined-outer-name,unused-argument
-
 import pytest
 
 from clinical_mdr_api.services.integrations import msgraph
-from clinical_mdr_api.tests.integration.services.test_msgraph import (
+from clinical_mdr_api.tests.integration.services.test_msgraph import (  # noqa: F401
     USERS,
     USERS_BY_PATTERN,
     mocked_msgraph_service,
@@ -52,9 +50,11 @@ def test_get_users(api_client, pattern):
 
 @pytest.mark.parametrize(
     "pattern, expected_users",
-    [(None, USERS)] + list(USERS_BY_PATTERN.items()),
+    [(None, USERS), *list(USERS_BY_PATTERN.items())],
 )
-def test_get_users_mocked(api_client, mocked_msgraph_service, pattern, expected_users):
+def test_get_users_mocked(
+    api_client, mocked_msgraph_service, pattern, expected_users  # noqa: F811
+):
     params = {"search": pattern} if pattern else None
     response = api_client.get("/integrations/ms-graph/users", params=params)
     assert_response_status_code(response, 200)
@@ -81,7 +81,7 @@ def test_get_users_when_service_disabled(
 
 
 def _assert_users_match_expected(payload, expected_users):
-    # pylint: disable=unused-variable
+
     __tracebackhide__ = True
 
     assert isinstance(payload, list)
@@ -99,7 +99,7 @@ def _assert_users_match_expected(payload, expected_users):
 
 
 def assert_users_well_ordered(payload):
-    # pylint: disable=unused-variable
+
     __tracebackhide__ = True
 
     display_names = [u.get("display_name") for u in payload]
@@ -125,7 +125,9 @@ def assert_users_well_ordered(payload):
         * 3,
     ],
 )
-def test_get_users_invalid_pattern_length(api_client, mocked_msgraph_service, pattern):
+def test_get_users_invalid_pattern_length(
+    api_client, mocked_msgraph_service, pattern  # noqa: F811
+):
     params = {"search": pattern} if pattern else None
     response = api_client.get("/integrations/ms-graph/users", params=params)
 
@@ -154,7 +156,7 @@ def test_get_users_invalid_pattern_length(api_client, mocked_msgraph_service, pa
     ],
 )
 def test_get_users_treats_regex_metacharacters_literally(
-    api_client, mocked_msgraph_service, pattern
+    api_client, mocked_msgraph_service, pattern  # noqa: F811
 ):
     params = {"search": pattern} if pattern else None
     response = api_client.get("/integrations/ms-graph/users", params=params)

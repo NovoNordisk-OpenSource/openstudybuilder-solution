@@ -119,10 +119,18 @@ class VendorElementRepository(OdmGenericRepository[OdmVendorElementAR]):
 
     def _get_computed_field_expressions(self) -> dict[str, str]:
         """Computed fields requiring complex Cypher expressions."""
-        # pylint: disable=line-too-long
+
         return {
-            "vendor_namespace": "head([(odm_value)<-[:HAS_VENDOR_ELEMENT]-(vnv:OdmVendorNamespaceValue)<-[:HAS_VERSION]-(vnr:OdmVendorNamespaceRoot) | {uid: vnr.uid, name: vnv.name, prefix: vnv.prefix, url: vnv.url}]) AS vendor_namespace",
-            "vendor_attributes": "[(odm_value)-[:HAS_VENDOR_ATTRIBUTE]->(vav:OdmVendorAttributeValue)<-[:HAS_VERSION]-(var:OdmVendorAttributeRoot) | {uid: var.uid, name: vav.name, compatible_types: vav.compatible_types}] AS vendor_attributes",
+            "vendor_namespace": (
+                "head([(odm_value)<-[:HAS_VENDOR_ELEMENT]-(vnv:OdmVendorNamespaceValue)<-[:HAS_VERSION]-"
+                "(vnr:OdmVendorNamespaceRoot) | {uid: vnr.uid, name: vnv.name, prefix: vnv.prefix, "
+                "url: vnv.url}]) AS vendor_namespace"
+            ),
+            "vendor_attributes": (
+                "[(odm_value)-[:HAS_VENDOR_ATTRIBUTE]->(vav:OdmVendorAttributeValue)<-[:HAS_VERSION]-"
+                "(var:OdmVendorAttributeRoot) | {uid: var.uid, name: vav.name, compatible_types: "
+                "vav.compatible_types}] AS vendor_attributes"
+            ),
         }
 
     def specific_alias_clause(self, **kwargs) -> str:

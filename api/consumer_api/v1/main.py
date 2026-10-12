@@ -1,6 +1,6 @@
 # RESTful API endpoints used by consumers that want to extract data from OpenStudyBuilder
-# pylint: disable=invalid-name
-# pylint: disable=redefined-builtin
+
+
 import csv
 import io
 from datetime import datetime
@@ -19,9 +19,7 @@ from consumer_api.shared.responses import (
     PaginatedResponse,
     PaginatedResponseWithStudyVersion,
 )
-from consumer_api.v1 import api_specs
-from consumer_api.v1 import db as DB
-from consumer_api.v1 import models
+from consumer_api.v1 import api_specs, db as DB, models
 from consumer_api.v1.services.soa import SoAService
 from consumer_api.v1.services.study import StudyCreateService
 
@@ -919,7 +917,6 @@ def get_papillons_data_type_mapping(
         },
     },
 )
-# pylint: disable=dangerous-default-value
 def get_studies_audit_trail(
     from_ts: Annotated[
         datetime,

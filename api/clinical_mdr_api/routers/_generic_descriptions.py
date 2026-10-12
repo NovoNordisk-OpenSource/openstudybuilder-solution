@@ -1,6 +1,6 @@
 import json
 import typing
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Annotated, Any, cast
 
 from fastapi import Query
@@ -337,6 +337,10 @@ ERROR_400 = {
 ERROR_401 = {"model": ErrorResponse, "description": "Unauthorized"}
 ERROR_403 = {"model": ErrorResponse, "description": "Forbidden"}
 ERROR_404 = {"model": ErrorResponse, "description": "Entity not found"}
+ERROR_405 = {
+    "model": ErrorResponse,
+    "description": "Method Not Allowed - the operation method supplied in the request payload is not supported by this endpoint.",
+}
 ERROR_409 = {
     "model": ErrorResponse,
     "description": "The request could not be completed due to a conflict with the current state of the target resource. "
@@ -398,8 +402,8 @@ def _normalize_datetime_to_utc(value: datetime | None) -> datetime | None:
         return None
     if value.tzinfo is None:
         # Per existing router docs, tz-naive values are treated as UTC.
-        return value.replace(tzinfo=timezone.utc)
-    return value.astimezone(timezone.utc)
+        return value.replace(tzinfo=UTC)
+    return value.astimezone(UTC)
 
 
 # Reusable Query parameter for `at_specified_date_time` / `at_specific_date_time`.

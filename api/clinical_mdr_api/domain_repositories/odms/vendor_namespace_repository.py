@@ -122,10 +122,18 @@ class VendorNamespaceRepository(OdmGenericRepository[OdmVendorNamespaceAR]):
 
     def _get_computed_field_expressions(self) -> dict[str, str]:
         """Computed fields requiring complex Cypher expressions."""
-        # pylint: disable=line-too-long
+
         return {
-            "vendor_elements": "[(odm_value)-[hve:HAS_VENDOR_ELEMENT]->(vev:OdmVendorElementValue)<-[:HAS_VERSION]-(ver:OdmVendorElementRoot) | {uid: ver.uid, name: vev.name, compatible_types: vev.compatible_types, value: hve.value}] AS vendor_elements",
-            "vendor_attributes": "[(odm_value)-[hva:HAS_VENDOR_ATTRIBUTE]->(vav:OdmVendorAttributeValue)<-[:HAS_VERSION]-(var:OdmVendorAttributeRoot) | {uid: var.uid, name: vav.name, compatible_types: vav.compatible_types, value: hva.value}] AS vendor_attributes",
+            "vendor_elements": (
+                "[(odm_value)-[hve:HAS_VENDOR_ELEMENT]->(vev:OdmVendorElementValue)<-[:HAS_VERSION]-"
+                "(ver:OdmVendorElementRoot) | {uid: ver.uid, name: vev.name, compatible_types: "
+                "vev.compatible_types, value: hve.value}] AS vendor_elements"
+            ),
+            "vendor_attributes": (
+                "[(odm_value)-[hva:HAS_VENDOR_ATTRIBUTE]->(vav:OdmVendorAttributeValue)<-[:HAS_VERSION]-"
+                "(var:OdmVendorAttributeRoot) | {uid: var.uid, name: vav.name, compatible_types: "
+                "vav.compatible_types, value: hva.value}] AS vendor_attributes"
+            ),
         }
 
     def specific_alias_clause(self, **kwargs) -> str:

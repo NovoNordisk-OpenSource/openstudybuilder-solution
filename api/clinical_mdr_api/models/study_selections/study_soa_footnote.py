@@ -3,6 +3,9 @@ from typing import Annotated, Self
 
 from pydantic import Field
 
+from clinical_mdr_api.domain_repositories.study_selections.study_soa_repository import (
+    SoALayout,
+)
 from clinical_mdr_api.domains.study_selections.study_soa_footnote import (
     StudySoAFootnoteVO,
     StudySoAFootnoteVOHistory,
@@ -176,6 +179,13 @@ class StudySoAFootnote(BaseModel):
             json_schema_extra={"nullable": True},
         ),
     ] = None
+    layout: Annotated[
+        SoALayout | None,
+        Field(
+            description="The SoA layout/rendering this footnote is connected to.",
+            json_schema_extra={"nullable": True},
+        ),
+    ] = None
     author_username: Annotated[
         str | None, Field(json_schema_extra={"nullable": True})
     ] = None
@@ -230,6 +240,11 @@ class StudySoAFootnote(BaseModel):
             modified=study_soa_footnote_vo.modified,
             accepted_version=study_soa_footnote_vo.accepted_version,
             author_username=study_soa_footnote_vo.author_username,
+            layout=(
+                SoALayout(study_soa_footnote_vo.layout)
+                if study_soa_footnote_vo.layout
+                else None
+            ),
         )
 
     @classmethod
@@ -263,6 +278,11 @@ class StudySoAFootnote(BaseModel):
                 if not study_soa_footnote_vo.footnote_uid
                 else None
             ),
+            layout=(
+                SoALayout(study_soa_footnote_vo.layout)
+                if study_soa_footnote_vo.layout
+                else None
+            ),
         )
 
 
@@ -273,6 +293,10 @@ class StudySoAFootnoteCreateInput(PostInputModel):
         description="The list of items referenced by a single footnote",
         default_factory=list,
     )
+    layout: Annotated[
+        SoALayout | None,
+        Field(description="The SoA layout/rendering this footnote is connected to."),
+    ] = None
 
 
 class StudySoAFootnoteCreateFootnoteInput(PostInputModel):
@@ -284,6 +308,10 @@ class StudySoAFootnoteCreateFootnoteInput(PostInputModel):
         description="The list of items referenced by a single footnote",
         default_factory=list,
     )
+    layout: Annotated[
+        SoALayout | None,
+        Field(description="The SoA layout/rendering this footnote is connected to."),
+    ] = None
 
 
 class StudySoAFootnoteEditInput(PatchInputModel):
@@ -292,6 +320,10 @@ class StudySoAFootnoteEditInput(PatchInputModel):
     referenced_items: Annotated[
         list[ReferencedItem] | None,
         Field(description="The list of items referenced by a single footnote"),
+    ] = None
+    layout: Annotated[
+        SoALayout | None,
+        Field(description="The SoA layout/rendering this footnote is connected to."),
     ] = None
 
 
@@ -341,6 +373,11 @@ class StudySoAFootnoteHistory(StudySoAFootnote):
             end_date=study_soa_footnote_vo.end_date,
             change_type=study_soa_footnote_vo.change_type,
             author_username=study_soa_footnote_vo.author_username,
+            layout=(
+                SoALayout(study_soa_footnote_vo.layout)
+                if study_soa_footnote_vo.layout
+                else None
+            ),
         )
 
 
@@ -354,4 +391,4 @@ class StudySoAFootnoteBatchEditInput(StudySoAFootnoteEditInput):
 
 class StudySoAFootnoteBatchOutput(BaseModel):
     response_code: Annotated[int, Field()] = RESPONSE_CODE_FIELD
-    content: Annotated[StudySoAFootnote | None | BatchErrorResponse, Field()]
+    content: Annotated[StudySoAFootnote | BatchErrorResponse | None, Field()]

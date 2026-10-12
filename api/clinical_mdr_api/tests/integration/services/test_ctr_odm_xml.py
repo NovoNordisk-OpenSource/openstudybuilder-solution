@@ -32,7 +32,6 @@ def test_database():
     return study
 
 
-# pylint: disable=unused-argument,redefined-outer-name
 def test_xml_response(api_client, test_database):
     study = generate_study_root()
     response = api_client.get(f"/studies/{study.uid}/ctr/odm.xml")

@@ -76,7 +76,7 @@
             >
               <div class="supplier-type-section pa-4">
                 <div class="text-headline-small mb-4">
-                  {{ $t('StudyDataSuppliers.supplier_data_type') }}
+                  {{ $t('StudyDataSuppliers.data_supplier_type') }}
                   <strong>{{ typeName }}</strong>
                 </div>
                 <div

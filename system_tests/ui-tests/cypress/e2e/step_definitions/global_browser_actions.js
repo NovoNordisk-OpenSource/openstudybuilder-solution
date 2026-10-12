@@ -10,6 +10,7 @@ Then('User defocus from field', () => cy.get('body').click())
 Then('The current URL is {string}', (url) => cy.url().should('contain', url))
 
 When('The page {string} is opened for current study', (page) => goToPageAndForItToLoad(`/studies/${getCurrStudyUid()}/${page}`))
+
 Given('The {string} page is opened', (url) => goToPageAndForItToLoad(url))
 
 Given('The homepage is opened', () => cy.visit('/'))
@@ -20,6 +21,16 @@ Given('User selects study with id {string}', (studyId) => {
     cy.getStudyUidById(studyId).then(uid => {
         cy.sendGetRequest(`/studies/${uid}`).then((response) => {
             window.localStorage.setItem("selectedStudy", JSON.stringify(response.body))
+        })
+    })
+})
+
+Given('User selects newly created CDISC study', () => {
+    cy.readFile('cypress/fixtures/study_metadata.json').then(data => {
+        cy.getStudyUidById(`CDISC DEV-${data.studyNumber}`).then(uid => {
+            cy.sendGetRequest(`/studies/${uid}`).then((response) => {
+                window.localStorage.setItem("selectedStudy", JSON.stringify(response.body))
+            })
         })
     })
 })

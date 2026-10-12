@@ -267,14 +267,14 @@ class StudySelectionActivityInstanceRepository(
 
     def _additional_match(self, **kwargs) -> str:
         include_placeholders = kwargs.get("include_placeholders", False)
-        # Base query to match study activities and their instances
+        # Membership is the StudyValue edges, not the absence of a BEFORE audit
+        # relationship. Delete/edit on the latest draft adds BEFORE to the previous
+        # SAI node; locked StudyValues still point at that node and must keep it.
         base_query = """
             WITH sr, sv
             MATCH (sv)-[:HAS_STUDY_ACTIVITY]->(study_activity:StudyActivity)
-            WHERE NOT (study_activity)-[:BEFORE]-()
             OPTIONAL MATCH (study_activity)-[:STUDY_ACTIVITY_HAS_STUDY_ACTIVITY_INSTANCE]->(sa:StudyActivityInstance)
-                <-[:HAS_STUDY_ACTIVITY_INSTANCE]-(sv)
-            WHERE NOT (sa)-[:BEFORE]-()"""
+                <-[:HAS_STUDY_ACTIVITY_INSTANCE]-(sv)"""
 
         if include_placeholders:
             # Include placeholders: activities from 'Requested' library without a StudyActivityInstance
@@ -298,16 +298,23 @@ class StudySelectionActivityInstanceRepository(
                         uid:air.uid, name: aiv.name, topic_code: aiv.topic_code, adam_param_code:aiv.adam_param_code, version: ver.version, status: ver.status,
                         is_default_selected_for_activity: coalesce(aiv.is_default_selected_for_activity, false),
                         is_required_for_activity: coalesce(aiv.is_required_for_activity, false),
-                        activity_instance_class: head([(aiv)-[:ACTIVITY_INSTANCE_CLASS]->(activity_instance_class_root:ActivityInstanceClassRoot)-[:LATEST]->(activity_instance_class_value:ActivityInstanceClassValue)
-                            | {uid:activity_instance_class_root.uid, name:activity_instance_class_value.name}]),
+                        activity_instance_class: head([
+                            (aiv)-[:ACTIVITY_INSTANCE_CLASS]->(activity_instance_class_root:ActivityInstanceClassRoot)
+                            -[:LATEST]->(activity_instance_class_value:ActivityInstanceClassValue)
+                            | {uid:activity_instance_class_root.uid, name:activity_instance_class_value.name}
+                        ]),
                         activity_items: [(aiv)-[:CONTAINS_ACTIVITY_ITEM]->(activity_item:ActivityItem)
                             <-[:HAS_ACTIVITY_ITEM]-(activity_item_class_root:ActivityItemClassRoot)-[:LATEST]->
                             (activity_item_class_value:ActivityItemClassValue)
                             WHERE activity_item_class_value.name IN ['specimen', 'test_name_code', 'standard_unit']
                                 | {
                                     activity_item_class_name: activity_item_class_value.name,
-                                    ct_terms: [(activity_item)-[:HAS_CT_TERM]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(:CTTermRoot)-[:HAS_NAME_ROOT]->(:CTTermNameRoot)-[:LATEST]->(term_name_value:CTTermNameValue) | term_name_value.name],
-                                    unit_definitions: [(activity_item)-[:HAS_UNIT_DEFINITION]->(:UnitDefinitionRoot)-[:LATEST]->(unit_definition_value:UnitDefinitionValue) | unit_definition_value.name]
+                                    ct_terms: [(activity_item)-[:HAS_CT_TERM]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(:CTTermRoot)-[:HAS_NAME_ROOT]->(:CTTermNameRoot)
+                                        -[:LATEST]->(term_name_value:CTTermNameValue)
+                                        | term_name_value.name],
+                                    unit_definitions: [(activity_item)-[:HAS_UNIT_DEFINITION]->(:UnitDefinitionRoot)-[:LATEST]->
+                                        (unit_definition_value:UnitDefinitionValue)
+                                        | unit_definition_value.name]
                                 }
                         ]
                     } as activity_instance,
@@ -324,13 +331,16 @@ class StudySelectionActivityInstanceRepository(
                 RETURN
                     {
                         uid:air.uid, name: latest_aiv.name, topic_code: latest_aiv.topic_code, version: ver.version, status: ver.status, date: ver.start_date,
-                        activity_instance_class: head([(latest_aiv)-[:ACTIVITY_INSTANCE_CLASS]->(activity_instance_class_root:ActivityInstanceClassRoot)-[:LATEST]->(activity_instance_class_value:ActivityInstanceClassValue)
-                            | {uid:activity_instance_class_root.uid, name:activity_instance_class_value.name}])
+                        activity_instance_class: head([
+                            (latest_aiv)-[:ACTIVITY_INSTANCE_CLASS]->(activity_instance_class_root:ActivityInstanceClassRoot)
+                            -[:LATEST]->(activity_instance_class_value:ActivityInstanceClassValue)
+                            | {uid:activity_instance_class_root.uid, name:activity_instance_class_value.name}
+                        ])
                     } as latest_activity_instance
                 ORDER BY ver.start_date DESC
                 LIMIT 1
             }
-            CALL(study_activity) {
+            CALL (study_activity, sv) {
                 MATCH (study_activity)-[:HAS_SELECTED_ACTIVITY]->(av:ActivityValue)<-[ver:HAS_VERSION]-(ar:ActivityRoot)<-[:CONTAINS_CONCEPT]-(library:Library)
                 WHERE ver.status IN ['Final', 'Retired']
                 RETURN
@@ -339,7 +349,7 @@ class StudySelectionActivityInstanceRepository(
                         is_instance_removal_needed:
                         CASE WHEN
                             size(apoc.coll.toSet([(study_activity)-[:STUDY_ACTIVITY_HAS_STUDY_ACTIVITY_INSTANCE]->(sai:StudyActivityInstance)
-                                WHERE NOT (sai)-[:BEFORE]-() AND NOT (sai)-[:AFTER]-(:Delete:StudyAction) | sai.uid])) > 1
+                                <-[:HAS_STUDY_ACTIVITY_INSTANCE]-(sv) | sai.uid])) > 1
                             AND av.is_multiple_selection_allowed = false
                             THEN TRUE
                             ELSE FALSE
@@ -352,7 +362,8 @@ class StudySelectionActivityInstanceRepository(
             CALL (sa, sv) {
                 OPTIONAL MATCH (sa)-[:HAS_BASELINE]->(baseline_visit:StudyVisit)<-[:HAS_STUDY_VISIT]-(sv)
                 OPTIONAL MATCH (baseline_visit)-[:HAS_VISIT_NAME]->(visit_name_root:VisitNameRoot)-[:LATEST]->(visit_name_value:VisitNameValue)
-                OPTIONAL MATCH (baseline_visit)-[:HAS_VISIT_TYPE]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(visit_type_root:CTTermRoot)-[:HAS_NAME_ROOT]-(:CTTermNameRoot)-[:LATEST]->(visit_type_value:CTTermNameValue)
+                OPTIONAL MATCH (baseline_visit)-[:HAS_VISIT_TYPE]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(visit_type_root:CTTermRoot)-[:HAS_NAME_ROOT]-(:CTTermNameRoot)
+                    -[:LATEST]->(visit_type_value:CTTermNameValue)
                 WITH CASE WHEN baseline_visit IS NOT NULL THEN {
                     uid: baseline_visit.uid,
                     visit_name: visit_name_value.name,
@@ -363,9 +374,11 @@ class StudySelectionActivityInstanceRepository(
             WITH sr, sv, sa, study_activity, activity, activity_instance, latest_activity_instance, collect(baseline_visit) as baseline_visits
             // Data supplier and origin fields (L3 SoA)
             OPTIONAL MATCH (sa)-[:HAS_STUDY_DATA_SUPPLIER]->(sds:StudyDataSupplier)-[:HAS_DATA_SUPPLIER]->(dsv:DataSupplierValue)
-            OPTIONAL MATCH (sa)-[:HAS_ORIGIN_TYPE]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(origin_type_root:CTTermRoot)-[:HAS_NAME_ROOT]->(:CTTermNameRoot)-[:LATEST]->(origin_type_name_value:CTTermNameValue)
+            OPTIONAL MATCH (sa)-[:HAS_ORIGIN_TYPE]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(origin_type_root:CTTermRoot)-[:HAS_NAME_ROOT]->(:CTTermNameRoot)
+                -[:LATEST]->(origin_type_name_value:CTTermNameValue)
             OPTIONAL MATCH (sa)-[:HAS_ORIGIN_TYPE]->(origin_type_ctx:CTTermContext)-[:HAS_SELECTED_CODELIST]->(origin_type_codelist:CTCodelistRoot)
-            OPTIONAL MATCH (sa)-[:HAS_ORIGIN_SOURCE]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(origin_source_root:CTTermRoot)-[:HAS_NAME_ROOT]->(:CTTermNameRoot)-[:LATEST]->(origin_source_name_value:CTTermNameValue)
+            OPTIONAL MATCH (sa)-[:HAS_ORIGIN_SOURCE]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(origin_source_root:CTTermRoot)-[:HAS_NAME_ROOT]->(:CTTermNameRoot)
+                -[:LATEST]->(origin_source_name_value:CTTermNameValue)
             OPTIONAL MATCH (sa)-[:HAS_ORIGIN_SOURCE]->(origin_source_ctx:CTTermContext)-[:HAS_SELECTED_CODELIST]->(origin_source_codelist:CTCodelistRoot)
         """
         return base_query
@@ -416,7 +429,7 @@ class StudySelectionActivityInstanceRepository(
             if has_activity_instance is True:
                 # Use WITH * WHERE to filter after OPTIONAL MATCH, not pattern WHERE
                 return " WITH * WHERE " + " AND ".join(
-                    filter_list + ["activity_instance.uid IS NOT NULL"]
+                    [*filter_list, "activity_instance.uid IS NOT NULL"]
                 )
             filter_query += " AND ".join(filter_list)
         return filter_query
@@ -614,16 +627,23 @@ class StudySelectionActivityInstanceRepository(
                                 uid:air.uid, name: aiv.name, topic_code: aiv.topic_code, adam_param_code:aiv.adam_param_code, version: ver.version, status: ver.status,
                                 is_default_selected_for_activity: coalesce(aiv.is_default_selected_for_activity, false), 
                                 is_required_for_activity: coalesce(aiv.is_required_for_activity, false),
-                                activity_instance_class: head([(aiv)-[:ACTIVITY_INSTANCE_CLASS]->(activity_instance_class_root:ActivityInstanceClassRoot)-[:LATEST]->(activity_instance_class_value:ActivityInstanceClassValue)
-                                    | {uid:activity_instance_class_root.uid, name:activity_instance_class_value.name}]),
+                                activity_instance_class: head([
+                                    (aiv)-[:ACTIVITY_INSTANCE_CLASS]->(activity_instance_class_root:ActivityInstanceClassRoot)
+                                    -[:LATEST]->(activity_instance_class_value:ActivityInstanceClassValue)
+                                    | {uid:activity_instance_class_root.uid, name:activity_instance_class_value.name}
+                                ]),
                                 activity_items: [(aiv)-[:CONTAINS_ACTIVITY_ITEM]->(activity_item:ActivityItem)
                                     <-[:HAS_ACTIVITY_ITEM]-(activity_item_class_root:ActivityItemClassRoot)-[:LATEST]->
                                     (activity_item_class_value:ActivityItemClassValue)
                                     WHERE activity_item_class_value.name IN ['specimen', 'test_name_code', 'standard_unit']
                                         | {
                                             activity_item_class_name: activity_item_class_value.name,
-                                            ct_terms: [(activity_item)-[:HAS_CT_TERM]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(:CTTermRoot)-[:HAS_NAME_ROOT]->(:CTTermNameRoot)-[:LATEST]->(term_name_value:CTTermNameValue) | term_name_value.name],
-                                            unit_definitions: [(activity_item)-[:HAS_UNIT_DEFINITION]->(unit_definition_root:UnitDefinitionRoot)-[:LATEST]->(unit_definition_value:UnitDefinitionValue) | unit_definition_value.name]
+                                            ct_terms: [(activity_item)-[:HAS_CT_TERM]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(:CTTermRoot)-[:HAS_NAME_ROOT]->(:CTTermNameRoot)
+                                                -[:LATEST]->(term_name_value:CTTermNameValue)
+                                                | term_name_value.name],
+                                            unit_definitions: [(activity_item)-[:HAS_UNIT_DEFINITION]->(unit_definition_root:UnitDefinitionRoot)-[:LATEST]->
+                                                (unit_definition_value:UnitDefinitionValue)
+                                                | unit_definition_value.name]
                                         }
                                 ]
                             } as activity_instance,
@@ -646,7 +666,8 @@ class StudySelectionActivityInstanceRepository(
                     CALL (all_sa) {
                         OPTIONAL MATCH (all_sa)-[:HAS_BASELINE]->(baseline_visit:StudyVisit)
                         OPTIONAL MATCH (baseline_visit)-[:HAS_VISIT_NAME]->(visit_name_root:VisitNameRoot)-[:LATEST]->(visit_name_value:VisitNameValue)
-                        OPTIONAL MATCH (baseline_visit)-[:HAS_VISIT_TYPE]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(visit_type_root:CTTermRoot)-[:HAS_NAME_ROOT]-(:CTTermNameRoot)-[:LATEST]->(visit_type_value:CTTermNameValue)
+                        OPTIONAL MATCH (baseline_visit)-[:HAS_VISIT_TYPE]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(visit_type_root:CTTermRoot)-[:HAS_NAME_ROOT]-(:CTTermNameRoot)
+                            -[:LATEST]->(visit_type_value:CTTermNameValue)
                         WITH baseline_visit.uid AS baseline_visit_uid, CASE WHEN baseline_visit IS NOT NULL THEN {
                             uid: baseline_visit.uid,
                             visit_name: visit_name_value.name,
@@ -660,9 +681,11 @@ class StudySelectionActivityInstanceRepository(
                     WITH all_sa, study_activity, activity, activity_instance, asa, bsa, collect(baseline_visit) as baseline_visits
                     // Data supplier and origin fields (L3 SoA)
                     OPTIONAL MATCH (all_sa)-[:HAS_STUDY_DATA_SUPPLIER]->(sds:StudyDataSupplier)-[:HAS_DATA_SUPPLIER]->(dsv:DataSupplierValue)
-                    OPTIONAL MATCH (all_sa)-[:HAS_ORIGIN_TYPE]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(origin_type_root:CTTermRoot)-[:HAS_NAME_ROOT]->(:CTTermNameRoot)-[:LATEST]->(origin_type_name_value:CTTermNameValue)
+                    OPTIONAL MATCH (all_sa)-[:HAS_ORIGIN_TYPE]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(origin_type_root:CTTermRoot)-[:HAS_NAME_ROOT]->(:CTTermNameRoot)
+                        -[:LATEST]->(origin_type_name_value:CTTermNameValue)
                     OPTIONAL MATCH (all_sa)-[:HAS_ORIGIN_TYPE]->(origin_type_ctx:CTTermContext)-[:HAS_SELECTED_CODELIST]->(origin_type_codelist:CTCodelistRoot)
-                    OPTIONAL MATCH (all_sa)-[:HAS_ORIGIN_SOURCE]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(origin_source_root:CTTermRoot)-[:HAS_NAME_ROOT]->(:CTTermNameRoot)-[:LATEST]->(origin_source_name_value:CTTermNameValue)
+                    OPTIONAL MATCH (all_sa)-[:HAS_ORIGIN_SOURCE]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(origin_source_root:CTTermRoot)-[:HAS_NAME_ROOT]->(:CTTermNameRoot)
+                        -[:LATEST]->(origin_source_name_value:CTTermNameValue)
                     OPTIONAL MATCH (all_sa)-[:HAS_ORIGIN_SOURCE]->(origin_source_ctx:CTTermContext)-[:HAS_SELECTED_CODELIST]->(origin_source_codelist:CTCodelistRoot)
                     WITH all_sa, study_activity, activity, activity_instance, asa, bsa, baseline_visits,
                          sds, dsv, origin_type_root, origin_type_name_value, origin_type_codelist,

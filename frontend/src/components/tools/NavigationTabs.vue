@@ -38,6 +38,10 @@ const props = defineProps({
     type: String,
     default: 'name',
   },
+  persist: {
+    type: Boolean,
+    default: true,
+  },
 })
 const emit = defineEmits(['tabChanged'])
 
@@ -52,6 +56,9 @@ const tabKeys = ref({})
 const updateTabKey = (value) => {
   if (tabKeys.value[value] === undefined) {
     tabKeys.value[value] = 0
+  }
+  if (props.persist) {
+    return
   }
   tabKeys.value[value]++
 }

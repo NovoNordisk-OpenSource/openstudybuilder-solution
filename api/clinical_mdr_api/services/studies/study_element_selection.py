@@ -1,6 +1,7 @@
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Callable
+from typing import Any
 
 from fastapi import status
 from neomodel import db
@@ -59,9 +60,7 @@ class _ElementSkipIndexes:
     by_short_name: dict[str, list[_ElementSkipIndexEntry]]
 
     @classmethod
-    def from_aggregate(
-        cls, aggregate: StudySelectionElementAR
-    ) -> "_ElementSkipIndexes":
+    def from_aggregate(cls, aggregate: StudySelectionElementAR) -> _ElementSkipIndexes:
         indexes = cls(by_name={}, by_short_name={})
         for vo in aggregate.study_elements_selection:
             indexes.register_vo(vo)
@@ -254,6 +253,7 @@ class StudyElementSelectionService(
                                 selection_create_input.planned_duration.duration_unit_code
                             ),
                             find_duration_name_by_code=self._repos.unit_definition_repository.find_by_uid_2,
+                            find_all_study_time_units=self._repos.unit_definition_repository.find_all,
                         )
                         if selection_create_input.planned_duration
                         else None
@@ -449,6 +449,7 @@ class StudyElementSelectionService(
                         request_study_element.planned_duration.duration_unit_code
                     ),
                     find_duration_name_by_code=find_duration_name_by_code,
+                    find_all_study_time_units=self._repos.unit_definition_repository.find_all,
                 )
                 if request_study_element.planned_duration is not None
                 else None
@@ -623,6 +624,7 @@ class StudyElementSelectionService(
                         spec.planned_duration.duration_unit_code
                     ),
                     find_duration_name_by_code=repos.unit_definition_repository.find_by_uid_2,
+                    find_all_study_time_units=repos.unit_definition_repository.find_all,
                 )
                 if spec.planned_duration
                 else None

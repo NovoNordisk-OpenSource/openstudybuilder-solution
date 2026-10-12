@@ -1,6 +1,7 @@
 from abc import abstractmethod
+from collections.abc import Callable, Set
 from dataclasses import dataclass
-from typing import AbstractSet, Callable, Generic, Self, TypeVar
+from typing import Self, TypeVar
 
 from clinical_mdr_api.domains.versioned_object_aggregate import (
     LibraryItemAggregateRootBase,
@@ -146,33 +147,31 @@ class ConceptVO:
         )
 
 
-# pylint: disable=invalid-name
-_ConceptVOType = TypeVar("_ConceptVOType", bound=ConceptVO)
 _AggregateRootType = TypeVar("_AggregateRootType")
 
 
 @dataclass
-class ConceptARBase(LibraryItemAggregateRootBase, Generic[_ConceptVOType]):
+class ConceptARBase[ConceptVOType: ConceptVO](LibraryItemAggregateRootBase):
     """
     An abstract generic activity item aggregate for versioned activity items
     """
 
-    _concept_vo: _ConceptVOType
+    _concept_vo: ConceptVOType
 
     @property
     @abstractmethod
-    def concept_vo(self) -> _ConceptVOType:
+    def concept_vo(self) -> ConceptVOType:
         raise NotImplementedError
 
     @concept_vo.setter
-    def concept_vo(self, concept_vo: _ConceptVOType):
+    def concept_vo(self, concept_vo: ConceptVOType):
         self._concept_vo = concept_vo
 
     @classmethod
     def from_repository_values(
         cls,
         uid: str,
-        concept_vo: _ConceptVOType,
+        concept_vo: ConceptVOType,
         library: LibraryVO,
         item_metadata: LibraryItemMetadataVO,
     ) -> Self:
@@ -189,7 +188,7 @@ class ConceptARBase(LibraryItemAggregateRootBase, Generic[_ConceptVOType]):
         cls,
         *,
         author_id: str,
-        concept_vo: _ConceptVOType,
+        concept_vo: ConceptVOType,
         library: LibraryVO,
         concept_exists_by_callback: Callable[
             [str, str, bool], bool
@@ -220,7 +219,7 @@ class ConceptARBase(LibraryItemAggregateRootBase, Generic[_ConceptVOType]):
         self,
         author_id: str,
         change_description: str,
-        concept_vo: _ConceptVOType,
+        concept_vo: ConceptVOType,
         concept_exists_by_callback: Callable[
             [str, str, bool], bool
         ] = lambda x, y, z: True,
@@ -243,7 +242,7 @@ class ConceptARBase(LibraryItemAggregateRootBase, Generic[_ConceptVOType]):
         """
         super()._create_new_version(author_id=author_id)
 
-    def get_possible_actions(self) -> AbstractSet[ObjectAction]:
+    def get_possible_actions(self) -> Set[ObjectAction]:
         """
         Returns list of possible actions
         """

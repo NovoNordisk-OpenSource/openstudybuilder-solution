@@ -219,7 +219,7 @@ def pytest_itemcollected(item):
     which allows the report to contain more meaningful text than just the test method name.
     This will also format the docstring using the test parameters values.
     """
-    # pylint: disable=protected-access
+
     node = item.obj
     test_docstring = node.__doc__.strip() if node.__doc__ else None
     if test_docstring:

@@ -90,7 +90,8 @@ def make_api_header(token):
 
 
 # Refresh the token if it's older than TOKEN_REFRESH_INTERVAL
-# pylint: disable=global-statement
+
+
 def refresh_token():
     global LAST_TOKEN_REFRESH
     global API_HEADERS

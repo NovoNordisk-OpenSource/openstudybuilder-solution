@@ -1,7 +1,7 @@
 """Base classes/mixins related to study selection."""
 
-from datetime import datetime, timezone
-from typing import Sequence
+from collections.abc import Sequence
+from datetime import UTC, datetime
 
 from opencensus.trace import execution_context
 
@@ -183,7 +183,7 @@ class StudySelectionMixin:
                 59,
                 59,
                 999999,
-                tzinfo=timezone.utc,
+                tzinfo=UTC,
             )
             if terms_at_specific_date
             else None

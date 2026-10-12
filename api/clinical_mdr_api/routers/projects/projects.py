@@ -51,7 +51,6 @@ ProjectUID = Path(description="The unique id of the project.")
         ],
     }
 )
-# pylint: disable=unused-argument
 def get_projects(
     request: Request,  # request is actually required by the allow_exports decorator
     sort_by: _generic_descriptions.SORT_BY_QUERY = None,

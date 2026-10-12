@@ -1,10 +1,3 @@
-# pylint: disable=unused-argument
-# pylint: disable=redefined-outer-name
-# pylint: disable=too-many-arguments
-
-# pytest fixture functions have other fixture functions as arguments,
-# which pylint interprets as unused arguments
-
 import pytest
 from fastapi.testclient import TestClient
 from neomodel import db
@@ -40,6 +33,33 @@ def test_get_all_terms_from_non_existent_codelist(api_client):
     res = response.json()
 
     assert res["type"] == "NotFoundException"
+    assert (
+        res["message"] == "CT Codelist with UID 'non_existent_codelist' doesn't exist."
+    )
+
+
+def test_post_create_term_from_non_existent_codelist_returns_bad_request(api_client):
+    data = {
+        "catalogue_names": ["SDTM CT"],
+        "nci_preferred_name": "nci_preferred_name",
+        "definition": "definition",
+        "sponsor_preferred_name": "string",
+        "sponsor_preferred_name_sentence_case": "string",
+        "library_name": "Sponsor",
+        "codelists": [
+            {
+                "codelist_uid": "non_existent_codelist",
+                "submission_value": "term_submission_value",
+            }
+        ],
+    }
+    response = api_client.post("/ct/terms", json=data)
+
+    assert_response_status_code(response, 400)
+
+    res = response.json()
+
+    assert res["type"] == "BusinessLogicException"
     assert (
         res["message"] == "CT Codelist with UID 'non_existent_codelist' doesn't exist."
     )

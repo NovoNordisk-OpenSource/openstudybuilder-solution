@@ -7,6 +7,9 @@ request-timeout = 300
 # Available since schemathesis 4.4.0.
 allow-extra-parameters = false
 
+# Stops Hypothesis printing a warning for every endpoint it tests.
+database = "none"
+
 [checks.positive_data_acceptance]
 # Allow-list rationale:
 #   2xx          - default success statuses.
@@ -19,12 +22,21 @@ allow-extra-parameters = false
 #                  without a real token or role context.
 #   404          - generated path UIDs naturally miss existing records; the
 #                  request shape is valid, the referent just does not exist.
+#   405          - the five `*/batch` operations return 405 when the `method`
+#                  field inside a batch item names an operation the endpoint
+#                  does not support. Those five are the only routes in any of
+#                  the three specs that declare 405, and each declares it
+#                  deliberately, so `status_code_conformance` still rejects a
+#                  405 from anywhere else.
 #   409          - unique-constraint / state-conflict outcomes from legitimate
 #                  business rules (not contract violations).
-# 5xx is intentionally excluded: server errors are real bugs and must remain
-# visible via both `positive_data_acceptance` and the dedicated `server_error`
-# check. Double-reporting is preferred over silently hiding crashes.
-expected-statuses = ["2xx", "400", "401", "403", "404", "409"]
+# 5xx is intentionally excluded from the global allow-list: server errors are
+# real bugs and must remain visible via both `positive_data_acceptance` and the
+# dedicated `not_a_server_error` check. Double-reporting is preferred over
+# silently hiding crashes. A small, explicitly enumerated set of per-operation
+# exceptions is documented in the [[operations]] blocks below; each block
+# carries its own justification.
+expected-statuses = ["2xx", "400", "401", "403", "404", "405", "409"]
 
 [checks.unsupported_method]
 # Schemathesis v4 added the `unsupported_method` check, which expects methods
@@ -45,3 +57,56 @@ expected-statuses = ["2xx", "400", "401", "403", "404", "409"]
 # justify. The check is disabled so we stop reporting framework-level
 # routing behaviour as API contract violations.
 enabled = false
+
+# Pydantic coerces JSON boolean values to numbers (false -> 0, true -> 1)
+# rather than rejecting them, so these operations accept `false` where the
+# schema declares an integer or number field and return 200/201. Disabling the
+# coercion would require strict validation mode across the affected concept
+# models, which changes behaviour for existing API consumers. The
+# `negative_data_rejection` check is suppressed on these operations because
+# the coercion is a deliberate framework default, not a contract defect.
+[[operations]]
+include-name = "PATCH /ct/terms/{term_uid}/codelists"
+checks.negative_data_rejection.enabled = false
+
+[[operations]]
+include-name = "POST /admin/complexity-scores/burdens"
+checks.negative_data_rejection.enabled = false
+
+[[operations]]
+include-name = "POST /concepts/numeric-values"
+checks.negative_data_rejection.enabled = false
+
+[[operations]]
+include-name = "POST /concepts/study-days"
+checks.negative_data_rejection.enabled = false
+
+[[operations]]
+include-name = "POST /concepts/study-duration-days"
+checks.negative_data_rejection.enabled = false
+
+[[operations]]
+include-name = "POST /concepts/study-duration-weeks"
+checks.negative_data_rejection.enabled = false
+
+[[operations]]
+include-name = "POST /concepts/study-weeks"
+checks.negative_data_rejection.enabled = false
+
+[[operations]]
+include-name = "POST /concepts/unit-definitions"
+checks.negative_data_rejection.enabled = false
+
+[[operations]]
+include-name = "POST /odms/item-groups"
+checks.negative_data_rejection.enabled = false
+
+# The pagination parameters previously needed six per-route suppressions here.
+# Both causes were in our own test hooks rather than in the API, and are fixed
+# in clinical_mdr_api/hooks/schemathesis_hooks.py: an array generated for a
+# scalar parameter was collapsed to a valid integer, and `page_size=0` was
+# rewritten to 10 even on the consumer operations that declare `minimum: 1`.
+# Either rewrite handed the API a legal request and the check then correctly
+# reported that no violation had been rejected. The violations now reach the API
+# and it rejects them with 400, so there is nothing left to suppress.
+

@@ -46,9 +46,6 @@
           :update="updateSoa"
         />
       </v-window-item>
-      <v-window-item value="crfs">
-        <StudyOdmViewer :key="`crfs-${tabKeys.crfs}`" />
-      </v-window-item>
     </v-window>
     <v-dialog v-model="showSoaSettings" max-width="800px">
       <SoaSettingsForm @close="closeSoaSettings" />
@@ -69,7 +66,6 @@ import { useRoute, useRouter } from 'vue-router'
 import { useAccessGuard } from '@/composables/accessGuard'
 import { useSoaContentLoadingStore } from '@/stores/soa-content-loading'
 import { useTabKeys } from '@/composables/tabKeys'
-import StudyOdmViewer from '@/components/studies/StudyOdmViewer.vue'
 
 const appStore = useAppStore()
 const studiesGeneralStore = useStudiesGeneralStore()
@@ -79,13 +75,12 @@ const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const roles = inject('roles')
-const { tabKeys, updateTabKey } = useTabKeys()
+const { tabKeys, updateTabKey } = useTabKeys({ persist: true })
 
 const tab = ref(null)
 const tabs = [
   { tab: 'instances', name: t('StudyDataSpecifications.tab1_title') },
   { tab: 'operational', name: t('StudyDataSpecifications.tab2_title') },
-  { tab: 'crfs', name: t('StudyDataSpecifications.tab3_title') },
 ]
 const showSoaSettings = ref(false)
 const updateSoa = ref(0)

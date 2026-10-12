@@ -10,5 +10,5 @@ if __name__ == "__main__":
     os.environ.setdefault("UVICORN_PORT", "8000")
     os.environ.setdefault("UVICORN_RELOAD", "true")
 
-    # pylint: disable=no-value-for-parameter
+    
     sys.exit(main())

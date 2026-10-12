@@ -23,6 +23,7 @@ const DEMO_FEATURE_FLAGS = [
   'studies_view_listings_analysis_study_metadata_new',
   'study_data_suppliers',
   'nsvs_library',
+  'study_epoch_lag_time',
 ].map((name, idx) => ({
   uid: `FeatureFlag_${String(idx + 1).padStart(6, '0')}`,
   section: 'studies',

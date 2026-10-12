@@ -4,8 +4,14 @@ with the dictionaries and sponsor data that OpenStudyBuilder requires.
 
 It also contains some sample study data.
 
-Python 3.14 and Pipenv are prerequisites — see the
+Python 3.14 and uv are prerequisites — see the
 [root README](../README.md#prerequisites).
+
+Some of the codelists loaded here are **system codelists** — the application
+resolves them by submission value to build forms and validate mandatory fields,
+so a missing or empty one breaks a feature outright rather than merely leaving a
+dropdown empty. [SYSTEM_CODELISTS.md](SYSTEM_CODELISTS.md) lists which ones,
+what each is needed for, and how the failures present.
 
 # Running
 ## Preparations
@@ -72,26 +78,26 @@ It also determines which files are used by each import step.
 The `.env.import` example is set up to import everything except the dummy development study,
 using the files from the `datatfiles` directory. 
 
-## Activate pipenv
+## Set up uv
 
-Activate pipenv by running:
+Set up the local uv environment by running:
 
 ```
-$ pipenv sync --dev
+$ uv sync --group dev
 ```
 
 ## Run full import
 Run the following command to start the full import.
 
 ```sh
-$ pipenv run import_all
+$ uv run poe import_all
 ```
 **Note:** This will take some time to run.
 
 ## Partial import
 
-It is also possible to run only a single part of the import with ```pipenv run {scriptname}```. 
-The available commands are listed under `[scripts]` in the `Pipfile`.
+It is also possible to run only a single part of the import with ```uv run poe {scriptname}```. 
+The available commands are listed under `[tool.poe.tasks]` in `pyproject.toml`.
 
 The current set of commands is:
 - import_all (runs all of the others in the order listed here)
@@ -147,7 +153,7 @@ docker compose up import
 Any other commands can be run via:
 
 ```shell
-docker compose run --rm pipenv run whatever
+docker compose run --rm uv run poe whatever
 ```
 
 # Import steps
@@ -372,6 +378,11 @@ These scripts rely on some files in the `datafiles/libraries/concepts/crfs` and 
 
 # Adding sponsor terms and codelists
 
+> Before renaming or removing a term, check
+> [SYSTEM_CODELISTS.md](SYSTEM_CODELISTS.md#verbatim-term-names--the-quiet-landmine).
+> A number of terms are looked up by their literal name and dereferenced without
+> a null-check, so a rename — not just a deletion — can break a form.
+
 ## Add a term to an existing list
 
 To add a new term to a sponsor codelist, simply edit the corresponding .csv file.
@@ -403,9 +414,9 @@ The line to add at the end of the file is thus:
 "COMP_DISP_IN","Ampoule","ampoule","DISPENSED IN AMPOULE","Small sealed glass or plastic vial","121"
 ```
 
-After this, run just the `codelistterms2` Pipenv command:
+After this, run just the `codelistterms2` uv/poe command:
 ```sh
-$ pipenv run codelistterms2
+$ uv run poe codelistterms2
 ```
 
 ## Add a new codelist
@@ -492,11 +503,11 @@ At the end of this function, add a new call to `migrate_term()`, again with appr
 
 ### Run the import to add the new list and its terms
 
-Start by running the `codelistterms1` Pipenv command:
+Start by running the `codelistterms1` uv/poe command:
 
 ```sh
 
-$ pipenv run codelistterms1
+$ uv run poe codelistterms1
 
 ```
 
@@ -505,19 +516,19 @@ It is possible to limit what codelists are imported
 by giving a comma-separated list of codelist names.
 Enclose the list in quotes, and add no spaces around the comma:
 ```sh
-$ pipenv run codelistterms1 "Epoch,Objectivel Level"
+$ uv run poe codelistterms1 "Epoch,Objectivel Level"
 ```
 This imports only the listed codelists (codelist definitions and terms).
 
-After this, run the `codelistterms2` Pipenv command:
+After this, run the `codelistterms2` uv/poe command:
 ```sh
-$ pipenv run codelistterms2
+$ uv run poe codelistterms2
 ```
 This imports all sponsor codelists.
 Also here it is possible to limit what codelists are imported
 by giving a comma-separated list of codelist names:
 ```sh
-$ pipenv run codelistterms2 "Unit Subset,Footnote Type"
+$ uv run poe codelistterms2 "Unit Subset,Footnote Type"
 ```
 
 ## Updating the included demo study data

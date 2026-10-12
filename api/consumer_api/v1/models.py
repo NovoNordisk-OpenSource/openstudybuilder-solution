@@ -1,6 +1,6 @@
 import logging
 from datetime import datetime
-from enum import Enum
+from enum import Enum, StrEnum
 from typing import TYPE_CHECKING, Annotated, Any
 
 import neo4j.time
@@ -116,7 +116,10 @@ class Study(BaseModel):
     class StudyDataSupplier(BaseModel):
         uid: Annotated[str, Field()]
         name: Annotated[str, Field()]
-        type: Annotated["SimpleCodelistTerm", Field()]
+        type: Annotated[SimpleCodelistTerm, Field()]
+        is_blinded: Annotated[
+            bool | None, Field(json_schema_extra={"nullable": True})
+        ] = None
         order: Annotated[int | None, Field(json_schema_extra={"nullable": True})] = None
 
     uid: Annotated[str, Field(description="Study UID")]
@@ -163,6 +166,7 @@ class Study(BaseModel):
                             codelist_uid=study_data_supplier["type_codelist_uid"],
                             term_uid=study_data_supplier["type_uid"],
                         ),
+                        is_blinded=study_data_supplier.get("is_blinded", None),
                         order=study_data_supplier.get("order", None),
                     )
                     for study_data_supplier in val.get("study_data_suppliers", [])
@@ -292,7 +296,7 @@ class StudyVisit(BaseModel):
         ),
     ] = None
     anchor_visit: Annotated[
-        "StudyVisit | None",
+        StudyVisit | None,
         Field(
             description="Anchor Visit for given StudyVisit",
             json_schema_extra={"nullable": True},
@@ -762,7 +766,7 @@ class StudyOperationalSoA(BaseModel):
 
 if TYPE_CHECKING:
     # Static definition for mypy — mirrors the default config values
-    class Library(str, Enum):
+    class Library(StrEnum):
         SPONSOR = "Sponsor"
         REQUESTED = "Requested"
 
@@ -1688,7 +1692,7 @@ class StudyCreateInput(BaseModel):
     ] = None
 
     @model_validator(mode="after")
-    def _require_study_number_or_study_acronym(self) -> "StudyCreateInput":
+    def _require_study_number_or_study_acronym(self) -> StudyCreateInput:
         # The same rule is enforced by the domain layer, but only once the
         # request has reached it. Declaring it here puts it in the OpenAPI
         # description and turns it into an immediate 400.
@@ -1909,9 +1913,6 @@ class UnitDefinition(BaseModel):
     is_master_unit: Annotated[
         bool | None, Field(description="Whether the unit is a master unit")
     ]
-    is_si_unit: Annotated[
-        bool | None, Field(description="Whether the unit is an SI unit")
-    ]
     is_display_unit: Annotated[
         bool | None, Field(description="Whether the unit is a display unit")
     ]
@@ -1930,7 +1931,6 @@ class UnitDefinition(BaseModel):
         UnitDimensionInfo | None,
         Field(description="Unit dimension with term and codelist info"),
     ]
-    legacy_code: Annotated[str | None, Field(description="Legacy unit code")]
     conversion_factor_to_master: Annotated[
         float | None, Field(description="Conversion factor to master unit")
     ]
@@ -1970,14 +1970,12 @@ class UnitDefinition(BaseModel):
             subsets=subsets,
             is_convertible_unit=val.get("is_convertible_unit"),
             is_master_unit=val.get("is_master_unit"),
-            is_si_unit=val.get("is_si_unit"),
             is_display_unit=val.get("is_display_unit"),
             is_us_conventional_unit=val.get("is_us_conventional_unit"),
             use_complex_unit_conversion=val.get("use_complex_unit_conversion"),
             use_molecular_weight=val.get("use_molecular_weight"),
             ucum_unit_name=val.get("ucum_unit_name"),
             unit_dimension=unit_dimension,
-            legacy_code=val.get("legacy_code"),
             conversion_factor_to_master=val.get("conversion_factor_to_master"),
         )
 
@@ -2039,49 +2037,49 @@ class StudyTypeListingModel(BaseModel):
     """Study type (high-level design) for study metadata listing."""
 
     stype: Annotated[
-        "CTTermWithCodelistAndConflictFlag | None",
+        CTTermWithCodelistAndConflictFlag | None,
         Field(json_schema_extra={"nullable": True}),
     ] = None
     stype_nf: Annotated[
-        "CTTermWithCodelistAndConflictFlag | None",
+        CTTermWithCodelistAndConflictFlag | None,
         Field(json_schema_extra={"nullable": True}),
     ] = None
-    trial_type: list["CTTermWithCodelistAndConflictFlag"] = Field(default_factory=list)
+    trial_type: list[CTTermWithCodelistAndConflictFlag] = Field(default_factory=list)
     trial_type_nf: Annotated[
-        "CTTermWithCodelistAndConflictFlag | None",
+        CTTermWithCodelistAndConflictFlag | None,
         Field(json_schema_extra={"nullable": True}),
     ] = None
     phase: Annotated[
-        "CTTermWithCodelistAndConflictFlag | None",
+        CTTermWithCodelistAndConflictFlag | None,
         Field(json_schema_extra={"nullable": True}),
     ] = None
     phase_nf: Annotated[
-        "CTTermWithCodelistAndConflictFlag | None",
+        CTTermWithCodelistAndConflictFlag | None,
         Field(json_schema_extra={"nullable": True}),
     ] = None
     extension: str = ""
     extension_nf: Annotated[
-        "CTTermWithCodelistAndConflictFlag | None",
+        CTTermWithCodelistAndConflictFlag | None,
         Field(json_schema_extra={"nullable": True}),
     ] = None
     adaptive: str = ""
     adaptive_nf: Annotated[
-        "CTTermWithCodelistAndConflictFlag | None",
+        CTTermWithCodelistAndConflictFlag | None,
         Field(json_schema_extra={"nullable": True}),
     ] = None
     stop_rule: str = ""
     stop_rule_nf: Annotated[
-        "CTTermWithCodelistAndConflictFlag | None",
+        CTTermWithCodelistAndConflictFlag | None,
         Field(json_schema_extra={"nullable": True}),
     ] = None
     confirmed_res_min_dur: str = ""
     confirmed_res_min_dur_nf: Annotated[
-        "CTTermWithCodelistAndConflictFlag | None",
+        CTTermWithCodelistAndConflictFlag | None,
         Field(json_schema_extra={"nullable": True}),
     ] = None
     post_auth: str = ""
     post_auth_nf: Annotated[
-        "CTTermWithCodelistAndConflictFlag | None",
+        CTTermWithCodelistAndConflictFlag | None,
         Field(json_schema_extra={"nullable": True}),
     ] = None
 
@@ -2089,81 +2087,79 @@ class StudyTypeListingModel(BaseModel):
 class StudyPopulationListingModel(BaseModel):
     """Study population for study metadata listing."""
 
-    therapy_area: list["CTTermWithCodelistAndConflictFlag"] = Field(
-        default_factory=list
-    )
+    therapy_area: list[CTTermWithCodelistAndConflictFlag] = Field(default_factory=list)
     therapy_area_nf: Annotated[
-        "CTTermWithCodelistAndConflictFlag | None",
+        CTTermWithCodelistAndConflictFlag | None,
         Field(json_schema_extra={"nullable": True}),
     ] = None
-    indication: list["CTTermWithCodelistAndConflictFlag"] = Field(default_factory=list)
+    indication: list[CTTermWithCodelistAndConflictFlag] = Field(default_factory=list)
     indication_nf: Annotated[
-        "CTTermWithCodelistAndConflictFlag | None",
+        CTTermWithCodelistAndConflictFlag | None,
         Field(json_schema_extra={"nullable": True}),
     ] = None
-    diag_grp: list["CTTermWithCodelistAndConflictFlag"] = Field(default_factory=list)
+    diag_grp: list[CTTermWithCodelistAndConflictFlag] = Field(default_factory=list)
     diag_grp_nf: Annotated[
-        "CTTermWithCodelistAndConflictFlag | None",
+        CTTermWithCodelistAndConflictFlag | None,
         Field(json_schema_extra={"nullable": True}),
     ] = None
     sex: Annotated[
-        "CTTermWithCodelistAndConflictFlag | None",
+        CTTermWithCodelistAndConflictFlag | None,
         Field(json_schema_extra={"nullable": True}),
     ] = None
     sex_nf: Annotated[
-        "CTTermWithCodelistAndConflictFlag | None",
+        CTTermWithCodelistAndConflictFlag | None,
         Field(json_schema_extra={"nullable": True}),
     ] = None
     rare_dis: str = ""
     rare_dis_nf: Annotated[
-        "CTTermWithCodelistAndConflictFlag | None",
+        CTTermWithCodelistAndConflictFlag | None,
         Field(json_schema_extra={"nullable": True}),
     ] = None
     healthy_subj: str = ""
     healthy_subj_nf: Annotated[
-        "CTTermWithCodelistAndConflictFlag | None",
+        CTTermWithCodelistAndConflictFlag | None,
         Field(json_schema_extra={"nullable": True}),
     ] = None
     min_age: str = ""
     min_age_nf: Annotated[
-        "CTTermWithCodelistAndConflictFlag | None",
+        CTTermWithCodelistAndConflictFlag | None,
         Field(json_schema_extra={"nullable": True}),
     ] = None
     max_age: str = ""
     max_age_nf: Annotated[
-        "CTTermWithCodelistAndConflictFlag | None",
+        CTTermWithCodelistAndConflictFlag | None,
         Field(json_schema_extra={"nullable": True}),
     ] = None
     stable_dis_min_dur: str = ""
     stable_dis_min_dur_nf: Annotated[
-        "CTTermWithCodelistAndConflictFlag | None",
+        CTTermWithCodelistAndConflictFlag | None,
         Field(json_schema_extra={"nullable": True}),
     ] = None
     pediatric: str = ""
     pediatric_nf: Annotated[
-        "CTTermWithCodelistAndConflictFlag | None",
+        CTTermWithCodelistAndConflictFlag | None,
         Field(json_schema_extra={"nullable": True}),
     ] = None
     pediatric_postmarket: str = ""
     pediatric_postmarket_nf: Annotated[
-        "CTTermWithCodelistAndConflictFlag | None",
+        CTTermWithCodelistAndConflictFlag | None,
         Field(json_schema_extra={"nullable": True}),
     ] = None
     pediatric_inv: str = ""
     pediatric_inv_nf: Annotated[
-        "CTTermWithCodelistAndConflictFlag | None",
+        CTTermWithCodelistAndConflictFlag | None,
         Field(json_schema_extra={"nullable": True}),
     ] = None
     relapse_criteria: str = ""
     relapse_criteria_nf: Annotated[
-        "CTTermWithCodelistAndConflictFlag | None",
+        CTTermWithCodelistAndConflictFlag | None,
         Field(json_schema_extra={"nullable": True}),
     ] = None
     plan_no_subject: Annotated[
         int | None, Field(json_schema_extra={"nullable": True})
     ] = None
     plan_no_subject_nf: Annotated[
-        "CTTermWithCodelistAndConflictFlag | None",
+        CTTermWithCodelistAndConflictFlag | None,
         Field(json_schema_extra={"nullable": True}),
     ] = None
 
@@ -2172,62 +2168,60 @@ class StudyAttributesListingModel(BaseModel):
     """Study attributes (intervention) for study metadata listing."""
 
     intv_type: Annotated[
-        "CTTermWithCodelistAndConflictFlag | None",
+        CTTermWithCodelistAndConflictFlag | None,
         Field(json_schema_extra={"nullable": True}),
     ] = None
     intv_type_nf: Annotated[
-        "CTTermWithCodelistAndConflictFlag | None",
+        CTTermWithCodelistAndConflictFlag | None,
         Field(json_schema_extra={"nullable": True}),
     ] = None
     add_on: str = ""
     add_on_nf: Annotated[
-        "CTTermWithCodelistAndConflictFlag | None",
+        CTTermWithCodelistAndConflictFlag | None,
         Field(json_schema_extra={"nullable": True}),
     ] = None
     control_type: Annotated[
-        "CTTermWithCodelistAndConflictFlag | None",
+        CTTermWithCodelistAndConflictFlag | None,
         Field(json_schema_extra={"nullable": True}),
     ] = None
     control_type_nf: Annotated[
-        "CTTermWithCodelistAndConflictFlag | None",
+        CTTermWithCodelistAndConflictFlag | None,
         Field(json_schema_extra={"nullable": True}),
     ] = None
     intv_model: Annotated[
-        "CTTermWithCodelistAndConflictFlag | None",
+        CTTermWithCodelistAndConflictFlag | None,
         Field(json_schema_extra={"nullable": True}),
     ] = None
     intv_model_nf: Annotated[
-        "CTTermWithCodelistAndConflictFlag | None",
+        CTTermWithCodelistAndConflictFlag | None,
         Field(json_schema_extra={"nullable": True}),
     ] = None
     randomised: str = ""
     randomised_nf: Annotated[
-        "CTTermWithCodelistAndConflictFlag | None",
+        CTTermWithCodelistAndConflictFlag | None,
         Field(json_schema_extra={"nullable": True}),
     ] = None
     strata: str = ""
     strata_nf: Annotated[
-        "CTTermWithCodelistAndConflictFlag | None",
+        CTTermWithCodelistAndConflictFlag | None,
         Field(json_schema_extra={"nullable": True}),
     ] = None
     blinding: Annotated[
-        "CTTermWithCodelistAndConflictFlag | None",
+        CTTermWithCodelistAndConflictFlag | None,
         Field(json_schema_extra={"nullable": True}),
     ] = None
     blinding_nf: Annotated[
-        "CTTermWithCodelistAndConflictFlag | None",
+        CTTermWithCodelistAndConflictFlag | None,
         Field(json_schema_extra={"nullable": True}),
     ] = None
     planned_length: str = ""
     planned_length_nf: Annotated[
-        "CTTermWithCodelistAndConflictFlag | None",
+        CTTermWithCodelistAndConflictFlag | None,
         Field(json_schema_extra={"nullable": True}),
     ] = None
-    study_intent: list["CTTermWithCodelistAndConflictFlag"] = Field(
-        default_factory=list
-    )
+    study_intent: list[CTTermWithCodelistAndConflictFlag] = Field(default_factory=list)
     study_intent_nf: Annotated[
-        "CTTermWithCodelistAndConflictFlag | None",
+        CTTermWithCodelistAndConflictFlag | None,
         Field(json_schema_extra={"nullable": True}),
     ] = None
 

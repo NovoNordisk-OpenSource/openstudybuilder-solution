@@ -1,3 +1,5 @@
+from typing import ClassVar
+
 from neomodel import One, RelationshipFrom, RelationshipTo, ZeroOrMore, ZeroOrOne
 
 from clinical_mdr_api.domain_repositories.models.controlled_terminology import (
@@ -20,7 +22,7 @@ from common.neomodel import (
 
 
 class ConceptValue(VersionValue):
-    __optional_labels__ = ["TemplateParameterTermValue"]
+    __optional_labels__: ClassVar[list[str]] = ["TemplateParameterTermValue"]
     nci_concept_id = StringProperty()
     nci_concept_name = StringProperty()
     name = StringProperty()
@@ -31,18 +33,16 @@ class ConceptValue(VersionValue):
 
 
 class ConceptRoot(VersionRoot):
-    __optional_labels__ = ["TemplateParameterTermRoot"]
+    __optional_labels__: ClassVar[list[str]] = ["TemplateParameterTermRoot"]
     LIBRARY_REL_LABEL = "CONTAINS_CONCEPT"
 
     has_library = RelationshipFrom(Library, LIBRARY_REL_LABEL, model=ClinicalMdrRel)
 
 
 class UnitDefinitionValue(ConceptValue):
-    legacy_code = StringProperty()
     convertible_unit = BooleanProperty()
     display_unit = BooleanProperty()
     master_unit = BooleanProperty()
-    si_unit = BooleanProperty()
     us_conventional_unit = BooleanProperty()
     use_complex_unit_conversion = BooleanProperty()
     use_molecular_weight = BooleanProperty()

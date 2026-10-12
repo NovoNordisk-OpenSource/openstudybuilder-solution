@@ -1,5 +1,6 @@
+from collections.abc import Callable, Set
 from dataclasses import dataclass, field
-from typing import AbstractSet, Any, Callable, Self
+from typing import Any, Self
 
 from clinical_mdr_api.domains.versioned_object_aggregate import (
     LibraryItemAggregateRootBase,
@@ -174,7 +175,7 @@ class DictionaryTermAR(LibraryItemAggregateRootBase):
         """
         super()._create_new_version(author_id=author_id)
 
-    def get_possible_actions(self) -> AbstractSet[ObjectAction]:
+    def get_possible_actions(self) -> Set[ObjectAction]:
         """
         Returns list of possible actions
         """

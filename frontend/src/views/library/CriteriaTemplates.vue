@@ -41,7 +41,7 @@ import { useTabKeys } from '@/composables/tabKeys'
 const appStore = useAppStore()
 const route = useRoute()
 const router = useRouter()
-const { tabKeys, updateTabKey } = useTabKeys()
+const { tabKeys, updateTabKey } = useTabKeys({ persist: true })
 
 const criteriaTypes = ref([])
 const tab = ref(null)

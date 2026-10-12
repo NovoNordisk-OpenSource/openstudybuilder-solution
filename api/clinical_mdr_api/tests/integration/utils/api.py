@@ -179,7 +179,7 @@ class APITest(TestCase):
             elif key in self.ignored_fields() and val is not None:
                 self.assertIsNotNone(actual[key], f"{key} is unexpectedly null")
             elif key not in self.ignored_fields():
-                self._diff(expected[key], actual[key])
+                self._diff(val, actual[key])
         for key, val in actual.items():
             self.assertIn(key, expected, f"Field {key} not expected in {actual}")
 
@@ -201,7 +201,7 @@ class APITest(TestCase):
 
         # read scenario JSON
         indent = None
-        with open(self.current_scenario_file_path, "r", encoding="utf-8") as file:
+        with open(self.current_scenario_file_path, encoding="utf-8") as file:
             file.readline()
 
             # detect indentation
@@ -287,7 +287,6 @@ class APITest(TestCase):
     def post_test(self):
         return True
 
-    #  pylint: disable=unused-argument
     def preprocess_expected_response(self, resp_item, actual_response, url):
         return resp_item
 

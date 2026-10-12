@@ -1,4 +1,5 @@
-from typing import Annotated, Callable, Self
+from collections.abc import Callable
+from typing import Annotated, Self
 
 from pydantic import ConfigDict, Field, ValidationInfo, field_validator
 
@@ -205,6 +206,7 @@ class NonStandardVariable(BaseModel):
     origin_source: Annotated[
         SimpleOriginTerm | None, Field(json_schema_extra={"nullable": True})
     ] = None
+    nsvxmldt: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
 
     @classmethod
     def from_vo(cls, nsv_vo) -> Self | None:
@@ -235,6 +237,7 @@ class NonStandardVariable(BaseModel):
                 if nsv_vo.origin_source is not None
                 else None
             ),
+            nsvxmldt=nsv_vo.nsvxmldt,
         )
 
 
@@ -267,7 +270,7 @@ class ActivityItemClass(VersionProperties):
         ),
     ] = None
     order: Annotated[int, Field(json_schema_extra={"source": "has_latest_value.order"})]
-    data_type: Annotated[SimpleDataTypeTerm, Field()]
+    semtcdt: Annotated[SimpleDataTypeTerm, Field()]
     role: Annotated[SimpleRoleTerm, Field()]
     activity_instance_classes: Annotated[
         list[CompactActivityInstanceClassForActivityItemClass] | None, Field()
@@ -384,7 +387,7 @@ class ActivityItemClass(VersionProperties):
             display_name=activity_item_class_ar.display_name,
             order=activity_item_class_ar.activity_item_class_vo.order,
             activity_instance_classes=activity_instance_classes,
-            data_type=SimpleDataTypeTerm(
+            semtcdt=SimpleDataTypeTerm(
                 uid=activity_item_class_ar.activity_item_class_vo.data_type.uid,
                 codelist_uid=activity_item_class_ar.activity_item_class_vo.data_type.codelist_uid,
                 name=activity_item_class_ar.activity_item_class_vo.data_type.name,

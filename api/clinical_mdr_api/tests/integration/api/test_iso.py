@@ -10,14 +10,6 @@ from fastapi.testclient import TestClient
 from clinical_mdr_api.main import app
 from clinical_mdr_api.tests.utils.checks import assert_response_status_code
 
-# pylint: disable=unused-argument
-# pylint: disable=redefined-outer-name
-# pylint: disable=too-many-arguments
-
-# pytest fixture functions have other fixture functions as arguments,
-# which pylint interprets as unused arguments
-
-
 log = logging.getLogger(__name__)
 
 

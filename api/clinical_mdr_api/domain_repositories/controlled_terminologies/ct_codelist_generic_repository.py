@@ -1,14 +1,12 @@
 from abc import ABC, abstractmethod
-from datetime import datetime, timezone
-from typing import Any, Generic, Iterable, cast
+from collections.abc import Iterable
+from datetime import UTC, datetime
+from typing import Any, cast
 
 from cachetools import cached
 from cachetools.keys import hashkey
 from neomodel import db
 
-from clinical_mdr_api.domain_repositories._generic_repository_interface import (
-    _AggregateRootType,
-)
 from clinical_mdr_api.domain_repositories._utils.helpers import is_codelist_in_final
 from clinical_mdr_api.domain_repositories.controlled_terminologies.ct_get_all_query_utils import (
     create_codelist_filter_statement,
@@ -58,8 +56,8 @@ from clinical_mdr_api.repositories._utils import (
 from common import exceptions
 
 
-class CTCodelistGenericRepository(
-    LibraryItemRepositoryImplBase, Generic[_AggregateRootType], ABC
+class CTCodelistGenericRepository[AggregateRootType](
+    LibraryItemRepositoryImplBase, ABC
 ):
 
     root_class = type
@@ -126,17 +124,17 @@ class CTCodelistGenericRepository(
         library: Library,
         relationship: VersionRelationship,
         value: ControlledTerminology,
-    ) -> _AggregateRootType:
+    ) -> AggregateRootType:
         raise NotImplementedError
 
     @abstractmethod
     def _create_aggregate_root_instance_from_cypher_result(
         self, codelist_dict: dict[str, Any]
-    ) -> _AggregateRootType:
+    ) -> AggregateRootType:
         """
         Creates aggregate root instances from cypher query result.
         :param codelist_dict:
-        :return _AggregateRootType:
+        :return AggregateRootType:
         """
         raise NotImplementedError
 
@@ -167,7 +165,7 @@ class CTCodelistGenericRepository(
         filter_operator: FilterOperator = FilterOperator.AND,
         total_count: bool = False,
         **_kwargs,
-    ) -> GenericFilteringReturn[_AggregateRootType]:
+    ) -> GenericFilteringReturn[AggregateRootType]:
         """
         Method runs a cypher query to fetch all needed data to create objects of type AggregateRootType.
         In the case of the following repository it will be some Codelists aggregates.
@@ -184,7 +182,7 @@ class CTCodelistGenericRepository(
         :param filter_by:
         :param filter_operator:
         :param total_count:
-        :return GenericFilteringReturn[_AggregateRootType]:
+        :return GenericFilteringReturn[AggregateRootType]:
         """
         exceptions.BusinessLogicException.raise_if(
             self.relationship_from_root not in vars(CTCodelistRoot),
@@ -329,12 +327,12 @@ class CTCodelistGenericRepository(
 
     def _retrieve_codelists_from_cypher_res(
         self, result_array, attribute_names
-    ) -> list[_AggregateRootType]:
+    ) -> list[AggregateRootType]:
         """
         Method maps the result of the cypher query into real aggregate objects.
         :param result_array:
         :param attribute_names:
-        :return Iterable[_AggregateRootType]:
+        :return Iterable[AggregateRootType]:
         """
         codelist_ars = []
         for codelist in result_array:
@@ -364,7 +362,7 @@ class CTCodelistGenericRepository(
         status: LibraryItemStatus | None = None,
         at_specific_date: datetime | None = None,
         for_update: bool = False,
-    ) -> _AggregateRootType | None:
+    ) -> AggregateRootType | None:
         ct_codelist_root: CTCodelistRoot = CTCodelistRoot.nodes.get_or_none(
             uid=codelist_uid
         )
@@ -374,7 +372,6 @@ class CTCodelistGenericRepository(
         if for_update:
             self._lock_object2(codelist_uid)
 
-        # pylint: disable=unnecessary-dunder-call
         ct_codelist_name_root_node = ct_codelist_root.__getattribute__(
             self.relationship_from_root
         ).single()
@@ -388,14 +385,12 @@ class CTCodelistGenericRepository(
 
         return codelist_ar
 
-    def get_all_versions(
-        self, codelist_uid: str
-    ) -> Iterable[_AggregateRootType] | None:
+    def get_all_versions(self, codelist_uid: str) -> Iterable[AggregateRootType] | None:
         ct_codelist_root: CTCodelistRoot = CTCodelistRoot.nodes.get_or_none(
             uid=codelist_uid
         )
         if ct_codelist_root is not None:
-            # pylint: disable=unnecessary-dunder-call
+
             ct_codelist_name_root_node = ct_codelist_root.__getattribute__(
                 self.relationship_from_root
             ).single()
@@ -408,7 +403,7 @@ class CTCodelistGenericRepository(
     @sb_clear_cache(
         caches=["cache_store_item_by_uid", "cache_store_term_by_uid_and_submval"]
     )
-    def save(self, item: _AggregateRootType) -> None:
+    def save(self, item: AggregateRootType) -> None:
         if item.uid is not None and item.repository_closure_data is None:
             self._create(item)
         elif item.uid is not None and not item.is_deleted:
@@ -520,7 +515,7 @@ class CTCodelistGenericRepository(
         ct_codelist_node.has_term.connect(
             ct_codelist_term_node,
             {
-                "start_date": datetime.now(timezone.utc),
+                "start_date": datetime.now(UTC),
                 "end_date": None,
                 "author_id": author_id,
                 "order": order,
@@ -584,7 +579,7 @@ class CTCodelistGenericRepository(
                     ct_codelist_node.has_term.relationship(ct_codelist_term_node)
                 )
                 has_term_relationship.author_id = author_id
-                has_term_relationship.end_date = datetime.now(timezone.utc)
+                has_term_relationship.end_date = datetime.now(UTC)
                 has_term_relationship.save()
 
                 # Validate that the term is removed from a codelist that isn't in a draft state.
@@ -750,7 +745,8 @@ class CTCodelistGenericRepository(
                 ht.order AS order,
                 codelist_name_value.name AS codelist_name,
                 codelist_root.uid AS codelist_uid,
-                $cl_submval AS codelist_submission_value
+                $cl_submval AS codelist_submission_value,
+                head([(library:Library)-[:CONTAINS_TERM]->(term_root) | library.name]) AS library_name
         """
         result_array, attribute_names = db.cypher_query(query, params)
         if len(result_array) > 0:

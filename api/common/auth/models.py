@@ -37,7 +37,6 @@ class JWTTokenClaims(BaseModel):
     scp: list[str] | None = None
 
     @field_validator("aud", "scp", mode="before")
-    # pylint: disable=no-self-argument
     def split_str(cls, elm):
         """Splits claim space-separated-string into a list of str elements"""
         if isinstance(elm, str):
@@ -95,7 +94,6 @@ class User:
         self.email = email
         self.roles = roles
 
-    # pylint: disable=invalid-name
     def id(self):
         """Returns the user id
 

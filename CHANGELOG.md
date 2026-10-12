@@ -1,3 +1,112 @@
+## V 2.11
+
+## Highlights
+
+- **Study compound dosing is more flexible.** Dose values and dose frequencies can now be entered as free text or chosen from the library, a dose can optionally link to a dose collection activity instance, the form offers only Interventions-class activity instances, and the dose collection dropdown is sorted.
+- **Data Supplier rules can now be managed.** Rules are available under _Library › Admin Definitions › Data Suppliers_ and on each study's Data Suppliers page, and the consumer API exposes a `blinded` flag on study data suppliers.
+- **Breaking change: the Study CRF views and `GET /studies/{study_uid}/odm-forms` have been removed.** The Blank CRF, CDASH Annotated CRF, SDTM Annotated CRF, CRF Specifications, ODM Specification and ODM viewer screens are gone; any client calling that endpoint needs updating.
+- **Unit definitions changed, and one migration needs re-running.** The SI unit and legacy code properties are removed, units that cannot be converted can no longer hold a conversion factor, and the unit table and form were updated. If you ran migration 024 for Release 2.10, run it again — see **Running the application**.
+- **Tables and filters now keep their state.** Applied filters and pagination persist when switching tabs, filters refresh after data changes, Transition Rule visibility is remembered, and pagination is fixed in the Design Matrix and the Instances table.
+- **The Schedule of Activities is faster and handles footnotes per layout.** Assigning visits to activities is around twice as fast and no longer hits the maximum payload size on large assignments, and study footnotes can be tied to a specific layout.
+- **The user guides were refreshed.** The Reports and Dashboards guide now has one page per report, including CRF Impact Analysis, the Study Data Specifications guide was updated, the documentation portal's right-hand menu gained a third heading level, and a new document lists the code lists the application needs to function.
+- **Python components are now built and run with uv and poe, and linted with ruff.** Container commands changed to `uv run poe export` and `uv run poe import_all`, and the API image now runs as a non-root user that owns `/app`. See **Running the application**.
+- **Trial Summary Parameters were refined.** Controlled-terminology term names and code list terms now carry a short code, and code list terms carry a submission value test name.
+
+## New features
+
+- **api:** Added Data Supplier rules, which can be listed, created, versioned and activated — `GET /data-suppliers/rules`. In the application they are under _Library › Admin Definitions › Data Suppliers_, with a matching Data Suppliers page for each study under _Manage Study_.
+- **api:** Added dose frequencies on Study Compound Dosing, entered as free text or chosen from the library, with the full create and edit flow in the application.
+- **api:** Added free-text dose values on Study Compound Dosing, alongside values from the library.
+- **api:** Added an optional link from Study Compound Dosing to a dose collection activity instance.
+
+## Improvements
+
+- **api:** Updated the Unit table and form — _Library › Concepts › Units_.
+- **api:** Added an "SDTM domain" column to the Activity Instance table, with filter, search and sort — _Library › Concepts › Activities_.
+- **api:** Refined Trial Summary Parameters following review: controlled-terminology term names and code list terms now carry a short code, and code list terms carry a submission value test name.
+- **api:** Added a layout setting to Study Schedule of Activities footnotes, so a footnote can be tied to a specific layout, and fixed four related defects, including footnotes that could not be deleted once their template had been retired.
+- **api:** Refined Trial Summary Parameters following review.
+- **api:** Removed the SI unit and legacy code properties from unit definitions, and added safeguards so a unit that cannot be converted cannot carry a conversion factor. The "CT Unit terms" column in the unit table is now "CDISC CT Submission Values". Existing data is cleaned up by a database migration — see **Running the application**. Clients reading either removed property need updating.
+- **api:** Removed the obsolete `GET /studies/{study_uid}/odm-forms` endpoint and the Study CRF views in the application — Blank CRF, CDASH Annotated CRF, SDTM Annotated CRF, CRF Specifications, ODM Specification and the ODM viewer. Clients calling that path need updating.
+- **api:** Added a `blinded` field for study data suppliers in the consumer API.
+- **api:** Reduced the size of the request used when assigning activities to visits in the Schedule of Activities, making assignment around twice as fast and avoiding the maximum payload size being reached when many activities are assigned to many visits in one request.
+- **db:** Added a logical data model diagram for derived activity instances.
+- **db:** Updated the physical data model diagram with two new fields on Study Compound Dosing, added six Interventions-class activity instances to the test data, and rounded the result of the compound dosing composition calculation.
+- **db:** Updated the data model diagram for Study Visits.
+- **db_schema_migration:** Added a data migration that makes the data type of CRF (ODM) items a controlled-terminology relationship. If you ran migration 024 for Release 2.10, run it again — see **Running the application**.
+- **documentation_portal:** Restructured the Reports and Dashboards user guide into one page per report, each with annotated screenshots, and fixed the CRF Impact Analysis report so removed library items no longer appear in its results.
+- **documentation_portal:** Added a third heading level to the documentation portal's right-hand menu.
+- **documentation_portal:** Updated the Study Data Specifications section of the user guide.
+- **frontend:** Sorted the values in the dose collection dropdown.
+- **frontend:** Improved tables so applied filters and pagination are kept when switching between tabs within a menu option.
+- **frontend:** Restricted the activity instances offered on the Study Compound Dosing form to those of the Interventions class.
+- **frontend:** Set the table header labels to white in the high-contrast theme, improving accessibility.
+- **frontend:** Improved Transition Rule display so its visibility is remembered between sessions.
+- **import_sponsor_data:** Added a document listing the controlled-terminology code lists the application needs in order to function, what each is used for, and how a missing one shows up.
+- **import_sponsor_data:** Added the `activity_instance_wizard_stepper_interventions` feature flag for interventions in the activity instance wizard, off by default, and changed the default library for non-standard variables in the import settings from CDISC to Sponsor.
+
+## Bug fixes
+
+- **api:** Fixed wildcard search on `GET /ct/terms`.
+- **api:** Fixed filters not refreshing after data changes.
+- **api:** Fixed the non-standard variable filter dropdown showing values mixed in with activity item classes.
+- **api:** Fixed the order of study activities changing when only the activity is replaced.
+- **api:** Fixed several issues in the non-standard variables table: added the missing XML data type column, renamed the semantic data type column, and fixed search and status filters.
+- **api:** Fixed a released study version no longer listing its study activity instances once the live instances had been deleted.
+- **api:** Fixed adding more than one washout epoch to a study.
+- **frontend:** Fixed the lag time unit missing from the study epoch audit trail.
+- **frontend:** Fixed nested filters in the Units table — _Library › Concepts › Units_.
+- **frontend:** Fixed pagination in the Instances table.
+- **frontend:** Fixed editing of study footnotes.
+- **frontend:** Fixed new Sponsor terms so they are created in the Sponsor library.
+- **frontend:** Fixed approval of a large CRF collection failing with HTTP 414 by batching the requests.
+- **frontend:** Fixed an error when editing an activity instance, caused by incorrect initial values in the edit form.
+- **frontend:** Fixed pagination in the Design Matrix, which is now disabled while editing.
+
+## Renamed and moved
+
+The developer assistant configuration that used to live separately in two components now sits once at the repository root. Paths referenced in scripts or documentation need updating:
+
+| Old location | Now |
+|---|---|
+| `api/.claude/` | `.claude/` |
+| `frontend/.claude/` | `.claude/` |
+
+Every user-invokable skill is now prefixed `osb-`. Nothing else was renamed inside the repository this release.
+
+## Running the application
+
+The root `compose.yaml` and the `gateway` are unchanged, so the addresses, ports and `GATEWAY_PORT` / `BIND_ADDRESS` settings are as described for Release 2.10.
+
+What did change:
+
+- **Container commands.** The `export` and `import_sponsor_data` compose files now run `uv run poe export` and `uv run poe import_all` instead of `pipenv run export` and `pipenv run import_all`. The Dockerfiles for `api`, `db`, `export`, `import_sponsor_data` and `import_standards` now build with uv.
+- **API image user.** The API image now runs as a non-root user that owns `/app`, because the virtual environment is created inside that folder. Anything that mounts or writes to `/app` should expect this.
+- **Import settings.** `MDR_MIGRATION_NONSTANDARD_VARIABLES_LIBRARY` in `import_sponsor_data/.env.import` and `.env.e2e` now defaults to Sponsor instead of CDISC. If you keep your own copy of either file, update it.
+- **Database migration.** If you ran migration 024 for Release 2.10, run it again. It now also converts the data type of CRF (ODM) items to a controlled-terminology relationship, and removes the SI unit and legacy code properties from units while resetting the conversion factor of units that cannot be converted. Both steps are safe to repeat.
+
+## Internal / Infrastructure
+
+- **.claude:** Consolidated the developer assistant skills and agents into a single configuration at the repository root, and prefixed every user-invokable skill with `osb-`.
+- **_tools:** Replaced remaining references to the previous Python packaging tool in the build tooling and the documentation portal.
+- **api:** Migrated Python linting from pylint to ruff.
+- **api:** Moved the Python components from Pipenv to uv and poe: the Dockerfiles and READMEs for api, db, export, import_sponsor_data and import_standards were updated, and the container commands are now `uv run poe export` and `uv run poe import_all`. See **Running the application**.
+- **api:** Added automated API contract tests to the API build validation.
+- **docs:** Added an architecture decision record template under `docs/adr/`.
+- **docs:** Added `docs/adr/` with decision records for the move from Pipenv to uv and poe and from pylint to ruff.
+- **import_standards:** Updated the controlled-terminology verification queries in the README.
+- **system_tests:** Added missing user requirement IDs to the dashboard end-to-end test scenarios.
+- **system_tests:** Added missing user requirement IDs to the web application end-to-end test scenarios.
+- **system_tests:** Fixed end-to-end tests for transition rules and units.
+- **system_tests:** Fixed and refactored end-to-end tests for Trial Summary Parameters.
+- **system_tests:** Automated previously manual end-to-end tests for managing a study.
+- **verifications:** Upgraded the Jupyter notebook and JupyterLab packages.
+- **verifications:** Upgraded the Jupyter server package.
+
+## Other
+
+- **db:** Updated three third-party libraries across the db, frontend, import_standards, import_sponsor_data and load_tests components to clear reported security advisories
+
 ## V 2.10
 
 New Features and Enhancements

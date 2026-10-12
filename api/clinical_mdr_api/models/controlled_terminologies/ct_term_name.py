@@ -108,7 +108,7 @@ class CTTermName(BaseModel):
 
     catalogue_names: Annotated[
         list[str], Field(json_schema_extra={"remove_from_wildcard": True})
-    ] = []
+    ] = Field(default_factory=list)
 
     sponsor_preferred_name: Annotated[str, Field()]
 
@@ -147,7 +147,7 @@ class CTTermName(BaseModel):
     reference: Annotated[
         str | None,
         Field(
-            json_schema_extra={"nullable": True},
+            json_schema_extra={"nullable": True, "remove_from_wildcard": True},
             description="Reference terminology identifier (e.g. 'ClinicalTrials.gov', 'ISO8601'). Used for TSVCDREF in SDTM TS listings.",
         ),
     ] = None
@@ -162,18 +162,28 @@ class CTTermName(BaseModel):
         TSParameterCardinality | None,
         Field(json_schema_extra={"nullable": True}),
     ] = None
-    notes: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
+    notes: Annotated[
+        str | None,
+        Field(json_schema_extra={"nullable": True, "remove_from_wildcard": True}),
+    ] = None
+    short_code: Annotated[
+        str | None,
+        Field(
+            json_schema_extra={"nullable": True, "remove_from_wildcard": True},
+            description="Short code for this TS parameter.",
+        ),
+    ] = None
     osb_field_name: Annotated[
         str | None,
         Field(
-            json_schema_extra={"nullable": True},
+            json_schema_extra={"nullable": True, "remove_from_wildcard": True},
             description="Name of the MetaStudyField this TS parameter maps to.",
         ),
     ] = None
     osb_page_reference: Annotated[
         str | None,
         Field(
-            json_schema_extra={"nullable": True},
+            json_schema_extra={"nullable": True, "remove_from_wildcard": True},
             description="OSB page reference for this TS parameter.",
         ),
     ] = None
@@ -296,6 +306,10 @@ class CTTermNameTSParameterInput(BaseModel):
         Field(),
     ] = None
     notes: Annotated[str | None, Field()] = None
+    short_code: Annotated[
+        str | None,
+        Field(description="Short code for this TS parameter."),
+    ] = None
 
 
 class CTTermNameTSParameterOutput(BaseModel):
@@ -312,6 +326,7 @@ class CTTermNameTSParameterOutput(BaseModel):
     required_level: Annotated[TSParameterRequiredLevel | None, Field()] = None
     cardinality: Annotated[TSParameterCardinality | None, Field()] = None
     notes: Annotated[str | None, Field()] = None
+    short_code: Annotated[str | None, Field()] = None
 
 
 def build_valid_null_flavor_terms(
@@ -342,6 +357,7 @@ def _build_ts_kwargs(vo: CTTermNameVO) -> dict[str, Any]:
         "required_level": vo.required_level,
         "cardinality": vo.cardinality,
         "notes": vo.notes,
+        "short_code": vo.short_code,
         "osb_field_name": vo.osb_field_name,
         "osb_page_reference": vo.osb_page_reference,
         "semantic_data_type": (

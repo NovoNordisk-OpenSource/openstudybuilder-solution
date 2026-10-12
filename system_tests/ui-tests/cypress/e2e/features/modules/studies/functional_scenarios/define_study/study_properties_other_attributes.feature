@@ -1,4 +1,4 @@
-@REQ_ID:914606
+@REQ_ID:1074254
 Feature: Studies - Define Study - Study Properties - Other Study Attributes
 
     Background: User is logged in and study has been selected
@@ -30,7 +30,8 @@ Feature: Studies - Define Study - Study Properties - Other Study Attributes
 
     Scenario: [Actions][Edit] User must be able to open and cancel Other Study Attributes editing
         Given The page 'study_properties/other_study_attributes' is opened for current study
-        When The Other Study Attributes edit form is opened
+        When User clicks add other study attributes button
+        And The form is opened and visible
         Then The required and optional study attribute sections are visible
         When The Other Study Attributes edit form is closed
         Then The form is no longer available
@@ -38,43 +39,47 @@ Feature: Studies - Define Study - Study Properties - Other Study Attributes
     Scenario: [Actions][Edit] User must be able to edit an Other Study Attribute
         Given [API] All Other Study Attributes assigned to the selected study are deleted
         Given The page 'study_properties/other_study_attributes' is opened for current study
-        When The Other Study Attributes edit form is opened
+        When User clicks add other study attributes button
+        And The form is opened and visible
         And User selects the first required Other Study Attribute parameter
         And User selects the first optional Other Study Attribute parameter
-        And User edits the first required Other Study Attribute value
-        And User intercepts the Other Study Attributes update request
+        And User edits the first optional Other Study Attribute value
+        And User intercepts the Other Study Attributes POST request
         And Form save button is clicked
-        And User waits for the Other Study Attributes update request
-        Then The Other Study Attributes update request contains a POST operation
+        And User waits for the Other Study Attributes POST request
+        Then The Other Study Attributes update request contains 'POST' operations
         And The form is no longer available
         And The pop up displays 'Other Study Attributes updated'
 
     Scenario: [Actions][Remove] User must be able to remove an existing Other Study Attribute
         Given [API] All Other Study Attributes assigned to the selected study are deleted
         And The page 'study_properties/other_study_attributes' is opened for current study
-        When The Other Study Attributes edit form is opened
+        When User clicks add other study attributes button
+        And The form is opened and visible
         And User selects the first required Other Study Attribute parameter
         And User selects the first optional Other Study Attribute parameter
-        And User edits the first required Other Study Attribute value
-        And User intercepts the Other Study Attributes update request
+        And User edits the first optional Other Study Attribute value
+        And User intercepts the Other Study Attributes POST request
         And Form save button is clicked
-        And User waits for the Other Study Attributes update request
+        And User waits for the Other Study Attributes POST request
         And The form is no longer available
-        And User waits for Other Study Attributes table to refresh
-        And The Other Study Attributes edit form is opened
+        And User waits for the table
+        When User clicks add other study attributes button
+        And The form is opened and visible
         And User removes the first optional Other Study Attribute
-        And User intercepts the Other Study Attributes delete request
+        And User intercepts the Other Study Attributes POST request
         And Form save button is clicked
-        And User waits for the Other Study Attributes delete request
-        Then The Other Study Attributes delete request contains a DELETE operation
+        And User waits for the Other Study Attributes POST request
+        Then The Other Study Attributes update request contains 'DELETE' operations
         And The form is no longer available
         And The pop up displays 'Other Study Attributes updated'
 
     Scenario: [Validation] User must select a parameter before saving an attribute
         Given [API] All Other Study Attributes assigned to the selected study are deleted
         And The page 'study_properties/other_study_attributes' is opened for current study
-        When The Other Study Attributes edit form is opened
-        And User intercepts the Other Study Attributes update request
+        When User clicks add other study attributes button
+        And The form is opened and visible
+        And User intercepts the Other Study Attributes POST request
         And Form save button is clicked
         Then The required and optional parameter validations are displayed
         And The Other Study Attributes update request was not sent
@@ -82,36 +87,40 @@ Feature: Studies - Define Study - Study Properties - Other Study Attributes
     Scenario: [Actions][Null flavor] User can use a null flavor instead of a parameter value
         Given [API] All Other Study Attributes assigned to the selected study are deleted
         And The page 'study_properties/other_study_attributes' is opened for current study
-        When The Other Study Attributes edit form is opened
+        When User clicks add other study attributes button
+        And The form is opened and visible
         And User selects the first required Other Study Attribute parameter
         And User selects the first optional Other Study Attribute parameter
-        And User selects the first required Other Study Attribute null flavor
-        Then The first required Other Study Attribute value is disabled and empty
-        And User intercepts the Other Study Attributes update request
+        And User selects the first optional Other Study Attribute null flavor
+        Then The first optional Other Study Attribute value is disabled and empty
+        And User intercepts the Other Study Attributes POST request
         And Form save button is clicked
-        And User waits for the Other Study Attributes update request
+        And User waits for the Other Study Attributes POST request
         Then The Other Study Attributes update request contains a null flavor operation
         And The form is no longer available
 
     Scenario: [Actions][Edit and Remove] User can edit one attribute and remove another
         Given [API] All Other Study Attributes assigned to the selected study are deleted
         And The page 'study_properties/other_study_attributes' is opened for current study
-        When The Other Study Attributes edit form is opened
+        When User clicks add other study attributes button
+        And The form is opened and visible
         And User selects the first required Other Study Attribute parameter
         And User selects the first optional Other Study Attribute parameter
-        And User edits the first required Other Study Attribute value
-        And User intercepts the Other Study Attributes update request
+        And User edits the first optional Other Study Attribute value
+        And User intercepts the Other Study Attributes POST request
         And Form save button is clicked
-        And User waits for the Other Study Attributes update request
+        And User waits for the Other Study Attributes POST request
         And The form is no longer available
-        And User waits for Other Study Attributes table to refresh
-        And The Other Study Attributes edit form is opened
-        And User edits the first required Other Study Attribute value
+        And User waits for the table
+        When User clicks add other study attributes button
+        And The form is opened and visible
+        And User edits the first optional Other Study Attribute value
         And User removes the first optional Other Study Attribute
-        And User intercepts the Other Study Attributes update request
+        And User intercepts the Other Study Attributes POST request
         And Form save button is clicked
-        And User waits for the Other Study Attributes update request
-        Then The Other Study Attributes update request contains PATCH and DELETE operations
+        And User waits for the Other Study Attributes POST request
+        Then The Other Study Attributes update request contains 'PATCH' operations
+        And The Other Study Attributes update request contains 'DELETE' operations
         And The form is no longer available
 
     Scenario: [Test data] Other Study Attributes are cleaned up after the scenarios

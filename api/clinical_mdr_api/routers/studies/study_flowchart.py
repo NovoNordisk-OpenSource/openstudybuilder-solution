@@ -13,8 +13,11 @@ from clinical_mdr_api.domain_repositories.study_selections.study_soa_repository 
 )
 from clinical_mdr_api.models.study_selections.study_selection import DetailedSoAHistory
 from clinical_mdr_api.models.utils import CustomPage
-from clinical_mdr_api.routers import _generic_descriptions, decorators
-from clinical_mdr_api.routers import studies_router as router
+from clinical_mdr_api.routers import (
+    _generic_descriptions,
+    decorators,
+    studies_router as router,
+)
 from clinical_mdr_api.services.studies.study import StudyService
 from clinical_mdr_api.services.studies.study_activity_selection import (
     StudyActivitySelectionService,
@@ -400,7 +403,6 @@ def get_detailed_soa_history(
         ],
     }
 )
-# pylint: disable=unused-argument
 def export_detailed_soa_content(
     request: Request,  # request is actually required by the allow_exports decorator
     study_uid: Annotated[str, STUDY_UID_PATH],
@@ -463,7 +465,6 @@ def export_detailed_soa_content(
         ],
     }
 )
-# pylint: disable=unused-argument
 def export_operational_soa_content(
     request: Request,  # request is actually required by the allow_exports decorator
     study_uid: Annotated[str, STUDY_UID_PATH],
@@ -511,7 +512,6 @@ def export_operational_soa_content(
         ],
     }
 )
-# pylint: disable=unused-argument
 def export_protocol_soa_content(
     request: Request,  # request is actually required by the allow_exports decorator
     study_uid: Annotated[str, STUDY_UID_PATH],

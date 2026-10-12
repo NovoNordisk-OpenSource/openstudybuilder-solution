@@ -57,7 +57,6 @@ Possible errors:
         ],
     }
 )
-# pylint: disable=unused-argument
 def get_sponsor_models(
     request: Request,  # request is actually required by the allow_exports decorator
     sort_by: _generic_descriptions.SORT_BY_QUERY = None,
@@ -148,7 +147,6 @@ Possible errors:
         },
     },
 )
-# pylint: disable=unused-argument
 def create(
     sponsor_model: Annotated[
         SponsorModelCreateInput,

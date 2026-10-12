@@ -77,7 +77,6 @@ Possible errors:
         ],
     }
 )
-# pylint: disable=unused-argument
 def get_medicinal_products(
     request: Request,  # request is actually required by the allow_exports decorator
     library_name: Annotated[str | None, Query()] = None,
@@ -155,7 +154,6 @@ Possible errors:
         ],
     }
 )
-# pylint: disable=unused-argument
 def get_medicinal_products_versions(
     request: Request,  # request is actually required by the allow_exports decorator
     library_name: Annotated[str | None, Query()] = None,
@@ -305,6 +303,7 @@ Possible errors:
             "- The library doesn't exist.\n"
             "- The library doesn't allow to add new items.\n",
         },
+        409: _generic_descriptions.ERROR_409,
     },
 )
 def create(

@@ -4,7 +4,7 @@
 
 # Features:
 # - Uses only standard Python modules.
-# - Works with Python and Node projects by discovering installed packages from yarn.lock, package-lock.json, or Pipfile.lock.
+# - Works with Python and Node projects by discovering installed packages from yarn.lock, package-lock.json, or uv.lock.
 # - Discovers license files from packages directories or from an optional fallback directory if package does not include a license file.
 # - Raises warnings/errors for missing licenses or when the fallback license filename does not include the current version number of the package.
 # - Log messages can be formatted for Azure DevOps pipelines.
@@ -16,7 +16,7 @@
 # - The level of markdown headers can be set.
 # - Text files can be prepended/appended to beginning/end of the built SBOM.
 #
-# 1. Discovers installed packages from yarn.lock or Pipfile.lock.
+# 1. Discovers installed packages from yarn.lock, package-lock.json, or uv.lock.
 # 2. Finds the package directory in node_modules folder or with importlib.metadata.
 # 3. Reads package metadata (METADATA or package.json), updates package name or version based on metadata.
 # 3. Looks for license files:
@@ -49,6 +49,7 @@ import os
 import re
 import sys
 import textwrap
+import tomllib
 from glob import glob
 from typing import Callable
 
@@ -557,15 +558,52 @@ def read_package_json_if_exists(
     return metadata
 
 
-def read_pipfile_lock(
-    filepath: str = "Pipfile.lock", category: str = "default"
-) -> list[tuple[str, str]]:
-    """Reads Pipfile.lock file and returns a list of (package name, version) tuples."""
+def read_uv_lock(filepath: str = "uv.lock") -> list[tuple[str, str, bool]]:
+    """Reads uv.lock file and returns a list of (package name, version, conditional) tuples.
 
-    with open(filepath, mode="rt", encoding="utf8") as f:
-        pipfile = json.load(f)
+    Walks the transitive closure of the project's own direct (production)
+    dependencies, mirroring what Pipfile.lock's flat "default" category
+    already contained. The project's dev-only dependency group is
+    deliberately not walked.
+
+    uv.lock is a universal lock file: some dependency edges carry an
+    environment marker and apply only to other platforms or Python versions.
+    Markers are not evaluated (that would require a non-stdlib parser), so a
+    package reachable only through marked edges is flagged as conditional and
+    may legitimately be absent from the installed environment.
+    """
+
+    with open(filepath, mode="rb") as f:
+        lock = tomllib.load(f)
+
+    packages = {pkg["name"]: pkg for pkg in lock["package"]}
+    root = next(pkg for pkg in lock["package"] if pkg.get("source") == {"virtual": "."})
+
+    def walk(skip_marked: bool) -> dict[str, str]:
+        def dependencies(pkg: dict) -> list[str]:
+            return [
+                dep["name"]
+                for dep in pkg.get("dependencies", [])
+                if not (skip_marked and dep.get("marker"))
+            ]
+
+        closure: dict[str, str] = {}
+        pending = dependencies(root)
+        while pending:
+            name = pending.pop()
+            if name in closure:
+                continue
+            pkg = packages[name]
+            closure[name] = pkg["version"]
+            pending.extend(dependencies(pkg))
+
+        return closure
+
+    closure = walk(skip_marked=False)
+    unconditional = walk(skip_marked=True)
+
     return [
-        (name, meta["version"].lstrip("=")) for name, meta in pipfile[category].items()
+        (name, version, name not in unconditional) for name, version in closure.items()
     ]
 
 
@@ -627,7 +665,7 @@ def discover_python_packages(
     root_dir: str = "", fallback_dir: str = ""
 ) -> list[tuple[str, str, str, list[str], dict]]:
     """
-    Discover installed Python packages from Pipfile.lock.
+    Discover installed Python packages from uv.lock.
 
     Returns a list of tuples with mostly strings:
     (package name, version, license type (if specified), module path, a list of strings of license file paths)
@@ -636,14 +674,18 @@ def discover_python_packages(
 
     packages = []
 
-    for name, version in read_pipfile_lock(
-        filepath=os.path.join(root_dir, "Pipfile.lock")
-    ):
+    installed = read_uv_lock(filepath=os.path.join(root_dir, "uv.lock"))
+
+    for name, version, conditional in installed:
         try:
             license_paths, metadata, name, version, module_path = (
                 discover_python_package(name)
             )
         except ModuleNotFoundError as exc:
+            if conditional:
+                # Only required by an environment marker that does not apply here
+                log.info("Omitting module '%s' which is not installed", name)
+                continue
             log.error("Module '%s' was not found: %s", name, str(exc))
             _EXIT_CODE |= 4
             continue
@@ -718,15 +760,15 @@ def parse_args() -> argparse.Namespace:
         "DIR",
         nargs="?",
         default="",
-        help="Root directory of the project with yarn.lock, package-lock.json, or Pipfile.lock (default: current directory)",
+        help="Root directory of the project with yarn.lock, package-lock.json, or uv.lock (default: current directory)",
     )
 
     mode = parser.add_mutually_exclusive_group(required=True)
     mode.add_argument(
-        "-p",
-        "--pipfile",
+        "-u",
+        "--uv",
         action="store_true",
-        help="Discover Python packages using Pipfile.lock",
+        help="Discover Python packages using uv.lock",
     )
     mode.add_argument(
         "-y",
@@ -854,12 +896,12 @@ def main() -> int:
         packages = discover_node_packages(
             root_dir=args.DIR, fallback_dir=args.fallback_dir, lock_type="npm"
         )
-    elif args.pipfile:
+    elif args.uv:
         packages = discover_python_packages(
             root_dir=args.DIR, fallback_dir=args.fallback_dir
         )
     else:
-        raise RuntimeError("neither --yarn, --npm, nor --pipfile specified")
+        raise RuntimeError("neither --yarn, --npm nor --uv specified")
 
     print(
         build_sbom(

@@ -24,6 +24,8 @@ The list must expose the project IDs accepted when creating a study, so that a c
 
 Consumers must be able to retrieve a list of all studies that exist in OpenStudyBuilder via the Consumer API.
 
+For each study, consumers must also be able to retrieve the data suppliers selected for that study, including whether the data delivered by a given supplier is blinded for the study.
+
 # URS-ConsumerApi-Studies-Create
 
 Consumers with write access must be able to create a new top-level study definition via the Consumer API by providing a study number and/or a study acronym, together with the ID of an existing project.

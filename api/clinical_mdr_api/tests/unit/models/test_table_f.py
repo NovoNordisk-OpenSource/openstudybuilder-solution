@@ -1,5 +1,5 @@
-# pylint: disable=no-member
-from typing import Any, Mapping
+from collections.abc import Mapping
+from typing import Any
 
 import bs4
 import docx
@@ -266,7 +266,8 @@ def test_table_to_html(test_table: TableWithFootnotes):
     assert title.text == test_table.title, "title mismatch"
 
     # THEN the document has TABLE
-    assert (table := doc.select_one("html > body > table")), "<TABLE> tag not found"
+    table = doc.select_one("html > body > table")
+    assert table, "<TABLE> tag not found"
 
     compare_html_table(table, test_table)
 
@@ -292,7 +293,7 @@ def compare_html_table(table: bs4.element.Tag, test_table: TableWithFootnotes):
     ), "unexpected number of header rows <thead><tr>"
 
     row: TableRow
-    # pylint: disable=invalid-name
+
     # iterate over index, <tr>, TableRow
     for r, (tr, row) in enumerate(
         zip(table.find_all("tr"), (row for row in test_table.rows if not row.hide))
@@ -309,13 +310,12 @@ def compare_html_table(table: bs4.element.Tag, test_table: TableWithFootnotes):
         cells = [cell for cell in row.cells if cell.span]
 
         # THEN number of cells in rows match
-        assert len(tds := tr.find_all(["th", "td"])) == len(
-            cells
-        ), "unexpected number of cells in row i"
+        tds = tr.find_all(["th", "td"])
+        assert len(tds) == len(cells), "unexpected number of cells in row i"
 
         cell: TableCell
         span = 0
-        # pylint: disable=invalid-name
+
         # iterate over index, <td/th>, TableCell
         for c, (td, cell) in enumerate(zip(tds, cells)):
             if r < num_header_rows or span < test_table.num_header_cols:
@@ -349,8 +349,9 @@ def compare_html_table(table: bs4.element.Tag, test_table: TableWithFootnotes):
 
             if cell.footnotes:
                 # THEN footnote symbols found in cell as superscript
+                sups = td.find_all("sup")
                 assert (
-                    len(sups := td.find_all("sup")) == 1
+                    len(sups) == 1
                 ), f"expected one <sup> for footnotes in row {r} column {c}"
                 symbols = sups[0].get_text(strip=True).split("\xa0")
                 assert (
@@ -358,12 +359,12 @@ def compare_html_table(table: bs4.element.Tag, test_table: TableWithFootnotes):
                 ), f"unexpected superscript text of footnote symbols in row {r} column {c}"
 
 
-# pylint: disable=invalid-name
 def compare_html_footnotes(doc: bs4.BeautifulSoup, test_table: TableWithFootnotes):
     """Compares footnote <dl> with footnotes of TableWithFootnotes"""
 
     # THEN number of footnotes match with footnotes list
-    assert (paras := doc.find_all("p", class_="footnote")), "no P.footnote tags found"
+    paras = doc.find_all("p", class_="footnote")
+    assert paras, "no P.footnote tags found"
     assert len(paras) == len(test_table.footnotes), "number of footnotes mismatch"
 
     for r, (para, (symbol, footnote)) in enumerate(
@@ -501,7 +502,7 @@ def compare_docx_footnotes(
     footnote_paras = [parax for parax in docx_doc.paragraphs if parax.text.strip()]
 
     # THEN document lists footnotes
-    assert len(footnote_paras), "footnotes listing was not found in DOCX document"
+    assert footnote_paras, "footnotes listing was not found in DOCX document"
 
     # THEN number of footnotes match
     assert len(footnote_paras) == len(footnotes), "number of footnotes mismatch"

@@ -1,5 +1,5 @@
+from collections.abc import Set
 from dataclasses import dataclass
-from typing import AbstractSet
 
 from clinical_mdr_api.domains.libraries.object import ParametrizedTemplateARBase
 from clinical_mdr_api.domains.versioned_object_aggregate import (
@@ -10,7 +10,7 @@ from clinical_mdr_api.domains.versioned_object_aggregate import (
 
 @dataclass
 class PreInstanceAR(ParametrizedTemplateARBase):
-    def get_possible_actions(self) -> AbstractSet[ObjectAction]:
+    def get_possible_actions(self) -> Set[ObjectAction]:
         """
         Returns list of possible actions
         """

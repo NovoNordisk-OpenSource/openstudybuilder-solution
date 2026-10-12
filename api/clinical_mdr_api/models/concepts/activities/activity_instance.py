@@ -1,5 +1,6 @@
+from collections.abc import Callable
 from datetime import datetime
-from typing import Annotated, Any, Callable, Self
+from typing import Annotated, Any, Self
 
 from pydantic import ConfigDict, Field
 
@@ -411,6 +412,17 @@ class ActivityInstanceGroupings(BaseModel):
         )
 
 
+def _extract_sdtm_domain(activity_items: list[ActivityItem]) -> str | None:
+    """Return the SDTM domain name from the 'domain' activity item, if present."""
+    for activity_item in activity_items:
+        if (
+            activity_item.activity_item_class.name == "domain"
+            and activity_item.ct_terms
+        ):
+            return activity_item.ct_terms[0].name
+    return None
+
+
 # ActivityInstance is a complete view of an Activity Instance
 # that combines both the instance attributes and the groupings.
 class ActivityInstance(ActivityBase):
@@ -479,6 +491,13 @@ class ActivityInstance(ActivityBase):
     activity_name: Annotated[
         str | None, Field(json_schema_extra={"nullable": True})
     ] = None
+    sdtm_domain: Annotated[
+        str | None,
+        Field(
+            description="Name of the SDTM domain linked via the 'domain' activity item",
+            json_schema_extra={"nullable": True},
+        ),
+    ] = None
     groupings_status: Annotated[
         str | None, Field(json_schema_extra={"remove_from_wildcard": True})
     ] = None
@@ -543,13 +562,14 @@ class ActivityInstance(ActivityBase):
                 )
             ct_terms.sort(key=lambda x: x.uid or "")
 
-            if activity_item.ct_codelist is not None:
-                ct_codelist = CompactCodelist(
+            ct_codelist = (
+                CompactCodelist(
                     uid=activity_item.ct_codelist.uid,
                     name=activity_item.ct_codelist.name,
                 )
-            else:
-                ct_codelist = None
+                if activity_item.ct_codelist is not None
+                else None
+            )
 
             activity_items.append(
                 ActivityItem(
@@ -607,6 +627,8 @@ class ActivityInstance(ActivityBase):
                 )
             activity_groupings.append(translation)
 
+        sdtm_domain = _extract_sdtm_domain(activity_items)
+
         return cls(
             uid=activity_ar.uid,
             nci_concept_id=attrs.nci_concept_id,
@@ -627,6 +649,7 @@ class ActivityInstance(ActivityBase):
             legacy_description=attrs.legacy_description,
             activity_groupings=activity_groupings,
             activity_name=activity_ar.concept_vo.activity_name,
+            sdtm_domain=sdtm_domain,
             activity_instance_class=CompactActivityInstanceClass(
                 uid=attrs.activity_instance_class_uid,
                 name=attrs.activity_instance_class_name,

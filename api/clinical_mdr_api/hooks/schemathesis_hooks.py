@@ -1,3 +1,4 @@
+import json
 import os
 from typing import Any
 
@@ -7,6 +8,10 @@ import schemathesis
 import schemathesis.schemas
 
 STUDY_UID = os.getenv("SCHEMATHESIS_STUDY_UID", "Study_000001")
+
+# Pagination parameters are declared as `integer` on every operation in all
+# three specifications, so any non-numeric value is rejected with 422.
+PAGINATION_PARAMS = ("page_number", "page_size")
 
 
 EXCLUDED_PATHS = [
@@ -20,11 +25,14 @@ EXCLUDED_PATHS = [
     "/standards/sponsor-models/dataset-variables/headers",
 ]
 
+MIN_CODEPOINT = 0x20
+MAX_CODEPOINT = 0xFFFF
+
 
 def is_in_range(val):
     """Temporarily filter out all characters outside of 0x20...0xFFFF range"""
     val = str(val)
-    return all(0x20 <= ord(char) <= 0xFFFF for char in val)
+    return all(MIN_CODEPOINT <= ord(char) <= MAX_CODEPOINT for char in val)
 
 
 def is_desired_header(headers: dict[Any, Any]) -> bool:
@@ -65,12 +73,25 @@ def before_generate_case(
     # ``?name=v1&name=v2`` which Starlette collapses by keeping the last value.
     # That silently masks type violations, so we mirror the runtime behaviour
     # before the request leaves the generator: keep the last element and let
-    # the API validators see the real value.
+    # the API validators see the real value. Pagination parameters are handled
+    # differently below, because for those the masking is what produces a
+    # spurious failure rather than what prevents one.
     scalar_query_params = {
         param.name
         for param in op.query
         if param.definition.get("schema", {}).get("type") != "array"
     }
+
+    # `page_size=0` means "no limit" wherever the schema declares `minimum: 0`,
+    # and those responses are large enough to slow the run down, which is why
+    # the value is replaced below. Consumer operations declare `minimum: 1`
+    # instead, so there 0 is a real violation and has to reach the API for it to
+    # be rejected.
+    page_size_allows_zero = any(
+        param.name == "page_size"
+        and param.definition.get("schema", {}).get("minimum") == 0
+        for param in op.query
+    )
 
     def tune_case(case: schemathesis.Case):
         # Replace study_uid/uid path param for all paths starting with "/studies/study_uid}/" or "/studies/{uid}/"
@@ -86,14 +107,26 @@ def before_generate_case(
                 case.path_parameters[path_param] = STUDY_UID
 
         if case.query:
-            # Collapse repeated scalar query params to the last value (see above).
             for name in scalar_query_params:
                 value = case.query.get(name)
-                if isinstance(value, list):
+                if not isinstance(value, list):
+                    continue
+                if name in PAGINATION_PARAMS:
+                    # Collapsing here would hand the API a valid integer and the
+                    # type violation would vanish before the request left the
+                    # client, which then reads as the API having accepted
+                    # schema-violating data. Send the array as its JSON text
+                    # instead so the violation survives to the wire and the API
+                    # can reject it, which is what the generated case is
+                    # asserting in the first place.
+                    case.query[name] = json.dumps(value)
+                else:
+                    # Collapse repeated scalar query params to the last value
+                    # (see above).
                     case.query[name] = value[-1] if value else None
 
             # Set page_size to 10 if it is 0
-            if case.query.get("page_size") == 0:
+            if page_size_allows_zero and case.query.get("page_size") == 0:
                 print(
                     f"Setting page_size to 10 for {case.method} {case.formatted_path}"
                 )

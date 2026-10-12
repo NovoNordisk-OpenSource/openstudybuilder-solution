@@ -1,55 +1,50 @@
 import re
 import uuid
-from datetime import date, datetime, timezone
+from collections.abc import Callable
+from datetime import UTC, date, datetime
 from itertools import chain
-from typing import Any, Callable
+from typing import Any, ClassVar
 
 from neomodel import db
 from usdm_info import __model_version__ as usdm_package_version
-from usdm_model import Activity as USDMActivity
-from usdm_model import Administration as USDMAdministration
-from usdm_model import AliasCode as USDMAliasCode
-from usdm_model import BiomedicalConcept as USDMBiomedicalConcept
-from usdm_model import BiomedicalConceptProperty as USDMBiomedicalConceptProperty
-from usdm_model import Code as USDMCode
-from usdm_model import Duration as USDMDuration
-from usdm_model import EligibilityCriterion as USDMEligibilityCriterion
-from usdm_model import EligibilityCriterionItem as USDMEligibilityCriterionItem
-from usdm_model import Encounter as USDMEncounter
-from usdm_model import Endpoint as USDMEndpoint
-from usdm_model import Indication as USDMIndication
-from usdm_model import InterventionalStudyDesign as USDMInterventionalStudyDesign
-from usdm_model import Objective as USDMObjective
-from usdm_model import Organization as USDMOrganization
-from usdm_model import Procedure as USDMProcedure
-from usdm_model import Quantity as USDMQuantity
-from usdm_model import Range as USDMRange
-from usdm_model import ResponseCode as USDMResponseCode
 from usdm_model import (
+    Activity as USDMActivity,
+    Administration as USDMAdministration,
+    AliasCode as USDMAliasCode,
+    BiomedicalConcept as USDMBiomedicalConcept,
+    BiomedicalConceptProperty as USDMBiomedicalConceptProperty,
+    Code as USDMCode,
+    Duration as USDMDuration,
+    EligibilityCriterion as USDMEligibilityCriterion,
+    EligibilityCriterionItem as USDMEligibilityCriterionItem,
+    Encounter as USDMEncounter,
+    Endpoint as USDMEndpoint,
+    Indication as USDMIndication,
+    InterventionalStudyDesign as USDMInterventionalStudyDesign,
+    Objective as USDMObjective,
+    Organization as USDMOrganization,
+    Procedure as USDMProcedure,
+    Quantity as USDMQuantity,
+    Range as USDMRange,
+    ResponseCode as USDMResponseCode,
     ScheduledActivityInstance,
-)
-from usdm_model import ScheduleTimeline as USDMScheduleTimeline
-from usdm_model import Study as USDMStudy
-from usdm_model import (
+    ScheduleTimeline as USDMScheduleTimeline,
+    Study as USDMStudy,
     StudyArm,
-)
-from usdm_model import StudyCell as USDMStudyCell
-from usdm_model import (
+    StudyCell as USDMStudyCell,
     StudyCohort,
-)
-from usdm_model import StudyDefinitionDocument as USDMStudyDefinitionDocument
-from usdm_model import (
+    StudyDefinitionDocument as USDMStudyDefinitionDocument,
     StudyDefinitionDocumentVersion as USDMStudyDefinitionDocumentVersion,
+    StudyDesignPopulation as USDMStudyDesignPopulation,
+    StudyElement as USDMStudyElement,
+    StudyEpoch as USDMStudyEpoch,
+    StudyIdentifier as USDMStudyIdentifier,
+    StudyIntervention as USDMStudyIntervention,
+    StudyTitle as USDMStudyTitle,
+    StudyVersion as USDMStudyVersion,
+    Timing as USDMTiming,
+    TransitionRule as USDMTransitionRule,
 )
-from usdm_model import StudyDesignPopulation as USDMStudyDesignPopulation
-from usdm_model import StudyElement as USDMStudyElement
-from usdm_model import StudyEpoch as USDMStudyEpoch
-from usdm_model import StudyIdentifier as USDMStudyIdentifier
-from usdm_model import StudyIntervention as USDMStudyIntervention
-from usdm_model import StudyTitle as USDMStudyTitle
-from usdm_model import StudyVersion as USDMStudyVersion
-from usdm_model import Timing as USDMTiming
-from usdm_model import TransitionRule as USDMTransitionRule
 
 from clinical_mdr_api.domains.study_definition_aggregates.study_metadata import (
     StudyStatus,
@@ -115,6 +110,17 @@ def extract_c_code_from_simple_term(term_uid: str) -> str | None:
     if regex_match:
         return regex_match.group(1)
     return None
+
+
+def _as_label_fragment(value: Any) -> str:
+    if value is None:
+        return ""
+    if isinstance(value, str):
+        return value.strip()
+    term_name = getattr(value, "term_name", None)
+    if isinstance(term_name, str):
+        return term_name.strip()
+    return str(value).strip()
 
 
 def _update_ddf_encounter_scheduled_at(encounters, schedule_timelines):
@@ -193,7 +199,7 @@ class USDMMapper:
     def _effective_date_to_datetime(effective_date_str: str) -> datetime:
         """Convert effective date string (YYYY-MM-DD) to a timezone-aware datetime for version-aware CT term resolution."""
         d = date.fromisoformat(effective_date_str)
-        return datetime(d.year, d.month, d.day, 23, 59, 59, 999999, tzinfo=timezone.utc)
+        return datetime(d.year, d.month, d.day, 23, 59, 59, 999999, tzinfo=UTC)
 
     @staticmethod
     def _get_system_version() -> str | None:
@@ -791,10 +797,14 @@ class USDMMapper:
                  collect(DISTINCT CASE WHEN item_class_value IS NOT NULL THEN {
                      nci_concept_id: item_class_value.nci_concept_id,
                      name: coalesce(head([(item_class_root)-[:MAPS_VARIABLE_CLASS]->(vc:VariableClass) | vc.uid]), item_class_value.name),
-                     data_type: head([(item_class_value)-[:HAS_DATA_TYPE]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(:CTTermRoot)-[:HAS_NAME_ROOT]->(:CTTermNameRoot)-[:LATEST]->(dtv:CTTermNameValue) | dtv.name]),
+                     data_type: head([(item_class_value)-[:HAS_DATA_TYPE]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(:CTTermRoot)-[:HAS_NAME_ROOT]->(:CTTermNameRoot)
+                         -[:LATEST]->(dtv:CTTermNameValue) | dtv.name]),
                      mandatory: item_class_rel.mandatory,
-                     response_codes: [(activity_item)-[:HAS_CT_TERM]->(tr:CTTermRoot)-[:HAS_NAME_ROOT]->(:CTTermNameRoot)-[ver:HAS_VERSION]->(tnv:CTTermNameValue) WHERE ver.status IN ['Final', 'Retired'] AND ($ct_terms_datetime IS NULL OR (ver.start_date <= $ct_terms_datetime AND (ver.end_date IS NULL OR ver.end_date > $ct_terms_datetime))) | {code: tr.uid, decode: tnv.name}]
-                         + [(activity_item)-[:HAS_UNIT_DEFINITION]->(:UnitDefinitionRoot)-[:LATEST]->(udv:UnitDefinitionValue)-[:HAS_CT_UNIT]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(utr:CTTermRoot)-[:HAS_ATTRIBUTES_ROOT]->(:CTTermAttributesRoot)-[:LATEST]->(uav:CTTermAttributesValue) | {code: uav.concept_id, decode: udv.name}]
+                     response_codes: [(activity_item)-[:HAS_CT_TERM]->(tr:CTTermRoot)-[:HAS_NAME_ROOT]->(:CTTermNameRoot)-[ver:HAS_VERSION]->(tnv:CTTermNameValue)
+                         WHERE ver.status IN ['Final', 'Retired'] AND ($ct_terms_datetime IS NULL OR (ver.start_date <= $ct_terms_datetime
+                         AND (ver.end_date IS NULL OR ver.end_date > $ct_terms_datetime))) | {code: tr.uid, decode: tnv.name}]
+                         + [(activity_item)-[:HAS_UNIT_DEFINITION]->(:UnitDefinitionRoot)-[:LATEST]->(udv:UnitDefinitionValue)-[:HAS_CT_UNIT]->(:CTTermContext)
+                         -[:HAS_SELECTED_TERM]->(utr:CTTermRoot)-[:HAS_ATTRIBUTES_ROOT]->(:CTTermAttributesRoot)-[:LATEST]->(uav:CTTermAttributesValue) | {code: uav.concept_id, decode: udv.name}]
                  } END) AS properties
             RETURN study_activity_uid, nci_concept_id, name, topic_code, adam_param_code, properties
         """
@@ -1122,7 +1132,9 @@ class USDMMapper:
     # Organization type codes (from DDF CT codelist C188724): C93453 = Study Registry, C188863 = Regulatory Agency
     # Labels are resolved at runtime from the REGISTID sponsor codelist (CTCodelist_000038) in the database.
     # org_name and id_scheme have no DB source and remain as configuration.
-    REGISTRY_ORGANIZATIONS: dict[str, tuple[str, str | None, str, str, str]] = {
+    REGISTRY_ORGANIZATIONS: ClassVar[
+        dict[str, tuple[str, str | None, str, str, str]]
+    ] = {
         # field_name: (org_name, registid_term_uid, id_scheme, org_type_code, fallback_label)
         "ct_gov_id": (
             "CT-GOV",
@@ -1440,6 +1452,34 @@ class USDMMapper:
                     instanceType="AliasCode",
                 )
 
+            # Preserve free-text dosing in the human-readable Administration label,
+            # which is the only USDM field capable of carrying non-code text. The
+            # coded dose/frequency fields remain the authoritative structured form
+            # when a library term/value exists; otherwise we carry the free-text
+            # value/frequency through the label instead of dropping it.
+            dose_value_text = ""
+            if dosing.dose_value is not None:
+                dose_unit_label = getattr(dosing.dose_value, "unit_label", "") or ""
+                dose_value_text = _as_label_fragment(
+                    f"{dosing.dose_value.value} {dose_unit_label}"
+                )
+            elif getattr(dosing, "free_text_dose_value", None):
+                dose_value_text = _as_label_fragment(dosing.free_text_dose_value)
+
+            dose_frequency_text = ""
+            if dose_frequency is not None:
+                dose_frequency_text = _as_label_fragment(
+                    getattr(dose_frequency, "term_name", "")
+                )
+            elif getattr(dosing, "free_text_dose_frequency", None):
+                dose_frequency_text = _as_label_fragment(
+                    dosing.free_text_dose_frequency
+                )
+
+            rendered_dose_label = " ".join(
+                part for part in [dose_value_text, dose_frequency_text] if part
+            ).strip()
+
             admin_name = (
                 getattr(getattr(dosing, "study_compound", None), "compound_uid", None)
                 or getattr(dosing, "study_compound_dosing_uid", None)
@@ -1452,6 +1492,7 @@ class USDMMapper:
                         dosing.study_compound_dosing_uid,
                     ),
                     name=admin_name,
+                    label=rendered_dose_label or None,
                     duration=usdm_duration,
                     dose=usdm_dose,
                     frequency=usdm_frequency,
@@ -1978,7 +2019,7 @@ class USDMMapper:
                     else ""
                 ),
                 valueLabel=(
-                    f"{str(abs(osb_visit.time_value))} {osb_visit.time_unit_name}"
+                    f"{abs(osb_visit.time_value)!s} {osb_visit.time_unit_name}"
                     if osb_visit.time_value is not None
                     else ""
                 ),

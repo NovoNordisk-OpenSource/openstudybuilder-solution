@@ -20,9 +20,7 @@ from clinical_mdr_api.tests.integration.utils.method_library import (
     get_unit_uid_by_name,
 )
 from clinical_mdr_api.tests.integration.utils.utils import TestUtils
-
-# pylint: disable=unused-argument
-# pylint: disable=redefined-outer-name
+from common import exceptions
 
 
 class TestData:
@@ -157,3 +155,31 @@ def test_batch_operations(setup_and_teardown_db):
     )
     schedules = service.get_all_schedules("study_root")
     assert len(schedules) == 0
+
+
+@pytest.fixture(scope="function")
+def minimal_db():
+    db_name = "scheduletest.validation"
+    inject_and_clear_db(db_name)
+    yield
+    drop_db(db_name)
+
+
+def test_batch_delete_wrong_payload_raises_validation_error(minimal_db):
+    # A DELETE operation whose content is a create-shaped payload has no `.uid`
+    # attribute. Before the fix this produced an AttributeError (500); after the
+    # fix it must raise ValidationException (400).
+    service = StudyActivityScheduleService()
+    with pytest.raises(exceptions.ValidationException):
+        service.handle_batch_operations(
+            "study_root",
+            [
+                StudyActivityScheduleBatchInput(
+                    method="DELETE",
+                    content=StudyActivityScheduleCreateInput(
+                        study_activity_uid="fake_activity_uid",
+                        study_visit_uid="fake_visit_uid",
+                    ),
+                ),
+            ],
+        )

@@ -1,8 +1,8 @@
 import datetime
 import logging
+from collections.abc import Iterable
 from enum import Enum
 from textwrap import dedent
-from typing import Iterable
 
 from neomodel import DoesNotExist, RelationshipManager, db
 
@@ -95,8 +95,8 @@ class StudySoARepository:
         sv_query, params = cls._study_value_query(study_uid, study_value_version)
 
         query = "\n".join(
-            sv_query
-            + [
+            [
+                *sv_query,
                 "MATCH (study_value)-[cell:HAS_PROTOCOL_SOA_CELL]->()",
                 "DELETE cell",
             ]
@@ -104,8 +104,8 @@ class StudySoARepository:
         db.cypher_query(query, params)
 
         query = "\n".join(
-            sv_query
-            + [
+            [
+                *sv_query,
                 "MATCH (study_value)-[fn:HAS_PROTOCOL_SOA_FOOTNOTE]->()",
                 "DELETE fn",
             ]
@@ -315,7 +315,7 @@ class StudySoARepository:
         study_status: StudyStatus = StudyStatus.DRAFT,
     ):
         action = UpdateSoASnapshot(
-            date=datetime.datetime.now(datetime.timezone.utc),
+            date=datetime.datetime.now(datetime.UTC),
             status=study_status.value,
             author_id=user().id(),
             object_type=f"{layout.value} SoA",

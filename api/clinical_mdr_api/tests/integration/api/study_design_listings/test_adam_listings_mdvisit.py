@@ -2,14 +2,6 @@
 Tests for /listings/studies/all/adam/ endpoints
 """
 
-# pylint: disable=unused-argument
-# pylint: disable=redefined-outer-name
-# pylint: disable=too-many-arguments
-# pylint: disable=invalid-name
-
-# pytest fixture functions have other fixture functions as arguments,
-# which pylint interprets as unused arguments
-
 import logging
 from unittest import mock
 
@@ -237,9 +229,9 @@ def test_adam_with_protocol_soa_html_with_time_units(api_client):
         AVISIT2="Week 11",
         AVISIT2N="11",
     )
-    # pylint: disable=invalid-name
-    expected_output.STUDYID = mock.ANY
-    assert res[0] == expected_output.model_dump()
+    expected = expected_output.model_dump()
+    expected["STUDYID"] = mock.ANY
+    assert res[0] == expected
     day_uid = get_unit_uid_by_name("day")
     response = api_client.patch(
         f"/studies/{study_for_export.uid}/time-units?for_protocol_soa=true",
@@ -266,5 +258,6 @@ def test_adam_with_protocol_soa_html_with_time_units(api_client):
         AVISIT2="Week 11",
         AVISIT2N="11",
     )
-    expected_output.STUDYID = mock.ANY  # pylint: disable=invalid-name
-    assert res[0] == expected_output.model_dump()
+    expected = expected_output.model_dump()
+    expected["STUDYID"] = mock.ANY
+    assert res[0] == expected

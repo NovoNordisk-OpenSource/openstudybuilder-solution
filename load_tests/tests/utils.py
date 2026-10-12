@@ -146,7 +146,6 @@ def pretty_print_endpoint(host: str, url: str, params: dict) -> str:
     return f"{host}{url}"
 
 
-# pylint: disable=too-many-arguments,too-many-positional-arguments
 def query(
     cypher_query,
     params: dict = None,

@@ -1,7 +1,8 @@
 import json
 import re
 import string
-from typing import Any, Iterable, overload
+from collections.abc import Iterable
+from typing import Any, overload
 
 from bs4 import BeautifulSoup
 from pydantic import BaseModel
@@ -232,5 +233,15 @@ def enumerate_letters(items: Iterable[Any]):
     >>> list(enumerate(range(28)))[22:]
     [('w', 22), ('x', 23), ('y', 24), ('z1', 25), ('z2', 26), ('z3', 27)]
     """
+    # Reserve the last lowercase letter ("z") to prefix the numbered overflow
+    # sequence ("z1", "z2", ...) once all other letters are exhausted.
+    last_plain_letter_index = len(string.ascii_lowercase) - 1
     for i, item in enumerate(items):
-        yield string.ascii_lowercase[i] if i < 25 else f"z{i-24}", item
+        yield (
+            (
+                string.ascii_lowercase[i]
+                if i < last_plain_letter_index
+                else f"z{i - last_plain_letter_index + 1}"
+            ),
+            item,
+        )

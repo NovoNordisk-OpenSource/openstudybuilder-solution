@@ -1,5 +1,3 @@
-# pylint: disable=unused-argument
-# pylint: disable=redefined-outer-name
 from typing import Any
 
 import pytest
@@ -29,7 +27,7 @@ _study_number_counter = 1000
 
 
 def _next_study_number() -> str:
-    global _study_number_counter  # pylint: disable=global-statement
+    global _study_number_counter
     _study_number_counter += 1
     return str(_study_number_counter)
 

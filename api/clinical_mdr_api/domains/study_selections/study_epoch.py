@@ -1,6 +1,6 @@
 import datetime
+from collections.abc import Mapping, MutableMapping
 from dataclasses import dataclass, field
-from typing import Mapping, MutableMapping
 
 from clinical_mdr_api.domains.study_definition_aggregates.study_metadata import (
     StudyStatus,

@@ -5,6 +5,12 @@ let diagnosisGroup = 'Nonalcoholic steatohepatitis', relapseCriteria = 'Test rel
 let rareDiseaseIndicator = 'No', sex = 'Female', minParticipantAge = '18', maxParticipantAge = '99'
 let paediatricStudyIndicator = 'No', paediatricInvestigationPlanIndicator = 'No', paediatricPostMarketStudyIndicator = 'No'
 
+When('User sets study therapeutic area as {string}', (value) => cy.selectMultipleSelect('Therapeutic area', value))
+
+When('User deselects study therapeutic area {string}', (value) => cy.contains('.v-list-item', value).find('input').uncheck())
+
+When('The study Therapeutic area is visible as {string}', (value) => cy.contains('table tbody tr td', 'Therapeutic area').next().should('have.text', value))
+
 When('The population is edited', () => {
     cy.selectMultipleSelect('Therapeutic area', therapeuticArea)
     cy.selectMultipleSelect('Study disease, condition or indication', studyDiseaseConditionOrIndication)

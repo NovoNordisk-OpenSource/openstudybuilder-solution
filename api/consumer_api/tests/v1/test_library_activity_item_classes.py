@@ -1,4 +1,3 @@
-# pylint: disable=redefined-outer-name
 """
 Integration tests for `GET /v1/library/activity-item-classes`.
 

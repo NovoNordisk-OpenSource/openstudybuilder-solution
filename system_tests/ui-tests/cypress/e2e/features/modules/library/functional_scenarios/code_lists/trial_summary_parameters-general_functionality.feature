@@ -1,10 +1,13 @@
-@REQ_ID:TBD
+@REQ_ID:1070679
 Feature: Library - Code Lists - Trial Summary Parameters - General Functionality
 
     As a user, I want to verify that the Trial Summary Parameters generic functions work correctly.
 
     Background: User must be logged in
         Given The user is logged in
+
+    Scenario: [Test data] User must be able to create data for trial summary parameters page
+        Given [API] Trial Summary Parameter is created
 
     @smoke_test
     Scenario: [Navigation] User must be able to navigate to the Trial Summary Parameters page
@@ -23,9 +26,9 @@ Feature: Library - Code Lists - Trial Summary Parameters - General Functionality
         Then The table page presents correct data
 
     Scenario: [Table][Search] User must be able to search for a Trial Summary Parameter
-        Given The '/library/trial_summary_parameters' page is opened
-        When The user searches for a term in the search field
-        Then The table is filtered to show only matching results
+        Given [API] Trial Summary Parameter is created
+        When The '/library/trial_summary_parameters' page is opened  
+        Then The new Trial Summary Parameter is visible in the table
 
     Scenario Outline: [Table][Filtering] User must be able to filter the table by text fields
         Given The '/library/trial_summary_parameters' page is opened
@@ -36,8 +39,8 @@ Feature: Library - Code Lists - Trial Summary Parameters - General Functionality
             | name               |
             | Library            |
             | Sponsor name       |
-            | CT name            |
-            | Code               |
+            | NCI preferred term |
+            | Code subm value    |
             | Concept ID         |
             | Required level     |
             | Name status        |
@@ -82,13 +85,19 @@ Feature: Library - Code Lists - Trial Summary Parameters - General Functionality
         Then The version history window is displayed
 
     Scenario: [Overview][History][CT values] User must be able to view CT values history from the overview page
-        Given The Trial Summary Parameter details page is opened
+        Given The '/library/trial_summary_parameters' page is opened
+        And User searches for 'Draft'
+        And The 'View or edit details' option is clicked from the three dot menu list
+        When User intercepts term attributes versions history
         When The CT values history button is clicked
         Then The version history window is displayed
         And The history contains timestamps and usernames
 
     Scenario: [Overview][History][Sponsor values] User must be able to view Sponsor values history from the overview page
-        Given The Trial Summary Parameter details page is opened
+        Given The '/library/trial_summary_parameters' page is opened
+        And User searches for 'Draft'
+        And The 'View or edit details' option is clicked from the three dot menu list
+        And User intercepts term name versions history
         When The sponsor values history button is clicked
         Then The version history window is displayed
         And The history contains timestamps and usernames

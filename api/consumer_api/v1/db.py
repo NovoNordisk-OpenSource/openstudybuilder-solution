@@ -1,6 +1,4 @@
-# pylint: disable=invalid-name
-# pylint: disable=redefined-builtin
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from common import queries as common_queries
@@ -151,6 +149,7 @@ def get_studies(
             [ds IN COLLECT(DISTINCT {{
                 uid: sds.uid,
                 name: dsv.name,
+                is_blinded: sds.blinded,
                 type_uid: ctr.uid,
                 type_codelist_uid: ccr.uid,
                 order: sds.order
@@ -212,13 +211,19 @@ def get_study_visits(
     base_query += """
         MATCH (study_value)-[:HAS_STUDY_VISIT]-(study_visit:StudyVisit)
         OPTIONAL MATCH (study_visit)-[:HAS_VISIT_NAME]->(:VisitNameRoot)-[:LATEST]->(visit_name_value:VisitNameValue)
-        OPTIONAL MATCH (study_visit)-[:HAS_VISIT_TYPE]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(visit_type_ct_term_root:CTTermRoot)-[:HAS_NAME_ROOT]->(:CTTermNameRoot)-[:LATEST]->(visit_type_ct_term_name_value:CTTermNameValue)
+        OPTIONAL MATCH (study_visit)-[:HAS_VISIT_TYPE]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(visit_type_ct_term_root:CTTermRoot)
+            -[:HAS_NAME_ROOT]->(:CTTermNameRoot)-[:LATEST]->(visit_type_ct_term_name_value:CTTermNameValue)
         OPTIONAL MATCH (study_visit)<-[:STUDY_EPOCH_HAS_STUDY_VISIT]-(study_epoch:StudyEpoch)<-[:HAS_STUDY_EPOCH]-(study_value)
-        OPTIONAL MATCH (study_epoch)-[:HAS_EPOCH]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(epoch_ct_term_root:CTTermRoot)-[:HAS_NAME_ROOT]->(:CTTermNameRoot)-[:LATEST]->(epoch_term:CTTermNameValue)
-        OPTIONAL MATCH (study_visit)-[:HAS_TIMEPOINT]->(:TimePointRoot)-[:LATEST]->(:TimePointValue)-[:HAS_UNIT_DEFINITION]->(time_unit_unit_definition_root:UnitDefinitionRoot)-[:LATEST]->(time_unit_unit_definition_value:UnitDefinitionValue)
+        OPTIONAL MATCH (study_epoch)-[:HAS_EPOCH]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(epoch_ct_term_root:CTTermRoot)
+            -[:HAS_NAME_ROOT]->(:CTTermNameRoot)-[:LATEST]->(epoch_term:CTTermNameValue)
+        OPTIONAL MATCH (study_visit)-[:HAS_TIMEPOINT]->(:TimePointRoot)-[:LATEST]->(:TimePointValue)
+            -[:HAS_UNIT_DEFINITION]->(time_unit_unit_definition_root:UnitDefinitionRoot)-[:LATEST]->(time_unit_unit_definition_value:UnitDefinitionValue)
         OPTIONAL MATCH (study_visit)-[:HAS_TIMEPOINT]->(:TimePointRoot)-[:LATEST]->(:TimePointValue)-[:HAS_VALUE]->(time_value_root:NumericValueRoot)-[:LATEST]->(time_value_value:NumericValue)
-        OPTIONAL MATCH (study_visit)-[:HAS_TIMEPOINT]->(:TimePointRoot)-[:LATEST]->(:TimePointValue)-[:HAS_TIME_REFERENCE]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(time_ref_ct_root:CTTermRoot)-[:HAS_NAME_ROOT]->(:CTTermNameRoot)-[:LATEST]->(time_ref_ct_term_name_value:CTTermNameValue)
-        OPTIONAL MATCH (study_visit)-[:HAS_WINDOW_UNIT]->(window_unit_unit_definition_root:UnitDefinitionRoot)-[:LATEST]->(window_unit_unit_definition_value:UnitDefinitionValue)
+        OPTIONAL MATCH (study_visit)-[:HAS_TIMEPOINT]->(:TimePointRoot)-[:LATEST]->(:TimePointValue)
+            -[:HAS_TIME_REFERENCE]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(time_ref_ct_root:CTTermRoot)
+            -[:HAS_NAME_ROOT]->(:CTTermNameRoot)-[:LATEST]->(time_ref_ct_term_name_value:CTTermNameValue)
+        OPTIONAL MATCH (study_visit)-[:HAS_WINDOW_UNIT]->(window_unit_unit_definition_root:UnitDefinitionRoot)
+            -[:LATEST]->(window_unit_unit_definition_value:UnitDefinitionValue)
 
         WITH
             study_root.uid AS study_uid,
@@ -282,7 +287,8 @@ def get_study_activities(
     base_query += """
         WITH study_root, study_value, hv
         MATCH (study_value)-[:HAS_STUDY_ACTIVITY]->(sa:StudyActivity)-[:HAS_SELECTED_ACTIVITY]->(av:ActivityValue)<-[:HAS_VERSION]-(ar:ActivityRoot)
-        MATCH (sa)-[:STUDY_ACTIVITY_HAS_STUDY_SOA_GROUP]->(soa_group:StudySoAGroup)-[:HAS_FLOWCHART_GROUP]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(soa_group_term:CTTermRoot)-[:HAS_NAME_ROOT]->(:CTTermNameRoot)-[:LATEST]->(soa_group_term_value:CTTermNameValue)
+        MATCH (sa)-[:STUDY_ACTIVITY_HAS_STUDY_SOA_GROUP]->(soa_group:StudySoAGroup)-[:HAS_FLOWCHART_GROUP]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(soa_group_term:CTTermRoot)
+            -[:HAS_NAME_ROOT]->(:CTTermNameRoot)-[:LATEST]->(soa_group_term_value:CTTermNameValue)
         MATCH (ar)<-[:CONTAINS_CONCEPT]-(lib:Library)
 
         WITH DISTINCT *
@@ -471,11 +477,16 @@ def get_study_detailed_soa(
             study_visit,
             study_epoch,
             study_activity,
-            head([(study_activity)-[:HAS_SELECTED_ACTIVITY]->(activity_value:ActivityValue)<-[:HAS_VERSION]-(activity_root:ActivityRoot) | {value: activity_value, uid: activity_root.uid}]) AS activity,
-            head([(study_activity)-[:STUDY_ACTIVITY_HAS_STUDY_ACTIVITY_SUBGROUP]->(:StudyActivitySubGroup)-[:HAS_SELECTED_ACTIVITY_SUBGROUP]->(activity_subgroup_value:ActivitySubGroupValue)<-[:HAS_VERSION]-(activity_subgroup_root:ActivitySubGroupRoot) | {value: activity_subgroup_value, uid: activity_subgroup_root.uid}]) AS activity_subgroup,
-            head([(study_activity)-[:STUDY_ACTIVITY_HAS_STUDY_ACTIVITY_GROUP]->(:StudyActivityGroup)-[:HAS_SELECTED_ACTIVITY_GROUP]->(activity_group_value:ActivityGroupValue)<-[:HAS_VERSION]-(activity_group_root:ActivityGroupRoot) | {value: activity_group_value, uid: activity_group_root.uid}]) AS activity_group,
-            head([(study_activity)-[:STUDY_ACTIVITY_HAS_STUDY_SOA_GROUP]->(:StudySoAGroup)-[:HAS_FLOWCHART_GROUP]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(:CTTermRoot)-[:HAS_NAME_ROOT]->(:CTTermNameRoot)-[:LATEST]->(term_name_value:CTTermNameValue) | term_name_value]) AS term_name_value,
-            head([(study_epoch)-[:HAS_EPOCH]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(:CTTermRoot)-[:HAS_NAME_ROOT]->(:CTTermNameRoot)-[:LATEST]-(epoch_term:CTTermNameValue) | epoch_term.name]) AS epoch_name
+            head([(study_activity)-[:HAS_SELECTED_ACTIVITY]->(activity_value:ActivityValue)<-[:HAS_VERSION]-(activity_root:ActivityRoot)
+                | {value: activity_value, uid: activity_root.uid}]) AS activity,
+            head([(study_activity)-[:STUDY_ACTIVITY_HAS_STUDY_ACTIVITY_SUBGROUP]->(:StudyActivitySubGroup)-[:HAS_SELECTED_ACTIVITY_SUBGROUP]->(activity_subgroup_value:ActivitySubGroupValue)
+                <-[:HAS_VERSION]-(activity_subgroup_root:ActivitySubGroupRoot) | {value: activity_subgroup_value, uid: activity_subgroup_root.uid}]) AS activity_subgroup,
+            head([(study_activity)-[:STUDY_ACTIVITY_HAS_STUDY_ACTIVITY_GROUP]->(:StudyActivityGroup)-[:HAS_SELECTED_ACTIVITY_GROUP]->(activity_group_value:ActivityGroupValue)
+                <-[:HAS_VERSION]-(activity_group_root:ActivityGroupRoot) | {value: activity_group_value, uid: activity_group_root.uid}]) AS activity_group,
+            head([(study_activity)-[:STUDY_ACTIVITY_HAS_STUDY_SOA_GROUP]->(:StudySoAGroup)-[:HAS_FLOWCHART_GROUP]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(:CTTermRoot)
+                -[:HAS_NAME_ROOT]->(:CTTermNameRoot)-[:LATEST]->(term_name_value:CTTermNameValue) | term_name_value]) AS term_name_value,
+            head([(study_epoch)-[:HAS_EPOCH]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(:CTTermRoot)-[:HAS_NAME_ROOT]->(:CTTermNameRoot)
+                -[:LATEST]-(epoch_term:CTTermNameValue) | epoch_term.name]) AS epoch_name
 
         RETURN DISTINCT
             study_root.uid AS study_uid,
@@ -537,7 +548,8 @@ def get_study_operational_soa(
         MATCH (study_activity_schedule:StudyActivitySchedule)<-[:HAS_STUDY_ACTIVITY_SCHEDULE]-(study_value)
         MATCH (study_activity_schedule)<-[:STUDY_VISIT_HAS_SCHEDULE]-(study_visit:StudyVisit)<-[:HAS_STUDY_VISIT]-(study_value)
         OPTIONAL MATCH (study_visit)<-[:STUDY_EPOCH_HAS_STUDY_VISIT]-(study_epoch:StudyEpoch)<-[:HAS_STUDY_EPOCH]-(study_value)
-        MATCH (study_activity_schedule)<-[:STUDY_ACTIVITY_HAS_SCHEDULE]-(study_activity:StudyActivity)-[:STUDY_ACTIVITY_HAS_STUDY_ACTIVITY_INSTANCE]->(study_activity_instance:StudyActivityInstance)<-[:HAS_STUDY_ACTIVITY_INSTANCE]-(study_value)
+        MATCH (study_activity_schedule)<-[:STUDY_ACTIVITY_HAS_SCHEDULE]-(study_activity:StudyActivity)-[:STUDY_ACTIVITY_HAS_STUDY_ACTIVITY_INSTANCE]->(study_activity_instance:StudyActivityInstance)
+            <-[:HAS_STUDY_ACTIVITY_INSTANCE]-(study_value)
         WHERE NOT (study_activity)<-[:BEFORE]-() AND (study_activity_instance)-[:HAS_SELECTED_ACTIVITY_INSTANCE]-()
         """
 
@@ -547,12 +559,21 @@ def get_study_operational_soa(
             study_root,
             study_value,
             study_visit,
-            head([(study_activity)-[:HAS_SELECTED_ACTIVITY]->(activity_value:ActivityValue)<-[:HAS_VERSION]-(activity_root:ActivityRoot) | { uid: activity_root.uid, study_activity_uid: study_activity.uid, name: activity_value.name, nci_concept_id: activity_value.nci_concept_id, nci_concept_name: activity_value.nci_concept_name }]) as activity,
-            head([(study_activity_instance)-[:HAS_SELECTED_ACTIVITY_INSTANCE]->(activity_instance_value:ActivityInstanceValue)<-[:HAS_VERSION]-(activity_instance_root:ActivityInstanceRoot) | { uid: activity_instance_root.uid, name: activity_instance_value.name, topic_code: activity_instance_value.topic_code, adam_param_code: activity_instance_value.adam_param_code, nci_concept_id: activity_instance_value.nci_concept_id, nci_concept_name: activity_instance_value.nci_concept_name }]) as activity_instance,
-            head([(study_activity)-[:STUDY_ACTIVITY_HAS_STUDY_ACTIVITY_SUBGROUP]->(:StudyActivitySubGroup)-[:HAS_SELECTED_ACTIVITY_SUBGROUP]->(activity_subgroup_value:ActivitySubGroupValue)<-[:LATEST]-(activity_subgroup_root:ActivitySubGroupRoot) | { uid: activity_subgroup_root.uid, name: activity_subgroup_value.name }]) as activity_subgroup,
-            head([(study_activity)-[:STUDY_ACTIVITY_HAS_STUDY_ACTIVITY_GROUP]->(:StudyActivityGroup)-[:HAS_SELECTED_ACTIVITY_GROUP]->(activity_group_value:ActivityGroupValue)<-[:LATEST]-(activity_group_root:ActivityGroupRoot) | { uid: activity_group_root.uid, name: activity_group_value.name }]) as activity_group,
-            head([(study_activity)-[:STUDY_ACTIVITY_HAS_STUDY_SOA_GROUP]->(:StudySoAGroup)-[:HAS_FLOWCHART_GROUP]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(:CTTermRoot)-[:HAS_NAME_ROOT]->(:CTTermNameRoot)-[:LATEST]->(term_name_value:CTTermNameValue) | term_name_value]) as term_name_value,
-            head([(study_epoch)-[:HAS_EPOCH]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(:CTTermRoot)-[:HAS_NAME_ROOT]->(:CTTermNameRoot)-[:LATEST]-(epoch_term:CTTermNameValue) | epoch_term.name]) as epoch_name
+            head([(study_activity)-[:HAS_SELECTED_ACTIVITY]->(activity_value:ActivityValue)<-[:HAS_VERSION]-(activity_root:ActivityRoot)
+                | { uid: activity_root.uid, study_activity_uid: study_activity.uid, name: activity_value.name,
+                    nci_concept_id: activity_value.nci_concept_id, nci_concept_name: activity_value.nci_concept_name }]) as activity,
+            head([(study_activity_instance)-[:HAS_SELECTED_ACTIVITY_INSTANCE]->(activity_instance_value:ActivityInstanceValue)<-[:HAS_VERSION]-(activity_instance_root:ActivityInstanceRoot)
+                | { uid: activity_instance_root.uid, name: activity_instance_value.name, topic_code: activity_instance_value.topic_code,
+                    adam_param_code: activity_instance_value.adam_param_code, nci_concept_id: activity_instance_value.nci_concept_id,
+                    nci_concept_name: activity_instance_value.nci_concept_name }]) as activity_instance,
+            head([(study_activity)-[:STUDY_ACTIVITY_HAS_STUDY_ACTIVITY_SUBGROUP]->(:StudyActivitySubGroup)-[:HAS_SELECTED_ACTIVITY_SUBGROUP]->(activity_subgroup_value:ActivitySubGroupValue)
+                <-[:LATEST]-(activity_subgroup_root:ActivitySubGroupRoot) | { uid: activity_subgroup_root.uid, name: activity_subgroup_value.name }]) as activity_subgroup,
+            head([(study_activity)-[:STUDY_ACTIVITY_HAS_STUDY_ACTIVITY_GROUP]->(:StudyActivityGroup)-[:HAS_SELECTED_ACTIVITY_GROUP]->(activity_group_value:ActivityGroupValue)
+                <-[:LATEST]-(activity_group_root:ActivityGroupRoot) | { uid: activity_group_root.uid, name: activity_group_value.name }]) as activity_group,
+            head([(study_activity)-[:STUDY_ACTIVITY_HAS_STUDY_SOA_GROUP]->(:StudySoAGroup)-[:HAS_FLOWCHART_GROUP]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(:CTTermRoot)
+                -[:HAS_NAME_ROOT]->(:CTTermNameRoot)-[:LATEST]->(term_name_value:CTTermNameValue) | term_name_value]) as term_name_value,
+            head([(study_epoch)-[:HAS_EPOCH]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(:CTTermRoot)-[:HAS_NAME_ROOT]->(:CTTermNameRoot)
+                -[:LATEST]-(epoch_term:CTTermNameValue) | epoch_term.name]) as epoch_name
 
         RETURN DISTINCT
             study_root.uid AS study_uid,
@@ -878,8 +899,10 @@ def get_papillons_soa(
     )
     full_query += """
         MATCH (study_value)-[:HAS_STUDY_ACTIVITY]->(study_activity:StudyActivity)
-        MATCH (study_activity)-[:STUDY_ACTIVITY_HAS_STUDY_ACTIVITY_INSTANCE]->(study_activity_instance:StudyActivityInstance)-[:HAS_SELECTED_ACTIVITY_INSTANCE]->(activity_instance_value:ActivityInstanceValue)
-        MATCH (study_activity)-[:STUDY_ACTIVITY_HAS_STUDY_SOA_GROUP]->(soa_group:StudySoAGroup)-[:HAS_FLOWCHART_GROUP]->(cttc:CTTermContext)-[:HAS_SELECTED_TERM]->(soa_group_term:CTTermRoot)-[:HAS_NAME_ROOT]->(cttnr:CTTermNameRoot)-[:LATEST_FINAL]->(soa_group_term_value:CTTermNameValue)
+        MATCH (study_activity)-[:STUDY_ACTIVITY_HAS_STUDY_ACTIVITY_INSTANCE]->(study_activity_instance:StudyActivityInstance)
+            -[:HAS_SELECTED_ACTIVITY_INSTANCE]->(activity_instance_value:ActivityInstanceValue)
+        MATCH (study_activity)-[:STUDY_ACTIVITY_HAS_STUDY_SOA_GROUP]->(soa_group:StudySoAGroup)-[:HAS_FLOWCHART_GROUP]->(cttc:CTTermContext)-[:HAS_SELECTED_TERM]->(soa_group_term:CTTermRoot)
+            -[:HAS_NAME_ROOT]->(cttnr:CTTermNameRoot)-[:LATEST_FINAL]->(soa_group_term_value:CTTermNameValue)
         MATCH (study_value)-[:HAS_STUDY_ACTIVITY_INSTANCE]->(study_activity_instance)
         OPTIONAL MATCH (study_activity)-[:STUDY_ACTIVITY_HAS_SCHEDULE]->(study_activity_schedule:StudyActivitySchedule)<-[:HAS_STUDY_ACTIVITY_SCHEDULE]-(study_value)
         OPTIONAL MATCH (study_value)-[:HAS_STUDY_VISIT]->(study_visit:StudyVisit)-[:STUDY_VISIT_HAS_SCHEDULE]->(study_activity_schedule)
@@ -1673,7 +1696,7 @@ def _get_study_registry_identifiers_for_listing(
     """
     res = query(full_query, params)
     # Build listing key -> value; default "" for all keys.
-    reg_id = {key: "" for key in _REGISTRY_ID_FIELD_TO_KEY.values()}
+    reg_id = dict.fromkeys(_REGISTRY_ID_FIELD_TO_KEY.values(), "")
     for row in res:
         fn = row.get("field_name")
         if fn and fn in _REGISTRY_ID_FIELD_TO_KEY:
@@ -2643,7 +2666,7 @@ def get_study_metadata_listing(
             date_time=datetime_value,
             subpart=subpart_acronym,
         )
-    request_dt = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S")
+    request_dt = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%S")
     specified_dt = datetime_value if datetime_value else ""
     api_version = "v1"
     params = {
@@ -3275,7 +3298,6 @@ def get_unit_definitions(
             subsets,
             concept_value.convertible_unit AS is_convertible_unit,
             concept_value.master_unit AS is_master_unit,
-            concept_value.si_unit AS is_si_unit,
             concept_value.display_unit AS is_display_unit,
             concept_value.us_conventional_unit AS is_us_conventional_unit,
             concept_value.use_complex_unit_conversion AS use_complex_unit_conversion,
@@ -3289,7 +3311,6 @@ def get_unit_definitions(
                 codelist_name: dim_cl_attrs.name,
                 codelist_submission_value: dim_cl_attrs.submission_value
             }} ELSE null END AS unit_dimension,
-            concept_value.legacy_code AS legacy_code,
             concept_value.conversion_factor_to_master AS conversion_factor_to_master
 
         RETURN *

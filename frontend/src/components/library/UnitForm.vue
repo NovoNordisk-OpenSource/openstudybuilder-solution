@@ -12,15 +12,14 @@
       <v-form ref="observer">
         <v-row>
           <v-col>
-            <v-select
-              v-model="form.library_name"
-              :label="$t('_global.library')"
-              data-cy="unit-library"
-              :items="libraries"
-              item-title="name"
-              item-value="name"
+            <v-autocomplete
+              v-model="form.unit_dimension"
+              :label="$t('UnitForm.dimension')"
+              data-cy="unit-dimension"
+              :items="unitDimensions"
+              item-title="sponsor_preferred_name"
+              item-value="term_uid"
               clearable
-              :rules="[formRules.required]"
             />
           </v-col>
         </v-row>
@@ -30,22 +29,6 @@
               v-model="form.name"
               :label="$t('_global.name')"
               data-cy="unit-name"
-              clearable
-              :rules="[formRules.required]"
-            />
-          </v-col>
-        </v-row>
-        <v-row>
-          <v-col cols="12">
-            <v-autocomplete
-              v-model="form.ct_units"
-              :label="$t('UnitForm.ct_term')"
-              data-cy="unit-codelist-term"
-              :items="unitTerms"
-              item-title="sponsor_preferred_name"
-              item-value="term_uid"
-              single-line
-              multiple
               clearable
               :rules="[formRules.required]"
             />
@@ -63,6 +46,22 @@
               single-line
               multiple
               clearable
+            />
+          </v-col>
+        </v-row>
+        <v-row>
+          <v-col cols="12">
+            <v-autocomplete
+              v-model="form.ct_units"
+              :label="$t('UnitForm.ct_term')"
+              data-cy="unit-codelist-term"
+              :items="unitTerms"
+              item-title="sponsor_preferred_name"
+              item-value="term_uid"
+              single-line
+              multiple
+              clearable
+              :rules="[formRules.required]"
             />
           </v-col>
         </v-row>
@@ -90,11 +89,9 @@
               v-model="form.master_unit"
               :label="$t('UnitForm.master_unit')"
               data-cy="master-unit"
-            />
-            <v-switch
-              v-model="form.si_unit"
-              :label="$t('UnitForm.si_unit')"
-              data-cy="si-unit"
+              :disabled="masterUnitExists"
+              :hint="masterUnitExists ? $t('UnitForm.master_unit_exists') : ''"
+              :persistent-hint="masterUnitExists"
             />
             <v-switch
               v-model="form.us_conventional_unit"
@@ -108,35 +105,13 @@
         </v-row>
         <v-row>
           <v-col>
-            <v-autocomplete
-              v-model="form.unit_dimension"
-              :label="$t('UnitForm.dimension')"
-              data-cy="unit-dimension"
-              :items="unitDimensions"
-              item-title="sponsor_preferred_name"
-              item-value="term_uid"
-              clearable
-            />
-          </v-col>
-        </v-row>
-        <v-row>
-          <v-col>
-            <v-text-field
-              v-model="form.legacy_code"
-              :label="$t('UnitForm.legacy_code')"
-              data-cy="unit-legacy-code"
-              clearable
-            />
-          </v-col>
-        </v-row>
-        <v-row>
-          <v-col>
             <v-number-input
               v-model="form.conversion_factor_to_master"
               :label="$t('UnitForm.conversion_factor')"
               data-cy="unit-conversion-factor"
+              :disabled="!form.convertible_unit && !form.master_unit"
               clearable
-              precision="5"
+              :precision="5"
             />
           </v-col>
         </v-row>
@@ -164,7 +139,8 @@ import { computed, inject, onMounted, ref, watch } from 'vue'
 import terms from '@/api/controlledTerminology/terms'
 import units from '@/api/units'
 import _isEmpty from 'lodash/isEmpty'
-import librariesApi from '@/api/libraries'
+import _isEqual from 'lodash/isEqual'
+import libConstants from '@/constants/libraries'
 import SimpleFormDialog from '@/components/tools/SimpleFormDialog.vue'
 import StudybuilderUCUMField from '@/components/tools/StudybuilderUCUMField.vue'
 import { useUnitsStore } from '@/stores/units'
@@ -192,18 +168,16 @@ const helpItems = [
   'UnitForm.convertible_unit',
   'UnitForm.display_unit',
   'UnitForm.master_unit',
-  'UnitForm.si_unit',
   'UnitForm.us_unit',
   'UnitForm.dimension',
-  'UnitForm.legacy_code',
   'UnitForm.add_success',
   'UnitForm.molecular_weight',
   'UnitForm.conversion_factor',
 ]
-const libraries = ref([])
 const unitTerms = ref([])
 const unitDimensions = ref([])
 const unitSubsets = ref([])
+const masterUnitExists = ref(false)
 
 const title = computed(() => {
   return props.unit.uid ? t('UnitForm.edit_title') : t('UnitForm.add_title')
@@ -212,6 +186,52 @@ const title = computed(() => {
 const editing = computed(() => {
   return !_isEmpty(props.unit)
 })
+
+watch(
+  () => form.value.convertible_unit,
+  (value) => {
+    if (!value) {
+      form.value.conversion_factor_to_master = null
+    }
+  }
+)
+
+// A dimension can only have one master unit, so the option is locked when
+// creating a unit in a dimension that already has one. The API enforces this
+// across every library, but its list endpoint leaves out the Archived library
+// unless asked for it explicitly, so that library is queried separately.
+watch(
+  () => form.value.unit_dimension,
+  async (dimensionUid) => {
+    masterUnitExists.value = false
+    if (editing.value || !dimensionUid) {
+      return
+    }
+    const params = {
+      filters: JSON.stringify({
+        'unit_dimension.uid': { v: [dimensionUid] },
+        master_unit: { v: [true] },
+      }),
+      page_size: 1,
+    }
+    const responses = await Promise.all([
+      units.get({ params }),
+      units.get({
+        params: { ...params, library_name: libConstants.LIBRARY_ARCHIVED },
+      }),
+    ])
+    // Ignore the response if the dimension changed while it was in flight
+    if (form.value.unit_dimension !== dimensionUid) {
+      return
+    }
+    masterUnitExists.value = responses.some(
+      (resp) => resp.data.items.length > 0
+    )
+    if (masterUnitExists.value) {
+      form.value.master_unit = false
+    }
+  }
+)
 
 watch(
   () => props.unit,
@@ -240,9 +260,6 @@ onMounted(() => {
   terms.getTermsByCodelist('unitSubsets').then((resp) => {
     unitSubsets.value = resp.data.items
   })
-  librariesApi.getEditable().then((resp) => {
-    libraries.value = resp.data
-  })
   if (Object.keys(props.unit).length !== 0) {
     form.value = JSON.parse(JSON.stringify(props.unit))
     form.value.ct_units = props.unit.ct_units.map((el) => el.term_uid)
@@ -256,10 +273,10 @@ onMounted(() => {
 
 function getInitialForm() {
   return {
+    library_name: libConstants.LIBRARY_SPONSOR,
     convertible_unit: false,
-    display_unit: false,
+    display_unit: true,
     master_unit: false,
-    si_unit: false,
     us_conventional_unit: false,
     use_molecular_weight: false,
     use_complex_unit_conversion: false,
@@ -267,7 +284,7 @@ function getInitialForm() {
 }
 
 async function cancel() {
-  if (form.value.library_name === undefined) {
+  if (!editing.value && _isEqual(form.value, getInitialForm())) {
     close()
   } else {
     const options = {
@@ -287,8 +304,31 @@ function close() {
   form.value = getInitialForm()
 }
 
+async function confirmMolecularWeight() {
+  if (form.value.use_molecular_weight) {
+    return true
+  }
+  if (!/\bmol\w*/i.test(form.value.name || '')) {
+    return true
+  }
+  const options = {
+    type: 'warning',
+    cancelLabel: t('_global.cancel'),
+    agreeLabel: t('_global.continue'),
+  }
+  return await formRef.value.confirmHtml(
+    t('UnitForm.molecular_weight_confirm'),
+    options
+  )
+}
+
 async function submit() {
   notificationHub.clearErrors()
+
+  if (!(await confirmMolecularWeight())) {
+    formRef.value.working = false
+    return
+  }
 
   if (form.value.ucum && form.value.ucum.term_uid) {
     form.value.ucum = form.value.ucum.term_uid

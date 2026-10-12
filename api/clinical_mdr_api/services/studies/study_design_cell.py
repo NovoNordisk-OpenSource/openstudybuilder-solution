@@ -1,5 +1,5 @@
 from copy import deepcopy
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from fastapi import status
 from neomodel import db
@@ -22,11 +22,7 @@ from clinical_mdr_api.models.study_selections.study_selection import (
     StudyDesignCellCreateInput,
     StudyDesignCellDeleteInput,
     StudyDesignCellEditInput,
-)
-from clinical_mdr_api.models.study_selections.study_selection import (
     StudyDesignCellHistory as StudyDesignCellHistoryModel,
-)
-from clinical_mdr_api.models.study_selections.study_selection import (
     StudyDesignCellVersion,
     StudyDesignMatrixStructureExportRow,
 )
@@ -207,7 +203,7 @@ class StudyDesignCellService(StudySelectionMixin):
             order=design_cell_input.order,  # type: ignore[arg-type]
             transition_rule=design_cell_input.transition_rule,
             author_id=self.author,
-            start_date=datetime.now(timezone.utc),
+            start_date=datetime.now(UTC),
         )
 
     @trace_calls

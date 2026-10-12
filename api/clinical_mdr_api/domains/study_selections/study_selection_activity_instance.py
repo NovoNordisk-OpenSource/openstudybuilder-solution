@@ -1,7 +1,7 @@
 import datetime
+from collections.abc import Callable
 from dataclasses import dataclass, replace
 from enum import Enum
-from typing import Callable
 
 from clinical_mdr_api.domains.enums import LibraryItemStatus
 from clinical_mdr_api.domains.study_selections import study_selection_base
@@ -91,8 +91,7 @@ class StudySelectionActivityInstanceVO(study_selection_base.StudySelectionBaseVO
     origin_source_codelist_uid: str | None = None
 
     @classmethod
-    # pylint: disable=too-many-arguments,too-many-locals
-    def from_input_values(
+    def from_input_values(  # noqa: PLR0913
         cls,
         study_uid: str,
         author_id: str,
@@ -156,7 +155,7 @@ class StudySelectionActivityInstanceVO(study_selection_base.StudySelectionBaseVO
             study_selection_uid = generate_uid_callback()
 
         if start_date is None:
-            start_date = datetime.datetime.now(datetime.timezone.utc)
+            start_date = datetime.datetime.now(datetime.UTC)
 
         return cls(
             study_uid=normalize_string(study_uid),

@@ -1,10 +1,9 @@
-# pylint: disable=invalid-name
 from typing import Any
 
 from neomodel import db
 
 # Importing node models registers them with neomodel for resolve_objects=True
-from clinical_mdr_api.domain_repositories.models.preferences import (  # pylint: disable=unused-import
+from clinical_mdr_api.domain_repositories.models.preferences import (  # noqa: F401
     GlobalPreferences,
     UserPreferences,
 )

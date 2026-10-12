@@ -9,8 +9,6 @@ from clinical_mdr_api.domains.versioned_object_aggregate import (
     LibraryVO,
 )
 
-# pylint: disable=too-many-arguments
-
 
 @dataclass(frozen=True)
 class SponsorModelDatasetVariableVO:
@@ -75,14 +73,13 @@ class SponsorModelDatasetVariableMetadataVO(LibraryItemMetadataVO):
     def version(self) -> str:
         return self._major_version
 
-    # pylint: disable=arguments-renamed
     @classmethod
     def get_initial_item_metadata(cls, author_id: str, version: str) -> Self:
         return cls(
             _change_description="Approved version",
             _status=LibraryItemStatus.FINAL,
             _author_id=author_id,
-            _start_date=datetime.datetime.now(datetime.timezone.utc),
+            _start_date=datetime.datetime.now(datetime.UTC),
             _end_date=None,
             _major_version=int(version),
             _minor_version=0,

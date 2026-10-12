@@ -107,9 +107,14 @@ class StudyEventRepository(OdmGenericRepository[OdmStudyEventAR]):
 
     def _get_computed_field_expressions(self) -> dict[str, str]:
         """Study Event computed field expressions."""
-        # pylint: disable=line-too-long
+
         return {
-            "forms": "[(odm_value)-[fref:FORM_REF]->(fv:OdmFormValue)<-[hv:HAS_VERSION]-(fr:OdmFormRoot) | {uid: fr.uid, oid: fv.oid, name: fv.name, order_number: fref.order_number, mandatory: fref.mandatory, locked: fref.locked, collection_exception_condition_oid: fref.collection_exception_condition_oid, version:hv.version}] AS forms",
+            "forms": (
+                "[(odm_value)-[fref:FORM_REF]->(fv:OdmFormValue)<-[hv:HAS_VERSION]-(fr:OdmFormRoot) | "
+                "{uid: fr.uid, oid: fv.oid, name: fv.name, order_number: fref.order_number, mandatory: "
+                "fref.mandatory, locked: fref.locked, collection_exception_condition_oid: "
+                "fref.collection_exception_condition_oid, version:hv.version}] AS forms"
+            ),
         }
 
     def specific_alias_clause(self, **kwargs) -> str:

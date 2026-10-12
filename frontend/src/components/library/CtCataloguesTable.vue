@@ -44,7 +44,7 @@ const props = defineProps({
 const emit = defineEmits(['catalogueChanged'])
 const router = useRouter()
 const ctCataloguesStore = useCtCataloguesStore()
-const { tabKeys, updateTabKey } = useTabKeys()
+const { tabKeys, updateTabKey } = useTabKeys({ persist: true })
 
 const allCatalogues = ref([])
 const tab = ref(null)

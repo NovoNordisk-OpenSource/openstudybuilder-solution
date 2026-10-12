@@ -135,7 +135,10 @@ class DictionaryTermSubstanceRepository(DictionaryTermGenericRepository):
     def specific_alias_clause(self) -> str:
         return """
             WITH *,
-                head([(dictionary_term_value)-[:HAS_PCLASS]->(pclass_dict_term_root:DictionaryTermRoot)-[:LATEST]->(pclass_dict_term_value) | {uid: pclass_dict_term_root.uid, dictionary_id: pclass_dict_term_value.dictionary_id, name: pclass_dict_term_value.name}]) AS pclass
+                head([(dictionary_term_value)-[:HAS_PCLASS]->(pclass_dict_term_root:DictionaryTermRoot)-[:LATEST]->
+                    (pclass_dict_term_value) |
+                    {uid: pclass_dict_term_root.uid, dictionary_id: pclass_dict_term_value.dictionary_id, name: pclass_dict_term_value.name}
+                ]) AS pclass
             """
 
     def find_all(

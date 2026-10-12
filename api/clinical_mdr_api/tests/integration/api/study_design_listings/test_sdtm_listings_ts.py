@@ -2,13 +2,6 @@
 Tests for /listings/studies/all/adam/ endpoints
 """
 
-# pylint: disable=unused-argument
-# pylint: disable=redefined-outer-name
-# pylint: disable=too-many-arguments
-
-# pytest fixture functions have other fixture functions as arguments,
-# which pylint interprets as unused arguments
-
 import logging
 
 import pytest
@@ -632,6 +625,32 @@ def test_data():
         approve=True,
     )
 
+    # Null Flavor codelist + a sample null flavor term, used by
+    # test_ts_listing_null_flavor to verify a field's null flavor is reported in
+    # TSVALNF and excluded from TSVAL/TSVALCD/TSVCDREF/controlled_by.
+    null_flavor_codelist = create_codelist(
+        name="Null Flavor",
+        uid="CTCodelist_NullFlavor",
+        catalogue=catalogue_name,
+        library=library_name,
+        submission_value=settings.null_flavor_cl_submval,
+    )
+    _null_flavor_term = create_ct_term(
+        name="Not Applicable",
+        uid="NullFlavor_NA",
+        preferred_term="Not Applicable",
+        definition="Null flavor: Not Applicable.",
+        catalogue_name=catalogue_name,
+        library_name=library_name,
+        codelists=[
+            {
+                "uid": null_flavor_codelist.codelist_uid,
+                "order": 1,
+                "submission_value": "NA",
+            },
+        ],
+    )
+
     # Bind TS parameter terms to MetaStudyField via the lightweight service endpoint
     ts_service = CTTermNameService()
     ts_service.patch_trial_summary_parameter(
@@ -977,3 +996,36 @@ def test_ts_listing_versioning(api_client: TestClient):
     assert_response_status_code(response, 200)
     res = response.json()["items"]
     assert res[1]["TSVAL"] == "2"
+
+
+def test_ts_listing_null_flavor(api_client: TestClient):
+    # Select a null flavor instead of a real value for the Trial Phase field.
+    # The null flavor's own CT term must be reported in TSVALNF only, not leak
+    # into TSVAL/TSVALCD/TSVCDREF/controlled_by (which must fall back to blank).
+    response = api_client.patch(
+        f"/studies/{study_uid}",
+        json={
+            "current_metadata": {
+                "high_level_study_design": {
+                    "trial_phase_code": None,
+                    "trial_phase_null_value_code": {"term_uid": "NullFlavor_NA"},
+                },
+            }
+        },
+    )
+    assert_response_status_code(response, 200)
+
+    response = api_client.get(
+        "/listings/studies/study_root/sdtm/ts",
+        params={"page_size": 100},
+    )
+    assert_response_status_code(response, 200)
+    res = response.json()["items"]
+
+    phase_rows = [r for r in res if r["TSPARMCD"] == "PHASE"]
+    assert len(phase_rows) == 1
+    phase_row = phase_rows[0]
+    assert phase_row["TSVAL"] in (None, "")
+    assert phase_row["TSVALCD"] in (None, "")
+    assert phase_row["TSVCDREF"] in (None, "")
+    assert phase_row["TSVALNF"] == "NA"

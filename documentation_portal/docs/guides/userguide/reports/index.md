@@ -126,10 +126,11 @@ The first tab of each report holds a short ReadMe instruction as well.
 | Report | Purpose | Where to find it |
 | --- | --- | --- |
 | [Activity Library Dashboard](activity-library-dashboard.md) | Browse and understand biomedical concepts (activities and activity instances) in the OSB Library from multiple perspectives. | Report navigation panel → Activity Library Dashboard |
+| [Activity Metadata Check](activity-metadata-check.md) | Check activity instances for missing items and valid groupings. | Report navigation panel → Activity Metadata Check |
 | [Audit Trail Report](audit-trail-report.md) | Browse audit-trail history of changes to library elements and studies. | Report navigation panel → Audit Trail Report |
+| [CRF Impact Analysis](crf-impact-analysis.md) | See which Forms, ItemGroups, and Collections would be affected by changing an Item, ItemGroup, or Form. | Report navigation panel → CRF Impact Analysis |
+| [CRF Library Versions](crf-library-versions.md) | Compare versions of CRF collections, CRFs, Groups, and Items. | Report navigation panel → CRF Library Versions |
 | [Data Exchange Data Models](data-exchange-data-models.md) | Browse CDISC and sponsor data-exchange data models. | Report navigation panel → Data Exchange Data Models |
+| [Laboratory Data Specification](laboratory-data-specification.md) | Build a Laboratory Data Specification for a supplier. | Report navigation panel → Laboratory Data Specification |
 | [Study Metadata Comparison](study-metadata-comparison.md) | Compare metadata between two studies or two versions of a study. | Report navigation panel → Study Metadata Comparison |
 | [Syntax Template Dashboard](syntax-template-dashboard.md) | Browse syntax templates, parameters, instantiations, and study usage. | Report navigation panel → Syntax Template Dashboard |
-| [Activity Metadata Check](activity-metadata-check.md) | Check activity instances for missing items and valid groupings. | Report navigation panel → Activity Metadata Check |
-| [CRF Library Versions](crf-library-versions.md) | Compare versions of CRF collections, CRFs, Groups, and Items. | Report navigation panel → CRF Library Versions |
-| [Laboratory Data Specification](laboratory-data-specification.md) | Build a Laboratory Data Specification for a supplier. | Report navigation panel → Laboratory Data Specification |

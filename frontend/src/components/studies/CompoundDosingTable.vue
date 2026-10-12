@@ -9,6 +9,7 @@
     :history-config="{
       dataFetcher: fetchCompoundDosingsHistory,
       title: $t('StudyCompoundDosingTable.global_history_title'),
+      externalHeaders: globalHistoryHeaders,
     }"
     :export-config="{
       objectLabel: 'StudyCompoundDosings',
@@ -62,7 +63,7 @@
   >
     <HistoryTable
       :title="studyCompoundDosingHistoryTitle"
-      :headers="headers"
+      :headers="historyHeaders"
       :items="compoundDosingHistoryItems"
       @close="closeHistory"
     />
@@ -140,11 +141,33 @@ const headers = [
   },
   {
     title: t('StudyCompoundDosingTable.dose_value'),
-    key: 'dose_value',
+    // Sort on the numeric value — the API cannot order the nested dose_value
+    // object itself. transformItems formats dose_value into a "<value> <unit>"
+    // string, which is what the cell shows.
+    key: 'dose_value.value',
+    displayKey: 'dose_value',
+    // A dosing carries either a library dose value or a study level free text
+    // one, never both, so the free text shows in this same column when there is
+    // no library value.
+    fallbackKey: 'free_text_dose_value',
+    // Neither underlying field alone covers both sources, so filter on the
+    // API's combined label instead.
+    filteringName: 'dose_value_label',
   },
   {
     title: t('StudyCompoundDosingTable.dose_frequency'),
-    key: 'dose_frequency.term_name',
+    // A dosing carries either a library dose frequency or a study level free
+    // text one, never both. Unlike the dose value there is nothing to gain from
+    // sorting on the underlying term, so display, sort and filter all read the
+    // API's combined label — which also means HistoryTable needs no remapping.
+    key: 'dose_frequency_label',
+  },
+  {
+    title: t('StudyCompoundDosingTable.dose_collection_activity_instance'),
+    key: 'study_activity_instance.activity_instance.name',
+    // A linked instance reduced to a placeholder keeps the link but loses its
+    // activity instance, so show the activity name rather than a blank cell.
+    fallbackKey: 'study_activity_instance.activity.name',
   },
   {
     title: t('StudyCompoundDosingTable.composition'),
@@ -164,6 +187,20 @@ const selectedStudyVersion = computed(
 const exportDataUrl = computed(() => {
   return `studies/${selectedStudy.value.uid}/study-compound-dosings`
 })
+// HistoryTable resolves each cell from `key` alone, ignoring displayKey and
+// fallbackKey, so point the dose value column at the API's combined label.
+const historyHeaders = computed(() =>
+  headers.map((header) =>
+    header.displayKey === 'dose_value'
+      ? { ...header, key: 'dose_value_label' }
+      : header
+  )
+)
+// Passing external headers skips the uid column NNTable prepends on its own.
+const globalHistoryHeaders = computed(() => [
+  { title: t('_global.uid'), key: 'study_compound_dosing_uid' },
+  ...historyHeaders.value,
+])
 const formattedStudyCompoundDosings = computed(() => {
   // clone objects to avoid mutating the store state
   const items = JSON.parse(

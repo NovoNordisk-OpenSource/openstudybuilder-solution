@@ -16,7 +16,7 @@ def convert_to_tz_aware_datetime(value: datetime.datetime):
     Returns:
         datetime.datetime: The timezone-aware datetime object with UTC timezone.
     """
-    return value.astimezone(tz=datetime.timezone.utc)
+    return value.astimezone(tz=datetime.UTC)
 
 
 def format_generic_header_values(values: list[Any]):

@@ -37,7 +37,6 @@ def test_database():
     return study
 
 
-# pylint: disable=unused-argument,redefined-outer-name
 def test_docx_response(api_client, test_database):
     study = generate_study_root()
     response = api_client.get(f"/studies/{study.uid}/study-objectives.docx")
@@ -136,7 +135,6 @@ def test_docx_response(api_client, test_database):
     assert len(table.rows) == 3, "expected 3 rows of table"
 
 
-# pylint: disable=unused-argument,redefined-outer-name
 def test_html_response(api_client, test_database):
     study = generate_study_root()
     response = api_client.get(f"/studies/{study.uid}/study-objectives.html")

@@ -19,12 +19,6 @@ except ImportError:
     TEST_DATA = ""
 
 
-# pylint: disable=unused-argument
-# pylint: disable=redefined-outer-name
-
-# pytest fixture functions have other fixture functions as arguments,
-# which pylint interprets as unused arguments
-
 db = get_db_connection()
 DB_DRIVER = get_db_driver()
 logger = get_logger(os.path.basename(__file__))

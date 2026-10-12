@@ -1,5 +1,3 @@
-# pylint: disable=unused-argument,redefined-outer-name
-
 import logging
 import time
 from typing import NamedTuple
@@ -29,7 +27,7 @@ from clinical_mdr_api.tests.utils.utils import get_db_name
 from common.config import settings
 from common.database import configure_database
 
-__all__ = ["temp_database", "base_data", "temp_database_populated"]
+__all__ = ["base_data", "temp_database", "temp_database_populated"]
 
 
 log = logging.getLogger(__name__)
@@ -237,7 +235,6 @@ def temp_database_populated(request, temp_database: str) -> TempDatabasePopulate
         convertible_unit=True,
         display_unit=True,
         master_unit=False,
-        si_unit=True,
         us_conventional_unit=True,
         conversion_factor_to_master=settings.day_unit_conversion_factor_to_master,
         unit_subsets=unit_subsets,
@@ -247,7 +244,6 @@ def temp_database_populated(request, temp_database: str) -> TempDatabasePopulate
         convertible_unit=True,
         display_unit=True,
         master_unit=False,
-        si_unit=True,
         us_conventional_unit=True,
         conversion_factor_to_master=settings.day_unit_conversion_factor_to_master,
         unit_subsets=unit_subsets,
@@ -257,7 +253,6 @@ def temp_database_populated(request, temp_database: str) -> TempDatabasePopulate
         convertible_unit=True,
         display_unit=True,
         master_unit=False,
-        si_unit=True,
         us_conventional_unit=True,
         conversion_factor_to_master=settings.week_unit_conversion_factor_to_master,
         unit_subsets=unit_subsets,

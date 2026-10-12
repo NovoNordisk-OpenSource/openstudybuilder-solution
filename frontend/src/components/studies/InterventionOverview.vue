@@ -158,9 +158,14 @@
               >
                 <td class="no-border half-size">
                   {{ compoundDosing.study_element.short_name }}:
+                  <!-- A dosing has either a library dose value or a study level
+                       free text one, so the free text shows in its place. -->
                   <template v-if="compoundDosing.dose_value">
                     {{ compoundDosing.dose_value.value }}
                     {{ compoundDosing.dose_value.unit_label }},
+                  </template>
+                  <template v-else-if="compoundDosing.free_text_dose_value">
+                    {{ compoundDosing.free_text_dose_value }},
                   </template>
 
                   <template v-if="displayDoseFrequencies(compoundDosing)">
@@ -341,9 +346,13 @@ export default {
   },
   methods: {
     displayDoseFrequencies(compoundDosing) {
-      return compoundDosing.dose_frequency?.term_name
-        ? compoundDosing.dose_frequency.term_name
-        : ''
+      // Either the library term or the study level free text, never both. Keeps
+      // returning '' so callers can use it as their own v-if guard.
+      return (
+        compoundDosing.dose_frequency?.term_name ||
+        compoundDosing.free_text_dose_frequency ||
+        ''
+      )
     },
     getCompoundAliases(compoundUid) {
       const params = {

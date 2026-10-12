@@ -1,9 +1,5 @@
-# pylint: disable=unused-argument, redefined-outer-name, too-many-arguments, line-too-long, too-many-statements
-
-# pytest fixture functions have other fixture functions as arguments,
-# which pylint interprets as unused arguments
-
-from typing import Any, Generator
+from collections.abc import Generator
+from typing import Any
 
 import pytest
 from fastapi.testclient import TestClient
@@ -32,7 +28,7 @@ def api_client(test_data):
 
 
 @pytest.fixture(scope="module")
-def test_data() -> Generator[None, Any, None]:
+def test_data() -> Generator[None, Any]:
     inject_and_clear_db("old.json.test.instance.multiple")
     db.cypher_query(STARTUP_PARAMETERS_CYPHER)
     db.cypher_query(CREATE_BASE_TEMPLATE_PARAMETER_TREE)

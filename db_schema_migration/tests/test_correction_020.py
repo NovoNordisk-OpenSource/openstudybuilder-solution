@@ -98,7 +98,7 @@ def _build_test_change_log():
             ]
         )
 
-    def add_rel_delete(  # pylint: disable=too-many-arguments,too-many-positional-arguments
+    def add_rel_delete(
         rel_type, start_labels, start_keys, end_labels, end_keys, props=None
     ):
         records.append(

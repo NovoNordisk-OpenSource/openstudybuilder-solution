@@ -10,8 +10,6 @@ from migrations.utils.utils import (
     get_db_result_as_dict,
 )
 
-# pylint: disable=invalid-name
-
 
 def test_indexes_and_constraints(db, logger):
     logger.info("Verify that db indexes and constraints exist")

@@ -36,7 +36,6 @@ Service = CommentsService
         403: _generic_descriptions.ERROR_403,
     },
 )
-# pylint: disable=redefined-outer-name
 def get_comment_topics(
     topic_path: Annotated[
         str | None,
@@ -76,7 +75,6 @@ def get_comment_topics(
         403: _generic_descriptions.ERROR_403,
     },
 )
-# pylint: disable=redefined-outer-name
 def get_comment_threads(
     topic_path: Annotated[
         str | None,
@@ -230,7 +228,6 @@ def get_comment_thread_replies(
         404: _generic_descriptions.ERROR_404,
     },
 )
-# pylint: disable=unused-argument
 def get_comment_thread_reply(
     comment_thread_uid: Annotated[str, CommentThreadUID],
     reply_uid: Annotated[str, CommentReplyUID],
@@ -249,7 +246,6 @@ def get_comment_thread_reply(
         404: _generic_descriptions.ERROR_404,
     },
 )
-# pylint: disable=unused-argument
 def edit_comment_thread_reply(
     comment_thread_uid: Annotated[str, CommentThreadUID],
     reply_uid: Annotated[str, CommentReplyUID],
@@ -270,7 +266,6 @@ def edit_comment_thread_reply(
         204: {"description": "No Content - The item was successfully deleted."},
     },
 )
-# pylint: disable=unused-argument
 def delete_comment_reply(
     comment_thread_uid: Annotated[str, CommentThreadUID],
     reply_uid: Annotated[str, CommentReplyUID],

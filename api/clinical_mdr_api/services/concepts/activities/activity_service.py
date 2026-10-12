@@ -1,5 +1,6 @@
 import datetime
-from typing import Any, Iterable
+from collections.abc import Iterable
+from typing import Any
 
 from neomodel import db
 
@@ -97,8 +98,8 @@ class ActivityService(ConceptGenericService[ActivityAR]):
     @staticmethod
     def _to_activity_grouping_vo(
         activity_grouping: ActivityGrouping | ActivityGroupingVO,
-        activity_groups_by_uid=tuple(),
-        activity_subgroups_by_uid=tuple(),
+        activity_groups_by_uid=(),
+        activity_subgroups_by_uid=(),
     ) -> ActivityGroupingVO:
         return ActivityGroupingVO(
             activity_group_uid=activity_grouping.activity_group_uid,
@@ -452,12 +453,12 @@ class ActivityService(ConceptGenericService[ActivityAR]):
             "shortName": data["activity_value"]["name"],
             "synonyms": data["activity_value"]["abbreviation"],
             "resultScales": list(
-                set(
+                {
                     constants.COSM0S_RESULT_SCALES_MAP.get(
                         instance["activity_instance_class_name"], ""
                     )
                     for instance in data["activity_instances"]
-                )
+                }
             ),
             "definition": data["activity_value"]["definition"],
             "dataElementConcepts": [],
@@ -553,15 +554,17 @@ class ActivityService(ConceptGenericService[ActivityAR]):
                     change_description="Cascade edit",
                     activity_groupings=instance_groupings,
                 )
-                activity_instance = activity_instance_groupings_service._edit_aggregate(
-                    item=activity_instance,
-                    concept_edit_input=edit_input,
-                    perform_validation=False,
+                updated_activity_instance = (
+                    activity_instance_groupings_service._edit_aggregate(
+                        item=activity_instance,
+                        concept_edit_input=edit_input,
+                        perform_validation=False,
+                    )
                 )
 
-                activity_instance.approve(author_id=self.author_id)
+                updated_activity_instance.approve(author_id=self.author_id)
                 self._repos.activity_instance_groupings_repository.copy_activity_instance_groupings_and_recreate(
-                    activity_instance_groupings=activity_instance,
+                    activity_instance_groupings=updated_activity_instance,
                     author_id=self.author_id,
                 )
 

@@ -31,6 +31,8 @@ class SponsorModelSchemaCreateInput(InputModel):
         Field(
             description="Positive integer version of the schema. Immutable once published.",
             ge=1,
+            # Neo4j stores 64-bit integers; anything larger fails on write.
+            le=settings.max_int_neo4j,
         ),
     ]
     schema_content: Annotated[

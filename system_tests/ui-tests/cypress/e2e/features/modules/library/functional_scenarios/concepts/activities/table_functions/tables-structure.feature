@@ -6,6 +6,9 @@ Feature: Library - Concepts - Activities - Tables
     Background: User must be logged in
         Given The user is logged in
 
+    Scenario: [TestData] Old placeholder activity workflow feature flag is enabled
+        Then [API] The feature flag 'streamline_placeholder_activities' is disabled
+        
     Scenario: [Table][Options] User must be able to see activities table with correct options
         Given The '/library/activities/activities' page is opened
         Then A table is visible with following options
@@ -185,7 +188,7 @@ Feature: Library - Concepts - Activities - Tables
             | headers          |
             | Name             |
             | Definition       |
-            | NCI Code         |
+            | NCI code         |
             | Modified         |
             | Modified by      |     
             | Version          |

@@ -204,8 +204,13 @@ class Settings(BaseSettings):
                 "usePkceWithAuthorizationCodeGrant": True,
                 "clientId": self.oauth_swagger_app_id or self.oauth_api_app_id,
                 "scopes": (
-                    ["openid", "profile", "email", "offline_access"]
-                    + list(self.our_scopes.keys())
+                    [
+                        "openid",
+                        "profile",
+                        "email",
+                        "offline_access",
+                        *list(self.our_scopes.keys()),
+                    ]
                 ),
                 "additionalQueryStringParams": {
                     "response_mode": "fragment",
@@ -337,6 +342,8 @@ class Settings(BaseSettings):
     study_visit_contact_mode_cl_submval: str = "VISCNTMD"
     epoch_allocation_cl_submval: str = "EPCHALLC"
     stdm_domain_cl_submval: str = "DOMAIN"
+    # Name of the Activity Item Class that carries the SDTM domain; it may link at most one CT Term
+    domain_activity_item_class_name: str = "domain"
     stdm_role_cl_submval: str = "ROLE"
     study_endpoint_level_cl_submval: str = "ENDPLEVL"
     study_endpoint_sublevel_cl_submval: str = "ENDPSBLV"
@@ -353,6 +360,7 @@ class Settings(BaseSettings):
     disease_milestone_cl_submval: str = "MIDSTYPE"
     flowchart_group_cl_submval: str = "FLWCRTGRP"
     data_supplier_type_cl_submval: str = "DATA_SUPPLIER_TYPE"
+    edc_system_data_supplier_type_submval: str = "EDC SYSTEM"
     origin_source_cl_submval: str = "ORIGINS"
     origin_type_cl_submval: str = "ORIGINT"
     reason_for_lock_cl_submval: str = "RSNFL"
@@ -367,4 +375,4 @@ settings = Settings()  # type: ignore[call-arg]
 # Validation mode constants for database integrity checks
 VALIDATION_MODE_STRICT: Final[Literal["strict"]] = "strict"
 VALIDATION_MODE_WARNING: Final[Literal["warning"]] = "warning"
-VALIDATION_MODE = Literal["strict", "warning"]  # pylint: disable=invalid-name
+VALIDATION_MODE = Literal["strict", "warning"]

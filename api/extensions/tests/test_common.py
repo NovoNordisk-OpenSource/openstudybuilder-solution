@@ -1,6 +1,3 @@
-# pylint: disable=redefined-outer-name
-# pylint: disable=unused-argument
-
 import pytest
 
 from common.config import settings

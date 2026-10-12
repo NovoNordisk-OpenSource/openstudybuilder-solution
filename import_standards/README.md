@@ -8,8 +8,8 @@ Later on, other imports like UNII, SNOMED, etc. might be added.
 
 ## Setup python virtual environment
 
-* Python 3.14 and Pipenv are prerequisites — see the [root README](../README.md#prerequisites).
-* Run `pipenv sync --dev`
+* Python 3.14 and uv are prerequisites — see the [root README](../README.md#prerequisites).
+* Run `uv sync --group dev`
 ---
 ## Setup environment variables
 
@@ -72,12 +72,12 @@ The MDR DB needs to be present and have the correct index configuration. See [`d
 
 * Download CT Packages from the CDISC REST API by running:
 ```shell
-pipenv run download_ct_json_data_from_cdisc_api 'your-sub-directory'
+uv run poe download_ct_json_data_from_cdisc_api 'your-sub-directory'
 ```
 
 * Download Data Model Versions from the CDISC REST API by running:
 ```shell
-pipenv run download_data_models_json_data_from_cdisc_api 'your-sub-directory'
+uv run poe download_data_models_json_data_from_cdisc_api 'your-sub-directory'
 ```
 
 **Note:** These steps can be skipped as the JSON package files is now placed in the repository and will be downloaded when you clone the repository.
@@ -92,7 +92,7 @@ The following command will:
 * trigger the import into the MDR DB
 
 ```shell
-pipenv run bulk_import_data_models 'TEST' '' # Second argument is to specify a different data directory
+uv run poe bulk_import_data_models 'TEST' '' # Second argument is to specify a different data directory
 # You can append the name of a catalogue to import, excluding the others, for example 'SDTM' or 'FBDE'
 # Both model and IG will be imported, for example SDTM and SDTMIG
 ```
@@ -104,7 +104,7 @@ The following command will:
 * trigger the import of CT into the CDISC staging DB
 
 ```shell
-pipenv run import_cdisc_ct_into_cdisc_db
+uv run poe import_cdisc_ct_into_cdisc_db
 ```
 
 ### Import all CT data from the CDISC staging database into the MDR database
@@ -113,7 +113,7 @@ The following command will:
 * trigger the import of all staged CT into the MDR DB
 
 ```shell
-pipenv run import_ct_from_cdisc_db_into_mdr
+uv run poe import_ct_from_cdisc_db_into_mdr
 ```
 
 ### Import Data Models data to CDISC database only
@@ -122,7 +122,7 @@ The following command will:
 * trigger the import of Data Models into the CDISC DB
 
 ```shell
-pipenv run import_cdisc_data_models_into_cdisc_db 'TEST' ''  # Second argument is to specify a different data directory
+uv run poe import_cdisc_data_models_into_cdisc_db 'TEST' ''  # Second argument is to specify a different data directory
 # You can append the name of a catalogue to import, excluding the others, for example 'SDTM' or 'FBDE'
 # Both model and IG will be imported, for example SDTM and SDTMIG
 ```
@@ -133,11 +133,11 @@ pipenv run import_cdisc_data_models_into_cdisc_db 'TEST' ''  # Second argument i
 * Open Neo4j browser in your web browser at the address: http://localhost:5074/ (or http://NEO4J_MDR_HOST:NEO4J_MDR_BOLT_PORT), log in with username and password stated in .env file in neo4j_database repository (the value of `NEO4J_MDR_AUTH_PASSWORD` from your `.env`).
 * Switch to database cdisc, run command:
 ```
-MATCH (p:Package)-[:CONTAINS]->(c:Codelist) WHERE c.effective_date=date("2015-12-18")
+MATCH (p:RawCatalogue)-[:HAS_RAW_CODELIST]->(c:RawCodelist)
 WITH p.name as name, count(c) AS count
 RETURN name, count
 ```
-* The output should be:
+* The output should be something like this based on the packages that were loaded:
 ```
 name	                count
 "SDTM CT 2015-12-18"	480
@@ -146,7 +146,7 @@ name	                count
 ```
 * Switch to database neo4j, run command:
 ```
-MATCH (c:CTPackage)-[:CONTAINS_CODELIST]->(cc:CTPackageCodelist) WHERE c.effective_date=date("2015-12-18")
+MATCH (c:CTPackage)-[:CONTAINS_CODELIST]->(cc:CTPackageCodelist)
 WITH c.name as name, count(cc) AS count
 RETURN name, count
 ```
@@ -166,7 +166,7 @@ For more information on pipeline configuration, see the `*.yml` files in the roo
 
 For more information on the overall setup, see the section `CDISC CT Integration` in the documentation portal.
 
-For more information on scripts definitions, see the [Pipfile](./Pipfile).
+For more information on script definitions, see `[tool.poe.tasks]` in [pyproject.toml](./pyproject.toml).
 
 ---
 

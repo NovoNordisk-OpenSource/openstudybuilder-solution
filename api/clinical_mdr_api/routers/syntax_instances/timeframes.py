@@ -77,7 +77,6 @@ TimeframeUID = Path(description="The unique id of the timeframe.")
         ],
     }
 )
-# pylint: disable=unused-argument
 def get_all(
     request: Request,  # request is actually required by the allow_exports decorator
     status: Annotated[

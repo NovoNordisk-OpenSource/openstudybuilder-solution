@@ -16,6 +16,8 @@ from common import exceptions
 from common.config import settings
 from common.utils import TimeUnit, VisitClass, VisitSubclass
 
+MAX_EARLY_DISCONTINUATION_VISITS = 3
+
 
 class VisitGroupFormat(Enum):
     RANGE = "range"
@@ -183,8 +185,10 @@ class StudyVisitVO:
                 ):
                     exceptions.BusinessLogicException.raise_if(
                         self.special_visit_number is None
-                        or self.special_visit_number > 3,
-                        msg=f"There can be a maximum of 3 Early Discontinuation visits per scheduled visit and current Early Discontinuation visit is set to be {self.subvisit_number}",
+                        or self.special_visit_number > MAX_EARLY_DISCONTINUATION_VISITS,
+                        msg=f"There can be a maximum of {MAX_EARLY_DISCONTINUATION_VISITS} Early "
+                        f"Discontinuation visits per scheduled visit and current Early "
+                        f"Discontinuation visit is set to be {self.subvisit_number}",
                     )
                     assert self.special_visit_number is not None
                     chosen_letter = settings.special_visit_letters[-3:][
@@ -431,7 +435,7 @@ class StudyVisitVO:
 
     def compare_cons_group_equality(
         self,
-        other_visit: "StudyVisitVO",
+        other_visit: StudyVisitVO,
     ) -> list[str]:
         different_fields: list[str] = []
         if self.visit_type != other_visit.visit_type:

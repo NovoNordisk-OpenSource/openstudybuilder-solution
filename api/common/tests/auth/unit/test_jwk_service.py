@@ -1,10 +1,9 @@
 """Test JWT validation with crafted tokens signed with a test JWK"""
 
-# pylint: disable=redefined-outer-name
-
 import logging
 import time
-from typing import Any, Iterable, Mapping
+from collections.abc import Iterable, Mapping
+from typing import Any
 
 import authlib.jose.errors
 import pytest
@@ -94,7 +93,6 @@ def jwk_service(jwk_good_key):
 
     log.debug("Patching JWKService._fetch_json() on instance")
 
-    # pylint: disable=unused-argument
     async def return_jwks_doc(url):
         return {"keys": [jwk_good_key]}
 
@@ -142,7 +140,6 @@ def mk_jwt(claims: Mapping, key: Key) -> bytes:
     return jwt.encode(header, claims, key)
 
 
-# pylint: disable=unused-argument
 @pytest.mark.asyncio
 async def test_correct_test_setup(jwk_service, jwk_good_key, jwk_wrong_key):
     """This tests if test setup is correct, other tests rely on this"""

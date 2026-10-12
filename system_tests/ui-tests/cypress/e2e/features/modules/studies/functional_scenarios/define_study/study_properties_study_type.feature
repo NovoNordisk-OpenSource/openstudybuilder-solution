@@ -1,4 +1,4 @@
-@REQ_ID:xxx
+@REQ_ID:1074254
 Feature: Studies - Define Study - Study Properties - Study Type
 
     Background: User is logged in and study has been selected
@@ -11,7 +11,6 @@ Feature: Studies - Define Study - Study Properties - Study Type
         When The 'Study Properties' submenu is clicked in the 'Define Study' section
         Then The current URL is '/study_properties/type'
 
-    @REQ_ID:987736 @smoke_test
     Scenario: [Table][Columns][Names] User must be able to see the Study Type table with following columns
         Given The page 'study_properties/type' is opened for current study
         Then A table is visible with following headers

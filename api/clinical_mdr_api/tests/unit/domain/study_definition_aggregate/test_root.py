@@ -1,8 +1,9 @@
 import random
 import unittest
-from datetime import datetime, timezone
+from collections.abc import Callable, Mapping
+from datetime import UTC, datetime
 from decimal import Decimal
-from typing import Any, Callable, Mapping
+from typing import Any
 
 from clinical_mdr_api.domains.study_definition_aggregates.registry_identifiers import (
     RegistryIdentifiersVO,
@@ -409,7 +410,7 @@ class TestStudyDefinitionAR(unittest.TestCase):
                         eu_pas_number_null_value_code=None,
                     ),
                 )
-                start_timestamp = datetime.now(timezone.utc)
+                start_timestamp = datetime.now(UTC)
 
                 # when
                 author = random_str()
@@ -425,7 +426,7 @@ class TestStudyDefinitionAR(unittest.TestCase):
                 )
 
                 # then
-                end_timestamp = datetime.now(timezone.utc)
+                end_timestamp = datetime.now(UTC)
                 self.assertGreaterEqual(
                     study.current_metadata.ver_metadata.version_timestamp,
                     start_timestamp,
@@ -714,7 +715,7 @@ class TestStudyDefinitionAR(unittest.TestCase):
                 given_study_metadata = study.current_metadata
                 given_study_released_metadata = study.released_metadata
                 given_study_latest_locked_metadata = study.latest_locked_metadata
-                start_timestamp = datetime.now(timezone.utc)
+                start_timestamp = datetime.now(UTC)
 
                 # when
                 study.release(
@@ -726,7 +727,7 @@ class TestStudyDefinitionAR(unittest.TestCase):
                 )
 
                 # then
-                end_timestamp = datetime.now(timezone.utc)
+                end_timestamp = datetime.now(UTC)
                 self.assertGreaterEqual(
                     study.latest_released_or_locked_metadata.ver_metadata.version_timestamp,
                     start_timestamp,
@@ -825,7 +826,7 @@ class TestStudyDefinitionAR(unittest.TestCase):
                 # given
                 given_study_metadata = study.current_metadata
                 given_latest_locked_metadata = study.latest_locked_metadata
-                start_timestamp = datetime.now(timezone.utc)
+                start_timestamp = datetime.now(UTC)
                 version_author = random_str()
                 version_info = random_str()
                 study_title = "new_study_title"
@@ -845,7 +846,7 @@ class TestStudyDefinitionAR(unittest.TestCase):
                 )
 
                 # then
-                end_timestamp = datetime.now(timezone.utc)
+                end_timestamp = datetime.now(UTC)
                 expected_version_number = (
                     given_latest_locked_metadata.ver_metadata.version_number + 1
                     if given_latest_locked_metadata is not None
@@ -934,14 +935,14 @@ class TestStudyDefinitionAR(unittest.TestCase):
                 given_study_latest_locked_metadata = (
                     study.latest_released_or_locked_metadata
                 )
-                start_timestamp = datetime.now(timezone.utc)
+                start_timestamp = datetime.now(UTC)
                 study_title = "new_study_title"
                 study_short_title = "study_short_title"
                 # when
                 study.unlock(author)
 
                 # then
-                end_timestamp = datetime.now(timezone.utc)
+                end_timestamp = datetime.now(UTC)
                 self.assertGreaterEqual(
                     study.current_metadata.ver_metadata.version_timestamp,
                     start_timestamp,
@@ -1042,7 +1043,7 @@ class TestStudyDefinitionAR(unittest.TestCase):
                     ),
                     project_number=random_str(),
                 )
-                start_timestamp = datetime.now(timezone.utc)
+                start_timestamp = datetime.now(UTC)
 
                 # when
                 study.edit_metadata(
@@ -1052,7 +1053,7 @@ class TestStudyDefinitionAR(unittest.TestCase):
                 )
 
                 # then
-                end_timestamp = datetime.now(timezone.utc)
+                end_timestamp = datetime.now(UTC)
                 expected_current_id_prefix = (
                     new_id_metadata.project_number
                     if study.latest_locked_metadata is None
@@ -1190,7 +1191,6 @@ class TestStudyDefinitionAR(unittest.TestCase):
                             study.current_metadata.id_metadata.registry_identifiers.japanese_trial_registry_number_jrct_null_value_code
                         ),
                         national_medical_products_administration_nmpa_number_null_value_code=(
-                            # pylint: disable=line-too-long
                             study.current_metadata.id_metadata.registry_identifiers.national_medical_products_administration_nmpa_number_null_value_code
                         ),
                         eudamed_srn_number_null_value_code=study.current_metadata.id_metadata.registry_identifiers.eudamed_srn_number_null_value_code,
@@ -1266,7 +1266,6 @@ class TestStudyDefinitionAR(unittest.TestCase):
                             study.current_metadata.id_metadata.registry_identifiers.japanese_trial_registry_number_jrct_null_value_code
                         ),
                         national_medical_products_administration_nmpa_number_null_value_code=(
-                            # pylint: disable=line-too-long
                             study.current_metadata.id_metadata.registry_identifiers.national_medical_products_administration_nmpa_number_null_value_code
                         ),
                         eudamed_srn_number_null_value_code=study.current_metadata.id_metadata.registry_identifiers.eudamed_srn_number_null_value_code,
@@ -1360,7 +1359,6 @@ class TestStudyDefinitionAR(unittest.TestCase):
                             study.current_metadata.id_metadata.registry_identifiers.japanese_trial_registry_number_jrct_null_value_code
                         ),
                         national_medical_products_administration_nmpa_number_null_value_code=(
-                            # pylint: disable=line-too-long
                             study.current_metadata.id_metadata.registry_identifiers.national_medical_products_administration_nmpa_number_null_value_code
                         ),
                         eudamed_srn_number_null_value_code=study.current_metadata.id_metadata.registry_identifiers.eudamed_srn_number_null_value_code,
@@ -1501,7 +1499,6 @@ class TestStudyDefinitionAR(unittest.TestCase):
                             study.current_metadata.id_metadata.registry_identifiers.japanese_trial_registry_number_jrct_null_value_code
                         ),
                         national_medical_products_administration_nmpa_number_null_value_code=(
-                            # pylint: disable=line-too-long
                             study.current_metadata.id_metadata.registry_identifiers.national_medical_products_administration_nmpa_number_null_value_code
                         ),
                         eudamed_srn_number_null_value_code=study.current_metadata.id_metadata.registry_identifiers.eudamed_srn_number_null_value_code,
@@ -1560,7 +1557,6 @@ class TestStudyDefinitionAR(unittest.TestCase):
                             study.latest_locked_metadata.id_metadata.registry_identifiers.japanese_trial_registry_id_japic_null_value_code
                         ),
                         investigational_new_drug_application_number_ind_null_value_code=(
-                            # pylint: disable=line-too-long
                             study.latest_locked_metadata.id_metadata.registry_identifiers.investigational_new_drug_application_number_ind_null_value_code
                         ),
                         eu_trial_number_null_value_code=study.latest_locked_metadata.id_metadata.registry_identifiers.eu_trial_number_null_value_code,
@@ -1574,7 +1570,6 @@ class TestStudyDefinitionAR(unittest.TestCase):
                             study.latest_locked_metadata.id_metadata.registry_identifiers.japanese_trial_registry_number_jrct_null_value_code
                         ),
                         national_medical_products_administration_nmpa_number_null_value_code=(
-                            # pylint: disable=line-too-long
                             study.latest_locked_metadata.id_metadata.registry_identifiers.national_medical_products_administration_nmpa_number_null_value_code
                         ),
                         eudamed_srn_number_null_value_code=(

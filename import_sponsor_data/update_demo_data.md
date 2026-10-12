@@ -160,7 +160,7 @@ in case something goes wrong when trying to import the new data.
 Run the import to check that the data is imported properly.
 It is sufficient to run only the json import step:
 ```
-pipenv run mockdatajson
+uv run poe mockdatajson
 ```
 
 Check the log messages for errors related to missing items.

@@ -37,6 +37,6 @@ npm run format:staged      # Format only staged files
 
 ## Other Utilities
 ```bash
-node scripts/getApiFields.js    # Extract API field translations from OpenAPI spec
+node scripts/updateApiFields.js # Extract API field translations from OpenAPI spec
 npm run build-sbom              # Generate software bill of materials
 ```

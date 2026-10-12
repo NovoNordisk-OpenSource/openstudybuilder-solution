@@ -1,5 +1,3 @@
-# pylint: disable=redefined-outer-name,unused-argument
-
 """
 Integration tests for StudyService methods.
 These tests verify service-level behavior including business logic and exception handling.

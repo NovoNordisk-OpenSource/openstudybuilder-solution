@@ -31,19 +31,22 @@ jobs:
         with:
           python-version: "3.14"
 
-      - name: Set up Python environment
-        run: |
-          pip install --upgrade pip pipenv wheel
-          pipenv sync --dev
+      - uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
 
-      - name: Pylint
-        run: pipenv run lint
+      - name: Set up Python environment
+        run: uv sync --group dev
+
+      - name: Ruff
+        run: uv run poe lint
 
       - name: Black formatting check
-        run: pipenv run black --check
+        run: uv run poe black --check
 
       - name: Isort import ordering check
-        run: pipenv run isort --check
+        run: uv run poe isort --check
 
       - name: Check for vulnerable packages
-        run: pipenv run audit
+        # Opt-out per repository: runs by default; skipped only where the
+        # Actions variable HALT_ON_CVE_FINDINGS is set to 'false'.
+        if: vars.HALT_ON_CVE_FINDINGS != 'false'
+        run: uv run poe audit

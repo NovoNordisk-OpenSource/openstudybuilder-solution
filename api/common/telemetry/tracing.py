@@ -1,7 +1,7 @@
 import json
+from collections.abc import Callable, Generator, Sequence
 from contextlib import contextmanager
 from functools import wraps
-from typing import Callable, Generator, Sequence
 
 from opencensus.trace import Span, execution_context
 from opencensus.trace.tracer import Tracer
@@ -109,8 +109,8 @@ def trace_calls(
                 span.add_attribute("call.qualname", func.__qualname__)
 
                 if args:
-                    l = len(_args)
-                    if v := [str(_args[i])[:128] for i in args if i < l]:
+                    args_length = len(_args)
+                    if v := [str(_args[i])[:128] for i in args if i < args_length]:
                         span.add_attribute("call.args", json.dumps(v))
 
                 if kwargs:

@@ -22,23 +22,23 @@ The documentation has been organized into focused rule files in `.claude/rules/`
 
 **Start Development:**
 ```bash
-pipenv sync --dev
+uv sync --group dev
 cp .env.example .env  # Edit NEO4J_DSN, UID
-pipenv run dev        # Start main API (localhost:8000)
+uv run poe dev        # Start main API (localhost:8000)
 ```
 
 **Run Tests:**
 ```bash
-pipenv run testunit   # Unit tests
-pipenv run testint    # Integration tests (requires Neo4j)
-pipenv run test       # All tests
+uv run poe testunit   # Unit tests
+uv run poe testint    # Integration tests (requires Neo4j)
+uv run poe test       # All tests
 ```
 
 **Code Quality:**
 ```bash
-pipenv run format     # Auto-format code
-pipenv run lint       # Run Pylint
-pipenv run mypy       # Type checking
+uv run poe format     # Auto-format code
+uv run poe lint       # Run Ruff
+uv run poe mypy       # Type checking
 ```
 
 For detailed information, refer to the specific rule files above.

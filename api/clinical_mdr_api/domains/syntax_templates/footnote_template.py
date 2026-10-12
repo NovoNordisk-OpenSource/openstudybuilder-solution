@@ -1,6 +1,7 @@
 import re
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable, Self
+from typing import Self
 
 from clinical_mdr_api.domains.syntax_templates.template import (
     InstantiationCountsVO,

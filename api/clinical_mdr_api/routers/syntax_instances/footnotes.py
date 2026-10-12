@@ -100,7 +100,6 @@ FootnoteUID = Path(description="The unique id of the footnote.")
         ],
     }
 )
-# pylint: disable=unused-argument
 def get_all(
     request: Request,  # request is actually required by the allow_exports decorator
     sort_by: _generic_descriptions.SORT_BY_QUERY = None,

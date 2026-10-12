@@ -1,6 +1,7 @@
 import datetime
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
-from typing import Any, Callable, Iterable, Self
+from typing import Any, Self
 
 from clinical_mdr_api.domains.concepts.medicinal_product import MedicinalProductAR
 from clinical_mdr_api.utils import normalize_string
@@ -29,7 +30,10 @@ class StudyCompoundDosingVO:
     medicinal_product_uid: str | None = None
     dose_frequency_uid: str | None = None
     dose_value_uid: str | None = None
+    free_text_dose_value: str | None = None
+    free_text_dose_frequency: str | None = None
     composition: str | None = None
+    study_activity_instance_uid: str | None = None
 
     @classmethod
     def from_input_values(
@@ -43,7 +47,10 @@ class StudyCompoundDosingVO:
         compound_uid: str | None = None,
         compound_alias_uid: str | None = None,
         medicinal_product_uid: str | None = None,
+        free_text_dose_value: str | None = None,
+        free_text_dose_frequency: str | None = None,
         composition: str | None = None,
+        study_activity_instance_uid: str | None = None,
         study_selection_uid: str | None = None,
         start_date: datetime.datetime | None = None,
         generate_uid_callback: Callable[[], str] = (
@@ -56,7 +63,7 @@ class StudyCompoundDosingVO:
             study_selection_uid = generate_uid_callback()
 
         if start_date is None:
-            start_date = datetime.datetime.now(datetime.timezone.utc)
+            start_date = datetime.datetime.now(datetime.UTC)
 
         return StudyCompoundDosingVO(
             study_uid=study_uid,
@@ -68,7 +75,12 @@ class StudyCompoundDosingVO:
             study_element_uid=normalize_string(study_element_uid),
             dose_value_uid=normalize_string(dose_value_uid),
             dose_frequency_uid=normalize_string(dose_frequency_uid),
+            # Normalized so that a blank string cannot masquerade as a set value
+            # and defeat the exclusivity rule or the uniqueness key.
+            free_text_dose_value=normalize_string(free_text_dose_value),
+            free_text_dose_frequency=normalize_string(free_text_dose_frequency),
             composition=composition,
+            study_activity_instance_uid=normalize_string(study_activity_instance_uid),
             author_id=normalize_string(author_id),
             start_date=start_date,
         )
@@ -81,11 +93,41 @@ class StudyCompoundDosingVO:
         medicinal_product_callback: Callable[..., MedicinalProductAR | None] = (
             lambda _: None
         ),
+        # Answers "is this uid a term of the dose frequency codelist?". Boolean
+        # rather than the term itself, so the permissive default below reads as
+        # "skip the check" — a default returning None would instead reject every
+        # frequency whenever the callback is omitted.
+        dose_frequency_term_exists_callback: Callable[[str], bool] = lambda _: True,
     ) -> None:
         """
         Raises ValueError or exceptions.BusinessLogicException if values do not comply with relevant business rules.
 
         """
+        # The dose value and the dose frequency are each either picked from the
+        # library or given as study level free text, never both. The two fields are
+        # independent of one another: a library value with a free text frequency is
+        # a legal combination. Checked first, so that a contradictory payload gets a
+        # clear error instead of a confusing 'already exists'.
+        exceptions.ValidationException.raise_if(
+            self.dose_value_uid is not None and self.free_text_dose_value is not None,
+            msg="Only one of 'dose_value_uid' and 'free_text_dose_value' may be provided.",
+        )
+        exceptions.ValidationException.raise_if(
+            self.dose_frequency_uid is not None
+            and self.free_text_dose_frequency is not None,
+            msg="Only one of 'dose_frequency_uid' and 'free_text_dose_frequency' may be provided.",
+        )
+
+        # A library dose frequency may be any term of the dose frequency codelist,
+        # not only one of those defined on the medicinal product. Checked here so
+        # the caller gets this message rather than the persistence layer's, which
+        # names the codelist by uid and is raised mid-transaction.
+        exceptions.ValidationException.raise_if(
+            self.dose_frequency_uid is not None
+            and not dose_frequency_term_exists_callback(self.dose_frequency_uid),
+            msg=f"Dose frequency term '{self.dose_frequency_uid}' is not a term of the dose frequency codelist.",
+        )
+
         # Find a compound dosing selection with the same medicinal product, dose value, dose frequency
         existing_uid = selection_uid_by_compound_dose_and_frequency_callback(self)
         exceptions.AlreadyExistsException.raise_if(
@@ -93,9 +135,13 @@ class StudyCompoundDosingVO:
             msg="Compound dosing selection with the specified compound, dose value and dose frequency already exists.",
         )
 
-        # Validate that each of these selections is actually defined on the selected library compound (i.e. medicinal product):
-        #   - dose value
-        #   - dose frequency
+        # Validate that the dose value is actually defined on the selected library
+        # compound (i.e. medicinal product). The dose FREQUENCY is deliberately not
+        # constrained this way — it may be any codelist term, checked above — because
+        # a medicinal product lists only a handful of frequencies while studies need
+        # the rest of the codelist. The dose value has no such wider set to fall back
+        # on: it points at a numeric value concept, not a codelist term.
+        # Guarded on the uid being set, so a study level free text value escapes it.
         medicinal_product: MedicinalProductAR | None = medicinal_product_callback(
             self.medicinal_product_uid
         )
@@ -106,13 +152,6 @@ class StudyCompoundDosingVO:
                 and self.dose_value_uid
                 not in medicinal_product.concept_vo.dose_value_uids,
                 msg=f"Selected dose value is not valid for medicinal product '{medicinal_product.concept_vo.name}'.",
-            )
-            exceptions.BusinessLogicException.raise_if(
-                self.dose_frequency_uid is not None
-                and medicinal_product.concept_vo.dose_frequency_uids is not None
-                and self.dose_frequency_uid
-                not in medicinal_product.concept_vo.dose_frequency_uids,
-                msg=f"Selected dose frequency is not valid for medicinal product '{medicinal_product.concept_vo.name}'.",
             )
 
 
@@ -158,6 +197,7 @@ class StudySelectionCompoundDosingsAR:
         medicinal_product_callback: Callable[..., MedicinalProductAR | None] = (
             lambda _: None
         ),
+        dose_frequency_term_exists_callback: Callable[[str], bool] = lambda _: True,
     ) -> None:
         """
         Adding a new study compound to the _study_compound_selection
@@ -166,10 +206,12 @@ class StudySelectionCompoundDosingsAR:
         study_compound_dosing_selection.validate(
             selection_uid_by_compound_dose_and_frequency_callback=selection_uid_by_compound_dose_and_frequency_callback,
             medicinal_product_callback=medicinal_product_callback,
+            dose_frequency_term_exists_callback=dose_frequency_term_exists_callback,
         )
-        self._study_compound_dosings_selection = (
-            self._study_compound_dosings_selection + [study_compound_dosing_selection]
-        )
+        self._study_compound_dosings_selection = [
+            *self._study_compound_dosings_selection,
+            study_compound_dosing_selection,
+        ]
 
     @classmethod
     def from_repository_values(
@@ -254,7 +296,11 @@ class StudySelectionCompoundDosingsAR:
             or current.medicinal_product_uid != updated.medicinal_product_uid
             or current.dose_frequency_uid != updated.dose_frequency_uid
             or current.dose_value_uid != updated.dose_value_uid
+            or current.free_text_dose_value != updated.free_text_dose_value
+            or current.free_text_dose_frequency != updated.free_text_dose_frequency
             or current.composition != updated.composition
+            or current.study_activity_instance_uid
+            != updated.study_activity_instance_uid
         )
 
     def update_selection(
@@ -266,6 +312,7 @@ class StudySelectionCompoundDosingsAR:
         medicinal_product_callback: Callable[..., MedicinalProductAR | None] = (
             lambda _: None
         ),
+        dose_frequency_term_exists_callback: Callable[[str], bool] = lambda _: True,
     ) -> None:
         """
         Used when a study compound is updated
@@ -273,6 +320,7 @@ class StudySelectionCompoundDosingsAR:
         updated_study_compound_dosing_selection.validate(
             selection_uid_by_compound_dose_and_frequency_callback=selection_uid_by_compound_dose_and_frequency_callback,
             medicinal_product_callback=medicinal_product_callback,
+            dose_frequency_term_exists_callback=dose_frequency_term_exists_callback,
         )
         updated_selection = []
         for selection in self.study_compound_dosings_selection:

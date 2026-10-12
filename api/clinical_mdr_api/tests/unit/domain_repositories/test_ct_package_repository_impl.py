@@ -1,6 +1,6 @@
 import datetime
 import unittest
-from typing import Collection
+from collections.abc import Collection
 from unittest.mock import Mock, patch
 
 from clinical_mdr_api.domain_repositories.controlled_terminologies.ct_package_repository import (
@@ -32,7 +32,7 @@ def create_random_ct_package_node(catalogue_name: str) -> CTPackage:
         href=random_str(),
         registration_status=random_str(),
         source=random_str(),
-        import_date=datetime.datetime.now(datetime.timezone.utc),
+        import_date=datetime.datetime.now(datetime.UTC),
         effective_date=datetime.date(year=2020, month=6, day=26),
         author_id=random_str(),
         contains_package=mock,

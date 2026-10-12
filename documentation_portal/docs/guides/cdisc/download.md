@@ -4,11 +4,11 @@ Before being able to load the cdisc CT in the OpenStudyBuilder application, we n
 
 ## Download new cdisc data (optional)
 
-Inside the mdr-standards-import repository, launch the two following scripts:
+Inside the `import_standards` directory, launch the two following scripts:
 
 ```
-$ pipenv run download_cdisc_meta
-$ pipenv run download_cdisc_data
+$ uv run poe download_ct_json_data_from_cdisc_api
+$ uv run poe download_data_models_json_data_from_cdisc_api
 ```
 
 ---

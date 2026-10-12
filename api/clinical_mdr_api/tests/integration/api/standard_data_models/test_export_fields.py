@@ -2,9 +2,6 @@
 Tests for export_fields query parameter functionality
 """
 
-# pylint: disable=unused-argument
-# pylint: disable=redefined-outer-name
-
 import csv
 import io
 import logging

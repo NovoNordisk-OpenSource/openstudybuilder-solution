@@ -1,4 +1,4 @@
-from enum import Enum
+from enum import StrEnum
 from typing import Annotated
 
 from pydantic import Field
@@ -19,7 +19,7 @@ class TermCount(BaseModel):
     count: Annotated[int, Field()]
 
 
-class CountTypeEnum(str, Enum):
+class CountTypeEnum(StrEnum):
     ADDED = "added"
     DELETED = "deleted"
     UPDATED = "updated"

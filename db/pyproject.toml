@@ -1,0 +1,49 @@
+[project]
+name = "db"
+version = "0.1.0"
+requires-python = ">=3.14"
+dependencies = [
+    "requests~=2.33.0",
+    "urllib3~=2.8.0",
+    "neo4j~=4.4",
+    "idna~=3.15",
+]
+
+[tool.uv]
+# This directory is a collection of scripts, not a package to build and
+# install. Keep `uv sync` in virtual/non-package mode so it only installs the
+# declared dependencies rather than trying to build this directory as a package.
+package = false
+
+[dependency-groups]
+dev = [
+    "ruff~=0.16.8",
+    "black~=26.3.1",
+    "poethepoet>=0.30",
+]
+
+[tool.poe]
+envfile = ".env"
+
+[tool.poe.tasks]
+lint = "ruff check *.py"
+init_neo4j = "python init_neo4j.py"
+init_aura = "python init_aura.py"
+update_ct_stats = "python update_ct_stats.py"
+export_to_cypher = "python export_to_cypher.py"
+import_from_cypher = "python import_from_cypher.py"
+build-sbom = "python3 ../_tools/build_sbom.py --uv --fallback-dir doc/licenses --level 2 --output sbom.md"
+import_reports = "python neodash/import_reports.py"
+
+[tool.black]
+target-version = ["py314"]
+
+[tool.ruff]
+line-length = 200
+target-version = 'py314'
+
+[tool.ruff.lint]
+select = ['PL']
+ignore = [
+    'PLC0415', # import-outside-toplevel
+]

@@ -56,19 +56,23 @@
           >
             {{ cancelLabel ?? $t('_global.cancel') }}
           </v-btn>
-          <v-btn
-            v-if="!noSaving"
-            data-cy="save-button"
-            color="secondary"
-            variant="flat"
-            min-width="120px"
-            :loading="working"
-            :disabled="actionDisabled"
-            rounded
-            @click="submit"
-          >
-            {{ actionButtonLabel }}
-          </v-btn>
+          <span v-if="!noSaving" class="d-inline-block">
+            <v-btn
+              data-cy="save-button"
+              color="secondary"
+              variant="flat"
+              min-width="120px"
+              :loading="working"
+              :disabled="actionDisabled || saveDisabled"
+              rounded
+              @click="submit"
+            >
+              {{ actionButtonLabel }}
+            </v-btn>
+            <v-tooltip v-if="saveDisabled" activator="parent" location="top">
+              {{ saveDisabledTooltip }}
+            </v-tooltip>
+          </span>
         </div>
       </v-card-actions>
     </v-card>
@@ -110,6 +114,14 @@ const props = defineProps({
   noSaving: {
     type: Boolean,
     default: false,
+  },
+  saveDisabled: {
+    type: Boolean,
+    default: false,
+  },
+  saveDisabledTooltip: {
+    type: String,
+    default: '',
   },
   formUrl: {
     type: String,
@@ -164,6 +176,10 @@ async function confirm(message, options) {
   return await confirmRef.value.open(message, options)
 }
 
+async function confirmHtml(message, options) {
+  return await confirmRef.value.openHtml(message, options)
+}
+
 async function submit() {
   const observer = instance?.proxy?.$parent?.$refs?.observer
   if (observer) {
@@ -182,6 +198,7 @@ defineExpose({
   copyUrl,
   cancel,
   confirm,
+  confirmHtml,
   submit,
 })
 </script>

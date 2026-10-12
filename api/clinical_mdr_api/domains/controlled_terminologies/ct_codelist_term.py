@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Generic, Self, TypeVar
+from typing import Any, Self
 
 from clinical_mdr_api.domain_repositories.models._utils import convert_to_datetime
 from clinical_mdr_api.domains.controlled_terminologies.ct_term_name import (
@@ -35,6 +35,7 @@ class CTCodelistTermBaseVO:
     required_level: TSParameterRequiredLevel | None
     cardinality: TSParameterCardinality | None
     notes: str | None
+    short_code: str | None
     osb_page_reference: str | None
     osb_field_name: str | None
     semantic_data_type_uid: str | None
@@ -79,6 +80,7 @@ class CTCodelistTermBaseVO:
                 else None
             ),
             "notes": result.get("notes"),
+            "short_code": result.get("short_code"),
             "osb_page_reference": result.get("osb_page_reference"),
             "osb_field_name": result.get("osb_field_name"),
             "semantic_data_type_uid": result.get("semantic_data_type_uid"),
@@ -100,28 +102,27 @@ class CTCodelistTermBaseVO:
 @dataclass(frozen=True)
 class CTCodelistTermVO(CTCodelistTermBaseVO):
     submission_value: str
+    submission_value_test_name: str | None
 
     @classmethod
     def from_result_dict(cls, result: dict[str, Any]) -> Self:
         return cls(
             **cls._common_kwargs_from_result_dict(result),
             submission_value=result["submission_value"],
+            submission_value_test_name=result.get("submission_value_test_name"),
         )
 
 
-_VOType = TypeVar("_VOType", bound=CTCodelistTermBaseVO)  # pylint: disable=invalid-name
-
-
 @dataclass
-class CTCodelistTermBaseAR(Generic[_VOType]):
-    _vo: _VOType
+class CTCodelistTermBaseAR[VOType: CTCodelistTermBaseVO]:
+    _vo: VOType
 
     @property
-    def vo(self) -> _VOType:
+    def vo(self) -> VOType:
         return self._vo
 
     @classmethod
-    def from_repository_values(cls, vo: _VOType) -> Self:
+    def from_repository_values(cls, vo: VOType) -> Self:
         return cls(_vo=vo)
 
 
@@ -184,6 +185,7 @@ class CTSimpleCodelistTermVO:
     codelist_name: str | None
     codelist_submission_value: str | None
     date_conflict: bool
+    library_name: str | None = None
 
     @classmethod
     def from_result_dict(cls, result: dict[str, Any]) -> Self:
@@ -198,6 +200,7 @@ class CTSimpleCodelistTermVO:
             codelist_name=result.get("codelist_name"),
             codelist_submission_value=result.get("codelist_submission_value"),
             date_conflict=result.get("date_conflict", False),
+            library_name=result.get("library_name"),
         )
 
         return ct_simple_codelist_term_vo

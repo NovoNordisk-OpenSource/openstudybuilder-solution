@@ -19,6 +19,49 @@ When('The user select first dose frequency', () => cy.selectFirstVSelect('dose-f
 
 When('The user select last dose frequency', () => cy.selectLastVSelect('dose-frequency'))
 
+When('The user selects the free text dose value source', () => {
+    cy.get('[data-cy="dose-value-free-text"]').click()
+})
+
+When('The user selects the library dose value source', () => {
+    cy.get('[data-cy="dose-value-from-library"]').click()
+})
+
+When('The user selects the free text dose frequency source', () => {
+    cy.get('[data-cy="dose-frequency-free-text"]').click()
+})
+
+When('The user selects the library dose frequency source', () => {
+    cy.get('[data-cy="dose-frequency-from-library"]').click()
+})
+
+When('The user enters {string} as the free text dose value', (value) => {
+    cy.get('[data-cy="free-text-dose-value"]').clear().type(value)
+})
+
+When('The user enters {string} as the free text dose frequency', (value) => {
+    cy.get('[data-cy="free-text-dose-frequency"]').clear().type(value)
+})
+
+Then('The dose value drop-down is not displayed', () => {
+    cy.get('[data-cy="dose-value"]').should('not.exist')
+})
+
+Then('The dose frequency drop-down is not displayed', () => {
+    cy.get('[data-cy="dose-frequency"]').should('not.exist')
+})
+
+Then('The free text dose frequency field is not displayed', () => {
+    cy.get('[data-cy="free-text-dose-frequency"]').should('not.exist')
+})
+
+Then('The compound dosing table shows {string} as the dose frequency', (value) => {
+    cy.wait('@createdDosing').then((req) => {
+        cy.searchFor(req.response.body.study_compound_dosing_uid)
+        cy.checkRowByIndex(0, 'Dose frequency', value)
+    })
+})
+
 When('The user enters {string} in the composition field', (value) => {
     cy.get('[data-cy="composition"]').clear().type(value)
 })
@@ -47,8 +90,11 @@ Then('The study compound dosing is present in the compound dosings table', () =>
         cy.checkRowByIndex(0, 'Medicinal product', dosingData.study_compound.medicinal_product.name)
         cy.checkRowByIndex(0, 'Compound alias name', dosingData.study_compound.compound_alias.name)
         cy.checkRowByIndex(0, 'Preferred alias', dosingData.study_compound.compound_alias.is_preferred_synonym ? 'Yes' : 'No')
-        cy.checkRowByIndex(0, 'Dose value', `${dosingData.dose_value.value} ${dosingData.dose_value.unit_label}`)
-        cy.checkRowByIndex(0, 'Dose frequency', dosingData.dose_frequency?.term_name)
+        // Each of these columns shows either the library value or the study level
+        // free text, so assert against the API's combined label rather than the
+        // library field, which is null for a free text dosing.
+        cy.checkRowByIndex(0, 'Dose value', dosingData.dose_value_label)
+        cy.checkRowByIndex(0, 'Dose frequency', dosingData.dose_frequency_label)
     })
 })
 

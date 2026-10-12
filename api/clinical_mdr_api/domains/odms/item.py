@@ -1,5 +1,6 @@
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Callable, Self
+from typing import TYPE_CHECKING, Any, Self
 
 from clinical_mdr_api.domains.controlled_terminologies.ct_codelist_attributes import (
     CTCodelistAttributesAR,
@@ -43,12 +44,12 @@ class OdmItemVO:
     sds_var_name: str | None
     origin: str | None
     comment: str | None
-    odm_item_group: "OdmItemParentGroup | None"
+    odm_item_group: OdmItemParentGroup | None
     translated_texts: list[OdmTranslatedTextModel]
     aliases: list[OdmAliasModel]
     unit_definition_uids: list[str]
     external_question: CTTermItem | None
-    codelist: "OdmItemCodelist | None"
+    codelist: OdmItemCodelist | None
     term_uids: list[str]
     vendor_attribute_uids: list[str]
     vendor_element_uids: list[str]
@@ -68,12 +69,12 @@ class OdmItemVO:
         sds_var_name: str | None,
         origin: str | None,
         comment: str | None,
-        odm_item_group: "OdmItemParentGroup | None",
+        odm_item_group: OdmItemParentGroup | None,
         translated_texts: list[OdmTranslatedTextModel],
         aliases: list[OdmAliasModel],
         unit_definition_uids: list[str],
         external_question: CTTermItem | None,
-        codelist: "OdmItemCodelist | None",
+        codelist: OdmItemCodelist | None,
         term_uids: list[str],
         vendor_element_uids: list[str],
         vendor_attribute_uids: list[str],

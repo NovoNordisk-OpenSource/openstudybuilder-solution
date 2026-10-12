@@ -1,11 +1,13 @@
+from collections.abc import Callable, Sequence
 from datetime import datetime
-from typing import Annotated, Any, Callable, Self, Sequence, overload
+from typing import Annotated, Any, Self, overload
 
 import neo4j.time
 from pydantic import Field, field_validator
 
 from clinical_mdr_api.domains.controlled_terminologies.ct_codelist_term import (
     CTSimpleCodelistTermAR,
+    CTSimpleCodelistTermVO,
 )
 from clinical_mdr_api.domains.controlled_terminologies.ct_term_attributes import (
     CTTermAttributesAR,
@@ -103,7 +105,7 @@ class CTTerm(BaseModel):
 
     @classmethod
     def from_ct_term_name_and_attributes(
-        cls, ct_term_name_and_attributes: "CTTermNameAndAttributes"
+        cls, ct_term_name_and_attributes: CTTermNameAndAttributes
     ) -> Self:
         return cls(
             term_uid=ct_term_name_and_attributes.term_uid,
@@ -543,10 +545,20 @@ class SimpleCodelistTermModel(BaseModel):
                     codelist_submission_value=codelist_term_data.ct_simple_codelist_term_vo.codelist_submission_value,
                     queried_effective_date=queried_date,
                     date_conflict=codelist_term_data.ct_simple_codelist_term_vo.date_conflict,
+                    **cls._extra_fields_from_simple_codelist_term_vo(
+                        codelist_term_data.ct_simple_codelist_term_vo
+                    ),
                 )
         else:
             simple_term_model = None
         return simple_term_model
+
+    @classmethod
+    def _extra_fields_from_simple_codelist_term_vo(
+        cls, _: CTSimpleCodelistTermVO
+    ) -> dict[str, Any]:
+        """Hook for subclasses exposing more of the term value object."""
+        return {}
 
     term_uid: Annotated[str, Field()]
     term_name: Annotated[str, Field()]
@@ -601,10 +613,14 @@ class SimpleCTTermNameAndAttributes(BaseModel):
 class CTTermCodelists(BaseModel):
     @classmethod
     def from_ct_term_codelists(
-        cls, term_uid: str, ct_term_codelists: list[CTTermCodelist]
+        cls,
+        term_uid: str,
+        term_library_name: str | None,
+        ct_term_codelists: list[CTTermCodelist],
     ) -> Self:
         term_codelists = cls(
             term_uid=term_uid,
+            term_library_name=term_library_name,
             codelists=[
                 CTTermCodelist(
                     codelist_uid=x.codelist_uid,
@@ -623,6 +639,9 @@ class CTTermCodelists(BaseModel):
         return term_codelists
 
     term_uid: Annotated[str, Field()]
+    term_library_name: Annotated[
+        str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
     codelists: Annotated[list[CTTermCodelist], Field()]
 
 

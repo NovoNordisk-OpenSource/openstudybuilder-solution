@@ -1,5 +1,3 @@
-# pylint: disable=redefined-outer-name
-# pylint: disable=unused-argument
 """
 Integration tests for `GET /v1/papillons/non-standard-variables` and the
 SEMTCDT -> NSVXMLDT (NSV XML Data Type) data type translation it relies on.

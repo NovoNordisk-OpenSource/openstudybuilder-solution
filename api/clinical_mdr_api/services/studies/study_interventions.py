@@ -1,7 +1,8 @@
 """Study Protocol Interventions service"""
 
 import logging
-from typing import Any, Mapping
+from collections.abc import Mapping
+from typing import Any
 
 from docx.enum.style import WD_STYLE_TYPE
 
@@ -52,7 +53,7 @@ _gettext = {
 
 log = logging.getLogger(__name__)
 
-# pylint: disable=no-member
+
 DOCX_STYLES = {
     "table": ("SB Table Condensed", WD_STYLE_TYPE.TABLE),
     "header1": ("Table Header lvl1", WD_STYLE_TYPE.PARAGRAPH),
@@ -79,7 +80,6 @@ class StudyInterventionsService:
         return docx
 
     @staticmethod
-    # pylint: disable=unused-argument
     def mk_table(
         compounds: list[StudySelectionCompound],
         arms: Mapping[str, list[StudySelectionArm]],
@@ -273,11 +273,24 @@ class StudyInterventionsService:
         return table
 
     @staticmethod
+    def _dose_value_txt(dosing: StudyCompoundDosing) -> str:
+        """The library dose value if there is one, else the study level free text."""
+        if dosing.dose_value:
+            return f"{dosing.dose_value.value} {dosing.dose_value.unit_label}"
+        return dosing.free_text_dose_value or ""
+
+    @staticmethod
+    def _dose_frequency_txt(dosing: StudyCompoundDosing) -> str:
+        """The library dose frequency if there is one, else the study level free text."""
+        if dosing.dose_frequency:
+            return dosing.dose_frequency.term_name
+        return dosing.free_text_dose_frequency or ""
+
+    @staticmethod
     def _dosing_txt(compounds, dosings):
         return "\n".join(
-            f"{dosing.dose_value.value if dosing.dose_value else ''} "
-            f"{dosing.dose_value.unit_label if dosing.dose_value else ''} "
-            f"{dosing.dose_frequency.term_name if dosing.dose_frequency else ''}".strip()
+            f"{StudyInterventionsService._dose_value_txt(dosing)} "
+            f"{StudyInterventionsService._dose_frequency_txt(dosing)}".strip()
             for dosing in dosings.get(compounds.study_compound_uid, [])
         ) or _gettext("no_information")
 

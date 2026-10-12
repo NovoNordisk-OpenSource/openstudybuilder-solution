@@ -1,4 +1,5 @@
-from typing import Annotated, Callable, Self, overload
+from collections.abc import Callable
+from typing import Annotated, Self, overload
 
 from pydantic import Field
 

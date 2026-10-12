@@ -287,7 +287,7 @@ class ActivitySubGroupService(ConceptGenericService[ActivitySubGroupAR]):
         except exceptions.BusinessLogicException as e:
             # Rethrow with more context if needed
             raise exceptions.BusinessLogicException(
-                msg=f"Error getting COSMoS subgroup overview for {subgroup_uid}: {str(e)}"
+                msg=f"Error getting COSMoS subgroup overview for {subgroup_uid}: {e!s}"
             ) from e
 
     def cascade_edit_and_approve(self, item: ActivitySubGroupAR):
@@ -349,15 +349,15 @@ class ActivitySubGroupService(ConceptGenericService[ActivitySubGroupAR]):
                     library_name=activity.library.name,
                     change_description="Cascade edit",
                 )
-                activity = activity_service._edit_aggregate(
+                updated_activity = activity_service._edit_aggregate(
                     item=activity,
                     concept_edit_input=edit_input,
                     perform_validation=False,
                 )
 
-                activity.approve(author_id=self.author_id)
+                updated_activity.approve(author_id=self.author_id)
                 self._repos.activity_repository.copy_activity_and_recreate_activity_groupings(
-                    activity, author_id=self.author_id
+                    updated_activity, author_id=self.author_id
                 )
                 activity_service.cascade_edit_and_approve(activity)
 

@@ -57,7 +57,7 @@ class _ArmConflictIndexes:
     by_randomization_group: dict[str, _ArmConflictIndexEntry]
 
     @classmethod
-    def from_aggregate(cls, aggregate: StudySelectionArmAR) -> "_ArmConflictIndexes":
+    def from_aggregate(cls, aggregate: StudySelectionArmAR) -> _ArmConflictIndexes:
         indexes = cls(
             by_name={}, by_short_name={}, by_code={}, by_randomization_group={}
         )
@@ -119,7 +119,7 @@ class StudyArmSelectionService(StudySelectionMixin):
         study_value_version: str | None = None,
         terms_at_specific_datetime: datetime | None = None,
     ) -> StudySelectionArmWithConnectedBranchArms:
-        # pylint: disable=line-too-long
+
         return StudySelectionArmWithConnectedBranchArms.from_study_selection_arm_ar__order__connected_branch_arms(
             study_uid=study_uid,
             selection=study_selection,
@@ -724,7 +724,7 @@ class StudyArmSelectionService(StudySelectionMixin):
             study_value_version=study_value_version,
         )
         # With Connected BranchArms due to it may has already connected BranchArms to it
-        # pylint: disable=line-too-long
+
         return StudySelectionArmWithConnectedBranchArms.from_study_selection_arm_ar__order__connected_branch_arms(
             study_uid=study_uid,
             selection=new_selection,

@@ -17,7 +17,7 @@ configure_database(
     liveness_check_timeout=settings.neo4j_liveness_check_timeout,
 )
 
-# pylint: disable=wrong-import-position,wrong-import-order,ungrouped-imports
+
 import logging
 from contextlib import asynccontextmanager
 from typing import Any
@@ -144,11 +144,15 @@ This license information is applicable to the swagger documentation of the clini
 
 Copyright (C) 2025 Novo Nordisk A/S, Danish company registration no. 24256790
 
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ## Licenses and Acknowledgements for Incorporated Software
 
@@ -256,7 +260,7 @@ async def value_error_handler(request: Request, exception: ValueError):
 
 
 # Late import of routers, because they do run code on import, and we want monkey-patching like tracing to work
-# pylint: disable=wrong-import-position,ungrouped-imports
+
 from clinical_mdr_api import routers
 
 # Include routers here
@@ -596,6 +600,11 @@ app.include_router(
     tags=["MS Graph API integrations"],
 )
 app.include_router(routers.ddf_router, prefix="/usdm/v4", tags=["USDM endpoints"])
+app.include_router(
+    routers.data_supplier_rules_router,
+    prefix="/data-suppliers/rules",
+    tags=["Data Supplier Rules"],
+)
 app.include_router(
     routers.data_suppliers_router, prefix="/data-suppliers", tags=["Data Suppliers"]
 )

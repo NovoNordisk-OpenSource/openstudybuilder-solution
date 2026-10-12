@@ -1,13 +1,10 @@
 import copy
 from abc import ABC, abstractmethod
-from typing import Any, Generic
+from typing import Any, ClassVar
 
 from neo4j.graph import Node
 from neomodel import db
 
-from clinical_mdr_api.domain_repositories._generic_repository_interface import (
-    _AggregateRootType,
-)
 from clinical_mdr_api.domain_repositories.concepts.utils import (
     list_concept_wildcard_properties,
 )
@@ -40,20 +37,22 @@ from common.config import settings
 from common.exceptions import NotFoundException
 
 
-class ConceptGenericRepository(
-    LibraryItemRepositoryImplBase, Generic[_AggregateRootType], ABC
-):
+class ConceptGenericRepository[AggregateRootType](LibraryItemRepositoryImplBase, ABC):
     root_class = type
     value_class = type
     return_model: type = BaseModel
-    filter_query_parameters: dict[Any, Any] = {}
+    filter_query_parameters: dict[Any, Any]
     sort_by: dict[Any, Any] | None = None
-    wildcard_properties_list: list[str] | None = None
+    wildcard_properties_list: ClassVar[list[str] | None] = None
+
+    def __init__(self, user: str | None = None):
+        super().__init__(user)
+        self.filter_query_parameters = {}
 
     @abstractmethod
     def _create_aggregate_root_instance_from_cypher_result(
         self, input_dict: dict[str, Any]
-    ) -> _AggregateRootType:
+    ) -> AggregateRootType:
         raise NotImplementedError
 
     @abstractmethod
@@ -64,7 +63,7 @@ class ConceptGenericRepository(
         relationship: VersionRelationship,
         value: VersionValue,
         **_kwargs,
-    ) -> _AggregateRootType:
+    ) -> AggregateRootType:
         raise NotImplementedError
 
     @abstractmethod
@@ -78,14 +77,13 @@ class ConceptGenericRepository(
     def specific_header_match_clause(self) -> str | None:
         return None
 
-    # pylint: disable=unused-argument
     def specific_header_match_clause_lite(self, field_name: str) -> str | None:
         """This is a lightweight version of the header match clause.
         It should fetch only the required field, without supporting wildcard filtering.
         """
         return None
 
-    def _create_new_value_node(self, ar: _AggregateRootType) -> VersionValue:
+    def _create_new_value_node(self, ar: AggregateRootType) -> VersionValue:
         return self.value_class(  # type: ignore[call-overload]
             nci_concept_id=getattr(ar.concept_vo, "nci_concept_id", None),
             nci_concept_name=getattr(ar.concept_vo, "nci_concept_name", None),
@@ -96,7 +94,7 @@ class ConceptGenericRepository(
             external_id=getattr(ar.concept_vo, "external_id", None),
         )
 
-    def _has_data_changed(self, ar: _AggregateRootType, value: VersionValue) -> bool:
+    def _has_data_changed(self, ar: AggregateRootType, value: VersionValue) -> bool:
         return (
             ar.concept_vo.name != value.name
             or getattr(ar.concept_vo, "nci_concept_id", None)
@@ -302,10 +300,7 @@ class ConceptGenericRepository(
             concept_root = "concept_root"
             library_relationship = self.root_class.LIBRARY_REL_LABEL
 
-        library_filter = (
-            "EXISTS { MATCH (library:Library {name: $library_name})-[:%s]->(%s) }"
-            % (library_relationship, concept_root)
-        )
+        library_filter = f"EXISTS {{ MATCH (library:Library {{name: $library_name}})-[:{library_relationship}]->({concept_root}) }}"
 
         if library:
             statements.append(library_filter)
@@ -324,7 +319,6 @@ class ConceptGenericRepository(
         return statement, params
 
     @classmethod
-    # pylint: disable=unused-argument
     def format_filter_sort_keys(cls, key: str):
         """
         Maps a fieldname as provided by the API query (equal to output model) to the same fieldname as defined in the database and/or Cypher query
@@ -349,7 +343,7 @@ class ConceptGenericRepository(
         uid: str,
         *,
         version: str | None = None,
-    ) -> _AggregateRootType | None:
+    ) -> AggregateRootType | None:
         """Single-query read-only lookup by UID.
 
         Uses the Cypher-based find_all path (one DB round-trip) instead of
@@ -371,7 +365,7 @@ class ConceptGenericRepository(
         return_all_versions: bool = False,
         uids: list[str] | None = None,
         **kwargs,
-    ) -> tuple[list[_AggregateRootType], int]:
+    ) -> tuple[list[AggregateRootType], int]:
         """
         Method runs a cypher query to fetch all needed data to create objects of type AggregateRootType.
         In the case of the following repository it will be some Concept aggregates.
@@ -387,7 +381,7 @@ class ConceptGenericRepository(
         :param filter_operator:
         :param total_count:
         :param return_all_versions:
-        :return GenericFilteringReturn[_AggregateRootType]:
+        :return GenericFilteringReturn[AggregateRootType]:
         """
         match_clause = (
             self.generic_match_clause(**kwargs)
@@ -462,12 +456,12 @@ class ConceptGenericRepository(
 
     def _retrieve_concepts_from_cypher_res(
         self, result_array, attribute_names
-    ) -> list[_AggregateRootType]:
+    ) -> list[AggregateRootType]:
         """
         Method maps the result of the cypher query into real aggregate objects.
         :param result_array:
         :param attribute_names:
-        :return Iterable[_AggregateRootType]:
+        :return Iterable[AggregateRootType]:
         """
         concept_ars = []
         for concept in result_array:
@@ -492,7 +486,6 @@ class ConceptGenericRepository(
         page_size: int = 10,
         **kwargs,
     ) -> list[Any]:
-        # pylint: disable=unused-argument
         """
         Method runs a cypher query to fetch possible values for a given field_name, with a limit of page_size.
         It uses generic filtering capability, on top of filtering the field_name with provided search_string.
@@ -512,8 +505,10 @@ class ConceptGenericRepository(
         )
         # Match clause
         match_clause = self.generic_match_clause(**kwargs)
-        if self.specific_header_match_clause():
-            match_clause += self.specific_header_match_clause()
+
+        specific_clause = self.specific_header_match_clause()
+        if specific_clause:
+            match_clause += specific_clause
 
         filter_statements, filter_query_parameters = self.create_query_filter_statement(
             library=library, **kwargs
@@ -562,7 +557,7 @@ class ConceptGenericRepository(
         filter_operator: FilterOperator = FilterOperator.AND,
         **kwargs,
     ) -> list[Any]:
-        match_clause = self.generic_match_clause()
+        match_clause = self.generic_match_clause(**kwargs)
 
         # Set header field name in the `filter_by` dict,
         # which will be used to generate `WHERE toLower(toString(field_name)) CONTAINS ...` clause
@@ -572,7 +567,7 @@ class ConceptGenericRepository(
 
         # This will allow filtering by library (if specified)
         filter_statements, filter_query_parameters = self.create_query_filter_statement(
-            library=library, kwargs=kwargs
+            library=library, **kwargs
         )
 
         match_clause += filter_statements
@@ -612,7 +607,6 @@ class ConceptGenericRepository(
             "is_required_for_activity",
             "is_research_lab",
             "language",
-            "legacy_code",
             "legacy_description",
             "length",
             "long_number",
@@ -636,7 +630,6 @@ class ConceptGenericRepository(
             "sas_field_name",
             "sds_var_name",
             "short_number",
-            "si_unit",
             "significant_digits",
             "sponsor_instruction",
             "synonyms",
@@ -696,9 +689,8 @@ class ConceptGenericRepository(
                 WITH author.username AS author_username
             """
 
-        else:
-            if self.specific_header_match_clause_lite(field_name):
-                match_clause += self.specific_header_match_clause_lite(field_name)
+        elif self.specific_header_match_clause_lite(field_name):
+            match_clause += self.specific_header_match_clause_lite(field_name)
 
         query = CypherQueryBuilder(
             filter_by=FilterDict.model_validate({"elements": filter_by}),
@@ -722,9 +714,7 @@ class ConceptGenericRepository(
         )
 
     @sb_clear_cache(caches=["cache_store_item_by_uid"])
-    def save(
-        self, item: _AggregateRootType, force_new_value_node: bool = False
-    ) -> None:
+    def save(self, item: AggregateRootType, force_new_value_node: bool = False) -> None:
         if item.uid is not None and item.repository_closure_data is None:
             self._create(item)
         elif item.uid is not None and not item.is_deleted:
@@ -847,14 +837,14 @@ class ConceptGenericRepository(
         return len(result) > 0 and len(result[0]) > 0
 
     def _is_new_version_necessary(
-        self, ar: _AggregateRootType, value: VersionValue
+        self, ar: AggregateRootType, value: VersionValue
     ) -> bool:
         return self._has_data_changed(ar, value)
 
     def _get_or_create_value(
         self,
         root: VersionRoot,
-        ar: _AggregateRootType,
+        ar: AggregateRootType,
         force_new_value_node: bool = False,
     ) -> VersionValue:
         if not force_new_value_node:
@@ -884,7 +874,7 @@ class ConceptGenericRepository(
 
     def _maintain_parameters(
         self,
-        versioned_object: _AggregateRootType,
+        versioned_object: AggregateRootType,
         root: VersionRoot,
         value: VersionValue,
     ) -> None:

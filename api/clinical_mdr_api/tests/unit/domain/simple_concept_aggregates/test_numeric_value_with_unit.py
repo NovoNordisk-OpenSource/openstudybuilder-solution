@@ -1,5 +1,5 @@
 import unittest
-from typing import Callable
+from collections.abc import Callable
 from unittest.mock import patch
 
 from clinical_mdr_api.domain_repositories.concepts.unit_definitions.unit_definition_repository import (
@@ -44,8 +44,7 @@ def create_random_numeric_value_vo(unit_definition) -> NumericValueWithUnitVO:
 
 def create_random_numeric_value_ar(
     unit_definition,
-    # pylint: disable=unnecessary-lambda
-    generate_uid_callback: Callable[[], str] = lambda: random_str(),
+    generate_uid_callback: Callable[[], str] = random_str,
     library: str = "Library",
     is_editable: bool = True,
 ) -> NumericValueWithUnitAR:
@@ -69,7 +68,7 @@ class TestNumericValueWithUnit(unittest.TestCase):
         self,
         unit_definition_repository_mock,
     ):
-        # pylint: disable=no-member
+
         # given
         unit_definition_mock = MockObject()
         unit_definition_repository_mock.find_by_uid_2.return_value = (

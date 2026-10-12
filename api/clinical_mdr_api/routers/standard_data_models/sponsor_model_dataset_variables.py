@@ -65,7 +65,6 @@ Possible errors:
         ],
     }
 )
-# pylint: disable=unused-argument
 def get_sponsor_model_dataset_variables(
     request: Request,  # request is actually required by the allow_exports decorator
     sponsor_model_name: Annotated[
@@ -183,7 +182,6 @@ def get_distinct_values_for_header(
         },
     },
 )
-# pylint: disable=unused-argument
 def create(
     sponsor_model: Annotated[
         SponsorModelDatasetVariableInput,

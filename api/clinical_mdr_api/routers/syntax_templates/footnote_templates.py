@@ -125,7 +125,6 @@ Allowed parameters include : filter on fields, sort by field name with sort dire
         ],
     }
 )
-# pylint: disable=unused-argument
 def get_footnote_templates(
     request: Request,  # request is actually required by the allow_exports decorator
     status: Annotated[
@@ -328,7 +327,6 @@ The returned versions are ordered by `start_date` descending (newest entries fir
         ],
     }
 )
-#  pylint: disable=unused-argument
 def get_footnote_template_versions(
     request: Request,  # request is actually required by the allow_exports decorator
     footnote_template_uid: Annotated[str, FootnoteTemplateUID],

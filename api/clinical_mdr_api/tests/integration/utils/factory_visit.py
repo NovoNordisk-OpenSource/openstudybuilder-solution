@@ -29,11 +29,9 @@ DAY = {
     "convertible_unit": True,
     "display_unit": True,
     "master_unit": False,
-    "si_unit": True,
     "us_conventional_unit": True,
     "use_complex_unit_conversion": False,
     "unit_dimension": "TIME_UID",
-    "legacy_code": "unit1-legacy-code",
     "use_molecular_weight": False,
     "conversion_factor_to_master": settings.day_unit_conversion_factor_to_master,
 }
@@ -45,11 +43,9 @@ WEEK = {
     "convertible_unit": True,
     "display_unit": True,
     "master_unit": False,
-    "si_unit": False,
     "us_conventional_unit": True,
     "use_complex_unit_conversion": False,
     "unit_dimension": "TIME_UID",
-    "legacy_code": "unit2-legacy-code",
     "use_molecular_weight": False,
     "conversion_factor_to_master": settings.week_unit_conversion_factor_to_master,
 }

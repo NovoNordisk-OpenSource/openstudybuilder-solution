@@ -4,9 +4,6 @@
 Covers subpart edit-warning / copy-dropdown session API-B1/B2.
 """
 
-# pylint: disable=unused-argument
-# pylint: disable=redefined-outer-name
-
 import pytest
 from fastapi.testclient import TestClient
 

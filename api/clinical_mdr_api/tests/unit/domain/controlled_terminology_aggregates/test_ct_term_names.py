@@ -1,5 +1,5 @@
 import unittest
-from typing import Callable, Sequence
+from collections.abc import Callable, Sequence
 
 from clinical_mdr_api.domains.controlled_terminologies.ct_term_name import (
     CTTermNameAR,
@@ -23,8 +23,7 @@ def create_random_ct_term_name_vo() -> CTTermNameVO:
 
 
 def create_random_ct_term_name_ar(
-    # pylint: disable=unnecessary-lambda
-    generate_uid_callback: Callable[[], str] = lambda: random_str(),
+    generate_uid_callback: Callable[[], str] = random_str,
     library: str = "Library",
     is_editable: bool = True,
 ) -> CTTermNameAR:
@@ -40,7 +39,6 @@ def create_random_ct_term_name_ar(
 
 
 def create_random_ct_term_name_ars(
-    # pylint: disable=unnecessary-lambda
     term_uids: Sequence[str] = [random_str() for i in range(10)],
     library: str = "Library",
     is_editable: bool = True,

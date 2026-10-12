@@ -1,6 +1,7 @@
 import logging
 from collections import defaultdict
-from typing import Any, Iterable, Sequence
+from collections.abc import Iterable, Sequence
+from typing import Any, ClassVar
 
 from clinical_mdr_api.domain_repositories.study_selections.study_soa_repository import (
     SoALayout,
@@ -100,12 +101,12 @@ class SoATestData:
     soa_footnotes: list[StudySoAFootnote]
     soa_preferences: StudySoaPreferences
 
-    EPOCHS = {
+    EPOCHS: ClassVar[dict[str, dict[str, Any]]] = {
         "Screening": {"color_hash": "#80DEEAFF"},
         "Treatment": {"color_hash": "#C5E1A5FF"},
         "Follow-Up": {"color_hash": "#BCAAA4FF"},
     }
-    VISITS = {
+    VISITS: ClassVar[dict[str, dict[str, Any]]] = {
         "V1": {
             "epoch": "Screening",
             "type": "Screening",
@@ -162,7 +163,7 @@ class SoATestData:
 
     # Mind if an activity is scheduled for a visit of a visit-group, then it must be scheduled for all visits of the group.
     # Testing for safeguards on this is not in the scope of the tests of the SoA feature.
-    ACTIVITIES = {
+    ACTIVITIES: ClassVar[dict[str, dict[str, Any]]] = {
         "Randomized": {
             "soa_group": "Subject Related Information",
             "group": "Randomization",
@@ -409,7 +410,7 @@ class SoATestData:
     )
     NUM_OPERATIONAL_SOA_EXPORT_ROWS = 48  # study-activity-instances ⋈ study-visits, plus rows for instances without selected ActivityInstance
 
-    FOOTNOTES = {
+    FOOTNOTES: ClassVar[dict[str, list[dict[str, Any]]]] = {
         "Dilution of hyperreal in ion-exchanged water applied orally": [],
         "Pharmacokinetic dance of molecules within the bloodstream": [
             {"type": SoAItemType.STUDY_VISIT.value, "name": "V4"},
@@ -1223,8 +1224,8 @@ class SoATestData:
 
         soa_footnotes: list[StudySoAFootnote] = []
 
-        for name, refs in footnotes_dict.items():
-            footnote: Footnote = self.footnotes[name]
+        for footnote_name, refs in footnotes_dict.items():
+            footnote: Footnote = self.footnotes[footnote_name]
             referenced_items = []
 
             for ref in refs:
@@ -1246,19 +1247,20 @@ class SoATestData:
                     activity_uid = self.study_activities[
                         activity_name
                     ].study_activity_uid
-                    name = activity_name
+                    item_name = activity_name
 
                     assert (
                         activity_uid,
                         visit_uid,
                     ) in study_activity_schedule_uids, (
-                        f"{typ} '{name}' not scheduled for visit '{visit_name}'"
+                        f"{typ} '{item_name}' not scheduled for visit '{visit_name}'"
                     )
                     uids = {study_activity_schedule_uids[activity_uid, visit_uid]}
-                    name = f"{name} {visit_name}"
+                    name = f"{item_name} {visit_name}"
 
                 else:
-                    assert (name := ref.get("name"))
+                    name = ref.get("name")
+                    assert name
 
                     if typ == SoAItemType.STUDY_EPOCH.value:
                         assert name in self.study_epochs
@@ -1314,11 +1316,11 @@ class SoATestDataMinimal(SoATestData):
     as its constructor does not check for existing data and may fail.
     """
 
-    EPOCHS = {
+    EPOCHS: ClassVar[dict[str, dict[str, Any]]] = {
         "Screening": {"color_hash": "#80DEEAFF"},
         "Treatment": {"color_hash": "#C5E1A5FF"},
     }
-    VISITS = {
+    VISITS: ClassVar[dict[str, dict[str, Any]]] = {
         "V1": {
             "epoch": "Screening",
             "type": "Screening",
@@ -1341,7 +1343,7 @@ class SoATestDataMinimal(SoATestData):
 
     # Mind if an activity is scheduled for a visit of a visit-group, then it must be scheduled for all visits of the group.
     # Testing for safeguards on this is not in the scope of the tests of the SoA feature.
-    ACTIVITIES = {
+    ACTIVITIES: ClassVar[dict[str, dict[str, Any]]] = {
         "Acetaminophen": {
             "soa_group": "Pharmacodynamics",
             "group": "PK Sampling",
@@ -1386,7 +1388,7 @@ class SoATestDataMinimal(SoATestData):
         },
     }
 
-    FOOTNOTES = {
+    FOOTNOTES: ClassVar[dict[str, list[dict[str, Any]]]] = {
         "Some footnote": [
             {
                 "type": SoAItemType.STUDY_ACTIVITY_SCHEDULE.value,

@@ -18,7 +18,7 @@ def _gettext(x):
 
 log = getLogger(__name__)
 
-# pylint: disable=no-member
+
 STYLES = {
     "table": ("SB Table Condensed", WD_STYLE_TYPE.TABLE),
     "header1": ("Table Header lvl1", WD_STYLE_TYPE.PARAGRAPH),

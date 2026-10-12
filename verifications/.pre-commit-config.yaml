@@ -9,18 +9,12 @@ repos:
       - id: isort
   - repo: local
     hooks:
-      - id: pylint
-        name: pylint
-        entry: pipenv
+      - id: ruff
+        name: ruff
+        entry: uv
         language: system
         types: [python]
         require_serial: true
-        args:
-          [
-            "run",
-            "pylint",
-            "-rn", # Only display messages
-            "-sn", # Don't display the score
-          ]
+        args: ["run", "poe", "lint"]
 default_language_version:
   python: python3.14

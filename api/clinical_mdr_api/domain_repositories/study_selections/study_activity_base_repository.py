@@ -1,7 +1,7 @@
 import abc
 import datetime
 from dataclasses import replace
-from typing import Any, Generic, TypeVar
+from typing import Any, TypeVar
 
 from neomodel import db
 
@@ -27,8 +27,8 @@ from common.utils import convert_to_datetime, validate_max_skip_clause
 _AggregateRootType = TypeVar("_AggregateRootType")
 
 
-class StudySelectionActivityBaseRepository(Generic[_AggregateRootType], abc.ABC):
-    _aggregate_root_type: type[_AggregateRootType]
+class StudySelectionActivityBaseRepository[AggregateRootType](abc.ABC):
+    _aggregate_root_type: type[AggregateRootType]
 
     @abc.abstractmethod
     def _create_value_object_from_repository(
@@ -137,12 +137,11 @@ class StudySelectionActivityBaseRepository(Generic[_AggregateRootType], abc.ABC)
             else:
                 query = f"MATCH (sr:StudyRoot {study_uid_statement})-[l:LATEST]->(sv:StudyValue)"
                 query_parameters["uids"] = study_uids
+        elif study_value_version:
+            query = "MATCH (sr:StudyRoot)-[l:HAS_VERSION{status:'RELEASED', version:$study_value_version}]->(sv:StudyValue)"
+            query_parameters["study_value_version"] = study_value_version
         else:
-            if study_value_version:
-                query = "MATCH (sr:StudyRoot)-[l:HAS_VERSION{status:'RELEASED', version:$study_value_version}]->(sv:StudyValue)"
-                query_parameters["study_value_version"] = study_value_version
-            else:
-                query = "MATCH (sr:StudyRoot)-[l:LATEST]->(sv:StudyValue)"
+            query = "MATCH (sr:StudyRoot)-[l:LATEST]->(sv:StudyValue)"
 
         # Add project related filters if applicable
         if project_name is not None or project_number is not None:
@@ -265,7 +264,6 @@ class StudySelectionActivityBaseRepository(Generic[_AggregateRootType], abc.ABC)
 
         return audit_node, last_study_selection_node
 
-    # pylint: disable=unused-argument
     @trace_calls
     def save(
         self,

@@ -1,5 +1,4 @@
-# pylint: disable=invalid-name
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from neomodel import db
 
@@ -39,9 +38,7 @@ class NotificationService:
             notification_type=notification_input.notification_type.value,
             started_at=notification_input.started_at,
             ended_at=notification_input.ended_at,
-            published_at=(
-                datetime.now(timezone.utc) if notification_input.published else None
-            ),
+            published_at=(datetime.now(UTC) if notification_input.published else None),
         )
 
     @db.transaction
@@ -57,9 +54,7 @@ class NotificationService:
             notification_type=notification_input.notification_type.value,
             started_at=notification_input.started_at,
             ended_at=notification_input.ended_at,
-            published_at=(
-                datetime.now(timezone.utc) if notification_input.published else None
-            ),
+            published_at=(datetime.now(UTC) if notification_input.published else None),
         )
 
     @db.transaction

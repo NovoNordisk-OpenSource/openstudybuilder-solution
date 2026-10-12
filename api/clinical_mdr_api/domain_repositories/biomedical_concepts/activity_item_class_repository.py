@@ -1,5 +1,5 @@
 import json
-from typing import Any, NamedTuple
+from typing import Any, ClassVar, NamedTuple
 
 from neomodel import db
 from neomodel.sync_.match import NodeNameResolver, Path
@@ -71,6 +71,36 @@ class ActivityItemClassRepository(ConceptGenericRepository[ActivityItemClassAR])
     value_object_class = ActivityItemClassVO
     return_model = ActivityItemClass
 
+    # Explicit list because `role` and `semtcdt` use dedicated term models
+    # (SimpleRoleTerm / SimpleDataTypeTerm) rather than SimpleTermModel, so the
+    # default return-model-derived wildcard list would silently skip them and
+    # the non_standard_variable map's nested fields. activity_instance_classes
+    # is covered via the synthetic _search_activity_instance_class_names alias
+    # (see specific_alias_clause) since it's a list of a custom model, not a
+    # SimpleTermModel-family type the auto-derive logic recognizes either.
+    wildcard_properties_list: ClassVar[list[str]] = [
+        "uid",
+        "name",
+        "definition",
+        "display_name",
+        "library_name",
+        "nci_concept_id",
+        "nci_concept_name",
+        "status",
+        "version",
+        "change_description",
+        "author_username",
+        "role.name",
+        "data_type.name",
+        "non_standard_variable.code",
+        "non_standard_variable.length",
+        "non_standard_variable.algorithm",
+        "non_standard_variable.derivation_rule",
+        "non_standard_variable.origin_type.name",
+        "non_standard_variable.origin_source.name",
+        "_search_activity_instance_class_names",
+    ]
+
     def generic_alias_clause(self, *, return_all_versions: bool = False, **kwargs):
         """Override to use ActivityItemClass-specific library relationship."""
         version_return = (
@@ -126,6 +156,12 @@ class ActivityItemClassRepository(ConceptGenericRepository[ActivityItemClassAR])
 
     def generic_alias_clause_all_versions(self):
         return self.generic_alias_clause(return_all_versions=True)
+
+    @classmethod
+    def format_filter_sort_keys(cls, key: str) -> str:
+        if key == "semtcdt" or key.startswith("semtcdt."):
+            return "data_type" + key[len("semtcdt") :]
+        return key
 
     def create_query_filter_statement(
         self, library: str | None = None, **kwargs
@@ -280,14 +316,25 @@ class ActivityItemClassRepository(ConceptGenericRepository[ActivityItemClassAR])
                 is_default_linked: rel.is_default_linked
             }] AS activity_instance_classes,
 
+            reduce(s='', x IN [
+                (concept_root)<-[:HAS_ITEM_CLASS]-(:ActivityInstanceClassRoot)-[:LATEST]->(activity_instance_class_search_value:ActivityInstanceClassValue)
+                | activity_instance_class_search_value.name
+            ] | s + ' ' + coalesce(x, '')) AS _search_activity_instance_class_names,
+
             COLLECT {
-                MATCH (concept_value)-[:HAS_ROLE]->(role_context)-[:HAS_SELECTED_TERM]->(role_term:CTTermRoot)-[:HAS_NAME_ROOT]->(role_name_root:CTTermNameRoot)-[:LATEST]->(role_name_value:CTTermNameValue)
+                MATCH (concept_value)-[:HAS_ROLE]->(role_context)-[:HAS_SELECTED_TERM]->
+                    (role_term:CTTermRoot)-[:HAS_NAME_ROOT]->
+                    (role_name_root:CTTermNameRoot)-[:LATEST]->
+                    (role_name_value:CTTermNameValue)
                 MATCH (role_context)-[:HAS_SELECTED_CODELIST]->(role_codelist:CTCodelistRoot)
                 RETURN {uid: role_term.uid, name: role_name_value.name, codelist_uid: role_codelist.uid}
             }[0] AS role,
 
             COLLECT {
-                MATCH (concept_value)-[:HAS_DATA_TYPE]->(data_type_context)-[:HAS_SELECTED_TERM]->(data_type_term:CTTermRoot)-[:HAS_NAME_ROOT]->(data_type_name_root:CTTermNameRoot)-[:LATEST]->(data_type_name_value:CTTermNameValue)
+                MATCH (concept_value)-[:HAS_DATA_TYPE]->(data_type_context)-[:HAS_SELECTED_TERM]->
+                    (data_type_term:CTTermRoot)-[:HAS_NAME_ROOT]->
+                    (data_type_name_root:CTTermNameRoot)-[:LATEST]->
+                    (data_type_name_value:CTTermNameValue)
                 MATCH (data_type_context)-[:HAS_SELECTED_CODELIST]->(data_type_codelist:CTCodelistRoot)
                 RETURN {uid: data_type_term.uid, name: data_type_name_value.name, codelist_uid: data_type_codelist.uid}
             }[0] AS data_type,
@@ -313,17 +360,121 @@ class ActivityItemClassRepository(ConceptGenericRepository[ActivityItemClassAR])
                 is_cdisc_defined: concept_value.is_cdisc_defined,
                 derivation_rule: concept_value.derivation_rule,
                 origin_type: COLLECT {
-                    MATCH (concept_value)-[:DEFAULT_ORIGIN_TYPE]->(ot_context:CTTermContext)-[:HAS_SELECTED_TERM]->(ot_term:CTTermRoot)-[:HAS_NAME_ROOT]->(:CTTermNameRoot)-[:LATEST]->(ot_name_value:CTTermNameValue)
+                    MATCH (concept_value)-[:DEFAULT_ORIGIN_TYPE]->(ot_context:CTTermContext)-[:HAS_SELECTED_TERM]->
+                        (ot_term:CTTermRoot)-[:HAS_NAME_ROOT]->(:CTTermNameRoot)-[:LATEST]->
+                        (ot_name_value:CTTermNameValue)
                     MATCH (ot_context)-[:HAS_SELECTED_CODELIST]->(ot_codelist:CTCodelistRoot)
                     RETURN {uid: ot_term.uid, name: ot_name_value.name, codelist_uid: ot_codelist.uid}
                 }[0],
                 origin_source: COLLECT {
-                    MATCH (concept_value)-[:DEFAULT_ORIGIN_SOURCE]->(os_context:CTTermContext)-[:HAS_SELECTED_TERM]->(os_term:CTTermRoot)-[:HAS_NAME_ROOT]->(:CTTermNameRoot)-[:LATEST]->(os_name_value:CTTermNameValue)
+                    MATCH (concept_value)-[:DEFAULT_ORIGIN_SOURCE]->(os_context:CTTermContext)-[:HAS_SELECTED_TERM]->
+                        (os_term:CTTermRoot)-[:HAS_NAME_ROOT]->(:CTTermNameRoot)-[:LATEST]->
+                        (os_name_value:CTTermNameValue)
                     MATCH (os_context)-[:HAS_SELECTED_CODELIST]->(os_codelist:CTCodelistRoot)
                     RETURN {uid: os_term.uid, name: os_name_value.name, codelist_uid: os_codelist.uid}
+                }[0],
+                nsvxmldt: COLLECT {
+                    MATCH (concept_value)-[:HAS_DATA_TYPE]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(dt_root:CTTermRoot)
+                    MATCH path = (dt_root)-[:IS_SPECIALIZATION_OF*0..20]->(ancestor:CTTermRoot)
+                    MATCH (nsvxmldt_cl:CTCodelistRoot)-[:HAS_ATTRIBUTES_ROOT]->(:CTCodelistAttributesRoot)-[:LATEST]->(:CTCodelistAttributesValue {submission_value: 'NSVXMLDT'})
+                    MATCH (nsvxmldt_cl)-[nsvxmldt_ht:HAS_TERM]->(nsvxmldt_cl_term:CTCodelistTerm)-[:HAS_TERM_ROOT]->(ancestor)
+                    WHERE nsvxmldt_ht.end_date IS NULL
+                    WITH nsvxmldt_cl_term, length(path) AS dist
+                    ORDER BY dist ASC
+                    LIMIT 1
+                    RETURN nsvxmldt_cl_term.submission_value
                 }[0]
             } ELSE null END AS non_standard_variable
         """
+
+    def specific_header_match_clause_lite(self, field_name: str) -> str | None:
+        """This is a lightweight version of the header match clause.
+        It should fetch only the required field, without supporting wildcard filtering.
+
+        Covers the dotted fields from `wildcard_properties_list` that the generic
+        lite path (`concept_value.{field_name}`) cannot resolve directly.
+        """
+        if field_name == "display_name":
+            return """
+                WITH concept_value.display_name AS display_name
+            """
+        if field_name == "valid_codelists.submission_value":
+            return """
+                WITH [
+                    (concept_root)-[:HAS_VALID_CODELIST_FOR_ITEMS]->(valid_codelist:CTCodelistRoot) |
+                    head([
+                        (valid_codelist)-[:HAS_ATTRIBUTES_ROOT]->(:CTCodelistAttributesRoot)-[:LATEST]->(valid_codelist_attr_value:CTCodelistAttributesValue)
+                        | valid_codelist_attr_value.submission_value
+                    ])
+                ] AS valid_codelists_submission_value
+            """
+        if field_name == "role.name":
+            return """
+                WITH concept_value,
+                COLLECT {
+                    MATCH (concept_value)-[:HAS_ROLE]->(role_context)-[:HAS_SELECTED_TERM]->(role_term:CTTermRoot)
+                    -[:HAS_NAME_ROOT]->(role_name_root:CTTermNameRoot)-[:LATEST]->(role_name_value:CTTermNameValue)
+                    RETURN role_name_value.name
+                }[0] AS role_name
+            """
+        if field_name in ("data_type.name", "semtcdt.name"):
+            alias = field_name.replace(".", "_")
+            return f"""
+                WITH concept_value,
+                COLLECT {{
+                    MATCH (concept_value)-[:HAS_DATA_TYPE]->(data_type_context)-[:HAS_SELECTED_TERM]->(data_type_term:CTTermRoot)
+                    MATCH (data_type_term)-[:HAS_NAME_ROOT]->(data_type_name_root:CTTermNameRoot)-[:LATEST]->(data_type_name_value:CTTermNameValue)
+                    RETURN data_type_name_value.name
+                }}[0] AS {alias}
+            """
+        if field_name.startswith("non_standard_variable."):
+            nsv_field = field_name[len("non_standard_variable.") :]
+            alias = "non_standard_variable_" + nsv_field.replace(".", "_")
+            if nsv_field in (
+                "code",
+                "is_multiple",
+                "length",
+                "algorithm",
+                "is_cdisc_defined",
+                "derivation_rule",
+            ):
+                return f"""
+                    WITH concept_value.{nsv_field} AS {alias}
+                """
+            if nsv_field == "origin_type.name":
+                return f"""
+                    WITH concept_value,
+                    COLLECT {{
+                        MATCH (concept_value)-[:DEFAULT_ORIGIN_TYPE]->(ot_context:CTTermContext)-[:HAS_SELECTED_TERM]->(ot_term:CTTermRoot)
+                        MATCH (ot_term)-[:HAS_NAME_ROOT]->(:CTTermNameRoot)-[:LATEST]->(ot_name_value:CTTermNameValue)
+                        RETURN ot_name_value.name
+                    }}[0] AS {alias}
+                """
+            if nsv_field == "origin_source.name":
+                return f"""
+                    WITH concept_value,
+                    COLLECT {{
+                        MATCH (concept_value)-[:DEFAULT_ORIGIN_SOURCE]->(os_context:CTTermContext)-[:HAS_SELECTED_TERM]->(os_term:CTTermRoot)
+                        MATCH (os_term)-[:HAS_NAME_ROOT]->(:CTTermNameRoot)-[:LATEST]->(os_name_value:CTTermNameValue)
+                        RETURN os_name_value.name
+                    }}[0] AS {alias}
+                """
+            if nsv_field == "nsvxmldt":
+                return f"""
+                    WITH concept_value,
+                    COLLECT {{
+                        MATCH (concept_value)-[:HAS_DATA_TYPE]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(dt_root:CTTermRoot)
+                        MATCH path = (dt_root)-[:IS_SPECIALIZATION_OF*0..20]->(ancestor:CTTermRoot)
+                        MATCH (nsvxmldt_cl:CTCodelistRoot)-[:HAS_ATTRIBUTES_ROOT]->(:CTCodelistAttributesRoot)-[:LATEST]->(:CTCodelistAttributesValue {{submission_value: 'NSVXMLDT'}})
+                        MATCH (nsvxmldt_cl)-[nsvxmldt_ht:HAS_TERM]->(nsvxmldt_cl_term:CTCodelistTerm)-[:HAS_TERM_ROOT]->(ancestor)
+                        WHERE nsvxmldt_ht.end_date IS NULL
+                        WITH nsvxmldt_cl_term, length(path) AS dist
+                        ORDER BY dist ASC
+                        LIMIT 1
+                        RETURN nsvxmldt_cl_term.submission_value
+                    }}[0] AS {alias}
+                """
+        return None
 
     def _create_new_value_node(self, ar: ActivityItemClassAR) -> ActivityItemClassValue:
         """Override to handle ActivityItemClass-specific value node creation."""
@@ -673,6 +824,7 @@ class ActivityItemClassRepository(ConceptGenericRepository[ActivityItemClassAR])
                 if origin_source_dict
                 else None
             ),
+            nsvxmldt=data.get("nsvxmldt"),
         )
 
     def generate_uid(self) -> str:
@@ -706,7 +858,9 @@ class ActivityItemClassRepository(ConceptGenericRepository[ActivityItemClassAR])
 
         variable_class_uids = [node.uid for node in root.maps_variable_class.all()]
         valid_codelists = self._valid_codelists_for_root(root.uid)
-        non_standard_variable = self._non_standard_variable_vo_from_value_node(value)
+        non_standard_variable = self._non_standard_variable_vo_from_value_node(
+            value, data_type_term_uid=data_type.uid
+        )
         return ActivityItemClassAR.from_repository_values(
             uid=root.uid,
             activity_item_class_vo=ActivityItemClassVO.from_repository_values(
@@ -759,9 +913,35 @@ class ActivityItemClassRepository(ConceptGenericRepository[ActivityItemClassAR])
         )
         return [CodelistItem(uid=row[0], submission_value=row[1]) for row in results]
 
-    @staticmethod
+    def _nsv_xml_data_type_for_term_uid(self, term_uid: str) -> str | None:
+        # Memoized per repository instance: building audit-trail/version-history
+        # results calls this once per HAS_VERSION row, and the data_type term_uid
+        # is typically unchanged across most historical versions of an item, so
+        # caching avoids a redundant round-trip query for each of those rows.
+        cache = self.__dict__.setdefault("_nsv_xml_data_type_cache", {})
+        if term_uid in cache:
+            return cache[term_uid]
+        results, _ = db.cypher_query(
+            """
+            MATCH (dt_root:CTTermRoot {uid: $uid})
+            MATCH path = (dt_root)-[:IS_SPECIALIZATION_OF*0..20]->(ancestor:CTTermRoot)
+            MATCH (nsvxmldt_cl:CTCodelistRoot)-[:HAS_ATTRIBUTES_ROOT]->(:CTCodelistAttributesRoot)-[:LATEST]->(:CTCodelistAttributesValue {submission_value: 'NSVXMLDT'})
+            MATCH (nsvxmldt_cl)-[nsvxmldt_ht:HAS_TERM]->(nsvxmldt_cl_term:CTCodelistTerm)-[:HAS_TERM_ROOT]->(ancestor)
+            WHERE nsvxmldt_ht.end_date IS NULL
+            RETURN nsvxmldt_cl_term.submission_value AS nsv_xml_data_type, length(path) AS dist
+            ORDER BY dist ASC
+            LIMIT 1
+            """,
+            {"uid": term_uid},
+        )
+        value = results[0][0] if results else None
+        cache[term_uid] = value
+        return value
+
     def _non_standard_variable_vo_from_value_node(
+        self,
         value: ActivityItemClassValue,
+        data_type_term_uid: str | None = None,
     ) -> NonStandardVariableVO | None:
         if not isinstance(value, NonStandardVariableValue):
             return None
@@ -786,6 +966,11 @@ class ActivityItemClassRepository(ConceptGenericRepository[ActivityItemClassAR])
             derivation_rule=value.derivation_rule,
             origin_type=_term_item_from_context(value.origin_type),
             origin_source=_term_item_from_context(value.origin_source),
+            nsvxmldt=(
+                self._nsv_xml_data_type_for_term_uid(data_type_term_uid)
+                if data_type_term_uid
+                else None
+            ),
         )
 
     def check_exists_by_name(self, name: str) -> bool:
@@ -833,8 +1018,8 @@ class ActivityItemClassRepository(ConceptGenericRepository[ActivityItemClassAR])
     def patch_mappings(self, uid: str, variable_class_uids: list[str]) -> None:
         root = ActivityItemClassRoot.nodes.get(uid=uid)
         root.maps_variable_class.disconnect_all()
-        for variable_class in variable_class_uids:
-            variable_class = VariableClass.nodes.get(uid=variable_class)
+        for variable_class_uid in variable_class_uids:
+            variable_class = VariableClass.nodes.get(uid=variable_class_uid)
             root.maps_variable_class.connect(variable_class)
 
     @sb_clear_cache(caches=["cache_store_item_by_uid"])
@@ -1022,7 +1207,7 @@ class ActivityItemClassRepository(ConceptGenericRepository[ActivityItemClassAR])
         )
         # Return a dictionary of codelist uids and filtered terms
         # Note that for now, this model does not cater for filtering down to a subset of terms
-        return {uid: None for uid in codelist_uids}
+        return dict.fromkeys(codelist_uids)
 
     def get_activity_instance_classes_using_item(
         self,

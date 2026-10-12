@@ -1,9 +1,9 @@
 import logging
 import os
 import urllib.parse
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import Enum
-from typing import Annotated, Any, Generic, Self, TypeVar
+from typing import Annotated, Any, Self
 
 from fastapi import Query, Request
 from neomodel import db
@@ -14,15 +14,13 @@ from common.config import settings
 from common.exceptions import ValidationException
 from common.utils import filter_sort_valid_keys_re, get_db_result_as_dict
 
-T = TypeVar("T")
-
 
 class SortByType(Enum):
     STRING = "string"
     NUMBER = "number"
 
 
-class PaginatedResponse(BaseModel, Generic[T]):
+class PaginatedResponse[T](BaseModel):
     """
     Paginated response model
     """
@@ -68,7 +66,6 @@ class PaginatedResponse(BaseModel, Generic[T]):
         prev_link = f"{path}?{query_params}sort_by={sort_by}&sort_order={sort_order}&page_size={page_size}&page_number={prev_page_number}"
         next_link = f"{path}?{query_params}sort_by={sort_by}&sort_order={sort_order}&page_size={page_size}&page_number={page_number + 1}"
 
-        # pylint: disable=kwarg-superseded-by-positional-arg
         return cls(
             self=urlencode_link(self_link),
             prev=urlencode_link(prev_link),
@@ -171,7 +168,7 @@ def db_sort_clause(
 
 def get_api_version() -> str:
     version_path = os.path.join("./extensions", "apiVersion")
-    with open(version_path, "r", encoding="utf-8") as file:
+    with open(version_path, encoding="utf-8") as file:
         return file.read().strip()
 
 
@@ -200,11 +197,11 @@ class Logger:
     def format_message(cls, msg: str, *args, level: str = "INFO") -> str:
         try:
             formatted_msg = msg % args if args else msg
-        # fmt: off
-        except (TypeError, ValueError):
+            # fmt: off
+        except TypeError, ValueError:
             # fmt: on
             formatted_msg = f"{msg} [args: {args}]"
-        return f"[{datetime.now(timezone.utc)}] {level} {formatted_msg}"
+        return f"[{datetime.now(UTC)}] {level} {formatted_msg}"
 
     def clear(self) -> None:
         self.full_log.clear()

@@ -88,7 +88,7 @@ class SponsorModelDatasetVariable(SponsorModelBase):
     def from_sponsor_model_dataset_variable_ar(
         cls,
         sponsor_model_dataset_variable_ar: SponsorModelDatasetVariableAR,
-    ) -> "SponsorModelDatasetVariable":
+    ) -> SponsorModelDatasetVariable:
         vo = sponsor_model_dataset_variable_ar.sponsor_model_dataset_variable_vo
         dataset = None
         if vo.dataset_uid is not None:

@@ -1,4 +1,4 @@
-@REQ_ID:XXX
+@REQ_ID:1074260
 Feature: Studies - Define Study - Study Structure and Study Activities - E2E verification
 
     Background: User is logged in and study has been selected

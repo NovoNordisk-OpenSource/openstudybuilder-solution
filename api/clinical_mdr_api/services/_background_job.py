@@ -26,9 +26,10 @@ import inspect
 import json
 import logging
 import traceback
+from collections.abc import Callable
 from contextvars import ContextVar
-from datetime import datetime, timezone
-from typing import Any, Callable, TypeVar
+from datetime import UTC, datetime
+from typing import Any, TypeVar
 
 from fastapi import BackgroundTasks
 from neomodel import db
@@ -60,7 +61,7 @@ def job_log(message: str, level: str = "INFO") -> None:
     buffer = _CURRENT_JOB_LOG.get()
     if buffer is None:
         return
-    line = f"{datetime.now(timezone.utc).isoformat()} {level} {message}"
+    line = f"{datetime.now(UTC).isoformat()} {level} {message}"
     buffer.append(line)
 
 
@@ -142,7 +143,7 @@ def _run_job(
         except MDRApiBaseException as exc:
             job.mark_failed(_serialize_exception(exc), _format_log_buffer(buffer))
             repo.update(job)
-        except Exception as exc:  # pylint: disable=broad-except
+        except Exception as exc:
             log.exception("Background job %s (%s) failed", job.uid, job.job_name)
             job.mark_failed(_serialize_exception(exc), _format_log_buffer(buffer))
             repo.update(job)

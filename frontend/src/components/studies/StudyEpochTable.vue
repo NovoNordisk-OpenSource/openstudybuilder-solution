@@ -265,6 +265,11 @@ const headers = computed(() => [
     ? lagTimeFields.map((field) => ({
         title: t(`StudyEpochForm.${field}`),
         key: field,
+        historyFilter: (_value, item) => formatLagTime(item, field),
+        // The audit trail reports a unit change as ae_lag_time_unit_name, so
+        // this cell must watch that field too or a days -> weeks edit looks
+        // unchanged.
+        changeKeys: [`${field}_unit_name`],
       }))
     : []),
   { title: t('StudyEpochTable.colour'), key: 'color_hash' },

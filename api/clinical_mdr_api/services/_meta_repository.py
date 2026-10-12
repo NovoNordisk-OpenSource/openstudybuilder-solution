@@ -1,4 +1,5 @@
-from typing import Any, Callable, Mapping, MutableMapping
+from collections.abc import Callable, Mapping, MutableMapping
+from typing import Any
 
 from clinical_mdr_api.domain_repositories.biomedical_concepts.activity_instance_class_repository import (
     ActivityInstanceClassRepository,
@@ -101,6 +102,9 @@ from clinical_mdr_api.domain_repositories.controlled_terminologies.ct_term_attri
 )
 from clinical_mdr_api.domain_repositories.controlled_terminologies.ct_term_name_repository import (
     CTTermNameRepository,
+)
+from clinical_mdr_api.domain_repositories.data_supplier_rules.data_supplier_rule_repository import (
+    DataSupplierRuleRepository,
 )
 from clinical_mdr_api.domain_repositories.data_suppliers.data_supplier_repository import (
     DataSupplierRepository,
@@ -302,7 +306,6 @@ from clinical_mdr_api.domain_repositories.syntax_templates.timeframe_template_re
 from clinical_mdr_api.domain_repositories.user_repository import UserRepository
 
 
-# pylint: disable=too-many-public-methods
 class MetaRepository:
     """
     Utility class to provide repository instances and simplify lifecycle management (close) for them.
@@ -382,6 +385,10 @@ class MetaRepository:
     @property
     def data_supplier_repository(self) -> DataSupplierRepository:
         return self.get_repository_instance(DataSupplierRepository)
+
+    @property
+    def data_supplier_rule_repository(self) -> DataSupplierRuleRepository:
+        return self.get_repository_instance(DataSupplierRuleRepository)
 
     @property
     def data_model_ig_repository(self) -> DataModelIGRepository:

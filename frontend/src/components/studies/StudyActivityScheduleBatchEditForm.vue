@@ -66,10 +66,6 @@ const props = defineProps({
     type: Array,
     default: () => [],
   },
-  currentSelectionMatrix: {
-    type: Object,
-    default: undefined,
-  },
   studyVisits: {
     type: Array,
     default: null,
@@ -122,6 +118,23 @@ function close() {
 function unselectItem(item) {
   emit('remove', item)
 }
+
+// Sends the full desired set of visit uids for all selected activities in one
+// entry - the API diffs this per activity against its current schedules and
+// creates/deletes only what changed.
+function buildScheduleEntry(activityUids) {
+  return {
+    method: 'POST',
+    object: 'StudyActivitySchedule',
+    content: {
+      study_activity_uids: activityUids,
+      study_visit_uids: selectedVisitsGrouped.value.flatMap((visits) =>
+        visits.map((visit) => visit.uid)
+      ),
+    },
+  }
+}
+
 async function submit() {
   const { valid } = await observer.value.validate()
   if (!valid) {
@@ -131,47 +144,22 @@ async function submit() {
   notificationHub.clearErrors()
 
   baseForm.value.loading = true
-  const data = []
-  for (const item of props.selection) {
-    // First: delete any existing study activity schedule for the given selection
-    for (const cell of Object.values(
-      props.currentSelectionMatrix[item.study_activity_uid]
-    )) {
-      if (cell.uid) {
-        cell.value = false
-        const uids = Array.isArray(cell.uid) ? cell.uid : [cell.uid]
-        for (const uid of uids) {
-          data.push({
-            method: 'DELETE',
-            object: 'StudyActivitySchedule',
-            content: { uid },
-          })
-        }
-      }
-    }
-    // Second: create new activity schedules
-    for (const visits of selectedVisitsGrouped.value) {
-      for (const visit of visits) {
-        data.push({
-          method: 'POST',
-          object: 'StudyActivitySchedule',
-          content: {
-            study_activity_uid: item.study_activity_uid,
-            study_visit_uid: visit.uid,
-          },
-        })
-      }
-    }
-    data.push({
-      method: 'PATCH',
-      object: 'StudyActivity',
-      content: {
-        study_activity_uid: item.study_activity_uid,
+  const data = [
+    buildScheduleEntry(props.selection.map((item) => item.study_activity_uid)),
+  ]
+  if (selectedFlowchartGroup.value) {
+    for (const item of props.selection) {
+      data.push({
+        method: 'PATCH',
+        object: 'StudyActivity',
         content: {
-          soa_group_term_uid: selectedFlowchartGroup.value?.term_uid,
+          study_activity_uid: item.study_activity_uid,
+          content: {
+            soa_group_term_uid: selectedFlowchartGroup.value.term_uid,
+          },
         },
-      },
-    })
+      })
+    }
   }
   try {
     const resp = await study.studyActivitySoaEditsBatchOperations(

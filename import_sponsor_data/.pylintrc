@@ -32,7 +32,7 @@ disable=
     R1735,  # use-dict-literal
     R0916,  # too-many-boolean-expressions
     
-    # Import errors - often false positives in pipenv
+    # Import errors - often false positives with local package layouts
     E0401,  # import-error
     
     # Naming - established patterns in codebase

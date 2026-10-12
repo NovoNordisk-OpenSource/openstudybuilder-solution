@@ -68,7 +68,7 @@ def serialize_relationship_minimal(
     err: str | None = None
     try:
         rel.lookup_node_class()
-    except Exception as exc:  # pylint: disable=broad-exception-caught
+    except Exception as exc:
         err = f"{type(exc).__name__}: {exc}"
 
     definition = rel.definition

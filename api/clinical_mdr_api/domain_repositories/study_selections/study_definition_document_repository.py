@@ -131,7 +131,11 @@ class StudyDefinitionDocumentRepository:
                 }
             )
             update_query += """
-            CREATE (new_sdd:StudyDefinitionDocument:StudySelection {uid: $study_definition_document, protocol_header_major_version: $protocol_header_major_version, protocol_header_minor_version: $protocol_header_minor_version})
+            CREATE (new_sdd:StudyDefinitionDocument:StudySelection {
+                uid: $study_definition_document,
+                protocol_header_major_version: $protocol_header_major_version,
+                protocol_header_minor_version: $protocol_header_minor_version
+            })
             WITH new_sdd, study_value
             OPTIONAL MATCH (old_sdd:StudyDefinitionDocument {uid: $study_definition_document})<-[old_rel:HAS_STUDY_DEFINITION_DOCUMENT]-(study_value)
             WHERE NOT (old_sdd)-[:BEFORE]-(:StudyAction)

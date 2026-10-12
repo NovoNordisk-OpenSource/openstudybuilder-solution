@@ -43,14 +43,16 @@ from clinical_mdr_api.tests.integration.utils.data_library import (
 
 class TestStudyObjectiveUpversion(unittest.TestCase):
     TPR_LABEL = "ParameterName"
-    term_roots: list[Any] = []
-    term_values: list[Any] = []
+    term_roots: list[Any]
+    term_values: list[Any]
     lib: Library
 
     def setUp(self):
         inject_and_clear_db("templateretire")
         db.cypher_query(STARTUP_PARAMETERS_CYPHER)
         db.cypher_query(STARTUP_STUDY_CYPHER)
+        self.term_roots = []
+        self.term_values = []
 
         self.lib = Library(name="LibraryName", is_editable=True)
         self.lib.save()

@@ -2,13 +2,6 @@
 Tests for /studies/{study_uid}/study-compounds endpoints
 """
 
-# pylint: disable=unused-argument
-# pylint: disable=redefined-outer-name
-# pylint: disable=too-many-arguments
-
-# pytest fixture functions have other fixture functions as arguments,
-# which pylint interprets as unused arguments
-
 import copy
 import json
 import logging
@@ -482,13 +475,15 @@ def test_get_study_compounds_headers(api_client, field_name, expected_returned_v
     assert_response_status_code(response, 200)
     assert len(res) >= len(expected_returned_values)
 
-    for val in expected_returned_values:
-        val = val.replace("{study_id}", study.uid)
-        val = val.replace("{dispenser}", ct_term_dispenser.sponsor_preferred_name)
-        val = val.replace(
+    for expected_value_template in expected_returned_values:
+        expected_value = expected_value_template.replace("{study_id}", study.uid)
+        expected_value = expected_value.replace(
+            "{dispenser}", ct_term_dispenser.sponsor_preferred_name
+        )
+        expected_value = expected_value.replace(
             "{delivery_device}", ct_term_delivery_device.sponsor_preferred_name
         )
-        assert val in res
+        assert expected_value in res
 
 
 @pytest.mark.parametrize(
@@ -509,13 +504,15 @@ def test_get_study_compounds_headers_for_all_studies(
     assert_response_status_code(response, 200)
     assert len(res) >= len(expected_returned_values)
 
-    for val in expected_returned_values:
-        val = val.replace("{study_id}", study.uid)
-        val = val.replace("{dispenser}", ct_term_dispenser.sponsor_preferred_name)
-        val = val.replace(
+    for expected_value_template in expected_returned_values:
+        expected_value = expected_value_template.replace("{study_id}", study.uid)
+        expected_value = expected_value.replace(
+            "{dispenser}", ct_term_dispenser.sponsor_preferred_name
+        )
+        expected_value = expected_value.replace(
             "{delivery_device}", ct_term_delivery_device.sponsor_preferred_name
         )
-        assert val in res
+        assert expected_value in res
 
 
 def test_change_order_of_study_compound(api_client):

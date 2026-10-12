@@ -214,8 +214,8 @@ export default {
   computed: {
     historyTitle() {
       if (this.selectedItem) {
-        return this.$t('CompoundAliasTable.history_title', {
-          compoundAlias: this.selectedItem.uid,
+        return this.$t('ActiveSubstanceTable.history_title', {
+          activeSubstance: this.selectedItem.uid,
         })
       }
       return ''
@@ -335,8 +335,12 @@ export default {
       return result
     },
     async fetchGlobalAuditTrail(options) {
-      const resp = await activeSubstances.getAllVersions(options)
-      return this.transformItems(resp.data.items)
+      const params = filteringParameters.prepareParameters(options)
+      const resp = await activeSubstances.getAllVersions(params)
+      return {
+        items: this.transformItems(resp.data.items),
+        total: resp.data.total,
+      }
     },
   },
 }

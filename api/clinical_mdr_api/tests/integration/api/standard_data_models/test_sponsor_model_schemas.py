@@ -2,9 +2,6 @@
 Tests for /standards/sponsor-models/schema endpoints
 """
 
-# pylint: disable=unused-argument
-# pylint: disable=redefined-outer-name
-
 import logging
 
 import pytest

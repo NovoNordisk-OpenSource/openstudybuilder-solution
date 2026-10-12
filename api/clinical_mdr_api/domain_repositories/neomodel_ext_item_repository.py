@@ -20,7 +20,6 @@ from clinical_mdr_api.repositories._utils import (
 )
 from common.utils import convert_to_datetime, validate_page_number_and_page_size
 
-# pylint: disable=invalid-name
 _StandardsReturnType = TypeVar("_StandardsReturnType", bound=BaseModel)
 
 
@@ -43,10 +42,8 @@ class NeomodelExtBaseRepository:
     def extend_distinct_headers_query(
         self,
         nodeset: NodeSet,
-        field_name: str,  # pylint: disable=unused-argument
-        filter_by: (  # pylint: disable=unused-argument
-            dict[str, dict[str, Any]] | None
-        ) = None,
+        field_name: str,
+        filter_by: dict[str, dict[str, Any]] | None = None,
     ) -> NodeSet:
         """
         Method to extend the query built for distinct header retrieval.
@@ -156,7 +153,6 @@ class NeomodelExtBaseRepository:
             len_query = self.root_class.nodes.filter(*q_filters)
             all_nodes = len(len_query)
 
-        # pylint: disable=possibly-used-before-assignment
         return all_data_model, all_nodes if total_count else 0
 
     def find_by_uid(self, uid: str) -> _StandardsReturnType | None:

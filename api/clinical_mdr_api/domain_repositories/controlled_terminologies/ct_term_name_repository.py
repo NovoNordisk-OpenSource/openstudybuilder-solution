@@ -76,7 +76,10 @@ class CTTermNameRepository(  # type: ignore[misc]
         """
         query = """
             MATCH (term_root:CTTermRoot {uid: $term_uid})<-[:HAS_TERM_ROOT]-(:CTCodelistTerm)<-[ht:HAS_TERM WHERE ht.end_date IS NULL]-(clr:CTCodelistRoot)
-            MATCH (clr)-[clht:HAS_TERM WHERE clht.end_date IS NULL]->(:CTCodelistTerm)-[:HAS_TERM_ROOT]->(cttr:CTTermRoot WHERE cttr.uid <> $term_uid)-[:HAS_NAME_ROOT]->(cttnr:CTTermNameRoot)-[hnv:HAS_VERSION WHERE hnv.end_date IS NULL AND hnv.status <> "Retired"]->(cttnv:CTTermNameValue {name: $term_name})
+            MATCH (clr)-[clht:HAS_TERM WHERE clht.end_date IS NULL]->(:CTCodelistTerm)-[:HAS_TERM_ROOT]->
+                (cttr:CTTermRoot WHERE cttr.uid <> $term_uid)-[:HAS_NAME_ROOT]->(cttnr:CTTermNameRoot)
+                -[hnv:HAS_VERSION WHERE hnv.end_date IS NULL AND hnv.status <> "Retired"]->
+                (cttnv:CTTermNameValue {name: $term_name})
             RETURN cttnv
             """
         result, _ = db.cypher_query(
@@ -252,6 +255,7 @@ class CTTermNameRepository(  # type: ignore[misc]
                 required_level=value.required_level,
                 cardinality=value.cardinality,
                 notes=value.notes,
+                short_code=value.short_code,
                 osb_field_name=_kwargs["ctterm_names"].get("osb_field_name"),
                 osb_page_reference=_kwargs["ctterm_names"].get("osb_page_reference"),
                 semantic_data_type_uid=_kwargs["ctterm_names"].get(
@@ -355,6 +359,7 @@ class CTTermNameRepository(  # type: ignore[misc]
                 required_level=value.required_level,
                 cardinality=value.cardinality,
                 notes=value.notes,
+                short_code=value.short_code,
                 **ts_data,
             ),
             library=LibraryVO.from_input_values_2(
@@ -378,6 +383,7 @@ class CTTermNameRepository(  # type: ignore[misc]
                 required_level=ar.ct_term_vo.required_level,
                 cardinality=ar.ct_term_vo.cardinality,
                 notes=ar.ct_term_vo.notes,
+                short_code=ar.ct_term_vo.short_code,
             ):
                 if not self._has_data_changed(ar, itm):
                     return itm
@@ -398,6 +404,7 @@ class CTTermNameRepository(  # type: ignore[misc]
             required_level=ar.ct_term_vo.required_level,
             cardinality=ar.ct_term_vo.cardinality,
             notes=ar.ct_term_vo.notes,
+            short_code=ar.ct_term_vo.short_code,
         )
         self._db_save_node(new_value)
         return new_value
@@ -414,6 +421,7 @@ class CTTermNameRepository(  # type: ignore[misc]
             vo.required_level != value.required_level
             or vo.cardinality != value.cardinality
             or vo.notes != value.notes
+            or vo.short_code != value.short_code
         ):
             return True
 
@@ -453,6 +461,7 @@ class CTTermNameRepository(  # type: ignore[misc]
             required_level=item.ct_term_vo.required_level,
             cardinality=item.ct_term_vo.cardinality,
             notes=item.ct_term_vo.notes,
+            short_code=item.ct_term_vo.short_code,
         )
         self._db_save_node(root)
 
@@ -502,7 +511,18 @@ class CTTermNameRepository(  # type: ignore[misc]
         # Wire TS parameter relationships
         vo = versioned_object.ct_term_vo
 
-        if not hasattr(vo, "osb_field_name") or vo.osb_field_name is None:
+        # `osb_field_name` may legitimately be absent — e.g. a "custom" TS
+        # parameter that only carries a semantic data type. Only skip wiring
+        # entirely when there is nothing at all to wire.
+        if not any(
+            (
+                vo.osb_field_name,
+                vo.semantic_data_type_uid,
+                vo.response_codelist_uid,
+                vo.response_dictionary_uids,
+                vo.valid_null_flavor_term_uids,
+            )
+        ):
             return
 
         # If the value node already has a RELATED_STUDY_FIELD_SELECTION relationship,
@@ -527,17 +547,23 @@ class CTTermNameRepository(  # type: ignore[misc]
             )
             # MERGE on the (MSF, HAS_SEMANTIC_DATA_TYPE, ctx) pattern so that an
             # MSF with the same osb_field_name but a different (or absent) SDT
-            # is not reused.
+            # is not reused. `osb_field_name` may be null (a TS parameter with
+            # only a semantic data type) — matched via IS NULL, since a Cypher
+            # property-map match against a null parameter never matches.
             result_msf, _ = db.cypher_query(
                 """
                 MATCH (ctx:CTTermContext) WHERE elementId(ctx) = $ctx_eid
-                OPTIONAL MATCH (existing:MetaStudyField {osb_field_name: $name})
-                    -[:HAS_SEMANTIC_DATA_TYPE]->(ctx)
+                OPTIONAL MATCH (existing:MetaStudyField)-[:HAS_SEMANTIC_DATA_TYPE]->(ctx)
+                WHERE existing.osb_field_name = $name
+                   OR ($name IS NULL AND existing.osb_field_name IS NULL)
                 FOREACH (_ IN CASE WHEN existing IS NULL THEN [1] ELSE [] END |
-                    CREATE (:MetaStudyField {osb_field_name: $name})-[:HAS_SEMANTIC_DATA_TYPE]->(ctx)
+                    CREATE (new_msf:MetaStudyField)-[:HAS_SEMANTIC_DATA_TYPE]->(ctx)
+                    SET new_msf.osb_field_name = $name
                 )
                 WITH ctx, $name AS name, $page_ref AS page_ref
-                MATCH (msf:MetaStudyField {osb_field_name: name})-[:HAS_SEMANTIC_DATA_TYPE]->(ctx)
+                MATCH (msf:MetaStudyField)-[:HAS_SEMANTIC_DATA_TYPE]->(ctx)
+                WHERE msf.osb_field_name = name
+                   OR (name IS NULL AND msf.osb_field_name IS NULL)
                 SET msf.osb_page_reference = page_ref
                 RETURN msf
                 """,
@@ -551,18 +577,24 @@ class CTTermNameRepository(  # type: ignore[misc]
             msf_node = result_msf[0][0]
         else:
             # No semantic data type — find or create an MSF with osb_field_name
-            # that has no HAS_SEMANTIC_DATA_TYPE relationship.
+            # that has no HAS_SEMANTIC_DATA_TYPE relationship. Same null-safe
+            # matching as above.
             result_msf, _ = db.cypher_query(
                 """
-                OPTIONAL MATCH (existing:MetaStudyField {osb_field_name: $name})
+                OPTIONAL MATCH (existing:MetaStudyField)
                 WHERE NOT (existing)-[:HAS_SEMANTIC_DATA_TYPE]->()
+                  AND (existing.osb_field_name = $name
+                       OR ($name IS NULL AND existing.osb_field_name IS NULL))
                 FOREACH (_ IN CASE WHEN existing IS NULL THEN [1] ELSE [] END |
-                    CREATE (:MetaStudyField {osb_field_name: $name})
+                    CREATE (new_msf:MetaStudyField)
+                    SET new_msf.osb_field_name = $name
                 )
-                WITH $name AS name
-                MATCH (msf:MetaStudyField {osb_field_name: name})
+                WITH $name AS name, $page_ref AS page_ref
+                MATCH (msf:MetaStudyField)
                 WHERE NOT (msf)-[:HAS_SEMANTIC_DATA_TYPE]->()
-                SET msf.osb_page_reference = $page_ref
+                  AND (msf.osb_field_name = name
+                       OR (name IS NULL AND msf.osb_field_name IS NULL))
+                SET msf.osb_page_reference = page_ref
                 RETURN msf
                 """,
                 {"name": vo.osb_field_name, "page_ref": vo.osb_page_reference},

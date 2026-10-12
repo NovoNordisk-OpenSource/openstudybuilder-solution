@@ -1,4 +1,4 @@
-@study_epoch_lag_time
+@REQ_ID:1074254
 Feature: Studies - Define Study - Study Structure - Study Epoch Lag Time
 
     Background: User is logged in and study has been selected

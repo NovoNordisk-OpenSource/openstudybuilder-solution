@@ -61,7 +61,6 @@ OdmStudyEventUID = Path(description="The unique id of the ODM Study Event.")
         ],
     }
 )
-# pylint: disable=unused-argument
 def get_all_odm_study_events(
     request: Request,  # request is actually required by the allow_exports decorator
     library_name: Annotated[str | None, Query()] = None,

@@ -58,6 +58,7 @@ TermUID = Path(description="The unique id of the Codelist Term")
             "- The library doesn't exist.\n"
             "- The library doesn't allow to add new items.\n",
         },
+        409: _generic_descriptions.ERROR_409,
     },
 )
 def create(
@@ -108,7 +109,6 @@ def create(
         ],
     }
 )
-# pylint: disable=unused-argument
 def get_codelists(
     request: Request,  # request is actually required by the allow_exports decorator
     catalogue_name: Annotated[
@@ -411,6 +411,7 @@ via the name_information and code_information fields respectively.
             "- The library doesn't exist.\n"
             "- The library doesn't allow to add new items.\n",
         },
+        409: _generic_descriptions.ERROR_409,
     },
 )
 def create_paired_codelists(
@@ -618,7 +619,6 @@ def get_codelist_terms(
         ],
     }
 )
-# pylint: disable=unused-argument
 def get_codelist_terms_by_name_or_submval(
     request: Request,  # request is actually required by the allow_exports decorator
     codelist_uid: str | None = Query(

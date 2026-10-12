@@ -13,15 +13,6 @@ from tests import common
 from tests.data.db_before_migration_014 import TEST_DATA
 from tests.utils.utils import clear_db
 
-# pylint: disable=unused-argument
-# pylint: disable=redefined-outer-name
-# pylint: disable=too-many-arguments
-# pylint: disable=protected-access
-# pylint: disable=broad-except
-
-# pytest fixture functions have other fixture functions as arguments,
-# which pylint interprets as unused arguments
-
 db = get_db_connection()
 DB_DRIVER = get_db_driver()
 logger = get_logger(os.path.basename(__file__))

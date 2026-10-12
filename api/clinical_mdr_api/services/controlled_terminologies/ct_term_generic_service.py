@@ -1,6 +1,6 @@
 import abc
 from datetime import datetime
-from typing import Any, Generic, TypeVar
+from typing import Any
 
 from neomodel import db
 from pydantic import BaseModel
@@ -17,14 +17,12 @@ from clinical_mdr_api.utils import normalize_string
 from common.auth.user import user
 from common.exceptions import NotFoundException
 
-_AggregateRootType = TypeVar("_AggregateRootType")
 
-
-class CTTermGenericService(Generic[_AggregateRootType], abc.ABC):
+class CTTermGenericService[AggregateRootType](abc.ABC):
     @abc.abstractmethod
     def _transform_aggregate_root_to_pydantic_model(
-        self, item_ar: _AggregateRootType, include_ts_parameters: bool = True
-    ) -> _AggregateRootType:
+        self, item_ar: AggregateRootType, include_ts_parameters: bool = True
+    ) -> AggregateRootType:
         raise NotImplementedError
 
     def get_input_or_previous_property(
@@ -46,7 +44,7 @@ class CTTermGenericService(Generic[_AggregateRootType], abc.ABC):
         self._repos.close()
 
     @property
-    def repository(self) -> CTTermGenericRepository[_AggregateRootType]:
+    def repository(self) -> CTTermGenericRepository[AggregateRootType]:
         assert self._repos is not None
         return self.repository_interface()
 
@@ -163,7 +161,7 @@ class CTTermGenericService(Generic[_AggregateRootType], abc.ABC):
         status: LibraryItemStatus | None = None,
         for_update: bool = False,
         include_ts_parameters: bool = True,
-    ) -> _AggregateRootType:
+    ) -> AggregateRootType:
         repository = self.repository
         # Only CTTermNameRepository honours per-call TS-parameter gating;
         # other repos simply ignore the flag.

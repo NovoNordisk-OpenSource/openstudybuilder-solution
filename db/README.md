@@ -2,7 +2,7 @@
 
 Utilities and scripts for setting up and managing the Neo4j MDR database.
 
-Prerequisites (Docker, Python 3.14, Pipenv) are documented in the
+Prerequisites (Docker, Python 3.14, uv) are documented in the
 [repository root README](../README.md#prerequisites). Install those first.
 
 ---
@@ -88,12 +88,12 @@ The `create_neo4j_local.sh` script creates and mounts several directories in the
 
 ## Initial setup - After installation of Docker
 ---
-### Activate pipenv
+### Sync dependencies with uv
 
-Activate pipenv by running:
+Create or update the virtual environment by running:
 
 ```
-$ pipenv sync --dev
+$ uv sync --group dev
 ```
 
 ### Initiate neo4j database
@@ -131,16 +131,10 @@ for example "mydbname-2022.08.15-12.25"
 
 #### Running initialization
 
-Initiate the database using pipenv:
+Initiate the database using uv:
 
 ```
-$ pipenv run init_neo4j
-```
-
-
-**Note:** You may have to install the following package if you get the error: invalid command 'bdist_wheel':
-```
-$ pip3 install wheel
+$ uv run poe init_neo4j
 ```
 
 ---
@@ -216,9 +210,9 @@ NEO4J_MDR_AUTH_USER
 NEO4J_MDR_AUTH_PASSWORD
 ```
 
-Run it with pipenv:
+Run it with uv:
 ```
-$ pipenv run export_to_cypher
+$ uv run poe export_to_cypher
 ```
 
 This dumps all the data in the database as Cyper statements.
@@ -243,9 +237,9 @@ NEO4J_MDR_AUTH_PASSWORD
 ```
 
 
-Run it with pipenv, specifying the filename to read from:
+Run it with uv, specifying the filename to read from:
 ```
-$ pipenv run import_from_cypher dump_example.cypher
+$ uv run poe import_from_cypher dump_example.cypher
 ```
 
 The database is created if it doesn't already exist.
@@ -262,9 +256,9 @@ NEO4J_MDR_BOLT_PORT
 NEO4J_MDR_AUTH_USER
 NEO4J_MDR_AUTH_PASSWORD
 ```
-Run it with pipenv, specifying the directory where the reports JSON files are stored:
+Run it with uv, specifying the directory where the reports JSON files are stored:
 ```
-$ pipenv run import_reports "neodash_reports"
+$ uv run poe import_reports "neodash_reports"
 ```
 
 ## How to Connect to NeoDash  

@@ -8,10 +8,10 @@ Default output matches CI baseline: extensions included, all StructuredNode subc
 canonical JSON (sorted keys). Override flags only when you know what you are doing.
 
 Usage:
-  pipenv run neomodel-schema
-  pipenv run neomodel-schema -o neomodel_schema.json
-  pipenv run neomodel-schema --compact -o out.json
-  pipenv run neomodel-schema --no-extensions --module-prefix clinical_mdr_api
+  uv run poe neomodel-schema
+  uv run poe neomodel-schema -o neomodel_schema.json
+  uv run poe neomodel-schema --compact -o out.json
+  uv run poe neomodel-schema --no-extensions --module-prefix clinical_mdr_api
 """
 
 from __future__ import annotations

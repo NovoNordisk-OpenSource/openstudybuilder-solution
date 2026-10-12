@@ -1,6 +1,7 @@
 import datetime
+from collections.abc import Set
 from dataclasses import dataclass
-from typing import AbstractSet, Any, Self
+from typing import Any, Self
 
 from clinical_mdr_api.domains.versioned_object_aggregate import (
     LibraryItemAggregateRootBase,
@@ -55,14 +56,13 @@ class SponsorModelMetadataVO(LibraryItemMetadataVO):
     def version(self) -> str:
         return str(self._major_version)
 
-    # pylint: disable=arguments-renamed
     @classmethod
     def get_initial_item_metadata(cls, author_id: str, version: str) -> Self:
         return cls(
             _change_description="Approved version",
             _status=LibraryItemStatus.FINAL,
             _author_id=author_id,
-            _start_date=datetime.datetime.now(datetime.timezone.utc),
+            _start_date=datetime.datetime.now(datetime.UTC),
             _end_date=None,
             _major_version=int(version),
             _minor_version=0,
@@ -158,7 +158,7 @@ class SponsorModelAR(LibraryItemAggregateRootBase):
         """
         super()._create_new_version(author_id=author_id)
 
-    def get_possible_actions(self) -> AbstractSet[ObjectAction]:
+    def get_possible_actions(self) -> Set[ObjectAction]:
         """
         Returns list of possible actions
         """

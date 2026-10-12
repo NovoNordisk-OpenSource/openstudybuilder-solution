@@ -1,4 +1,4 @@
-@REQ_ID:xxx @development_only
+@REQ_ID:1074260
 Feature: Studies - Study Activities - Study Visits groups
     See shared notes for study visits in file study-visit-intro-notes.txt
 

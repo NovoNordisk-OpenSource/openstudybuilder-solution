@@ -51,19 +51,25 @@ class UnitDefinitionRepository(ConceptGenericRepository[UnitDefinitionAR]):
     def specific_alias_clause(self, **kwargs) -> str:
         return """
         WITH *,
-            concept_value.si_unit as si_unit,
             concept_value.display_unit AS display_unit,
             concept_value.master_unit as master_unit,
             concept_value.convertible_unit as convertible_unit,
             concept_value.us_conventional_unit as us_conventional_unit,
             concept_value.use_complex_unit_conversion as use_complex_unit_conversion,
             concept_value.use_molecular_weight AS use_molecular_weight,
-            concept_value.legacy_code AS legacy_code,
             concept_value.conversion_factor_to_master as conversion_factor_to_master,
             concept_value.order as order,
             concept_value.comment as comment,
             [(concept_value)-[:HAS_CT_UNIT]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(term_root)-[:HAS_NAME_ROOT]-()-[:LATEST_FINAL]-(value) 
-                | {uid:term_root.uid, name: value.name}] AS ct_units,
+                | {uid:term_root.uid, name: value.name,
+                   library_name: head([(term_library:Library)-[:CONTAINS_TERM]->(term_root) | term_library.name])}] AS ct_units,
+            // Stable sort key matching the distinct library names shown in the UI.
+            // term_library, not library: library is already bound to the unit's own
+            // library here, and reusing it would only match terms from that library.
+            apoc.coll.sort(apoc.coll.toSet(
+                [(concept_value)-[:HAS_CT_UNIT]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(term_root)<-[:CONTAINS_TERM]-(term_library:Library)
+                    | term_library.name]
+            )) AS ct_unit_library_names,
             [(concept_value)-[:HAS_UNIT_SUBSET]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(term_root)-[:HAS_NAME_ROOT]-()-[:LATEST_FINAL]-(value) 
                 | {uid:term_root.uid, name: value.name}] AS unit_subsets,
             head([(concept_value)-[:HAS_CT_DIMENSION]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(term_root)-[:HAS_NAME_ROOT]-()-[:LATEST_FINAL]-(value) 
@@ -146,14 +152,12 @@ class UnitDefinitionRepository(ConceptGenericRepository[UnitDefinitionAR]):
             unit_definition_value=UnitDefinitionValueVO.from_repository_values(
                 name=ar_value.name,
                 definition=ar_value.definition,
-                si_unit=ar_value.si_unit,
                 display_unit=ar_value.display_unit,
                 master_unit=ar_value.master_unit,
                 convertible_unit=ar_value.convertible_unit,
                 us_conventional_unit=ar_value.us_conventional_unit,
                 use_complex_unit_conversion=ar_value.use_complex_unit_conversion,
                 use_molecular_weight=ar_value.use_molecular_weight,
-                legacy_code=ar_value.legacy_code,
                 conversion_factor_to_master=ar_value.conversion_factor_to_master,
                 order=ar_value.order,
                 comment=ar_value.comment,
@@ -211,14 +215,12 @@ class UnitDefinitionRepository(ConceptGenericRepository[UnitDefinitionAR]):
             unit_definition_value=UnitDefinitionValueVO.from_repository_values(
                 name=ar_value.name,
                 definition=ar_value.definition,
-                si_unit=ar_value.si_unit,
                 display_unit=ar_value.display_unit,
                 master_unit=ar_value.master_unit,
                 convertible_unit=ar_value.convertible_unit,
                 us_conventional_unit=ar_value.us_conventional_unit,
                 use_complex_unit_conversion=ar_value.use_complex_unit_conversion,
                 use_molecular_weight=ar_value.use_molecular_weight,
-                legacy_code=ar_value.legacy_code,
                 conversion_factor_to_master=ar_value.conversion_factor_to_master,
                 order=ar_value.order,
                 comment=ar_value.comment,
@@ -259,14 +261,12 @@ class UnitDefinitionRepository(ConceptGenericRepository[UnitDefinitionAR]):
             unit_definition_value=UnitDefinitionValueVO.from_repository_values(
                 name=input_dict["name"],
                 definition=input_dict.get("definition"),
-                si_unit=input_dict["si_unit"],
                 display_unit=input_dict["display_unit"],
                 master_unit=input_dict["master_unit"],
                 convertible_unit=input_dict["convertible_unit"],
                 us_conventional_unit=input_dict["us_conventional_unit"],
                 use_complex_unit_conversion=input_dict["use_complex_unit_conversion"],
                 use_molecular_weight=input_dict.get("use_molecular_weight"),
-                legacy_code=input_dict.get("legacy_code"),
                 conversion_factor_to_master=input_dict.get(
                     "conversion_factor_to_master"
                 ),
@@ -300,11 +300,9 @@ class UnitDefinitionRepository(ConceptGenericRepository[UnitDefinitionAR]):
 
     def _create_new_value_node(self, ar: UnitDefinitionAR) -> VersionValue:
         value_node = super()._create_new_value_node(ar=ar)
-        value_node.legacy_code = ar.concept_vo.legacy_code
         value_node.convertible_unit = ar.concept_vo.convertible_unit
         value_node.display_unit = ar.concept_vo.display_unit
         value_node.master_unit = ar.concept_vo.master_unit
-        value_node.si_unit = ar.concept_vo.si_unit
         value_node.us_conventional_unit = ar.concept_vo.us_conventional_unit
         value_node.use_complex_unit_conversion = (
             ar.concept_vo.use_complex_unit_conversion
@@ -363,16 +361,16 @@ class UnitDefinitionRepository(ConceptGenericRepository[UnitDefinitionAR]):
         unit_dimension = value.has_ct_dimension.get_or_none()
         if unit_dimension:
             unit_dimension = unit_dimension.has_selected_term.get_or_none()
-        ar_ct_units = set(unit.uid for unit in ar.concept_vo.ct_units)
-        ar_unit_subsets = set(subset.uid for subset in ar.concept_vo.unit_subsets)
+        ar_ct_units = {unit.uid for unit in ar.concept_vo.ct_units}
+        ar_unit_subsets = {subset.uid for subset in ar.concept_vo.unit_subsets}
         value_ct_unit_nodes = value.has_ct_unit.all()
-        value_ct_units = set(
+        value_ct_units = {
             unit.has_selected_term.get_or_none().uid for unit in value_ct_unit_nodes
-        )
+        }
         value_ct_unit_subset_nodes = value.has_unit_subset.all()
-        value_ct_unit_subsets = set(
+        value_ct_unit_subsets = {
             ss.has_selected_term.get_or_none().uid for ss in value_ct_unit_subset_nodes
-        )
+        }
         return (
             ar.concept_vo.name != value.name
             or ar.concept_vo.name_sentence_case != value.name_sentence_case
@@ -382,11 +380,9 @@ class UnitDefinitionRepository(ConceptGenericRepository[UnitDefinitionAR]):
             or ar.concept_vo.convertible_unit != value.convertible_unit
             or ar.concept_vo.display_unit != value.display_unit
             or ar.concept_vo.master_unit != value.master_unit
-            or ar.concept_vo.si_unit != value.si_unit
             or ar.concept_vo.us_conventional_unit != value.us_conventional_unit
             or ar.concept_vo.use_complex_unit_conversion
             != value.use_complex_unit_conversion
-            or ar.concept_vo.legacy_code != value.legacy_code
             or ar.concept_vo.use_molecular_weight != value.use_molecular_weight
             or ar.concept_vo.conversion_factor_to_master
             != value.conversion_factor_to_master
@@ -448,15 +444,6 @@ class UnitDefinitionRepository(ConceptGenericRepository[UnitDefinitionAR]):
             RETURN or.uid
         """
         items, _ = db.cypher_query(cypher_query, {"unit_dimension_uid": unit_dimension})
-
-        return len(items) > 0
-
-    def exists_by_legacy_code(self, legacy_code: str) -> bool:
-        cypher_query = f"""
-            MATCH (or:{self.root_class.__label__})-[:LATEST]->(ov:{self.value_class.__label__} {{legacy_code: $legacy_code}})
-            RETURN or.uid
-        """
-        items, _ = db.cypher_query(cypher_query, {"legacy_code": legacy_code})
 
         return len(items) > 0
 

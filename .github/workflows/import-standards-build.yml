@@ -24,17 +24,15 @@ jobs:
         with:
           python-version: "3.14"
 
-      - name: Install pipenv
-        working-directory: .
-        run: pip install --require-hashes -r .github/workflows/import-standards-bootstrap-requirements.txt
+      - uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
 
-      - name: Install runtime dependencies
-        run: pipenv sync
+      - name: Install dependencies
+        run: uv sync --group dev
 
       - name: Generate SBOM
         id: sbom
         run: |
-          pipenv run build-sbom
+          uv run poe build-sbom
           if git diff --exit-code sbom.md; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
           else
@@ -56,11 +54,8 @@ jobs:
           git --no-pager diff sbom.md
           exit 1
 
-      - name: Install dev dependencies
-        run: pipenv sync --dev
-
       - name: Run tests
-        run: pipenv run test
+        run: uv run poe test
 
       - name: Publish coverage artifact
         if: always()

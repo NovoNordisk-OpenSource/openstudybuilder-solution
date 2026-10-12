@@ -1,6 +1,6 @@
 import abc
 from datetime import datetime
-from typing import Any, Generic, Literal, TypeVar, overload
+from typing import Any, Literal, TypeVar, overload
 
 from clinical_mdr_api.domain_repositories.controlled_terminologies.ct_codelist_attributes_repository import (
     CTCodelistAttributesRepository,
@@ -46,9 +46,8 @@ from common.exceptions import NotFoundException
 _AggregateRootType = TypeVar("_AggregateRootType", bound=LibraryItemAggregateRootBase)
 
 
-class GenericSyntaxRepository(
-    LibraryItemRepositoryImplBase[_AggregateRootType],
-    Generic[_AggregateRootType],
+class GenericSyntaxRepository[AggregateRootType: LibraryItemAggregateRootBase](
+    LibraryItemRepositoryImplBase[AggregateRootType],
     abc.ABC,
 ):
 
@@ -108,7 +107,7 @@ class GenericSyntaxRepository(
         version: str | None = None,
         return_study_count: bool = False,
         for_audit_trail: Literal[False] = False,
-    ) -> _AggregateRootType: ...
+    ) -> AggregateRootType: ...
     @overload
     def find_by_uid(
         self,
@@ -120,7 +119,7 @@ class GenericSyntaxRepository(
         version: str | None = None,
         return_study_count: bool = False,
         for_audit_trail: Literal[True] = True,
-    ) -> list[_AggregateRootType]: ...
+    ) -> list[AggregateRootType]: ...
     def find_by_uid(
         self,
         uid: str | None,
@@ -131,7 +130,7 @@ class GenericSyntaxRepository(
         version: str | None = None,
         return_study_count: bool = False,
         for_audit_trail: bool = False,
-    ) -> _AggregateRootType | list[_AggregateRootType]:
+    ) -> AggregateRootType | list[AggregateRootType]:
         return self.find_by_uid_optimized(  # type: ignore[call-overload]
             uid=uid,
             for_update=for_update,
@@ -276,9 +275,11 @@ class GenericSyntaxRepository(
         # Finally, convert the nested dictionary to a list of ParameterTermEntryVO objects, grouped by value set
         return_dict = {}
         for set_number, term_set in data_dict.items():
-            term_set = [x[1] for x in sorted(term_set.items(), key=lambda x: x[0])]
+            sorted_term_set = [
+                x[1] for x in sorted(term_set.items(), key=lambda x: x[0])
+            ]
             parameter_list: list[ParameterTermEntryVO] = []
-            for item in term_set:
+            for item in sorted_term_set:
                 term_list = []
                 for value in sorted(
                     item["parameter_uids"],
@@ -360,8 +361,8 @@ class GenericSyntaxRepository(
     def patch_indications(self, uid: str, indication_uids: list[str] | None) -> None:
         root = self.root_class.nodes.get(uid=uid)
         root.has_indication.disconnect_all()
-        for indication in indication_uids or []:
-            indication = self._get_indication(indication)
+        for indication_uid in indication_uids or []:
+            indication = self._get_indication(indication_uid)
             root.has_indication.connect(indication)
 
     def _get_mapped_codelist_submission_value(self):
@@ -426,8 +427,8 @@ class GenericSyntaxRepository(
     def patch_activities(self, uid: str, activity_uids: list[str] | None) -> None:
         root = self.root_class.nodes.get(uid=uid)
         root.has_activity.disconnect_all()
-        for activity in activity_uids or []:
-            activity = self._get_activity(activity)
+        for activity_uid in activity_uids or []:
+            activity = self._get_activity(activity_uid)
             root.has_activity.connect(activity)
 
     @sb_clear_cache(caches=["cache_store_item_by_uid"])
@@ -436,9 +437,9 @@ class GenericSyntaxRepository(
     ) -> None:
         root = self.root_class.nodes.get(uid=uid)
         root.has_activity_group.disconnect_all()
-        for group in activity_group_uids or []:
-            group = self._get_activity_group(group)
-            root.has_activity_group.connect(group)
+        for group_uid in activity_group_uids or []:
+            activity_group = self._get_activity_group(group_uid)
+            root.has_activity_group.connect(activity_group)
 
     @sb_clear_cache(caches=["cache_store_item_by_uid"])
     def patch_activity_subgroups(
@@ -457,7 +458,7 @@ class GenericSyntaxRepository(
         root.is_confirmatory_testing = is_confirmatory_testing
         self._db_save_node(root)
 
-    def _create(self, item: _AggregateRootType):
+    def _create(self, item: AggregateRootType):
         item = super()._create(item)
         root = None
         if item.uid:
@@ -469,8 +470,8 @@ class GenericSyntaxRepository(
 
     def _are_changes_possible(
         self,
-        versioned_object: _AggregateRootType,
-        previous_versioned_object: _AggregateRootType,
+        versioned_object: AggregateRootType,
+        previous_versioned_object: AggregateRootType,
     ) -> bool:
         new_status = versioned_object.item_metadata.status
         prev_status = previous_versioned_object.item_metadata.status

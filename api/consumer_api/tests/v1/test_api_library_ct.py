@@ -1,5 +1,3 @@
-# pylint: disable=unused-argument
-# pylint: disable=redefined-outer-name
 from urllib.parse import quote_plus
 
 import pytest
@@ -379,14 +377,12 @@ UNIT_DEFINITION_FIELDS_ALL = [
     "subsets",
     "is_convertible_unit",
     "is_master_unit",
-    "is_si_unit",
     "is_display_unit",
     "is_us_conventional_unit",
     "use_complex_unit_conversion",
     "use_molecular_weight",
     "ucum_unit_name",
     "unit_dimension",
-    "legacy_code",
     "conversion_factor_to_master",
 ]
 

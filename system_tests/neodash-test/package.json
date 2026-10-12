@@ -38,6 +38,8 @@
         "uuid": "11.1.1",
         "qs": "6.16.0",
         "js-yaml": "4.3.2",
+        "undici": "6.28.1",
+        "brace-expansion": "5.0.12",
         "mocha": {
             "diff": "8.0.3",
             "glob": {

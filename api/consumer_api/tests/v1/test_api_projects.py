@@ -1,5 +1,3 @@
-# pylint: disable=unused-argument
-# pylint: disable=redefined-outer-name
 from typing import Any
 
 import pytest
@@ -44,7 +42,7 @@ def projects_setup() -> dict[str, Any]:
     db_name = "consumer-api-v1-projects"
     set_db(db_name)
 
-    global clinical_programme_uid  # pylint: disable=global-statement
+    global clinical_programme_uid
     TestUtils.create_dummy_user()
     clinical_programme = TestUtils.create_clinical_programme(
         name=CLINICAL_PROGRAMME_NAME

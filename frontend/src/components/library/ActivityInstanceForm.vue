@@ -573,6 +573,7 @@ import activitiesApi from '@/api/activities'
 import activityInstanceClassesApi from '@/api/activityInstanceClasses'
 import codelistsApi from '@/api/controlledTerminology/codelists'
 import ctApi from '@/api/controlledTerminology'
+import activityInstanceClassesConstants from '@/constants/activityInstanceClasses'
 import activityItemClassesConstants from '@/constants/activityItemClasses'
 import libraryConstants from '@/constants/libraries.js'
 import statuses from '@/constants/statuses.js'
@@ -654,29 +655,31 @@ if (
     'activity_instance_wizard_stepper_categoric_findings'
   ) === true
 ) {
-  allowedInstanceClasses.push('CategoricFindings')
+  allowedInstanceClasses.push(
+    activityInstanceClassesConstants.CATEGORIC_FINDINGS
+  )
 }
 if (
   featureFlagsStore.getFeatureFlag(
     'activity_instance_wizard_stepper_events'
   ) === true
 ) {
-  allowedInstanceClasses.push('Events')
+  allowedInstanceClasses.push(activityInstanceClassesConstants.EVENTS)
 }
-allowedInstanceClasses.push('NumericFindings')
+allowedInstanceClasses.push(activityInstanceClassesConstants.NUMERIC_FINDINGS)
 if (
   featureFlagsStore.getFeatureFlag(
     'activity_instance_wizard_stepper_textual_findings'
   ) === true
 ) {
-  allowedInstanceClasses.push('TextualFindings')
+  allowedInstanceClasses.push(activityInstanceClassesConstants.TEXTUAL_FINDINGS)
 }
 if (
   featureFlagsStore.getFeatureFlag(
     'activity_instance_wizard_stepper_interventions'
   ) === true
 ) {
-  allowedInstanceClasses.push('Interventions')
+  allowedInstanceClasses.push(activityInstanceClassesConstants.INTERVENTIONS)
 }
 
 const domainSearch = ref('')
@@ -713,10 +716,16 @@ const filteredDataDomains = computed(() => {
 })
 
 const step3LongTitle = computed(() => {
-  if (step2Form.value.activity_instance_class?.name === 'Events') {
+  if (
+    step2Form.value.activity_instance_class?.name ===
+    activityInstanceClassesConstants.EVENTS
+  ) {
     return t('ActivityInstanceForm.step3_events_long_title')
   }
-  if (step2Form.value.activity_instance_class?.name === 'Interventions') {
+  if (
+    step2Form.value.activity_instance_class?.name ===
+    activityInstanceClassesConstants.INTERVENTIONS
+  ) {
     return t('ActivityInstanceForm.step3_interventions_long_title')
   }
   return t('ActivityInstanceForm.step3_long_title')
@@ -888,7 +897,10 @@ const mandatoryActivityItemClasses = computed(() => {
       !['test_code', 'test_name'].includes(item.name)
     )
   })
-  if (step2Form.value.activity_instance_class?.name === 'NumericFindings') {
+  if (
+    step2Form.value.activity_instance_class?.name ===
+    activityInstanceClassesConstants.NUMERIC_FINDINGS
+  ) {
     // special sorting for NumericFindings
     return [
       result.find((item) => item.name === 'unit_dimension'),
@@ -962,11 +974,17 @@ const showMolecularWeight = computed(() => {
 })
 
 const showAdamParamCode = computed(() => {
-  return step2Form.value.activity_instance_class?.name !== 'Events'
+  return (
+    step2Form.value.activity_instance_class?.name !==
+    activityInstanceClassesConstants.EVENTS
+  )
 })
 
 const showIsResearchLab = computed(() => {
-  return step2Form.value.activity_instance_class?.name !== 'Events'
+  return (
+    step2Form.value.activity_instance_class?.name !==
+    activityInstanceClassesConstants.EVENTS
+  )
 })
 
 // Helper to determine if we should show existing mandatory items when editing an instance,
@@ -1078,15 +1096,19 @@ const subcategoryAic = computed(() => {
 const categoryCodelistName = computed(() => {
   const aicName = step2Form.value.activity_instance_class?.name
   if (!aicName) return null
-  if (aicName === 'Events') return 'eventCategoryDefinition'
-  if (aicName === 'Interventions') return 'interventionCategoryDefinition'
+  if (aicName === activityInstanceClassesConstants.EVENTS)
+    return 'eventCategoryDefinition'
+  if (aicName === activityInstanceClassesConstants.INTERVENTIONS)
+    return 'interventionCategoryDefinition'
   return 'findingCategoryDefinition'
 })
 const subcategoryCodelistName = computed(() => {
   const aicName = step2Form.value.activity_instance_class?.name
   if (!aicName) return null
-  if (aicName === 'Events') return 'eventSubCategoryDefinition'
-  if (aicName === 'Interventions') return 'interventionSubCategoryDefinition'
+  if (aicName === activityInstanceClassesConstants.EVENTS)
+    return 'eventSubCategoryDefinition'
+  if (aicName === activityInstanceClassesConstants.INTERVENTIONS)
+    return 'interventionSubCategoryDefinition'
   return 'findingSubCategoryDefinition'
 })
 
@@ -1138,10 +1160,10 @@ const allHelpItems = [
 function getStepTitle(stepName) {
   const className = step2Form.value.activity_instance_class?.name
   if (stepName === 'optional') {
-    if (className === 'Events') {
+    if (className === activityInstanceClassesConstants.EVENTS) {
       return t('ActivityInstanceForm.step3_events_title')
     }
-    if (className === 'Interventions') {
+    if (className === activityInstanceClassesConstants.INTERVENTIONS) {
       return t('ActivityInstanceForm.step3_interventions_title')
     }
   }
@@ -1544,6 +1566,20 @@ function extraStepValidation(step) {
 }
 
 async function prepareActivityItems() {
+  // These AICs are (re-)added explicitly below via addActivityItem(), so any
+  // leftover entry for them coming from step2/3/4Form must be excluded here
+  // to avoid sending a duplicate activity_item_class_uid in the payload.
+  const specialAicUids = new Set(
+    [
+      testCodeAic.value?.uid,
+      testNameAic.value?.uid,
+      categoryAic.value?.uid,
+      subcategoryAic.value?.uid,
+      domainAic.value?.uid,
+      ...defaultLinkedActivityItemClasses.value.map((aic) => aic.uid),
+    ].filter(Boolean)
+  )
+
   const activityItems = [
     ...step2Form.value.activityItems.map((item) => ({
       ...item,
@@ -1557,7 +1593,12 @@ async function prepareActivityItems() {
       ...item,
       is_activity_instance_id_specific: false,
     })),
-  ].filter((item) => item && item.activity_item_class_uid)
+  ].filter(
+    (item) =>
+      item &&
+      item.activity_item_class_uid &&
+      !specialAicUids.has(item.activity_item_class_uid)
+  )
 
   function addActivityItem(uid, codelistUid, term_uids) {
     const ct_terms = term_uids.map((term_uid) => {
@@ -1956,13 +1997,17 @@ async function initFromActivityInstance() {
       continue
     }
     // Step 2 — category: mapped to the data_category dropdown
-    if (itemClassName === categoryAic.value?.name && firstCtTermUid) {
-      step2Form.value.data_category = firstCtTermUid
+    if (itemClassName === categoryAic.value?.name) {
+      if (firstCtTermUid) {
+        step2Form.value.data_category = firstCtTermUid
+      }
       continue
     }
     // Step 2 — subcategory: mapped to the data_subcategory dropdown
-    if (itemClassName === subcategoryAic.value?.name && firstCtTermUid) {
-      step2Form.value.data_subcategory = firstCtTermUid
+    if (itemClassName === subcategoryAic.value?.name) {
+      if (firstCtTermUid) {
+        step2Form.value.data_subcategory = firstCtTermUid
+      }
       continue
     }
     // Step 2 — test code: stored separately, paired with test name
@@ -1972,14 +2017,12 @@ async function initFromActivityInstance() {
       continue
     }
     // Step 2 — test name: stored separately, paired with test code
-    if (
-      testNameAic.value &&
-      itemClass?.uid === testNameAic.value.uid &&
-      firstCtTermUid
-    ) {
-      testValue.value = firstCtTermUid
-      testNameCodelistValue.value =
-        activityItem?.ct_terms?.[0]?.codelist_uid || null
+    if (testNameAic.value && itemClass?.uid === testNameAic.value.uid) {
+      if (firstCtTermUid) {
+        testValue.value = firstCtTermUid
+        testNameCodelistValue.value =
+          activityItem?.ct_terms?.[0]?.codelist_uid || null
+      }
       continue
     }
 

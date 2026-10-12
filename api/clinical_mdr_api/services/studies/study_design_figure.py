@@ -1,7 +1,8 @@
 import logging
 import os
 from collections import OrderedDict
-from typing import Any, Mapping, MutableMapping
+from collections.abc import Mapping, MutableMapping
+from typing import Any
 
 import yattag
 from colour import Color
@@ -70,6 +71,8 @@ LINE_SPACING = 3
 TEXT_BOTTOM_EXTRA_PADDING = int(FONT_SIZE / 3)
 TEXT_COLOR_LIGHT = Color("white")
 TEXT_COLOR_DARK = Color("black")
+LIGHT_TEXT_LUMINANCE_THRESHOLD = 0.6
+DARK_STROKE_LUMINANCE = 0.2
 
 # merge cell with neighbouring cell if Element id matches
 MERGE_VERTICALLY = True
@@ -82,8 +85,8 @@ TIMELINE_ROW_MARGINS = (
     FONT_SIZE,
     10,
     FONT_SIZE,
-    int(round(FONT_SIZE * 1.5)),
-    int(round(FONT_SIZE * 2)),
+    round(FONT_SIZE * 1.5),
+    round(FONT_SIZE * 2),
     0,
 )
 VISIT_ARROW_COLOR = "#000"
@@ -151,7 +154,7 @@ class StudyDesignFigureService:
         self.debug = debug
         font_path = os.path.join(settings.app_root_dir, FONT_FILE_NAME)
         # Although ImageFont.truetype() expects point size, it seems we need to scale it up for calculations in pixels
-        self.font_size = int(round(FONT_SIZE * FONT_SIZE_POINT_TO_PIXELS_RATIO))
+        self.font_size = round(FONT_SIZE * FONT_SIZE_POINT_TO_PIXELS_RATIO)
         self.font = ImageFont.truetype(font_path, self.font_size)
 
     @trace_calls
@@ -666,7 +669,6 @@ class StudyDesignFigureService:
         and a list of (x, y, text) for each line,
         where x/y coordinates (px int) and are relative to the enclosing box.
         """
-        # pylint: disable=unused-variable
 
         max_width = cell_width - paddings[0] * 2
 
@@ -678,7 +680,6 @@ class StudyDesignFigureService:
         line: list[Any] = []
         line_width, line_height = 0, 0
 
-        # pylint: disable=unused-variable
         def newline():
             """Appends the line of text with X,Y coordinates and starts a new line"""
             nonlocal lines, total_width, total_height, line, line_width, line_height
@@ -697,7 +698,7 @@ class StudyDesignFigureService:
 
         while words:
             # how large is the string if we include the next word
-            width, height = self._get_text_size_px(" ".join(line + [words[0]]))
+            width, height = self._get_text_size_px(" ".join([*line, words[0]]))
 
             # next word fits in line, or line must have at least a single word in it
             if not line or width <= max_width:
@@ -723,7 +724,7 @@ class StudyDesignFigureService:
     @trace_calls
     def _merge_cells_horizontally(table):
         """Merges cells with identical Study Element horizontally"""
-        # pylint: disable=unsubscriptable-object,unsupported-assignment-operation
+
         for row in table[1:]:
             prev_cell: MutableMapping | None = None
             for cell in row[1:]:
@@ -746,7 +747,7 @@ class StudyDesignFigureService:
     @trace_calls
     def _merge_cells_vertically(table):
         """Merges cells with identical Study Element vertically"""
-        # pylint: disable=unsubscriptable-object,unsupported-assignment-operation
+
         n_cols = len(table[0])
         for i in range(1, n_cols):
             prev_cell: MutableMapping | None = None
@@ -779,14 +780,14 @@ class StudyDesignFigureService:
         border_color = Color(color)
 
         # Dark fill gets light text
-        if text_color.luminance < 0.6:
+        if text_color.luminance < LIGHT_TEXT_LUMINANCE_THRESHOLD:
             text_color = TEXT_COLOR_LIGHT
         # Light fill gets tark text
         else:
             text_color = TEXT_COLOR_DARK
 
         # Always a darkish stroke
-        border_color.luminance = 0.2
+        border_color.luminance = DARK_STROKE_LUMINANCE
 
         return background_color.hex, border_color.hex, text_color.hex
 
@@ -806,7 +807,7 @@ class StudyDesignFigureService:
 
     def _get_words_size_px(self, text: str) -> tuple[tuple[str, int, int]]:
         """Returns a tuple of (word, width, height) in pixels of each word of a text if rendered with font and size"""
-        return tuple((t,) + self._get_text_size_px(t) for t in text.split(" "))
+        return tuple((t, *self._get_text_size_px(t)) for t in text.split(" "))
 
     @trace_calls
     def _mk_timeline(
@@ -1182,9 +1183,7 @@ class StudyDesignFigureService:
         ):
             # caption
             kwargs = (
-                {
-                    "transform": f"rotate(90) translate(0, {-int(round(FONT_SIZE * 1.5))})"
-                }
+                {"transform": f"rotate(90) translate(0, {-round(FONT_SIZE * 1.5)})"}
                 if cell.get("vertical")
                 else {}
             )

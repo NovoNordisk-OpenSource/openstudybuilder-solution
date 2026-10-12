@@ -8,8 +8,11 @@ from clinical_mdr_api.models.study_selections.study_selection import (
 )
 from clinical_mdr_api.models.utils import CustomPage
 from clinical_mdr_api.repositories._utils import FilterOperator
-from clinical_mdr_api.routers import _generic_descriptions, decorators
-from clinical_mdr_api.routers import study_router as router
+from clinical_mdr_api.routers import (
+    _generic_descriptions,
+    decorators,
+    study_router as router,
+)
 from clinical_mdr_api.routers.studies import utils
 from clinical_mdr_api.services.studies.study import StudyService
 from clinical_mdr_api.services.studies.study_compound_dosing_selection import (
@@ -25,7 +28,13 @@ from common.models.error import ErrorResponse
     "/studies/{study_uid}/study-compound-dosings",
     dependencies=[security, rbac.STUDY_READ],
     summary="List all study compound dosings currently defined for the study",
-    description=_generic_descriptions.DATA_EXPORTS_HEADER,
+    description=_generic_descriptions.DATA_EXPORTS_HEADER + """
+
+A dose value is either a library one in `dose_value` or a study level free text in
+`free_text_dose_value`, and a dose frequency likewise either `dose_frequency` or
+`free_text_dose_frequency` — never both in each pair. `dose_value_label` and
+`dose_frequency_label` collapse each pair into the single rendered string, and are the
+fields to sort and filter on when the source does not matter.""",
     response_model_exclude_unset=True,
     status_code=200,
     responses={
@@ -46,7 +55,14 @@ from common.models.error import ErrorResponse
             "compound_alias=study_compound.compound_alias.name",
             "dose_value_value=dose_value.value",
             "dose_value_unit=dose_value.unit_label",
+            "free_text_dose_value",
+            # The *_label columns are what the UI displays and filters on, so the
+            # export carries them too rather than only the two underlying sources.
+            "dose_value_label",
             "dose_frequency=dose_frequency.term_name",
+            "free_text_dose_frequency",
+            "dose_frequency_label",
+            "dose_collection_activity_instance=study_activity_instance.activity_instance.name|study_activity_instance.activity.name",
             "study_uid",
             "study_version",
         ],
@@ -58,13 +74,13 @@ from common.models.error import ErrorResponse
         ],
     }
 )
-# pylint: disable=unused-argument
 def get_all_selected_compound_dosings(
     request: Request,  # request is actually required by the allow_exports decorator
     study_uid: Annotated[str, utils.studyUID],
     study_value_version: Annotated[
         str | None, _generic_descriptions.STUDY_VALUE_VERSION_QUERY
     ] = None,
+    sort_by: _generic_descriptions.SORT_BY_QUERY = None,
     filters: _generic_descriptions.FILTERS_QUERY = None,
     page_number: _generic_descriptions.PAGE_NUMBER_QUERY = settings.default_page_number,
     page_size: _generic_descriptions.PAGE_SIZE_QUERY = settings.default_page_size,
@@ -77,6 +93,7 @@ def get_all_selected_compound_dosings(
         study_value_version=study_value_version,
         filter_by=filters,
         filter_operator=FilterOperator.from_str(operator),
+        sort_by=sort_by,
         page_number=page_number,
         page_size=page_size,
         total_count=total_count,
@@ -172,6 +189,10 @@ State before:
 Business logic:
  - List all entries in the audit trail related to study compound dosings for specified study-uid.
  - If the released or a locked version of the study is selected then only entries up to the time of the study release or lock is included.
+ - Each entry reports the dose value and dose frequency as they stood, whether taken from the
+   library (`dose_value`, `dose_frequency`) or given as study level free text
+   (`free_text_dose_value`, `free_text_dose_frequency`). Switching between the two shows up as
+   one field becoming null and the other being set.
 
 State after:
  - no change.
@@ -213,6 +234,9 @@ State before:
 Business logic:
  - List a specific entry in the audit trail related to the specified study compound dosing for the specified study-uid.
  - If the released or a locked version of the study is selected then only entries up to the time of the study release or lock is included.
+ - Each entry reports the dose value and dose frequency as they stood, whether taken from the
+   library (`dose_value`, `dose_frequency`) or given as study level free text
+   (`free_text_dose_value`, `free_text_dose_frequency`).
 
 State after:
  - no change.
@@ -247,17 +271,39 @@ def get_compound_dosing_audit_trail(
     "/studies/{study_uid}/study-compound-dosings",
     dependencies=[security, rbac.STUDY_WRITE],
     summary="Add a study compound dosing to a study",
+    description="""
+Business logic:
+ - The dose value is either selected from the library through `dose_value_uid`, or given
+   as a study level free text through `free_text_dose_value`. The two are mutually
+   exclusive, and providing both is rejected.
+ - The dose frequency works the same way: either `dose_frequency_uid` from the library,
+   or a study level free text through `free_text_dose_frequency`, never both.
+ - The two choices are independent — a library dose value may be combined with a free
+   text dose frequency, and the reverse.
+ - A library `dose_value_uid` must be one of the dose values defined on the medicinal product.
+ - A library `dose_frequency_uid` may be **any** term of the dose frequency codelist, not only
+   one of those the medicinal product defines — a medicinal product lists a handful of
+   frequencies while studies need the rest of the codelist. A uid outside that codelist is
+   rejected.
+ - The free text fields exist to express a value that is not in the library at all.
+ - A dose value or dose frequency given as free text is not added to the library.""",
     response_model_exclude_unset=True,
     status_code=201,
     responses={
         403: _generic_descriptions.ERROR_403,
         400: {
             "model": ErrorResponse,
-            "description": "Forbidden - A study compound dosing already exists for selected study compound and element",
+            "description": "Bad Request - both 'dose_value_uid' and 'free_text_dose_value' were provided, "
+            "or both 'dose_frequency_uid' and 'free_text_dose_frequency' were provided, "
+            "or 'dose_frequency_uid' is not a term of the dose frequency codelist",
+        },
+        409: {
+            "model": ErrorResponse,
+            "description": "Conflict - a study compound dosing already exists for the selected study compound and dose configuration.",
         },
         404: {
             "model": ErrorResponse,
-            "description": "Not Found - Study, study compound or study element is not found with the passed 'study_uid'.",
+            "description": "Not Found - Study, study compound, study element or study activity instance is not found with the passed 'study_uid'.",
         },
     },
 )
@@ -313,6 +359,18 @@ Business logic:
  - Update specified study-compound-dosing with selection of existing study compound and study element items.
  - A single relationships can be defined for a study compound dosing to each of the following code list terms:
    - Dose frequency
+ - An optional link can be defined to the study activity instance collecting the dose.
+   Send `study_activity_instance_uid` explicitly as `null` to clear it.
+ - The dose value is either selected from the library through `dose_value_uid`, or given
+   as a study level free text through `free_text_dose_value`. The two are mutually
+   exclusive, and providing both is rejected. The dose frequency works the same way,
+   through `dose_frequency_uid` or `free_text_dose_frequency`. The two choices are
+   independent of one another.
+ - `dose_value_uid` must be one of the dose values defined on the medicinal product, while
+   `dose_frequency_uid` may be any term of the dose frequency codelist.
+ - Omitted fields are filled in from the current state of the study compound dosing.
+   Switching either the dose value or the dose frequency from one mode to the other
+   therefore requires sending the field being switched away from explicitly as `null`.
  - Order number for the study compound cannot be changed by this API endpoint.
 
 State after:
@@ -322,9 +380,19 @@ State after:
     status_code=200,
     responses={
         403: _generic_descriptions.ERROR_403,
+        400: {
+            "model": ErrorResponse,
+            "description": "Bad Request - The study is locked, or both 'dose_value_uid' and 'free_text_dose_value' were provided, "
+            "or both 'dose_frequency_uid' and 'free_text_dose_frequency' were provided, "
+            "or 'dose_frequency_uid' is not a term of the dose frequency codelist",
+        },
+        409: {
+            "model": ErrorResponse,
+            "description": "Conflict - a study compound dosing already exists for the selected study compound and dose configuration.",
+        },
         404: {
             "model": ErrorResponse,
-            "description": "Not Found - There exist no selection with the given uid.",
+            "description": "Not Found - There exist no selection with the given uid, or the study activity instance is not found with the passed 'study_uid'.",
         },
     },
 )

@@ -1,5 +1,3 @@
-# pylint: disable=redefined-outer-name,unused-argument
-
 import logging
 
 from clinical_mdr_api.models.study_selections.study import StudySoaPreferencesInput

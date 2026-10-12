@@ -2,15 +2,8 @@
 Tests for /studies/{study_uid}/study-design-classes endpoints
 """
 
-# pylint: disable=unused-argument
-# pylint: disable=redefined-outer-name
-# pylint: disable=too-many-arguments
-
-# pytest fixture functions have other fixture functions as arguments,
-# which pylint interprets as unused arguments
-
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 import pytest
@@ -75,7 +68,7 @@ def test_integrity_checks_for_all_studies(api_client):
 
 
 def test_study_design_class_get(api_client):
-    datetime_before_study_design_class_creation = datetime.now(timezone.utc)
+    datetime_before_study_design_class_creation = datetime.now(UTC)
     response = api_client.get(
         f"/studies/{study.uid}/study-design-classes",
     )

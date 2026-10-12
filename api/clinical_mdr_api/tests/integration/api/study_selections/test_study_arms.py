@@ -2,15 +2,8 @@
 Tests for /studies/{study_uid}/study-arms endpoints
 """
 
-# pylint: disable=unused-argument
-# pylint: disable=redefined-outer-name
-# pylint: disable=too-many-arguments
-
-# pytest fixture functions have other fixture functions as arguments,
-# which pylint interprets as unused arguments
-
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 from unittest import mock
 
@@ -80,7 +73,7 @@ def test_data():
         order=1,
         catalogue_name=catalogue_name,
         library_name=library_name,
-        effective_date=datetime(2020, 3, 25, tzinfo=timezone.utc),
+        effective_date=datetime(2020, 3, 25, tzinfo=UTC),
         approve=True,
     )
     global investigational_arm
@@ -92,14 +85,14 @@ def test_data():
         order=2,
         catalogue_name=catalogue_name,
         library_name=library_name,
-        effective_date=datetime(2020, 3, 25, tzinfo=timezone.utc),
+        effective_date=datetime(2020, 3, 25, tzinfo=UTC),
         approve=True,
     )
 
     # patch the date of the latest HAS_VERSION FINAL relationship so it can be detected by the selected study_standard_Version
     params = {
         "uid": initial_ct_term_study_standard_test.term_uid,
-        "date": datetime(2020, 3, 26, tzinfo=timezone.utc),
+        "date": datetime(2020, 3, 26, tzinfo=UTC),
     }
     db.cypher_query(
         """
@@ -114,7 +107,7 @@ def test_data():
 
     params = {
         "uid": ct_term_codelist.codelist_uid,
-        "date": datetime(2020, 3, 26, tzinfo=timezone.utc),
+        "date": datetime(2020, 3, 26, tzinfo=UTC),
     }
     db.cypher_query(
         """
@@ -322,7 +315,7 @@ def test_study_arm_type_version_selecting_ct_package(api_client):
     ct_package_uid = TestUtils.create_ct_package(
         name="SDTM CT 2020-03-27",
         approve_elements=False,
-        effective_date=datetime(2020, 3, 27, tzinfo=timezone.utc),
+        effective_date=datetime(2020, 3, 27, tzinfo=UTC),
     )
 
     # Patch study standard version created in inject_base_data

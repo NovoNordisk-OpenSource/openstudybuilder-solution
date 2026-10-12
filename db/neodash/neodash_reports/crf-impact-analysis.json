@@ -6,14 +6,20 @@
     "editable": true,
     "fullscreenEnabled": false,
     "parameters": {
+      "neodash_odmformvalue_display": "",
+      "neodash_odmformvalue_display_display": "",
       "neodash_odmformvalue_oid_impact": "",
       "neodash_odmformvalue_oid_impact_display": "",
       "neodash_form_version_impact": "",
       "neodash_form_version_impact_display": "",
+      "neodash_odmitemgroupvalue_display": "",
+      "neodash_odmitemgroupvalue_display_display": "",
       "neodash_odmitemgroupvalue_oid_impact": "",
       "neodash_odmitemgroupvalue_oid_impact_display": "",
       "neodash_group_version_impact": "",
       "neodash_group_version_impact_display": "",
+      "neodash_odmitemvalue_display": "",
+      "neodash_odmitemvalue_display_display": "",
       "neodash_odmitemvalue_oid_impact": "",
       "neodash_odmitemvalue_oid_impact_display": "",
       "neodash_item_version_impact": "",
@@ -30,7 +36,7 @@
           "title": "Guide",
           "query": "This report provides impact analysis for CRF library components.\n\n**Item Impact Analysis**\n- Select an Item and Version to see:\n  - All ItemGroups that reference this Item\n  - All Forms that contain these ItemGroups\n  - Collections where these Forms are used\n  - Full dependency chain showing impact\n    \n**ItemGroup Impact Analysis**\n- Select an ItemGroup and Version to see:\n  - All Items that are part of this ItemGroup\n  - All Forms that reference this ItemGroup\n  - Collections where these Forms are used\n  - Potential downstream impact of changes\n\n**Form Impact Analysis**\n- Select a Form and Version to see:\n  - All ItemGroups that are part of this Form\n  - All Items within those ItemGroups\n  - Collections where this Form is used\n  - Potential downstream impact of changes\n\n\nThis report helps users understand the ripple effect of changes across the CRF library structure.",
           "width": 24,
-          "height": 4,
+          "height": 6,
           "x": 0,
           "y": 0,
           "type": "text",
@@ -44,8 +50,8 @@
       "reports": [
         {
           "id": "3a3a3333-3333-3333-3333-333333333331",
-          "title": "Select Item",
-          "query": "MATCH (n:`OdmItemValue`) \nWHERE toLower(toString(n.`oid`)) CONTAINS toLower($input) \nRETURN DISTINCT n.`oid` as value,  n.`name` as display ORDER BY size(toString(value)) ASC LIMIT 1000",
+          "title": "1. Select an Item to analyze",
+          "query": "MATCH (n:`OdmItemValue`)<-[:HAS_VERSION]-(root:OdmItemRoot)\nWHERE NOT root:DeletedOdmItemRoot\n  AND toLower(toString(n.`name`)) CONTAINS toLower($input)\nRETURN DISTINCT n.`name` AS value, n.`name` AS display\nORDER BY display ASC\nLIMIT 1000",
           "width": 8,
           "height": 2,
           "x": 0,
@@ -55,19 +61,19 @@
           "settings": {
             "type": "Custom Query",
             "refreshButtonEnabled": true,
-            "helperText": "Select an Item to analyze",
-            "entityType": "odmitemvalue_oid_impact",
-            "parameterName": "neodash_odmitemvalue_oid_impact"
+            "helperText": "Item Name",
+            "entityType": "odmitemvalue_display",
+            "parameterName": "neodash_odmitemvalue_display"
           }
         },
         {
           "id": "3a3a3333-3333-3333-3333-333333333332",
-          "title": "Select Item Version",
-          "query": "MATCH (item:OdmItemValue)<-[item_version:HAS_VERSION]-(item_root:OdmItemRoot)\nWHERE item.oid = $neodash_odmitemvalue_oid_impact\nRETURN item_version.version as value, 'Version ' + item_version.version as display\nORDER BY item_version.version DESC",
-          "width": 8,
+          "title": "3. Select Item Version",
+          "query": "MATCH (item:OdmItemValue)<-[item_version:HAS_VERSION]-(item_root:OdmItemRoot)\nWHERE item.oid = $neodash_odmitemvalue_oid_impact\n  AND NOT item_root:DeletedOdmItemRoot\nRETURN item_version.version as value, 'Version ' + item_version.version as display\nORDER BY item_version.version DESC",
+          "width": 7,
           "height": 2,
-          "x": 0,
-          "y": 2,
+          "x": 8,
+          "y": 0,
           "type": "select",
           "selection": {},
           "settings": {
@@ -81,11 +87,11 @@
         {
           "id": "3a3a3333-3333-3333-3333-333333333333",
           "title": "Item Details",
-          "query": "MATCH (item:OdmItemValue)<-[item_version:HAS_VERSION]-(item_root:OdmItemRoot)\nWHERE item.oid = $neodash_odmitemvalue_oid_impact \n  AND item_version.version = $neodash_item_version_impact\nOPTIONAL MATCH (item)-[:HAS_DESCRIPTION]->(desc:OdmDescription)\nOPTIONAL MATCH (item)-[:HAS_CODELIST_TERM]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(:CTTermRoot)<-[:HAS_TERM_ROOT]-(codelist:CTCodelistTerm)\nWITH item, item_version, desc, collect(DISTINCT codelist.submission_value) AS codelists\nRETURN \n  item.oid AS `Item OID`,\n  item.name AS `Item Name`,\n  item_version.version AS Version,\n  item.data_type AS `Data Type`,\n  item.length AS Length,\n  item.significant_digits AS `Significant Digits`,\n  CASE WHEN size(codelists) > 0 THEN apoc.text.join(codelists, '; ') ELSE null END AS `Codelist Terms`,\n  desc.text AS Description",
+          "query": "MATCH (item:OdmItemValue)<-[item_version:HAS_VERSION]-(item_root:OdmItemRoot)\nWHERE item.oid = $neodash_odmitemvalue_oid_impact \n  AND item_version.version = $neodash_item_version_impact\n  AND NOT item_root:DeletedOdmItemRoot\nOPTIONAL MATCH (item)-[:HAS_DESCRIPTION]->(desc:OdmDescription)\nOPTIONAL MATCH (item)-[:HAS_CODELIST_TERM]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(:CTTermRoot)<-[:HAS_TERM_ROOT]-(codelist:CTCodelistTerm)\nWITH item, item_version, desc, collect(DISTINCT codelist.submission_value) AS codelists\nWITH item, item_version, desc, codelists,\n  CASE WHEN toUpper(item.datatype)='FLOAT' THEN item.significant_digits ELSE 'NA' END AS sig_digits\nRETURN \n  item.oid AS `Item OID`,\n  item.name AS `Item Name`,\n  item_version.version AS Version,\n  item.datatype AS `Data Type`,\n  item.length AS Length,\n  sig_digits AS `Significant Digits`,\n  CASE WHEN size(codelists) > 0 THEN apoc.text.join(codelists, '; ') ELSE null END AS `Codelist Terms`,\n  desc.text AS Description",
           "width": 7,
-          "height": 4,
+          "height": 3,
           "x": 8,
-          "y": 0,
+          "y": 2,
           "type": "table",
           "selection": {},
           "settings": {
@@ -98,11 +104,11 @@
         {
           "id": "3a3a3333-3333-3333-3333-333333333334",
           "title": "ItemGroups using Item - $neodash_odmitemvalue_oid_impact (v $neodash_item_version_impact)",
-          "query": "MATCH (item:OdmItemValue)<-[item_version:HAS_VERSION]-(item_root:OdmItemRoot)\nWHERE item.oid = $neodash_odmitemvalue_oid_impact \n  AND item_version.version = $neodash_item_version_impact\nOPTIONAL MATCH (group_root:OdmItemGroupRoot)-[group_version:HAS_VERSION]->(group:OdmItemGroupValue)-[item_ref:ITEM_REF]->(item)\nOPTIONAL MATCH (group)-[:HAS_SDTM_DOMAIN]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(:CTTermRoot)<-[:HAS_TERM_ROOT]-(domain:CTCodelistTerm)\nRETURN \n  group.oid AS `ItemGroup OID`,\n  group.name AS `ItemGroup Name`,\n  group_version.version AS `ItemGroup Version`,\n  domain.submission_value AS `SDTM Domain`,\n  item_ref.mandatory AS `Mandatory in Group`,\n  item_ref.order_number AS `Order in Group`\nORDER BY `ItemGroup Name`, `ItemGroup Version` DESC",
+          "query": "MATCH (item:OdmItemValue)<-[item_version:HAS_VERSION]-(item_root:OdmItemRoot)\nWHERE item.oid = $neodash_odmitemvalue_oid_impact \n  AND item_version.version = $neodash_item_version_impact\n  AND NOT item_root:DeletedOdmItemRoot\nOPTIONAL MATCH (group_root:OdmItemGroupRoot)-[group_version:HAS_VERSION]->(group:OdmItemGroupValue)-[item_ref:ITEM_REF]->(item)\nWHERE NOT group_root:DeletedOdmItemGroupRoot\nOPTIONAL MATCH (group)-[:HAS_SDTM_DOMAIN]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(:CTTermRoot)<-[:HAS_TERM_ROOT]-(domain:CTCodelistTerm)\nRETURN \n  group.oid AS `ItemGroup OID`,\n  group.name AS `ItemGroup Name`,\n  group_version.version AS `ItemGroup Version`,\n  domain.submission_value AS `SDTM Domain`,\n  item_ref.mandatory AS `Mandatory in Group`,\n  item_ref.order_number AS `Order in Group`\nORDER BY `ItemGroup Name`, `ItemGroup Version` DESC",
           "width": 13,
           "height": 6,
           "x": 10,
-          "y": 7,
+          "y": 8,
           "type": "table",
           "selection": {},
           "settings": {
@@ -115,11 +121,11 @@
         {
           "id": "3a3a3333-3333-3333-3333-333333333335",
           "title": "Forms using Item - $neodash_odmitemvalue_oid_impact  (v $neodash_item_version_impact)",
-          "query": "MATCH (item:OdmItemValue)<-[item_version:HAS_VERSION]-(item_root:OdmItemRoot)\nWHERE item.oid = $neodash_odmitemvalue_oid_impact \n  AND item_version.version = $neodash_item_version_impact\nOPTIONAL MATCH (form_root:OdmFormRoot)-[form_version:HAS_VERSION]->(form:OdmFormValue)-[:ITEM_GROUP_REF]->(group:OdmItemGroupValue)-[:ITEM_REF]->(item)\nRETURN DISTINCT\n  form.oid AS `Form OID`,\n  form.name AS `Form Name`,\n  form_version.version AS `Form Version`,\n  group.name AS `Via ItemGroup`\nORDER BY `Form Name`, `Form Version` DESC",
+          "query": "MATCH (item:OdmItemValue)<-[item_version:HAS_VERSION]-(item_root:OdmItemRoot)\nWHERE item.oid = $neodash_odmitemvalue_oid_impact \n  AND item_version.version = $neodash_item_version_impact\n  AND NOT item_root:DeletedOdmItemRoot\nOPTIONAL MATCH (form_root:OdmFormRoot)-[form_version:HAS_VERSION]->(form:OdmFormValue)-[:ITEM_GROUP_REF]->(group:OdmItemGroupValue)-[:ITEM_REF]->(item),\n      (group)<-[:HAS_VERSION]-(group_root:OdmItemGroupRoot)\nWHERE NOT form_root:DeletedOdmFormRoot\n  AND NOT group_root:DeletedOdmItemGroupRoot\nRETURN DISTINCT\n  form.oid AS `Form OID`,\n  form.name AS `Form Name`,\n  form_version.version AS `Form Version`,\n  group.name AS `Via ItemGroup`\nORDER BY `Form Name`, `Form Version` DESC",
           "width": 10,
           "height": 6,
           "x": 0,
-          "y": 7,
+          "y": 8,
           "type": "table",
           "selection": {},
           "settings": {
@@ -132,11 +138,11 @@
         {
           "id": "3a3a3333-3333-3333-3333-333333333336",
           "title": "Collections using Item - $neodash_odmitemvalue_oid_impact",
-          "query": "MATCH (item:OdmItemValue)<-[item_version:HAS_VERSION]-(item_root:OdmItemRoot)\nWHERE item.oid = $neodash_odmitemvalue_oid_impact \n  AND item_version.version = $neodash_item_version_impact\nOPTIONAL MATCH (coll_root:OdmStudyEventRoot)-[coll_version:HAS_VERSION]->(coll:OdmStudyEventValue)-[:FORM_REF]->(form:OdmFormValue)-[:ITEM_GROUP_REF]->(group:OdmItemGroupValue)-[:ITEM_REF]->(item)\nRETURN DISTINCT\n  coll.name AS `Collection Name`,\n  coll_version.version AS `Collection Version`,\n  form.name AS `Via Form`,\n  group.name AS `Via ItemGroup`\nORDER BY `Collection Name`, `Collection Version` DESC, `Via Form`",
+          "query": "MATCH (item:OdmItemValue)<-[item_version:HAS_VERSION]-(item_root:OdmItemRoot)\nWHERE item.oid = $neodash_odmitemvalue_oid_impact \n  AND item_version.version = $neodash_item_version_impact\n  AND NOT item_root:DeletedOdmItemRoot\nOPTIONAL MATCH (coll_root:OdmStudyEventRoot)-[coll_version:HAS_VERSION]->(coll:OdmStudyEventValue)-[:FORM_REF]->(form:OdmFormValue)-[:ITEM_GROUP_REF]->(group:OdmItemGroupValue)-[:ITEM_REF]->(item),\n      (form)<-[:HAS_VERSION]-(form_root:OdmFormRoot),\n      (group)<-[:HAS_VERSION]-(group_root:OdmItemGroupRoot)\nWHERE NOT coll_root:DeletedOdmStudyEventRoot\n  AND NOT form_root:DeletedOdmFormRoot\n  AND NOT group_root:DeletedOdmItemGroupRoot\nRETURN DISTINCT\n  coll.name AS `Collection Name`,\n  coll_version.version AS `Collection Version`,\n  form.name AS `Via Form`,\n  group.name AS `Via ItemGroup`\nORDER BY `Collection Name`, `Collection Version` DESC, `Via Form`",
           "width": 23,
           "height": 3,
           "x": 0,
-          "y": 13,
+          "y": 14,
           "type": "table",
           "selection": {},
           "settings": {
@@ -151,11 +157,11 @@
         {
           "id": "3a3a3333-3333-3333-3333-333333333337",
           "title": "Dependency Chain - $neodash_odmitemvalue_oid_impact  (v $neodash_item_version_impact)",
-          "query": "MATCH (item:OdmItemValue)<-[item_version:HAS_VERSION]-(item_root:OdmItemRoot)\nWHERE item.oid = $neodash_odmitemvalue_oid_impact \n  AND item_version.version = $neodash_item_version_impact\n\nOPTIONAL MATCH (coll:OdmStudyEventValue)-[:FORM_REF]->(form:OdmFormValue)-[:ITEM_GROUP_REF]->(group:OdmItemGroupValue)-[:ITEM_REF]->(item)\n\nWITH item, \n     coll.name AS coll_name,\n     form.name AS form_name,\n     group.name AS group_name\n\nWITH item,\n     collect(DISTINCT {coll: coll_name, form: form_name, grp: group_name}) AS chains\n\nUNWIND chains AS chain\n\nRETURN \n  chain.coll AS `Collection`,\n  chain.form AS `→ Form`,\n  chain.grp AS `→ ItemGroup`,\n  item.name AS `→ Item (Selected)`\nORDER BY `Collection`, `→ Form`, `→ ItemGroup`\nLIMIT 1000",
+          "query": "MATCH (item:OdmItemValue)<-[item_version:HAS_VERSION]-(item_root:OdmItemRoot)\nWHERE item.oid = $neodash_odmitemvalue_oid_impact \n  AND item_version.version = $neodash_item_version_impact\n  AND NOT item_root:DeletedOdmItemRoot\n\nOPTIONAL MATCH (coll_root:OdmStudyEventRoot)-[:HAS_VERSION]->(coll:OdmStudyEventValue)-[:FORM_REF]->(form:OdmFormValue)-[:ITEM_GROUP_REF]->(group:OdmItemGroupValue)-[:ITEM_REF]->(item),\n      (form)<-[:HAS_VERSION]-(form_root:OdmFormRoot),\n      (group)<-[:HAS_VERSION]-(group_root:OdmItemGroupRoot)\nWHERE NOT coll_root:DeletedOdmStudyEventRoot\n  AND NOT form_root:DeletedOdmFormRoot\n  AND NOT group_root:DeletedOdmItemGroupRoot\n\nWITH item,\n     coll.name AS coll_name,\n     form.name AS form_name,\n     group.name AS group_name\n\nWITH item,\n     collect(DISTINCT {coll: coll_name, form: form_name, grp: group_name}) AS chains\n\nUNWIND chains AS chain\n\nRETURN \n  item.name AS `Item (Selected) →`,\n  chain.grp AS `ItemGroup →`,\n  chain.form AS `Form →`,\n  chain.coll AS `Collection`\nORDER BY `Collection`, `Form →`, `ItemGroup →`\nLIMIT 1000",
           "width": 15,
           "height": 3,
           "x": 0,
-          "y": 4,
+          "y": 5,
           "type": "table",
           "selection": {},
           "settings": {
@@ -168,9 +174,9 @@
         {
           "id": "3a3a3333-3333-3333-3333-333333333338",
           "title": "Impact Summary",
-          "query": "MATCH (item:OdmItemValue)<-[item_version:HAS_VERSION]-(item_root:OdmItemRoot)\nWHERE item.oid = $neodash_odmitemvalue_oid_impact \n  AND item_version.version = $neodash_item_version_impact\n\nOPTIONAL MATCH (group:OdmItemGroupValue)-[:ITEM_REF]->(item)\nWITH item, collect(DISTINCT group) AS groups\n\nOPTIONAL MATCH (form:OdmFormValue)-[:ITEM_GROUP_REF]->(:OdmItemGroupValue)-[:ITEM_REF]->(item)\nWITH item, groups, collect(DISTINCT form) AS forms\n\nOPTIONAL MATCH (coll:OdmStudyEventValue)-[:FORM_REF]->(:OdmFormValue)-[:ITEM_GROUP_REF]->(:OdmItemGroupValue)-[:ITEM_REF]->(item)\nWITH item, groups, forms, collect(DISTINCT coll) AS collections\n\nRETURN \n  '# 🔹 Item Impact Analysis\\n\\n' +\n  '## Item Information\\n' +\n  '- **Item OID**: ' + item.oid + '\\n' +\n  '- **Item Name**: ' + item.name + '\\n' +\n  '- **Version**: ' + toString($neodash_item_version_impact) + '\\n' +\n  '- **Data Type**: ' + coalesce(item.data_type, 'N/A') + '\\n\\n' +\n  '---\\n\\n' +\n  '## Impact Summary\\n' +\n  '- **ItemGroups Using This Item**: ' + toString(size(groups)) + '\\n' +\n  '- **Forms Affected**: ' + toString(size(forms)) + '\\n' +\n  '- **Collections Affected**: ' + toString(size(collections)) + '\\n\\n' +\n  '---\\n\\n' +\n  '## ⚠️ Change Impact\\n' +\n  'Any changes to this Item will potentially affect:\\n' +\n  '- ' + toString(size(groups)) + ' ItemGroup(s)\\n' +\n  '- ' + toString(size(forms)) + ' Form(s)\\n' +\n  '- ' + toString(size(collections)) + ' Collection(s)\\n\\n' +\n  'This represents a **' + \n  CASE \n    WHEN size(forms) >= 5 THEN 'HIGH'\n    WHEN size(formss) >= 2 THEN 'MEDIUM'\n    ELSE 'LOW'\n  END + '** impact level.'\n  AS summary",
+          "query": "MATCH (item:OdmItemValue)<-[item_version:HAS_VERSION]-(item_root:OdmItemRoot)\nWHERE item.oid = $neodash_odmitemvalue_oid_impact \n  AND item_version.version = $neodash_item_version_impact\n  AND NOT item_root:DeletedOdmItemRoot\n\nOPTIONAL MATCH (group_root:OdmItemGroupRoot)-[:HAS_VERSION]->(group:OdmItemGroupValue)-[:ITEM_REF]->(item)\nWHERE NOT group_root:DeletedOdmItemGroupRoot\nWITH item, collect(DISTINCT group) AS groups\n\nOPTIONAL MATCH (form_root:OdmFormRoot)-[:HAS_VERSION]->(form:OdmFormValue)-[:ITEM_GROUP_REF]->(group:OdmItemGroupValue)-[:ITEM_REF]->(item),\n      (group)<-[:HAS_VERSION]-(group_root:OdmItemGroupRoot)\nWHERE NOT form_root:DeletedOdmFormRoot\n  AND NOT group_root:DeletedOdmItemGroupRoot\nWITH item, groups, collect(DISTINCT form) AS forms\n\nOPTIONAL MATCH (coll_root:OdmStudyEventRoot)-[:HAS_VERSION]->(coll:OdmStudyEventValue)-[:FORM_REF]->(form:OdmFormValue)-[:ITEM_GROUP_REF]->(group:OdmItemGroupValue)-[:ITEM_REF]->(item),\n      (form)<-[:HAS_VERSION]-(form_root:OdmFormRoot),\n      (group)<-[:HAS_VERSION]-(group_root:OdmItemGroupRoot)\nWHERE NOT coll_root:DeletedOdmStudyEventRoot\n  AND NOT form_root:DeletedOdmFormRoot\n  AND NOT group_root:DeletedOdmItemGroupRoot\nWITH item, groups, forms, collect(DISTINCT coll) AS collections\n\nRETURN \n  '# 🔹 Item Impact Analysis\\n\\n' +\n  '## Item Information\\n' +\n  '- **Item OID**: ' + item.oid + '\\n' +\n  '- **Item Name**: ' + item.name + '\\n' +\n  '- **Version**: ' + toString($neodash_item_version_impact) + '\\n' +\n  '- **Data Type**: ' + coalesce(item.datatype, 'N/A') + '\\n\\n' +\n  '---\\n\\n' +\n  '## Impact Summary\\n' +\n  '- **ItemGroups Using This Item**: ' + toString(size(groups)) + '\\n' +\n  '- **Forms Affected**: ' + toString(size(forms)) + '\\n' +\n  '- **Collections Affected**: ' + toString(size(collections)) + '\\n\\n' +\n  '---\\n\\n' +\n  '## ⚠️ Change Impact\\n' +\n  'Any changes to this Item will potentially affect:\\n' +\n  '- ' + toString(size(groups)) + ' ItemGroup(s)\\n' +\n  '- ' + toString(size(forms)) + ' Form(s)\\n' +\n  '- ' + toString(size(collections)) + ' Collection(s)\\n\\n' +\n  'This represents a **' + \n  CASE \n    WHEN size(forms) >= 5 THEN 'HIGH'\n    WHEN size(forms) >= 2 THEN 'MEDIUM'\n    ELSE 'LOW'\n  END + '** impact level.'\n  AS summary",
           "width": 8,
-          "height": 7,
+          "height": 8,
           "x": 15,
           "y": 0,
           "type": "value",
@@ -179,6 +185,26 @@
             "fontSize": 14,
             "monospace": true
           }
+        },
+        {
+          "id": "e0ac5e6e-44d2-400c-9eb2-a5ce6f7cf78c",
+          "title": "2. Select Item Identifier",
+          "query": "MATCH (n:`OdmItemValue`)<-[:HAS_VERSION]-(root:OdmItemRoot)\nWHERE NOT root:DeletedOdmItemRoot\n  AND toLower(toString(n.`name`)) =\n  toLower($neodash_odmitemvalue_display)\nWITH DISTINCT n\nWHERE toLower(toString(n.`oid`)) CONTAINS toLower($input)\nRETURN DISTINCT n.`oid` AS value, n.`oid` AS display\nORDER BY display ASC\nLIMIT 1000\n\n\n",
+          "width": 8,
+          "height": 3,
+          "x": 0,
+          "y": 2,
+          "type": "select",
+          "selection": {},
+          "settings": {
+            "type": "Custom Query",
+            "entityType": "odmitemvalue_oid_impact",
+            "parameterName": "neodash_odmitemvalue_oid_impact",
+            "clearParameterOnFieldClear": false,
+            "refreshButtonEnabled": true,
+            "helperText": "Item OID"
+          },
+          "schema": []
         }
       ]
     },
@@ -187,8 +213,8 @@
       "reports": [
         {
           "id": "2a2a2222-2222-2222-2222-222222222221",
-          "title": "Select ItemGroup",
-          "query": "MATCH (n:`OdmItemGroupValue`) \nWHERE toLower(toString(n.`oid`)) CONTAINS toLower($input) \nRETURN DISTINCT n.`oid` as value,  n.`name` as display ORDER BY size(toString(value)) ASC LIMIT 1000",
+          "title": "1. Select ItemGroup",
+          "query": "MATCH (n:`OdmItemGroupValue`)<-[:HAS_VERSION]-(root:OdmItemGroupRoot)\nWHERE NOT root:DeletedOdmItemGroupRoot\n  AND toLower(toString(n.`name`)) CONTAINS toLower($input) \nRETURN DISTINCT n.`name` as value,  n.`name` as display ORDER BY display ASC LIMIT 1000",
           "width": 8,
           "height": 2,
           "x": 0,
@@ -199,18 +225,18 @@
             "type": "Custom Query",
             "refreshButtonEnabled": true,
             "helperText": "Select an ItemGroup to analyze",
-            "entityType": "odmitemgroupvalue_oid_impact",
-            "parameterName": "neodash_odmitemgroupvalue_oid_impact"
+            "entityType": "odmitemgroupvalue_display",
+            "parameterName": "neodash_odmitemgroupvalue_display"
           }
         },
         {
           "id": "2a2a2222-2222-2222-2222-222222222222",
-          "title": "Select ItemGroup Version",
-          "query": "MATCH (group:OdmItemGroupValue)<-[group_version:HAS_VERSION]-(group_root:OdmItemGroupRoot)\nWHERE group.oid = $neodash_odmitemgroupvalue_oid_impact\nRETURN group_version.version as value, 'Version ' + group_version.version as display\nORDER BY group_version.version DESC",
-          "width": 8,
+          "title": "3. Select ItemGroup Version",
+          "query": "MATCH (group:OdmItemGroupValue)<-[group_version:HAS_VERSION]-(group_root:OdmItemGroupRoot)\nWHERE group.oid = $neodash_odmitemgroupvalue_oid_impact\n  AND NOT group_root:DeletedOdmItemGroupRoot\nRETURN group_version.version as value, 'Version ' + group_version.version as display\nORDER BY group_version.version DESC",
+          "width": 6,
           "height": 2,
-          "x": 0,
-          "y": 2,
+          "x": 8,
+          "y": 0,
           "type": "select",
           "selection": {},
           "settings": {
@@ -224,11 +250,11 @@
         {
           "id": "2a2a2222-2222-2222-2222-222222222223",
           "title": "ItemGroup Details",
-          "query": "MATCH (group:OdmItemGroupValue)<-[group_version:HAS_VERSION]-(group_root:OdmItemGroupRoot)\nWHERE group.oid = $neodash_odmitemgroupvalue_oid_impact \n  AND group_version.version = $neodash_group_version_impact\nOPTIONAL MATCH (group)-[:HAS_DESCRIPTION]->(desc:OdmDescription)\nOPTIONAL MATCH (group)-[:HAS_SDTM_DOMAIN]->(domain_context:CTTermContext)-[:HAS_SELECTED_TERM]->(:CTTermRoot)<-[:HAS_TERM_ROOT]-(domain:CTCodelistTerm)\nRETURN \n  group.oid AS `ItemGroup OID`,\n  group.name AS `ItemGroup Name`,\n  group_version.version AS Version,\n  group.repeating AS Repeating,\n  domain.submission_value AS `SDTM Domain`,\n  desc.text AS Description",
+          "query": "MATCH (group:OdmItemGroupValue)<-[group_version:HAS_VERSION]-(group_root:OdmItemGroupRoot)\nWHERE group.oid = $neodash_odmitemgroupvalue_oid_impact \n  AND group_version.version = $neodash_group_version_impact\n  AND NOT group_root:DeletedOdmItemGroupRoot\nOPTIONAL MATCH (group)-[:HAS_DESCRIPTION]->(desc:OdmDescription)\nOPTIONAL MATCH (group)-[:HAS_SDTM_DOMAIN]->(domain_context:CTTermContext)-[:HAS_SELECTED_TERM]->(:CTTermRoot)<-[:HAS_TERM_ROOT]-(domain:CTCodelistTerm)\nRETURN \n  group.oid AS `ItemGroup OID`,\n  group.name AS `ItemGroup Name`,\n  group_version.version AS Version,\n  group.repeating AS Repeating,\n  domain.submission_value AS `SDTM Domain`,\n  desc.text AS Description",
           "width": 6,
-          "height": 4,
+          "height": 3,
           "x": 8,
-          "y": 0,
+          "y": 2,
           "type": "table",
           "selection": {},
           "settings": {
@@ -241,11 +267,11 @@
         {
           "id": "2a2a2222-2222-2222-2222-222222222224",
           "title": "Items in ItemGroup - $neodash_odmitemgroupvalue_oid_impact (v $neodash_group_version_impact)",
-          "query": "MATCH (group:OdmItemGroupValue)<-[group_version:HAS_VERSION]-(group_root:OdmItemGroupRoot)\nWHERE group.oid = $neodash_odmitemgroupvalue_oid_impact \n  AND group_version.version = $neodash_group_version_impact\nOPTIONAL MATCH (group)-[item_ref:ITEM_REF]->(item:OdmItemValue)<-[item_version:HAS_VERSION]-(item_root:OdmItemRoot)\nOPTIONAL MATCH (item)-[:HAS_DESCRIPTION]->(item_desc:OdmDescription)\nOPTIONAL MATCH (item)-[:HAS_CODELIST_TERM]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(:CTTermRoot)<-[:HAS_TERM_ROOT]-(codelist:CTCodelistTerm)\nWITH item, item_version, item_desc, item_ref, collect(DISTINCT codelist.submission_value) AS codelists\nORDER BY item_ref.order_number\nRETURN \n  item.oid AS `Item OID`,\n  item.name AS `Item Name`,\n  item_version.version AS Version,\n  item.data_type AS `Data Type`,\n  item_ref.mandatory AS Mandatory,\n  item_ref.order_number AS `Order`,\n  CASE WHEN size(codelists) > 0 THEN apoc.text.join(codelists, '; ') ELSE null END AS `Codelist Terms`,\n  item_desc.text AS Description\nORDER BY `Order`",
+          "query": "MATCH (group:OdmItemGroupValue)<-[group_version:HAS_VERSION]-(group_root:OdmItemGroupRoot)\nWHERE group.oid = $neodash_odmitemgroupvalue_oid_impact \n  AND group_version.version = $neodash_group_version_impact\n  AND NOT group_root:DeletedOdmItemGroupRoot\nOPTIONAL MATCH (group)-[item_ref:ITEM_REF]->(item:OdmItemValue)<-[item_version:HAS_VERSION]-(item_root:OdmItemRoot)\nWHERE NOT item_root:DeletedOdmItemRoot\nOPTIONAL MATCH (item)-[:HAS_DESCRIPTION]->(item_desc:OdmDescription)\nOPTIONAL MATCH (item)-[:HAS_CODELIST_TERM]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(:CTTermRoot)<-[:HAS_TERM_ROOT]-(codelist:CTCodelistTerm)\nWITH item, item_version, item_desc, item_ref, collect(DISTINCT codelist.submission_value) AS codelists\nORDER BY item_ref.order_number\nRETURN \n  item.oid AS `Item OID`,\n  item.name AS `Item Name`,\n  item_version.version AS Version,\n  item.datatype AS `Data Type`,\n  item_ref.mandatory AS Mandatory,\n  item_ref.order_number AS `Order`,\n  CASE WHEN size(codelists) > 0 THEN apoc.text.join(codelists, '; ') ELSE null END AS `Codelist Terms`,\n  item_desc.text AS Description\nORDER BY `Order`",
           "width": 22,
           "height": 5,
           "x": 0,
-          "y": 7,
+          "y": 8,
           "type": "table",
           "selection": {},
           "settings": {
@@ -261,11 +287,11 @@
         {
           "id": "2a2a2222-2222-2222-2222-222222222225",
           "title": "Forms using ItemGroup - $neodash_odmitemgroupvalue_oid_impact (v $neodash_group_version_impact)",
-          "query": "MATCH (group:OdmItemGroupValue)<-[group_version:HAS_VERSION]-(group_root:OdmItemGroupRoot)\nWHERE group.oid = $neodash_odmitemgroupvalue_oid_impact \n  AND group_version.version = $neodash_group_version_impact\nOPTIONAL MATCH (form_root:OdmFormRoot)-[form_version:HAS_VERSION]->(form:OdmFormValue)-[ig_ref:ITEM_GROUP_REF]->(group)\nRETURN \n  form.oid AS `Form OID`,\n  form.name AS `Form Name`,\n  form_version.version AS `Form Version`,\n  ig_ref.mandatory AS `Mandatory in Form`,\n  ig_ref.order_number AS `Order in Form`\nORDER BY `Form Name`, `Form Version` DESC",
+          "query": "MATCH (group:OdmItemGroupValue)<-[group_version:HAS_VERSION]-(group_root:OdmItemGroupRoot)\nWHERE group.oid = $neodash_odmitemgroupvalue_oid_impact \n  AND group_version.version = $neodash_group_version_impact\n  AND NOT group_root:DeletedOdmItemGroupRoot\nOPTIONAL MATCH (form_root:OdmFormRoot)-[form_version:HAS_VERSION]->(form:OdmFormValue)-[ig_ref:ITEM_GROUP_REF]->(group)\nWHERE NOT form_root:DeletedOdmFormRoot\nRETURN \n  form.oid AS `Form OID`,\n  form.name AS `Form Name`,\n  form_version.version AS `Form Version`,\n  ig_ref.mandatory AS `Mandatory in Form`,\n  ig_ref.order_number AS `Order in Form`\nORDER BY `Form Name`, `Form Version` DESC",
           "width": 14,
           "height": 3,
           "x": 0,
-          "y": 4,
+          "y": 5,
           "type": "table",
           "selection": {},
           "settings": {
@@ -278,11 +304,11 @@
         {
           "id": "2a2a2222-2222-2222-2222-222222222226",
           "title": "Collections using ItemGroup - $neodash_odmitemgroupvalue_oid_impact (v $neodash_group_version_impact)",
-          "query": "MATCH (group:OdmItemGroupValue)<-[group_version:HAS_VERSION]-(group_root:OdmItemGroupRoot)\nWHERE group.oid = $neodash_odmitemgroupvalue_oid_impact \n  AND group_version.version = $neodash_group_version_impact\nOPTIONAL MATCH (coll_root:OdmStudyEventRoot)-[coll_version:HAS_VERSION]->(coll:OdmStudyEventValue)-[:FORM_REF]->(form:OdmFormValue)-[:ITEM_GROUP_REF]->(group)\nRETURN DISTINCT\n  coll.name AS `Collection Name`,\n  coll_version.version AS `Collection Version`,\n  form.name AS `Via Form`\nORDER BY `Collection Name`, `Collection Version` DESC, `Via Form`",
+          "query": "MATCH (group:OdmItemGroupValue)<-[group_version:HAS_VERSION]-(group_root:OdmItemGroupRoot)\nWHERE group.oid = $neodash_odmitemgroupvalue_oid_impact \n  AND group_version.version = $neodash_group_version_impact\n  AND NOT group_root:DeletedOdmItemGroupRoot\nOPTIONAL MATCH (coll_root:OdmStudyEventRoot)-[coll_version:HAS_VERSION]->(coll:OdmStudyEventValue)-[:FORM_REF]->(form:OdmFormValue)-[:ITEM_GROUP_REF]->(group),\n      (form)<-[:HAS_VERSION]-(form_root:OdmFormRoot)\nWHERE NOT coll_root:DeletedOdmStudyEventRoot\n  AND NOT form_root:DeletedOdmFormRoot\nRETURN DISTINCT\n  coll.name AS `Collection Name`,\n  coll_version.version AS `Collection Version`,\n  form.name AS `Via Form`\nORDER BY `Collection Name`, `Collection Version` DESC, `Via Form`",
           "width": 22,
           "height": 4,
           "x": 0,
-          "y": 12,
+          "y": 17,
           "type": "table",
           "selection": {},
           "settings": {
@@ -295,9 +321,9 @@
         {
           "id": "2a2a2222-2222-2222-2222-222222222227",
           "title": "Impact Summary",
-          "query": "MATCH (group:OdmItemGroupValue)<-[group_version:HAS_VERSION]-(group_root:OdmItemGroupRoot)\nWHERE group.oid = $neodash_odmitemgroupvalue_oid_impact \n  AND group_version.version = $neodash_group_version_impact\n\nOPTIONAL MATCH (group)-[:ITEM_REF]->(item:OdmItemValue)\nWITH group, collect(DISTINCT item) AS items\n\nOPTIONAL MATCH (form:OdmFormValue)-[:ITEM_GROUP_REF]->(group)\nWITH group, items, collect(DISTINCT form) AS forms\n\nOPTIONAL MATCH (coll:OdmStudyEventValue)-[:FORM_REF]->(:OdmFormValue)-[:ITEM_GROUP_REF]->(group)\nWITH group, items, forms, collect(DISTINCT coll) AS collections\n\nRETURN \n  '# 📦 ItemGroup Impact Analysis\\n\\n' +\n  '## ItemGroup Information\\n' +\n  '- **ItemGroup OID**: ' + group.oid + '\\n' +\n  '- **ItemGroup Name**: ' + group.name + '\\n' +\n  '- **Version**: ' + toString($neodash_group_version_impact) + '\\n\\n' +\n  '---\\n\\n' +\n  '## Impact Summary\\n' +\n  '- **Items Affected**: ' + toString(size(items)) + '\\n' +\n  '- **Forms Using This ItemGroup**: ' + toString(size(forms)) + '\\n' +\n  '- **Collections Affected**: ' + toString(size(collections)) + '\\n\\n' +\n  '---\\n\\n' +\n  '## ⚠️ Change Impact\\n' +\n  'Any changes to this ItemGroup will potentially affect:\\n' +\n  '- ' + toString(size(items)) + ' Item(s)\\n' +\n  '- ' + toString(size(forms)) + ' Form(s)\\n' +\n  '- ' + toString(size(collections)) + ' Collection(s)\\n'\n  AS summary",
+          "query": "MATCH (group:OdmItemGroupValue)<-[group_version:HAS_VERSION]-(group_root:OdmItemGroupRoot)\nWHERE group.oid = $neodash_odmitemgroupvalue_oid_impact \n  AND group_version.version = $neodash_group_version_impact\n  AND NOT group_root:DeletedOdmItemGroupRoot\n\nOPTIONAL MATCH (item_root:OdmItemRoot)-[:HAS_VERSION]->(item:OdmItemValue)<-[:ITEM_REF]-(group)\nWHERE NOT item_root:DeletedOdmItemRoot\nWITH group, collect(DISTINCT item) AS items\n\nOPTIONAL MATCH (form_root:OdmFormRoot)-[:HAS_VERSION]->(form:OdmFormValue)-[:ITEM_GROUP_REF]->(group)\nWHERE NOT form_root:DeletedOdmFormRoot\nWITH group, items, collect(DISTINCT form) AS forms\n\nOPTIONAL MATCH (coll_root:OdmStudyEventRoot)-[:HAS_VERSION]->(coll:OdmStudyEventValue)-[:FORM_REF]->(form:OdmFormValue)-[:ITEM_GROUP_REF]->(group),\n      (form)<-[:HAS_VERSION]-(form_root:OdmFormRoot)\nWHERE NOT coll_root:DeletedOdmStudyEventRoot\n  AND NOT form_root:DeletedOdmFormRoot\nWITH group, items, forms, collect(DISTINCT coll) AS collections\n\nRETURN \n  '# 📦 ItemGroup Impact Analysis\\n\\n' +\n  '## ItemGroup Information\\n' +\n  '- **ItemGroup OID**: ' + group.oid + '\\n' +\n  '- **ItemGroup Name**: ' + group.name + '\\n' +\n  '- **Version**: ' + toString($neodash_group_version_impact) + '\\n\\n' +\n  '---\\n\\n' +\n  '## Impact Summary\\n' +\n  '- **Items Affected**: ' + toString(size(items)) + '\\n' +\n  '- **Forms Using This ItemGroup**: ' + toString(size(forms)) + '\\n' +\n  '- **Collections Affected**: ' + toString(size(collections)) + '\\n\\n' +\n  '---\\n\\n' +\n  '## ⚠️ Change Impact\\n' +\n  'Any changes to this ItemGroup will potentially affect:\\n' +\n  '- ' + toString(size(items)) + ' Item(s)\\n' +\n  '- ' + toString(size(forms)) + ' Form(s)\\n' +\n  '- ' + toString(size(collections)) + ' Collection(s)\\n'\n  AS summary",
           "width": 8,
-          "height": 7,
+          "height": 8,
           "x": 14,
           "y": 0,
           "type": "value",
@@ -306,6 +332,24 @@
             "fontSize": 14,
             "monospace": true
           }
+        },
+        {
+          "id": "498b74a0-4cd0-4380-a77f-c1c7f8f86808",
+          "title": "2. Select ItemGroup OID",
+          "query": "MATCH (n:`OdmItemGroupValue`)<-[:HAS_VERSION]-(root:OdmItemGroupRoot)\nWHERE NOT root:DeletedOdmItemGroupRoot\n  AND toLower(toString(n.`name`)) =\n  toLower($neodash_odmitemgroupvalue_display)\nWITH DISTINCT n\nWHERE toLower(toString(n.`oid`)) CONTAINS toLower($input)\nRETURN DISTINCT n.`oid` AS value, n.`oid` AS display\nORDER BY display ASC\nLIMIT 1000\n\n\n",
+          "width": 8,
+          "height": 3,
+          "x": 0,
+          "y": 2,
+          "type": "select",
+          "selection": {},
+          "settings": {
+            "type": "Custom Query",
+            "entityType": "odmitemgroupvalue_oid_impact",
+            "parameterName": "neodash_odmitemgroupvalue_oid_impact",
+            "helperText": "Select ItemGroup OID"
+          },
+          "schema": []
         }
       ]
     },
@@ -314,8 +358,8 @@
       "reports": [
         {
           "id": "1a1a1111-1111-1111-1111-111111111111",
-          "title": "Select Form",
-          "query": "MATCH (n:`OdmFormValue`) \nWHERE toLower(toString(n.`oid`)) CONTAINS toLower($input) \nRETURN DISTINCT n.`oid` as value,  n.`name` as display ORDER BY size(toString(value)) ASC LIMIT 1000",
+          "title": "1. Select Form",
+          "query": "MATCH (n:`OdmFormValue`)<-[:HAS_VERSION]-(root:OdmFormRoot)\nWHERE NOT root:DeletedOdmFormRoot\n  AND toLower(toString(n.`name`)) CONTAINS toLower($input) \nRETURN DISTINCT n.`name` as value,  n.`name` as display ORDER BY size(toString(value)) ASC LIMIT 1000",
           "width": 6,
           "height": 2,
           "x": 0,
@@ -326,18 +370,18 @@
             "type": "Custom Query",
             "refreshButtonEnabled": true,
             "helperText": "Select a Form to analyze",
-            "entityType": "odmformvalue_oid_impact",
-            "parameterName": "neodash_odmformvalue_oid_impact"
+            "entityType": "odmformvalue_display",
+            "parameterName": "neodash_odmformvalue_display"
           }
         },
         {
           "id": "1a1a1111-1111-1111-1111-111111111112",
-          "title": "Select Form Version",
-          "query": "MATCH (form:OdmFormValue)<-[form_version:HAS_VERSION]-(form_root:OdmFormRoot)\nWHERE form.oid = $neodash_odmformvalue_oid_impact\nRETURN form_version.version as value, 'Version ' + form_version.version as display\nORDER BY form_version.version DESC",
-          "width": 6,
+          "title": "3. Select Form Version",
+          "query": "MATCH (form:OdmFormValue)<-[form_version:HAS_VERSION]-(form_root:OdmFormRoot)\nWHERE form.oid = $neodash_odmformvalue_oid_impact\n  AND NOT form_root:DeletedOdmFormRoot\nRETURN form_version.version as value, 'Version ' + form_version.version as display\nORDER BY form_version.version DESC",
+          "width": 8,
           "height": 2,
-          "x": 0,
-          "y": 2,
+          "x": 6,
+          "y": 0,
           "type": "select",
           "selection": {},
           "settings": {
@@ -351,11 +395,11 @@
         {
           "id": "1a1a1111-1111-1111-1111-111111111113",
           "title": "Form Details",
-          "query": "MATCH (form:OdmFormValue)<-[form_version:HAS_VERSION]-(form_root:OdmFormRoot)\nWHERE form.oid = $neodash_odmformvalue_oid_impact \n  AND form_version.version = $neodash_form_version_impact\nOPTIONAL MATCH (form)-[:HAS_DESCRIPTION]->(desc:OdmDescription)\nRETURN \n  form.oid AS `Form OID`,\n  form.name AS `Form Name`,\n  form_version.version AS Version,\n  form.repeating AS Repeating,\n  desc.text AS Description",
+          "query": "MATCH (form:OdmFormValue)<-[form_version:HAS_VERSION]-(form_root:OdmFormRoot)\nWHERE form.oid = $neodash_odmformvalue_oid_impact \n  AND form_version.version = $neodash_form_version_impact\n  AND NOT form_root:DeletedOdmFormRoot\nOPTIONAL MATCH (form)-[:HAS_DESCRIPTION]->(desc:OdmDescription)\nRETURN \n  form.oid AS `Form OID`,\n  form.name AS `Form Name`,\n  form_version.version AS Version,\n  form.repeating AS Repeating,\n  desc.text AS Description",
           "width": 8,
-          "height": 4,
+          "height": 3,
           "x": 6,
-          "y": 0,
+          "y": 2,
           "type": "table",
           "selection": {},
           "settings": {
@@ -368,11 +412,11 @@
         {
           "id": "1a1a1111-1111-1111-1111-111111111114",
           "title": "ItemGroups in Form - $neodash_odmformvalue_oid_impact (v $neodash_form_version_impact)",
-          "query": "MATCH (form:OdmFormValue)<-[form_version:HAS_VERSION]-(form_root:OdmFormRoot)\nWHERE form.oid = $neodash_odmformvalue_oid_impact \n  AND form_version.version = $neodash_form_version_impact\nOPTIONAL MATCH (form)-[ig_ref:ITEM_GROUP_REF]->(group:OdmItemGroupValue)<-[group_version:HAS_VERSION]-(group_root:OdmItemGroupRoot)\nOPTIONAL MATCH (group)-[:HAS_DESCRIPTION]->(group_desc:OdmDescription)\nWITH form, group, group_version, group_desc, ig_ref\nORDER BY ig_ref.order_number\nRETURN \n  group.oid AS `ItemGroup OID`,\n  group.name AS `ItemGroup Name`,\n  group_version.version AS Version,\n  group.repeating AS Repeating,\n  ig_ref.order_number AS `Order`,\n  ig_ref.mandatory AS Mandatory,\n  group_desc.text AS Description\nORDER BY `Order`",
+          "query": "MATCH (form:OdmFormValue)<-[form_version:HAS_VERSION]-(form_root:OdmFormRoot)\nWHERE form.oid = $neodash_odmformvalue_oid_impact \n  AND form_version.version = $neodash_form_version_impact\n  AND NOT form_root:DeletedOdmFormRoot\nOPTIONAL MATCH (form)-[ig_ref:ITEM_GROUP_REF]->(group:OdmItemGroupValue)<-[group_version:HAS_VERSION]-(group_root:OdmItemGroupRoot)\nWHERE NOT group_root:DeletedOdmItemGroupRoot\nOPTIONAL MATCH (group)-[:HAS_DESCRIPTION]->(group_desc:OdmDescription)\nWITH form, group, group_version, group_desc, ig_ref\nORDER BY ig_ref.order_number\nRETURN \n  group.oid AS `ItemGroup OID`,\n  group.name AS `ItemGroup Name`,\n  group_version.version AS Version,\n  group.repeating AS Repeating,\n  ig_ref.order_number AS `Order`,\n  ig_ref.mandatory AS Mandatory,\n  group_desc.text AS Description\nORDER BY `Order`",
           "width": 14,
           "height": 3,
           "x": 0,
-          "y": 4,
+          "y": 5,
           "type": "table",
           "selection": {},
           "settings": {
@@ -387,11 +431,11 @@
         {
           "id": "1a1a1111-1111-1111-1111-111111111115",
           "title": "All Items in Form - $neodash_odmformvalue_oid_impact (v $neodash_form_version_impact)",
-          "query": "MATCH (form:OdmFormValue)<-[form_version:HAS_VERSION]-(form_root:OdmFormRoot)\nWHERE form.oid = $neodash_odmformvalue_oid_impact \n  AND form_version.version = $neodash_form_version_impact\nOPTIONAL MATCH (form)-[ig_ref:ITEM_GROUP_REF]->(group:OdmItemGroupValue)-[item_ref:ITEM_REF]->(item:OdmItemValue)<-[item_version:HAS_VERSION]-(item_root:OdmItemRoot)\nOPTIONAL MATCH (item)-[:HAS_DESCRIPTION]->(item_desc:OdmDescription)\nWITH form, group, ig_ref, item, item_version, item_desc, item_ref\nORDER BY ig_ref.order_number, item_ref.order_number\nRETURN \n  group.oid AS `ItemGroup OID`,\n  group.name AS `ItemGroup Name`,\n  item.oid AS `Item OID`,\n  item.name AS `Item Name`,\n  item_version.version AS `Item Version`,\n  item.data_type AS `Data Type`,\n  item_ref.mandatory AS Mandatory,\n  item_ref.order_number AS `Order in Group`,\n  item_desc.text AS Description\nORDER BY ig_ref.order_number, `Order in Group`",
+          "query": "MATCH (form:OdmFormValue)<-[form_version:HAS_VERSION]-(form_root:OdmFormRoot)\nWHERE form.oid = $neodash_odmformvalue_oid_impact \n  AND form_version.version = $neodash_form_version_impact\n  AND NOT form_root:DeletedOdmFormRoot\nOPTIONAL MATCH (form)-[ig_ref:ITEM_GROUP_REF]->(group:OdmItemGroupValue)<-[:HAS_VERSION]-(group_root:OdmItemGroupRoot)\nWHERE NOT group_root:DeletedOdmItemGroupRoot\nOPTIONAL MATCH (group)-[item_ref:ITEM_REF]->(item:OdmItemValue)<-[item_version:HAS_VERSION]-(item_root:OdmItemRoot)\nWHERE NOT item_root:DeletedOdmItemRoot\nOPTIONAL MATCH (item)-[:HAS_DESCRIPTION]->(item_desc:OdmDescription)\nWITH form, group, ig_ref, item, item_version, item_desc, item_ref\nORDER BY ig_ref.order_number, item_ref.order_number\nRETURN \n  group.oid AS `ItemGroup OID`,\n  group.name AS `ItemGroup Name`,\n  item.oid AS `Item OID`,\n  item.name AS `Item Name`,\n  item_version.version AS `Item Version`,\n  item.datatype AS `Data Type`,\n  item_ref.mandatory AS Mandatory,\n  item_ref.order_number AS `Order in Group`,\n  item_desc.text AS Description\nORDER BY ig_ref.order_number, `Order in Group`",
           "width": 21,
           "height": 4,
           "x": 0,
-          "y": 7,
+          "y": 8,
           "type": "table",
           "selection": {},
           "settings": {
@@ -407,11 +451,11 @@
         {
           "id": "1a1a1111-1111-1111-1111-111111111116",
           "title": "Collections using Form - $neodash_odmformvalue_oid_impact (v $neodash_form_version_impact)",
-          "query": "MATCH (form_root:OdmFormRoot)-[form_version:HAS_VERSION]->(form:OdmFormValue)\nWHERE form.oid = $neodash_odmformvalue_oid_impact \n  AND form_version.version = $neodash_form_version_impact\nOPTIONAL MATCH (coll_root:OdmStudyEventRoot)-[coll_version:HAS_VERSION]->(coll:OdmStudyEventValue)-[:FORM_REF]->(form)\nRETURN \n  coll.name AS `Collection Name`,\n  coll_version.version AS `Collection Version`,\n  coll.oid AS `Collection OID`\nORDER BY `Collection Name`, `Collection Version` DESC",
+          "query": "MATCH (form_root:OdmFormRoot)-[form_version:HAS_VERSION]->(form:OdmFormValue)\nWHERE form.oid = $neodash_odmformvalue_oid_impact \n  AND form_version.version = $neodash_form_version_impact\n  AND NOT form_root:DeletedOdmFormRoot\nOPTIONAL MATCH (coll_root:OdmStudyEventRoot)-[coll_version:HAS_VERSION]->(coll:OdmStudyEventValue)-[:FORM_REF]->(form)\nWHERE NOT coll_root:DeletedOdmStudyEventRoot\nRETURN \n  coll.name AS `Collection Name`,\n  coll_version.version AS `Collection Version`,\n  coll.oid AS `Collection OID`\nORDER BY `Collection Name`, `Collection Version` DESC",
           "width": 21,
           "height": 4,
           "x": 0,
-          "y": 11,
+          "y": 12,
           "type": "table",
           "selection": {},
           "settings": {
@@ -424,9 +468,9 @@
         {
           "id": "1a1a1111-1111-1111-1111-111111111117",
           "title": "Impact Summary",
-          "query": "MATCH (form:OdmFormValue)<-[form_version:HAS_VERSION]-(form_root:OdmFormRoot)\nWHERE form.oid = $neodash_odmformvalue_oid_impact \n  AND form_version.version = $neodash_form_version_impact\n\nOPTIONAL MATCH (form)-[:ITEM_GROUP_REF]->(group:OdmItemGroupValue)\nWITH form, collect(DISTINCT group) AS groups\n\nOPTIONAL MATCH (form)-[:ITEM_GROUP_REF]->(:OdmItemGroupValue)-[:ITEM_REF]->(item:OdmItemValue)\nWITH form, groups, collect(DISTINCT item) AS items\n\nOPTIONAL MATCH (coll:OdmStudyEventValue)-[:FORM_REF]->(form)\nWITH form, groups, items, collect(DISTINCT coll) AS collections\n\nRETURN \n  '# 📋 Form Impact Analysis\\n\\n' +\n  '## Form Information\\n' +\n  '- **Form OID**: ' + form.oid + '\\n' +\n  '- **Form Name**: ' + form.name + '\\n' +\n  '- **Version**: ' + toString($neodash_form_version_impact) + '\\n\\n' +\n  '---\\n\\n' +\n  '## Impact Summary\\n' +\n  '- **ItemGroups Affected**: ' + toString(size(groups)) + '\\n' +\n  '- **Items Affected**: ' + toString(size(items)) + '\\n' +\n  '- **Collections Using This Form**: ' + toString(size(collections)) + '\\n\\n' +\n  '---\\n\\n' +\n  '## ⚠️ Change Impact\\n' +\n  'Any changes to this Form will potentially affect:\\n' +\n  '- ' + toString(size(groups)) + ' ItemGroup(s)\\n' +\n  '- ' + toString(size(items)) + ' Item(s)\\n' +\n  '- ' + toString(size(collections)) + ' Collection(s)\\n'\n  AS summary",
+          "query": "MATCH (form:OdmFormValue)<-[form_version:HAS_VERSION]-(form_root:OdmFormRoot)\nWHERE form.oid = $neodash_odmformvalue_oid_impact \n  AND form_version.version = $neodash_form_version_impact\n  AND NOT form_root:DeletedOdmFormRoot\n\nOPTIONAL MATCH (form)-[:ITEM_GROUP_REF]->(group:OdmItemGroupValue)<-[:HAS_VERSION]-(group_root:OdmItemGroupRoot)\nWHERE NOT group_root:DeletedOdmItemGroupRoot\nWITH form, collect(DISTINCT group) AS groups\n\nOPTIONAL MATCH (form)-[:ITEM_GROUP_REF]->(group:OdmItemGroupValue)-[:ITEM_REF]->(item:OdmItemValue)<-[:HAS_VERSION]-(item_root:OdmItemRoot),\n      (group)<-[:HAS_VERSION]-(group_root:OdmItemGroupRoot)\nWHERE NOT item_root:DeletedOdmItemRoot\n  AND NOT group_root:DeletedOdmItemGroupRoot\nWITH form, groups, collect(DISTINCT item) AS items\n\nOPTIONAL MATCH (coll_root:OdmStudyEventRoot)-[:HAS_VERSION]->(coll:OdmStudyEventValue)-[:FORM_REF]->(form)\nWHERE NOT coll_root:DeletedOdmStudyEventRoot\nWITH form, groups, items, collect(DISTINCT coll) AS collections\n\nRETURN \n  '# 📋 Form Impact Analysis\\n\\n' +\n  '## Form Information\\n' +\n  '- **Form OID**: ' + form.oid + '\\n' +\n  '- **Form Name**: ' + form.name + '\\n' +\n  '- **Version**: ' + toString($neodash_form_version_impact) + '\\n\\n' +\n  '---\\n\\n' +\n  '## Impact Summary\\n' +\n  '- **ItemGroups Affected**: ' + toString(size(groups)) + '\\n' +\n  '- **Items Affected**: ' + toString(size(items)) + '\\n' +\n  '- **Collections Using This Form**: ' + toString(size(collections)) + '\\n\\n' +\n  '---\\n\\n' +\n  '## ⚠️ Change Impact\\n' +\n  'Any changes to this Form will potentially affect:\\n' +\n  '- ' + toString(size(groups)) + ' ItemGroup(s)\\n' +\n  '- ' + toString(size(items)) + ' Item(s)\\n' +\n  '- ' + toString(size(collections)) + ' Collection(s)\\n'\n  AS summary",
           "width": 7,
-          "height": 7,
+          "height": 8,
           "x": 14,
           "y": 0,
           "type": "value",
@@ -435,6 +479,24 @@
             "fontSize": 14,
             "monospace": true
           }
+        },
+        {
+          "id": "b678c2e8-0e36-4e7f-9d0b-72b0d73b39ca",
+          "title": "2. Select Form OID",
+          "query": "MATCH (n:`OdmFormValue`)<-[:HAS_VERSION]-(root:OdmFormRoot)\nWHERE NOT root:DeletedOdmFormRoot\n  AND toLower(toString(n.`name`)) =\n  toLower($neodash_odmformvalue_display)\nWITH DISTINCT n\nWHERE toLower(toString(n.`oid`)) CONTAINS toLower($input)\nRETURN DISTINCT n.`oid` AS value, n.`oid` AS display\nORDER BY display ASC\nLIMIT 1000\n\n\n",
+          "width": 6,
+          "height": 3,
+          "x": 0,
+          "y": 2,
+          "type": "select",
+          "selection": {},
+          "settings": {
+            "type": "Custom Query",
+            "entityType": "odmformvalue_oid_impact",
+            "parameterName": "neodash_odmformvalue_oid_impact",
+            "helperText": "Select Form OID"
+          },
+          "schema": []
         }
       ]
     }

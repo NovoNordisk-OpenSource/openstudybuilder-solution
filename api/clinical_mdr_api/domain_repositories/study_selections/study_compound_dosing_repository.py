@@ -27,6 +27,7 @@ from clinical_mdr_api.domain_repositories.models.study_audit_trail import (
     StudyAction,
 )
 from clinical_mdr_api.domain_repositories.models.study_selections import (
+    StudyActivityInstance,
     StudyCompound,
     StudyCompoundDosing,
     StudyElement,
@@ -60,6 +61,9 @@ class SelectionHistory:
     dose_value_uid: str | None
     dose_frequency_uid: str | None
     composition: str | None
+    free_text_dose_value: str | None = None
+    free_text_dose_frequency: str | None = None
+    study_activity_instance_uid: str | None = None
 
 
 class StudyCompoundDosingRepository:
@@ -84,6 +88,8 @@ class StudyCompoundDosingRepository:
         )
         return StudyCompoundDosingVO(
             composition=compound_dosing.composition,
+            free_text_dose_value=compound_dosing.free_text_dose_value,
+            free_text_dose_frequency=compound_dosing.free_text_dose_frequency,
             study_selection_uid=compound_dosing.uid,
             study_uid=study_uid,
             study_compound_uid=study_compound.uid,
@@ -143,8 +149,14 @@ class StudyCompoundDosingRepository:
         )
 
         # Create new compound selection
+        # Every scalar property must be passed here: _manage_versioning_with_relations
+        # copies relationships from the before node to the after node, never
+        # properties, so anything omitted is lost on every edit.
         selection_node = StudyCompoundDosing(
-            order=order, composition=selection.composition
+            order=order,
+            composition=selection.composition,
+            free_text_dose_value=selection.free_text_dose_value,
+            free_text_dose_frequency=selection.free_text_dose_frequency,
         )
         selection_node.uid = selection.study_selection_uid
         selection_node.save()
@@ -187,6 +199,24 @@ class StudyCompoundDosingRepository:
 
             # connect to reason_for_missing node
             selection_node.has_dose_frequency.connect(selected_term_node)
+        if selection.study_activity_instance_uid:
+            # Anchoring the lookup on the current StudyValue picks the current
+            # node and proves that it belongs to the same study in one step.
+            instance_node = (
+                latest_study_value_node.has_study_activity_instance.get_or_none(
+                    uid=selection.study_activity_instance_uid
+                )
+            )
+
+            NotFoundException.raise_if(
+                instance_node is None,
+                "Study Activity Instance",
+                selection.study_activity_instance_uid,
+            )
+
+            selection_node.has_dose_collection_study_activity_instance.connect(
+                instance_node
+            )
 
         _manage_versioning_with_relations(
             study_root=study_root,
@@ -198,6 +228,9 @@ class StudyCompoundDosingRepository:
                 CTTermContext,
                 StudyCompound,
                 StudyElement,
+                # Excluded so that re-pointing the dose collection link replaces
+                # the edge instead of accumulating one per version.
+                StudyActivityInstance,
             ],
             author_id=selection.author_id,
         )
@@ -219,7 +252,6 @@ class StudyCompoundDosingRepository:
             return Create()
         return Delete()
 
-    # pylint: disable=unused-argument
     def save(
         self, study_selection: StudySelectionCompoundDosingsAR, author_id: str
     ) -> None:
@@ -363,6 +395,8 @@ class StudyCompoundDosingRepository:
                 all_scd.uid AS uid,
                 all_scd.order AS order,
                 all_scd.composition AS composition,
+                all_scd.free_text_dose_value AS free_text_dose_value,
+                all_scd.free_text_dose_frequency AS free_text_dose_frequency,
                 se.uid AS study_element_uid,
                 sc.uid AS study_compound_uid,
                 cr.uid AS compound_uid,
@@ -370,6 +404,8 @@ class StudyCompoundDosingRepository:
                 mpr.uid AS medicinal_product_uid,
                 dvr.uid AS dose_value_uid,
                 df.uid AS dose_frequency_uid,
+                head([(all_scd)-[:HAS_DOSE_COLLECTION_STUDY_ACTIVITY_INSTANCE]->(dcsai:StudyActivityInstance) | dcsai.uid])
+                    AS study_activity_instance_uid,
                 labels(asa) AS change_type,
                 asa.date AS start_date,
                 bsa.date AS end_date,
@@ -399,6 +435,9 @@ class StudyCompoundDosingRepository:
                     dose_value_uid=res["dose_value_uid"],
                     dose_frequency_uid=res["dose_frequency_uid"],
                     composition=res["composition"],
+                    free_text_dose_value=res["free_text_dose_value"],
+                    free_text_dose_frequency=res["free_text_dose_frequency"],
+                    study_activity_instance_uid=res["study_activity_instance_uid"],
                     author_id=res["author_id"],
                     change_type=change_type,
                     start_date=convert_to_datetime(value=res["start_date"]),
@@ -444,9 +483,21 @@ class StudyCompoundDosingRepository:
         OPTIONAL MATCH (scd)-[:HAS_DOSE_VALUE]->(dvr:NumericValueWithUnitRoot)
         OPTIONAL MATCH (scd)-[:HAS_DOSE_FREQUENCY]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(df:CTTermRoot)
 
+        // The dose collection link is copied forward onto every new version of the
+        // dosing node, so it accumulates. Anchoring on the current StudyValue picks
+        // the node that is current for the requested study version, and LIMIT 1
+        // stops any leftover edge from duplicating the row.
+        CALL (scd, sv) {
+            OPTIONAL MATCH (scd)-[:HAS_DOSE_COLLECTION_STUDY_ACTIVITY_INSTANCE]->(dcsai:StudyActivityInstance)
+                <-[:HAS_STUDY_ACTIVITY_INSTANCE]-(sv)
+            RETURN dcsai.uid AS study_activity_instance_uid
+            LIMIT 1
+        }
+
         MATCH (sc)<-[:AFTER]-(sa:StudyAction)
 
-        WITH sr, scd, sc, se, car, cr, mpr, dvr, df, sa
+        WITH sr, scd, sc, se, car, cr, mpr, dvr, df, sa,
+            study_activity_instance_uid
         RETURN
             sr.uid AS study_uid,
             scd.uid AS study_compound_dosing_uid,
@@ -454,11 +505,14 @@ class StudyCompoundDosingRepository:
             se.uid AS study_element_uid,
             scd.order AS order,
             scd.composition AS composition,
+            scd.free_text_dose_value AS free_text_dose_value,
+            scd.free_text_dose_frequency AS free_text_dose_frequency,
             cr.uid AS compound_uid,
             car.uid AS compound_alias_uid,
             mpr.uid AS medicinal_product_uid,
             dvr.uid AS dose_value_uid,
             df.uid AS dose_frequency_uid,
+            study_activity_instance_uid,
             sa.date AS start_date,
             sa.author_id AS author_id
             ORDER BY order
@@ -478,6 +532,11 @@ class StudyCompoundDosingRepository:
                 dose_value_uid=selection.get("dose_value_uid"),
                 dose_frequency_uid=selection.get("dose_frequency_uid"),
                 composition=selection.get("composition"),
+                free_text_dose_value=selection.get("free_text_dose_value"),
+                free_text_dose_frequency=selection.get("free_text_dose_frequency"),
+                study_activity_instance_uid=selection.get(
+                    "study_activity_instance_uid"
+                ),
                 start_date=convert_to_datetime(value=selection["start_date"]),
                 author_id=selection["author_id"],
             )
@@ -533,6 +592,13 @@ class StudyCompoundDosingRepository:
     def get_selection_uid_by_compound_dose_and_frequency(
         self, study_compound_dosing: StudyCompoundDosingVO
     ) -> str | None:
+        """Return the uid of the compound dosing sharing this uniqueness key, if any.
+
+        The key is the study compound, the dose value and the dose frequency, where
+        each of the latter two is either the library one or the study level free
+        text. All four fields take part, so that several free text dosings can
+        coexist on the same compound as long as they differ in one of them.
+        """
         query = """
             MATCH (:StudyRoot {uid: $study_uid})-[:LATEST]->(sv:StudyValue)-[rel:HAS_STUDY_COMPOUND_DOSING]->
                     (scd:StudyCompoundDosing)
@@ -544,6 +610,8 @@ class StudyCompoundDosingRepository:
             WITH scd, dfr.uid AS existing_dose_frequency_uid, dvr.uid AS existing_dose_value_uid
             WHERE coalesce(existing_dose_frequency_uid, '') = coalesce($dose_frequency_uid, '')
                 AND coalesce(existing_dose_value_uid, '') = coalesce($dose_value_uid, '')
+                AND coalesce(scd.free_text_dose_value, '') = coalesce($free_text_dose_value, '')
+                AND coalesce(scd.free_text_dose_frequency, '') = coalesce($free_text_dose_frequency, '')
             RETURN scd
             """
         result, _ = db.cypher_query(
@@ -553,8 +621,37 @@ class StudyCompoundDosingRepository:
                 "study_compound_uid": study_compound_dosing.study_compound_uid,
                 "dose_value_uid": study_compound_dosing.dose_value_uid,
                 "dose_frequency_uid": study_compound_dosing.dose_frequency_uid,
+                "free_text_dose_value": study_compound_dosing.free_text_dose_value,
+                "free_text_dose_frequency": study_compound_dosing.free_text_dose_frequency,
             },
         )
         if len(result) > 0 and len(result[0]) > 0:
             return result[0][0].get("uid")
         return None
+
+    def find_compound_dosing_uids_by_activity_instance_uids(
+        self, study_uid: str, study_activity_instance_uids: list[str]
+    ) -> list[str]:
+        """
+        Returns the uids of the study compound dosings that currently select any of
+        the given study activity instances as their dose collection instance.
+        """
+        if not study_activity_instance_uids:
+            return []
+
+        query = """
+            MATCH (:StudyRoot {uid: $study_uid})-[:LATEST]->(sv:StudyValue)
+                -[:HAS_STUDY_COMPOUND_DOSING]->(scd:StudyCompoundDosing)
+            MATCH (scd)-[:HAS_DOSE_COLLECTION_STUDY_ACTIVITY_INSTANCE]->(sai:StudyActivityInstance)
+                <-[:HAS_STUDY_ACTIVITY_INSTANCE]-(sv)
+            WHERE sai.uid IN $study_activity_instance_uids
+            RETURN DISTINCT scd.uid AS study_compound_dosing_uid
+            """
+        result, _ = db.cypher_query(
+            query,
+            {
+                "study_uid": study_uid,
+                "study_activity_instance_uids": study_activity_instance_uids,
+            },
+        )
+        return [row[0] for row in result]

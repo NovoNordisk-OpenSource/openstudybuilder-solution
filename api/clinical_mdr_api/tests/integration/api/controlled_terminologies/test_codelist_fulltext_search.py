@@ -2,10 +2,6 @@
 Tests for full-text search on codelists and codelists by term
 """
 
-# pylint: disable=unused-argument
-# pylint: disable=redefined-outer-name
-# pylint: disable=too-many-arguments
-
 import logging
 
 import pytest

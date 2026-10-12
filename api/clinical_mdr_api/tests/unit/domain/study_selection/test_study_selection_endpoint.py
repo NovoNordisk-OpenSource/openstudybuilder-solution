@@ -37,7 +37,7 @@ def create_random_valid_vo(
     uid_study_objective = "uid_study_objective_000001"
     uid_level = random_str()
     uid_sublevel = random_str()
-    start_datetime = datetime.datetime.now(datetime.timezone.utc)
+    start_datetime = datetime.datetime.now(datetime.UTC)
     uid_list.extend(
         [uid_study_objective, uid_timeframe, uid_endpoint, uid_level, uid_sublevel]
     )
@@ -66,7 +66,7 @@ def create_random_valid_vo(
 # test StudySelectionObjectivesVO
 class TestStudySelectionEndpointVO(unittest.TestCase):
     def test__validate__success(self):
-        start_datetime = datetime.datetime.now(datetime.timezone.utc)
+        start_datetime = datetime.datetime.now(datetime.UTC)
         test_tuples = [
             [
                 "uid_endpoint",
@@ -153,7 +153,7 @@ class TestStudySelectionEndpointVO(unittest.TestCase):
                 )
 
     def test__validate__failure(self):
-        start_datetime = datetime.datetime.now(datetime.timezone.utc)
+        start_datetime = datetime.datetime.now(datetime.UTC)
         test_tuples = [
             [
                 "wrong_endpoint_uid",
@@ -221,7 +221,7 @@ class TestStudySelectionEndpointVO(unittest.TestCase):
                     )
 
     def test__validate__success_unit_separator_states(self):
-        start_datetime = datetime.datetime.now(datetime.timezone.utc)
+        start_datetime = datetime.datetime.now(datetime.UTC)
         test_tuples = [
             [
                 "uid_endpoint",
@@ -300,7 +300,7 @@ class TestStudySelectionEndpointVO(unittest.TestCase):
                 )
 
     def test__validate__failure__unit_separator_states(self):
-        start_datetime = datetime.datetime.now(datetime.timezone.utc)
+        start_datetime = datetime.datetime.now(datetime.UTC)
         test_tuples = [
             [
                 "uid_endpoint",

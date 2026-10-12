@@ -1,4 +1,5 @@
-from typing import VT, Annotated, Callable, Iterator
+from collections.abc import Callable, Iterator
+from typing import VT, Annotated
 
 from pydantic import ConfigDict, Field
 

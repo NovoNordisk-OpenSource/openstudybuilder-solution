@@ -1,4 +1,4 @@
-@REQ_ID:1074257
+@REQ_ID:1074254
 Feature: Studies - Define Study - Study Properties - Study Attributes
 
     Background: User is logged in and study has been selected

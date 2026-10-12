@@ -1,6 +1,7 @@
+from collections.abc import Callable, Set
 from dataclasses import dataclass
-from datetime import datetime, timezone
-from typing import AbstractSet, Callable, Self
+from datetime import UTC, datetime
+from typing import Self
 
 from clinical_mdr_api.domains.concepts.concept_base import ConceptVO
 from clinical_mdr_api.domains.versioned_object_aggregate import (
@@ -81,7 +82,7 @@ class SimpleConceptAR(LibraryItemAggregateRootBase):
             _change_description="Initial version",
             _status=LibraryItemStatus.FINAL,
             _author_id=author_id,
-            _start_date=datetime.now(timezone.utc),
+            _start_date=datetime.now(UTC),
             _end_date=None,
             _major_version=1,
             _minor_version=0,
@@ -141,7 +142,7 @@ class SimpleConceptAR(LibraryItemAggregateRootBase):
             "_soft_delete function is not defined for SimpleConcept objects"
         )
 
-    def get_possible_actions(self) -> AbstractSet[ObjectAction]:
+    def get_possible_actions(self) -> Set[ObjectAction]:
         raise AttributeError(
             "get_possible_functions function is not defined for SimpleConcept objects"
         )

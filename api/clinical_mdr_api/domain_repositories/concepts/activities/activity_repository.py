@@ -64,7 +64,6 @@ class ActivityRepository(ConceptGenericRepository[ActivityAR]):
     root_class = ActivityRoot
     value_class = ActivityValue
     return_model = Activity
-    filter_query_parameters: dict[Any, Any] = {}
 
     def latest_concept_in_library_exists_by_name(
         self,
@@ -465,15 +464,24 @@ class ActivityRepository(ConceptGenericRepository[ActivityAR]):
             filter_by_activity_names = "concept_value.name IN $activity_names"
             filter_parameters.append(filter_by_activity_names)
             filter_query_parameters["activity_names"] = activity_names
-        if kwargs.get("activity_subgroup_names") is not None:
-            activity_subgroup_names = kwargs.get("activity_subgroup_names")
+        activity_subgroup_names = kwargs.get("activity_subgroup_names")
+        activity_group_names = kwargs.get("activity_group_names")
+        if activity_subgroup_names is not None and activity_group_names is not None:
+            filter_by_activity_subgroup_and_group_names = f"""
+            size([({activity_grouping_query_text}) WHERE
+            head([(activity_grouping)-[:HAS_SELECTED_SUBGROUP]->(asgv:ActivitySubGroupValue) | asgv.name]) IN $activity_subgroup_names
+            AND head([(activity_grouping)-[:HAS_SELECTED_GROUP]->(agv:ActivityGroupValue) | agv.name]) IN $activity_group_names
+            | activity_grouping]) > 0"""
+            filter_parameters.append(filter_by_activity_subgroup_and_group_names)
+            filter_query_parameters["activity_subgroup_names"] = activity_subgroup_names
+            filter_query_parameters["activity_group_names"] = activity_group_names
+        elif activity_subgroup_names is not None:
             filter_by_activity_subgroup_names = f"""
             size([({activity_grouping_query_text})-[:HAS_SELECTED_SUBGROUP]->
             (asgv:ActivitySubGroupValue) WHERE asgv.name IN $activity_subgroup_names | asgv.name]) > 0"""
             filter_parameters.append(filter_by_activity_subgroup_names)
             filter_query_parameters["activity_subgroup_names"] = activity_subgroup_names
-        if kwargs.get("activity_group_names") is not None:
-            activity_group_names = kwargs.get("activity_group_names")
+        elif activity_group_names is not None:
             filter_by_activity_group_names = f"""
             size([({activity_grouping_query_text})-[:HAS_SELECTED_GROUP]->
             (agv:ActivityGroupValue) WHERE agv.name IN $activity_group_names | agv.name]) > 0"""
@@ -649,7 +657,7 @@ class ActivityRepository(ConceptGenericRepository[ActivityAR]):
                 "activity_uid": activity.uid,
                 "new_status": activity.item_metadata.status.value,
                 "new_version": activity.item_metadata.version,
-                "start_date": datetime.datetime.now(datetime.timezone.utc),
+                "start_date": datetime.datetime.now(datetime.UTC),
                 "change_description": "Copying previous ActivityValue node and updating ActivityGrouping nodes",
                 "author_id": author_id,
                 "activity_subgroup_uids": [
@@ -773,7 +781,9 @@ class ActivityRepository(ConceptGenericRepository[ActivityAR]):
 
             apoc.coll.sortMulti([({activity_grouping_query_text})<-[:HAS_ACTIVITY]-(activity_instance_groupings_value:ActivityInstanceGroupingValue)
                 <-[groupings_has_version:HAS_VERSION]-(activity_instance_groupings_root:ActivityInstanceGroupingRoot)
-                <-[:HAS_GROUPING_ROOT]-(activity_instance_root:ActivityInstanceRoot)-[instance_version:HAS_VERSION WHERE instance_version.status='Final' and instance_version.end_date IS NULL]->(activity_instance_value:ActivityInstanceValue) |
+                <-[:HAS_GROUPING_ROOT]-(activity_instance_root:ActivityInstanceRoot)
+                -[instance_version:HAS_VERSION WHERE instance_version.status='Final' and instance_version.end_date IS NULL]->(activity_instance_value:ActivityInstanceValue)
+                |
                 {{
                     uid:activity_instance_root.uid,
                     legacy_code:activity_instance_value.is_legacy_usage,
@@ -989,7 +999,8 @@ class ActivityRepository(ConceptGenericRepository[ActivityAR]):
                 ['nci_concept_id', activity_item_class_value.nci_concept_id],
                 ['name', activity_item_class_value.name],
                 ['type', head([(activity_item_class_value)-[:HAS_DATA_TYPE]->(ct_term_context:CTTermContext)
-                    -[:HAS_SELECTED_TERM]->(data_type_root:CTTermRoot)-[:HAS_ATTRIBUTES_ROOT]->(data_type_term_attr_root)-[:LATEST]->(data_type_term_attr_value) | data_type_term_attr_value.preferred_term])],
+                    -[:HAS_SELECTED_TERM]->(data_type_root:CTTermRoot)-[:HAS_ATTRIBUTES_ROOT]->(data_type_term_attr_root)-[:LATEST]->(data_type_term_attr_value)
+                    | data_type_term_attr_value.preferred_term])],
                 ['example_set', collect(distinct(coalesce(activity_item_term_attr_value.submission_value, unit_def.name)))]
             ]) ELSE null
             END
@@ -1449,7 +1460,8 @@ RETURN
         linked_instances_query = """
             MATCH (activity_root:ActivityRoot {uid: $uid})-[:HAS_VERSION {version: $version}]->(activity_value:ActivityValue)
             WITH activity_root, activity_value
-            MATCH (activity_value)-[:HAS_GROUPING]->(:ActivityGrouping)<-[:HAS_ACTIVITY]-(:ActivityInstanceGroupingValue)<-[ghv:HAS_VERSION]-(:ActivityInstanceGroupingRoot)<-[:HAS_GROUPING_ROOT]-(ai_root:ActivityInstanceRoot)
+            MATCH (activity_value)-[:HAS_GROUPING]->(:ActivityGrouping)<-[:HAS_ACTIVITY]-(:ActivityInstanceGroupingValue)<-[ghv:HAS_VERSION]-(:ActivityInstanceGroupingRoot)
+                <-[:HAS_GROUPING_ROOT]-(ai_root:ActivityInstanceRoot)
             WITH DISTINCT ai_root, activity_value, collect(ghv) AS ghvs ORDER BY ai_root.uid
             CALL (ai_root, activity_value, ghvs) {
                 UNWIND ghvs AS ghv
@@ -1466,7 +1478,11 @@ RETURN
                   OR (ghv.end_date IS NOT NULL AND hv.end_date IS NOT NULL AND datetime(hv.start_date) < datetime(ghv.end_date) AND datetime(hv.end_date) >= datetime(ghv.start_date))
                 )
                 OPTIONAL MATCH (aiv)-[:ACTIVITY_INSTANCE_CLASS]->(aic_root:ActivityInstanceClassRoot)-[:LATEST]->(aic_value:ActivityInstanceClassValue)
-                WITH {uid: ai_root.uid, name: aiv.name, version: hv.version, activity_instance_class: {uid: aic_root.uid, name: aic_value.name}, status: hv.status, topic_code: aiv.topic_code, adam_param_code: aiv.adam_param_code} AS instance_info
+                WITH {
+                    uid: ai_root.uid, name: aiv.name, version: hv.version,
+                    activity_instance_class: {uid: aic_root.uid, name: aic_value.name},
+                    status: hv.status, topic_code: aiv.topic_code, adam_param_code: aiv.adam_param_code
+                } AS instance_info
                 ORDER BY hv.start_date DESC
                 WITH COLLECT(DISTINCT instance_info) AS instance_versions
                 WITH instance_versions[0].uid AS uid,

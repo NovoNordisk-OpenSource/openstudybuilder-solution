@@ -56,7 +56,6 @@ State after:
         ],
     }
 )
-# pylint: disable=unused-argument
 def get_class_variables(
     request: Request,  # request is actually required by the allow_exports decorator
     data_model_name: Annotated[

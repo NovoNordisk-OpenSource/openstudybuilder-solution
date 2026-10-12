@@ -7,6 +7,9 @@ Feature: Library - Concepts - Activities - Requested Activities - Search
         Given The user is logged in
         And The '/library/activities/requested-activities' page is opened
 
+    Scenario: [TestData] Old placeholder activity workflow feature flag is enabled
+        Then [API] The feature flag 'streamline_placeholder_activities' is disabled
+        
     @smoke_test
     Scenario: [Table][Search][Postive case] User must be able to search created activity request
         Given [API] First requested activity for search test is created

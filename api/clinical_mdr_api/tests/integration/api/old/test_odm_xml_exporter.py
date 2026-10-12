@@ -1,8 +1,3 @@
-# pylint: disable=unused-argument, redefined-outer-name, too-many-arguments, line-too-long, too-many-statements
-
-# pytest fixture functions have other fixture functions as arguments,
-# which pylint interprets as unused arguments
-
 import xml.etree.ElementTree as ET
 
 import pytest

@@ -137,7 +137,9 @@ class DictionaryTermGenericService(ABC):
     ) -> list[str]:
         # First, check that attributes provided for filtering exist in the return class
         # Properties can be nested => check if root property exists in class
-        if not is_attribute_in_model(field_name.split(".")[0], DictionaryTerm):
+        if not is_attribute_in_model(
+            field_name.split(".", maxsplit=1)[0], DictionaryTerm
+        ):
             raise ValidationException(
                 msg=f"Invalid field name specified in the filter dictionary : {field_name}"
             )

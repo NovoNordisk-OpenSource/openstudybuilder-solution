@@ -119,6 +119,14 @@
                 data-cy="ts-param-notes"
               />
             </v-col>
+            <v-col v-if="showShortCode" cols="3">
+              <v-text-field
+                v-model="form.short_code"
+                :label="$t('TrialSummaryParameterForm.short_code')"
+                :disabled="section === 'attributes'"
+                data-cy="ts-param-short-code"
+              />
+            </v-col>
           </v-row>
         </div>
 
@@ -164,8 +172,8 @@
               <v-textarea
                 v-model="form.definition"
                 :label="$t('TrialSummaryParameterForm.definition')"
-                counter="300"
-                maxlength="300"
+                counter="1000"
+                maxlength="1000"
                 rows="5"
                 :disabled="section === 'sponsor'"
                 data-cy="ts-param-definition"
@@ -195,11 +203,17 @@ import studyFields from '@/api/controlledTerminology/studyFields'
 import CodelistSelectionForm from '@/components/library/CodelistSelectionForm.vue'
 import { useEditableLibraries } from '@/composables/editableLibraries'
 import trialSummaryParameterConstants from '@/constants/trialSummaryParameters'
+import { useFeatureFlagsStore } from '@/stores/feature-flags'
 
 const { t } = useI18n()
 const notificationHub = inject('notificationHub')
 const formRules = inject('formRules')
 const formStore = useFormStore()
+const featureFlagsStore = useFeatureFlagsStore()
+
+const showShortCode = computed(() =>
+  featureFlagsStore.getFeatureFlag('ct_term_short_code')
+)
 
 const props = defineProps({
   section: {

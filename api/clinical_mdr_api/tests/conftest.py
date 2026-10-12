@@ -1,12 +1,10 @@
-# pylint: disable=unused-wildcard-import,wildcard-import
-
-from clinical_mdr_api.tests.fixtures.app import *
-from clinical_mdr_api.tests.fixtures.auth import *
-from clinical_mdr_api.tests.fixtures.database import *
-from clinical_mdr_api.tests.fixtures.logging import *
-from clinical_mdr_api.tests.fixtures.routes import *
-from clinical_mdr_api.tests.fixtures.study import *
-from clinical_mdr_api.tests.fixtures.tracing import *
+from clinical_mdr_api.tests.fixtures.app import *  # noqa: F403
+from clinical_mdr_api.tests.fixtures.auth import *  # noqa: F403
+from clinical_mdr_api.tests.fixtures.database import *  # noqa: F403
+from clinical_mdr_api.tests.fixtures.logging import *  # noqa: F403
+from clinical_mdr_api.tests.fixtures.routes import *  # noqa: F403
+from clinical_mdr_api.tests.fixtures.study import *  # noqa: F403
+from clinical_mdr_api.tests.fixtures.tracing import *  # noqa: F403
 
 
 def pytest_configure(config):

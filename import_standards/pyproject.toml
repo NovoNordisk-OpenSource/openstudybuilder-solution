@@ -1,0 +1,39 @@
+[project]
+name = "import-standards"
+version = "0.1.0"
+requires-python = ">=3.14"
+dependencies = [
+    "requests~=2.33",
+    "neo4j~=5.26",
+    "pytest~=9.0,>=9.0.3",
+    "openpyxl~=3.1",
+    "urllib3>=2.8.0",
+    "idna>=3.15",
+    "pygments>=2.20.0",
+]
+
+[tool.uv]
+package = false
+
+[dependency-groups]
+dev = [
+    "ruff~=0.16.8",
+    "black>=26.3.1",
+    "pytest-cov~=6.0.0",
+    "poethepoet>=0.30",
+    'colorama>=0.4.6; sys_platform != "win32"',
+]
+
+[tool.poe]
+envfile = ".env"
+
+[tool.poe.tasks]
+import_cdisc_ct_into_cdisc_db = "python cdisc_staging.py"
+import_ct_from_cdisc_db_into_mdr = "python cdisc_import.py"
+bulk_import_data_models = "python -m src.scripts.wrapper.cdisc_data_models.wrapper_bulk_import"
+import_cdisc_data_models_into_cdisc_db = "python -m src.scripts.wrapper.cdisc_data_models.wrapper_import_into_cdisc_db"
+import_data_models_from_cdisc_db_into_mdr = "python -m src.scripts.wrapper.cdisc_data_models.wrapper_import_from_cdisc_db_into_mdr"
+download_ct_json_data_from_cdisc_api = "python -m src.scripts.import_scripts.cdisc_ct.download_json_data_from_cdisc_api"
+download_data_models_json_data_from_cdisc_api = "python -m src.scripts.import_scripts.cdisc_data_models.download_json_data_from_cdisc_api"
+test = "python -m pytest -s --cov-report html:test_coverage --cov-report xml:reports/coverage.xml --cov --junitxml=reports/test_report.xml src/tests"
+build-sbom = "python3 ../_tools/build_sbom.py --uv --fallback-dir doc/licenses --level 2 --output sbom.md"

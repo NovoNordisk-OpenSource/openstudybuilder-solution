@@ -1,30 +1,89 @@
+[project]
+name = "import-sponsor-data"
+version = "0.1.0"
+requires-python = ">=3.14"
+dependencies = [
+    "requests~=2.34.2",
+    "aiohttp~=3.14.1",
+    "typing-extensions~=4.15.0",
+    "pyyaml~=6.0",
+    # poethepoet is a main (not dev) dependency here: the docker image (see
+    # Dockerfile/compose.yaml) invokes tasks in production via `uv run poe
+    # <task>` and is synced with `--no-dev`, unlike api's split dev/prod
+    # image stages.
+    "poethepoet>=0.30",
+]
+
+[tool.uv]
+package = false
+
+[dependency-groups]
+dev = [
+    "ruff~=0.16.8",
+    "isort~=8.0.1",
+    "black>=26.5.1",
+    "ipykernel==7.3.0",
+]
+
+[tool.poe]
+envfile = ".env"
+
+[tool.poe.tasks]
+build-sbom = "python3 ../_tools/build_sbom.py --uv --fallback-dir doc/licenses --level 2 --output sbom.md"
+import_all = "python -m run_import"
+import_feature_flags = "python -m importers.run_import_feature_flags"
+import_data_suppliers = "python -m importers.run_import_data_suppliers"
+import_dummydata = "python -m importers.run_import_dummydata"
+complexity = "python -m importers.run_import_complexity_burdens"
+dictionaries = "python -m importers.run_import_dictionaries"
+activities = "python -m importers.run_import_activities"
+activity_items = "python -m importers.run_update_activity_instance_activity_items"
+codelistterms1 = "python -m importers.run_import_standardcodelistterms1"
+codelistterms2 = "python -m importers.run_import_standardcodelistterms2"
+unitdefinitions = "python -m importers.run_import_unitdefinitions"
+codelistfinish = "python -m importers.run_import_standardcodelistfinish"
+compounds = "python -m importers.run_import_compounds"
+crfs = "python -m importers.run_import_crfs"
+mockdata = "python -m importers.run_import_mockdata"
+mockdatajson = "python -m importers.run_import_mockdatajson"
+e2e = "python -m importers.run_import_e2e"
+sponsormodels = "python -m importers.run_import_sponsormodels"
+nonstandard_variables = "python -m importers.run_import_nonstandard_variables"
+response_codelists = "python -m importers.run_import_response_codelists"
+trial_summary_parameters = "python -m importers.run_import_trial_summary_parameters"
+validatedatafiles = "python -m test_datafiles_e2e_sync"
+lint = "ruff check importers"
+black = "python -m black ."
+isort = "python -m isort ."
+
+[tool.poe.tasks.format]
+sequence = ["isort", "black"]
+
 [tool.isort]
 profile = 'black'
 src_paths = ['.']
-skip = ['./__init__.py']
+skip = ['.venv', './__init__.py']
 
-[tool.pylint.'MESSAGES CONTROL']
-# Temporarily disabling trivial warnings
-disable = 'invalid-name,missing-function-docstring,missing-class-docstring,missing-module-docstring,fixme,global-statement,import-outside-toplevel,protected-access,too-few-public-methods,too-many-ancestors,too-many-function-args,arguments-differ,cyclic-import'
+[tool.ruff]
+line-length = 200
+target-version = 'py314'
 
-[tool.pylint.'FORMAT']
-max-line-length = 200
-max-module-lines = 5500
+[tool.ruff.lint]
+select = ['PL']
+ignore = [
+    'PLC0415', # import-outside-toplevel
+    'PLR0917', # too-many-positional-arguments
+    'PLW0603', # global-statement
+    'PLR2004', # magic-value-comparison: idiomatic for HTTP status codes throughout this API client
+    'PLC0206', # dict-index-missing-items: stylistic preference, not a bug
+    'PLW2901', # redefined-loop-name: intentional variable reuse in several importers
+]
 
-[tool.pylint.'BASIC']
-good-names = '_,e,i,j,k,x,y,z,ar,ex,rs,_AggregateRootType'
-
-[tool.pylint.'DESIGN']
+[tool.ruff.lint.pylint]
 max-args = 35
-max-attributes = 85
-max-branches = 50
+max-branches = 70
 max-locals = 46
 max-public-methods = 81
 max-returns = 9
-max-statements = 100
-
-[tool.pylint.'REFACTORING']
+max-statements = 200
 max-nested-blocks = 10
-
-[tool.pylint.'SIMILARITIES']
-min-similarity-lines = 1000

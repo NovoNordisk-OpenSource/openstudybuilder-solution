@@ -267,7 +267,56 @@ function findStudyMerged(uid, state, clone) {
   return applyOverrides(clone(base), state.studyOverrides?.[uid])
 }
 
+// Two epoch versions that differ only in the lag time unit — the schema-walked
+// placeholders repeat one value per version, so they cannot show that a
+// unit-only edit is a change.
+const DEMO_EPOCH_VERSIONS = [
+  ['weeks', '2026-02-01T10:00:00Z', null, ['ae_lag_time_unit_name']],
+  ['days', '2026-01-01T10:00:00Z', '2026-02-01T10:00:00Z', []],
+].map(([unit, startDate, endDate, changes]) => ({
+  uid: 'StudyEpoch_000001',
+  study_uid: 'Study_000001',
+  order: 1,
+  epoch_ctterm: {
+    term_uid: 'CTTerm_000001',
+    sponsor_preferred_name: 'Screening',
+  },
+  epoch_type_ctterm: {
+    term_uid: 'CTTerm_000002',
+    sponsor_preferred_name: 'Screening',
+  },
+  epoch_subtype_ctterm: {
+    term_uid: 'CTTerm_000003',
+    sponsor_preferred_name: 'Screening',
+  },
+  start_rule: 'Informed consent signed',
+  end_rule: 'Randomisation',
+  description: 'Screening epoch',
+  study_visit_count: 2,
+  ae_lag_time: 32,
+  ae_lag_time_unit_uid: unit === 'days' ? 'UNIT_DAYS' : 'UNIT_WEEKS',
+  ae_lag_time_unit_name: unit,
+  hypo_lag_time: 7,
+  hypo_lag_time_unit_uid: 'UNIT_DAYS',
+  hypo_lag_time_unit_name: 'days',
+  ce_lag_time: 2,
+  ce_lag_time_unit_uid: 'UNIT_WEEKS',
+  ce_lag_time_unit_name: 'weeks',
+  color_hash: '#A5D6A7',
+  change_type: changes.length ? 'Edit' : 'Create',
+  author_username: 'demo-user',
+  start_date: startDate,
+  end_date: endDate,
+  changes,
+}))
+
 export const studyHandlers = [
+  {
+    method: 'GET',
+    regex:
+      /^\/studies\/(?<uid>[^/]+)\/study-epochs\/(?<epochUid>[^/]+)\/audit-trail$/,
+    respond: ({ clone }) => ({ data: clone(DEMO_EPOCH_VERSIONS) }),
+  },
   {
     method: 'GET',
     regex: /^\/studies\/list$/,
@@ -423,7 +472,6 @@ export const studyHandlers = [
         convertible_unit: true,
         display_unit: true,
         master_unit: false,
-        si_unit: false,
         us_conventional_unit: false,
         use_complex_unit_conversion: false,
         template_parameter: false,

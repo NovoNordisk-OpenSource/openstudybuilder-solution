@@ -117,7 +117,6 @@ def create(
         ],
     }
 )
-# pylint: disable=unused-argument
 def get_all_terms(
     request: Request,  # request is actually required by the allow_exports decorator
     codelist_uid: Annotated[

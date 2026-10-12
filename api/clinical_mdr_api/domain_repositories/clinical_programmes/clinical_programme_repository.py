@@ -1,5 +1,5 @@
+from collections.abc import Collection
 from threading import Lock
-from typing import Collection
 
 from cachetools import TTLCache, cached
 from cachetools.keys import hashkey

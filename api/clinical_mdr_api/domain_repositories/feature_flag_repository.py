@@ -1,6 +1,5 @@
 """Persistence helpers for feature flag Root/Value objects."""
 
-# pylint: disable=invalid-name
 from typing import Any
 
 from neomodel import db

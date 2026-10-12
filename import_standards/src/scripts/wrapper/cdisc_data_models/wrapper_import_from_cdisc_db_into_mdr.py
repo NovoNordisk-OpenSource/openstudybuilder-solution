@@ -3,7 +3,7 @@ This script serves as the entry point for the pipeline step 'Import Data Models 
 
 It is meant to be called e.g. via:
 
-> `python -m pipenv run import_data_models_from_cdisc_db_into_mdr <user initials> <effective date>`
+> `uv run poe import_data_models_from_cdisc_db_into_mdr <user initials> <effective date>`
 
 The script expects the following parameters:
 

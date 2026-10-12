@@ -15,8 +15,11 @@ from clinical_mdr_api.models.study_selections.study_visit import (
 )
 from clinical_mdr_api.models.utils import CustomPage
 from clinical_mdr_api.repositories._utils import FilterOperator
-from clinical_mdr_api.routers import _generic_descriptions, decorators
-from clinical_mdr_api.routers import study_router as router
+from clinical_mdr_api.routers import (
+    _generic_descriptions,
+    decorators,
+    study_router as router,
+)
 from clinical_mdr_api.routers.studies.study_epochs import (
     study_visit_uid_description,
     studyUID,
@@ -37,7 +40,8 @@ State before:
 - Study must exist.
  
 Business logic:
- - By default (no study status is provided) list all study visits for the study uid in status draft. If the study not exist in status draft then return the study visits for the study in status released. If the study uid only exist as deleted then this is returned.
+ - By default (no study status is provided) list all study visits for the study uid in status draft. If the study not exist in status draft then return the study visits for the study in status
+   released. If the study uid only exist as deleted then this is returned.
  - If a specific study status parameter is provided then return study visit for this study status.
  - If the locked study status parameter is requested then a study version should also be provided, and then the study visits for the specific locked study version is returned.
  - Indicate by an boolean variable if the study visit can be updated (if the selected study is in status draft).  
@@ -112,7 +116,6 @@ Possible errors:
         ],
     }
 )
-# pylint: disable=unused-argument
 def get_all(
     request: Request,  # request is actually required by the allow_exports decorator,
     study_uid: Annotated[str, studyUID],
@@ -217,19 +220,24 @@ State before:
  - Study must exist and study status must be in draft.
 
 Business logic:
- - A subset of the visit types are of the type being a time reference (the sponsor defined term exist both in the code list visit type as well as time reference) - only one visit in the study visits can refer to a visit type related to a specific time reference.
+ - A subset of the visit types are of the type being a time reference (the sponsor defined term exist both in the code list visit type as well as time reference) - only one visit in the study
+   visits can refer to a visit type related to a specific time reference.
  
  - The initial study visit specified for a study must refer to a visit type being a time reference type, it must have this as the time reference as well, and the time value must be set to 0.
  
- - All other study visits, than the initial visit, must either refer to a time reference that exist as a visit type for one of the other study visits for the study; or refer to the time reference for 'previous visit'. [previous visit needs to be selected in up - this probably will not be implemented in 0.1]
+ - All other study visits, than the initial visit, must either refer to a time reference that exist as a visit type for one of the other study visits for the study; or refer to the time reference
+   for 'previous visit'. [previous visit needs to be selected in up - this probably will not be implemented in 0.1]
 
- - The duration time must be calculated as the duration time at the visit for the reference time + the time value specified for the study visit. [absolute value of time difference from initial reference time visit (e.g. the Baseline visit)" - to be discussed in point 3]
+ - The duration time must be calculated as the duration time at the visit for the reference time + the time value specified for the study visit. [absolute value of time difference from initial
+   reference time visit (e.g. the Baseline visit)" - to be discussed in point 3]
  
  - The duration time must be returned in the duration time unit specified for the related study epoch. [changed calculated to returned]
  
- - The time value is only valid, if the derived duration time for the study visit is greater than or equal to the duration time for the last study visit in the previous study epoch (given the study visit not is in the first epoch). [depending on a epoch definition, not in v 0.1]
+ - The time value is only valid, if the derived duration time for the study visit is greater than or equal to the duration time for the last study visit in the previous study epoch (given the
+   study visit not is in the first epoch). [depending on a epoch definition, not in v 0.1]
  
- - The time value is only valid, if the derived duration time for the study visit is less than or equal to the duration time for the first study visit in the following study epoch (given the study visit not is in the last epoch). [depending on epoch definition, not in c 0.1)
+ - The time value is only valid, if the derived duration time for the study visit is less than or equal to the duration time for the first study visit in the following study epoch (given the
+   study visit not is in the last epoch). [depending on epoch definition, not in c 0.1)
  ]
  - The study day number is derived as:
     - Equal to the derived study duration time in days if value is less than 0.
@@ -246,9 +254,11 @@ Business logic:
  - The study week label is a text string derived by concatenation of:  Week+space+[Study week number]
 
 
- - The visit number is derived as an running integer with 1 for the very first visit sorted by chronological order (i.e. 1, 2. 3, 4, etc.). [NOTE: we have to figure out a rule for how we avoid counting sub visits? 1.1, 1.2, 1.3 etc?]
+ - The visit number is derived as an running integer with 1 for the very first visit sorted by chronological order (i.e. 1, 2. 3, 4, etc.). [NOTE: we have to figure out a rule for how we avoid
+   counting sub visits? 1.1, 1.2, 1.3 etc?]
  
- - The unique visit number is derived as an integer with 10 for the very first visit, increasing with +10 for each visit, sorted by chronological order  (i.e. 10, 20. 30, 40, etc.). [NOTE: we have to figure out a rule for how we create unique visit numbers for sub visits?]
+ - The unique visit number is derived as an integer with 10 for the very first visit, increasing with +10 for each visit, sorted by chronological order  (i.e. 10, 20. 30, 40, etc.). [NOTE: we
+   have to figure out a rule for how we create unique visit numbers for sub visits?]
  
  - The visit name is a text string derived by concatenation of: Visit+space+[Visit number]+[Visit sub-label] (if available)
  
@@ -447,7 +457,6 @@ Possible errors:
         },
     },
 )
-# pylint: disable=unused-argument
 def get_study_visit_audit_trail(
     study_uid: Annotated[str, studyUID],
     study_visit_uid: Annotated[str, study_visit_uid_description],
@@ -500,7 +509,8 @@ State before:
  - Study and study visit must exist
  
 Business logic:
- - By default (no study status is provided) list all details for specified study visit for the study uid in status draft. If the study not exist in status draft then return the study visits for the study in status released. If the study uid only exist as deleted then this is returned.
+ - By default (no study status is provided) list all details for specified study visit for the study uid in status draft. If the study not exist in status draft then return the study visits for
+   the study in status released. If the study uid only exist as deleted then this is returned.
  - If a specific study status parameter is provided then return study visits for this study status.
  - If the locked study status parameter is requested then a study version should also be provided, and then the specified study visit for the specific locked study version is returned.
  - Indicate by an boolean variable if the study visit can be updated (if the selected study is in status draft).

@@ -34,8 +34,7 @@ def create_random_ct_codelist_attributes_ar(
     library: str = "Library",
     is_editable: bool = True,
     catalogue: str = "Catalogue",
-    # pylint: disable=unnecessary-lambda
-    generate_uid_callback=lambda: random_str(),
+    generate_uid_callback=random_str,
 ) -> CTCodelistAttributesAR:
     random_ct_codelist_attributes_ar = CTCodelistAttributesAR.from_input_values(
         generate_uid_callback=generate_uid_callback,

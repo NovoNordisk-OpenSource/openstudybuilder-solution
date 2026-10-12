@@ -109,7 +109,6 @@ OdmItemUID = Path(description="The unique id of the ODM Item.")
         ],
     }
 )
-# pylint: disable=unused-argument
 def get_all_odm_items(
     request: Request,  # request is actually required by the allow_exports decorator
     library_name: Annotated[str | None, Query()] = None,

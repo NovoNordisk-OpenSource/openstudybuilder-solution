@@ -1,6 +1,7 @@
 from abc import ABC
+from collections.abc import Callable
 from datetime import datetime
-from typing import Annotated, Any, Callable, Self, overload
+from typing import Annotated, Any, Self, overload
 
 from pydantic import Field, StringConstraints, field_validator
 

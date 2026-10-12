@@ -16,12 +16,6 @@ DB_DRIVER = get_db_driver()
 
 VERIFY_RUN_LABEL = "test_verification"
 
-# pylint: disable=unused-argument
-# pylint: disable=redefined-outer-name
-
-# pytest fixture functions have other fixture functions as arguments,
-# which pylint interprets as unused arguments
-
 
 @pytest.fixture(scope="module")
 def initial_data():

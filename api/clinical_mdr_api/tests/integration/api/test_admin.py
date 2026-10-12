@@ -16,14 +16,6 @@ from clinical_mdr_api.tests.integration.utils.api import (
 from clinical_mdr_api.tests.integration.utils.utils import TestUtils
 from clinical_mdr_api.tests.utils.checks import assert_response_status_code
 
-# pylint: disable=unused-argument
-# pylint: disable=redefined-outer-name
-# pylint: disable=too-many-arguments
-
-# pytest fixture functions have other fixture functions as arguments,
-# which pylint interprets as unused arguments
-
-
 log = logging.getLogger(__name__)
 
 COMPLEXITY_BURDEN_FIELDS = [

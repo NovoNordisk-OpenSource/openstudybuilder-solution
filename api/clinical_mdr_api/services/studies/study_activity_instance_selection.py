@@ -1,7 +1,8 @@
 import dataclasses
 from collections import defaultdict
-from datetime import datetime, timezone
-from typing import Callable, Iterable
+from collections.abc import Callable, Iterable
+from datetime import UTC, datetime
+from typing import ClassVar
 
 from fastapi import status
 from neomodel import db
@@ -27,6 +28,7 @@ from clinical_mdr_api.domains.versioned_object_aggregate import LibraryItemStatu
 from clinical_mdr_api.models.error import BatchErrorResponse
 from clinical_mdr_api.models.study_selections.study_selection import (
     StudySelectionActivityInstance,
+    StudySelectionActivityInstanceBatchEditInput,
     StudySelectionActivityInstanceBatchInput,
     StudySelectionActivityInstanceBatchOutput,
     StudySelectionActivityInstanceCreateInput,
@@ -42,17 +44,20 @@ from clinical_mdr_api.services._utils import (
 from clinical_mdr_api.services.studies.study_activity_selection_base import (
     StudyActivitySelectionBaseService,
 )
-from clinical_mdr_api.utils import db_result_to_list
+from clinical_mdr_api.services.studies.study_compound_dosing_selection import (
+    StudyCompoundDosingRelationMixin,
+)
 from common import exceptions
 from common.auth.user import user
 
 
 class StudyActivityInstanceSelectionService(
+    StudyCompoundDosingRelationMixin,
     StudyActivitySelectionBaseService[
         StudySelectionActivityInstanceAR,
         StudySelectionActivityInstanceVO,
         StudySelectionActivityInstance,
-    ]
+    ],
 ):
     _repos: MetaRepository
     repository_interface = StudySelectionActivityInstanceRepository
@@ -80,7 +85,7 @@ class StudyActivityInstanceSelectionService(
     ) -> StudySelectionActivityInstanceAR:
         return selection_aggregate
 
-    _vo_to_ar_filter_map = {
+    _vo_to_ar_filter_map: ClassVar[dict[str, str]] = {
         "order": "order",
         "start_date": "start_date",
         "author_id": "author_id",
@@ -106,7 +111,6 @@ class StudyActivityInstanceSelectionService(
             study_selection=specific_selection,
         )
 
-    # pylint: disable=unused-argument
     def _transform_all_to_response_model(
         self,
         study_selection: StudySelectionActivityInstanceAR | None,
@@ -341,6 +345,12 @@ class StudyActivityInstanceSelectionService(
             ]
 
             if other_selections_referencing_same_activity:
+                # Only this branch actually removes the row; the placeholder branch
+                # below keeps the same uid, so any dose collection link survives it.
+                self._validate_study_activity_instances_not_used_for_dose_collection(
+                    study_uid=study_uid,
+                    study_activity_instance_uids=[study_selection_uid],
+                )
                 selection_aggregate.remove_object_selection(study_selection_uid)
             elif (
                 not other_selections_referencing_same_activity
@@ -390,7 +400,7 @@ class StudyActivityInstanceSelectionService(
         )
         keep_old_version_date = None
         if request_object.keep_old_version is True:
-            keep_old_version_date = datetime.now(timezone.utc)
+            keep_old_version_date = datetime.now(UTC)
         # fill the missing from the inputs
         fill_missing_values_in_base_model_from_reference_base_model(
             base_model_with_missing_values=request_object,
@@ -552,6 +562,16 @@ class StudyActivityInstanceSelectionService(
             item = None
             try:
                 if operation.method == "PATCH":
+                    # `content` is a union: a payload without
+                    # `study_activity_instance_uid` validates as the create shape,
+                    # which does not carry the uid a PATCH needs.
+                    exceptions.ValidationException.raise_if_not(
+                        isinstance(
+                            operation.content,
+                            StudySelectionActivityInstanceBatchEditInput,
+                        ),
+                        msg="PATCH operation requires StudySelectionActivityInstanceBatchEditInput as request payload.",
+                    )
                     item = self.patch_selection(
                         study_uid=study_uid,
                         study_selection_uid=operation.content.study_activity_instance_uid,
@@ -650,28 +670,3 @@ class StudyActivityInstanceSelectionService(
                     )
                 )
         return results
-
-    def get_crfs(self, study_uid: str):
-        query = """
-        MATCH (sr:StudyRoot {uid: $study_uid})-[:LATEST]->(:StudyValue)
-            -[:HAS_STUDY_ACTIVITY_INSTANCE]->(:StudyActivityInstance)
-            -[:HAS_SELECTED_ACTIVITY_INSTANCE]->(:ActivityInstanceValue)
-            -[:CONTAINS_ACTIVITY_ITEM]->(:ActivityItem)
-            <-[:LINKS_TO_ACTIVITY_ITEM]-(oiv:OdmItemValue)
-            <-[:ITEM_REF]-(oigv:OdmItemGroupValue)
-            <-[:ITEM_GROUP_REF]-(ofv:OdmFormValue)
-            <-[hv:HAS_VERSION]-(ofr:OdmFormRoot)
-        
-        WITH ofr, ofv, hv ORDER BY hv.end_date DESC
-        
-        WITH ofr, COLLECT({ofv: ofv, hv: hv})[0] AS latest
-        
-        RETURN DISTINCT
-            ofr.uid AS uid,
-            latest.ofv.name AS name,
-            latest.hv.version AS version
-        """
-
-        results = db.cypher_query(query, params={"study_uid": study_uid})
-
-        return db_result_to_list(results)

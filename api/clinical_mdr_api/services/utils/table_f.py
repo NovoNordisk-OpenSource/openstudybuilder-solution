@@ -1,6 +1,7 @@
 import os
 from collections import defaultdict
-from typing import Annotated, Any, Iterable, Mapping
+from collections.abc import Iterable, Mapping
+from typing import Annotated, Any
 
 import yattag
 from docx.enum.text import WD_ALIGN_PARAGRAPH
@@ -224,7 +225,7 @@ def tables_to_docx(
 
     def add_table(table: TableWithFootnotes):
         # assume horizontal table dimension from number of cells in first row
-        num_cols = sum((c.span for c in table.rows[0].cells))
+        num_cols = sum(c.span for c in table.rows[0].cells)
 
         # adds a table to the document
         x_table = docx.create_table(
@@ -239,7 +240,7 @@ def tables_to_docx(
         x_cells = x_table._cells
         x_rows = x_table.rows
 
-        for r, t_row in enumerate((row for row in table.rows if not row.hide)):
+        for r, t_row in enumerate(row for row in table.rows if not row.hide):
             num_merge, merge_to = 0, None
 
             # set header row to repeat on each page
@@ -483,7 +484,7 @@ def table_to_xlsx(
     # calculate and set column widths
     for c, widths in column_widths.items():
         worksheet.column_dimensions[get_column_letter(c)].width = max(
-            2, int(round(max(widths) * 1.05 + 1))
+            2, round(max(widths) * 1.05 + 1)
         )
 
     # apply named styles on cells
@@ -518,4 +519,4 @@ def table_to_xlsx(
 
 
 def estimate_string_length(string: str) -> float:
-    return sum((CHAR_WIDTHS.get(c, 1) for c in string))
+    return sum(CHAR_WIDTHS.get(c, 1) for c in string)

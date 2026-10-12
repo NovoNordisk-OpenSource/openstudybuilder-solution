@@ -327,7 +327,8 @@ class StudySelectionActivityRepository(
                         all_sa.order AS order,
                         all_sa.uid AS study_selection_uid,
                         all_sa.show_activity_in_protocol_flowchart AS show_activity_in_protocol_flowchart,
-                        head(apoc.coll.sortMulti([(all_sa)-[:STUDY_ACTIVITY_HAS_STUDY_SOA_GROUP]->(soa_group:StudySoAGroup)-[:HAS_FLOWCHART_GROUP]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(soa_group_term_root:CTTermRoot) | 
+                        head(apoc.coll.sortMulti([(all_sa)-[:STUDY_ACTIVITY_HAS_STUDY_SOA_GROUP]->(soa_group:StudySoAGroup)
+                            -[:HAS_FLOWCHART_GROUP]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(soa_group_term_root:CTTermRoot) | 
                         {
                             selection_uid: soa_group.uid, 
                             soa_group_term_uid: soa_group_term_root.uid,

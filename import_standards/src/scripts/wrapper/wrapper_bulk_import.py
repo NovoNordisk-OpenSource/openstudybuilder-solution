@@ -1,7 +1,7 @@
 """
 This script is meant to be called via:
 
-> `python -m pipenv run bulk_import <user initials> <JSON directory name>`
+> `uv run poe bulk_import <user initials> <JSON directory name>`
 
 The script expects the following parameters:
 

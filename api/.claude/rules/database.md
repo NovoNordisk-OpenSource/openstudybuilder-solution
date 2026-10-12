@@ -27,3 +27,7 @@ Each versioned entity has a `Root` node connected to one or more `Value` nodes v
 - The object's *current* status is derived from the open `HAS_VERSION` (the one with `end_date IS NULL`), not from which `LATEST_{STATUS}` pointer exists.
 
 Misreading these pointers as mutually exclusive "current status" markers has caused real regressions — any change that removes one `LATEST_{STATUS}` pointer when another is set is almost certainly wrong.
+
+### Resolving through `LATEST_FINAL` makes unapproved look absent
+
+Lookups that match through `LATEST_FINAL` cannot see a never-approved entity, and typically report it as missing rather than as draft. `CTCodelistGenericRepository.get_codelist_uid_by_submission_value` is the case to know: a codelist that exists but was never approved resolves to `None`, and the caller raises `"The codelist identified by submission value ... was not found"` — so the codelist sits plainly visible in the Library UI while the API insists it does not exist. That reads as an API bug and is not one. When writing a resolver, decide deliberately whether "draft" should surface as a distinct error rather than falling into the not-found path. See `import_sponsor_data/SYSTEM_CODELISTS.md` for the failure modes this produces downstream.

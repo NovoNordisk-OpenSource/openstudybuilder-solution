@@ -2,12 +2,6 @@
 Tests for /ct/codelists and /ct/terms endpoints
 """
 
-# pylint: disable=unused-argument
-# pylint: disable=redefined-outer-name
-# pylint: disable=too-many-arguments
-
-# pytest fixture functions have other fixture functions as arguments,
-# which pylint interprets as unused arguments
 import json
 import logging
 from functools import reduce

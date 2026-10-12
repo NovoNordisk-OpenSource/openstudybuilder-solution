@@ -46,7 +46,7 @@ Each is `Depends(RequiresAnyRole({...}))` over these six JWT roles: `Admin.Read`
 
 With `OAUTH_ENABLED=false` (the default for local development), `security` binds to `dummy_user_auth` instead of `validate_token`, and the dummy user is granted **all six roles**.
 
-Consequently **every endpoint works locally no matter which `rbac` constant you picked** — including the wrong one, and including none at all. Local manual testing cannot validate an authorization change. Verify with `pipenv run testauth`, which exercises the OAuth/RBAC paths, or in an OAuth-enabled environment.
+Consequently **every endpoint works locally no matter which `rbac` constant you picked** — including the wrong one, and including none at all. Local manual testing cannot validate an authorization change. Verify with `uv run poe testauth`, which exercises the OAuth/RBAC paths, or in an OAuth-enabled environment.
 
 `OAUTH_RBAC_ENABLED=false` is a second, independent switch: it replaces `RequiresAnyRole` with a no-op class, so role checks pass even when OAuth is on. Both flags log a startup `WARNING` when disabled.
 

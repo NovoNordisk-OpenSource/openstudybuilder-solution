@@ -1,19 +1,42 @@
 <template>
+  <div class="d-flex flex-column align-center mb-4 mt-4">
+    <v-btn-toggle
+      v-model="selectedStatusTab"
+      mandatory
+      density="compact"
+      color="nnBaseBlue"
+      divided
+      variant="outlined"
+      class="layoutSelector"
+      @update:model-value="onStatusTabChange"
+    >
+      <v-btn v-for="tab in statusTabs" :key="tab.value" :value="tab.value">
+        {{ tab.label }}
+      </v-btn>
+    </v-btn-toggle>
+  </div>
+  <!-- is_nsv: true restricts header autocomplete values to NSV items only; ActivityItemClassTable passes false. Both share the same column-data-resource. -->
   <NNTable
     ref="table"
+    table-id="library-non-standard-variables-table"
     :headers="headers"
     :items="items"
     :items-length="total"
-    :history-data-fetcher="fetchAuditTrail"
-    :history-title="$t('_global.audit_trail')"
-    history-change-field="change_description"
     item-value="uid"
+    :history-config="{
+      dataFetcher: fetchAuditTrail,
+      changeField: 'change_description',
+      title: $t('_global.audit_trail'),
+    }"
     :export-config="{
       objectLabel: 'NonStandardVariables',
       dataUrl: '/activity-item-classes',
       dataUrlParams: { is_nsv: true },
     }"
     column-data-resource="activity-item-classes"
+    :column-data-parameters="{ is_nsv: true }"
+    :filters-modify-function="modifyFilters"
+    hide-default-switches
     @filter="fetchItems"
   >
     <template #actions="">
@@ -33,7 +56,14 @@
       </v-btn>
     </template>
     <template #[`item.actions`]="{ item }">
-      <ActionsMenu :actions="rowActions" :item="item" />
+      <v-progress-circular
+        v-if="processingUids.has(item.uid)"
+        indeterminate
+        color="nnBaseBlue"
+        size="20"
+        width="2"
+      />
+      <ActionsMenu v-else :actions="rowActions" :item="item" />
     </template>
     <template #[`item.name`]="{ item }">
       <router-link
@@ -105,8 +135,12 @@ import StatusChip from '@/components/tools/StatusChip.vue'
 import NonStandardVariableForm from '@/components/library/NonStandardVariableForm.vue'
 import api from '@/api/activityItemClasses'
 import filteringParameters from '@/utils/filteringParameters'
+import statuses from '@/constants/statuses'
+import _isEmpty from 'lodash/isEmpty'
+import { DEMO_MODE } from '@/demo/isDemoMode'
 
 const { t } = useI18n()
+const roles = inject('roles')
 const notificationHub = inject('notificationHub')
 
 const items = ref([])
@@ -117,7 +151,34 @@ const showHistory = ref(false)
 const historyItems = ref([])
 const selectedItem = ref(null)
 const editedItem = ref(null)
+const processingUids = ref(new Set())
 const confirm = ref()
+const selectedStatusTab = ref('all')
+
+// The demo mock backend synthesizes list responses from the OpenAPI schema
+// alone (see mockBackend.js) and never varies `status` per row, so no real
+// approve/new-version action can produce an actual Final-to-Draft change to
+// smoke-test against. This lets a test simulate that external change
+// directly. It's also the only way to change a row without a click, which
+// matters here: clicking anything else on the page (e.g. a row action)
+// closes any open filter dropdown via Vuetify's outside-click handling,
+// defeating the very "row changes while the dropdown stays open" scenario
+// this is meant to cover.
+if (DEMO_MODE) {
+  globalThis.__demoSimulateNsvRowChange = (index, patch) => {
+    if (!items.value[index]) return
+    items.value = items.value.map((item, i) =>
+      i === index ? { ...item, ...patch } : item
+    )
+  }
+}
+
+const statusTabs = [
+  { value: 'all', label: 'All' },
+  { value: 'final', label: 'Final' },
+  { value: 'draft', label: 'Draft' },
+  { value: 'retired', label: 'Retired' },
+]
 
 const rowActions = [
   {
@@ -126,6 +187,7 @@ const rowActions = [
     iconColor: 'primary',
     condition: (item) =>
       item.possible_actions?.find((action) => action === 'edit'),
+    accessRole: roles.LIBRARY_WRITE,
     click: editItem,
   },
   {
@@ -134,6 +196,7 @@ const rowActions = [
     iconColor: 'success',
     condition: (item) =>
       item.possible_actions?.find((action) => action === 'approve'),
+    accessRole: roles.LIBRARY_WRITE,
     click: approveItem,
   },
   {
@@ -142,6 +205,7 @@ const rowActions = [
     iconColor: 'primary',
     condition: (item) =>
       item.possible_actions?.find((action) => action === 'new_version'),
+    accessRole: roles.LIBRARY_WRITE,
     click: createNewVersion,
   },
   {
@@ -150,6 +214,7 @@ const rowActions = [
     iconColor: 'primary',
     condition: (item) =>
       item.possible_actions?.find((action) => action === 'inactivate'),
+    accessRole: roles.LIBRARY_WRITE,
     click: inactivateItem,
   },
   {
@@ -158,6 +223,7 @@ const rowActions = [
     iconColor: 'primary',
     condition: (item) =>
       item.possible_actions?.find((action) => action === 'reactivate'),
+    accessRole: roles.LIBRARY_WRITE,
     click: reactivateItem,
   },
   {
@@ -166,11 +232,13 @@ const rowActions = [
     iconColor: 'error',
     condition: (item) =>
       item.possible_actions?.find((action) => action === 'delete'),
+    accessRole: roles.LIBRARY_WRITE,
     click: deleteItem,
   },
   {
     label: t('_global.history'),
     icon: 'mdi-history',
+    accessRole: roles.LIBRARY_READ,
     click: openHistory,
   },
 ]
@@ -200,8 +268,12 @@ const headers = [
     title: t('NonStandardVariablesTable.is_cdisc_defined'),
   },
   {
-    key: 'data_type.name',
+    key: 'semtcdt.name',
     title: t('NonStandardVariablesTable.data_type'),
+  },
+  {
+    key: 'non_standard_variable.nsvxmldt',
+    title: t('NonStandardVariablesTable.nsvxmldt'),
   },
   {
     key: 'non_standard_variable.length',
@@ -210,6 +282,7 @@ const headers = [
   {
     key: 'valid_codelists',
     title: t('NonStandardVariablesTable.codelist_codes'),
+    filteringName: 'valid_codelists.submission_value',
     historyFilter: (value) =>
       (value || []).map((c) => c.submission_value).join(', '),
   },
@@ -233,7 +306,7 @@ const headers = [
   { key: 'start_date', title: t('_global.modified') },
   { key: 'author_username', title: t('_global.modified_by') },
   { key: 'version', title: t('_global.version') },
-  { key: 'status', title: t('_global.status') },
+  { key: 'status', title: t('_global.status'), noFilter: true },
 ]
 
 const historyTitle = computed(() => {
@@ -245,6 +318,53 @@ const historyTitle = computed(() => {
   return ''
 })
 
+function normalizeFiltersObject(filters) {
+  if (_isEmpty(filters)) {
+    return {}
+  }
+  if (typeof filters === 'string') {
+    try {
+      const parsedFilters = JSON.parse(filters)
+      return parsedFilters && typeof parsedFilters === 'object'
+        ? parsedFilters
+        : {}
+    } catch {
+      return {}
+    }
+  }
+  if (typeof filters === 'object') {
+    return filters
+  }
+  return {}
+}
+
+function getSelectedStatusValue() {
+  if (selectedStatusTab.value === 'final') {
+    return statuses.FINAL
+  }
+  if (selectedStatusTab.value === 'retired') {
+    return statuses.RETIRED
+  }
+  if (selectedStatusTab.value === 'draft') {
+    return statuses.DRAFT
+  }
+  return null
+}
+
+function onStatusTabChange() {
+  table.value?.filterTable()
+}
+
+function modifyFilters(jsonFilter, params) {
+  const selectedStatusValue = getSelectedStatusValue()
+  if (selectedStatusValue) {
+    jsonFilter.status = { v: [selectedStatusValue] }
+  } else {
+    delete jsonFilter.status
+  }
+  return { jsonFilter, params }
+}
+
 const fetchItems = (filters, options, filtersUpdated) => {
   const params = filteringParameters.prepareParameters(
     options,
@@ -252,6 +372,15 @@ const fetchItems = (filters, options, filtersUpdated) => {
     filtersUpdated
   )
   params.is_nsv = true
+  const selectedStatusValue = getSelectedStatusValue()
+  if (selectedStatusValue) {
+    const filtersObj = normalizeFiltersObject(params.filters)
+    filtersObj.status = { v: [selectedStatusValue] }
+    params.filters = filtersObj
+  }
+  if (params.filters && typeof params.filters === 'object') {
+    params.filters = JSON.stringify(params.filters)
+  }
   api.getAll(params).then((resp) => {
     items.value = resp.data.items
     total.value = resp.data.total
@@ -309,21 +438,31 @@ async function createNewVersion(item) {
 }
 
 async function inactivateItem(item) {
-  await api.inactivate(item.uid)
-  notificationHub.add({
-    msg: t('NonStandardVariablesTable.inactivate_success'),
-    type: 'success',
-  })
-  table.value?.filterTable()
+  processingUids.value.add(item.uid)
+  try {
+    await api.inactivate(item.uid)
+    notificationHub.add({
+      msg: t('NonStandardVariablesTable.inactivate_success'),
+      type: 'success',
+    })
+    table.value?.filterTable()
+  } finally {
+    processingUids.value.delete(item.uid)
+  }
 }
 
 async function reactivateItem(item) {
-  await api.reactivate(item.uid)
-  notificationHub.add({
-    msg: t('NonStandardVariablesTable.reactivate_success'),
-    type: 'success',
-  })
-  table.value?.filterTable()
+  processingUids.value.add(item.uid)
+  try {
+    await api.reactivate(item.uid)
+    notificationHub.add({
+      msg: t('NonStandardVariablesTable.reactivate_success'),
+      type: 'success',
+    })
+    table.value?.filterTable()
+  } finally {
+    processingUids.value.delete(item.uid)
+  }
 }
 
 async function editItem(item) {
@@ -347,3 +486,13 @@ function onUpdated() {
   table.value?.filterTable()
 }
 </script>
+
+<style scoped>
+.layoutSelector {
+  border-color: rgb(var(--v-theme-nnBaseBlue));
+}
+
+.layoutSelector :deep(.v-btn) {
+  text-transform: none;
+}
+</style>

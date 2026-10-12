@@ -1,7 +1,5 @@
 """Common query patterns"""
 
-# pylint: disable=invalid-name
-
 from textwrap import dedent
 
 # Gives ct_terms_datetime for effective study_standard_version of a StudyValue

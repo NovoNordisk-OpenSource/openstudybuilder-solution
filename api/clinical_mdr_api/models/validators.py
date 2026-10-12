@@ -1,7 +1,7 @@
 """Reusable pydantic validator functions"""
 
 import re
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 from typing import Any
 
 from pydantic import ValidationInfo
@@ -168,9 +168,9 @@ def transform_to_utc(value: datetime | None, info: ValidationInfo):
         return None
 
     if value.tzinfo is None:
-        value = value.replace(tzinfo=timezone.utc)
+        value = value.replace(tzinfo=UTC)
     try:
-        return value.astimezone(timezone.utc)
+        return value.astimezone(UTC)
     except OverflowError as exc:
         raise ValueError(
             f"Provided value '{value}' for '{info.field_name}' is invalid. {exc}"

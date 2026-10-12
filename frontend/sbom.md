@@ -5,9 +5,9 @@
 |--------------------------------------------------|---------|----------------------------------------------------------|
 | @babel/helper-string-parser                      | 7.29.7  | [MIT](#@babel/helper-string-parser)                      |
 | @babel/helper-validator-identifier               | 7.29.7  | [MIT](#@babel/helper-validator-identifier)               |
-| @babel/parser                                    | 7.29.7  | [MIT](#@babel/parser)                                    |
+| @babel/parser                                    | 7.29.9  | [MIT](#@babel/parser)                                    |
 | @babel/runtime                                   | 7.29.7  | [MIT](#@babel/runtime)                                   |
-| @babel/types                                     | 7.29.7  | [MIT](#@babel/types)                                     |
+| @babel/types                                     | 7.29.8  | [MIT](#@babel/types)                                     |
 | @bufbuild/protobuf                               | 2.12.0  | [(Apache-2.0 AND BSD-3-Clause)](#@bufbuild/protobuf)     |
 | @eslint-community/eslint-utils                   | 4.9.1   | [MIT](#@eslint-community/eslint-utils)                   |
 | @eslint-community/regexpp                        | 4.12.2  | [MIT](#@eslint-community/regexpp)                        |
@@ -29,7 +29,7 @@
 | @intlify/shared                                  | 11.1.10 | [MIT](#@intlify/shared)                                  |
 | @irojs/iro-core                                  | 1.2.1   | [MPL-2.0](#@irojs/iro-core)                              |
 | @jaames/iro                                      | 5.5.2   | [MPL-2.0](#@jaames/iro)                                  |
-| @jridgewell/sourcemap-codec                      | 1.5.5   | [MIT](#@jridgewell/sourcemap-codec)                      |
+| @jridgewell/sourcemap-codec                      | 1.6.0   | [MIT](#@jridgewell/sourcemap-codec)                      |
 | @kurkle/color                                    | 0.3.4   | [MIT](#@kurkle/color)                                    |
 | @mdi/font                                        | 7.4.47  | [Apache-2.0](#@mdi/font)                                 |
 | @microsoft/applicationinsights-analytics-js      | 3.4.2   | [MIT](#@microsoft/applicationinsights-analytics-js)      |
@@ -59,16 +59,16 @@
 | @types/lodash.merge                              | 4.6.9   | [MIT](#@types/lodashmerge)                               |
 | @types/trusted-types                             | 2.0.7   | [MIT](#@types/trusted-types)                             |
 | @vitejs/plugin-vue                               | 6.0.7   | [MIT](#@vitejs/plugin-vue)                               |
-| @vue/compiler-core                               | 3.5.38  | [MIT](#@vue/compiler-core)                               |
-| @vue/compiler-dom                                | 3.5.38  | [MIT](#@vue/compiler-dom)                                |
-| @vue/compiler-sfc                                | 3.5.38  | [MIT](#@vue/compiler-sfc)                                |
-| @vue/compiler-ssr                                | 3.5.38  | [MIT](#@vue/compiler-ssr)                                |
+| @vue/compiler-core                               | 3.5.43  | [MIT](#@vue/compiler-core)                               |
+| @vue/compiler-dom                                | 3.5.43  | [MIT](#@vue/compiler-dom)                                |
+| @vue/compiler-sfc                                | 3.5.43  | [MIT](#@vue/compiler-sfc)                                |
+| @vue/compiler-ssr                                | 3.5.43  | [MIT](#@vue/compiler-ssr)                                |
 | @vue/devtools-api                                | 6.6.4   | [MIT](#@vue/devtools-api)                                |
-| @vue/reactivity                                  | 3.5.38  | [MIT](#@vue/reactivity)                                  |
-| @vue/runtime-core                                | 3.5.38  | [MIT](#@vue/runtime-core)                                |
-| @vue/runtime-dom                                 | 3.5.38  | [MIT](#@vue/runtime-dom)                                 |
-| @vue/server-renderer                             | 3.5.38  | [MIT](#@vue/server-renderer)                             |
-| @vue/shared                                      | 3.5.38  | [MIT](#@vue/shared)                                      |
+| @vue/reactivity                                  | 3.5.43  | [MIT](#@vue/reactivity)                                  |
+| @vue/runtime-core                                | 3.5.43  | [MIT](#@vue/runtime-core)                                |
+| @vue/runtime-dom                                 | 3.5.43  | [MIT](#@vue/runtime-dom)                                 |
+| @vue/server-renderer                             | 3.5.43  | [MIT](#@vue/server-renderer)                             |
+| @vue/shared                                      | 3.5.43  | [MIT](#@vue/shared)                                      |
 | @vuetify/loader-shared                           | 2.1.2   | [MIT](#@vuetify/loader-shared)                           |
 | @vueup/vue-quill                                 | 1.5.5   | [MIT](#@vueup/vue-quill)                                 |
 | acorn                                            | 8.17.0  | [MIT](#acorn)                                            |
@@ -76,11 +76,11 @@
 | agent-base                                       | 6.0.2   | MIT (missing)                                            |
 | ajv                                              | 6.15.0  | [MIT](#ajv)                                              |
 | asynckit                                         | 0.4.0   | [MIT](#asynckit)                                         |
-| axios                                            | 1.18.0  | [MIT](#axios)                                            |
+| axios                                            | 1.20.0  | [MIT](#axios)                                            |
 | base64-arraybuffer                               | 1.0.2   | [MIT](#base64-arraybuffer)                               |
 | base64-js                                        | 1.5.1   | [MIT](#base64-js)                                        |
 | boolbase                                         | 1.0.0   | ISC (missing)                                            |
-| brace-expansion                                  | 5.0.9   | [MIT](#brace-expansion)                                  |
+| brace-expansion                                  | 5.0.12  | [MIT](#brace-expansion)                                  |
 | buffer                                           | 6.0.3   | [MIT](#buffer)                                           |
 | call-bind-apply-helpers                          | 1.0.2   | [MIT](#call-bind-apply-helpers)                          |
 | chart.js                                         | 4.5.1   | [MIT](#chartjs)                                          |
@@ -96,7 +96,7 @@
 | deep-is                                          | 0.1.4   | [MIT](#deep-is)                                          |
 | delayed-stream                                   | 1.0.0   | [MIT](#delayed-stream)                                   |
 | detect-libc                                      | 2.1.2   | [Apache-2.0](#detect-libc)                               |
-| dompurify                                        | 3.4.13  | [(MPL-2.0 OR Apache-2.0)](#dompurify)                    |
+| dompurify                                        | 3.4.16  | [(MPL-2.0 OR Apache-2.0)](#dompurify)                    |
 | dunder-proto                                     | 1.0.1   | [MIT](#dunder-proto)                                     |
 | entities                                         | 7.0.1   | [BSD-2-Clause](#entities)                                |
 | es-define-property                               | 1.0.1   | [MIT](#es-define-property)                               |
@@ -175,7 +175,7 @@
 | mime-types                                       | 2.1.35  | [MIT](#mime-types)                                       |
 | minimatch                                        | 10.2.5  | [BlueOak-1.0.0](#minimatch)                              |
 | ms                                               | 2.1.3   | [MIT](#ms)                                               |
-| nanoid                                           | 3.3.18  | [MIT](#nanoid)                                           |
+| nanoid                                           | 3.3.20  | [MIT](#nanoid)                                           |
 | natural-compare                                  | 1.4.0   | MIT (missing)                                            |
 | node-addon-api                                   | 7.1.1   | [MIT](#node-addon-api)                                   |
 | nth-check                                        | 2.1.1   | [BSD-2-Clause](#nth-check)                               |
@@ -191,8 +191,8 @@
 | pinia                                            | 2.3.1   | [MIT](#pinia)                                            |
 | playwright                                       | 1.62.1  | [Apache-2.0](#playwright)                                |
 | playwright-core                                  | 1.62.1  | [Apache-2.0](#playwright-core)                           |
-| postcss                                          | 8.5.23  | [MIT](#postcss)                                          |
-| postcss-selector-parser                          | 7.1.4   | [MIT](#postcss-selector-parser)                          |
+| postcss                                          | 8.5.29  | [MIT](#postcss)                                          |
+| postcss-selector-parser                          | 7.1.6   | [MIT](#postcss-selector-parser)                          |
 | preact                                           | 10.29.2 | [MIT](#preact)                                           |
 | prelude-ls                                       | 1.2.1   | [MIT](#prelude-ls)                                       |
 | prettier                                         | 3.8.4   | [MIT](#prettier)                                         |
@@ -212,7 +212,7 @@
 | shallow-clone                                    | 3.0.1   | [MIT](#shallow-clone)                                    |
 | shebang-command                                  | 2.0.0   | [MIT](#shebang-command)                                  |
 | shebang-regex                                    | 3.0.0   | [MIT](#shebang-regex)                                    |
-| source-map-js                                    | 1.2.1   | [BSD-3-Clause](#source-map-js)                           |
+| source-map-js                                    | 1.2.2   | [BSD-3-Clause](#source-map-js)                           |
 | sync-child-process                               | 1.0.2   | [MIT](#sync-child-process)                               |
 | sync-message-port                                | 1.2.0   | [MIT](#sync-message-port)                                |
 | text-segmentation                                | 1.0.3   | [MIT](#text-segmentation)                                |
@@ -226,7 +226,7 @@
 | varint                                           | 6.0.0   | [MIT](#varint)                                           |
 | vite                                             | 8.0.16  | [MIT](#vite)                                             |
 | vite-plugin-vuetify                              | 2.1.3   | [MIT](#vite-plugin-vuetify)                              |
-| vue                                              | 3.5.38  | [MIT](#vue)                                              |
+| vue                                              | 3.5.43  | [MIT](#vue)                                              |
 | vue-chartjs                                      | 5.3.3   | [MIT](#vue-chartjs)                                      |
 | vue-demi                                         | 0.14.10 | [MIT](#vue-demi)                                         |
 | vue-eslint-parser                                | 10.4.1  | [MIT](#vue-eslint-parser)                                |

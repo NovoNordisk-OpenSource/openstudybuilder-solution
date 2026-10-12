@@ -1,9 +1,9 @@
 import random
 import unittest
+from collections.abc import Iterable
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from types import SimpleNamespace
-from typing import Iterable
 from unittest.mock import MagicMock, PropertyMock, patch
 
 from clinical_mdr_api.domain_repositories.controlled_terminologies import (
@@ -126,7 +126,7 @@ class TestStudyService(unittest.TestCase):
 
     def test__build_batched_term_lookup__keeps_cache_per_specific_date(self):
         term_uid = "TERM_001"
-        prefetched_date = datetime(2025, 1, 1, tzinfo=timezone.utc)
+        prefetched_date = datetime(2025, 1, 1, tzinfo=UTC)
         prefetched_term = create_random_ct_term_name_ar(
             generate_uid_callback=lambda: term_uid
         )
@@ -213,14 +213,14 @@ class TestStudyService(unittest.TestCase):
         unit_definition_repository_property_mock.find_all.return_value = (
             unit_definition_test_repo.find_all()
         )
-        project_repository_property_mock.find_by_project_number.return_value = create_random_project(
-            clinical_programme_uid=random_str(),
-            # pylint: disable=unnecessary-lambda
-            generate_uid_callback=lambda: random_str(),
+        project_repository_property_mock.find_by_project_number.return_value = (
+            create_random_project(
+                clinical_programme_uid=random_str(),
+                generate_uid_callback=random_str,
+            )
         )
         clinical_programme_repository_property_mock.find_by_uid.return_value = (
-            # pylint: disable=unnecessary-lambda
-            create_random_clinical_programme(generate_uid_callback=lambda: random_str())
+            create_random_clinical_programme(generate_uid_callback=random_str)
         )
 
         for _ in range(0, 100):
@@ -466,14 +466,14 @@ class TestStudyService(unittest.TestCase):
         study_definition_repository_property_mock.return_value = test_repo
 
         # when
-        project_repository_property_mock.find_by_project_number.return_value = create_random_project(
-            clinical_programme_uid=random_str(),
-            # pylint: disable=unnecessary-lambda
-            generate_uid_callback=lambda: random_str(),
+        project_repository_property_mock.find_by_project_number.return_value = (
+            create_random_project(
+                clinical_programme_uid=random_str(),
+                generate_uid_callback=random_str,
+            )
         )
         clinical_programme_repository_property_mock.find_by_uid.return_value = (
-            # pylint: disable=unnecessary-lambda
-            create_random_clinical_programme(generate_uid_callback=lambda: random_str())
+            create_random_clinical_programme(generate_uid_callback=random_str)
         )
         ct_term_name_repository_property_mock.find_by_uid.return_value = (
             create_random_ct_term_name_ar()
@@ -625,14 +625,14 @@ class TestStudyService(unittest.TestCase):
         test_db = StudyDefinitionsDBFake()
         test_repo = StudyDefinitionRepositoryFake(test_db)
         study_definition_repository_property_mock.return_value = test_repo
-        project_repository_property_mock.find_by_project_number.return_value = create_random_project(
-            clinical_programme_uid=random_str(),
-            # pylint: disable=unnecessary-lambda
-            generate_uid_callback=lambda: random_str(),
+        project_repository_property_mock.find_by_project_number.return_value = (
+            create_random_project(
+                clinical_programme_uid=random_str(),
+                generate_uid_callback=random_str,
+            )
         )
         clinical_programme_repository_property_mock.find_by_uid.return_value = (
-            # pylint: disable=unnecessary-lambda
-            create_random_clinical_programme(generate_uid_callback=lambda: random_str())
+            create_random_clinical_programme(generate_uid_callback=random_str)
         )
         unit_definition_repository_property_mock.final_concept_exists.return_value = (
             True
@@ -714,14 +714,14 @@ class TestStudyService(unittest.TestCase):
             ct_term_generic_repository.__name__
         )
         # when
-        project_repository_property_mock.find_by_project_number.return_value = create_random_project(
-            clinical_programme_uid=random_str(),
-            # pylint: disable=unnecessary-lambda
-            generate_uid_callback=lambda: random_str(),
+        project_repository_property_mock.find_by_project_number.return_value = (
+            create_random_project(
+                clinical_programme_uid=random_str(),
+                generate_uid_callback=random_str,
+            )
         )
         clinical_programme_repository_property_mock.find_by_uid.return_value = (
-            # pylint: disable=unnecessary-lambda
-            create_random_clinical_programme(generate_uid_callback=lambda: random_str())
+            create_random_clinical_programme(generate_uid_callback=random_str)
         )
         study_service = StudyService()
         service_response = study_service.get_by_uid(sample_study_definition.uid)
@@ -813,14 +813,14 @@ class TestStudyService(unittest.TestCase):
         study_definition_repository_property_mock.return_value = test_repo
 
         # when
-        project_repository_property_mock.find_by_project_number.return_value = create_random_project(
-            clinical_programme_uid=random_str(),
-            # pylint: disable=unnecessary-lambda
-            generate_uid_callback=lambda: random_str(),
+        project_repository_property_mock.find_by_project_number.return_value = (
+            create_random_project(
+                clinical_programme_uid=random_str(),
+                generate_uid_callback=random_str,
+            )
         )
         clinical_programme_repository_property_mock.find_by_uid.return_value = (
-            # pylint: disable=unnecessary-lambda
-            create_random_clinical_programme(generate_uid_callback=lambda: random_str())
+            create_random_clinical_programme(generate_uid_callback=random_str)
         )
         study_service = StudyService()
         service_response = study_service.get_all().items
@@ -833,9 +833,9 @@ class TestStudyService(unittest.TestCase):
         )
 
         for sample_study_definition in sample_study_definitions:
-            service_response_item = [
+            service_response_item = next(
                 _ for _ in service_response if _.uid == sample_study_definition.uid
-            ][0]
+            )
             self.assertEqual(
                 sample_study_definition.current_metadata.ver_metadata.study_status.value,
                 service_response_item.current_metadata.version_metadata.study_status,
@@ -928,14 +928,14 @@ class TestStudyService(unittest.TestCase):
         # given
         test_db = StudyDefinitionsDBFake()
 
-        project_repository_property_mock.find_by_project_number.return_value = create_random_project(
-            clinical_programme_uid=random_str(),
-            # pylint: disable=unnecessary-lambda
-            generate_uid_callback=lambda: random_str(),
+        project_repository_property_mock.find_by_project_number.return_value = (
+            create_random_project(
+                clinical_programme_uid=random_str(),
+                generate_uid_callback=random_str,
+            )
         )
         clinical_programme_repository_property_mock.find_by_uid.return_value = (
-            # pylint: disable=unnecessary-lambda
-            create_random_clinical_programme(generate_uid_callback=lambda: random_str())
+            create_random_clinical_programme(generate_uid_callback=random_str)
         )
 
         prepare_repo = StudyDefinitionRepositoryFake(test_db)
@@ -1069,14 +1069,14 @@ class TestStudyService(unittest.TestCase):
         # given
         test_db = StudyDefinitionsDBFake()
 
-        project_repository_property_mock.find_by_project_number.return_value = create_random_project(
-            clinical_programme_uid=random_str(),
-            # pylint: disable=unnecessary-lambda
-            generate_uid_callback=lambda: random_str(),
+        project_repository_property_mock.find_by_project_number.return_value = (
+            create_random_project(
+                clinical_programme_uid=random_str(),
+                generate_uid_callback=random_str,
+            )
         )
         clinical_programme_repository_property_mock.find_by_uid.return_value = (
-            # pylint: disable=unnecessary-lambda
-            create_random_clinical_programme(generate_uid_callback=lambda: random_str())
+            create_random_clinical_programme(generate_uid_callback=random_str)
         )
 
         prepare_repo = StudyDefinitionRepositoryFake(test_db)
@@ -1208,9 +1208,7 @@ class TestStudyService(unittest.TestCase):
                 sample_study_definition.current_metadata.id_metadata.registry_identifiers.universal_trial_number_utn_null_value_code,
             )
             self.assertEqual(
-                # pylint: disable=line-too-long
                 study_definition_ar.current_metadata.id_metadata.registry_identifiers.investigational_new_drug_application_number_ind_null_value_code,
-                # pylint: disable=line-too-long
                 sample_study_definition.current_metadata.id_metadata.registry_identifiers.investigational_new_drug_application_number_ind_null_value_code,
             )
             self.assertEqual(
@@ -1262,7 +1260,6 @@ class TestStudyService(unittest.TestCase):
                 sample_study_definition.current_metadata.id_metadata.registry_identifiers.japanese_trial_registry_number_jrct_null_value_code,
             )
             self.assertEqual(
-                # pylint: disable=line-too-long
                 study_definition_ar.current_metadata.id_metadata.registry_identifiers.national_medical_products_administration_nmpa_number_null_value_code,
                 sample_study_definition.current_metadata.id_metadata.registry_identifiers.national_medical_products_administration_nmpa_number_null_value_code,
             )
@@ -1298,14 +1295,14 @@ class TestStudyService(unittest.TestCase):
         # given
         test_db = StudyDefinitionsDBFake()
 
-        project_repository_property_mock.find_by_project_number.return_value = create_random_project(
-            clinical_programme_uid=random_str(),
-            # pylint: disable=unnecessary-lambda
-            generate_uid_callback=lambda: random_str(),
+        project_repository_property_mock.find_by_project_number.return_value = (
+            create_random_project(
+                clinical_programme_uid=random_str(),
+                generate_uid_callback=random_str,
+            )
         )
         clinical_programme_repository_property_mock.find_by_uid.return_value = (
-            # pylint: disable=unnecessary-lambda
-            create_random_clinical_programme(generate_uid_callback=lambda: random_str())
+            create_random_clinical_programme(generate_uid_callback=random_str)
         )
 
         prepare_repo = StudyDefinitionRepositoryFake(test_db)
@@ -1454,9 +1451,7 @@ class TestStudyService(unittest.TestCase):
                 sample_study_definition.current_metadata.id_metadata.registry_identifiers.universal_trial_number_utn_null_value_code,
             )
             self.assertEqual(
-                # pylint: disable=line-too-long
                 study_definition_ar.current_metadata.id_metadata.registry_identifiers.investigational_new_drug_application_number_ind_null_value_code,
-                # pylint: disable=line-too-long
                 sample_study_definition.current_metadata.id_metadata.registry_identifiers.investigational_new_drug_application_number_ind_null_value_code,
             )
             self.assertEqual(
@@ -1508,7 +1503,6 @@ class TestStudyService(unittest.TestCase):
                 sample_study_definition.current_metadata.id_metadata.registry_identifiers.japanese_trial_registry_number_jrct_null_value_code,
             )
             self.assertEqual(
-                # pylint: disable=line-too-long
                 study_definition_ar.current_metadata.id_metadata.registry_identifiers.national_medical_products_administration_nmpa_number_null_value_code,
                 sample_study_definition.current_metadata.id_metadata.registry_identifiers.national_medical_products_administration_nmpa_number_null_value_code,
             )
@@ -1631,14 +1625,14 @@ class TestStudyService(unittest.TestCase):
         )
 
         study_definition_repository_property_mock.return_value = test_repo
-        project_repository_property_mock.find_by_project_number.return_value = create_random_project(
-            clinical_programme_uid=random_str(),
-            # pylint: disable=unnecessary-lambda
-            generate_uid_callback=lambda: random_str(),
+        project_repository_property_mock.find_by_project_number.return_value = (
+            create_random_project(
+                clinical_programme_uid=random_str(),
+                generate_uid_callback=random_str,
+            )
         )
         clinical_programme_repository_property_mock.find_by_uid.return_value = (
-            # pylint: disable=unnecessary-lambda
-            create_random_clinical_programme(generate_uid_callback=lambda: random_str())
+            create_random_clinical_programme(generate_uid_callback=random_str)
         )
 
         # when
@@ -1686,6 +1680,14 @@ class TestStudyService(unittest.TestCase):
                         ),
                         find_duration_name_by_code=lambda _: unit_definition_test_repo.find_by_uid_2(
                             study_population.planned_minimum_age_of_subjects.duration_unit_code.uid
+                        ),
+                        find_all_study_time_units=lambda **_: (
+                            [
+                                unit_definition_test_repo.find_by_uid_2(
+                                    study_population.planned_minimum_age_of_subjects.duration_unit_code.uid
+                                )
+                            ],
+                            1,
                         ),
                     ),
                     rare_disease_indicator=study_population.rare_disease_indicator,
@@ -1788,14 +1790,14 @@ class TestStudyService(unittest.TestCase):
             unit_definition_test_repo.find_by_uid_2
         )
         study_definition_repository_property_mock.return_value = test_repo
-        project_repository_property_mock.find_by_project_number.return_value = create_random_project(
-            clinical_programme_uid=random_str(),
-            # pylint: disable=unnecessary-lambda
-            generate_uid_callback=lambda: random_str(),
+        project_repository_property_mock.find_by_project_number.return_value = (
+            create_random_project(
+                clinical_programme_uid=random_str(),
+                generate_uid_callback=random_str,
+            )
         )
         clinical_programme_repository_property_mock.find_by_uid.return_value = (
-            # pylint: disable=unnecessary-lambda
-            create_random_clinical_programme(generate_uid_callback=lambda: random_str())
+            create_random_clinical_programme(generate_uid_callback=random_str)
         )
 
         # when
@@ -1843,6 +1845,14 @@ class TestStudyService(unittest.TestCase):
                         ),
                         find_duration_name_by_code=lambda _: unit_definition_test_repo.find_by_uid_2(
                             study_intervention.planned_study_length.duration_unit_code.uid
+                        ),
+                        find_all_study_time_units=lambda **_: (
+                            [
+                                unit_definition_test_repo.find_by_uid_2(
+                                    study_intervention.planned_study_length.duration_unit_code.uid
+                                )
+                            ],
+                            1,
                         ),
                     ),
                     is_trial_randomised=study_intervention.is_trial_randomised,
@@ -1936,14 +1946,14 @@ class TestStudyService(unittest.TestCase):
         # mocking repos
         study_definition_repository_property_mock.return_value = test_repo
         study_title_repository_mock.return_value = study_title_test_repo
-        project_repository_property_mock.find_by_project_number.return_value = create_random_project(
-            clinical_programme_uid=random_str(),
-            # pylint: disable=unnecessary-lambda
-            generate_uid_callback=lambda: random_str(),
+        project_repository_property_mock.find_by_project_number.return_value = (
+            create_random_project(
+                clinical_programme_uid=random_str(),
+                generate_uid_callback=random_str,
+            )
         )
         clinical_programme_repository_property_mock.find_by_uid.return_value = (
-            # pylint: disable=unnecessary-lambda
-            create_random_clinical_programme(generate_uid_callback=lambda: random_str())
+            create_random_clinical_programme(generate_uid_callback=random_str)
         )
 
         # when

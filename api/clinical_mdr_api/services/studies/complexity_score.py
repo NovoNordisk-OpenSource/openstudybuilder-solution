@@ -94,7 +94,8 @@ class ComplexityScoreService:
                 visit_contact_mode_term,
                 study_activity,
                 head([(study_activity)-[:HAS_SELECTED_ACTIVITY]->(activity_value:ActivityValue)<-[:HAS_VERSION]-(activity_root:ActivityRoot) | {uid: activity_root.uid}]) AS activity,
-                head([(study_activity)-[:STUDY_ACTIVITY_HAS_STUDY_ACTIVITY_SUBGROUP]->(:StudyActivitySubGroup)-[:HAS_SELECTED_ACTIVITY_SUBGROUP]->(activity_subgroup_value:ActivitySubGroupValue)<-[:LATEST]-(activity_subgroup_root:ActivitySubGroupRoot) | {name: activity_subgroup_value.name, uid: activity_subgroup_root.uid}]) AS activity_subgroup
+                head([(study_activity)-[:STUDY_ACTIVITY_HAS_STUDY_ACTIVITY_SUBGROUP]->(:StudyActivitySubGroup)-[:HAS_SELECTED_ACTIVITY_SUBGROUP]->(activity_subgroup_value:ActivitySubGroupValue)
+                    <-[:LATEST]-(activity_subgroup_root:ActivitySubGroupRoot) | {name: activity_subgroup_value.name, uid: activity_subgroup_root.uid}]) AS activity_subgroup
             ORDER BY study_activity.order, study_visit.visit_number
 
             RETURN DISTINCT

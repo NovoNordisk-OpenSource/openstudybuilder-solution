@@ -2,8 +2,9 @@ import collections
 import csv
 import functools
 import io
+from collections.abc import Callable
 from copy import copy
-from typing import Any, Callable
+from typing import Any
 
 import yaml
 from dict2xml import dict2xml
@@ -50,6 +51,54 @@ def _convert_headers_to_dict(headers: list[Any]) -> dict[str, Any]:
     return dict_headers
 
 
+def _resolve_target(item: dict[Any, Any], target: str):
+    """
+    Resolves a single (optionally dotted) target path against one data item.
+
+    Args:
+        item (dict): The data item to read from.
+        target (str): The path to resolve, e.g. ``name`` or ``compound.name``.
+
+    Returns:
+        The resolved value. An unresolvable path degrades to a falsy value
+        rather than raising: "" for an absent key, ``None`` when the path
+        walks into an explicit ``None``.
+    """
+    value: Any
+    if "." in target:
+        value = item
+        parts = target.split(".")
+        for index, path in enumerate(parts):
+            if isinstance(value, list):
+                items = []
+                for elm in value:
+                    subvalue = elm.get(path, "")
+                    if isinstance(subvalue, float | int | str):
+                        # collection[].key
+                        items.append(str(subvalue))
+                    elif isinstance(subvalue, dict):
+                        # collection[].key1.key2
+                        items.append(subvalue[parts[index + 1]])
+                value = ", ".join(items)
+            elif isinstance(value, dict):
+                # Check if path contains [] notation
+                if path.endswith("[]"):
+                    # Strip [] and get the list
+                    clean_path = path[:-2]
+                    value = value.get(clean_path, "")
+                else:
+                    value = value.get(path, "")
+            if not value:
+                break
+    else:
+        value = item.get(target, "")
+        if isinstance(value, bool):
+            value = "Yes" if value else "No"
+    if value == []:
+        value = ""
+    return value
+
+
 def _extract_values_from_data(data: dict[Any, Any], headers: dict[Any, Any]):
     """
     Extracts required values from data and yields them.
@@ -67,40 +116,16 @@ def _extract_values_from_data(data: dict[Any, Any], headers: dict[Any, Any]):
         data = [data]
     for item in data:
         result = {}
-        if not isinstance(item, dict):
-            item = item.model_dump()
+        item_data = item if isinstance(item, dict) else item.model_dump()
         for header, target in headers.items():
-            if "." in target:
-                value = item
-                parts = target.split(".")
-                for index, path in enumerate(parts):
-                    if isinstance(value, list):
-                        items = []
-                        for elm in value:
-                            subvalue = elm.get(path, "")
-                            if isinstance(subvalue, float | int | str):
-                                # collection[].key
-                                items.append(str(subvalue))
-                            elif isinstance(subvalue, dict):
-                                # collection[].key1.key2
-                                items.append(subvalue[parts[index + 1]])
-                        value = ", ".join(items)
-                    elif isinstance(value, dict):
-                        # Check if path contains [] notation
-                        if path.endswith("[]"):
-                            # Strip [] and get the list
-                            clean_path = path[:-2]
-                            value = value.get(clean_path, "")
-                        else:
-                            value = value.get(path, "")
-                    if not value:
-                        break
-            else:
-                value = item.get(target, "")
-                if isinstance(value, bool):
-                    value = "Yes" if value else "No"
-            if value == []:
-                value = ""
+            # A target may declare fallback paths separated by "|"; the first
+            # one that resolves to a value wins. Needed where the primary path
+            # runs through a nullable object, e.g. a study activity instance
+            # that has become a placeholder and so carries no activity instance.
+            for alternative in target.split("|"):
+                value = _resolve_target(item_data, alternative)
+                if value is not None and value != "":
+                    break
             result[header] = value
         yield result
 
@@ -180,7 +205,6 @@ def _export_to_xml(data: dict[Any, Any], headers: list[Any]):
 
 
 @register_export_format("application/x-yaml")
-# pylint: disable=unused-argument
 def _export_to_yaml(data: BaseModel, headers: list[Any]):
     """Export given data to YAML."""
     return yaml.dump(data.model_dump())

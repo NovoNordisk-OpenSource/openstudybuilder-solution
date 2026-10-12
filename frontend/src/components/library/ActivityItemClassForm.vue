@@ -175,7 +175,7 @@ function initForm(value) {
     display_name: value.display_name,
     order: value.order,
     role_uid: value.role?.uid ?? value.role?.term_uid ?? null,
-    data_type_uid: value.data_type?.uid ?? value.data_type?.term_uid ?? null,
+    data_type_uid: value.semtcdt?.uid ?? value.semtcdt?.term_uid ?? null,
     nci_concept_id: value.nci_concept_id,
     definition: value.definition,
     change_description: t('_global.work_in_progress'),

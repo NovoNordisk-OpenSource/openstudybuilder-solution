@@ -12,17 +12,17 @@ RUN useradd --home-dir /home/"$USER" --user-group --create-home --uid "$UID" "$U
 ARG WORKDIR=/app
 WORKDIR $WORKDIR
 
-## Copy Pipfiles into the working directory
-COPY ./Pipfile* ./
+## Copy dependency metadata into the working directory
+COPY ./pyproject.toml ./uv.lock ./
 
 # Update package lists, upgrade installed packages and install required system packages
-# and create virtual environment according to Pipfile.lock into user's home as root
+# and create virtual environment according to uv.lock as root
 RUN apt-get update \
     && apt-get -y upgrade \
     && apt-get -y install curl \
-    && pip install --upgrade pip pipenv wheel \
+    && pip install --upgrade pip uv wheel \
     && apt-get clean && rm -rf /var/lib/apt/lists \
-    && HOME=/home/"$USER" pipenv sync \
+    && HOME=/home/"$USER" uv sync --locked --no-dev \
     # clean-up
     && rm -rf ~/.cache
 

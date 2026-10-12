@@ -26,7 +26,19 @@
 
 7. **Path aliases**: Use `@/` to import from `src/` directory (configured in `vite.config.mjs`)
 
-8. **Demo-mode checks in `main.js` and `api/repository.js` must stay inline**: Both files guard a
+8. **CT terms are looked up by literal name and dereferenced unguarded**: A number of components
+   resolve a controlled-terminology term by its display name and immediately dereference the
+   result — `.find(t => t.sponsor_preferred_name === 'Unscheduled').term_uid` — and three views
+   index `[0]` of a possibly-empty term array on mount to pick a default tab. So an empty codelist,
+   or a renamed term, throws a `TypeError` and takes the page down rather than degrading.
+
+   **This is a known defect, not a pattern to copy.** Do not add new name-based lookups; match on a
+   stable key (`term_uid`, or `concept_id` where the term is CDISC-sourced) and null-check the
+   result. The affected terms and the reasoning are catalogued in
+   `import_sponsor_data/SYSTEM_CODELISTS.md`; a fix is planned, and that section of the doc should
+   shrink when it lands.
+
+9. **Demo-mode checks in `main.js` and `api/repository.js` must stay inline**: Both files guard a
    dynamic `import()` of demo-only code, and both declare the flag as a local literal:
 
    ```javascript

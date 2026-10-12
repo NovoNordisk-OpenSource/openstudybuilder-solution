@@ -473,7 +473,7 @@ class StudyEpochTiny(BaseModel):
     ] = None
 
     @classmethod
-    def from_study_visit(cls, study_visit: "StudyVisitLite") -> Self:
+    def from_study_visit(cls, study_visit: StudyVisitLite) -> Self:
         return cls(
             epoch=(
                 study_visit.study_epoch.term_uid

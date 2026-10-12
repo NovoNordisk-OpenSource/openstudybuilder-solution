@@ -20,6 +20,10 @@ const TABLE_ROUTES = [
   ['Compounds', '/library/interventions/compounds'],
   ['Endpoint instances', '/library/endpoints'],
   ['Criteria instances', '/library/criteria_instances'],
+  [
+    'Study compound dosings',
+    '/studies/Study_000001/study_interventions/study_compound_dosings',
+  ],
 ]
 
 for (const [label, path] of TABLE_ROUTES) {

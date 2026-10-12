@@ -28,8 +28,25 @@ from clinical_mdr_api.domains.study_selections.study_selection_cohort import (
     StudySelectionCohortAR,
     StudySelectionCohortVO,
 )
-from common.exceptions import BusinessLogicException
+from common.exceptions import BusinessLogicException, NotFoundException
 from common.utils import convert_to_datetime
+
+
+def _get_selection_node_in_study(
+    node_class, study_uid: str | None, uid: str, resource_name: str
+):
+    """Return the node of `node_class` with `uid` that belongs to `study_uid`.
+
+    Filtering across a relationship makes neomodel return a row rather than the
+    node itself, hence the subscript. Raises NotFoundException when nothing
+    matches: batch operations save before validating, so an unknown uid reaches
+    the repository instead of being rejected by the domain validation.
+    """
+    row = node_class.nodes.filter(study_value__latest_value__uid=study_uid).get_or_none(
+        uid=uid
+    )
+    NotFoundException.raise_if(row is None, resource_name, uid)
+    return row[0]
 
 
 @dataclass
@@ -75,12 +92,11 @@ class StudySelectionCohortRepository:
             else:
                 query = "MATCH (sr:StudyRoot)-[l:HAS_VERSION{status:'RELEASED', version:$study_value_version}]->(sv:StudyValue)"
                 query_parameters["study_value_version"] = study_value_version
+        elif study_uid:
+            query = "MATCH (sr:StudyRoot { uid: $uid})-[l:LATEST]->(sv:StudyValue)"
+            query_parameters["uid"] = study_uid
         else:
-            if study_uid:
-                query = "MATCH (sr:StudyRoot { uid: $uid})-[l:LATEST]->(sv:StudyValue)"
-                query_parameters["uid"] = study_uid
-            else:
-                query = "MATCH (sr:StudyRoot)-[l:LATEST]->(sv:StudyValue)"
+            query = "MATCH (sr:StudyRoot)-[l:LATEST]->(sv:StudyValue)"
 
         if project_name is not None or project_number is not None:
             query += (
@@ -287,7 +303,6 @@ class StudySelectionCohortRepository:
         )
         return cohort_node
 
-    # pylint: disable=unused-argument
     def save(self, study_selection: StudySelectionCohortAR, author_id: str) -> None:
         """
         Persist the set of selected study cohorts from the aggregate to the database
@@ -450,23 +465,24 @@ class StudySelectionCohortRepository:
         # check if arm root is set
         if selection.arm_root_uids:
             for arm_root_uid in selection.arm_root_uids:
-                # find the objective
-                study_arm_root = StudyArm.nodes.filter(
-                    study_value__latest_value__uid=selection.study_uid
-                ).get_or_none(uid=arm_root_uid)[0]
+                study_arm_root = _get_selection_node_in_study(
+                    StudyArm, selection.study_uid, arm_root_uid, "Study Arm"
+                )
                 # connect to node
-                # pylint: disable=no-member
+
                 study_cohort_selection_node.arm_root.connect(study_arm_root)
 
         # check if branch arm root is set
         if selection.branch_arm_root_uids:
             for branch_arm_root_uid in selection.branch_arm_root_uids:
-                # find the objective
-                study_branch_arm_root = StudyBranchArm.nodes.filter(
-                    study_value__latest_value__uid=selection.study_uid
-                ).get_or_none(uid=branch_arm_root_uid)[0]
+                study_branch_arm_root = _get_selection_node_in_study(
+                    StudyBranchArm,
+                    selection.study_uid,
+                    branch_arm_root_uid,
+                    "Study Branch Arm",
+                )
                 # connect to node]
-                # pylint: disable=no-member
+
                 study_cohort_selection_node.branch_arm_root.connect(
                     study_branch_arm_root
                 )

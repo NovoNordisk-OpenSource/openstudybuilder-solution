@@ -57,7 +57,7 @@ ACTIVITY_INSTANCE_CLASSES_PATH = "/activity-instance-classes"
 ACTIVITY_ITEM_CLASSES_PATH = "/activity-item-classes"
 
 
-class FieldMapper:  # pylint: disable=too-few-public-methods
+class FieldMapper:
     """
     Maps CSV fields to API fields with automatic transformation based on PropertyDefinition.
     """

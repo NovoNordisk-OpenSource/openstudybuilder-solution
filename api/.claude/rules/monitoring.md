@@ -1,6 +1,6 @@
 # Telemetry & Monitoring
 
-This file covers the telemetry **infrastructure**. For log level selection, per-layer logging conventions, and what must never be logged, see `.claude/skills/logging-standards-helper/SKILL.md` — do not duplicate that guidance here.
+This file covers the telemetry **infrastructure**. For log level selection, per-layer logging conventions, and what must never be logged, see `.claude/skills/logging-standards-helper/SKILL.md` (that path is relative to the monorepo root, not to `api/`) — do not duplicate that guidance here.
 
 ## Logging
 

@@ -201,7 +201,6 @@ CONDENSED_TREE = {
 }
 
 
-# pylint: disable=redefined-outer-name
 @pytest.fixture(scope="module")
 def study_objectives_service():
     service = StudyObjectivesService()

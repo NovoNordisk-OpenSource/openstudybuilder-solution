@@ -1,8 +1,9 @@
 import abc
 import copy
+from collections.abc import Iterable, Mapping
 from datetime import datetime
 from threading import Lock
-from typing import Any, Iterable, Literal, Mapping, TypeVar, overload
+from typing import Any, Literal, TypeVar, overload
 
 import neo4j.time
 from cachetools import TTLCache, cached
@@ -885,19 +886,17 @@ class LibraryItemRepositoryImplBase(
                     ) and relationship.status == status.value:
                         latest_matching_relationship = relationship
                         latest_matching_value = matching_value
-                else:
-                    if (
-                        latest_matching_relationship is None
-                        or latest_matching_relationship.start_date
-                        < relationship.start_date
-                        or (
-                            latest_matching_relationship.start_date
-                            == relationship.start_date
-                            and relationship.end_date is None
-                        )
-                    ):
-                        latest_matching_relationship = relationship
-                        latest_matching_value = matching_value
+                elif (
+                    latest_matching_relationship is None
+                    or latest_matching_relationship.start_date < relationship.start_date
+                    or (
+                        latest_matching_relationship.start_date
+                        == relationship.start_date
+                        and relationship.end_date is None
+                    )
+                ):
+                    latest_matching_relationship = relationship
+                    latest_matching_value = matching_value
         return latest_matching_value, latest_matching_relationship
 
     # Bypass the cache on for_update=True so that _lock_object() always runs
@@ -961,22 +960,21 @@ class LibraryItemRepositoryImplBase(
                     value, relationship = self._get_version_active_at_date_time(
                         has_version_rel, at_specific_date
                     )
+            elif at_specific_date is None:
+                # Find the latest version with the specified status
+                value, relationship = self._get_latest_value_with_status(
+                    root,
+                    status,
+                    has_version_rel,  # type: ignore[arg-type]
+                    latest_draft_rel,  # type: ignore[arg-type]
+                    latest_final_rel,  # type: ignore[arg-type]
+                    latest_retired_rel,  # type: ignore[arg-type]
+                )
             else:
-                if at_specific_date is None:
-                    # Find the latest version with the specified status
-                    value, relationship = self._get_latest_value_with_status(
-                        root,
-                        status,
-                        has_version_rel,  # type: ignore[arg-type]
-                        latest_draft_rel,  # type: ignore[arg-type]
-                        latest_final_rel,  # type: ignore[arg-type]
-                        latest_retired_rel,  # type: ignore[arg-type]
-                    )
-                else:
-                    # Find the latest version (regardless of status) that exists at the specified date
-                    value, relationship = self._get_version_active_at_date_time(
-                        has_version_rel, at_specific_date, status=status
-                    )
+                # Find the latest version (regardless of status) that exists at the specified date
+                value, relationship = self._get_version_active_at_date_time(
+                    has_version_rel, at_specific_date, status=status
+                )
         else:
             # Find the version with the specified version number, and optionally status
             value, relationship = self._get_value_with_version_number(
@@ -1327,6 +1325,23 @@ class LibraryItemRepositoryImplBase(
         result, _ = db.cypher_query(query, {"uid": uid})
         return len(result) > 0 and len(result[0]) > 0
 
+    def latest_version_is_retired(self, uid: str | None) -> bool:
+        """Check whether the current version of the item has Retired status.
+
+        Derives the current status from the open HAS_VERSION relationship
+        (end_date IS NULL) rather than the LATEST_* pointers, which are
+        historical and coexist on the same root after a retire cycle."""
+        if uid is None:
+            return False
+
+        query = f"""
+            MATCH (root:{self.root_class.__label__} {{uid: $uid}})-[hv:HAS_VERSION]->(:{self.value_class.__label__})
+            WHERE hv.end_date IS NULL
+            RETURN hv.status = 'Retired' AS is_retired
+            """
+        result, _ = db.cypher_query(query, {"uid": uid})
+        return len(result) > 0 and len(result[0]) > 0 and result[0][0] is True
+
     def close(self) -> None:
         # Our repository guidelines state that repos should have a close method
         # But nothing needs to be done in this one
@@ -1658,7 +1673,6 @@ class LibraryItemRepositoryImplBase(
         key=hashkey_library_items_with_metadata_get_all,
         lock=lock_store_item_by_uid,
     )
-    # pylint: disable=too-many-locals
     def get_all_optimized(
         self,
         *,
@@ -1766,7 +1780,7 @@ class LibraryItemRepositoryImplBase(
                 # or the default latest final one
                 # Drop that last column once it has been used
                 matched_element_ids = list(
-                    set(i_result[5]["ctterm_name_element_id"] for i_result in result)
+                    {i_result[5]["ctterm_name_element_id"] for i_result in result}
                 )
                 not_matched = [
                     param
@@ -1966,7 +1980,6 @@ class LibraryItemRepositoryImplBase(
         if hasattr(self.root_class, "is_confirmatory_testing"):
             mapping |= {"is_confirmatory_testing": "root.is_confirmatory_testing"}
 
-        # pylint: disable=no-member
         if hasattr(self, "template_class"):
             mapping |= {"template.name": "template_value.name"}
 
@@ -2290,7 +2303,6 @@ END
 
             match_stmt += stmt
 
-        # pylint: disable=no-member
         if hasattr(self.root_class, "has_type") or (
             hasattr(self, "template_class") and hasattr(self.template_class, "has_type")
         ):
@@ -2342,7 +2354,6 @@ END
 
         return match_stmt, return_stmt
 
-    # pylint: disable=too-many-statements
     def _find_cypher_query_optimized(
         self,
         get_latest_final: bool = False,
@@ -2484,13 +2495,12 @@ END
             else:
                 uid_where_stmt = "WHERE root.uid = $uid"
                 library__stmt = f"MATCH (library:Library)-[:{self.root_class.LIBRARY_REL_LABEL}]->(root)"
+        elif issubclass(self.root_class, CTTermNameRoot):
+            uid_where_stmt = ""
+            library__stmt = "MATCH (library:Library)-[:CONTAINS_TERM]->(ctterm_root:CTTermRoot)-[:HAS_NAME_ROOT]->(root)"
         else:
-            if issubclass(self.root_class, CTTermNameRoot):
-                uid_where_stmt = ""
-                library__stmt = "MATCH (library:Library)-[:CONTAINS_TERM]->(ctterm_root:CTTermRoot)-[:HAS_NAME_ROOT]->(root)"
-            else:
-                uid_where_stmt = ""
-                library__stmt = f"MATCH (library:Library)-[:{self.root_class.LIBRARY_REL_LABEL}]->(root)"
+            uid_where_stmt = ""
+            library__stmt = f"MATCH (library:Library)-[:{self.root_class.LIBRARY_REL_LABEL}]->(root)"
         value_matching = (
             f"-[{version_rel}]->(value:{self.value_class.__label__})"
             if not version_call
@@ -2586,7 +2596,6 @@ END
 
             match_stmt += stmt
 
-        # pylint: disable=no-member
         if hasattr(self.root_class, "has_type") or (
             hasattr(self, "template_class") and hasattr(self.template_class, "has_type")
         ):
@@ -2673,18 +2682,13 @@ END
 
                 if with_pagination:
                     return_stmt += " SKIP $page_number * $page_size LIMIT $page_size "
-        else:
-            if not uid:
-                return_stmt += (
-                    " ORDER BY ver_rel.start_date DESC, ver_rel.end_date DESC "
-                )
+        elif not uid:
+            return_stmt += " ORDER BY ver_rel.start_date DESC, ver_rel.end_date DESC "
 
-                if with_pagination:
-                    return_stmt += " SKIP $page_number * $page_size LIMIT $page_size "
-            else:
-                return_stmt += (
-                    " ORDER BY ver_rel.start_date DESC, ver_rel.end_date DESC "
-                )
+            if with_pagination:
+                return_stmt += " SKIP $page_number * $page_size LIMIT $page_size "
+        else:
+            return_stmt += " ORDER BY ver_rel.start_date DESC, ver_rel.end_date DESC "
 
         return match_stmt, return_stmt
 
@@ -2844,7 +2848,13 @@ END
                 WHERE activity_instance_version.status IN ['Final', 'Retired']
                 WITH *
                 ORDER BY activity_instance_root.uid, activity_instance_version.start_date DESC
-                WITH activity_instance_root.uid AS uid, HEAD(COLLECT({uid: activity_instance_root.uid, name: activity_instance_value.name, version: activity_instance_version.version, status: activity_instance_version.status})) AS latest_activity_instance
+                WITH activity_instance_root.uid AS uid,
+                    HEAD(COLLECT({
+                        uid: activity_instance_root.uid,
+                        name: activity_instance_value.name,
+                        version: activity_instance_version.version,
+                        status: activity_instance_version.status
+                    })) AS latest_activity_instance
                 RETURN COLLECT(latest_activity_instance) AS activity_instances
             } */
             CALL
@@ -2878,7 +2888,12 @@ END
                         <-[:HAS_SELECTED_ACTIVITY]-(sa:StudyActivity)<-[:HAS_STUDY_ACTIVITY]-(study_value:StudyValue)
                         WHERE library.name="Requested" AND NOT (sa)-[:BEFORE]-() AND NOT (sa)--(:Delete) |
                         COALESCE(study_value.study_id_prefix, '') + "-" + COALESCE(study_value.study_number, '') +
-                        CASE WHEN study_value.study_subpart_acronym IS NOT NULL AND study_value.study_subpart_acronym <> '' THEN "-" + study_value.study_subpart_acronym ELSE "" END])) AS used_by_studies
+                        CASE
+                            WHEN study_value.study_subpart_acronym IS NOT NULL
+                                AND study_value.study_subpart_acronym <> ''
+                            THEN "-" + study_value.study_subpart_acronym
+                            ELSE ""
+                        END])) AS used_by_studies
                 RETURN activity_groupings, used_by_studies
             }
         """
@@ -3000,7 +3015,9 @@ WHERE cnt > 0
 
     def _subcategory_match_return_stmt(self):
         match_stmt = """
-            OPTIONAL MATCH (root)-[:HAS_SUBCATEGORY]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(subcategory_root:CTTermRoot)-[:HAS_NAME_ROOT]->(:CTTermNameRoot)-[:LATEST]->(subcategory_ct_term_name_value:CTTermNameValue)
+            OPTIONAL MATCH (root)-[:HAS_SUBCATEGORY]->(:CTTermContext)-[:HAS_SELECTED_TERM]->
+                (subcategory_root:CTTermRoot)-[:HAS_NAME_ROOT]->(:CTTermNameRoot)-[:LATEST]->
+                (subcategory_ct_term_name_value:CTTermNameValue)
             OPTIONAL MATCH (subcategory_root:CTTermRoot)-[:HAS_ATTRIBUTES_ROOT]->(:CTTermAttributesRoot)-[:LATEST]->(subcategory_ct_term_attributes_value:CTTermAttributesValue)
         """
 
@@ -3018,7 +3035,9 @@ WHERE cnt > 0
 
     def _category_match_return_stmt(self):
         match_stmt = """
-            OPTIONAL MATCH (root)-[:HAS_CATEGORY]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(category_root:CTTermRoot)-[:HAS_NAME_ROOT]->(:CTTermNameRoot)-[:LATEST]->(category_ct_term_name_value:CTTermNameValue)
+            OPTIONAL MATCH (root)-[:HAS_CATEGORY]->(:CTTermContext)-[:HAS_SELECTED_TERM]->
+                (category_root:CTTermRoot)-[:HAS_NAME_ROOT]->(:CTTermNameRoot)-[:LATEST]->
+                (category_ct_term_name_value:CTTermNameValue)
             OPTIONAL MATCH (category_root:CTTermRoot)-[:HAS_ATTRIBUTES_ROOT]->(:CTTermAttributesRoot)-[:LATEST]->(category_ct_term_attributes_value:CTTermAttributesValue)
         """
 
@@ -3055,7 +3074,8 @@ WHERE cnt > 0
                     LIMIT 1
                 }}
                 OPTIONAL MATCH (template_root)-[:HAS_TYPE]->(:CTTermContext)-[:HAS_SELECTED_TERM]->
-                  (type_root:CTTermRoot)-[:HAS_NAME_ROOT]->(:CTTermNameRoot)-[:LATEST]->(type_ct_term_name_value:CTTermNameValue)
+                    (type_root:CTTermRoot)-[:HAS_NAME_ROOT]->(:CTTermNameRoot)-[:LATEST]->
+                    (type_ct_term_name_value:CTTermNameValue)
                 OPTIONAL MATCH (type_root)-[:HAS_ATTRIBUTES_ROOT]->(:CTTermAttributesRoot)-[:LATEST]->(type_ct_term_attributes_value:CTTermAttributesValue)
             """
 
@@ -3094,7 +3114,9 @@ WHERE cnt > 0
     def _template_type_match_return_stmt(self):
         if hasattr(self.root_class, "has_type"):
             match_stmt = """
-                OPTIONAL MATCH (root)-[:HAS_TYPE]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(type_root:CTTermRoot)-[:HAS_NAME_ROOT]->(:CTTermNameRoot)-[:LATEST]->(type_ct_term_name_value:CTTermNameValue)
+                OPTIONAL MATCH (root)-[:HAS_TYPE]->(:CTTermContext)-[:HAS_SELECTED_TERM]->
+                    (type_root:CTTermRoot)-[:HAS_NAME_ROOT]->(:CTTermNameRoot)-[:LATEST]->
+                    (type_ct_term_name_value:CTTermNameValue)
                 OPTIONAL MATCH (type_root)-[:HAS_ATTRIBUTES_ROOT]->(:CTTermAttributesRoot)-[:LATEST]->(type_ct_term_attributes_value:CTTermAttributesValue)
             """
 
@@ -3109,7 +3131,9 @@ WHERE cnt > 0
             """
         else:
             match_stmt = """
-                OPTIONAL MATCH (root)-[:CREATED_FROM]->(template_root)-[:HAS_TYPE]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(type_root:CTTermRoot)-[:HAS_NAME_ROOT]->(:CTTermNameRoot)-[:LATEST]->(type_ct_term_name_value:CTTermNameValue)
+                OPTIONAL MATCH (root)-[:CREATED_FROM]->(template_root)-[:HAS_TYPE]->
+                    (:CTTermContext)-[:HAS_SELECTED_TERM]->(type_root:CTTermRoot)-[:HAS_NAME_ROOT]->
+                    (:CTTermNameRoot)-[:LATEST]->(type_ct_term_name_value:CTTermNameValue)
                 OPTIONAL MATCH (type_root)-[:HAS_ATTRIBUTES_ROOT]->(:CTTermAttributesRoot)-[:LATEST]->(type_ct_term_attributes_value:CTTermAttributesValue)
                 OPTIONAL MATCH (template_root)-[:LATEST]->(template_value)
             """

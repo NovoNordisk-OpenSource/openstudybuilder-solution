@@ -20,6 +20,7 @@
             :loading="loading"
             :expanded="expandedItems"
             :items-length="paginationTotal"
+            :items-per-page-options="itemsPerPageOptions"
             :no-data-text="t('activityInstancesTable.noInstancesFound')"
             :use-cached-filtering="false"
             :export-config="{
@@ -187,6 +188,12 @@ import { useI18n } from 'vue-i18n'
 import activitiesApi from '@/api/activities'
 import NNTable from '@/components/tools/NNTable.vue'
 import StatusChip from '@/components/tools/StatusChip.vue'
+import tablesConstants from '@/constants/tables'
+
+// "All" (page_size=0) empties this table server-side; omit it until fixed there.
+const itemsPerPageOptions = tablesConstants.ITEMS_PER_PAGE_OPTIONS.filter(
+  (option) => option.value !== -1
+)
 
 const route = useRoute()
 const { t } = useI18n()
@@ -218,7 +225,7 @@ const activitiesList = ref([]) // Activities displayed in the table
 const loading = ref(false)
 const expandedItems = ref([])
 const paginationTotal = ref(0) // Total count for pagination
-let sortTimer = null // Timer for delayed sort application
+const activeSearchTerm = ref('') // Current search term, lowercased, '' when inactive
 const tableOptions = ref({
   page: 1,
   itemsPerPage: 25,
@@ -289,7 +296,7 @@ function refresh() {
     props.version || route.params.version || props.itemData?.activity?.version
 
   if (activityId && version) {
-    fetchActivityInstancesFromApi(version, tableOptions.value)
+    fetchActivityInstancesFromApi(version)
   } else if (activityId) {
     // Fallback to current version lookup if we still don't have a version
     fetchCurrentActivityVersion()
@@ -303,24 +310,15 @@ function fetchCurrentActivityVersion() {
       .getObject('activities', props.activityId)
       .then((response) => {
         if (response.data && response.data.version) {
-          fetchActivityInstancesFromApi(
-            response.data.version,
-            tableOptions.value
-          )
+          fetchActivityInstancesFromApi(response.data.version)
         } else {
-          fetchActivityInstancesFromApi(
-            defaultActivityVersion.value,
-            tableOptions.value
-          )
+          fetchActivityInstancesFromApi(defaultActivityVersion.value)
         }
       })
       .catch((error) => {
         console.error('Error fetching activity by ID:', error)
         // Fallback to default version
-        fetchActivityInstancesFromApi(
-          defaultActivityVersion.value,
-          tableOptions.value
-        )
+        fetchActivityInstancesFromApi(defaultActivityVersion.value)
       })
   } else {
     fetchAllActivityInstances()
@@ -379,79 +377,109 @@ function updateExpandedItems(items) {
   expandedItems.value = items || []
 }
 
-// Handles filtering of activity instances based on search term
-function handleFilter(filters, options) {
-  loading.value = true
+// Sorts a list of activities by tableOptions.sortBy; returns a new array
+function sortActivities(items, sortBy) {
+  if (!sortBy || !sortBy.length) return items
 
-  if (allActivities.value.length === 0 || !filters || !filters.search) {
-    activitiesList.value = allActivities.value
-    loading.value = false
-    return
+  const { key, order } = sortBy[0]
+  return [...items].sort((a, b) => {
+    let aValue = a[key]
+    let bValue = b[key]
+
+    if (key === 'activity_instance_class') {
+      aValue = a.activity_instance_class?.name || ''
+      bValue = b.activity_instance_class?.name || ''
+    }
+
+    aValue =
+      typeof aValue === 'string' ? aValue.toLowerCase() : String(aValue || '')
+    bValue =
+      typeof bValue === 'string' ? bValue.toLowerCase() : String(bValue || '')
+
+    return order === 'desc'
+      ? bValue.localeCompare(aValue)
+      : aValue.localeCompare(bValue)
+  })
+}
+
+// Recomputes activitiesList (the current page's rows) from allActivities by
+// applying the active search term, sort, and pagination, in that order.
+// allActivities always holds the FULL instance set for the activity/version
+// (see fetchActivityInstancesFromApi), so search and pagination never disagree
+// about which instances exist - unlike filtering a single fetched server page.
+function updateDisplayedActivities() {
+  const term = activeSearchTerm.value
+  const expandedKeys = new Set(expandedItems.value.map((item) => item.item_key))
+
+  let filtered = allActivities.value
+  if (term) {
+    filtered = allActivities.value.reduce((acc, item) => {
+      const mainItemMatches = itemMatchesSearch(item, term)
+      const matchingVersions = (item.versions || []).filter((version) =>
+        itemMatchesSearch(version, term)
+      )
+      if (mainItemMatches || matchingVersions.length > 0) {
+        acc.push({ ...item, versions: matchingVersions })
+      }
+      return acc
+    }, [])
   }
 
-  const searchTerm = options.search?.toLowerCase()
-  const filteredActivities = []
+  filtered = sortActivities(filtered, tableOptions.value.sortBy)
+  paginationTotal.value = filtered.length
 
-  if (searchTerm) {
-    const expandedKeys = new Set(
-      expandedItems.value.map((item) => item.item_key)
-    )
-    allActivities.value.forEach((item) => {
-      const mainItemMatches = itemMatchesSearch(item, searchTerm)
+  const itemsPerPage = tableOptions.value.itemsPerPage
+  const pageCount =
+    itemsPerPage > 0
+      ? Math.max(1, Math.ceil(filtered.length / itemsPerPage))
+      : 1
+  if (tableOptions.value.page > pageCount) {
+    tableOptions.value.page = pageCount
+  }
 
-      let matchingVersions = []
-      if (item.versions && item.versions.length > 0) {
-        matchingVersions = item.versions.filter((version) =>
-          itemMatchesSearch(version, searchTerm)
-        )
-      }
+  const start = (tableOptions.value.page - 1) * itemsPerPage
+  activitiesList.value =
+    itemsPerPage > 0 ? filtered.slice(start, start + itemsPerPage) : filtered
 
-      if (mainItemMatches || matchingVersions.length > 0) {
-        filteredActivities.push({ ...item, versions: matchingVersions })
-      }
-    })
-
-    activitiesList.value = filteredActivities
-
-    expandedItems.value = filteredActivities.filter(
+  if (term) {
+    expandedItems.value = activitiesList.value.filter(
       (item) =>
         expandedKeys.has(item.item_key) ||
-        (!itemMatchesSearch(item, searchTerm) &&
+        (!itemMatchesSearch(item, term) &&
           item.versions &&
           item.versions.length > 0)
     )
-  } else {
-    activitiesList.value = allActivities.value
   }
-
-  // Handle sorting changes
-  if (options.sortBy && options.sortBy.length > 0) {
-    const currentSortKey = tableOptions.value.sortBy?.[0]?.key
-    const currentSortOrder = tableOptions.value.sortBy?.[0]?.order
-    const newSortKey = options.sortBy[0].key
-    const newSortOrder = options.sortBy[0].order
-
-    // Clear any pending sort timers
-    if (sortTimer) {
-      clearTimeout(sortTimer)
-      sortTimer = null
-    }
-
-    if (currentSortKey !== newSortKey || currentSortOrder !== newSortOrder) {
-      // Update sort options
-      tableOptions.value.sortBy = [...options.sortBy]
-      applyClientSideSort()
-    }
-  }
-
-  loading.value = false
 }
 
-// Fetches activity instances from API using pagination parameters
-function fetchActivityInstancesFromApi(activityVersion, options = {}) {
-  loading.value = true
+// Handles filtering/pagination/sort changes emitted by NNTable's @filter
+function handleFilter(filters, options) {
+  if (!options) return
 
-  // Version parameter is kept for backward compatibility but no longer used in the URL
+  const term = (options.search || '').toLowerCase()
+  const searchChanged = term !== activeSearchTerm.value
+  const itemsPerPageChanged =
+    options.itemsPerPage !== tableOptions.value.itemsPerPage
+
+  activeSearchTerm.value = term
+  tableOptions.value.itemsPerPage = options.itemsPerPage
+  if (options.sortBy && options.sortBy.length > 0) {
+    tableOptions.value.sortBy = [...options.sortBy]
+  }
+  // A new search or page-size resets to page 1; otherwise honor the clicked page
+  tableOptions.value.page =
+    searchChanged || itemsPerPageChanged ? 1 : options.page
+
+  updateDisplayedActivities()
+}
+
+// Fetches the FULL instance set (not one server page) so search/pagination
+// in updateDisplayedActivities never miss a match on an unfetched page. A
+// second, exact-sized call covers the rare activity beyond the initial page.
+const INITIAL_FETCH_PAGE_SIZE = 100
+
+function fetchActivityInstancesFromApi(activityVersion) {
+  loading.value = true
 
   if (!props.activityId) {
     console.error('No activity ID provided for activity instances fetch')
@@ -459,48 +487,34 @@ function fetchActivityInstancesFromApi(activityVersion, options = {}) {
     return
   }
 
-  // Build query parameters with pagination from options or defaults
-  const params = {
-    page_number: options.page || tableOptions.value.page,
-    page_size: options.itemsPerPage || tableOptions.value.itemsPerPage,
-    total_count: true, // Request total count for pagination
-  }
-
-  // Track if this request includes sorting parameters
-  let hasSortParams = false
-
-  // Add sort parameters to API request
-  if (options.sortBy && options.sortBy.length > 0) {
-    const sortItem = options.sortBy[0]
-    params.sort_by = sortItem.key
-    params.order = sortItem.order === 'desc' ? 'desc' : 'asc'
-  }
-
-  console.log(
-    'Fetching instances from API for activity:',
-    props.activityId,
-    'version:',
-    activityVersion
-  )
-
   activitiesApi
-    .getVersionInstances(props.activityId, activityVersion, params)
+    .getVersionInstances(props.activityId, activityVersion, {
+      page_number: 1,
+      page_size: INITIAL_FETCH_PAGE_SIZE,
+      total_count: true,
+    })
     .then((response) => {
-      try {
-        const items = response.data?.items || []
+      const items = response.data?.items || []
+      const total = response.data?.total ?? items.length
 
-        // Process the items with knowledge of whether this is a sort request
-        processActivityInstances(items, hasSortParams)
-
-        paginationTotal.value = response.data?.total || items.length
-      } catch (e) {
-        console.error('Error processing activity instances:', e)
-        activitiesList.value = []
-        paginationTotal.value = 0
+      if (total > items.length) {
+        return activitiesApi
+          .getVersionInstances(props.activityId, activityVersion, {
+            page_number: 1,
+            page_size: total,
+          })
+          .then((fullResponse) => fullResponse.data?.items || [])
       }
+      return items
+    })
+    .then((items) => {
+      processActivityInstances(items)
+      tableOptions.value.page = 1
+      updateDisplayedActivities()
     })
     .catch((error) => {
       console.error('Error fetching activity instances:', error)
+      allActivities.value = []
       activitiesList.value = []
       paginationTotal.value = 0
     })
@@ -512,89 +526,41 @@ function fetchActivityInstancesFromApi(activityVersion, options = {}) {
 // Fetch all activity instances without filtering by activity
 function fetchAllActivityInstances() {
   loading.value = true
-  const params = {}
   activitiesApi
-    .get(params, 'activity-instances')
+    .get({}, 'activity-instances')
     .then((resp) => {
       processActivityInstances(resp.data.items)
-      paginationTotal.value = resp.data.total
-      loading.value = false
+      tableOptions.value.page = 1
+      updateDisplayedActivities()
     })
-    .catch(() => {
+    .catch((error) => {
+      console.error('Error fetching activity instances:', error)
+      allActivities.value = []
+      activitiesList.value = []
+      paginationTotal.value = 0
+    })
+    .finally(() => {
       loading.value = false
     })
 }
 
-// Process activity instances from the API and organize them for display
+// Normalizes raw API instances into allActivities; display state (activitiesList,
+// paginationTotal) is derived from it by updateDisplayedActivities.
 function processActivityInstances(instances) {
   if (!instances || !Array.isArray(instances)) {
     allActivities.value = []
-    activitiesList.value = []
     return
   }
 
-  const result = []
-
-  // Process each instance
-  instances.forEach((instance) => {
+  allActivities.value = instances.map((instance) => {
     const resultItem = {
       ...instance,
       versions: instance.children || [],
       item_key: instance.uid + '_' + instance.version,
     }
-
     delete resultItem.children
-    result.push(resultItem)
+    return resultItem
   })
-
-  // Store both the original and display data
-  allActivities.value = [...result]
-  activitiesList.value = [...result]
-
-  // Apply current sort if we have any
-  if (tableOptions.value.sortBy && tableOptions.value.sortBy.length > 0) {
-    applyClientSideSort()
-  }
-}
-
-// Simple function to apply client-side sorting as a backup to server-side sorting
-function applyClientSideSort() {
-  if (
-    !tableOptions.value.sortBy ||
-    !tableOptions.value.sortBy.length ||
-    !allActivities.value.length
-  ) {
-    return
-  }
-
-  const { key, order } = tableOptions.value.sortBy[0]
-
-  // Create a sorted copy of the data
-  const sortedResult = [...allActivities.value].sort((a, b) => {
-    let aValue = a[key]
-    let bValue = b[key]
-
-    // Handle nested objects like activity_instance_class
-    if (key === 'activity_instance_class') {
-      aValue = a.activity_instance_class?.name || ''
-      bValue = b.activity_instance_class?.name || ''
-    }
-
-    // String comparison
-    if (typeof aValue === 'string' && typeof bValue === 'string') {
-      aValue = aValue.toLowerCase()
-      bValue = bValue.toLowerCase()
-    } else {
-      aValue = String(aValue || '')
-      bValue = String(bValue || '')
-    }
-
-    return order === 'desc'
-      ? bValue.localeCompare(aValue)
-      : aValue.localeCompare(bValue)
-  })
-
-  activitiesList.value = sortedResult
 }
 
 // Check if a column is visible in the table
@@ -614,34 +580,18 @@ function getVisibleColumnsCount() {
   return tableRef.value.selectedColumns.length
 }
 
-// Handle table options changes (pagination and sorting)
+// Handle table options changes (pagination and sorting); allActivities is
+// already fully loaded, so this only needs to re-slice it, never refetch.
 function updateTableOptions(options) {
   if (!options) return
 
-  console.log('Table options updated:', JSON.stringify(options))
-
-  // Track if pagination has changed (requiring a data refresh)
-  let shouldRefreshFromApi = false
-
-  // Check for pagination changes
-  if (
-    options.page !== tableOptions.value.page ||
-    options.itemsPerPage !== tableOptions.value.itemsPerPage
-  ) {
-    tableOptions.value.page = options.page
-    tableOptions.value.itemsPerPage = options.itemsPerPage
-    shouldRefreshFromApi = true
+  tableOptions.value.page = options.page
+  tableOptions.value.itemsPerPage = options.itemsPerPage
+  if (options.sortBy && options.sortBy.length > 0) {
+    tableOptions.value.sortBy = [...options.sortBy]
   }
 
-  // Only refresh from API for pagination changes, not for sorting
-  if (
-    shouldRefreshFromApi &&
-    props.activityId &&
-    (props.version || route.params.version)
-  ) {
-    const version = props.version || route.params.version
-    fetchActivityInstancesFromApi(version, tableOptions.value)
-  }
+  updateDisplayedActivities()
 }
 </script>
 

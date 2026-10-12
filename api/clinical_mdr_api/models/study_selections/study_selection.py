@@ -1,15 +1,12 @@
 import re
+from collections.abc import Callable, Iterable, Mapping
 from datetime import datetime
 from enum import Enum
 from typing import (
     Annotated,
     Any,
-    Callable,
-    Iterable,
-    Mapping,
     NamedTuple,
     Self,
-    TypeVar,
 )
 
 from pydantic import (
@@ -501,7 +498,7 @@ class StudySelectionObjective(StudySelectionObjectiveCore):
         find_project_by_study_uid: Callable,
         accepted_version: bool = False,
         study_value_version: str | None = None,
-    ) -> "StudySelectionObjective":
+    ) -> StudySelectionObjective:
         study_uid = study_selection_objective_ar.study_uid
 
         project = find_project_by_study_uid(study_uid)
@@ -512,7 +509,6 @@ class StudySelectionObjective(StudySelectionObjectiveCore):
         )
         study_objective_uid = single_study_selection.study_selection_uid
         objective_template_uid = single_study_selection.objective_uid
-        #
         latest_objective_template: ObjectiveTemplate | None
         assert objective_template_uid is not None
         latest_objective_template = get_objective_template_by_uid_callback(
@@ -818,7 +814,7 @@ class StudySelectionEndpoint(StudySelection):
         get_study_objective_by_uid: Callable[..., StudySelectionObjective],
         find_project_by_study_uid: Callable,
         accepted_version: bool = False,
-    ) -> "StudySelectionEndpoint":
+    ) -> StudySelectionEndpoint:
         study_uid = study_selection_endpoint_ar.study_uid
 
         project = find_project_by_study_uid(study_uid)
@@ -829,7 +825,6 @@ class StudySelectionEndpoint(StudySelection):
         ]
         study_endpoint_uid = single_study_selection.study_selection_uid
         endpoint_template_uid = single_study_selection.endpoint_uid
-        #
         assert endpoint_template_uid is not None
         latest_endpoint_template: EndpointTemplate | None
         latest_endpoint_template = get_endpoint_template_by_uid_callback(
@@ -2545,7 +2540,7 @@ class StudySelectionActivityBatchInput(BatchInputModel):
 
 class StudySelectionActivityBatchOutput(BaseModel):
     response_code: Annotated[int, RESPONSE_CODE_FIELD]
-    content: Annotated[StudySelectionActivity | None | BatchErrorResponse, Field()]
+    content: Annotated[StudySelectionActivity | BatchErrorResponse | None, Field()]
 
 
 class StudyActivitySyncLatestVersionInput(BaseModel):
@@ -3183,7 +3178,7 @@ class StudySelectionActivityInstanceBatchInput(BatchInputModel):
 class StudySelectionActivityInstanceBatchOutput(BaseModel):
     response_code: Annotated[int, RESPONSE_CODE_FIELD]
     content: Annotated[
-        StudySelectionActivityInstance | None | BatchErrorResponse, Field()
+        StudySelectionActivityInstance | BatchErrorResponse | None, Field()
     ]
 
 
@@ -3305,9 +3300,31 @@ class StudyActivityScheduleBatchInput(BatchInputModel):
 
 class StudyActivityScheduleBatchOutput(BaseModel):
     response_code: Annotated[int, RESPONSE_CODE_FIELD]
-    content: Annotated[StudyActivitySchedule | None | BatchErrorResponse, Field()] = (
+    content: Annotated[StudyActivitySchedule | BatchErrorResponse | None, Field()] = (
         None
     )
+
+
+class StudyActivityScheduleBatchEditInput(PostInputModel):
+    """Desired full set of study visit uids to be scheduled for one or more study activities.
+
+    Used as the content of a `POST` / `StudyActivitySchedule` entry in the
+    `soa-edits/batch` payload. The same `study_visit_uids` are applied to every
+    activity in `study_activity_uids`. For each activity, the API diffs the list
+    against that activity's current schedules and creates/deletes only what changed
+    - a visit omitted from the list is deleted, so callers never send a separate
+    DELETE entry for a schedule.
+    """
+
+    study_activity_uids: Annotated[
+        list[str], Field(description="The related study activity uids")
+    ]
+    study_visit_uids: Annotated[
+        list[str],
+        Field(
+            description="Full desired list of study visit uids to be scheduled for these study activities"
+        ),
+    ]
 
 
 class StudySoAEditBatchInput(BatchInputModel):
@@ -3320,11 +3337,10 @@ class StudySoAEditBatchInput(BatchInputModel):
         ),
     ]
     content: Annotated[
-        StudyActivityScheduleCreateInput
+        StudyActivityScheduleBatchEditInput
         | StudySelectionActivityBatchUpdateInput
         | StudySelectionActivityCreateInput
-        | StudySelectionActivityBatchDeleteInput
-        | StudyActivityScheduleDeleteInput,
+        | StudySelectionActivityBatchDeleteInput,
         Field(),
     ]
 
@@ -3332,7 +3348,10 @@ class StudySoAEditBatchInput(BatchInputModel):
 class StudySoAEditBatchOutput(BaseModel):
     response_code: Annotated[int, RESPONSE_CODE_FIELD]
     content: Annotated[
-        StudySelectionActivity | StudyActivitySchedule | None | BatchErrorResponse,
+        StudySelectionActivity
+        | list[StudyActivitySchedule]
+        | BatchErrorResponse
+        | None,
         Field(),
     ]
 
@@ -3671,7 +3690,7 @@ class StudyDesignCellBatchInput(BatchInputModel):
 
 class StudyDesignCellBatchOutput(BaseModel):
     response_code: Annotated[int, RESPONSE_CODE_FIELD]
-    content: Annotated[StudyDesignCell | None | BatchErrorResponse, Field()] = None
+    content: Annotated[StudyDesignCell | BatchErrorResponse | None, Field()] = None
 
 
 # Study brancharms without ArmRoot
@@ -4201,8 +4220,8 @@ class StudySelectionArmBatchOutput(BaseModel):
     content: Annotated[
         StudySelectionArm
         | StudySelectionArmWithConnectedBranchArms
-        | None
-        | BatchErrorResponse,
+        | BatchErrorResponse
+        | None,
         Field(),
     ]
     notification: Annotated[
@@ -4349,7 +4368,7 @@ class StudyActivityInstructionBatchInput(BatchInputModel):
 class StudyActivityInstructionBatchOutput(BaseModel):
     response_code: Annotated[int, RESPONSE_CODE_FIELD]
     content: Annotated[
-        StudyActivityInstruction | None | BatchErrorResponse, Field()
+        StudyActivityInstruction | BatchErrorResponse | None, Field()
     ] = None
 
 
@@ -4778,7 +4797,7 @@ class StudySelectionElementBatchInput(BatchInputModel):
 class StudySelectionElementBatchOutput(BaseModel):
     response_code: Annotated[int, RESPONSE_CODE_FIELD]
     content: Annotated[
-        StudySelectionElement | None | BatchErrorResponse,
+        StudySelectionElement | BatchErrorResponse | None,
         Field(),
     ]
     notification: Annotated[
@@ -5059,7 +5078,7 @@ class StudySelectionBranchArmBatchInput(BatchInputModel):
 
 class StudySelectionBranchArmBatchOutput(BaseModel):
     response_code: Annotated[int, RESPONSE_CODE_FIELD]
-    content: Annotated[StudySelectionBranchArm | None | BatchErrorResponse, Field()]
+    content: Annotated[StudySelectionBranchArm | BatchErrorResponse | None, Field()]
     notification: Annotated[
         str | None,
         Field(
@@ -5371,7 +5390,7 @@ class StudySelectionCohortBatchInput(BatchInputModel):
 
 class StudySelectionCohortBatchOutput(BaseModel):
     response_code: Annotated[int, RESPONSE_CODE_FIELD]
-    content: Annotated[StudySelectionCohort | None | BatchErrorResponse, Field()]
+    content: Annotated[StudySelectionCohort | BatchErrorResponse | None, Field()]
 
 
 #
@@ -5412,6 +5431,14 @@ class StudyCompoundDosing(StudySelection):
         ),
     ] = None
 
+    study_activity_instance: Annotated[
+        StudySelectionActivityInstance | None,
+        Field(
+            description="The related study activity instance used for dose collection",
+            json_schema_extra={"nullable": True},
+        ),
+    ] = None
+
     start_date: Annotated[
         datetime | None,
         Field(description=START_DATE_DESC, json_schema_extra={"nullable": True}),
@@ -5433,8 +5460,65 @@ class StudyCompoundDosing(StudySelection):
         ),
     ] = None
 
+    free_text_dose_value: Annotated[
+        str | None,
+        Field(
+            description="Study level free text dose value, defined instead of a dose value from the library",
+            json_schema_extra={"nullable": True},
+        ),
+    ] = None
+
+    free_text_dose_frequency: Annotated[
+        str | None,
+        Field(
+            description="Study level free text dose frequency, defined instead of a dose frequency from the library",
+            json_schema_extra={"nullable": True},
+        ),
+    ] = None
+
+    dose_value_label: Annotated[
+        str | None,
+        Field(
+            description="Dose value rendered as '<value> <unit>' when taken from the library, otherwise the study level free text dose value",
+            json_schema_extra={"nullable": True},
+        ),
+    ] = None
+
+    dose_frequency_label: Annotated[
+        str | None,
+        Field(
+            description="Name of the library dose frequency term, otherwise the study level free text dose frequency. "
+            "Also null for a library term that cannot be resolved at the requested point in time.",
+            json_schema_extra={"nullable": True},
+        ),
+    ] = None
+
     end_date: Annotated[datetime | None, END_DATE_FIELD] = None
     change_type: Annotated[str | None, CHANGE_TYPE_FIELD] = None
+
+    # The library and free text sources of each of the dose value and the dose
+    # frequency are mutually exclusive but live in separate fields, so neither
+    # alone can back a single filter or sort over the column showing them both.
+    # Kept as real fields rather than computed ones: a computed_field is invisible
+    # to the model_fields-driven filtering helpers in services/_utils.py.
+    @model_validator(mode="after")
+    def derive_dose_labels(self) -> Self:
+        if self.dose_value:
+            value = self.dose_value.value
+            # Match how the value is rendered client side, where an integral
+            # float carries no trailing ".0".
+            self.dose_value_label = (
+                f"{int(value) if value.is_integer() else value} "
+                f"{self.dose_value.unit_label}"
+            )
+        else:
+            self.dose_value_label = self.free_text_dose_value
+
+        if self.dose_frequency:
+            self.dose_frequency_label = self.dose_frequency.term_name
+        else:
+            self.dose_frequency_label = self.free_text_dose_frequency
+        return self
 
     @classmethod
     def from_vo(
@@ -5443,6 +5527,7 @@ class StudyCompoundDosing(StudySelection):
         order: int,
         study_compound_model: StudySelectionCompound,
         study_element_model: StudySelectionElement,
+        study_activity_instance_model: StudySelectionActivityInstance | None,
         find_unit_by_uid: Callable[[str], UnitDefinitionAR | None],
         find_numeric_value_by_uid: Callable[[str], NumericValueWithUnitAR | None],
         find_codelist_term_by_uid_and_submval: Callable[
@@ -5474,6 +5559,9 @@ class StudyCompoundDosing(StudySelection):
                 at_specific_date_time=terms_at_specific_datetime,
             ),
             composition=compound_dosing_vo.composition,
+            free_text_dose_value=compound_dosing_vo.free_text_dose_value,
+            free_text_dose_frequency=compound_dosing_vo.free_text_dose_frequency,
+            study_activity_instance=study_activity_instance_model,
             start_date=compound_dosing_vo.start_date,
             author_username=compound_dosing_vo.author_username,
         )
@@ -5486,6 +5574,7 @@ class StudyCompoundDosing(StudySelection):
         order: int,
         study_compound_model: StudySelectionCompound,
         study_element_model: StudySelectionElement,
+        study_activity_instance_model: StudySelectionActivityInstance | None,
         find_unit_by_uid: Callable[[str], UnitDefinitionAR | None],
         find_numeric_value_by_uid: Callable[[str], NumericValueWithUnitAR | None],
         find_codelist_term_by_uid_and_submval: Callable[
@@ -5509,6 +5598,9 @@ class StudyCompoundDosing(StudySelection):
                 find_codelist_term_by_uid_and_submission_value=find_codelist_term_by_uid_and_submval,
             ),
             composition=study_selection_history.composition,
+            free_text_dose_value=study_selection_history.free_text_dose_value,
+            free_text_dose_frequency=study_selection_history.free_text_dose_frequency,
+            study_activity_instance=study_activity_instance_model,
             start_date=study_selection_history.start_date,
             end_date=study_selection_history.end_date,
             change_type=study_selection_history.change_type,
@@ -5535,6 +5627,15 @@ class StudyCompoundDosingInput(InputModel):
         ),
     ] = None
 
+    free_text_dose_value: Annotated[
+        str | None,
+        Field(
+            description="Study level free text dose value, defined instead of 'dose_value_uid'. "
+            "The two are mutually exclusive.",
+            json_schema_extra={"nullable": True},
+        ),
+    ] = None
+
     dose_frequency_uid: Annotated[
         str | None,
         Field(
@@ -5543,10 +5644,27 @@ class StudyCompoundDosingInput(InputModel):
         ),
     ] = None
 
+    free_text_dose_frequency: Annotated[
+        str | None,
+        Field(
+            description="Study level free text dose frequency, defined instead of 'dose_frequency_uid'. "
+            "The two are mutually exclusive.",
+            json_schema_extra={"nullable": True},
+        ),
+    ] = None
+
     composition: Annotated[
         str | None,
         Field(
             description="Composition of active substances for the compound dosing",
+            json_schema_extra={"nullable": True},
+        ),
+    ] = None
+
+    study_activity_instance_uid: Annotated[
+        str | None,
+        Field(
+            description="uid of the study activity instance collecting the dose for the study selection",
             json_schema_extra={"nullable": True},
         ),
     ] = None
@@ -5584,10 +5702,7 @@ class CellCoordinates(NamedTuple):
     col: Annotated[int, Field()]
 
 
-ConceptType = TypeVar("ConceptType", bound=Concept)  # pylint: disable=invalid-name
-
-
-def _find_versions(
+def _find_versions[ConceptType: Concept](
     uid: str,
     version: str | None,
     versions_by_uid: Mapping[str, Iterable[ConceptType]] | None = None,

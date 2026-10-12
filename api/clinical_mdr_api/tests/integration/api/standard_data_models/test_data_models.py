@@ -2,13 +2,6 @@
 Tests for /standards/data-models endpoints
 """
 
-# pylint: disable=unused-argument
-# pylint: disable=redefined-outer-name
-# pylint: disable=too-many-arguments
-
-# pytest fixture functions have other fixture functions as arguments,
-# which pylint interprets as unused arguments
-
 import json
 import logging
 from functools import reduce
@@ -201,8 +194,8 @@ def test_get_data_models(
     if sort_by:
         # sort_by is JSON string in the form: {"sort_field_name": is_ascending_order}
         sort_by_dict = json.loads(sort_by)
-        sort_field: str = list(sort_by_dict.keys())[0]
-        sort_order_ascending: bool = list(sort_by_dict.values())[0]
+        sort_field: str = next(iter(sort_by_dict.keys()))
+        sort_order_ascending: bool = next(iter(sort_by_dict.values()))
 
         # extract list of values of 'sort_field_name' field from the returned result
         result_vals = list(map(lambda x: x[sort_field], res["items"]))
@@ -240,16 +233,19 @@ def test_filtering_wildcard(
 
         # Each returned row has a field that starts with the specified filter value
         for row in res["items"]:
+            current_row = row
             if nested_path:
                 for prop in nested_path:
-                    row = row[prop]
-            if isinstance(row, list):
+                    current_row = current_row[prop]
+            if isinstance(current_row, list):
                 any(
                     item[expected_matched_field].startswith(expected_result_prefix)
-                    for item in row
+                    for item in current_row
                 )
             else:
-                assert row[expected_matched_field].startswith(expected_result_prefix)
+                assert current_row[expected_matched_field].startswith(
+                    expected_result_prefix
+                )
     else:
         assert len(res["items"]) == 0
 
@@ -297,21 +293,28 @@ def test_filtering_exact(
 
         # Each returned row has a field whose value is equal to the specified filter value
         for row in res["items"]:
+            current_row = row
             if nested_path:
                 for prop in nested_path:
-                    row = row[prop]
+                    current_row = current_row[prop]
             if isinstance(expected_result, list):
-                if isinstance(row, list):
-                    all(item[expected_matched_field] == expected_result for item in row)
+                if isinstance(current_row, list):
+                    all(
+                        item[expected_matched_field] == expected_result
+                        for item in current_row
+                    )
                 else:
                     assert all(
-                        item in row[expected_matched_field] for item in expected_result
+                        item in current_row[expected_matched_field]
+                        for item in expected_result
                     )
+            elif isinstance(current_row, list):
+                all(
+                    item[expected_matched_field] == expected_result
+                    for item in current_row
+                )
             else:
-                if isinstance(row, list):
-                    all(item[expected_matched_field] == expected_result for item in row)
-                else:
-                    assert row[expected_matched_field] == expected_result
+                assert current_row[expected_matched_field] == expected_result
     else:
         assert len(res["items"]) == 0
 
@@ -354,17 +357,18 @@ def test_headers(api_client, field_name):
         nested_path = nested_path[:-1]
 
     for data_model in data_models_all:
+        current_data_model = data_model
         if nested_path:
             for prop in nested_path:
-                data_model = getattr(data_model, prop)
-            if not data_model:
+                current_data_model = getattr(current_data_model, prop)
+            if not current_data_model:
                 continue
-            if isinstance(data_model, list):
-                for item in data_model:
+            if isinstance(current_data_model, list):
+                for item in current_data_model:
                     value = getattr(item, expected_matched_field)
                     expected_result.append(value)
             else:
-                value = getattr(data_model, expected_matched_field)
+                value = getattr(current_data_model, expected_matched_field)
                 expected_result.append(value)
 
         else:

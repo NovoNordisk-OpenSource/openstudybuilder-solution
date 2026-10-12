@@ -8,7 +8,7 @@ To run SBLint and ensure your code adheres to the defined standards, use the fol
 ### Run All SBLinters
 Execute all available SBLinters against `clinical_mdr_api`, `consumer_api` and `common`:
 ```sh
-pipenv run sblint
+uv run poe sblint
 ```
 
 Execute all available SBLinters against the specified directories:

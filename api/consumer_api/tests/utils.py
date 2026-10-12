@@ -3,9 +3,10 @@ import io
 import logging
 import os
 import time
-from datetime import datetime, timedelta, timezone
+from collections.abc import Iterable
+from datetime import UTC, datetime, timedelta
 from random import randint
-from typing import Any, Iterable
+from typing import Any
 from urllib.parse import urljoin
 from xml.etree import ElementTree
 
@@ -74,7 +75,7 @@ def set_db(db_name):
 
 def assert_response_status_code(response: httpx.Response, status: int | Iterable[int]):
     """Assert request.Response status code"""
-    # pylint: disable=unused-variable
+
     __tracebackhide__ = True
 
     if isinstance(status, int):
@@ -126,14 +127,12 @@ class TestUtils:
     @classmethod
     def assert_timestamp_is_in_utc_zone(cls, val: str):
         datetime_ts: datetime = datetime.strptime(val, settings.date_time_format)
-        assert datetime_ts.tzinfo == timezone.utc
+        assert datetime_ts.tzinfo == UTC
 
     @classmethod
     def assert_timestamp_is_newer_than(cls, val: str, seconds: int):
         datetime_ts: datetime = datetime.strptime(val, settings.date_time_format)
-        assert abs(datetime.now(timezone.utc) - datetime_ts) < timedelta(
-            seconds=seconds
-        )
+        assert abs(datetime.now(UTC) - datetime_ts) < timedelta(seconds=seconds)
 
     @classmethod
     def assert_chronological_sequence(cls, val1: str, val2: str):

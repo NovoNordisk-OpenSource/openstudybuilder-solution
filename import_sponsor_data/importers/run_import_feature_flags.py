@@ -1,6 +1,5 @@
 """Import feature flags from CSV into the API."""
 
-# pylint: disable=logging-fstring-interpolation
 import argparse
 import csv
 
@@ -30,7 +29,6 @@ class FeatureFlags(BaseImporter):
         super().__init__(api=api, metrics_inst=metrics_inst)
 
     @open_file()
-    # pylint: disable=too-many-locals
     def handle_feature_flags(self, csvfile, update: bool = False):
         """Create, update, or retire feature flags to match the input CSV."""
         feature_flags_in_db = requests.get(

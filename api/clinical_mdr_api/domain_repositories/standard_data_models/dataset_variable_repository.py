@@ -18,7 +18,6 @@ class DatasetVariableRepository(StandardDataModelRepository):
     value_class = DatasetVariableInstance
     return_model = DatasetVariableAPIModel
 
-    # pylint: disable=unused-argument
     def generic_match_clause(self, versioning_relationship: str):
         standard_data_model_label = self.root_class.__label__
         standard_data_model_value_label = self.value_class.__label__

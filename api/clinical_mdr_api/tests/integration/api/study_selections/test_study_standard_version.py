@@ -2,13 +2,6 @@
 Tests for /studies/{study_uid}/study-standard-versions endpoints
 """
 
-# pylint: disable=unused-argument
-# pylint: disable=redefined-outer-name
-# pylint: disable=too-many-arguments
-
-# pytest fixture functions have other fixture functions as arguments,
-# which pylint interprets as unused arguments
-
 import logging
 from typing import Any
 from unittest import mock

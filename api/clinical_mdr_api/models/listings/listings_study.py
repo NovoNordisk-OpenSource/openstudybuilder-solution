@@ -1,5 +1,6 @@
-from datetime import datetime, timezone
-from typing import Annotated, Any, Callable, Self, overload
+from collections.abc import Callable
+from datetime import UTC, datetime
+from typing import Annotated, Any, Self, overload
 
 from pydantic import ConfigDict, Field
 
@@ -627,7 +628,7 @@ class StudyBranchArmListingModel(StudySelctionListingModel):
     @staticmethod
     def from_study_selection_branch_arm_ar(
         study_selection_branch_arm_ar: StudySelectionBranchArmAR,
-    ) -> list["StudyBranchArmListingModel"]:
+    ) -> list[StudyBranchArmListingModel]:
         branch_arms = []
         for selection in study_selection_branch_arm_ar.study_branch_arms_selection:
             selection_and_order = (
@@ -677,7 +678,7 @@ class StudyArmListingModel(StudySelctionListingModel):
     def from_study_selection_arm_ar(
         study_selection_arm_ar: StudySelectionArmAR,
         find_simple_term_arm_type_by_term_uid: Callable,
-    ) -> list["StudyArmListingModel"]:
+    ) -> list[StudyArmListingModel]:
         arms = []
         for selection in study_selection_arm_ar.study_arms_selection:
             selection_and_order = study_selection_arm_ar.get_specific_object_selection(
@@ -726,7 +727,7 @@ class StudyCohortListingModel(StudySelctionListingModel):
     @staticmethod
     def from_study_selection_cohort_ar(
         study_selection_cohort_ar: StudySelectionCohortAR,
-    ) -> list["StudyCohortListingModel"]:
+    ) -> list[StudyCohortListingModel]:
         cohorts = []
         for selection in study_selection_cohort_ar.study_cohorts_selection:
             cohorts.append(
@@ -774,7 +775,7 @@ class StudyEpochListingModel(BaseModel):
     def from_all_study_epochs(
         all_study_epochs: list[StudyEpoch],
         find_term_by_uid: Callable,
-    ) -> list["StudyEpochListingModel"]:
+    ) -> list[StudyEpochListingModel]:
         epochs = []
         for epoch in all_study_epochs:
             epochs.append(
@@ -826,7 +827,7 @@ class StudyElementListingModel(BaseModel):
     def from_study_element_ar(
         study_element_ar: StudySelectionElementAR,
         find_term_by_uid: Callable,
-    ) -> list["StudyElementListingModel"]:
+    ) -> list[StudyElementListingModel]:
         elements = []
         for selection in study_element_ar.study_elements_selection:
             selection_and_order = study_element_ar.get_specific_object_selection(
@@ -863,7 +864,7 @@ class StudyDesignMatrixListingModel(BaseModel):
     @staticmethod
     def from_all_study_design_cells(
         all_design_cells: list[StudyDesignCellVO],
-    ) -> list["StudyDesignMatrixListingModel"]:
+    ) -> list[StudyDesignMatrixListingModel]:
         design_cells = []
         for design_cell in all_design_cells:
             design_cells.append(
@@ -931,7 +932,7 @@ class StudyVisitListingModel(BaseModel):
     @staticmethod
     def from_all_study_visits(
         all_study_visits: list[StudyVisitVO],
-    ) -> list["StudyVisitListingModel"]:
+    ) -> list[StudyVisitListingModel]:
         study_visits = []
         for study_visit in all_study_visits:
             study_visits.append(
@@ -971,7 +972,7 @@ class StudyCriteriaListingModel(BaseModel):
         study_criteria_ar: StudySelectionCriteriaAR,
         find_term_by_uid: Callable[[str], CTTermAttributesAR | None],
         find_criteria_by_uid: Callable[[str], CriteriaAR | None],
-    ) -> list["StudyCriteriaListingModel"]:
+    ) -> list[StudyCriteriaListingModel]:
         study_criterias = []
         for study_criteria in study_criteria_ar.study_criteria_selection:
             if study_criteria.is_instance:
@@ -1022,7 +1023,7 @@ class StudyObjectiveListingModel(BaseModel):
         study_objective_ar: StudySelectionObjectivesAR,
         find_term_by_uid: Callable[[str], CTTermAttributesAR | None],
         find_objective_by_uid: Callable[[str], ObjectiveAR | None],
-    ) -> list["StudyObjectiveListingModel"]:
+    ) -> list[StudyObjectiveListingModel]:
         study_objectives = []
         for study_objective in study_objective_ar.study_objectives_selection:
             study_objectives.append(
@@ -1109,7 +1110,7 @@ class StudyEndpointListingModel(BaseModel):
         find_term_by_uid: Callable[[str], CTTermAttributesAR | None],
         find_endpoint_by_uid: Callable[[str], EndpointAR | None],
         find_timeframe_by_uid: Callable[[str], TimeframeAR | None],
-    ) -> list["StudyEndpointListingModel"]:
+    ) -> list[StudyEndpointListingModel]:
         study_endpoints = []
         for study_endpoint in study_endpoint_ar.study_endpoints_selection:
             study_endpoints.append(
@@ -1215,7 +1216,7 @@ class StudyMetadataListingModel(BaseModel):
             study_id=study_id,
             study_ver=float(study_ver),
             specified_dt=none_to_empty_str(specified_dt),
-            request_dt=datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S"),
+            request_dt=datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%S"),
             title=StudyDescriptionJsonModel.from_study_description_vo(
                 study_description_vo=study_metadata_vo.study_description
             ).study_title,

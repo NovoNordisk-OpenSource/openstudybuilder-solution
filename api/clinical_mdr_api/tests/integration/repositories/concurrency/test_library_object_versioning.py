@@ -1,4 +1,5 @@
 import unittest
+from typing import ClassVar
 
 from neomodel import db
 
@@ -35,7 +36,7 @@ class ObjectiveRepositoryConcurrencyTest(unittest.TestCase):
     library_name = "Sponsor"
     author_id = "TEST"
     template_name = "Example Template"
-    parameter_terms: list[ParameterTermEntryVO] = []
+    parameter_terms: ClassVar[list[ParameterTermEntryVO]] = []
 
     # These are set as part of the test for [Objective, Endpoint, Timeframe]
     template_uid = None

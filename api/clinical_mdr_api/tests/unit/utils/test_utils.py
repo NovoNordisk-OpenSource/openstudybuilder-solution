@@ -126,7 +126,6 @@ class TestServiceUtils(unittest.TestCase):
                     "camel32_case_input_": "y",
                     "_camel32_case_input_": "y",
                 },
-                # pylint: disable=duplicate-key
                 {
                     "camelCaseInput": "x",
                     "camel32CaseInput": "y",

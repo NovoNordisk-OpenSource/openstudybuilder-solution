@@ -736,18 +736,17 @@ class ActivityInstanceGroupingsService(
                 ]
             else:
                 activity_groupings = []
+        elif item.concept_vo.activity_groupings:
+            activity_groupings = [
+                ActivityInstanceGroupingVO(
+                    activity_uid=activity_grouping.activity_uid,
+                    activity_group_uid=activity_grouping.activity_group_uid,
+                    activity_subgroup_uid=activity_grouping.activity_subgroup_uid,
+                )
+                for activity_grouping in item.concept_vo.activity_groupings
+            ]
         else:
-            if item.concept_vo.activity_groupings:
-                activity_groupings = [
-                    ActivityInstanceGroupingVO(
-                        activity_uid=activity_grouping.activity_uid,
-                        activity_group_uid=activity_grouping.activity_group_uid,
-                        activity_subgroup_uid=activity_grouping.activity_subgroup_uid,
-                    )
-                    for activity_grouping in item.concept_vo.activity_groupings
-                ]
-            else:
-                activity_groupings = []
+            activity_groupings = []
 
         item.edit_draft(
             author_id=self.author_id,

@@ -6,6 +6,9 @@ Feature: Library - Concepts - Activities - Requested Activities - Filtering
     Background: User must be logged in
         Given The user is logged in
 
+    Scenario: [TestData] Old placeholder activity workflow feature flag is enabled
+        Then [API] The feature flag 'streamline_placeholder_activities' is disabled
+
     Scenario Outline: [Table][Filtering] User must be able to filter the table by text fields
         Given The '/library/activities/requested-activities' page is opened
         When The user filters field '<name>'

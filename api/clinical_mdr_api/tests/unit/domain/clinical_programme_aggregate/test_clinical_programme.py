@@ -1,4 +1,4 @@
-from typing import Callable
+from collections.abc import Callable
 
 from clinical_mdr_api.domains.clinical_programmes.clinical_programme import (
     ClinicalProgrammeAR,

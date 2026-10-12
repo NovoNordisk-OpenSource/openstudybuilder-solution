@@ -1,7 +1,8 @@
 import datetime
 from abc import ABC, abstractmethod
+from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Any, Sequence
+from typing import Any
 
 from neomodel import db
 from neomodel.sync_.node import NodeMeta
@@ -166,12 +167,18 @@ class StudyDefinitionRepository(ABC):
 MATCH (sr:StudyRoot)-[:LATEST]->(sv:StudyValue)
 WHERE sv.study_id_prefix IS NOT NULL AND sv.study_number IS NOT NULL
 OPTIONAL MATCH (sv)-[:HAS_STUDY_ARM]->(arm:StudyArm)
-OPTIONAL MATCH (sv)-[:HAS_STUDY_EPOCH]->(pre_treatment_epoch:StudyEpoch)-[:HAS_EPOCH_TYPE]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(:CTTermRoot)<-[:HAS_TERM_ROOT]-(:CTCodelistTerm {submission_value: "PRE TREATMENT EPOCH TYPE"})
-OPTIONAL MATCH (sv)-[:HAS_STUDY_EPOCH]->(treatment_epoch:StudyEpoch)-[:HAS_EPOCH_TYPE]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(:CTTermRoot)<-[:HAS_TERM_ROOT]-(:CTCodelistTerm {submission_value: "TREATMENT"})
-OPTIONAL MATCH (sv)-[:HAS_STUDY_EPOCH]->(no_treatment_epoch:StudyEpoch)-[:HAS_EPOCH_TYPE]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(:CTTermRoot)<-[:HAS_TERM_ROOT]-(:CTCodelistTerm {submission_value: "NO TREATMENT EPOCH TYPE"})
-OPTIONAL MATCH (sv)-[:HAS_STUDY_EPOCH]->(post_treatment_epoch:StudyEpoch)-[:HAS_EPOCH_TYPE]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(:CTTermRoot)<-[:HAS_TERM_ROOT]-(:CTCodelistTerm {submission_value: "POST TREATMENT EPOCH TYPE"})
-OPTIONAL MATCH (sv)-[:HAS_STUDY_ELEMENT]->(treatment_element:StudyElement)-[:HAS_ELEMENT_SUBTYPE]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(:CTTermRoot)-[:HAS_PARENT_TYPE]->(:CTTermRoot)<-[:HAS_TERM_ROOT]-(:CTCodelistTerm {submission_value: "TREATMENT ELEMENT TYPE"})
-OPTIONAL MATCH (sv)-[:HAS_STUDY_ELEMENT]->(no_treatment_element:StudyElement)-[:HAS_ELEMENT_SUBTYPE]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(:CTTermRoot)-[:HAS_PARENT_TYPE]->(:CTTermRoot)<-[:HAS_TERM_ROOT]-(:CTCodelistTerm {submission_value: "NO TREATMENT ELEMENT TYPE"})
+OPTIONAL MATCH (sv)-[:HAS_STUDY_EPOCH]->(pre_treatment_epoch:StudyEpoch)-[:HAS_EPOCH_TYPE]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(:CTTermRoot)
+    <-[:HAS_TERM_ROOT]-(:CTCodelistTerm {submission_value: "PRE TREATMENT EPOCH TYPE"})
+OPTIONAL MATCH (sv)-[:HAS_STUDY_EPOCH]->(treatment_epoch:StudyEpoch)-[:HAS_EPOCH_TYPE]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(:CTTermRoot)
+    <-[:HAS_TERM_ROOT]-(:CTCodelistTerm {submission_value: "TREATMENT"})
+OPTIONAL MATCH (sv)-[:HAS_STUDY_EPOCH]->(no_treatment_epoch:StudyEpoch)-[:HAS_EPOCH_TYPE]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(:CTTermRoot)
+    <-[:HAS_TERM_ROOT]-(:CTCodelistTerm {submission_value: "NO TREATMENT EPOCH TYPE"})
+OPTIONAL MATCH (sv)-[:HAS_STUDY_EPOCH]->(post_treatment_epoch:StudyEpoch)-[:HAS_EPOCH_TYPE]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(:CTTermRoot)
+    <-[:HAS_TERM_ROOT]-(:CTCodelistTerm {submission_value: "POST TREATMENT EPOCH TYPE"})
+OPTIONAL MATCH (sv)-[:HAS_STUDY_ELEMENT]->(treatment_element:StudyElement)-[:HAS_ELEMENT_SUBTYPE]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(:CTTermRoot)
+    -[:HAS_PARENT_TYPE]->(:CTTermRoot)<-[:HAS_TERM_ROOT]-(:CTCodelistTerm {submission_value: "TREATMENT ELEMENT TYPE"})
+OPTIONAL MATCH (sv)-[:HAS_STUDY_ELEMENT]->(no_treatment_element:StudyElement)-[:HAS_ELEMENT_SUBTYPE]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(:CTTermRoot)
+    -[:HAS_PARENT_TYPE]->(:CTTermRoot)<-[:HAS_TERM_ROOT]-(:CTCodelistTerm {submission_value: "NO TREATMENT ELEMENT TYPE"})
 OPTIONAL MATCH (sv)-[:HAS_STUDY_COHORT]->(cohort:StudyCohort)
 """
 
@@ -197,12 +204,18 @@ MATCH (sr:StudyRoot)-[:LATEST]->(sv:StudyValue)
 WHERE sv.study_id_prefix IS NOT NULL AND sv.study_number IS NOT NULL
 CALL (sv) {
     OPTIONAL MATCH (sv)-[:HAS_STUDY_ARM]->(arm:StudyArm)
-    OPTIONAL MATCH (sv)-[:HAS_STUDY_EPOCH]->(pre_treatment_epoch:StudyEpoch)-[:HAS_EPOCH_TYPE]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(:CTTermRoot)<-[:HAS_TERM_ROOT]-(:CTCodelistTerm {submission_value: "PRE TREATMENT EPOCH TYPE"})
-    OPTIONAL MATCH (sv)-[:HAS_STUDY_EPOCH]->(treatment_epoch:StudyEpoch)-[:HAS_EPOCH_TYPE]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(:CTTermRoot)<-[:HAS_TERM_ROOT]-(:CTCodelistTerm {submission_value: "TREATMENT"})
-    OPTIONAL MATCH (sv)-[:HAS_STUDY_EPOCH]->(no_treatment_epoch:StudyEpoch)-[:HAS_EPOCH_TYPE]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(:CTTermRoot)<-[:HAS_TERM_ROOT]-(:CTCodelistTerm {submission_value: "NO TREATMENT EPOCH TYPE"})
-    OPTIONAL MATCH (sv)-[:HAS_STUDY_EPOCH]->(post_treatment_epoch:StudyEpoch)-[:HAS_EPOCH_TYPE]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(:CTTermRoot)<-[:HAS_TERM_ROOT]-(:CTCodelistTerm {submission_value: "POST TREATMENT EPOCH TYPE"})
-    OPTIONAL MATCH (sv)-[:HAS_STUDY_ELEMENT]->(treatment_element:StudyElement)-[:HAS_ELEMENT_SUBTYPE]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(:CTTermRoot)-[:HAS_PARENT_TYPE]->(:CTTermRoot)<-[:HAS_TERM_ROOT]-(:CTCodelistTerm {submission_value: "TREATMENT ELEMENT TYPE"})
-    OPTIONAL MATCH (sv)-[:HAS_STUDY_ELEMENT]->(no_treatment_element:StudyElement)-[:HAS_ELEMENT_SUBTYPE]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(:CTTermRoot)-[:HAS_PARENT_TYPE]->(:CTTermRoot)<-[:HAS_TERM_ROOT]-(:CTCodelistTerm {submission_value: "NO TREATMENT ELEMENT TYPE"})
+    OPTIONAL MATCH (sv)-[:HAS_STUDY_EPOCH]->(pre_treatment_epoch:StudyEpoch)-[:HAS_EPOCH_TYPE]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(:CTTermRoot)
+        <-[:HAS_TERM_ROOT]-(:CTCodelistTerm {submission_value: "PRE TREATMENT EPOCH TYPE"})
+    OPTIONAL MATCH (sv)-[:HAS_STUDY_EPOCH]->(treatment_epoch:StudyEpoch)-[:HAS_EPOCH_TYPE]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(:CTTermRoot)
+        <-[:HAS_TERM_ROOT]-(:CTCodelistTerm {submission_value: "TREATMENT"})
+    OPTIONAL MATCH (sv)-[:HAS_STUDY_EPOCH]->(no_treatment_epoch:StudyEpoch)-[:HAS_EPOCH_TYPE]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(:CTTermRoot)
+        <-[:HAS_TERM_ROOT]-(:CTCodelistTerm {submission_value: "NO TREATMENT EPOCH TYPE"})
+    OPTIONAL MATCH (sv)-[:HAS_STUDY_EPOCH]->(post_treatment_epoch:StudyEpoch)-[:HAS_EPOCH_TYPE]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(:CTTermRoot)
+        <-[:HAS_TERM_ROOT]-(:CTCodelistTerm {submission_value: "POST TREATMENT EPOCH TYPE"})
+    OPTIONAL MATCH (sv)-[:HAS_STUDY_ELEMENT]->(treatment_element:StudyElement)-[:HAS_ELEMENT_SUBTYPE]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(:CTTermRoot)
+        -[:HAS_PARENT_TYPE]->(:CTTermRoot)<-[:HAS_TERM_ROOT]-(:CTCodelistTerm {submission_value: "TREATMENT ELEMENT TYPE"})
+    OPTIONAL MATCH (sv)-[:HAS_STUDY_ELEMENT]->(no_treatment_element:StudyElement)-[:HAS_ELEMENT_SUBTYPE]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(:CTTermRoot)
+        -[:HAS_PARENT_TYPE]->(:CTTermRoot)<-[:HAS_TERM_ROOT]-(:CTCodelistTerm {submission_value: "NO TREATMENT ELEMENT TYPE"})
     OPTIONAL MATCH (sv)-[:HAS_STUDY_COHORT]->(cohort:StudyCohort)
     WITH
         COUNT(DISTINCT arm) AS arm_count,
@@ -640,7 +653,7 @@ return *
             "study_src_uid": study_src_uid,
             "study_target_uid": study_target_uid,
             "to_copy_labels": list_of_items_to_copy,
-            "date": datetime.datetime.now(datetime.timezone.utc),
+            "date": datetime.datetime.now(datetime.UTC),
             "author_id": author_id,
         }
         result = db.cypher_query(query=query, params=parameters)

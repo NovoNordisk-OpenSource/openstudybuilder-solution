@@ -166,6 +166,9 @@
       <template #[`item.definition`]="{ item }">
         {{ item.definition || '-' }}
       </template>
+      <template #[`item.sdtm_domain`]="{ item }">
+        {{ item.sdtm_domain || '-' }}
+      </template>
       <template #[`item.status`]="{ item }">
         <StatusChip :status="item.status" />
       </template>
@@ -942,6 +945,10 @@ const instantiationsHeaders = [
   {
     title: t('ActivityTable.nci_concept_name'),
     key: 'nci_concept_name',
+  },
+  {
+    title: t('ActivityTable.sdtm_domain'),
+    key: 'sdtm_domain',
   },
   {
     title: t('ActivityTable.is_research_lab'),

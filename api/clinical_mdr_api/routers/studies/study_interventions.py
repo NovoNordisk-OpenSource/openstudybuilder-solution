@@ -6,8 +6,7 @@ from typing import Annotated
 from fastapi import Path
 from fastapi.responses import HTMLResponse, StreamingResponse
 
-from clinical_mdr_api.routers import _generic_descriptions
-from clinical_mdr_api.routers import studies_router as router
+from clinical_mdr_api.routers import _generic_descriptions, studies_router as router
 from clinical_mdr_api.services.studies.study import StudyService
 from clinical_mdr_api.services.studies.study_interventions import (
     StudyInterventionsService,

@@ -8,8 +8,8 @@ on:
   pull_request:
     branches: [main]
     paths:
-      - "api/Pipfile"
-      - "api/Pipfile.lock"
+      - "api/pyproject.toml"
+      - "api/uv.lock"
       - ".github/workflows/api-dependency-review.yml"
 
 permissions:

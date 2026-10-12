@@ -42,7 +42,6 @@ class StandardDataModelRepository(ABC):
         :return str:
         """
 
-    # pylint: disable=unused-argument
     def union_match_clause(self, _: dict[Any, Any]) -> str | None:
         return None
 
@@ -207,7 +206,6 @@ class StandardDataModelRepository(ABC):
         page_size: int = 10,
         **kwargs,
     ) -> list[Any]:
-        # pylint: disable=unused-argument
         """
         Method runs a cypher query to fetch possible values for a given field_name, with a limit of page_size.
         It uses generic filtering capability, on top of filtering the field_name with provided search_string.

@@ -1,9 +1,10 @@
 import random
 import string
 import unittest
-from datetime import datetime, timedelta, timezone
+from collections.abc import Callable, Iterable, Mapping
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
-from typing import Any, Callable, Iterable, Mapping
+from typing import Any
 
 import pytest
 
@@ -243,8 +244,12 @@ def random_valid_study_population(
     while count < max_tries:
         use_therapeutic_area = random.choice([True, False])
         therapeutic_area_codes = tuple(
-            [random.choice(initialize_ct_data_map["TherapeuticAreas"])[0]]
-            + list(random_c_code_sequence(initialize_ct_data_map["TherapeuticAreas"]))
+            [
+                random.choice(initialize_ct_data_map["TherapeuticAreas"])[0],
+                *list(
+                    random_c_code_sequence(initialize_ct_data_map["TherapeuticAreas"])
+                ),
+            ]
             if use_therapeutic_area
             else []
         )
@@ -256,8 +261,12 @@ def random_valid_study_population(
 
         use_diagnosis_group = random.choice([True, False])
         diagnosis_group_codes = (
-            [random.choice(initialize_ct_data_map["DiagnosisGroups"])[0]]
-            + list(random_c_code_sequence(initialize_ct_data_map["DiagnosisGroups"]))
+            [
+                random.choice(initialize_ct_data_map["DiagnosisGroups"])[0],
+                *list(
+                    random_c_code_sequence(initialize_ct_data_map["DiagnosisGroups"])
+                ),
+            ]
             if use_diagnosis_group
             else []
         )
@@ -269,8 +278,14 @@ def random_valid_study_population(
 
         use_disease_condition_or_indication = random.choice([True, False])
         disease_condition_or_indication_codes = (
-            [random.choice(initialize_ct_data_map["DiseaseConditionOrIndications"])[0]]
-            + list(random_c_code_sequence(initialize_ct_data_map["DiagnosisGroups"]))
+            [
+                random.choice(initialize_ct_data_map["DiseaseConditionOrIndications"])[
+                    0
+                ],
+                *list(
+                    random_c_code_sequence(initialize_ct_data_map["DiagnosisGroups"])
+                ),
+            ]
             if use_disease_condition_or_indication
             else []
         )
@@ -1039,8 +1054,10 @@ def random_valid_high_level_study_design(
 
         use_trial_type = random.choice([True, False])
         trial_type_codes = (
-            [random.choice(initialize_ct_data_map["TrialType"])[0]]
-            + list(random_c_code_sequence(initialize_ct_data_map["TrialType"]))
+            [
+                random.choice(initialize_ct_data_map["TrialType"])[0],
+                *list(random_c_code_sequence(initialize_ct_data_map["TrialType"])),
+            ]
             if use_trial_type
             else []
         )
@@ -1231,7 +1248,7 @@ def test__high_level_study_design__validate__invalid_null_value_code_failure(
     )
 
     # given
-    high_level_study_design = HighLevelStudyDesignVO.from_input_values(  # pylint: disable=unreachable
+    high_level_study_design = HighLevelStudyDesignVO.from_input_values(
         study_type_code=None,
         study_type_null_value_code=study_type_null_value_code,
         trial_type_codes=[],
@@ -1304,7 +1321,7 @@ def test__high_level_study_design_vo__validate__valid_data__success(
     post_auth_indicator_null_value_code,
 ):
     assume(study_type_code is None or study_type_null_value_code is None)
-    # pylint: disable=unreachable
+
     assume(trial_phase_code is None or trial_phase_null_value_code is None)
     assume(trial_type_codes == [] or trial_type_null_value_code is None)
     assume(confirmed_response is None or confirmed_response_null_value_code is None)
@@ -1498,7 +1515,7 @@ class TestHighLevelStudyDesignVO(unittest.TestCase):
         )
         test_sequence = [
             _.fix_some_values(
-                trial_type_codes=list(random_str_sequence()) + [random_str()],
+                trial_type_codes=[*list(random_str_sequence()), random_str()],
                 trial_type_null_value_code=random_str(),
             )
             for _ in test_sequence
@@ -1783,8 +1800,7 @@ def random_ver_metadata(
             version_timestamp=random.choice(
                 [
                     None,
-                    datetime.now(timezone.utc)
-                    + timedelta(days=random.randint(-1000, 1000)),
+                    datetime.now(UTC) + timedelta(days=random.randint(-1000, 1000)),
                 ]
             ),
             study_status=random.choice(
@@ -1946,8 +1962,12 @@ def random_valid_study_intervention(
 
         use_trial_intent_type = random.choice([True, False])
         trial_intent_types_codes = (
-            [random.choice(initialize_ct_data_map["TrialIntentType"])[0]]
-            + list(random_c_code_sequence(initialize_ct_data_map["TrialIntentType"]))
+            [
+                random.choice(initialize_ct_data_map["TrialIntentType"])[0],
+                *list(
+                    random_c_code_sequence(initialize_ct_data_map["TrialIntentType"])
+                ),
+            ]
             if use_trial_intent_type
             else []
         )

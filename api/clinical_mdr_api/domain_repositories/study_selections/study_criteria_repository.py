@@ -77,12 +77,11 @@ class StudySelectionCriteriaRepository:
             else:
                 query = f"MATCH (sr:StudyRoot {study_uid_statement})-[l:LATEST]->(sv:StudyValue)"
                 query_parameters["uids"] = study_uids
+        elif study_value_version:
+            query = "MATCH (sr:StudyRoot)-[l:HAS_VERSION{status:'RELEASED', version:$study_value_version}]->(sv:StudyValue)"
+            query_parameters["study_value_version"] = study_value_version
         else:
-            if study_value_version:
-                query = "MATCH (sr:StudyRoot)-[l:HAS_VERSION{status:'RELEASED', version:$study_value_version}]->(sv:StudyValue)"
-                query_parameters["study_value_version"] = study_value_version
-            else:
-                query = "MATCH (sr:StudyRoot)-[l:LATEST]->(sv:StudyValue)"
+            query = "MATCH (sr:StudyRoot)-[l:LATEST]->(sv:StudyValue)"
 
         if project_name is not None or project_number is not None:
             query += (
@@ -318,7 +317,6 @@ class StudySelectionCriteriaRepository:
 
         return selections_to_remove, selections_to_add
 
-    # pylint: disable=unused-argument
     def save(self, study_selection: StudySelectionCriteriaAR, author_id: str) -> None:
         """
         Persist the set of selected study criteria from the aggregate to the database

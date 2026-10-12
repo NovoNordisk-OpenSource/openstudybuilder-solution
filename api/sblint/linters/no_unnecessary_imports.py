@@ -1,5 +1,6 @@
 import ast
 import sys
+from typing import ClassVar
 
 from rich import print as rptint
 from rich.table import Table
@@ -8,7 +9,7 @@ from sblint.sblinter import SBLinter
 
 
 class NoUnnecessaryImports(SBLinter):
-    UNNECESSARY_IMPORTS = [
+    UNNECESSARY_IMPORTS: ClassVar[list[tuple[str, str, str]]] = [
         ("typing", "Optional", "x | None"),
         ("typing", "Union", "x | y"),
         ("typing", "List", "list"),

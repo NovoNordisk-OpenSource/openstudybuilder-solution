@@ -89,6 +89,7 @@ class CTTermNameService(CTTermGenericService[CTTermNameAR]):
                 required_level=ts_input.required_level,
                 cardinality=ts_input.cardinality,
                 notes=ts_input.notes,
+                short_code=ts_input.short_code,
                 osb_field_name=ts_input.osb_field_name,
                 osb_page_reference=ts_input.osb_page_reference,
                 semantic_data_type_uid=ts_input.semantic_data_type_uid,
@@ -139,4 +140,5 @@ class CTTermNameService(CTTermGenericService[CTTermNameAR]):
             required_level=ts_input.required_level,
             cardinality=ts_input.cardinality,
             notes=ts_input.notes,
+            short_code=ts_input.short_code,
         )

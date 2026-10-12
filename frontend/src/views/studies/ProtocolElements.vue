@@ -118,7 +118,7 @@ export default {
       studyId: computed(() => studiesGeneralStore.studyId),
       soaContentLoadingStore,
       ...accessGuard,
-      ...useTabKeys(),
+      ...useTabKeys({ persist: true }),
     }
   },
   data() {

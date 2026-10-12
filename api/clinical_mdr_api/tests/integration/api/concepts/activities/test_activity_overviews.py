@@ -2,14 +2,8 @@
 Tests for /concepts/activities/activity-sub-groups/{uid}/overview endpoint
 """
 
-# pylint: disable=unused-argument
-# pylint: disable=redefined-outer-name
-
-# pytest fixture functions have other fixture functions as arguments,
-# which pylint interprets as unused arguments
-
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pytest
 from fastapi.testclient import TestClient
@@ -93,7 +87,7 @@ def test_data():
     for idx, activity_name in enumerate(test_activities, 1):
         log.info("Creating activity %s...", activity_name)
         activity_data = {
-            "start_date": datetime.now(timezone.utc).isoformat(),
+            "start_date": datetime.now(UTC).isoformat(),
             "end_date": None,
             "status": "Draft",
             "version": "0.1",

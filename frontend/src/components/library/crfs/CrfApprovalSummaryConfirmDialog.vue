@@ -104,6 +104,7 @@ import { computed, ref } from 'vue'
 import ConfirmDialog from '@/components/tools/ConfirmDialog.vue'
 import crfs from '@/api/crfs'
 import statuses from '@/constants/statuses'
+import batchRequests from '@/utils/batchRequests'
 
 const { t } = useI18n()
 
@@ -173,14 +174,15 @@ const retrieveData = async () => {
 
     if (!uids.length) return []
 
-    const resp = await crfs.get(endpoint, {
-      params: {
-        filters: JSON.stringify({ uid: { v: uids } }),
+    return batchRequests.fetchInBatches(
+      crfs,
+      endpoint,
+      [...new Set(uids)],
+      (batch) => ({
+        filters: JSON.stringify({ uid: { v: batch } }),
         page_size: 0,
-      },
-    })
-
-    return resp.data.items || []
+      })
+    )
   }
 
   let forms = []

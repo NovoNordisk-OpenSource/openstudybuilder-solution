@@ -177,8 +177,8 @@ jobs:
           fi
 
           # verifications lints against clinical_mdr_api resolved from the
-          # in-tree ../api (pyproject.toml pythonpath / pylint init-hook),
-          # so an api/ change can affect its pylint result — trigger it too.
+          # in-tree ../api (pyproject.toml pytest pythonpath / pyright extraPaths),
+          # so an api/ change can affect its ruff/test result — trigger it too.
           if match '^verifications/' \
             || match '^api/' \
             || match '^\.github/workflows/verifications-build\.'; then

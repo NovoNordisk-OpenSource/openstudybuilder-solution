@@ -59,7 +59,7 @@
 
 <script>
 import { i18n } from '@/plugins/i18n'
-import { QuillEditor } from '@vueup/vue-quill'
+import { QuillEditor, Delta } from '@vueup/vue-quill'
 import '@vueup/vue-quill/dist/vue-quill.snow.css'
 
 export default {
@@ -376,7 +376,6 @@ export default {
         }
       }
       const quill = this.$refs.editor.getQuill()
-      const Delta = quill.import('delta')
       const delta = new Delta()
         .retain(start)
         .delete(end - start)

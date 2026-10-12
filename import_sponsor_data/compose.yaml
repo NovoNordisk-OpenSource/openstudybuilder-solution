@@ -7,7 +7,7 @@ services:
         UID: "${UID:-1000}"
       context: ./
       dockerfile: Dockerfile
-    command: pipenv run import_all
+    command: uv run poe import_all
     env_file: .env.import
     environment:
       API_BASE_URL:  http://localhost:8000

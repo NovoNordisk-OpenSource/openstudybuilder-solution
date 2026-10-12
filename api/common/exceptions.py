@@ -91,7 +91,6 @@ class BusinessLogicException(MDRApiBaseException):
         Default message format is: `resource_name` with `field_name` '`field_value`' didn't pass a business rule.
         """
 
-        # pylint: disable=unused-variable
         __tracebackhide__ = True
 
         if val:
@@ -118,7 +117,6 @@ class BusinessLogicException(MDRApiBaseException):
         Default message format is: `resource_name` with `field_name` '`field_value`' didn't pass a business rule.
         """
 
-        # pylint: disable=unused-variable
         __tracebackhide__ = True
 
         cls.raise_if(
@@ -225,7 +223,6 @@ class ForbiddenException(MDRApiBaseException):
         Default message format is: Access to `resource_name` with `field_name` '`field_value`' is forbidden.
         """
 
-        # pylint: disable=unused-variable
         __tracebackhide__ = True
 
         if val:
@@ -252,7 +249,6 @@ class ForbiddenException(MDRApiBaseException):
         Default message format is: Access to `resource_name` with `field_name` '`field_value`' is forbidden.
         """
 
-        # pylint: disable=unused-variable
         __tracebackhide__ = True
 
         cls.raise_if(
@@ -312,7 +308,6 @@ class NotFoundException(MDRApiBaseException):
         Default message format is: `resource_name` with `field_name` '`field_value`' doesn't exist.
         """
 
-        # pylint: disable=unused-variable
         __tracebackhide__ = True
 
         if val:
@@ -339,7 +334,6 @@ class NotFoundException(MDRApiBaseException):
         Default message format is: `resource_name` with `field_name` '`field_value`' doesn't exist.
         """
 
-        # pylint: disable=unused-variable
         __tracebackhide__ = True
 
         cls.raise_if(
@@ -399,7 +393,6 @@ class AlreadyExistsException(MDRApiBaseException):
         Default message format is: `resource_name` with `field_name` '`field_value`' already exists.
         """
 
-        # pylint: disable=unused-variable
         __tracebackhide__ = True
 
         if val:
@@ -426,7 +419,6 @@ class AlreadyExistsException(MDRApiBaseException):
         Default message format is: `resource_name` with `field_name` '`field_value`' already exists.
         """
 
-        # pylint: disable=unused-variable
         __tracebackhide__ = True
 
         cls.raise_if(

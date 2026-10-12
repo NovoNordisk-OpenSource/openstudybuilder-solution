@@ -215,7 +215,8 @@ author_id: "Dictionary Codelist Test"
 
 MERGE (library:Library {name:"Sponsor", is_editable:true})
 MERGE (library)-[:CONTAINS_CONCEPT]->(unit_def_root:ConceptRoot:UnitDefinitionRoot {uid:"unit_definition_root1"})
-MERGE (unit_def_value:ConceptValue:UnitDefinitionValue { name:"name1", unit_ct_uid: "unit1-ct-uid", convertible_unit: true, display_unit: true, master_unit: true, si_unit: true, us_conventional_unit: true, use_complex_unit_conversion: true, unit_dimension_uid: "unit1-dimension", legacy_code: "unit1-legacy-code", use_molecular_weight: false, conversion_factor_to_master: 1.0 })
+MERGE (unit_def_value:ConceptValue:UnitDefinitionValue { name:"name1", unit_ct_uid: "unit1-ct-uid", convertible_unit: true, display_unit: true, master_unit: true, us_conventional_unit: true,
+    use_complex_unit_conversion: true, unit_dimension_uid: "unit1-dimension", use_molecular_weight: false, conversion_factor_to_master: 1.0 })
 MERGE (unit_def_root)-[ld1:LATEST_DRAFT]-(unit_def_value)
 MERGE (unit_def_root)-[l1:LATEST]->(unit_def_value)
 MERGE (unit_def_root)-[hv1:HAS_VERSION]->(unit_def_value)
@@ -295,7 +296,8 @@ MERGE (odm_translated_text3:Odm:OdmTranslatedText {text_type: "osb:CompletionIns
 MERGE (odm_translated_text4:Odm:OdmTranslatedText {text_type: "osb:DisplayText", language: "eng", text: "Display Text1"})
 
 MERGE (item_group_root1:Odm:OdmRoot:OdmItemGroupRoot {uid: "odm_item_group1"})
-MERGE (item_group_value1:Odm:OdmValue:OdmItemGroupValue {oid: "oid1", name: "name1", repeating: false, is_reference_data: false, sas_dataset_name: "sas_dataset_name1", origin: "origin1", purpose: "purpose1", comment: "comment1"})
+MERGE (item_group_value1:Odm:OdmValue:OdmItemGroupValue {oid: "oid1", name: "name1", repeating: false, is_reference_data: false, sas_dataset_name: "sas_dataset_name1", origin: "origin1",
+    purpose: "purpose1", comment: "comment1"})
 MERGE (library)-[r0:CONTAINS_ODM]->(item_group_root1)
 MERGE (item_group_root1)-[r1:LATEST_FINAL]->(item_group_value1)
 MERGE (item_group_root1)-[hv2:HAS_VERSION]->(item_group_value1)
@@ -307,7 +309,8 @@ MERGE (item_group_value1)-[:HAS_TRANSLATED_TEXT]->(odm_translated_text4)
 SET hv2 = final_properties
 
 MERGE (item_group_root2:Odm:OdmRoot:OdmItemGroupRoot {uid: "odm_item_group2"})
-MERGE (item_group_value2:Odm:OdmValue:OdmItemGroupValue {oid: "oid2", name: "name2", repeating: false, is_reference_data: true, sas_dataset_name: "sas_dataset_name2", origin: "origin2", purpose: "purpose2", comment: "comment2"})
+MERGE (item_group_value2:Odm:OdmValue:OdmItemGroupValue {oid: "oid2", name: "name2", repeating: false, is_reference_data: true, sas_dataset_name: "sas_dataset_name2", origin: "origin2",
+    purpose: "purpose2", comment: "comment2"})
 MERGE (library)-[:CONTAINS_ODM]->(item_group_root2)
 MERGE (item_group_root2)-[r2:LATEST_FINAL]->(item_group_value2)
 MERGE (item_group_root2)-[hv3:HAS_VERSION]->(item_group_value2)
@@ -394,7 +397,8 @@ MERGE (odm_translated_text4:Odm:OdmTranslatedText {text_type: "osb:DisplayText",
 MERGE (odm_translated_text5:Odm:OdmTranslatedText {text_type: "Question", language: "en", text: "Question1"})
 
 MERGE (item_root1:Odm:OdmRoot:OdmItemRoot {uid: "odm_item1"})
-MERGE (item_value1:Odm:OdmValue:OdmItemValue {oid: "oid1", name: "name1", length: 1, significant_digits: 1, sas_field_name: "sasfieldname1", sds_var_name: "sdsvarname1", origin: "origin1", comment: "comment1"})
+MERGE (item_value1:Odm:OdmValue:OdmItemValue {oid: "oid1", name: "name1", length: 1, significant_digits: 1, sas_field_name: "sasfieldname1", sds_var_name: "sdsvarname1", origin: "origin1",
+    comment: "comment1"})
 MERGE (library)-[:CONTAINS_ODM]->(item_root1)
 MERGE (item_root1)-[r1:LATEST_FINAL]->(item_value1)
 MERGE (item_root1)-[hv2:HAS_VERSION]->(item_value1)
@@ -407,7 +411,8 @@ MERGE (item_value1)-[:HAS_TRANSLATED_TEXT]->(odm_translated_text5)
 SET hv2 = final_properties
 
 MERGE (item_root2:Odm:OdmRoot:OdmItemRoot {uid: "odm_item2"})
-MERGE (item_value2:Odm:OdmValue:OdmItemValue {oid: "oid2", name: "name2", length: 2, significant_digits: 2, sas_field_name: "sasfieldname2", sds_var_name: "sdsvarname2", origin: "origin2", comment: "comment2"})
+MERGE (item_value2:Odm:OdmValue:OdmItemValue {oid: "oid2", name: "name2", length: 2, significant_digits: 2, sas_field_name: "sasfieldname2", sds_var_name: "sdsvarname2", origin: "origin2",
+    comment: "comment2"})
 MERGE (library)-[:CONTAINS_ODM]->(item_root2)
 MERGE (item_root2)-[r2:LATEST_FINAL]->(item_value2)
 MERGE (item_root2)-[hv3:HAS_VERSION]->(item_value2)
@@ -487,7 +492,8 @@ version: "1.0"
 MERGE (library:Library {name:"Sponsor", is_editable:true})
 
 MERGE (StudyEventRoot:Odm:OdmRoot:OdmStudyEventRoot {uid: "odm_study_event1"})
-MERGE (StudyEventValue:Odm:OdmValue:OdmStudyEventValue {oid: "oid1", name: "name1", effective_date: toString(date()), retired_date: toString(date()), description: "description", display_in_tree: true})
+MERGE (StudyEventValue:Odm:OdmValue:OdmStudyEventValue {oid: "oid1", name: "name1", effective_date: toString(date()), retired_date: toString(date()), description: "description",
+    display_in_tree: true})
 MERGE (library)-[:CONTAINS_ODM]->(StudyEventRoot)
 MERGE (StudyEventRoot)-[r1:LATEST_FINAL]->(StudyEventValue)
 MERGE (StudyEventRoot)-[r2:LATEST]->(StudyEventValue)
@@ -541,7 +547,8 @@ MERGE (ItemValue)-[:HAS_CODELIST_TERM {order: "1", mandatory: false, display_tex
 MERGE (TermContext)-[:HAS_SELECTED_CODELIST]->(CodelistRoot)
 
 MERGE (CodelistRoot)-[:HAS_ATTRIBUTES_ROOT]->(CodelistAttrRoot:CTCodelistAttributesRoot)
-MERGE (CodelistAttrValue:CTCodelistAttributesValue {name:"name1", definition:"definition1", preferred_term: "preferred_term1", synonyms: "synonyms1", submission_value: "submission_value1", extensible:false})
+MERGE (CodelistAttrValue:CTCodelistAttributesValue {name:"name1", definition:"definition1", preferred_term: "preferred_term1", synonyms: "synonyms1", submission_value: "submission_value1",
+    extensible:false})
 MERGE (CodelistAttrRoot)-[lf1:LATEST_FINAL]->(CodelistAttrValue)
 MERGE (CodelistAttrRoot)-[hv1:HAS_VERSION]->(CodelistAttrValue)
 MERGE (CodelistAttrRoot)-[:LATEST]->(CodelistAttrValue)
@@ -573,13 +580,15 @@ MERGE (MethodValue2)-[:HAS_FORMAL_EXPRESSION]->(odm_formal_expression1)
 WITH *
 MATCH (:OdmItemGroupRoot {uid: "odm_item_group1"})-[:LATEST]->(ItemGroupValue:OdmItemGroupValue)
 MATCH (:OdmItemRoot {uid: "odm_item1"})-[:LATEST]->(ItemValue:OdmItemValue)
-MERGE (ItemGroupValue)-[:ITEM_REF {order_number: "1", mandatory: true, collection_exception_condition_oid: "oid1", method_oid: "oid1", vendor: '{"attributes": [{"uid": "odm_vendor_attribute3", "value": "No"}]}'}]->(ItemValue)
+MERGE (ItemGroupValue)-[:ITEM_REF {order_number: "1", mandatory: true, collection_exception_condition_oid: "oid1", method_oid: "oid1",
+    vendor: '{"attributes": [{"uid": "odm_vendor_attribute3", "value": "No"}]}'}]->(ItemValue)
 
 WITH *
 MATCH (:OdmFormRoot {uid: "odm_form1"})-[:LATEST]->(FormValue:OdmFormValue)
 MATCH (:OdmItemGroupRoot {uid: "odm_item_group1"})-[:LATEST]->(ItemGroupValue:OdmItemGroupValue)
 MATCH (:OdmVendorElementRoot {uid: "odm_vendor_element1"})-[:LATEST]->(VendorElementValue:OdmVendorElementValue)
-MERGE (FormValue)-[:ITEM_GROUP_REF {order_number: "1", mandatory: true, collection_exception_condition_oid: "oid2", vendor: '{"attributes": [{"uid": "odm_vendor_attribute3", "value": "No"}]}'}]->(ItemGroupValue)
+MERGE (FormValue)-[:ITEM_GROUP_REF {order_number: "1", mandatory: true, collection_exception_condition_oid: "oid2", vendor: '{"attributes": [{"uid": "odm_vendor_attribute3", "value": "No"}]}'}]->(
+    ItemGroupValue)
 MERGE (FormValue)-[:HAS_VENDOR_ELEMENT]->(VendorElementValue)
 
 WITH *
@@ -700,7 +709,8 @@ MERGE (odm_vendor_element_value1)-[:HAS_VENDOR_ATTRIBUTE {value: "value2"}]->(od
 SET hv2 = final_properties
 
 MERGE (odm_vendor_attribute_root3:Odm:OdmRoot:OdmVendorAttributeRoot {uid: "odm_vendor_attribute3"})
-MERGE (odm_vendor_attribute_value3:Odm:OdmValue:OdmVendorAttributeValue {name: "nameThree", compatible_types: '["FormDef","ItemGroupDef","ItemDef","ItemGroupRef","ItemRef"]', data_type: "string", value_regex: "^[a-zA-Z]+$"})
+MERGE (odm_vendor_attribute_value3:Odm:OdmValue:OdmVendorAttributeValue {name: "nameThree", compatible_types: '["FormDef","ItemGroupDef","ItemDef","ItemGroupRef","ItemRef"]', data_type: "string",
+    value_regex: "^[a-zA-Z]+$"})
 MERGE (library)-[:CONTAINS_ODM]->(odm_vendor_attribute_root3)
 MERGE (odm_vendor_attribute_root3)-[r4:LATEST_FINAL]->(odm_vendor_attribute_value3)
 MERGE (odm_vendor_attribute_root3)-[hv4:HAS_VERSION]->(odm_vendor_attribute_value3)
@@ -812,24 +822,24 @@ unit_ct_uid: "unit1-ct-uid",
 convertible_unit: true,
 display_unit: true,
 master_unit: true,
-si_unit: true,
 us_conventional_unit: true,
 use_complex_unit_conversion: true,
 unit_dimension_uid: "unit1-dimension",
-legacy_code: "unit1-legacy-code",
 use_molecular_weight: false,
 conversion_factor_to_master: 1.0
 })
 MERGE (unit_def_root)-[unit_final1:LATEST_FINAL]-(unit_def_value)
 MERGE (unit_def_root)-[unit_hv1:HAS_VERSION]-(unit_def_value)
 SET unit_hv1 = final_properties
-MERGE (lib)-[:CONTAINS_CONCEPT]->(numeric_value_root:ConceptRoot:SimpleConceptRoot:NumericValueRoot {uid:"NumericValue_000001"})-[:LATEST]-(numeric_value_value:ConceptValue:SimpleConceptValue:NumericValue {
+MERGE (lib)-[:CONTAINS_CONCEPT]->(numeric_value_root:ConceptRoot:SimpleConceptRoot:NumericValueRoot {uid:"NumericValue_000001"})-[:LATEST]-(
+    numeric_value_value:ConceptValue:SimpleConceptValue:NumericValue {
 name:"1.23",
 value:1.23})
 MERGE (numeric_value_root)-[numeric_value_final1:LATEST_FINAL]-(numeric_value_value)
 MERGE (numeric_value_root)-[numeric_value_hv1:HAS_VERSION]-(numeric_value_value)
 SET numeric_value_hv1 = final_properties
-MERGE (lib)-[:CONTAINS_CONCEPT]->(numeric_value_root2:ConceptRoot:SimpleConceptRoot:NumericValueRoot {uid:"NumericValue_000002"})-[:LATEST]-(numeric_value_value2:ConceptValue:SimpleConceptValue:NumericValue {
+MERGE (lib)-[:CONTAINS_CONCEPT]->(numeric_value_root2:ConceptRoot:SimpleConceptRoot:NumericValueRoot {uid:"NumericValue_000002"})-[:LATEST]-(
+    numeric_value_value2:ConceptValue:SimpleConceptValue:NumericValue {
 name:"3.21",
 value:3.21})
 MERGE (numeric_value_root2)-[numeric_value_final2:LATEST_FINAL]-(numeric_value_value2)
@@ -885,11 +895,9 @@ unit_ct_uid: "unit1-ct-uid",
 convertible_unit: true,
 display_unit: true,
 master_unit: true,
-si_unit: true,
 us_conventional_unit: true,
 use_complex_unit_conversion: true,
 unit_dimension_uid: "unit1-dimension",
-legacy_code: "unit1-legacy-code",
 use_molecular_weight: false,
 conversion_factor_to_master: 1.0
 })
@@ -898,7 +906,8 @@ MERGE (unit_def_root)-[unit_final1:LATEST_FINAL]-(unit_def_value)
 MERGE (unit_def_root)-[unit_hv1:HAS_VERSION]-(unit_def_value)
 SET unit_hv1 = final_properties
 
-MERGE (lib)-[:CONTAINS_CONCEPT]->(numeric_value_root:ConceptRoot:SimpleConceptRoot:NumericValueRoot:NumericValueWithUnitRoot {uid:"NumericValueWithUnit_000001"})-[:LATEST]-(numeric_value_value:ConceptValue:SimpleConceptValue:NumericValue:NumericValueWithUnitValue {
+MERGE (lib)-[:CONTAINS_CONCEPT]->(numeric_value_root:ConceptRoot:SimpleConceptRoot:NumericValueRoot:NumericValueWithUnitRoot {uid:"NumericValueWithUnit_000001"})-[:LATEST]-(
+    numeric_value_value:ConceptValue:SimpleConceptValue:NumericValue:NumericValueWithUnitValue {
 name:"1.23 [UnitDefinition_000001]",
 value:1.23})
 MERGE (numeric_value_root)-[numeric_value_final1:LATEST_FINAL]-(numeric_value_value)
@@ -906,7 +915,8 @@ MERGE (numeric_value_root)-[numeric_value_hv1:HAS_VERSION]-(numeric_value_value)
 MERGE (numeric_value_value)-[:HAS_UNIT_DEFINITION]->(unit_def_root)
 SET numeric_value_hv1 = final_properties
 
-MERGE (lib)-[:CONTAINS_CONCEPT]->(numeric_value_root2:ConceptRoot:SimpleConceptRoot:NumericValueRoot:NumericValueWithUnitRoot {uid:"NumericValueWithUnit_000002"})-[:LATEST]-(numeric_value_value2:ConceptValue:SimpleConceptValue:NumericValue:NumericValueWithUnitValue {
+MERGE (lib)-[:CONTAINS_CONCEPT]->(numeric_value_root2:ConceptRoot:SimpleConceptRoot:NumericValueRoot:NumericValueWithUnitRoot {uid:"NumericValueWithUnit_000002"})-[:LATEST]-(
+    numeric_value_value2:ConceptValue:SimpleConceptValue:NumericValue:NumericValueWithUnitValue {
 name:"3.21 [UnitDefinition_000001]",
 value:3.21})
 MERGE (numeric_value_root2)-[numeric_value_final2:LATEST_FINAL]-(numeric_value_value2)
@@ -1843,7 +1853,8 @@ MERGE (codelist_name_root_to_update)-[:LATEST]->(codelist_name_value_to_update)
 MERGE (codelist_name_root_to_update)-[final2hv:HAS_VERSION]->(codelist_name_value_to_update)
 SET final2hv=old_props
 MERGE (old_package)-[:CONTAINS_CODELIST]->(package_codelist2:CTPackageCodelist)-[:CONTAINS_ATTRIBUTES]->(codelist_attributes_value_to_delete:CTCodelistAttributesValue 
-{name:"old_name", extensible:false})<-[final3:LATEST_FINAL]-(codelist_attributes_root_to_delete:CTCodelistAttributesRoot)<-[:HAS_ATTRIBUTES_ROOT]-(codelist_to_delete:CTCodelistRoot {uid:"deleted_codelist_uid"})
+{name:"old_name", extensible:false})<-[final3:LATEST_FINAL]-(codelist_attributes_root_to_delete:CTCodelistAttributesRoot)<-[:HAS_ATTRIBUTES_ROOT]-(codelist_to_delete:CTCodelistRoot {
+    uid:"deleted_codelist_uid"})
 MERGE (codelist_attributes_root_to_delete)-[final3hv:HAS_VERSION]->(codelist_attributes_value_to_delete)
 SET final3hv=old_props
 MERGE (package_codelist1)-[contains_term:CONTAINS_TERM]->(package_term1:CTPackageTerm)-[:CONTAINS_ATTRIBUTES]->(term_attr_value_to_update:CTTermAttributesValue 
@@ -1867,7 +1878,8 @@ MERGE (new_package)-[:CONTAINS_CODELIST]->(package_codelist3:CTPackageCodelist)-
 MERGE (codelist_attr_root_to_update)-[final7hv:HAS_VERSION]->(attr_val7)
 SET final7hv = new_props
 MERGE (new_package)-[:CONTAINS_CODELIST]->(package_codelist4:CTPackageCodelist)-[:CONTAINS_ATTRIBUTES]->(attr_val8:CTCodelistAttributesValue 
-{name:"new_name", definition:"codelist_added", extensible:false})<-[final8:LATEST_FINAL]-(attr_root8:CTCodelistAttributesRoot)<-[:HAS_ATTRIBUTES_ROOT]-(codelist_to_add:CTCodelistRoot {uid:"added_codelist_uid"})
+{name:"new_name", definition:"codelist_added", extensible:false})<-[final8:LATEST_FINAL]-(attr_root8:CTCodelistAttributesRoot)<-[:HAS_ATTRIBUTES_ROOT]-(codelist_to_add:CTCodelistRoot {
+    uid:"added_codelist_uid"})
 MERGE (attr_root8)-[final8hv:HAS_VERSION]->(attr_val8)
 SET final8hv = new_props
 MERGE (attr_root8)-[:LATEST]->(attr_val8)
@@ -2180,8 +2192,10 @@ MERGE (lib)-[:CONTAINS_CODELIST]->(cr3)
 STARTUP_CT_TERM_ATTRIBUTES_CYPHER = """
 MERGE (cc:CTCatalogue {name: "SDTM CT"})
 MERGE (cc)-[:HAS_CODELIST]->(cr:CTCodelistRoot {uid:"editable_cr"})-[:HAS_NAME_ROOT]
-->(codelist_ver_root:CTCodelistNameRoot)-[:HAS_VERSION{change_description: "Approved version",start_date: datetime(),status: "Final",author_id: "TODO initials",version : "1.0"}]->(codelist_ver_value:CTCodelistNameValue {name: "Objective Level", name_sentence_case: "objective level"})
-MERGE (cr)-[:HAS_ATTRIBUTES_ROOT]->(car:CTCodelistAttributesRoot)-[:LATEST]->(cav:CTCodelistAttributesValue {name: "codelist attributes value1", submission_value: "codelist submission value1", preferred_term: "codelist preferred term", definition: "codelist definition", extensible: true})
+->(codelist_ver_root:CTCodelistNameRoot)-[:HAS_VERSION{change_description: "Approved version",start_date: datetime(),status: "Final",author_id: "TODO initials",version : "1.0"}]->(
+    codelist_ver_value:CTCodelistNameValue {name: "Objective Level", name_sentence_case: "objective level"})
+MERGE (cr)-[:HAS_ATTRIBUTES_ROOT]->(car:CTCodelistAttributesRoot)-[:LATEST]->(cav:CTCodelistAttributesValue {name: "codelist attributes value1", submission_value: "codelist submission value1",
+    preferred_term: "codelist preferred term", definition: "codelist definition", extensible: true})
 
 CREATE (codelist_ver_root)-[:LATEST]->(codelist_ver_value)
 CREATE (codelist_ver_root)-[:LATEST_FINAL]->(codelist_ver_value)
@@ -2324,8 +2338,10 @@ set latest_final_hv4.version = "1.0"
 STARTUP_DOMAIN_CL_CYPHER = """
 MERGE (cc:CTCatalogue {name: "SDTM CT"})
 MERGE (cc)-[:HAS_CODELIST]->(cr:CTCodelistRoot {uid:"domain_cl"})-[:HAS_NAME_ROOT]
-->(codelist_ver_root:CTCodelistNameRoot)-[:HAS_VERSION{change_description: "Approved version",start_date: datetime(),status: "Final",author_id: "TODO initials",version : "1.0"}]->(codelist_ver_value:CTCodelistNameValue {name: "SDTM Domain Abbreviation", name_sentence_case: "SDTM domain abbreviation"})
-MERGE (cr)-[:HAS_ATTRIBUTES_ROOT]->(car:CTCodelistAttributesRoot)-[:LATEST]->(cav:CTCodelistAttributesValue {name: "SDTM domain abbreviation", submission_value: "DOMAIN", preferred_term: "SDTM Domain Abbreviation", definition: "domain codelist definition", extensible: true})
+->(codelist_ver_root:CTCodelistNameRoot)-[:HAS_VERSION{change_description: "Approved version",start_date: datetime(),status: "Final",author_id: "TODO initials",version : "1.0"}]->(
+    codelist_ver_value:CTCodelistNameValue {name: "SDTM Domain Abbreviation", name_sentence_case: "SDTM domain abbreviation"})
+MERGE (cr)-[:HAS_ATTRIBUTES_ROOT]->(car:CTCodelistAttributesRoot)-[:LATEST]->(cav:CTCodelistAttributesValue {name: "SDTM domain abbreviation", submission_value: "DOMAIN",
+    preferred_term: "SDTM Domain Abbreviation", definition: "domain codelist definition", extensible: true})
 
 CREATE (codelist_ver_root)-[:LATEST]->(codelist_ver_value)
 CREATE (codelist_ver_root)-[:LATEST_FINAL]->(codelist_ver_value)
@@ -2674,28 +2690,36 @@ SET lv = draft_properties
 MERGE (sr)-[ld:LATEST_DRAFT]->(sv)
 SET ld = draft_properties
 MERGE (p)-[:HAS_FIELD]->(:StudyField:StudyProjectField)<-[:HAS_PROJECT]-(sv)
-MERGE (ot:ObjectiveTemplateRoot:SyntaxTemplateRoot:SyntaxIndexingTemplateRoot {uid:"ObjectiveTemplate_000001", sequence_id: "O1"})-[relt:LATEST_FINAL]->(otv:ObjectiveTemplateValue:SyntaxTemplateValue:SyntaxIndexingTemplateValue {name :"objective_1", name_plain : "objective_1"})
+MERGE (ot:ObjectiveTemplateRoot:SyntaxTemplateRoot:SyntaxIndexingTemplateRoot {uid:"ObjectiveTemplate_000001", sequence_id: "O1"})-[relt:LATEST_FINAL]->(
+    otv:ObjectiveTemplateValue:SyntaxTemplateValue:SyntaxIndexingTemplateValue {name :"objective_1", name_plain : "objective_1"})
 MERGE (ot)-[relthv:HAS_VERSION]->(otv)
 MERGE (ot)-[:LATEST]->(otv)
-MERGE (ot2:ObjectiveTemplateRoot:SyntaxTemplateRoot:SyntaxIndexingTemplateRoot {uid:"ObjectiveTemplate_0000022", sequence_id: "O22"})-[relt2:LATEST_FINAL]->(otv2:ObjectiveTemplateValue:SyntaxTemplateValue:SyntaxIndexingTemplateValue {name :"objective_2", name_plain : "objective_2"})
+MERGE (ot2:ObjectiveTemplateRoot:SyntaxTemplateRoot:SyntaxIndexingTemplateRoot {uid:"ObjectiveTemplate_0000022", sequence_id: "O22"})-[relt2:LATEST_FINAL]->(
+    otv2:ObjectiveTemplateValue:SyntaxTemplateValue:SyntaxIndexingTemplateValue {name :"objective_2", name_plain : "objective_2"})
 MERGE (ot2)-[relt2hv:HAS_VERSION]->(otv2)
 MERGE (ot2)-[:LATEST]->(otv2)
-MERGE (ot3:ObjectiveTemplateRoot:SyntaxTemplateRoot:SyntaxIndexingTemplateRoot {uid:"ObjectiveTemplate_000003", sequence_id: "O3"})-[relt3:LATEST_FINAL]->(otv3:ObjectiveTemplateValue:SyntaxTemplateValue:SyntaxIndexingTemplateValue {name :"objective_3", name_plain : "objective_3"})
+MERGE (ot3:ObjectiveTemplateRoot:SyntaxTemplateRoot:SyntaxIndexingTemplateRoot {uid:"ObjectiveTemplate_000003", sequence_id: "O3"})-[relt3:LATEST_FINAL]->(
+    otv3:ObjectiveTemplateValue:SyntaxTemplateValue:SyntaxIndexingTemplateValue {name :"objective_3", name_plain : "objective_3"})
 MERGE (ot3)-[relt3hv:HAS_VERSION]->(otv3)
 MERGE (ot3)-[:LATEST]->(otv3)
-MERGE (ot4:ObjectiveTemplateRoot:SyntaxTemplateRoot:SyntaxIndexingTemplateRoot {uid:"ObjectiveTemplate_000004", sequence_id: "O4"})-[relt4:LATEST_FINAL]->(otv4:ObjectiveTemplateValue:SyntaxTemplateValue:SyntaxIndexingTemplateValue {name :"objective_4", name_plain : "objective_4"})
+MERGE (ot4:ObjectiveTemplateRoot:SyntaxTemplateRoot:SyntaxIndexingTemplateRoot {uid:"ObjectiveTemplate_000004", sequence_id: "O4"})-[relt4:LATEST_FINAL]->(
+    otv4:ObjectiveTemplateValue:SyntaxTemplateValue:SyntaxIndexingTemplateValue {name :"objective_4", name_plain : "objective_4"})
 MERGE (ot4)-[relt4hv:HAS_VERSION]->(otv4)
 MERGE (ot4)-[:LATEST]->(otv4)
-MERGE (or:ObjectiveRoot:SyntaxInstanceRoot:SyntaxIndexingInstanceRoot)-[rel:LATEST_FINAL]->(ov:ObjectiveValue:SyntaxInstanceValue:SyntaxIndexingInstanceValue {name :"objective_1", name_plain : "objective_1"})
+MERGE (or:ObjectiveRoot:SyntaxInstanceRoot:SyntaxIndexingInstanceRoot)-[rel:LATEST_FINAL]->(ov:ObjectiveValue:SyntaxInstanceValue:SyntaxIndexingInstanceValue {name :"objective_1",
+    name_plain : "objective_1"})
 MERGE (or)-[relhv:HAS_VERSION]->(ov)
 MERGE (or)-[:LATEST]->(ov)
-MERGE (or2:ObjectiveRoot:SyntaxInstanceRoot:SyntaxIndexingInstanceRoot)-[rel2:LATEST_FINAL]->(ov2:ObjectiveValue:SyntaxInstanceValue:SyntaxIndexingInstanceValue {name :"objective_2", name_plain : "objective_2"})
+MERGE (or2:ObjectiveRoot:SyntaxInstanceRoot:SyntaxIndexingInstanceRoot)-[rel2:LATEST_FINAL]->(ov2:ObjectiveValue:SyntaxInstanceValue:SyntaxIndexingInstanceValue {name :"objective_2",
+    name_plain : "objective_2"})
 MERGE (or2)-[rel2hv:HAS_VERSION]->(ov2)
 MERGE (or2)-[:LATEST]->(ov2)
-MERGE (or3:ObjectiveRoot:SyntaxInstanceRoot:SyntaxIndexingInstanceRoot)-[rel3:LATEST_DRAFT]->(ov3:ObjectiveValue:SyntaxInstanceValue:SyntaxIndexingInstanceValue {name :"objective_3", name_plain : "objective_3"})
+MERGE (or3:ObjectiveRoot:SyntaxInstanceRoot:SyntaxIndexingInstanceRoot)-[rel3:LATEST_DRAFT]->(ov3:ObjectiveValue:SyntaxInstanceValue:SyntaxIndexingInstanceValue {name :"objective_3",
+    name_plain : "objective_3"})
 MERGE (or3)-[rel3hv:HAS_VERSION]->(ov3)
 MERGE (or3)-[:LATEST]->(ov3)
-MERGE (or4:ObjectiveRoot:SyntaxInstanceRoot:SyntaxIndexingInstanceRoot)-[rel4:LATEST_RETIRED]->(ov4:ObjectiveValue:SyntaxInstanceValue:SyntaxIndexingInstanceValue {name :"objective_5", name_plain : "objective_5"})
+MERGE (or4:ObjectiveRoot:SyntaxInstanceRoot:SyntaxIndexingInstanceRoot)-[rel4:LATEST_RETIRED]->(ov4:ObjectiveValue:SyntaxInstanceValue:SyntaxIndexingInstanceValue {name :"objective_5",
+    name_plain : "objective_5"})
 MERGE (or4)-[rel4hv:HAS_VERSION]->(ov4)
 MERGE (or4)-[:LATEST]->(ov4)
 MERGE (lib:Library{name:"Sponsor", is_editable:true})
@@ -2805,8 +2829,10 @@ set hv.author_id = "unknown-user"
 set hv2 = properties(hv)
 set ld = properties(hv)
 
-MERGE (ot:ObjectiveTemplateRoot:SyntaxTemplateRoot:SyntaxIndexingTemplateRoot {uid:"ObjectiveTemplate_000001", sequence_id: "O1"})-[relt:LATEST_FINAL]->(otv:ObjectiveTemplateValue:SyntaxTemplateValue:SyntaxIndexingTemplateValue {name :"objective_1", name_plain : "objective_1"})
-MERGE (or:ObjectiveRoot:SyntaxInstanceRoot:SyntaxIndexingInstanceRoot)-[rel:LATEST_FINAL]->(ov:ObjectiveValue:SyntaxInstanceValue:SyntaxIndexingInstanceValue {name : "objective_1", name_plain : "objective_1"})
+MERGE (ot:ObjectiveTemplateRoot:SyntaxTemplateRoot:SyntaxIndexingTemplateRoot {uid:"ObjectiveTemplate_000001", sequence_id: "O1"})-[relt:LATEST_FINAL]->(
+    otv:ObjectiveTemplateValue:SyntaxTemplateValue:SyntaxIndexingTemplateValue {name :"objective_1", name_plain : "objective_1"})
+MERGE (or:ObjectiveRoot:SyntaxInstanceRoot:SyntaxIndexingInstanceRoot)-[rel:LATEST_FINAL]->(ov:ObjectiveValue:SyntaxInstanceValue:SyntaxIndexingInstanceValue {name : "objective_1",
+    name_plain : "objective_1"})
 MERGE (ot)-[relthv:HAS_VERSION]->(otv)
 MERGE (or)-[relhv:HAS_VERSION]->(ov)
 MERGE (or)-[:LATEST]->(ov)
@@ -2829,8 +2855,10 @@ set sa.author_id = "unknown-user"
 // Set counter for study objective UID 
 MERGE (:Counter:StudyObjectiveCounter {count: 1, counterId:'StudyObjectiveCounter'})
 
-MERGE (et:EndpointTemplateRoot:SyntaxTemplateRoot:SyntaxIndexingTemplateRoot {uid:"EndpointTemplate_000001", sequence_id: "E1"})-[end_relt:LATEST_FINAL]->(etv:EndpointTemplateValue:SyntaxTemplateValue:SyntaxIndexingTemplateValue {name : "endpoint_1", name_plain : "endpoint_1"})
-MERGE (er:EndpointRoot:SyntaxInstanceRoot:SyntaxIndexingInstanceRoot)-[end_rel:LATEST_FINAL]->(ev:EndpointValue:SyntaxInstanceValue:SyntaxIndexingInstanceValue {name : "endpoint_1", name_plain : "endpoint_1"})
+MERGE (et:EndpointTemplateRoot:SyntaxTemplateRoot:SyntaxIndexingTemplateRoot {uid:"EndpointTemplate_000001", sequence_id: "E1"})-[end_relt:LATEST_FINAL]->(
+    etv:EndpointTemplateValue:SyntaxTemplateValue:SyntaxIndexingTemplateValue {name : "endpoint_1", name_plain : "endpoint_1"})
+MERGE (er:EndpointRoot:SyntaxInstanceRoot:SyntaxIndexingInstanceRoot)-[end_rel:LATEST_FINAL]->(ev:EndpointValue:SyntaxInstanceValue:SyntaxIndexingInstanceValue {name : "endpoint_1",
+    name_plain : "endpoint_1"})
 MERGE (er)-[:LATEST]->(ev)
 MERGE (et)-[:LATEST]->(etv)
 MERGE (er)-[end_rel_hv:HAS_VERSION]->(ev)
@@ -2841,13 +2869,15 @@ MERGE (lib)-[:CONTAINS_SYNTAX_TEMPLATE]->(et)
 set end_relt_hv = final_properties
 set end_rel_hv = final_properties
 
-MERGE (et2:EndpointTemplateRoot:SyntaxTemplateRoot:SyntaxIndexingTemplateRoot {uid:"EndpointTemplate_000022", sequence_id: "E22"})-[end_relt2:LATEST_FINAL]->(etv2:EndpointTemplateValue:SyntaxTemplateValue:SyntaxIndexingTemplateValue {name : "endpoint_template_2", name_plain : "endpoint_template_2"})
+MERGE (et2:EndpointTemplateRoot:SyntaxTemplateRoot:SyntaxIndexingTemplateRoot {uid:"EndpointTemplate_000022", sequence_id: "E22"})-[end_relt2:LATEST_FINAL]->(
+    etv2:EndpointTemplateValue:SyntaxTemplateValue:SyntaxIndexingTemplateValue {name : "endpoint_template_2", name_plain : "endpoint_template_2"})
 MERGE (et2)-[:LATEST]->(etv2)
 MERGE (et2)-[end_relt2_hv:HAS_VERSION]->(etv2)
 MERGE (lib)-[:CONTAINS_SYNTAX_TEMPLATE]->(et2)
 set end_relt2_hv = final_properties
 
-MERGE (tt:TimeframeTemplateRoot:SyntaxTemplateRoot {uid:"TimeframeTemplate_000011", sequence_id: "T11"})-[tim_relt:LATEST_FINAL]->(ttv:TimeframeTemplateValue:SyntaxTemplateValue {name : "timeframe_1", name_plain : "timeframe_1"})
+MERGE (tt:TimeframeTemplateRoot:SyntaxTemplateRoot {uid:"TimeframeTemplate_000011", sequence_id: "T11"})-[tim_relt:LATEST_FINAL]->(ttv:TimeframeTemplateValue:SyntaxTemplateValue {name : "timeframe_1",
+    name_plain : "timeframe_1"})
 MERGE (tr:TimeframeRoot:SyntaxInstanceRoot)-[tim_rel:LATEST_FINAL]->(tv:TimeframeValue:SyntaxInstanceValue {name : "timeframe_1", name_plain : "timeframe_1"})
 MERGE (tr)-[:LATEST]->(tv)
 MERGE (tt)-[:LATEST]->(ttv)
@@ -2901,8 +2931,10 @@ set hv.start_date = datetime()
 set hv.author_id = "unknown-user"
 set ld = properties(hv)
 
-MERGE (ot:ObjectiveTemplateRoot:SyntaxTemplateRoot:SyntaxIndexingTemplateRoot {uid:"ObjectiveTemplate_000001", sequence_id: "O1"})-[relt:LATEST_FINAL]->(otv:ObjectiveTemplateValue:SyntaxTemplateValue:SyntaxIndexingTemplateValue {name : "objective_1", name_plain : "objective_1"})
-MERGE (or:ObjectiveRoot:SyntaxInstanceRoot:SyntaxIndexingInstanceRoot)-[rel:LATEST_FINAL]->(ov:ObjectiveValue:SyntaxInstanceValue:SyntaxIndexingInstanceValue {name : "objective_1", name_plain : "objective_1"})
+MERGE (ot:ObjectiveTemplateRoot:SyntaxTemplateRoot:SyntaxIndexingTemplateRoot {uid:"ObjectiveTemplate_000001", sequence_id: "O1"})-[relt:LATEST_FINAL]->(
+    otv:ObjectiveTemplateValue:SyntaxTemplateValue:SyntaxIndexingTemplateValue {name : "objective_1", name_plain : "objective_1"})
+MERGE (or:ObjectiveRoot:SyntaxInstanceRoot:SyntaxIndexingInstanceRoot)-[rel:LATEST_FINAL]->(ov:ObjectiveValue:SyntaxInstanceValue:SyntaxIndexingInstanceValue {name : "objective_1",
+    name_plain : "objective_1"})
 MERGE (or)-[:LATEST]->(ov)
 MERGE (ot)-[:LATEST]->(otv)
 MERGE (or)-[rel_hv:HAS_VERSION]->(ov)
@@ -2931,8 +2963,10 @@ set sa.date = datetime()
 set sa.author_id = "unknown-user"
 
 
-MERGE (et:EndpointTemplateRoot:SyntaxTemplateRoot:SyntaxIndexingTemplateRoot)-[end_relt:LATEST_FINAL]->(etv:EndpointTemplateValue:SyntaxTemplateValue:SyntaxIndexingTemplateValue {name : "endpoint_1", name_plain : "endpoint_1"})
-MERGE (er:EndpointRoot:SyntaxInstanceRoot:SyntaxIndexingInstanceRoot)-[end_rel:LATEST_FINAL]->(ev:EndpointValue:SyntaxInstanceValue:SyntaxIndexingInstanceValue {name : "endpoint_1", name_plain : "endpoint_1"})
+MERGE (et:EndpointTemplateRoot:SyntaxTemplateRoot:SyntaxIndexingTemplateRoot)-[end_relt:LATEST_FINAL]->(etv:EndpointTemplateValue:SyntaxTemplateValue:SyntaxIndexingTemplateValue {name : "endpoint_1",
+    name_plain : "endpoint_1"})
+MERGE (er:EndpointRoot:SyntaxInstanceRoot:SyntaxIndexingInstanceRoot)-[end_rel:LATEST_FINAL]->(ev:EndpointValue:SyntaxInstanceValue:SyntaxIndexingInstanceValue {name : "endpoint_1",
+    name_plain : "endpoint_1"})
 MERGE (er)-[:LATEST]->(ev)
 MERGE (et)-[:LATEST]->(etv)
 MERGE (er)-[end_rel_hv:HAS_VERSION]->(ev)
@@ -3116,10 +3150,14 @@ MATCH (incl:CTTermRoot {uid: "C25532"}), (excl:CTTermRoot {uid: "C25370"})
 MERGE (library:Library{name: "Sponsor", is_editable: True})
 MERGE (sr:StudyRoot {uid: "study_root"})-[:LATEST]->(sv:StudyValue{study_id_prefix: "some_id", study_number:0})
 MERGE (p)-[:HAS_FIELD]->(:StudyField:StudyProjectField)<-[:HAS_PROJECT]-(sv)
-MERGE (incl)<-[:HAS_SELECTED_TERM]-(:CTTermContext)<-[:HAS_TYPE]-(ctr1:CriteriaTemplateRoot:SyntaxTemplateRoot:SyntaxIndexingTemplateRoot {uid: "incl_criteria_1"})-[relt:LATEST_FINAL]->(ctv1:CriteriaTemplateValue:SyntaxTemplateValue:SyntaxIndexingTemplateValue {name : "incl_criteria_1", guidance_text: "Guidance text", name_plain : "incl_criteria_1"})
-MERGE (incl)<-[:HAS_SELECTED_TERM]-(:CTTermContext)<-[:HAS_TYPE]-(ctr2:CriteriaTemplateRoot:SyntaxTemplateRoot:SyntaxIndexingTemplateRoot {uid: "incl_criteria_2"})-[relt2:LATEST_FINAL]->(ctv2:CriteriaTemplateValue:SyntaxTemplateValue:SyntaxIndexingTemplateValue {name : "incl_criteria_2", name_plain : "incl_criteria_2"})
-MERGE (incl)<-[:HAS_SELECTED_TERM]-(:CTTermContext)<-[:HAS_TYPE]-(ctr3:CriteriaTemplateRoot:SyntaxTemplateRoot:SyntaxIndexingTemplateRoot {uid: "incl_criteria_3"})-[relt3:LATEST_FINAL]->(ctv3:CriteriaTemplateValue:SyntaxTemplateValue:SyntaxIndexingTemplateValue {name : "incl_criteria_3", name_plain : "incl_criteria_3"})
-MERGE (incl)<-[:HAS_SELECTED_TERM]-(:CTTermContext)<-[:HAS_TYPE]-(ctr4:CriteriaTemplateRoot:SyntaxTemplateRoot:SyntaxIndexingTemplateRoot {uid: "incl_criteria_4"})-[relt4:LATEST_FINAL]->(ctv4:CriteriaTemplateValue:SyntaxTemplateValue:SyntaxIndexingTemplateValue {name : "incl_criteria_4", name_plain : "incl_criteria_4"})
+MERGE (incl)<-[:HAS_SELECTED_TERM]-(:CTTermContext)<-[:HAS_TYPE]-(ctr1:CriteriaTemplateRoot:SyntaxTemplateRoot:SyntaxIndexingTemplateRoot {uid: "incl_criteria_1"})-[relt:LATEST_FINAL]->(
+    ctv1:CriteriaTemplateValue:SyntaxTemplateValue:SyntaxIndexingTemplateValue {name : "incl_criteria_1", guidance_text: "Guidance text", name_plain : "incl_criteria_1"})
+MERGE (incl)<-[:HAS_SELECTED_TERM]-(:CTTermContext)<-[:HAS_TYPE]-(ctr2:CriteriaTemplateRoot:SyntaxTemplateRoot:SyntaxIndexingTemplateRoot {uid: "incl_criteria_2"})-[relt2:LATEST_FINAL]->(
+    ctv2:CriteriaTemplateValue:SyntaxTemplateValue:SyntaxIndexingTemplateValue {name : "incl_criteria_2", name_plain : "incl_criteria_2"})
+MERGE (incl)<-[:HAS_SELECTED_TERM]-(:CTTermContext)<-[:HAS_TYPE]-(ctr3:CriteriaTemplateRoot:SyntaxTemplateRoot:SyntaxIndexingTemplateRoot {uid: "incl_criteria_3"})-[relt3:LATEST_FINAL]->(
+    ctv3:CriteriaTemplateValue:SyntaxTemplateValue:SyntaxIndexingTemplateValue {name : "incl_criteria_3", name_plain : "incl_criteria_3"})
+MERGE (incl)<-[:HAS_SELECTED_TERM]-(:CTTermContext)<-[:HAS_TYPE]-(ctr4:CriteriaTemplateRoot:SyntaxTemplateRoot:SyntaxIndexingTemplateRoot {uid: "incl_criteria_4"})-[relt4:LATEST_FINAL]->(
+    ctv4:CriteriaTemplateValue:SyntaxTemplateValue:SyntaxIndexingTemplateValue {name : "incl_criteria_4", name_plain : "incl_criteria_4"})
 MERGE (ctr1)-[:LATEST]->(ctv1)
 MERGE (ctr2)-[:LATEST]->(ctv2)
 MERGE (ctr3)-[:LATEST]->(ctv3)
@@ -3152,8 +3190,10 @@ MERGE (library)-[:CONTAINS_SYNTAX_TEMPLATE]->(ctr1)
 MERGE (library)-[:CONTAINS_SYNTAX_TEMPLATE]->(ctr2)
 MERGE (library)-[:CONTAINS_SYNTAX_TEMPLATE]->(ctr3)
 MERGE (library)-[:CONTAINS_SYNTAX_TEMPLATE]->(ctr4)
-MERGE (excl)<-[:HAS_SELECTED_TERM]-(:CTTermContext)<-[:HAS_TYPE]-(ctr5:CriteriaTemplateRoot:SyntaxTemplateRoot:SyntaxIndexingTemplateRoot {uid: "excl_criteria_1"})-[relt5:LATEST_FINAL]->(ctv5:CriteriaTemplateValue:SyntaxTemplateValue:SyntaxIndexingTemplateValue {name :"excl_criteria_1", name_plain : "excl_criteria_1"})
-MERGE (excl)<-[:HAS_SELECTED_TERM]-(:CTTermContext)<-[:HAS_TYPE]-(ctr6:CriteriaTemplateRoot:SyntaxTemplateRoot:SyntaxIndexingTemplateRoot {uid: "excl_criteria_2"})-[relt6:LATEST_FINAL]->(ctv6:CriteriaTemplateValue:SyntaxTemplateValue:SyntaxIndexingTemplateValue {name :"excl_criteria_2", name_plain : "excl_criteria_2"})
+MERGE (excl)<-[:HAS_SELECTED_TERM]-(:CTTermContext)<-[:HAS_TYPE]-(ctr5:CriteriaTemplateRoot:SyntaxTemplateRoot:SyntaxIndexingTemplateRoot {uid: "excl_criteria_1"})-[relt5:LATEST_FINAL]->(
+    ctv5:CriteriaTemplateValue:SyntaxTemplateValue:SyntaxIndexingTemplateValue {name :"excl_criteria_1", name_plain : "excl_criteria_1"})
+MERGE (excl)<-[:HAS_SELECTED_TERM]-(:CTTermContext)<-[:HAS_TYPE]-(ctr6:CriteriaTemplateRoot:SyntaxTemplateRoot:SyntaxIndexingTemplateRoot {uid: "excl_criteria_2"})-[relt6:LATEST_FINAL]->(
+    ctv6:CriteriaTemplateValue:SyntaxTemplateValue:SyntaxIndexingTemplateValue {name :"excl_criteria_2", name_plain : "excl_criteria_2"})
 MERGE (ctr5)-[:LATEST]->(ctv5)
 MERGE (ctr6)-[:LATEST]->(ctv6)
 MERGE (ctr5)-[hv5:HAS_VERSION]->(ctv5)
@@ -3289,23 +3329,23 @@ def get_codelist_with_term_cypher(
     term_uid: str = "term_root_final",
     codelist_submval: str = "cl_submission_value1",
 ) -> str:
-    return """
-WITH {
+    return f"""
+WITH {{
   change_description: "Approved version",
   start_date: datetime("2020-06-26T00:00:00"),
   status: "Final",
   author_id: "unknown-user",
   version: "1.0"
-} AS final_version_props,
-{
+}} AS final_version_props,
+{{
   start_date: datetime("2020-06-26T00:00:00")
-} AS has_term_props
-MERGE (clr:CTCodelistRoot {uid: "%(codelist_uid)s"})
+}} AS has_term_props
+MERGE (clr:CTCodelistRoot {{uid: "{codelist_uid}"}})
 MERGE (clr)-[:HAS_NAME_ROOT]->(cnr:CTCodelistNameRoot)-[:LATEST]->
-    (cnv:TemplateParameter:CTCodelistNameValue {name: "%(codelist_name)s"})
+    (cnv:TemplateParameter:CTCodelistNameValue {{name: "{codelist_name}"}})
 MERGE (clr)-[:HAS_ATTRIBUTES_ROOT]->(car:CTCodelistAttributesRoot)-[:LATEST]->
-    (cav:TemplateParameter:CTCodelistAttributesValue {submission_value: "%(codelist_submval)s"})
-MERGE (cc:CTCatalogue {name: "SDTM CT"})
+    (cav:TemplateParameter:CTCodelistAttributesValue {{submission_value: "{codelist_submval}"}})
+MERGE (cc:CTCatalogue {{name: "SDTM CT"}})
 MERGE (cc)-[:HAS_CODELIST]->(clr)
 MERGE (cnr)-[cl_lf:LATEST_FINAL]->(cnv)
 MERGE (cnr)-[cl_hv:HAS_VERSION]->(cnv)
@@ -3313,15 +3353,15 @@ set cl_hv = final_version_props
 MERGE (car)-[cl_alf:LATEST_FINAL]->(cav)
 MERGE (car)-[cl_ahv:HAS_VERSION]->(cav)
 set cl_ahv = final_version_props
-MERGE (lib:Library {name: "Sponsor", is_editable: true})
+MERGE (lib:Library {{name: "Sponsor", is_editable: true}})
 MERGE (lib)-[:CONTAINS_CODELIST]->(clr)
 
-MERGE (clr)-[has_term1:HAS_TERM]->(term_submval:CTCodelistTerm {submission_value: "submission_value1"})
-MERGE (term_submval)-[:HAS_TERM_ROOT]->(term_root:CTTermRoot {uid:"%(term_uid)s"})-[:HAS_ATTRIBUTES_ROOT]->
+MERGE (clr)-[has_term1:HAS_TERM]->(term_submval:CTCodelistTerm {{submission_value: "submission_value1"}})
+MERGE (term_submval)-[:HAS_TERM_ROOT]->(term_root:CTTermRoot {{uid:"{term_uid}"}})-[:HAS_ATTRIBUTES_ROOT]->
     (term_ver_root:CTTermAttributesRoot)-[:LATEST]-(term_ver_value:CTTermAttributesValue
-        {preferred_term:"preferred_term", definition:"definition"})
+        {{preferred_term:"preferred_term", definition:"definition"}})
 MERGE (term_root)-[:HAS_NAME_ROOT]->(term_name_ver_root:CTTermNameRoot)-[:LATEST]-(term_name_ver_value:CTTermNameValue
-        {name: "%(name)s", name_sentence_case:"term_value_name_sentence_case"})
+        {{name: "{name}", name_sentence_case:"term_value_name_sentence_case"}})
 MERGE (lib)-[:CONTAINS_TERM]->(term_root)
 MERGE (term_ver_root)-[lf:LATEST_FINAL]->(term_ver_value)
 MERGE (term_ver_root)-[hv:HAS_VERSION]->(term_ver_value)
@@ -3330,13 +3370,7 @@ MERGE (term_name_ver_root)-[tnvr_lf:LATEST_FINAL]->(term_name_ver_value)
 MERGE (term_name_ver_root)-[tnvr_hv:HAS_VERSION]->(term_name_ver_value)
 set tnvr_hv = final_version_props
 set has_term1 = has_term_props
-""" % {
-        "name": name,
-        "codelist_name": codelist_name,
-        "codelist_uid": codelist_uid,
-        "term_uid": term_uid,
-        "codelist_submval": codelist_submval,
-    }
+"""
 
 
 STARTUP_STUDY_ARM_CYPHER = """
@@ -3383,8 +3417,10 @@ set hv.author_id = "unknown-user"
 set ld = properties(hv)
 
 
-MERGE (ot:ObjectiveTemplateRoot:SyntaxTemplateRoot:SyntaxIndexingTemplateRoot {uid:"ObjectiveTemplate_000001", sequence_id: "O1"})-[relt:LATEST_FINAL]->(otv:ObjectiveTemplateValue:SyntaxTemplateValue:SyntaxIndexingTemplateValue {name : "objective_1", name_plain : "objective_1"})
-MERGE (or:ObjectiveRoot:SyntaxInstanceRoot:SyntaxIndexingInstanceRoot)-[rel:LATEST_FINAL]->(ov:ObjectiveValue:SyntaxInstanceValue:SyntaxIndexingInstanceValue {name : "objective_1", name_plain : "objective_1"})
+MERGE (ot:ObjectiveTemplateRoot:SyntaxTemplateRoot:SyntaxIndexingTemplateRoot {uid:"ObjectiveTemplate_000001", sequence_id: "O1"})-[relt:LATEST_FINAL]->(
+    otv:ObjectiveTemplateValue:SyntaxTemplateValue:SyntaxIndexingTemplateValue {name : "objective_1", name_plain : "objective_1"})
+MERGE (or:ObjectiveRoot:SyntaxInstanceRoot:SyntaxIndexingInstanceRoot)-[rel:LATEST_FINAL]->(ov:ObjectiveValue:SyntaxInstanceValue:SyntaxIndexingInstanceValue {name : "objective_1",
+    name_plain : "objective_1"})
 MERGE (or)-[:LATEST]->(ov)
 MERGE (ot)-[:LATEST]->(otv)
 MERGE (or)-[rel_hv:HAS_VERSION]->(ov)
@@ -3407,8 +3443,10 @@ set sa.author_id = "unknown-user"
 // Set counter for study objective UID 
 MERGE (:Counter:StudyObjectiveCounter {count: 1, counterId:'StudyObjectiveCounter'})
 
-MERGE (et:EndpointTemplateRoot:SyntaxTemplateRoot:SyntaxIndexingTemplateRoot)-[end_relt:LATEST_FINAL]->(etv:EndpointTemplateValue:SyntaxTemplateValue:SyntaxIndexingTemplateValue {name : "endpoint_1", name_plain : "endpoint_1"})
-MERGE (er:EndpointRoot:SyntaxInstanceRoot:SyntaxIndexingInstanceRoot)-[end_rel:LATEST_FINAL]->(ev:EndpointValue:SyntaxInstanceValue:SyntaxIndexingInstanceValue {name : "endpoint_1", name_plain : "endpoint_1"})
+MERGE (et:EndpointTemplateRoot:SyntaxTemplateRoot:SyntaxIndexingTemplateRoot)-[end_relt:LATEST_FINAL]->(etv:EndpointTemplateValue:SyntaxTemplateValue:SyntaxIndexingTemplateValue {name : "endpoint_1",
+    name_plain : "endpoint_1"})
+MERGE (er:EndpointRoot:SyntaxInstanceRoot:SyntaxIndexingInstanceRoot)-[end_rel:LATEST_FINAL]->(ev:EndpointValue:SyntaxInstanceValue:SyntaxIndexingInstanceValue {name : "endpoint_1",
+    name_plain : "endpoint_1"})
 MERGE (er)-[:LATEST]->(ev)
 MERGE (et)-[:LATEST]->(etv)
 MERGE (er)-[end_rel_hv:HAS_VERSION]->(ev)
@@ -3419,7 +3457,8 @@ MERGE (lib)-[:CONTAINS_SYNTAX_TEMPLATE]->(et)
 set end_relt_hv = final_properties
 set end_rel_hv = final_properties
 
-MERGE (et2:EndpointTemplateRoot:SyntaxTemplateRoot:SyntaxIndexingTemplateRoot)-[end_relt2:LATEST_FINAL]->(etv2:EndpointTemplateValue:SyntaxTemplateValue:SyntaxIndexingTemplateValue {name : "endpoint_template_2", name_plain : "endpoint_template_2"})
+MERGE (et2:EndpointTemplateRoot:SyntaxTemplateRoot:SyntaxIndexingTemplateRoot)-[end_relt2:LATEST_FINAL]->(etv2:EndpointTemplateValue:SyntaxTemplateValue:SyntaxIndexingTemplateValue {
+    name : "endpoint_template_2", name_plain : "endpoint_template_2"})
 MERGE (et2)-[:LATEST]->(etv2)
 MERGE (et2)-[end_relt2_hv:HAS_VERSION]->(etv2)
 MERGE (lib)-[:CONTAINS_SYNTAX_TEMPLATE]->(et2)
@@ -3490,8 +3529,10 @@ set hv.start_date = datetime()
 set hv.author_id = "unknown-user"
 set ld = properties(hv)
 
-MERGE (ot:ObjectiveTemplateRoot:SyntaxTemplateRoot:SyntaxIndexingTemplateRoot {uid:"ObjectiveTemplate_000001", sequence_id: "O1"})-[relt:LATEST_FINAL]->(otv:ObjectiveTemplateValue:SyntaxTemplateValue:SyntaxIndexingTemplateValue {name : "objective_1", name_plain : "objective_1"})
-MERGE (or:ObjectiveRoot:SyntaxInstanceRoot:SyntaxIndexingInstanceRoot)-[rel:LATEST_FINAL]->(ov:ObjectiveValue:SyntaxInstanceValue:SyntaxIndexingInstanceValue {name : "objective_1", name_plain : "objective_1"})
+MERGE (ot:ObjectiveTemplateRoot:SyntaxTemplateRoot:SyntaxIndexingTemplateRoot {uid:"ObjectiveTemplate_000001", sequence_id: "O1"})-[relt:LATEST_FINAL]->(
+    otv:ObjectiveTemplateValue:SyntaxTemplateValue:SyntaxIndexingTemplateValue {name : "objective_1", name_plain : "objective_1"})
+MERGE (or:ObjectiveRoot:SyntaxInstanceRoot:SyntaxIndexingInstanceRoot)-[rel:LATEST_FINAL]->(ov:ObjectiveValue:SyntaxInstanceValue:SyntaxIndexingInstanceValue {name : "objective_1",
+    name_plain : "objective_1"})
 MERGE (or)-[:LATEST]->(ov)
 MERGE (ot)-[:LATEST]->(otv)
 MERGE (or)-[hv2:HAS_VERSION]->(ov)
@@ -3514,8 +3555,10 @@ set sa.author_id = "unknown-user"
 // Set counter for study objective UID 
 MERGE (:Counter:StudyObjectiveCounter {count: 1, counterId:'StudyObjectiveCounter'})
 
-MERGE (et:EndpointTemplateRoot:SyntaxTemplateRoot:SyntaxIndexingTemplateRoot)-[end_relt:LATEST_FINAL]->(etv:EndpointTemplateValue:SyntaxTemplateValue:SyntaxIndexingTemplateValue {name : "endpoint_1", name_plain : "endpoint_1"})
-MERGE (er:EndpointRoot:SyntaxInstanceRoot:SyntaxIndexingInstanceRoot)-[end_rel:LATEST_FINAL]->(ev:EndpointValue:SyntaxInstanceValue:SyntaxIndexingInstanceValue {name : "endpoint_1", name_plain : "endpoint_1"})
+MERGE (et:EndpointTemplateRoot:SyntaxTemplateRoot:SyntaxIndexingTemplateRoot)-[end_relt:LATEST_FINAL]->(etv:EndpointTemplateValue:SyntaxTemplateValue:SyntaxIndexingTemplateValue {name : "endpoint_1",
+    name_plain : "endpoint_1"})
+MERGE (er:EndpointRoot:SyntaxInstanceRoot:SyntaxIndexingInstanceRoot)-[end_rel:LATEST_FINAL]->(ev:EndpointValue:SyntaxInstanceValue:SyntaxIndexingInstanceValue {name : "endpoint_1",
+    name_plain : "endpoint_1"})
 MERGE (er)-[:LATEST]->(ev)
 MERGE (et)-[:LATEST]->(etv)
 MERGE (er)-[hv3:HAS_VERSION]->(ev)
@@ -3526,7 +3569,8 @@ MERGE (lib)-[:CONTAINS_SYNTAX_TEMPLATE]->(et)
 set hv3t = final_properties
 set hv3 = final_properties
 
-MERGE (et2:EndpointTemplateRoot:SyntaxTemplateRoot:SyntaxIndexingTemplateRoot)-[end_relt2:LATEST_FINAL]->(etv2:EndpointTemplateValue:SyntaxTemplateValue:SyntaxIndexingTemplateValue {name : "endpoint_template_2", name_plain : "endpoint_template_2"})
+MERGE (et2:EndpointTemplateRoot:SyntaxTemplateRoot:SyntaxIndexingTemplateRoot)-[end_relt2:LATEST_FINAL]->(etv2:EndpointTemplateValue:SyntaxTemplateValue:SyntaxIndexingTemplateValue {
+    name : "endpoint_template_2", name_plain : "endpoint_template_2"})
 MERGE (et2)-[:LATEST]->(etv2)
 MERGE (lib)-[:CONTAINS_SYNTAX_TEMPLATE]->(et2)
 set end_relt2 = final_properties
@@ -3868,7 +3912,6 @@ def inject_base_data(
         convertible_unit=True,
         display_unit=True,
         master_unit=False,
-        si_unit=True,
         us_conventional_unit=True,
         conversion_factor_to_master=settings.day_unit_conversion_factor_to_master,
         unit_subsets=[term.term_uid for term in unit_subset_terms],
@@ -3882,7 +3925,6 @@ def inject_base_data(
         convertible_unit=True,
         display_unit=True,
         master_unit=False,
-        si_unit=True,
         us_conventional_unit=True,
         conversion_factor_to_master=settings.day_unit_conversion_factor_to_master,
         unit_subsets=[term.term_uid for term in unit_subset_terms],
@@ -3896,7 +3938,6 @@ def inject_base_data(
         convertible_unit=True,
         display_unit=True,
         master_unit=False,
-        si_unit=True,
         us_conventional_unit=True,
         conversion_factor_to_master=settings.week_unit_conversion_factor_to_master,
         unit_subsets=[term.term_uid for term in unit_subset_terms],
@@ -3984,7 +4025,6 @@ def fix_study_preferred_time_unit(study_uid):
             convertible_unit=True,
             display_unit=True,
             master_unit=False,
-            si_unit=True,
             us_conventional_unit=True,
             conversion_factor_to_master=settings.day_unit_conversion_factor_to_master,
             unit_subsets=[unit_subset_term.term_uid],
@@ -3994,7 +4034,6 @@ def fix_study_preferred_time_unit(study_uid):
             convertible_unit=True,
             display_unit=True,
             master_unit=False,
-            si_unit=True,
             us_conventional_unit=True,
             conversion_factor_to_master=settings.week_unit_conversion_factor_to_master,
             unit_subsets=[unit_subset_term.term_uid],

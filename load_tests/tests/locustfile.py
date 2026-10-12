@@ -13,7 +13,6 @@ from tests.utils import Params, get_all_endpoints, get_big_study_id, get_random_
 PAGE_SIZE = 10
 
 
-# pylint: disable=unused-argument
 @events.test_start.add_listener
 def on_test_start(environment, **kwargs):
     print("Test session starting...")

@@ -53,14 +53,16 @@ from common.config import settings
 
 class TestStudyObjectiveUpversion(unittest.TestCase):
     TPR_LABEL = "ParameterName"
-    term_roots: list[Any] = []
-    term_values: list[Any] = []
+    term_roots: list[Any]
+    term_values: list[Any]
     lib: Library
 
     def setUp(self):
         inject_and_clear_db("studyobjectiveselectionupversion")
         db.cypher_query(STARTUP_PARAMETERS_CYPHER)
         db.cypher_query(STARTUP_STUDY_OBJECTIVE_CYPHER)
+        self.term_roots = []
+        self.term_values = []
         StudyRoot.generate_node_uids_if_not_present()
         TestUtils.create_ct_catalogue(catalogue_name=settings.sdtm_ct_catalogue_name)
         TestUtils.set_study_standard_version(

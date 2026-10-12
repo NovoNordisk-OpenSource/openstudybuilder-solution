@@ -1,4 +1,4 @@
-from typing import Any, TypeVar
+from typing import Any
 
 from neomodel import db
 from pydantic import BaseModel
@@ -29,8 +29,6 @@ from common.exceptions import (
     NotFoundException,
     ValidationException,
 )
-
-_AggregateRootType = TypeVar("_AggregateRootType")
 
 
 class DictionaryCodelistGenericService:
@@ -120,7 +118,9 @@ class DictionaryCodelistGenericService:
 
         # First, check that attributes provided for filtering exist in the return class
         # Properties can be nested => check if root property exists in class
-        if not is_attribute_in_model(field_name.split(".")[0], DictionaryCodelist):
+        if not is_attribute_in_model(
+            field_name.split(".", maxsplit=1)[0], DictionaryCodelist
+        ):
             raise ValidationException(
                 msg=f"Invalid field name specified in the filter dictionary : {field_name}"
             )

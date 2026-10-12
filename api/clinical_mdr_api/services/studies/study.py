@@ -1,10 +1,11 @@
 import dataclasses
 import functools
 import logging
+from collections.abc import Callable, Collection, Iterable
 from copy import copy
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 from string import ascii_lowercase
-from typing import Any, Callable, Collection, Iterable
+from typing import Any
 
 from fastapi import status as http_status
 from neomodel import db
@@ -39,6 +40,7 @@ from clinical_mdr_api.domains.study_definition_aggregates.root import (
 )
 from clinical_mdr_api.domains.study_definition_aggregates.study_metadata import (
     _STUDY_SUBPART_ACRONYM_PATTERN,
+    MAX_STUDY_SUBPART_ACRONYM_LENGTH,
     HighLevelStudyDesignVO,
     StudyCompactComponentEnum,
     StudyComponentEnum,
@@ -142,7 +144,7 @@ def validate_if_study_is_not_locked(
     def decorator(func):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
-            # pylint: disable=consider-using-get
+
             if study_uid_arg_name in kwargs:
                 study_uid = kwargs[study_uid_arg_name]
             else:
@@ -165,8 +167,9 @@ def validate_if_study_is_not_locked(
 def validate_study_subpart_acronym(study_subpart_acronym: str):
     """Check if provided study subpart acronym respects business rules."""
     BusinessLogicException.raise_if(
-        study_subpart_acronym is not None and len(study_subpart_acronym) > 10,
-        msg=f"Study Subpart Acronym must not exceed 10 characters, got {len(study_subpart_acronym) if study_subpart_acronym else 0}.",
+        study_subpart_acronym is not None
+        and len(study_subpart_acronym) > MAX_STUDY_SUBPART_ACRONYM_LENGTH,
+        msg=f"Study Subpart Acronym must not exceed {MAX_STUDY_SUBPART_ACRONYM_LENGTH} characters, got {len(study_subpart_acronym) if study_subpart_acronym else 0}.",
     )
     BusinessLogicException.raise_if(
         study_subpart_acronym is not None
@@ -222,17 +225,15 @@ class StudyService:
             list[StudyComponentEnum] | list[StudyCompactComponentEnum] | None
         ) = None,
     ):
-        default_fields = set(
-            [
-                "current_metadata.identification_metadata",
-                "current_metadata.version_metadata",
-                "current_metadata.study_description",
-                "uid",
-                "study_parent_part",
-                "study_subpart_uids",
-                "possible_actions",
-            ]
-        )
+        default_fields = {
+            "current_metadata.identification_metadata",
+            "current_metadata.version_metadata",
+            "current_metadata.study_description",
+            "uid",
+            "study_parent_part",
+            "study_subpart_uids",
+            "possible_actions",
+        }
         if include_sections:
             include_spec_set = {
                 f"current_metadata.{section.value}" for section in include_sections
@@ -474,7 +475,7 @@ class StudyService:
 
     def _build_batched_term_lookup(
         self,
-        study_definition: "StudyDefinitionAR",
+        study_definition: StudyDefinitionAR,
         status: StudyStatus | None,
         study_value_version: str | None,
         terms_at_specific_datetime: datetime | None,
@@ -781,7 +782,7 @@ class StudyService:
                 59,
                 59,
                 999999,
-                tzinfo=timezone.utc,
+                tzinfo=UTC,
             )
             if terms_at_specific_date
             else None
@@ -815,7 +816,7 @@ class StudyService:
                 )
             )
 
-            operation_timestamp = datetime.now(timezone.utc)
+            operation_timestamp = datetime.now(UTC)
 
             if study_definition is None:
                 raise NotFoundException("Study Definition", uid)
@@ -1130,7 +1131,7 @@ class StudyService:
                 )
             )
 
-            operation_timestamp = datetime.now(timezone.utc)
+            operation_timestamp = datetime.now(UTC)
 
             if study_definition is None:
                 raise NotFoundException("Study Definition", uid)
@@ -2040,6 +2041,7 @@ class StudyService:
                         request_study_intervention.planned_study_length.duration_unit_code
                     ),
                     find_duration_name_by_code=find_unit_definition_by_uid,
+                    find_all_study_time_units=find_all_study_time_units,
                 )
                 if request_study_intervention.planned_study_length is not None
                 else None
@@ -2129,6 +2131,7 @@ class StudyService:
                         request_study_population.planned_minimum_age_of_subjects.duration_unit_code
                     ),
                     find_duration_name_by_code=find_unit_definition_by_uid,
+                    find_all_study_time_units=find_all_study_time_units,
                 )
                 if request_study_population.planned_minimum_age_of_subjects
                 else None
@@ -2140,6 +2143,7 @@ class StudyService:
                         request_study_population.planned_maximum_age_of_subjects.duration_unit_code
                     ),
                     find_duration_name_by_code=find_unit_definition_by_uid,
+                    find_all_study_time_units=find_all_study_time_units,
                 )
                 if request_study_population.planned_maximum_age_of_subjects is not None
                 else None
@@ -2151,6 +2155,7 @@ class StudyService:
                         request_study_population.stable_disease_minimum_duration.duration_unit_code
                     ),
                     find_duration_name_by_code=find_unit_definition_by_uid,
+                    find_all_study_time_units=find_all_study_time_units,
                 )
                 if request_study_population.stable_disease_minimum_duration is not None
                 else None
@@ -2248,6 +2253,7 @@ class StudyService:
                         request_high_level_study_design.confirmed_response_minimum_duration.duration_unit_code
                     ),
                     find_duration_name_by_code=find_unit_definition_by_uid,
+                    find_all_study_time_units=find_all_study_time_units,
                 )
                 if request_high_level_study_design.confirmed_response_minimum_duration
                 is not None
@@ -2525,7 +2531,7 @@ class StudyService:
                 is not None
             ):
                 if study_patch_request.study_parent_part_uid:
-                    # pylint: disable=line-too-long
+
                     study_patch_request.current_metadata.identification_metadata.registry_identifiers = RegistryIdentifiersJsonModel.from_study_registry_identifiers_vo(
                         parent_part_ar.current_metadata.id_metadata.registry_identifiers,
                         self._repos.ct_term_name_repository.find_by_uids,
@@ -3271,9 +3277,8 @@ class StudyService:
                     if old_index < new_index:
                         if old_index < current_index <= new_index:
                             new_subpart_id = letters[current_index - 1]
-                    else:
-                        if new_index <= current_index < old_index:
-                            new_subpart_id = letters[current_index + 1]
+                    elif new_index <= current_index < old_index:
+                        new_subpart_id = letters[current_index + 1]
                 else:
                     new_subpart_id = letters[new_index]
 
@@ -3532,7 +3537,7 @@ class StudyService:
                                     noncompliant_labels=[],
                                     noncompliant_node_ids=[],
                                     root_uids=None,
-                                    error=f"Validation error: {str(validation_error)}",
+                                    error=f"Validation error: {validation_error!s}",
                                 )
                             )
 
@@ -3551,7 +3556,7 @@ class StudyService:
                             error=None,
                         )
                     )
-                except Exception as e:  # pylint: disable=broad-exception-caught
+                except Exception as e:
                     # Handle errors during check execution
                     # Catching Exception is necessary here as execute_all_checks_for_study
                     # or IntegrityCheckResult creation may raise various exception types

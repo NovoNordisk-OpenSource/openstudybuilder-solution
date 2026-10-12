@@ -186,7 +186,7 @@ class StudyActivityInstructionService(StudySelectionMixin):
             study_activity_uid=study_activity_instruction_input.study_activity_uid,
             activity_instruction_uid=activity_instruction_uid,
             author_id=self.author,
-            start_date=datetime.datetime.now(datetime.timezone.utc),
+            start_date=datetime.datetime.now(datetime.UTC),
         )
 
     @ensure_transaction(db)

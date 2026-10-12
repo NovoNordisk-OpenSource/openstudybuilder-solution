@@ -173,7 +173,7 @@
             <v-slide-group show-arrows class="mb-5">
               <FilterAutocomplete
                 v-for="item in itemsToFilter"
-                :key="item.text"
+                :key="item.key"
                 :load-filters="loadFilters"
                 :clear-input="trigger"
                 :item="item"
@@ -321,9 +321,7 @@
                 #[`item.${header.key}`]="{ item }"
               >
                 <template
-                  v-for="(cellValue, cellIndex) in [
-                    getValueByColumn(item, header.key),
-                  ]"
+                  v-for="(cellValue, cellIndex) in [getCellValue(item, header)]"
                   :key="cellIndex"
                 >
                   <v-tooltip
@@ -350,12 +348,19 @@
               <template #bottom="{ isDisabled }">
                 <div class="v-data-table-footer">
                   <div class="v-data-table-footer__items-per-page">
+                    <v-tooltip
+                      v-if="props.disablePagination"
+                      activator="parent"
+                      location="top"
+                    >
+                      {{ $t('NNTableTooltips.pagination_disabled') }}
+                    </v-tooltip>
                     <span>{{ $t('Settings.rows') }}:</span>
                     <v-select
                       :model-value="currentItemsPerPageValue"
                       :items="computedItemsPerPageOptions"
                       hide-details
-                      :disabled="isDisabled"
+                      :disabled="isDisabled || props.disablePagination"
                       @update:model-value="
                         (value) => updateItemsPerPage(value, currentPageNumber)
                       "
@@ -369,16 +374,31 @@
                     {{ getPaginationTotalDisplay() }}
                   </div>
                   <div class="v-data-table-footer__pagination">
+                    <v-tooltip
+                      v-if="props.disablePagination"
+                      activator="parent"
+                      location="top"
+                    >
+                      {{ $t('NNTableTooltips.pagination_disabled') }}
+                    </v-tooltip>
                     <v-btn
                       icon="$first"
                       variant="text"
-                      :disabled="currentPageNumber === 1 || isDisabled"
+                      :disabled="
+                        currentPageNumber === 1 ||
+                        isDisabled ||
+                        props.disablePagination
+                      "
                       @click="updatePage(1, currentItemsPerPageValue)"
                     />
                     <v-btn
                       icon="$prev"
                       variant="text"
-                      :disabled="currentPageNumber === 1 || isDisabled"
+                      :disabled="
+                        currentPageNumber === 1 ||
+                        isDisabled ||
+                        props.disablePagination
+                      "
                       @click="
                         updatePage(
                           currentPageNumber - 1,
@@ -391,6 +411,7 @@
                       variant="text"
                       :disabled="
                         isDisabled ||
+                        props.disablePagination ||
                         (props.itemsLength > 0 &&
                           currentPageNumber >=
                             Math.ceil(
@@ -409,6 +430,7 @@
                       variant="text"
                       :disabled="
                         isDisabled ||
+                        props.disablePagination ||
                         props.itemsLength === -1 ||
                         (props.itemsLength > 0 &&
                           currentPageNumber >=
@@ -446,6 +468,8 @@
         :headers="historyHeaders"
         :items="historyItems"
         :items-total="historyItemsTotal"
+        :comparison-items="historyComparisonItems"
+        :identity-key="historyConfig?.identityKey || ''"
         :title="historyConfig?.title || ''"
         :html-fields="historyConfig?.htmlFields || []"
         :simple-styling="historyConfig?.simpleStyling || false"
@@ -589,6 +613,10 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  disablePagination: {
+    type: Boolean,
+    default: false,
+  },
 
   // Selection
   showSelect: {
@@ -729,6 +757,10 @@ const matchWholeWords = ref(false)
 const itemsToFilter = ref([])
 const historyItems = ref([])
 const historyItemsTotal = ref(0)
+const historyComparisonItems = ref([])
+let historyRequestId = 0
+let historyOptions = null
+const historyPageCache = new Map()
 const apiParams = new Map()
 const trigger = ref(0)
 const showColumnNames = ref(false)
@@ -766,7 +798,7 @@ const headerActions = [
 ]
 let timeout
 let savedOptions = {}
-let savedFilters = '{}'
+const savedFilters = ref('{}')
 
 const computedItemsPerPage = computed(() => {
   return props.itemsPerPage ? props.itemsPerPage : appStore.rowsPerPage
@@ -1067,6 +1099,27 @@ function getValueByColumn(item, columnName) {
   const keys = columnName.split('.')
   return keys.reduce((acc, key) => (acc ? acc[key] : undefined), item)
 }
+// Resolves what a cell displays. A header may declare `fallbackKey` for a
+// `key` that runs through a nullable object — e.g. a study activity instance
+// reduced to a placeholder, where the instance name is gone but the activity
+// name is still there. `key` is left untouched because it doubles as the
+// server-side sort/filter field; only the displayed value falls back.
+// Only a genuinely absent value falls back — matching the "value is not None
+// and value != ''" rule the API-side export resolver uses, so a legitimate 0 or
+// false is displayed rather than being mistaken for a missing value.
+//
+// `key` is the server-side sort/filter field, so it has to name a scalar. When
+// what should be displayed differs from what should be sorted — e.g. a dose
+// value rendered as "10 mg" but sorted numerically — a header may set
+// `displayKey` for rendering and leave `key` pointing at the sortable scalar.
+function getCellValue(item, header) {
+  const value = getValueByColumn(item, header.displayKey || header.key)
+  const isMissing = value === null || value === undefined || value === ''
+  if (isMissing && header.fallbackKey) {
+    return getValueByColumn(item, header.fallbackKey)
+  }
+  return value
+}
 function getHeaderSlotName(header) {
   return `header.${header.key}`
 }
@@ -1151,6 +1204,7 @@ function columnFilter(params) {
 function filterTable(options) {
   loading.value = true
   if (timeout) clearTimeout(timeout)
+
   if (options) {
     savedOptions = { ...savedOptions, ...options }
   } else {
@@ -1209,9 +1263,10 @@ function filterTable(options) {
       }
     }
     const newFilters = JSON.stringify(filterObj)
-    const filtersUpdated = savedFilters && newFilters !== savedFilters
-    savedFilters = newFilters
-    emit('filter', savedFilters, options, filtersUpdated)
+    const filtersUpdated =
+      savedFilters.value && newFilters !== savedFilters.value
+    savedFilters.value = newFilters
+    emit('filter', savedFilters.value, options, filtersUpdated)
   }, 500)
 }
 async function confirmExport(resolve) {
@@ -1224,21 +1279,87 @@ async function confirmExport(resolve) {
   resolve(true)
 }
 async function getHistoryData(options) {
-  loading.value = true
-  const resp = await props.historyConfig.dataFetcher(options)
-  if (resp.items) {
-    historyItems.value = resp.items
-    historyItemsTotal.value = resp.total
-  } else {
-    historyItems.value = resp
-    historyItemsTotal.value = resp.length
+  const normalizedOptions = {
+    ...options,
+    itemsPerPage:
+      options.itemsPerPage > 0
+        ? options.itemsPerPage
+        : computedItemsPerPage.value,
   }
-  loading.value = false
+  historyOptions = normalizedOptions
+  const requestId = ++historyRequestId
+  loading.value = true
+  try {
+    const page = normalizedOptions.page || 1
+    const pageSize = normalizedOptions.itemsPerPage
+    const pageKey = getHistoryPageKey(page, pageSize)
+    const cachedItems = historyPageCache.get(pageKey)
+    const resp = cachedItems
+      ? { items: cachedItems, total: historyItemsTotal.value }
+      : await props.historyConfig.dataFetcher(normalizedOptions)
+    if (requestId !== historyRequestId) return
+
+    if (resp.items) {
+      historyItems.value = resp.items
+      historyItemsTotal.value = resp.total
+      historyPageCache.set(pageKey, resp.items)
+      historyComparisonItems.value = await getHistoryComparisonItems(
+        normalizedOptions,
+        resp.total,
+        requestId
+      )
+      if (requestId !== historyRequestId) return
+    } else {
+      historyItems.value = resp
+      historyItemsTotal.value = resp.length
+      historyComparisonItems.value = resp
+    }
+  } finally {
+    if (requestId === historyRequestId) loading.value = false
+  }
+}
+async function getHistoryComparisonItems(options, total, requestId) {
+  const page = options.page || 1
+  const pageSize = options.itemsPerPage
+  if (!pageSize || pageSize < 1 || total <= pageSize) {
+    return historyItems.value
+  }
+
+  const lastPage = Math.ceil(total / pageSize)
+  const pages = [page - 1, page, page + 1].filter(
+    (pageNumber) => pageNumber >= 1 && pageNumber <= lastPage
+  )
+  await Promise.all(
+    pages.map(async (pageNumber) => {
+      const pageKey = getHistoryPageKey(pageNumber, pageSize)
+      if (historyPageCache.has(pageKey)) return
+      const response = await props.historyConfig.dataFetcher({
+        ...options,
+        page: pageNumber,
+      })
+      if (requestId !== historyRequestId) return
+      historyPageCache.set(pageKey, response.items || [])
+    })
+  )
+  return pages.flatMap(
+    (pageNumber) =>
+      historyPageCache.get(getHistoryPageKey(pageNumber, pageSize)) || []
+  )
+}
+function getHistoryPageKey(page, pageSize) {
+  return `${pageSize}:${page}`
 }
 async function openHistory() {
+  historyPageCache.clear()
+  historyItems.value = []
+  historyItemsTotal.value = 0
+  historyComparisonItems.value = []
   showHistory.value = true
+  if (historyOptions) await getHistoryData(historyOptions)
 }
 function closeHistory() {
+  historyRequestId += 1
+  loading.value = false
   showHistory.value = false
 }
 function customSort(data) {

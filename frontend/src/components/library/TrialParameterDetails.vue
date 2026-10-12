@@ -204,6 +204,9 @@
           </tr>
 
           <tr class="details-table__labels">
+            <td v-if="showShortCode">
+              {{ t('TrialSummaryParameters.short_code') }}
+            </td>
             <td>{{ t('_global.status') }}</td>
             <td>{{ t('_global.version') }}</td>
             <td>{{ t('_global.modified_by') }}</td>
@@ -211,6 +214,9 @@
             <td></td>
           </tr>
           <tr class="details-table__values">
+            <td v-if="showShortCode" data-cy="short-code">
+              {{ currentName.short_code || '-' }}
+            </td>
             <td data-cy="names-status">
               <StatusChip :status="currentName.status || '-'" />
             </td>
@@ -413,7 +419,29 @@
         density="compact"
       >
         <template #[`item.actions`]="{ item }">
-          <ActionsMenu :actions="actions" :item="item" />
+          <span class="d-inline-block">
+            <v-btn
+              icon
+              data-cy="edit-codelist-item"
+              variant="text"
+              :disabled="
+                isCdiscTerm || !accessGuard.checkPermission(roles.LIBRARY_WRITE)
+              "
+              @click.stop="editCodelist(item)"
+            >
+              <v-icon>mdi-pencil-outline</v-icon>
+            </v-btn>
+            <v-tooltip activator="parent" location="top">
+              {{
+                isCdiscTerm
+                  ? t('TrialSummaryParameters.cdisc_edit_disabled')
+                  : t('_global.edit')
+              }}
+            </v-tooltip>
+          </span>
+        </template>
+        <template #[`item.library_name`]="{}">
+          {{ termLibraryName || '-' }}
         </template>
         <template #[`item.start_date`]="{ item }">
           {{ $filters.date(item.start_date) || '-' }}
@@ -427,7 +455,6 @@
     :term-uid="termUid"
     :codelist-uid="selectedCodelist?.codelist_uid"
     :submission-value="selectedCodelist?.submission_value"
-    :submission-values="listSubmissionValues()"
     :codelist-name="selectedCodelist?.codelist_name"
     :term-name="latestName?.sponsor_preferred_name || ''"
     :order="selectedCodelist?.order"
@@ -465,15 +492,22 @@ import { ref, computed, onMounted, inject } from 'vue'
 import { useI18n } from 'vue-i18n'
 import controlledTerminology from '@/api/controlledTerminology'
 import StatusChip from '@/components/tools/StatusChip.vue'
-import ActionsMenu from '@/components/tools/ActionsMenu.vue'
 import CodelistTermOrderSubmvalForm from '@/components/library/CodelistTermOrderSubmvalForm.vue'
 import TrialSummaryParameterEditForm from './TrialSummaryParameterEditForm.vue'
 import HistoryTable from '@/components/tools/HistoryTable.vue'
 import { useRouter } from 'vue-router'
+import { useAccessGuard } from '@/composables/accessGuard'
+import { useFeatureFlagsStore } from '@/stores/feature-flags'
 
 const roles = inject('roles')
 const { t } = useI18n()
 const router = useRouter()
+const accessGuard = useAccessGuard()
+const featureFlagsStore = useFeatureFlagsStore()
+
+const showShortCode = computed(() =>
+  featureFlagsStore.getFeatureFlag('ct_term_short_code')
+)
 
 const props = defineProps({
   termUid: {
@@ -484,7 +518,7 @@ const props = defineProps({
 
 const codelistHeaders = [
   { title: '', key: 'actions', width: '1%', sortable: false },
-  { title: t('_global.library'), key: 'library_name' },
+  { title: t('TrialSummaryParameters.term_library'), key: 'library_name' },
   { title: t('TrialSummaryParameters.codelist_name'), key: 'codelist_name' },
   {
     title: t('TrialSummaryParameters.codelist_concept_id'),
@@ -502,22 +536,14 @@ const codelistHeaders = [
   { title: t('_global.modified'), key: 'start_date' },
 ]
 
-const actions = [
-  {
-    label: t('_global.edit'),
-    icon: 'mdi-pencil-outline',
-    iconColor: 'primary',
-    accessRole: roles.LIBRARY_WRITE,
-    click: editCodelist,
-  },
-]
-
 const showForm = ref(false)
 const editSection = ref('')
 const selectedCodelist = ref(null)
 const showOrderSubmvalForm = ref(false)
 
 const codelistItems = ref([])
+const termLibraryName = ref(null)
+const isCdiscTerm = computed(() => termLibraryName.value === 'CDISC')
 
 const termNames = ref([])
 const selectedNameVersion = ref(null)
@@ -582,6 +608,7 @@ function fetchTermAttributes() {
 function fetchTermCodelists() {
   controlledTerminology.getTermCodelists(props.termUid).then((resp) => {
     codelistItems.value = resp.data.codelists
+    termLibraryName.value = resp.data.term_library_name
   })
 }
 
@@ -607,6 +634,7 @@ function prepareEditData() {
     osb_field_name: name.osb_field_name,
     semantic_data_type: name.semantic_data_type,
     notes: name.notes,
+    short_code: name.short_code,
     library_name: attribute.library_name,
     concept_id: attribute.concept_id,
     nci_preferred_name: attribute.nci_preferred_name,
@@ -634,12 +662,6 @@ function closeOrderSubmvalForm() {
   showOrderSubmvalForm.value = false
   selectedCodelist.value = null
   fetchTermCodelists()
-}
-
-function listSubmissionValues() {
-  return Array.from(
-    new Set(codelistItems.value.map((codelist) => codelist.submission_value))
-  )
 }
 
 function newTermNamesVersion() {

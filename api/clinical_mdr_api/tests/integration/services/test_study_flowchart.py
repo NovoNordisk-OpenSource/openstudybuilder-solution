@@ -1,8 +1,7 @@
-# pylint: disable=redefined-outer-name,unused-argument
-
 import logging
 from collections import defaultdict
-from typing import Any, Iterable, Sequence
+from collections.abc import Iterable, Sequence
+from typing import Any
 
 import pydantic
 import pytest
@@ -47,8 +46,8 @@ from clinical_mdr_api.services.studies.study_activity_subgroup import (
     StudyActivitySubGroupService,
 )
 from clinical_mdr_api.services.studies.study_epoch import StudyEpochService
-from clinical_mdr_api.services.studies.study_flowchart import _T as _gettext
 from clinical_mdr_api.services.studies.study_flowchart import (
+    _T as _gettext,
     NUM_OPERATIONAL_CODE_COLS,
     SOA_CHECK_MARK,
     StudyFlowchartService,
@@ -1079,7 +1078,6 @@ class TestSoASnapshot:
     ):
         """loads SoA snapshot references from db and compares them to expected references"""
 
-        # pylint: disable=unused-variable
         __tracebackhide__ = True
 
         refs = TestSoASnapshot._load_soa_snapshot_for_comparison(
@@ -1522,7 +1520,7 @@ def test_soa_snapshot_versioning_with_footnote_linking(
         study_uid=soa_test_data.study.uid,
         study_soa_footnote_uid=soa_footnote.uid,
         footnote_edit_input=StudySoAFootnoteEditInput(
-            referenced_items=soa_footnote.referenced_items + [item_ref]
+            referenced_items=[*soa_footnote.referenced_items, item_ref]
         ),
     )
 

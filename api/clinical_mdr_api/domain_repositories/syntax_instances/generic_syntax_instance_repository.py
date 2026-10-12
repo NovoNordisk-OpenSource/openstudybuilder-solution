@@ -1,7 +1,7 @@
 import abc
 import re
+from collections.abc import Iterable
 from datetime import datetime
-from typing import Generic, Iterable, TypeVar
 
 from neomodel import db
 
@@ -29,11 +29,9 @@ from clinical_mdr_api.models.controlled_terminologies.ct_term import (
 )
 from common.exceptions import BusinessLogicException, NotFoundException
 
-_AggregateRootType = TypeVar("_AggregateRootType", bound=LibraryItemAggregateRootBase)
 
-
-class GenericSyntaxInstanceRepository(
-    GenericSyntaxRepository[_AggregateRootType], Generic[_AggregateRootType], abc.ABC
+class GenericSyntaxInstanceRepository[AggregateRootType: LibraryItemAggregateRootBase](
+    GenericSyntaxRepository[AggregateRootType], abc.ABC
 ):
     template_class: type
 
@@ -70,7 +68,7 @@ class GenericSyntaxInstanceRepository(
 
     def _maintain_parameters(
         self,
-        versioned_object: _AggregateRootType,
+        versioned_object: AggregateRootType,
         root: VersionRoot,
         value: VersionValue,
     ) -> None:
@@ -138,7 +136,7 @@ class GenericSyntaxInstanceRepository(
             },
         )
 
-    def find_by(self, name: str) -> _AggregateRootType:
+    def find_by(self, name: str) -> AggregateRootType:
         values = self.value_class.nodes.filter(name=name)
 
         NotFoundException.raise_if(
@@ -146,7 +144,7 @@ class GenericSyntaxInstanceRepository(
         )
 
         root_uid = values[0].get_root_uid_by_latest()
-        item: _AggregateRootType = self.find_by_uid(uid=root_uid)
+        item: AggregateRootType = self.find_by_uid(uid=root_uid)
         return item
 
     def _get_template_parameters(self, root, value):

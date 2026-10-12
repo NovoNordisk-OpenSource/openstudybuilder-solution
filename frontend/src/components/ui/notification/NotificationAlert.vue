@@ -4,7 +4,7 @@
       <p
         class="font-weight-bold text-white"
         :class="{ 'mb-4': props.notification?.error?.correlation_id }"
-        v-html="props.notification.msg"
+        v-html="sanitizeHTML(props.notification.msg)"
       ></p>
       <p
         v-if="props.notification?.error?.correlation_id"
@@ -89,6 +89,7 @@
 <script setup>
 import { inject, onMounted, ref, onBeforeUnmount } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { sanitizeHTML } from '@/utils/sanitize'
 
 const { t } = useI18n()
 

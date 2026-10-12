@@ -1,7 +1,8 @@
 import re
 from abc import ABC, abstractmethod
+from collections.abc import Sequence
 from datetime import datetime
-from typing import Any, Generic, Sequence, TypeVar
+from typing import Any
 
 from neomodel import db
 from pydantic import BaseModel
@@ -49,8 +50,6 @@ from common.auth.user import user
 from common.exceptions import BusinessLogicException, NotFoundException
 from common.utils import get_field_type
 
-_AggregateRootType = TypeVar("_AggregateRootType")
-
 
 def _compute_possible_actions(status: str, major_version: int) -> list[str]:
     """
@@ -72,7 +71,7 @@ def _compute_possible_actions(status: str, major_version: int) -> list[str]:
     return []
 
 
-class OdmGenericService(Generic[_AggregateRootType], ABC):
+class OdmGenericService[AggregateRootType](ABC):
     OBJECT_NOT_IN_DRAFT = "ODM element is not in Draft."
     aggregate_class: type
     version_class: type
@@ -191,7 +190,7 @@ class OdmGenericService(Generic[_AggregateRootType], ABC):
 
     @staticmethod
     def fill_in_additional_fields(
-        odm_edit_input: BaseModel, current_ar: _AggregateRootType
+        odm_edit_input: BaseModel, current_ar: AggregateRootType
     ) -> None:
         """
         Subclasses should override this method to preserve field values which are not explicitly sent in the PATCH payload.
@@ -204,13 +203,13 @@ class OdmGenericService(Generic[_AggregateRootType], ABC):
         """
 
     @property
-    def repository(self) -> OdmGenericRepository[_AggregateRootType]:
+    def repository(self) -> OdmGenericRepository[AggregateRootType]:
         assert self._repos is not None
         return self.repository_interface()
 
     @abstractmethod
     def _transform_aggregate_root_to_pydantic_model(
-        self, item_ar: _AggregateRootType
+        self, item_ar: AggregateRootType
     ) -> BaseModel:
         raise NotImplementedError
 
@@ -219,13 +218,13 @@ class OdmGenericService(Generic[_AggregateRootType], ABC):
         self,
         odm_input: BaseModel,
         library: LibraryVO,
-    ) -> _AggregateRootType:
+    ) -> AggregateRootType:
         raise NotImplementedError()
 
     @abstractmethod
     def _edit_aggregate(
-        self, item: _AggregateRootType, odm_edit_input: BaseModel
-    ) -> _AggregateRootType:
+        self, item: AggregateRootType, odm_edit_input: BaseModel
+    ) -> AggregateRootType:
         raise NotImplementedError
 
     def get_input_or_previous_property(
@@ -432,7 +431,7 @@ class OdmGenericService(Generic[_AggregateRootType], ABC):
         at_specific_date: datetime | None = None,
         status: LibraryItemStatus | None = None,
         for_update: bool = False,
-    ) -> _AggregateRootType:
+    ) -> AggregateRootType:
         item = self.repository.find_by_uid_2(
             uid=uid,
             at_specific_date=at_specific_date,
@@ -865,7 +864,7 @@ class OdmGenericService(Generic[_AggregateRootType], ABC):
         uid: str,
         odm_vendor_element_post_input: list[OdmVendorElementRelationPostInput],
         odm_vendor_element_attribute_post_input: list[OdmVendorRelationPostInput],
-        odm_ar: _AggregateRootType,
+        odm_ar: AggregateRootType,
         repo: FormRepository | ItemGroupRepository | ItemRepository,
     ):
         """
@@ -874,7 +873,7 @@ class OdmGenericService(Generic[_AggregateRootType], ABC):
         Args:
             uid (str): The uid of the ODM form, item group, or item.
             odm_vendors_post_input (OdmVendorsPostInput): The ODM vendors.
-            odm_ar (_AggregateRootType): The ODM form, item group, or item.
+            odm_ar (AggregateRootType): The ODM form, item group, or item.
             repo (FormRepository | ItemGroupRepository | ItemRepository): The repository for the ODM form, item group, or item.
 
         Returns:
@@ -1083,7 +1082,7 @@ class OdmGenericService(Generic[_AggregateRootType], ABC):
         self,
         uid: str,
         odm_vendor_element_attribute_post_input: list[OdmVendorRelationPostInput],
-        odm_ar: _AggregateRootType,
+        odm_ar: AggregateRootType,
         odm_repository: FormRepository | ItemGroupRepository | ItemRepository,
         override: bool = False,
     ):
@@ -1176,11 +1175,11 @@ class OdmGenericService(Generic[_AggregateRootType], ABC):
                 )
         return sorted_items
 
-    def cascade_inactivate(self, item: _AggregateRootType):
+    def cascade_inactivate(self, item: AggregateRootType):
         pass
 
-    def cascade_reactivate(self, item: _AggregateRootType):
+    def cascade_reactivate(self, item: AggregateRootType):
         pass
 
-    def cascade_delete(self, item: _AggregateRootType):
+    def cascade_delete(self, item: AggregateRootType):
         pass

@@ -104,6 +104,10 @@ const knownCodelists = {
     attribute: 'codelist_submission_value',
     value: 'DATA_SUPPLIER_TYPE',
   },
+  dataSupplierRuleName: {
+    attribute: 'codelist_submission_value',
+    value: 'ROLE',
+  },
   findingCategoryDefinition: {
     attribute: 'codelist_submission_value',
     value: 'FINDCAT',

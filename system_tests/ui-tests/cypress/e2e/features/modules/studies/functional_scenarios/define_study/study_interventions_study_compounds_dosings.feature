@@ -133,6 +133,63 @@ Feature: Studies - Define Study - Study Interventions - Study Compound Dosings
         When Form save button is clicked
         Then The pop up displays 'Study compound dosing added'
 
+    Scenario: [Create][Free text] User must be able to create a study compound dosing with a free text dose frequency
+        Given The study compound dosing data is cleaned for testing purspose
+        Given The page 'study_interventions/study_compound_dosings' is opened for current study
+        When The user clicks add study compund dosing
+        And The user select first study element
+        And Form continue button is clicked
+        And The user select first compund
+        And Form continue button is clicked
+        And The user select first dose value
+        And The user selects the free text dose frequency source
+        Then The dose frequency drop-down is not displayed
+        When The user enters 'Every other Tuesday' as the free text dose frequency
+        And The user intercepts study compund dosings create request
+        When Form save button is clicked
+        Then The compound dosing table shows 'Every other Tuesday' as the dose frequency
+
+    Scenario: [Create][Free text] User must be able to create a study compound dosing with both dose value and dose frequency as free text
+        Given The study compound dosing data is cleaned for testing purspose
+        Given The page 'study_interventions/study_compound_dosings' is opened for current study
+        When The user clicks add study compund dosing
+        And The user select first study element
+        And Form continue button is clicked
+        And The user select first compund
+        And Form continue button is clicked
+        And The user selects the free text dose value source
+        Then The dose value drop-down is not displayed
+        When The user enters '5 mL' as the free text dose value
+        And The user selects the free text dose frequency source
+        And The user enters 'Every other Tuesday' as the free text dose frequency
+        And The user intercepts study compund dosings create request
+        When Form save button is clicked
+        Then The study compound dosing is present in the compound dosings table
+
+    Scenario: [Edit][Free text] User must be able to switch a study compound dosing dose frequency from free text back to the library
+        Given The study compound dosing data is cleaned for testing purspose
+        Given The page 'study_interventions/study_compound_dosings' is opened for current study
+        When The user clicks add study compund dosing
+        And The user select first study element
+        And Form continue button is clicked
+        And The user select first compund
+        And Form continue button is clicked
+        And The user selects the free text dose frequency source
+        And The user enters 'Every other Tuesday' as the free text dose frequency
+        And The user intercepts study compund dosings create request
+        When Form save button is clicked
+        Then The pop up displays 'Study compound dosing added'
+        When User searches the compound dosing by the uid
+        And The 'Edit' option is clicked from the three dot menu list
+        And Form continue button is clicked
+        And Form continue button is clicked
+        And The user selects the library dose frequency source
+        Then The free text dose frequency field is not displayed
+        When The user select first dose frequency
+        And The user intercepts study compund dosings update request
+        When Form save button is clicked
+        Then The study compound dosing is present in the compound dosings table
+
     Scenario: [Delete] User must be able to delete a study compound
         Given The study compound dosing data is cleaned for testing purspose
         Given [API] Study compound data is fetched

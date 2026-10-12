@@ -7,7 +7,7 @@ Approach to managing requirements and tracability:
 - URSs, FSs and test traceability are defined in markdown files in this repository.
 - URSs are defined in the `consumer_api/requirements/urs` folder.
 - FSs and corresponding test traceability are defined in the `consumer_api/requirements/urs` folder.
-- Python script (executed by running `pipenv run consumer-api-traceability`) collects the information from all relevant urs/fs markdown files and generates one html tracability document.
+- Python script (executed by running `uv run poe consumer-api-traceability`) collects the information from all relevant urs/fs markdown files and generates one html tracability document.
 
 ## Document formats
 
@@ -70,7 +70,7 @@ These pipelines need to run succesfully before a Consumer API deployment can be 
 
 - Build pipeline that builds **just** the Consumer API
 
-  - Runs all Consumer API tests mentioned in the FS traceability document (on top of schemathesis, pylint, SonarLint, snyk etc.), and generates a standard ADO test report
+  - Runs all Consumer API tests mentioned in the FS traceability document (on top of schemathesis, ruff, SonarLint, snyk etc.), and generates a standard ADO test report
   - New build step/script collects all relevant URSs/FSs/tests, generates and publishes a `traceability.html` document
 
 - Verifications pipeline (only checking Consumer API endpoints)

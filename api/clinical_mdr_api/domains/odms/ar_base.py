@@ -1,5 +1,5 @@
+from collections.abc import Set
 from dataclasses import dataclass
-from typing import AbstractSet
 
 from clinical_mdr_api.domains.versioned_object_aggregate import (
     LibraryItemAggregateRootBase,
@@ -17,7 +17,7 @@ class OdmARBase(LibraryItemAggregateRootBase):
     def should_disconnect_relationships(self) -> bool:
         return self.item_metadata.minor_version > 1
 
-    def get_possible_actions(self) -> AbstractSet[ObjectAction]:
+    def get_possible_actions(self) -> Set[ObjectAction]:
         """
         Returns list of possible actions
         """

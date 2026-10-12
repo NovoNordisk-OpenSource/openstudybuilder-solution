@@ -3,9 +3,6 @@ Tests that sponsor-defined (extensible) fields flow through the API in both
 directions, driven by the Sponsor Model's schema version.
 """
 
-# pylint: disable=unused-argument
-# pylint: disable=redefined-outer-name
-
 import logging
 
 import pytest

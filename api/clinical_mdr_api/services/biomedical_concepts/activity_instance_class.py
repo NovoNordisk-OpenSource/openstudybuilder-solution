@@ -189,7 +189,7 @@ class ActivityInstanceClassService(NeomodelExtGenericService[ActivityInstanceCla
         )
         return self._transform_aggregate_root_to_pydantic_model(item)
 
-    def _find_by_uid_or_raise_not_found(  # pylint: disable=arguments-renamed
+    def _find_by_uid_or_raise_not_found(
         self,
         uid: str,
         version: str | None = None,

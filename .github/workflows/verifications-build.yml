@@ -94,6 +94,9 @@ jobs:
     # Independent job: runs in parallel and isn't required by other jobs,
     # so a failure here (e.g. known unfixed vulnerabilities) doesn't block
     # the rest of the workflow from reporting results.
+    # Opt-out per repository: runs by default; skipped only where the
+    # Actions variable HALT_ON_CVE_FINDINGS is set to 'false'.
+    if: vars.HALT_ON_CVE_FINDINGS != 'false'
     defaults:
       run:
         working-directory: verifications

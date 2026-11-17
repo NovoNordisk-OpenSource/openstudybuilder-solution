@@ -138,6 +138,9 @@ jobs:
     # merge. Do NOT add this job to branch protection's required checks until
     # the existing high/critical findings have been cleaned up — at that point
     # the gate becomes meaningful.
+    # Opt-out per repository: runs by default; skipped only where the
+    # Actions variable HALT_ON_CVE_FINDINGS is set to 'false'.
+    if: vars.HALT_ON_CVE_FINDINGS != 'false'
     name: npm audit (advisory)
     runs-on: ubuntu-latest
     defaults:

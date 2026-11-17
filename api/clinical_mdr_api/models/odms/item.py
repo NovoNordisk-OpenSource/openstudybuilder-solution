@@ -1,7 +1,7 @@
 from collections.abc import Callable
 from typing import Annotated, Any, Self, overload
 
-from pydantic import Field, field_validator
+from pydantic import Field, field_validator, model_validator
 
 from clinical_mdr_api.descriptions.general import CHANGES_FIELD_DESC
 from clinical_mdr_api.domains.concepts.concept_base import ConceptARBase
@@ -66,8 +66,9 @@ class OdmItemTermRelationshipModel(BaseModel):
         uid: str,
         term_uid: str,
         find_term_with_item_relation_by_item_uid: Callable[
-            [str, str], OdmItemTermVO | None
+            [str, str, str | None], OdmItemTermVO | None
         ],
+        version: str | None = None,
     ) -> Self: ...
     @overload
     @classmethod
@@ -76,8 +77,9 @@ class OdmItemTermRelationshipModel(BaseModel):
         uid: str,
         term_uid: None,
         find_term_with_item_relation_by_item_uid: Callable[
-            [str, str], OdmItemTermVO | None
+            [str, str, str | None], OdmItemTermVO | None
         ],
+        version: str | None = None,
     ) -> None: ...
     @classmethod
     def from_odm_item_uid(
@@ -85,13 +87,14 @@ class OdmItemTermRelationshipModel(BaseModel):
         uid: str,
         term_uid: str | None,
         find_term_with_item_relation_by_item_uid: Callable[
-            [str, str], OdmItemTermVO | None
+            [str, str, str | None], OdmItemTermVO | None
         ],
+        version: str | None = None,
     ) -> Self | None:
         simple_term_model = None
 
         if term_uid is not None:
-            term = find_term_with_item_relation_by_item_uid(uid, term_uid)
+            term = find_term_with_item_relation_by_item_uid(uid, term_uid, version)
 
             if term is not None:
                 simple_term_model = cls(
@@ -137,10 +140,11 @@ class OdmItemUnitDefinitionWithRelationship(BaseModel):
         unit_definition_uid: str,
         find_unit_definition_by_uid: Callable[[str], ConceptARBase | None],
         find_unit_definition_with_item_relation_by_item_uid: Callable[
-            [str, str], OdmItemUnitDefinitionVO | None
+            [str, str, str | None], OdmItemUnitDefinitionVO | None
         ],
         find_dictionary_term_by_uid: Callable[[str], DictionaryTermAR | None],
         find_term_by_uid: Callable[[str], CTTermNameAR | None],
+        version: str | None = None,
     ) -> Self: ...
     @overload
     @classmethod
@@ -150,10 +154,11 @@ class OdmItemUnitDefinitionWithRelationship(BaseModel):
         unit_definition_uid: str,
         find_unit_definition_by_uid: Callable[[str], ConceptARBase | None],
         find_unit_definition_with_item_relation_by_item_uid: Callable[
-            [str, str], OdmItemUnitDefinitionVO | None
+            [str, str, str | None], OdmItemUnitDefinitionVO | None
         ],
         find_dictionary_term_by_uid: Callable[[str], DictionaryTermAR | None],
         find_term_by_uid: Callable[[str], CTTermNameAR | None],
+        version: str | None = None,
     ) -> None: ...
     @classmethod
     def from_unit_definition_uid(
@@ -162,16 +167,17 @@ class OdmItemUnitDefinitionWithRelationship(BaseModel):
         unit_definition_uid: str,
         find_unit_definition_by_uid: Callable[[str], ConceptARBase | None],
         find_unit_definition_with_item_relation_by_item_uid: Callable[
-            [str, str], OdmItemUnitDefinitionVO | None
+            [str, str, str | None], OdmItemUnitDefinitionVO | None
         ],
         find_dictionary_term_by_uid: Callable[[str], DictionaryTermAR | None],
         find_term_by_uid: Callable[[str], CTTermNameAR | None],
+        version: str | None = None,
     ) -> Self | None:
         simple_unit_definition_model = None
 
         if uid is not None:
             unit_definition_rel = find_unit_definition_with_item_relation_by_item_uid(
-                uid, unit_definition_uid
+                uid, unit_definition_uid, version
             )
             unit_definition = find_unit_definition_by_uid(unit_definition_uid)
 
@@ -294,7 +300,7 @@ class OdmItem(OdmBaseModel):
         odm_item_ar: OdmItemAR,
         find_unit_definition_by_uid: Callable[[str], UnitDefinitionAR | None],
         find_unit_definition_with_item_relation_by_item_uid: Callable[
-            [str, str], OdmItemUnitDefinitionVO | None
+            [str, str, str | None], OdmItemUnitDefinitionVO | None
         ],
         find_dictionary_term_by_uid: Callable[[str], DictionaryTermAR | None],
         find_term_by_uid: Callable[[str], CTTermNameAR | None],
@@ -302,14 +308,16 @@ class OdmItem(OdmBaseModel):
             [str], CTCodelistAttributesAR | None
         ],
         find_term_with_item_relation_by_item_uid: Callable[
-            [str, str], OdmItemTermVO | None
+            [str, str, str | None], OdmItemTermVO | None
         ],
         find_odm_vendor_element_by_uid_with_odm_element_relation: Callable[
             [str, str, str, RelationType], OdmVendorElementRelationVO
         ],
         find_odm_vendor_attribute_by_uid_with_odm_element_relation: Callable[
-            [str, str, str, RelationType, bool],
-            OdmVendorAttributeRelationVO | OdmVendorElementAttributeRelationVO,
+            [str, str, str, RelationType], OdmVendorAttributeRelationVO
+        ],
+        find_odm_vendor_element_attribute_by_uid_with_odm_element_relation: Callable[
+            [str, str, str, RelationType], OdmVendorElementAttributeRelationVO
         ],
     ) -> Self:
         return cls(
@@ -363,6 +371,7 @@ class OdmItem(OdmBaseModel):
                         find_unit_definition_with_item_relation_by_item_uid=find_unit_definition_with_item_relation_by_item_uid,
                         find_dictionary_term_by_uid=find_dictionary_term_by_uid,
                         find_term_by_uid=find_term_by_uid,
+                        version=odm_item_ar.item_metadata.version,
                     )
                     for unit_definition_uid in odm_item_ar.odm_vo.unit_definition_uids
                 ],
@@ -392,6 +401,7 @@ class OdmItem(OdmBaseModel):
                         uid=odm_item_ar._uid,
                         term_uid=term_uid,
                         find_term_with_item_relation_by_item_uid=find_term_with_item_relation_by_item_uid,
+                        version=odm_item_ar.item_metadata.version,
                     )
                     for term_uid in odm_item_ar.odm_vo.term_uids
                 ],
@@ -461,8 +471,7 @@ class OdmItem(OdmBaseModel):
                         odm_element_uid=odm_item_ar._uid,
                         odm_element_version=odm_item_ar.item_metadata.version,
                         odm_element_type=RelationType.ITEM,
-                        find_by_uid_with_odm_element_relation=find_odm_vendor_attribute_by_uid_with_odm_element_relation,  # type: ignore[arg-type]
-                        vendor_element_attribute=False,
+                        find_by_uid_with_odm_element_relation=find_odm_vendor_attribute_by_uid_with_odm_element_relation,
                     )
                     for vendor_attribute_uid in odm_item_ar.odm_vo.vendor_attribute_uids
                 ],
@@ -475,7 +484,7 @@ class OdmItem(OdmBaseModel):
                         odm_element_uid=odm_item_ar._uid,
                         odm_element_version=odm_item_ar.item_metadata.version,
                         odm_element_type=RelationType.ITEM,
-                        find_by_uid_with_odm_element_relation=find_odm_vendor_attribute_by_uid_with_odm_element_relation,  # type: ignore[arg-type]
+                        find_by_uid_with_odm_element_relation=find_odm_vendor_element_attribute_by_uid_with_odm_element_relation,
                     )
                     for vendor_element_attribute_uid in odm_item_ar.odm_vo.vendor_element_attribute_uids
                 ],
@@ -625,9 +634,47 @@ class OdmItemExternalQuestionInput(BaseModel):
     term_uid: Annotated[str, Field(min_length=1)]
 
 
+COMMENT_ITEM_RESTRICTED_PROPERTIES = (
+    "prompt",
+    "length",
+    "significant_digits",
+    "sas_field_name",
+    "sds_var_name",
+    "origin",
+    "comment",
+    "unit_definitions",
+    "external_question",
+    "codelist",
+    "terms",
+    "activity_instances",
+)
+
+
+def check_comment_item_properties(item):
+    """
+    An ODM Item without a data type is a comment: apart from oid, name,
+    translated texts, aliases and vendor extensions, it must not have any properties.
+    """
+    if item.datatype_uid is not None:
+        return item
+
+    populated_properties = [
+        property_name
+        for property_name in COMMENT_ITEM_RESTRICTED_PROPERTIES
+        if getattr(item, property_name, None) not in (None, "", [])
+    ]
+    if populated_properties:
+        raise ValueError(
+            "ODM Item has no data type, so it is a comment and only 'oid', "
+            "'name', translations, aliases and vendor extensions can be set. "
+            f"Remove: {', '.join(populated_properties)}."
+        )
+    return item
+
+
 class OdmItemPostInput(OdmPostInput):
     oid: Annotated[str | None, Field(min_length=1)] = None
-    datatype_uid: Annotated[str, Field(min_length=1)]
+    datatype_uid: Annotated[str | None, Field(min_length=1)] = None
     prompt: Annotated[str | None, Field()] = None
     length: Annotated[int | None, Field(ge=0, lt=settings.max_int_neo4j)] = None
     significant_digits: Annotated[
@@ -659,6 +706,8 @@ class OdmItemPostInput(OdmPostInput):
     _english_description_validator = field_validator("translated_texts")(
         has_english_description
     )
+
+    _comment_item_check = model_validator(mode="after")(check_comment_item_properties)
 
 
 class ActivityInstanceRelInput(InputModel):
@@ -714,6 +763,8 @@ class OdmItemPatchInput(OdmPatchInput):
     _english_description_validator = field_validator("translated_texts")(
         has_english_description
     )
+
+    _comment_item_check = model_validator(mode="after")(check_comment_item_properties)
 
     @field_validator("activity_instances")
     @classmethod

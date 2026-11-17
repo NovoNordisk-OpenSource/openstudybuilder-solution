@@ -3,9 +3,115 @@
   "info": {
     "title": "OpenStudyBuilder API Extensions",
     "description": "\n## NOTICE\n\nThis license information is applicable to the swagger documentation of the clinical-mdr-api, that is the openapi.json.\n\n## License Terms (MIT)\n\nCopyright (C) 2025 Novo Nordisk A/S, Danish company registration no. 24256790\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies\nof the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS\nFOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER\nIN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\n\n## Licenses and Acknowledgements for Incorporated Software\n\nThis component contains software licensed under different licenses when compiled, please refer to the third-party-licenses.md file for further information and full license texts.\n\n## Authentication\n\nSupports OAuth2 [Authorization Code Flow](https://datatracker.ietf.org/doc/html/rfc6749#section-4.1),\nat paths described in the OpenID Connect Discovery metadata document (whose URL is defined by the `OAUTH_METADATA_URL` environment variable).\n\nMicrosoft Identity Platform documentation can be read \n([here](https://docs.microsoft.com/en-us/azure/active-directory/develop/v2-oauth2-auth-code-flow)).\n",
-    "version": "0.0.9"
+    "version": "0.0.14"
   },
   "paths": {
+    "/consumer-sample/ct-terms": {
+      "get": {
+        "tags": [
+          "Consumer sample"
+        ],
+        "summary": "Get Ct Terms",
+        "description": "Returns one page of the CT terms of the codelist with the given submission value\n(only terms whose name and attributes are currently Final).\n\nA term that is being revised (a new Draft version) or is retired is not returned\nuntil it is approved again; the status of the codelist itself is not checked.\nAn unknown submission value gives an empty page. `total` is the number of such terms\nin the codelist, whatever the page.",
+        "operationId": "get_ct_terms_consumer_sample_ct_terms_get",
+        "security": [
+          {
+            "OAuth2AuthorizationCodeBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "codelist_submission_value",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Codelist submission value, for example `TIMELB`, `TIMEREF`, `VISCNTMD`, `EPOCHSTP`.",
+              "title": "Codelist Submission Value"
+            },
+            "description": "Codelist submission value, for example `TIMELB`, `TIMEREF`, `VISCNTMD`, `EPOCHSTP`."
+          },
+          {
+            "name": "sort_by",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/SortByCTTerms",
+              "default": "term_uid"
+            }
+          },
+          {
+            "name": "sort_order",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/SortOrder",
+              "default": "asc"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 1000,
+              "minimum": 1,
+              "description": "Number of items to be returned per page. Must be between 1 and the maximum allowed page size.",
+              "default": 100,
+              "title": "Page Size"
+            },
+            "description": "Number of items to be returned per page. Must be between 1 and the maximum allowed page size."
+          },
+          {
+            "name": "page_number",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 1000000000,
+              "minimum": 1,
+              "description": "Page number of the returned list of entities. Must be between 1 and the maximum allowed page number.",
+              "default": 1,
+              "title": "Page Number"
+            },
+            "description": "Page number of the returned list of entities. Must be between 1 and the maximum allowed page number."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedResponse_CTTerm_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/hello/nodes-count": {
       "get": {
         "tags": [
@@ -945,6 +1051,121 @@
   },
   "components": {
     "schemas": {
+      "CTTerm": {
+        "properties": {
+          "codelist_uid": {
+            "type": "string",
+            "title": "Codelist Uid",
+            "description": "Codelist UID"
+          },
+          "term_uid": {
+            "type": "string",
+            "title": "Term Uid",
+            "description": "Codelist Term UID"
+          },
+          "order": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order",
+            "description": "Term order within the codelist",
+            "nullable": true
+          },
+          "ordinal": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ordinal",
+            "description": "Term ordinal value (only for ordinal codelists)",
+            "nullable": true
+          },
+          "submission_value": {
+            "type": "string",
+            "title": "Submission Value",
+            "description": "Submission Value"
+          },
+          "sponsor_preferred_name": {
+            "type": "string",
+            "title": "Sponsor Preferred Name",
+            "description": "Sponsor Preferred Name"
+          },
+          "concept_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Concept Id",
+            "description": "Concept ID in e.g. CDISC Library",
+            "nullable": true
+          },
+          "nci_preferred_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nci Preferred Name",
+            "description": "NCI Preferred Name",
+            "nullable": true
+          },
+          "library_name": {
+            "type": "string",
+            "title": "Library Name",
+            "description": "Library Name"
+          },
+          "name_status": {
+            "type": "string",
+            "title": "Name Status",
+            "description": "Name version status"
+          },
+          "name_version": {
+            "type": "string",
+            "title": "Name Version",
+            "description": "Name version number"
+          },
+          "attributes_status": {
+            "type": "string",
+            "title": "Attributes Status",
+            "description": "Attributes version status"
+          },
+          "attributes_version": {
+            "type": "string",
+            "title": "Attributes Version",
+            "description": "Attributes version number"
+          }
+        },
+        "type": "object",
+        "required": [
+          "codelist_uid",
+          "term_uid",
+          "submission_value",
+          "sponsor_preferred_name",
+          "library_name",
+          "name_status",
+          "name_version",
+          "attributes_status",
+          "attributes_version"
+        ],
+        "title": "CTTerm",
+        "description": "A CT term of a codelist, with its Final name and attributes."
+      },
       "ErrorResponse": {
         "properties": {
           "time": {
@@ -1272,6 +1493,47 @@
         ],
         "title": "LoadSimple"
       },
+      "PaginatedResponse_CTTerm_": {
+        "properties": {
+          "self": {
+            "type": "string",
+            "title": "Self",
+            "description": "Pagination link pointing to the current page"
+          },
+          "prev": {
+            "type": "string",
+            "title": "Prev",
+            "description": "Pagination link pointing to the previous page"
+          },
+          "next": {
+            "type": "string",
+            "title": "Next",
+            "description": "Pagination link pointing to the next page"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total",
+            "description": "Total number of items",
+            "default": 0
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/CTTerm"
+            },
+            "type": "array",
+            "title": "Items",
+            "description": "List of items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "self",
+          "prev",
+          "next",
+          "items"
+        ],
+        "title": "PaginatedResponse[CTTerm]"
+      },
       "PaginatedResponse_Extract_": {
         "properties": {
           "self": {
@@ -1353,6 +1615,17 @@
           "items"
         ],
         "title": "PaginatedResponse[LoadSimple]"
+      },
+      "SortByCTTerms": {
+        "type": "string",
+        "enum": [
+          "term_uid",
+          "submission_value",
+          "sponsor_preferred_name",
+          "nci_preferred_name",
+          "concept_id"
+        ],
+        "title": "SortByCTTerms"
       },
       "SortByExtracts": {
         "type": "string",

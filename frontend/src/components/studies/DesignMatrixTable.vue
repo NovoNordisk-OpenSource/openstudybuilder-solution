@@ -132,7 +132,7 @@
         </div>
         <ElementsDropdownList
           v-else
-          :key="header.key"
+          :key="`${header.key}-${cellsResetKey}`"
           :save-object="saveObject"
           :edit-mode="editMode"
           :transition-rules-mode="transitionRulesMode"
@@ -201,6 +201,7 @@ const loading = ref(true)
 const updateObject = ref([])
 const saveObject = ref(false)
 const editLoading = ref(false)
+const cellsResetKey = ref(0)
 const transitionRulesModeStorageKey = 'designMatrixTransitionRulesMode'
 const storedTransitionRulesMode = localStorage.getItem(
   transitionRulesModeStorageKey
@@ -344,6 +345,10 @@ async function fetchStudyElements() {
 }
 function edit() {
   editMode.value = true
+  // The tab stays mounted after first visit, so elements changed since then are missing.
+  fetchStudyElements().catch(() => {
+    // The repository interceptor has already notified the user; keep the current list.
+  })
 }
 function save() {
   editLoading.value = true
@@ -355,8 +360,8 @@ function save() {
     armsApi
       .cellsBatchUpdate(selectedStudy.value.uid, updateObject.value)
       .then((batchResponse) => {
-        editLoading.value = false
         editMode.value = false
+        updateObject.value = []
         let hasError = false
         for (const subResponse of batchResponse.data) {
           if (subResponse.response_code >= 400) {
@@ -368,18 +373,25 @@ function save() {
             hasError = true
           }
         }
-        armsApi.getAllStudyCells(selectedStudy.value.uid).then((resp) => {
-          cells.value = resp
-          if (!hasError) {
-            notificationHub.add({
-              msg: t('DesignMatrix.matrix_updated'),
-            })
-          }
-          editLoading.value = false
-          editMode.value = false
-          updateObject.value = []
-          saveObject.value = false
-        })
+        return armsApi
+          .getAllStudyCells(selectedStudy.value.uid)
+          .then((resp) => {
+            cells.value = resp
+            if (!hasError) {
+              notificationHub.add({
+                msg: t('DesignMatrix.matrix_updated'),
+              })
+            }
+          })
+      })
+      .catch(() => {
+        // The repository interceptor has already notified the user. If the
+        // batch itself failed we are still in edit mode with updateObject
+        // intact, so the user can simply press Save again.
+      })
+      .finally(() => {
+        editLoading.value = false
+        saveObject.value = false
       })
   }, 1000)
 }
@@ -388,7 +400,10 @@ function prepareUpdateObject(cell) {
 }
 function cancel() {
   editMode.value = false
-  buildMatrix()
+  // Drop changes retained by a failed save.
+  updateObject.value = []
+  // Remount the cells so they drop unsaved selections and reload from `cells`.
+  cellsResetKey.value++
 }
 
 async function fetchDesignCellsHistory() {

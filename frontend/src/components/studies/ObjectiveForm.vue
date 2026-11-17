@@ -96,7 +96,11 @@
     <template #[`step.selectTemplates`]>
       <v-data-table :headers="selectionHeaders" :items="selectedTemplates">
         <template #[`item.name`]="{ item }">
-          <NNParameterHighlighter :name="item.name" default-color="orange" />
+          <NNParameterHighlighter
+            :name="item.name"
+            :parameter-names="item.parameters?.map((p) => p.name)"
+            default-color="orange"
+          />
         </template>
         <template #[`item.actions`]="{ item }">
           <v-btn
@@ -163,7 +167,11 @@
             </template>
           </template>
           <template #[`item.name`]="{ item }">
-            <NNParameterHighlighter :name="item.name" default-color="orange" />
+            <NNParameterHighlighter
+              :name="item.name"
+              :parameter-names="item.parameters?.map((p) => p.name)"
+              default-color="orange"
+            />
           </template>
           <template #[`item.actions`]="{ item }">
             <v-btn

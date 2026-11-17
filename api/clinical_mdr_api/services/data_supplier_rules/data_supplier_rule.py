@@ -27,7 +27,9 @@ from common.config import settings
 from common.exceptions import NotFoundException
 
 
-class DataSupplierRuleService(NeomodelExtGenericService[DataSupplierRuleAR]):
+class DataSupplierRuleService(
+    NeomodelExtGenericService[DataSupplierRuleAR, DataSupplierRule]
+):
     repository_interface = DataSupplierRuleRepository
     api_model_class = DataSupplierRule
     version_class = DataSupplierRuleVersion
@@ -52,6 +54,11 @@ class DataSupplierRuleService(NeomodelExtGenericService[DataSupplierRuleAR]):
                 activity_group_name=grouping.activity_group_name,
                 activity_subgroup_uid=grouping.activity_subgroup_uid,
                 activity_subgroup_name=grouping.activity_subgroup_name,
+                activity_grouping_uid=grouping.activity_grouping_uid,
+                is_activity_retired=grouping.is_activity_retired,
+                is_activity_group_retired=grouping.is_activity_group_retired,
+                is_activity_subgroup_retired=grouping.is_activity_subgroup_retired,
+                grouping_exists=grouping.grouping_exists,
             )
             for grouping in groupings
         ]
@@ -89,8 +96,18 @@ class DataSupplierRuleService(NeomodelExtGenericService[DataSupplierRuleAR]):
         filter_by: dict[str, dict[Any, Any]] | None = None,
         filter_operator: FilterOperator = FilterOperator.AND,
         total_count: bool = False,
+        has_warnings: bool | None = None,
         **kwargs,
     ) -> GenericFilteringReturn[DataSupplierRule]:
+        if has_warnings is not None:
+            rule_uids = self.repository.find_uids_of_rules_with_warnings()
+            if has_warnings and not rule_uids:
+                return GenericFilteringReturn(items=[], total=0)
+            if rule_uids:
+                filter_by = {
+                    **(filter_by or {}),
+                    "uid": {"v": rule_uids, "op": "eq" if has_warnings else "ne"},
+                }
         items, total = self.repository.find_all(
             total_count=total_count,
             sort_by=sort_by,
@@ -126,6 +143,7 @@ class DataSupplierRuleService(NeomodelExtGenericService[DataSupplierRuleAR]):
             generate_uid_callback=self.repository.generate_uid,
             ct_term_exists_by_uid_callback=self._repos.ct_term_name_repository.term_exists,
             activity_grouping_exists_callback=self.repository.activity_grouping_exists,
+            activity_grouping_retired_parts_callback=self.repository.find_activity_grouping_retired_parts,
             data_supplier_rule_name_exists_callback=self.repository.name_exists,
             data_supplier_type_disallows_rules_callback=self._data_supplier_type_disallows_rules,
         )
@@ -183,6 +201,7 @@ class DataSupplierRuleService(NeomodelExtGenericService[DataSupplierRuleAR]):
             ),
             ct_term_exists_by_uid_callback=self._repos.ct_term_name_repository.term_exists,
             activity_grouping_exists_callback=self.repository.activity_grouping_exists,
+            activity_grouping_retired_parts_callback=self.repository.find_activity_grouping_retired_parts,
             data_supplier_rule_name_exists_callback=lambda name: self.repository.name_exists(
                 name, uid_to_exclude=item.uid
             ),
@@ -195,7 +214,7 @@ class DataSupplierRuleService(NeomodelExtGenericService[DataSupplierRuleAR]):
 
         rs = self.create(item_input=item_input)
 
-        return self.approve(rs.uid)
+        return self.approve(rs.uid)  # type: ignore[arg-type]
 
     @ensure_transaction(db)
     def new_version_edit_approve(
@@ -210,3 +229,19 @@ class DataSupplierRuleService(NeomodelExtGenericService[DataSupplierRuleAR]):
         self.edit_draft(uid=uid, item_edit_input=item_edit_input)
 
         return self.approve(uid)
+
+    def cascade_activity_update(self, activity_uid: str) -> None:
+        """
+        Creates a new FINAL version, with a new value node, of each rule that maps the
+        activity through a grouping that is no longer the one on the latest FINAL
+        version of the activity, so that the rules follow the latest groupings.
+        """
+        rule_uids = self.repository.find_uids_of_rules_to_upgrade(activity_uid)
+        if not rule_uids:
+            return
+        self.repository.lock_objects(uids=rule_uids)
+        for rule_uid in rule_uids:
+            rule = self._find_by_uid_or_raise_not_found(rule_uid, for_update=True)
+            rule.create_new_version(author_id=self.author_id)
+            rule.approve(author_id=self.author_id, change_description="Cascade edit")
+            self.repository.save_with_new_value_node(rule)

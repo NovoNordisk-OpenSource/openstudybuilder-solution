@@ -1,13 +1,14 @@
 import contextlib
 import json
 import logging
+import threading
 import time
 from collections.abc import Mapping
 from functools import wraps
 
 import opencensus.trace
 from neomodel.sync_.database import Database as NeomodelDatabase
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, PrivateAttr
 from starlette.datastructures import MutableHeaders
 from starlette.responses import Response
 from starlette.types import Message
@@ -22,7 +23,7 @@ REQUEST_METRICS_HEADER_NAME = "X-Metrics"
 
 
 class RequestMetrics(BaseModel):
-    """Per-request metrics"""
+    """Per-request metrics, shared with the request's worker threads"""
 
     cypher_count: int = Field(
         0, alias="cypher.count", description="Number of Cypher queries executed"
@@ -47,6 +48,23 @@ class RequestMetrics(BaseModel):
         alias="cypher.slowest.query.params",
         description="Parameters of the slowest Cypher query",
     )
+
+    _lock: threading.Lock = PrivateAttr(default_factory=threading.Lock)
+
+    def record_cypher_query(self, query: str, duration: float) -> None:
+        """Adds an executed Cypher query to the metrics, safely from any thread"""
+
+        with self._lock:
+            self.cypher_count += 1
+            self.cypher_times += duration
+
+            # find the slowest query of the request
+            if duration > self.cypher_slowest_time:
+                self.cypher_slowest_time = duration
+
+                # also record query text if slower than the threshold
+                if duration > settings.slow_query_duration:
+                    self.cypher_slowest_query = query[: settings.trace_query_max_len]
 
 
 def init_request_metrics():
@@ -100,32 +118,21 @@ def add_request_metrics_header(
 @contextlib.contextmanager
 def cypher_tracing(query: str, params: Mapping):
     """cypher query tracing and metrics to Opencensus"""
-    # update request metrics
-    if metrics := get_request_metrics():
-        metrics.cypher_count += 1
-        start_time = time.time()
+    metrics = get_request_metrics()
+    start_time = time.perf_counter()
 
-    with trace_block("neomodel.query") as span:
-        span.add_attribute("cypher.query", query[: settings.trace_query_max_len])
-        # span.add_attribute("cypher.params", params)
+    try:
+        with trace_block("neomodel.query") as span:
+            span.add_attribute("cypher.query", query[: settings.trace_query_max_len])
+            # span.add_attribute("cypher.params", params)
 
-        # run the query (or any wrapped code) as a distinct operation (logical tracing block == Span)
-        yield span
+            # run the query (or any wrapped code) as a distinct operation (logical tracing block == Span)
+            yield span
 
-    # update cypher query metrics of the request
-    if metrics:
-
-        delta_time = time.time() - start_time
-        metrics.cypher_times += delta_time
-
-        # find the slowest query of the request
-        if delta_time > metrics.cypher_slowest_time:
-            metrics.cypher_slowest_time = delta_time
-
-            # also record query text and parameters if slower than the threshold
-            if delta_time > settings.slow_query_duration:
-                metrics.cypher_slowest_query = query[: settings.trace_query_max_len]
-                # metrics.cypher_slowest_query_params = params
+    finally:
+        # update cypher query metrics of the request, failed queries included
+        if metrics:
+            metrics.record_cypher_query(query, time.perf_counter() - start_time)
 
 
 def patch_neomodel_database():

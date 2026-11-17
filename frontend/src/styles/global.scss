@@ -27,6 +27,16 @@ body {
   background-color: #fff !important;
 }
 
+// Alerts
+// Tonal background plus a full border, which no single v-alert prop gives: the
+// `border` prop draws one thick edge and leaves the other three at zero width,
+// while the `outlined` variant drops the background. Pair this with
+// variant="tonal" - currentColor is whatever the alert's `type` resolved to, so
+// the border follows the type without naming a colour here.
+.alert-bordered {
+  border: thin solid currentColor;
+}
+
 // Tabs
 .v-tab {
   text-transform: none !important;
@@ -157,6 +167,35 @@ td.pa-0
 .v-data-table__expanded-row > td > .v-data-table {
   border-radius: 0 !important;
 }
+// The standards import review pages mix v-data-table, which gets its header and corners
+// from the rules above, with plain v-table. Those carry the same values here, so every
+// table on the pages reads as the generic one.
+.v-table.review-table:not(.v-data-table) {
+  border-radius: 12px;
+
+  .v-table__wrapper {
+    border-radius: 8px;
+  }
+
+  thead th {
+    vertical-align: middle;
+    padding-top: 20px !important;
+    padding-bottom: 16px !important;
+    background-color: rgb(var(--v-theme-nnTrueBlue)) !important;
+    color: rgb(var(--v-theme-nnWhite)) !important;
+    text-align: start;
+    font-size: 12px !important;
+    font-weight: bold !important;
+    border-left-style: outset;
+    border-bottom-style: outset;
+    border-width: 1px !important;
+    border-color: rgba(
+      var(--v-theme-darkGrey),
+      var(--v-border-opacity)
+    ) !important;
+  }
+}
+
 // Target Tables in expanded rows done
 
 thead.v-data-table-header {

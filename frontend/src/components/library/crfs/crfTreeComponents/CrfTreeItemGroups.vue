@@ -515,8 +515,10 @@ async function newVersion(item) {
     loading.value = true
 
     crfs
-      .newVersion('item-groups', item.uid)
+      .newVersionInTree('item-groups', item.uid)
       .then((resp) => {
+        if (!resp) return
+
         if (props.parentForm?.status === statuses.DRAFT) {
           updateItemGroup(resp.data)
         }

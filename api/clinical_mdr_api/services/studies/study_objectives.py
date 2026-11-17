@@ -154,50 +154,46 @@ class StudyObjectivesService:
             with tag("head"):
                 line("title", _gettext("Study Objectives"))
 
-            with tag("body"):
-                with tag("table", id="ObjectivesEndpointsTable"):
-                    with tag("thead"):
-                        with tag("tr"):
-                            # TODO: Do we have a CTTermName for these?
-                            line("th", _gettext("Objectives"))
-                            line("th", _gettext("Endpoints"))
+            with tag("body"), tag("table", id="ObjectivesEndpointsTable"):
+                with tag("thead"), tag("tr"):
+                    # TODO: Do we have a CTTermName for these?
+                    line("th", _gettext("Objectives"))
+                    line("th", _gettext("Endpoints"))
 
-                    with tag("tbody"):
-                        for objective_level, objectives, endpoints in sorted(
-                            tree.values(),
-                            key=lambda o: (o[0].order if o[0].order else 0),
-                        ):
-                            with tag("tr"):
-                                with tag("td"):
+                with tag("tbody"):
+                    for objective_level, objectives, endpoints in sorted(
+                        tree.values(),
+                        key=lambda o: o[0].order or 0,
+                    ):
+                        with tag("tr"):
+                            with tag("td"):
+                                line(
+                                    "p",
+                                    f"{objective_level.term_name}:",
+                                    klass="objective-level",
+                                )
+                                for study_objective in sorted(
+                                    objectives.values(), key=lambda o: o.order
+                                ):
+                                    doc.asis(study_objective.objective.name)
+
+                            with tag("td"):
+                                for endpoint_level, study_endpoints in sorted(
+                                    endpoints.values(),
+                                    key=lambda e: (e[0].order or 0),
+                                ):
                                     line(
                                         "p",
-                                        f"{objective_level.term_name}:",
-                                        klass="objective-level",
+                                        f"{endpoint_level.term_name}:",
+                                        klass="endpoint-level",
                                     )
-                                    for study_objective in sorted(
-                                        objectives.values(), key=lambda o: o.order
-                                    ):
-                                        doc.asis(study_objective.objective.name)
-
-                                with tag("td"):
-                                    for endpoint_level, study_endpoints in sorted(
-                                        endpoints.values(),
-                                        key=lambda e: (e[0].order if e[0].order else 0),
-                                    ):
-                                        line(
-                                            "p",
-                                            f"{endpoint_level.term_name}:",
-                                            klass="endpoint-level",
-                                        )
-                                        with tag("ul"):
-                                            for study_endpoint in sorted(
-                                                study_endpoints.values(),
-                                                key=lambda e: e.order,
-                                            ):
-                                                with tag("li"):
-                                                    doc.asis(
-                                                        study_endpoint.endpoint.name
-                                                    )
+                                    with tag("ul"):
+                                        for study_endpoint in sorted(
+                                            study_endpoints.values(),
+                                            key=lambda e: e.order,
+                                        ):
+                                            with tag("li"):
+                                                doc.asis(study_endpoint.endpoint.name)
 
         return doc.getvalue()
 
@@ -209,87 +205,79 @@ class StudyObjectivesService:
             with tag("head"):
                 line("title", _gettext("Study Objectives"))
 
-            with tag("body"):
-                with tag("table", id="ObjectivesEndpointsTable"):
-                    with tag("thead"):
+            with tag("body"), tag("table", id="ObjectivesEndpointsTable"):
+                with tag("thead"), tag("tr"):
+                    # TODO: Do we have a CTTermName for these?
+                    line("th", _gettext("Objectives"))
+                    line("th", _gettext("Endpoints"), colspan=3)
+
+                with tag("tbody"):
+                    for objective_level, study_objectives in sorted(
+                        tree.values(),
+                        key=lambda o: o[0].order or 0,
+                    ):
                         with tag("tr"):
-                            # TODO: Do we have a CTTermName for these?
-                            line("th", _gettext("Objectives"))
-                            line("th", _gettext("Endpoints"), colspan=3)
+                            line(
+                                "th",
+                                objective_level.term_name,
+                                klass="objective-level",
+                            )
+                            line("th", _gettext("Title"), klass="header2")
+                            line("th", _gettext("Time frame"), klass="header2")
+                            line("th", _gettext("Unit"), klass="header2")
 
-                    with tag("tbody"):
-                        for objective_level, study_objectives in sorted(
-                            tree.values(),
-                            key=lambda o: (o[0].order if o[0].order else 0),
+                        for study_objective, endpoint_levels in sorted(
+                            study_objectives.values(), key=lambda o: o[0].order
                         ):
-                            with tag("tr"):
-                                line(
-                                    "th",
-                                    objective_level.term_name,
-                                    klass="objective-level",
+                            amount_of_se_in_different_levels = len(endpoint_levels)
+                            for endpoint_level in endpoint_levels.values():
+                                _, study_endpoints = endpoint_level
+                                amount_of_se_in_different_levels += len(study_endpoints)
+                            for epl_idx, epl_ste in enumerate(
+                                sorted(
+                                    endpoint_levels.values(),
+                                    key=lambda o: o[0].order or 0,
                                 )
-                                line("th", _gettext("Title"), klass="header2")
-                                line("th", _gettext("Time frame"), klass="header2")
-                                line("th", _gettext("Unit"), klass="header2")
-
-                            for study_objective, endpoint_levels in sorted(
-                                study_objectives.values(), key=lambda o: o[0].order
                             ):
-                                amount_of_se_in_different_levels = len(endpoint_levels)
-                                for endpoint_level in endpoint_levels.values():
-                                    _, study_endpoints = endpoint_level
-                                    amount_of_se_in_different_levels += len(
-                                        study_endpoints
-                                    )
-                                for epl_idx, epl_ste in enumerate(
-                                    sorted(
-                                        endpoint_levels.values(),
-                                        key=lambda o: (o[0].order if o[0].order else 0),
-                                    )
+                                endpoint_level, study_endpoints = epl_ste
+                                if epl_idx == 0:
+                                    with tag("tr"):
+                                        with tag(
+                                            "td",
+                                            klass="objective",
+                                            rowspan=(amount_of_se_in_different_levels),
+                                        ):
+                                            doc.asis(study_objective.objective.name)
+                                        line(
+                                            "th",
+                                            endpoint_level.term_name,
+                                            klass="endpoint-level",
+                                            colspan=3,
+                                        )
+                                else:
+                                    with tag("tr"):
+                                        line(
+                                            "th",
+                                            endpoint_level.term_name,
+                                            klass="endpoint-level",
+                                            colspan=3,
+                                        )
+
+                                for study_endpoint in sorted(
+                                    study_endpoints.values(), key=lambda o: o.order
                                 ):
-                                    endpoint_level, study_endpoints = epl_ste
-                                    if epl_idx == 0:
-                                        with tag("tr"):
-                                            with tag(
-                                                "td",
-                                                klass="objective",
-                                                rowspan=(
-                                                    amount_of_se_in_different_levels
-                                                ),
-                                            ):
-                                                doc.asis(study_objective.objective.name)
-                                            line(
-                                                "th",
-                                                endpoint_level.term_name,
-                                                klass="endpoint-level",
-                                                colspan=3,
-                                            )
-                                    else:
-                                        with tag("tr"):
-                                            line(
-                                                "th",
-                                                endpoint_level.term_name,
-                                                klass="endpoint-level",
-                                                colspan=3,
-                                            )
+                                    with tag("tr"):
+                                        with tag("td", klass="endpoint"):
+                                            doc.asis(study_endpoint.endpoint.name)
 
-                                    for study_endpoint in sorted(
-                                        study_endpoints.values(), key=lambda o: o.order
-                                    ):
-                                        with tag("tr"):
-                                            with tag("td", klass="endpoint"):
-                                                doc.asis(study_endpoint.endpoint.name)
+                                        with tag("td", klass="timeframe"):
+                                            if study_endpoint.timeframe:
+                                                doc.asis(study_endpoint.timeframe.name)
 
-                                            with tag("td", klass="timeframe"):
-                                                if study_endpoint.timeframe:
-                                                    doc.asis(
-                                                        study_endpoint.timeframe.name
-                                                    )
-
-                                            units_text = self._endpoint_units_to_text(
-                                                study_endpoint.endpoint_units
-                                            )
-                                            line("td", units_text, kalss="units")
+                                        units_text = self._endpoint_units_to_text(
+                                            study_endpoint.endpoint_units
+                                        )
+                                        line("td", units_text, kalss="units")
 
         return doc.getvalue()
 
@@ -311,7 +299,7 @@ class StudyObjectivesService:
         docx.repeat_table_header(row)
         for objective_level, objectives, endpoints in sorted(
             tree.values(),
-            key=lambda o: o[0].order if o[0].order else 0,
+            key=lambda o: o[0].order or 0,
         ):
             row = table.add_row()
 
@@ -331,7 +319,7 @@ class StudyObjectivesService:
             cell = row.cells[1]
             for endpoint_level, study_endpoints in sorted(
                 endpoints.values(),
-                key=lambda e: e[0].order if e[0].order else 0,
+                key=lambda e: e[0].order or 0,
             ):
                 cell.add_paragraph(
                     f"{endpoint_level.term_name}:",
@@ -371,7 +359,7 @@ class StudyObjectivesService:
 
         for objective_level, study_objectives in sorted(
             tree.values(),
-            key=lambda o: o[0].order if o[0].order else 0,
+            key=lambda o: o[0].order or 0,
         ):
             row = table.add_row()
             num_rows += 1
@@ -404,7 +392,7 @@ class StudyObjectivesService:
                 for epl_idx, epl_ste in enumerate(
                     sorted(
                         endpoint_levels.values(),
-                        key=lambda o: o[0].order if o[0].order else 0,
+                        key=lambda o: o[0].order or 0,
                     )
                 ):
                     endpoint_level, study_endpoints = epl_ste

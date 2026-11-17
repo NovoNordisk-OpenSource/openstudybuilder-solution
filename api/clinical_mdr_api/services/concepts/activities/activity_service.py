@@ -40,7 +40,7 @@ from clinical_mdr_api.models.concepts.activities.activity_instance import (
     ActivityInstanceGroupingsEditInput,
 )
 from clinical_mdr_api.models.utils import GenericFilteringReturn
-from clinical_mdr_api.services._utils import is_library_editable
+from clinical_mdr_api.services._utils import ensure_transaction, is_library_editable
 from clinical_mdr_api.services.concepts import constants
 from clinical_mdr_api.services.concepts.activities.activity_instance_service import (
     ActivityInstanceGroupingsService,
@@ -49,12 +49,15 @@ from clinical_mdr_api.services.concepts.concept_generic_service import (
     ConceptGenericService,
     _AggregateRootType,
 )
+from clinical_mdr_api.services.data_supplier_rules.data_supplier_rule import (
+    DataSupplierRuleService,
+)
 from clinical_mdr_api.utils import normalize_string
 from common.config import settings
 from common.exceptions import BusinessLogicException, NotFoundException
 
 
-class ActivityService(ConceptGenericService[ActivityAR]):
+class ActivityService(ConceptGenericService[ActivityAR, Activity]):
     aggregate_class = ActivityAR
     version_class = ActivityVersion
     repository_interface = ActivityRepository
@@ -480,7 +483,23 @@ class ActivityService(ConceptGenericService[ActivityAR]):
             )
         return result
 
+    @ensure_transaction(db)
+    def approve(
+        self, uid: str, cascade_edit_and_approve: bool = False, ignore_exc: bool = False
+    ):
+        result = super().approve(
+            uid=uid,
+            cascade_edit_and_approve=cascade_edit_and_approve,
+            ignore_exc=ignore_exc,
+        )
+        if not cascade_edit_and_approve:
+            # Rules must follow the newly approved groupings regardless of the flag
+            DataSupplierRuleService().cascade_activity_update(activity_uid=uid)
+        return result
+
     def cascade_edit_and_approve(self, item: ActivityAR):
+        DataSupplierRuleService().cascade_activity_update(activity_uid=item.uid)
+
         if not item.concept_vo.is_data_collected:
             # Do not upversion any instances if the activity is without data collection
             return

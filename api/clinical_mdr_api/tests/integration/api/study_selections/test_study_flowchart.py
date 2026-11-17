@@ -15,6 +15,7 @@ from clinical_mdr_api.domain_repositories.study_selections.study_soa_repository 
     SoALayout,
 )
 from clinical_mdr_api.domains.enums import ValidationMode
+from clinical_mdr_api.domains.study_selections.study_selection_base import SoAItemType
 from clinical_mdr_api.models.study_selections.study import (
     LockReleaseInput,
     StudyDescriptionJsonModel,
@@ -1042,6 +1043,22 @@ def test_protocol_soa_exports_column_headers_consistent_for_lab_table(
     ), f"Column headers differ: default={default_headers}, lab_table={lab_table_headers}"
 
 
+def _get_protocol_soa_document(
+    api_client, study_uid: str, extension: str, study_value_version: str | None = None
+) -> bytes:
+    """Returns the Protocol SoA HTML, DOCX or XLSX document of a study version"""
+
+    params = {"layout": SoALayout.PROTOCOL.value}
+    if study_value_version:
+        params["study_value_version"] = study_value_version
+
+    response = api_client.get(
+        f"/studies/{study_uid}/flowchart.{extension}", params=params
+    )
+    assert_response_status_code(response, 200)
+    return response.content
+
+
 def test_get_study_flowchart_versioned(api_client, temp_database_populated):
     """Test study flowchart endpoint with versioning for Protocol SoA
 
@@ -1066,6 +1083,9 @@ def test_get_study_flowchart_versioned(api_client, temp_database_populated):
     assert_response_status_code(response, 200)
     initial_soa = response.json()
     assert len(initial_soa["rows"]) > initial_soa["num_header_rows"]
+    initial_soa_html = _get_protocol_soa_document(
+        api_client, soa_test_data.study.uid, "html"
+    )
 
     # GIVEN: study has a locked version
 
@@ -1117,6 +1137,17 @@ def test_get_study_flowchart_versioned(api_client, temp_database_populated):
     # THEN: SoA of the locked study version is the same as the initial SoA
     assert locked_soa == initial_soa
 
+    # WHEN: HTML, DOCX and XLSX of the locked study version are retrieved
+    locked_soa_documents = {
+        extension: _get_protocol_soa_document(
+            api_client, soa_test_data.study.uid, extension, locked_study_version
+        )
+        for extension in ("html", "docx", "xlsx")
+    }
+
+    # THEN: HTML of the locked study version is the same as the initial SoA
+    assert locked_soa_documents["html"] == initial_soa_html
+
     # WHEN: retrieving protocol SoA of draft version
     response = api_client.get(
         f"/studies/{soa_test_data.study.uid}/flowchart",
@@ -1157,6 +1188,21 @@ def test_get_study_flowchart_versioned(api_client, temp_database_populated):
 
     # THEN: SoA of the latest draft study version is different from the SoA of the locked study version
     assert r1_soa != locked_soa
+
+    # THEN: HTML, DOCX and XLSX of the locked study version are unchanged
+    for extension, locked_soa_document in locked_soa_documents.items():
+        assert (
+            _get_protocol_soa_document(
+                api_client, soa_test_data.study.uid, extension, locked_study_version
+            )
+            == locked_soa_document
+        ), f"Protocol SoA {extension} of the locked study version changed"
+
+    # THEN: HTML of the latest draft study version differs
+    assert (
+        _get_protocol_soa_document(api_client, soa_test_data.study.uid, "html")
+        != locked_soa_documents["html"]
+    )
 
     # WHEN: SoA snapshot of the locked study version is retrieved
     response = api_client.get(
@@ -1601,6 +1647,20 @@ def test_study_flowchart_include_uids_parameter_html(
     assert (
         len(cells_with_attrs) > 0
     ), "Response with include_uids should have UID attributes"
+
+    # THEN default response should not reference footnotes either
+    assert not [
+        para
+        for para in soup_without.find_all("p", class_="footnote")
+        if any(k.startswith("object-") for k in para.attrs)
+    ], "Default response should not include footnote UID attributes"
+
+    # THEN each footnote text of the response with include_uids references its footnote
+    for para in soup_with.find_all("p", class_="footnote"):
+        assert (
+            para.get("object-type") == SoAItemType.STUDY_SOA_FOOTNOTE.value
+        ), f"Footnote text without object-type: {para.attrs}"
+        assert para.get("object-uid"), f"Footnote text without object-uid: {para.attrs}"
 
 
 def test_study_flowchart_include_uids_with_protocol_lab_table_html(

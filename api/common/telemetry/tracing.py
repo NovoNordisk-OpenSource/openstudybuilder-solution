@@ -113,9 +113,10 @@ def trace_calls(
                     if v := [str(_args[i])[:128] for i in args if i < args_length]:
                         span.add_attribute("call.args", json.dumps(v))
 
-                if kwargs:
-                    if d := {str(k): str(_kwargs[k]) for k in kwargs if k in _kwargs}:
-                        span.add_attribute("call.kwargs", json.dumps(d))
+                if kwargs and (
+                    d := {str(k): str(_kwargs[k]) for k in kwargs if k in _kwargs}
+                ):
+                    span.add_attribute("call.kwargs", json.dumps(d))
 
                 return func(*_args, **_kwargs)
 

@@ -6,7 +6,7 @@ import { seedDemoAuth } from '../helpers/seedAuth.js'
 // loop in forms.smoke.spec.js only opens step 1 and cancels, so nothing there
 // reaches the dose value / dose frequency fields — which is where all of this
 // form's logic lives:
-//   - two Library/Free text radio groups, each swapping its field
+//   - the dose value source radio group, swapping its field
 //   - a Dose frequency dropdown grouped into the medicinal product's own
 //     frequencies and the rest of the frequency codelist, via Vuetify subheader
 //     pseudo-items
@@ -58,8 +58,8 @@ async function openStepThree(page) {
   await selectFirstOption(page, 'select-compound')
   await page.locator('[data-cy="continue-button"]:visible').first().click()
 
-  // Step 3 is identified by its radio groups, which exist nowhere else
-  await expect(page.locator('[data-cy="dose-frequency-source"]')).toBeVisible({
+  // Step 3 is identified by its radio group, which exists nowhere else
+  await expect(page.locator('[data-cy="dose-value-source"]')).toBeVisible({
     timeout: 10_000,
   })
 }
@@ -72,11 +72,7 @@ test('smoke: Compound dosing step 3 groups dose frequencies by source', async ({
 
   await openStepThree(page)
 
-  // Library is the default for both sources, so the dropdown is the field shown
   await expect(page.locator('[data-cy="dose-frequency"]')).toBeVisible()
-  await expect(
-    page.locator('[data-cy="free-text-dose-frequency"]')
-  ).toHaveCount(0)
 
   await page.locator('[data-cy="dose-frequency"] .v-field__input').click()
 
@@ -103,7 +99,7 @@ test('smoke: Compound dosing step 3 groups dose frequencies by source', async ({
   spy.assertClean()
 })
 
-test('smoke: Compound dosing step 3 swaps each field on its source toggle', async ({
+test('smoke: Compound dosing step 3 swaps the dose value field on its source toggle', async ({
   page,
 }) => {
   await page.addInitScript(seedDemoAuth)
@@ -111,24 +107,16 @@ test('smoke: Compound dosing step 3 swaps each field on its source toggle', asyn
 
   await openStepThree(page)
 
-  // Dose frequency: library dropdown -> free text field, and back
-  await page.locator('[data-cy="dose-frequency-free-text"]').click()
-  await expect(
-    page.locator('[data-cy="free-text-dose-frequency"]')
-  ).toBeVisible()
-  await expect(page.locator('[data-cy="dose-frequency"]')).toHaveCount(0)
-
-  await page.locator('[data-cy="dose-frequency-from-library"]').click()
-  await expect(page.locator('[data-cy="dose-frequency"]')).toBeVisible()
-  await expect(
-    page.locator('[data-cy="free-text-dose-frequency"]')
-  ).toHaveCount(0)
-
-  // Dose value behaves the same way, and the two toggles are independent:
-  // switching the dose value to free text must leave the frequency dropdown up
-  await page.locator('[data-cy="dose-value-free-text"]').click()
+  // Dose value: library dropdown -> study specific free text field, and back. The dose
+  // frequency dropdown does not depend on the toggle and must stay up throughout.
+  await page.locator('[data-cy="dose-value-study-specific-free-text"]').click()
   await expect(page.locator('[data-cy="free-text-dose-value"]')).toBeVisible()
   await expect(page.locator('[data-cy="dose-value"]')).toHaveCount(0)
+  await expect(page.locator('[data-cy="dose-frequency"]')).toBeVisible()
+
+  await page.locator('[data-cy="dose-value-from-library"]').click()
+  await expect(page.locator('[data-cy="dose-value"]')).toBeVisible()
+  await expect(page.locator('[data-cy="free-text-dose-value"]')).toHaveCount(0)
   await expect(page.locator('[data-cy="dose-frequency"]')).toBeVisible()
 
   spy.assertClean()

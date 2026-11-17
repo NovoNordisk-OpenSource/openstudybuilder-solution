@@ -317,6 +317,8 @@ def test_data():
         "latest_criteria": None,
         "accepted_version": False,
         "study_version": None,
+        "study_design_population_uids": [],
+        "identifier": None,
     }
 
 

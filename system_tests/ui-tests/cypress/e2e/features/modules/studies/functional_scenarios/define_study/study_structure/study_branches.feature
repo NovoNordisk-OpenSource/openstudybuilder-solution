@@ -144,7 +144,7 @@ Feature: Studies - Define Study - Study Structure - Manually Defined Study Branc
         Then The validation message appears for empty branch short name
         And The form is not closed
 
-    Scenario: [Create][Uniqueness check][Name] User must not be able to create two Branch Arms within one study using the same Branch Arm name
+    Scenario: [Create][Uniqueness check][Name] User must not be able to create two Branch Arms under one Study Arm using the same Branch Arm name
         And Add branch button is clicked
         And User continues to next step of study structure stepper
         And The first available arm is selected for the branch
@@ -160,10 +160,10 @@ Feature: Studies - Define Study - Study Structure - Manually Defined Study Branc
         And The first available arm is selected for the branch
         And Another Study Branch Arm is created with the same arm name
         And User continues to next step of study structure stepper
-        Then The pop up displays "in field Branch Arm Name is not unique for the study"
+        Then The pop up displays "in field Branch Arm Name is not unique for the Study Arm"
         And The form is not closed
 
-    Scenario: [Create][Uniqueness check][Short Name] User must not be able to create two Branch Arms within one study using the same Branch Arm short name
+    Scenario: [Create][Uniqueness check][Short Name] User must not be able to create two Branch Arms under one Study Arm using the same Branch Arm short name
         And Add branch button is clicked
         And User continues to next step of study structure stepper
         And The first available arm is selected for the branch
@@ -179,7 +179,7 @@ Feature: Studies - Define Study - Study Structure - Manually Defined Study Branc
         And The first available arm is selected for the branch
         And Another Study Branch Arm is created with the same branch arm short name
         And User continues to next step of study structure stepper
-        Then The pop up displays "in field Branch Arm Short Name is not unique for the study"
+        Then The pop up displays "in field Branch Arm Short Name is not unique for the Study Arm"
         And The form is not closed
 
     Scenario: [Create][Mandatory fields] User must not be able to use text longer than 20 characters for the Study Arm Arm Code field in the Study Arms form

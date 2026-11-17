@@ -183,7 +183,8 @@ Feature: Studies - Manage Study - E2E verification
         Given The page 'study_structure/epochs' is opened for current study
         Then The plus button is disabled
         Given The page 'study_structure/visits' is opened for current study
-        Then The plus button is disabled
+        And The 'visit-view-type-table' button is clicked
+        And The plus button does not exists
         Then The edit button is disabled
         Given The page 'activities/list' is opened for current study
         Then The plus button is disabled
@@ -347,7 +348,8 @@ Feature: Studies - Manage Study - E2E verification
         And User searches for 'Run-in'
         And User searches for 'Intervention' and confirms no results returned
         Given The page 'study_structure/visits' is opened for current study
-        Then The plus button is disabled
+        And The 'visit-view-type-table' button is clicked
+        And The plus button does not exists
         Then The edit button is disabled
         And User searches for 'Visit 1'
         And Only one row is present

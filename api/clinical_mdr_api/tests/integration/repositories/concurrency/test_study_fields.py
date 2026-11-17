@@ -11,9 +11,6 @@ from clinical_mdr_api.domain_repositories.controlled_terminologies.ct_term_name_
 from clinical_mdr_api.domain_repositories.study_definitions.study_definition_repository import (
     StudyDefinitionRepository,
 )
-from clinical_mdr_api.domain_repositories.study_definitions.study_title.study_title_repository import (
-    StudyTitleRepository,
-)
 from clinical_mdr_api.domains.controlled_terminologies.ct_term_attributes import (
     CTTermAttributesAR,
     CTTermAttributesVO,
@@ -57,7 +54,6 @@ class StudyFieldsConcurrencyTest(unittest.TestCase):
     author_id = "TEST"
 
     studies_repository: StudyDefinitionRepository
-    study_title_repository: StudyTitleRepository
     ct_term_attributes_repository: CTTermAttributesRepository
     ct_term_names_repository: CTTermNameRepository
 
@@ -76,7 +72,6 @@ class StudyFieldsConcurrencyTest(unittest.TestCase):
         db.cypher_query(STARTUP_CT_TERM_ATTRIBUTES_CYPHER)
         db.cypher_query("CREATE CONSTRAINT FOR (n:CTTermRoot) REQUIRE n.uid IS UNIQUE;")
 
-        self.study_title_repository = self._repos.study_title_repository
         self.studies_repository = self._repos.study_definition_repository
         self.ct_term_attributes_repository = self._repos.ct_term_attributes_repository
         self.ct_term_names_repository = self._repos.ct_term_name_repository
@@ -120,8 +115,6 @@ class StudyFieldsConcurrencyTest(unittest.TestCase):
                     ),
                 ),
                 project_exists_callback=lambda _: True,
-                study_title_exists_callback=lambda _, study_number: False,
-                study_short_title_exists_callback=lambda _, study_number: False,
                 study_number_exists_callback=lambda x, y: False,
                 study_acronym_exists_callback=lambda x, y: False,
                 author_id="unknown-user",
@@ -211,8 +204,6 @@ class StudyFieldsConcurrencyTest(unittest.TestCase):
         )
         self.study_ar.edit_metadata(
             new_study_description=study_description,
-            study_title_exists_callback=lambda _, study_number: False,
-            study_short_title_exists_callback=lambda _, study_number: False,
             author_id=self.author_id,
         )
 

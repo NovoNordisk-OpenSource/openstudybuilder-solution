@@ -110,7 +110,7 @@ class StudyActivityInstructionService(StudySelectionMixin):
                 .resolve_subgraph()
             ).distinct()
         ]
-        study_activity_instruction_response_model = [
+        return [
             StudyActivityInstruction.from_vo(
                 StudyActivityInstructionVO(
                     uid=i_study_activity_instruction_ogm.study_activity_instruction_uid,
@@ -126,8 +126,6 @@ class StudyActivityInstructionService(StudySelectionMixin):
             )
             for i_study_activity_instruction_ogm in study_activity_instructions_ogm
         ]
-
-        return study_activity_instruction_response_model
 
     @trace_calls(args=[1, 2], kwargs=["study_uid", "study_activity_uid"])
     def get_all_study_instructions_for_specific_study_activity(
@@ -263,5 +261,5 @@ class StudyActivityInstructionService(StudySelectionMixin):
                         content=BatchErrorResponse(message=str(error)),
                     )
                 )
-                raise error
+                raise
         return results

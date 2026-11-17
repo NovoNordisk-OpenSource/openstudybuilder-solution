@@ -19,5 +19,4 @@ def get_nodes_count() -> int:
     """
     Returns the count of nodes in the database.
     """
-    count = DB.get_node_count()
-    return count
+    return DB.get_node_count()

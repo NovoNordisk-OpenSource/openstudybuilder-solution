@@ -39,12 +39,13 @@ Feature: Library - Syntax Templates - Time Frames - Parent
     Then The pop up displays 'already exists'
     And The user is not able to save
 
-  Scenario: [Create][Syntax validation] User must be able to verify syntax when creating Timeframe template
-    Given The '/library/timeframe_templates/parent' page is opened
-    When The Add template button is clicked
-    And The timeframe template form is filled with base data
-    And The 'verify-syntax-button' button is clicked
-    Then The pop up displays 'This syntax is valid'
+    Scenario: [Create][Brackets restriction] User must be able to add value in brackets in the syntax template
+        Given The '/library/timeframe_templates/parent' page is opened
+        When The Add template button is clicked
+        And The timeframe template form is filled with base data
+        And The timeframe template form is filled with value with brackets
+        And Form save button is clicked
+        And The pop up displays 'Time frame template added'
 
   Scenario: [Create][Select parameters] User must be able to select parameter of the Activity Instruction template
     Given The '/library/timeframe_templates/parent' page is opened
@@ -55,21 +56,33 @@ Feature: Library - Syntax Templates - Time Frames - Parent
     Then The timeframe template is found
     And The Timeframe with paramter is visible in the Table
 
-  @manual_test
-  Scenario: User must be able to read change history of output
+  Scenario: [Actions][History] User must be able to view the history for the Timeframes
     Given The '/library/timeframe_templates/parent' page is opened
-    When The user opens version history
-    Then The user is presented with version history of the output containing timestamp and username
+    And The 'History' option is clicked from the three dot menu list
+    Then The History page is displayed
+    And The following column list with values will exist
+      | header                 |
+      | Sequence number        |
+      | Template               |
+      | Status                 |
+      | Version                |
+      | Change type            |
+      | User                   |
+      | From                   |
+      | To                     |
+    And The history table is not empty
+    When The CLOSE button is clicked
+    Then The current URL is '/library/timeframe_templates/parent'
 
-  @manual_test
-  Scenario: User must be able to read change history of selected element
-    Given The '/library/timeframe_templates/parent' page is opened
-    And The 'Show history' option is clicked from the three dot menu list
-    When The user clicks on History for particular element
-    Then The user is presented with history of changes for that element
-    And The history contains timestamps and usernames
+  #@manual_test
+  #Scenario: User must be able to read change history of selected element
+  #  Given The '/library/timeframe_templates/parent' page is opened
+  #  And The 'Show history' option is clicked from the three dot menu list
+  #  When The user clicks on History for particular element
+  #  Then The user is presented with history of changes for that element
+  #  And The history contains timestamps and usernames
 
-    Scenario: [Cancel][Creation] User must be able to Cancel creation of the Timeframe template
+  Scenario: [Cancel][Creation] User must be able to Cancel creation of the Timeframe template
     Given The '/library/timeframe_templates/parent' page is opened
     And The Add template button is clicked
     And The timeframe template form is filled with base data

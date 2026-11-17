@@ -41,9 +41,7 @@ class GenericSyntaxTemplateRepository[AggregateRootType](
         rs = db.cypher_query(query)
 
         name = uid.replace("Template", "")
-        prefix = (
-            prefix if prefix else "".join([char for char in name if char.isupper()])
-        )
+        prefix = prefix or "".join([char for char in name if char.isupper()])
         if library.name == "User Defined":
             prefix = "U-" + prefix
 
@@ -55,10 +53,13 @@ class GenericSyntaxTemplateRepository[AggregateRootType](
 
         return prefix + "1"
 
-    def _get_template(self, value: SyntaxTemplateValue) -> TemplateVO:
-        return TemplateVO(
-            name=value.name,
-            name_plain=value.name_plain,
+    def _get_template(
+        self, value: SyntaxTemplateValue, template_parameter_names: list[str]
+    ) -> TemplateVO:
+        return TemplateVO.from_repository_values(
+            template_name=value.name,
+            template_name_plain=value.name_plain,
+            linked_parameter_names=template_parameter_names,
             guidance_text=value.guidance_text,
         )
 
@@ -93,10 +94,7 @@ class GenericSyntaxTemplateRepository[AggregateRootType](
     def _has_data_changed(
         self, ar: AggregateRootType, value: SyntaxTemplateValue
     ) -> bool:
-        base_comparison = (
-            ar.name != value.name or ar.guidance_text != value.guidance_text
-        )
-        return base_comparison
+        return ar.name != value.name or ar.guidance_text != value.guidance_text
 
     def _maintain_parameters(
         self,
@@ -297,32 +295,29 @@ class GenericSyntaxTemplateRepository[AggregateRootType](
         return sorted(data, key=lambda item: item["position"])
 
     def simple_concept_template(self, rel_type: str):
-        query_to_subset = f"""
+        return f"""
             MATCH (:StudyRoot {{uid:$uid}})-[:LATEST]->(:StudyValue)
             -[:HAS_STUDY_VISIT]->(:StudyVisit)-[:{rel_type}]->(:SimpleConceptRoot)
             -[:LATEST_FINAL]->(simple_concept_value:SimpleConceptValue)
             return simple_concept_value.name
             """
-        return query_to_subset
 
     def ct_term_template(self, rel_type: str):
-        query_to_subset = f"""
+        return f"""
         MATCH (:StudyRoot {{uid:$uid}})-[:LATEST]->(:StudyValue)
         -[:HAS_STUDY_VISIT]->(:StudyVisit)-[:{rel_type}]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(:CTTermRoot)
         -[:HAS_NAME_ROOT]->(:CTTermNameRoot)-[:LATEST_FINAL]->(term_name_value:CTTermNameValue)
         return term_name_value.name
         """
-        return query_to_subset
 
     def subset_time_point_reference(self):
-        query_to_subset = """
+        return """
             MATCH (:StudyRoot {uid:$uid})-[:LATEST]->(:StudyValue)
             -[:HAS_STUDY_VISIT]->(:StudyVisit)-[:HAS_TIMEPOINT]->(:SimpleConceptRoot)
             -[:LATEST_FINAL]->(simple_concept_value:SimpleConceptValue)-[:HAS_TIME_REFERENCE]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(:CTTermRoot)
             -[:HAS_NAME_ROOT]->(:CTTermNameRoot)-[:LATEST_FINAL]->(term_name_value:CTTermNameValue)
             return term_name_value.name
             """
-        return query_to_subset
 
     def subset_parameters_to_specific_study(self, data: list[Any], study_uid: str):
         for parameter in data:

@@ -153,7 +153,7 @@ def _get_cache_info(repo: Any, show_items: bool = False) -> dict[str, Any]:
 
 def _get_cache_item_info(items):
     ret = []
-    for key in items.keys():
+    for key in items:
         ret.append(
             {
                 "key": str(key),

@@ -151,7 +151,7 @@
               <v-row>
                 <v-col cols="6">
                   <v-text-field
-                    :model-value="form.medicinalProduct.dispenser.name"
+                    :model-value="form.medicinalProduct.dispenser?.name || '-'"
                     :label="$t('StudyCompoundForm.dispensed_in')"
                     data-cy="dispensed-in"
                     disabled
@@ -160,7 +160,9 @@
                 </v-col>
                 <v-col cols="6">
                   <v-text-field
-                    :model-value="form.medicinalProduct.delivery_device.name"
+                    :model-value="
+                      form.medicinalProduct.delivery_device?.name || '-'
+                    "
                     :label="$t('StudyCompoundForm.device')"
                     data-cy="device"
                     disabled
@@ -333,6 +335,16 @@ const observer_1 = ref()
 const observer_2 = ref()
 const observer_3 = ref()
 
+// Appends the product's dose frequencies to its name for the dropdown, leaving
+// the name as is when it has none
+function withDoseFrequencies(item) {
+  const frequencies = dataFormating.names(item.dose_frequencies ?? [])
+  if (frequencies) {
+    item.name = `${item.name} (${frequencies})`
+  }
+  return item
+}
+
 const preferedSynonym = computed(() => {
   const preferedSynonym = compoundAliases.value.find(
     (item) => item.is_preferred_synonym
@@ -422,10 +434,7 @@ watch(
           page_size: 0,
         }
         medicinalProductsApi.getFiltered(params).then((resp) => {
-          medicinalProducts.value = resp.data.items.map((item) => {
-            item.name = `${item.name} (${dataFormating.names(item.dose_frequencies || [])})`
-            return item
-          })
+          medicinalProducts.value = resp.data.items.map(withDoseFrequencies)
         })
       } else {
         steps.value = [
@@ -506,10 +515,7 @@ watch(
         page_size: 0,
       }
       medicinalProductsApi.getFiltered(params).then((resp) => {
-        medicinalProducts.value = resp.data.items.map((item) => {
-          item.name = `${item.name} (${dataFormating.names(item.dose_frequencies || [])})`
-          return item
-        })
+        medicinalProducts.value = resp.data.items.map(withDoseFrequencies)
         showAlerts.value = true
       })
       if (newValue.uid) {

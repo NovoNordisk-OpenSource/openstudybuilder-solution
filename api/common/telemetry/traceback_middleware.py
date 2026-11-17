@@ -31,17 +31,15 @@ class ExceptionTracebackMiddleware:
 
         try:
             await self.app(scope, receive, send)
-            return
         except Exception as exc:
             self.add_traceback_attributes(exc)
 
             query_string = scope.get("query_string")
-            log.error(
-                "%s %s%s -> %s",
+            log.exception(
+                "%s %s%s",
                 scope.get("method"),
                 scope.get("path"),
                 "?" + query_string.decode("utf-8") if query_string else "",
-                exc,
                 exc_info=exc,
             )
 
@@ -57,7 +55,6 @@ class ExceptionTracebackMiddleware:
             )
 
             await response(scope, receive, send)
-            return
 
     @staticmethod
     def add_traceback_attributes(exception):

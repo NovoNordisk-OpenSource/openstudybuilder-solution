@@ -74,7 +74,7 @@ class StudyEndpointSelectionService(StudySelectionMixin):
         _, order = selection_aggregate.get_specific_objective_selection(
             study_selection_uid
         )
-        result = StudySelectionObjective.from_study_selection_objectives_ar_and_order(
+        return StudySelectionObjective.from_study_selection_objectives_ar_and_order(
             study_selection_objectives_ar=selection_aggregate,
             order=order,
             get_objective_by_uid_callback=self._transform_latest_objective_model,
@@ -86,7 +86,6 @@ class StudyEndpointSelectionService(StudySelectionMixin):
             study_value_version=study_value_version,
             terms_at_specific_datetime=terms_at_specific_datetime,
         )
-        return result
 
     def _transform_all_to_response_model(
         self,
@@ -688,11 +687,10 @@ class StudyEndpointSelectionService(StudySelectionMixin):
             parsed_selections = self._transform_all_to_response_model(
                 ar, no_brackets=no_brackets
             )
-            for selection in parsed_selections:
-                selections.append(selection)
+            selections.extend(parsed_selections)
 
         # Do filtering, sorting, pagination and count
-        filtered_items = service_level_generic_filtering(
+        return service_level_generic_filtering(
             items=selections,
             filter_by=filter_by,
             filter_operator=filter_operator,
@@ -701,7 +699,6 @@ class StudyEndpointSelectionService(StudySelectionMixin):
             page_number=page_number,
             page_size=page_size,
         )
-        return filtered_items
 
     @db.transaction
     def get_distinct_values_for_header(
@@ -761,7 +758,7 @@ class StudyEndpointSelectionService(StudySelectionMixin):
                     endpoint_selection_ar, no_brackets=False
                 )
 
-            header_values = service_level_generic_header_filtering(
+            return service_level_generic_header_filtering(
                 items=self._transform_all_to_response_model(
                     endpoint_selection_ar, no_brackets=False
                 ),
@@ -771,8 +768,6 @@ class StudyEndpointSelectionService(StudySelectionMixin):
                 filter_operator=filter_operator,
                 page_size=page_size,
             )
-
-            return header_values
 
         # Extract the study uids to use database level filtering for these
         # instead of service level filtering
@@ -795,11 +790,10 @@ class StudyEndpointSelectionService(StudySelectionMixin):
             parsed_selections = self._transform_all_to_response_model(
                 ar, no_brackets=False
             )
-            for selection in parsed_selections:
-                selections.append(selection)
+            selections.extend(parsed_selections)
 
         # Do filtering, sorting, pagination and count
-        header_values = service_level_generic_header_filtering(
+        return service_level_generic_header_filtering(
             items=selections,
             field_name=field_name,
             search_string=search_string,
@@ -808,7 +802,6 @@ class StudyEndpointSelectionService(StudySelectionMixin):
             page_size=page_size,
         )
         # Return values for field_name
-        return header_values
 
     @db.transaction
     def get_all_selection(

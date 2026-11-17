@@ -60,13 +60,12 @@ class StudyActivityScheduleService(StudySelectionMixin):
                 study_visit_uid=study_visit_uid,
             )
         )
-        study_activity_schedules_response_model = [
+        return [
             StudyActivitySchedule.from_vo(
                 i_study_activity_schedule_ogm,
             )
             for i_study_activity_schedule_ogm in study_activity_schedules
         ]
-        return study_activity_schedules_response_model
 
     @trace_calls(args=[1, 2], kwargs=["study_uid", "study_activity_uid"])
     def get_all_schedules_for_specific_activity(
@@ -308,5 +307,5 @@ class StudyActivityScheduleService(StudySelectionMixin):
                         content=BatchErrorResponse(message=str(error)),
                     )
                 )
-                raise error
+                raise
         return results

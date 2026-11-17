@@ -1,6 +1,6 @@
 from typing import Any
 
-from neomodel import db  # type: ignore
+from neomodel import db
 
 from clinical_mdr_api.domains.projects.project import ProjectAR
 from clinical_mdr_api.models.clinical_programmes.clinical_programme import (
@@ -13,7 +13,7 @@ from clinical_mdr_api.models.projects.project import (
 )
 from clinical_mdr_api.models.utils import GenericFilteringReturn
 from clinical_mdr_api.repositories._utils import FilterOperator
-from clinical_mdr_api.services._meta_repository import MetaRepository  # type: ignore
+from clinical_mdr_api.services._meta_repository import MetaRepository
 from clinical_mdr_api.services._utils import (
     service_level_generic_filtering,
     service_level_generic_header_filtering,
@@ -90,7 +90,7 @@ class ProjectService:
             )
             for project_ar, programme_name in all_projects_with_programme
         ]
-        filtered_items = service_level_generic_header_filtering(
+        return service_level_generic_header_filtering(
             items=items,
             field_name=field_name,
             search_string=search_string,
@@ -98,7 +98,6 @@ class ProjectService:
             filter_operator=filter_operator,
             page_size=page_size,
         )
-        return filtered_items
 
     def get_by_study_uid(self, study_uid: str) -> Project:
         repos = MetaRepository()

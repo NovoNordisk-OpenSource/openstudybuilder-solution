@@ -677,7 +677,7 @@ def test_tables_to_html_with_include_uids_false():
     for cell in cells_with_refs:
         # THEN no object-uid or object-type attributes should be present
         assert not any(
-            attr.startswith("object-") for attr in cell.attrs.keys()
+            attr.startswith("object-") for attr in cell.attrs
         ), f"Found unexpected object-* attribute in cell: {cell.attrs}"
 
 
@@ -723,7 +723,7 @@ def test_tables_to_html_with_include_uids_true():
     ]
     for cell in empty_cells:
         assert not any(
-            attr.startswith("object-") for attr in cell.attrs.keys()
+            attr.startswith("object-") for attr in cell.attrs
         ), f"Empty cell should not have object attributes: {cell.attrs}"
 
 
@@ -736,7 +736,7 @@ def test_tables_to_html_with_include_uids_single_table():
     cells_with_attrs = [
         cell
         for cell in doc.find_all(["th", "td"])
-        if any(attr.startswith("object-") for attr in cell.attrs.keys())
+        if any(attr.startswith("object-") for attr in cell.attrs)
     ]
     assert (
         len(cells_with_attrs) == 0
@@ -835,3 +835,126 @@ def test_cell_to_attrs_empty_refs():
     expected_attrs = {}
 
     assert attrs == expected_attrs
+
+
+TEST_TABLE_WITH_FOOTNOTE_UIDS = TableWithFootnotes(
+    rows=[
+        TableRow(
+            cells=[
+                TableCell(text="Visits"),
+                TableCell(
+                    text="V1",
+                    refs=[Ref(type_="StudyVisit", uid="visit-1")],
+                    footnotes=["a"],
+                ),
+            ]
+        ),
+        TableRow(
+            cells=[
+                TableCell(
+                    text="Lab Assessment",
+                    refs=[Ref(type_="StudyActivity", uid="activity-1")],
+                    footnotes=["a", "b"],
+                ),
+                TableCell(text="X", footnotes=["c"]),
+            ]
+        ),
+    ],
+    footnotes={
+        "a": SimpleFootnote(
+            uid="footnote-1", text_html="<p>First</p>", text_plain="First"
+        ),
+        "b": SimpleFootnote(
+            uid="footnote-2", text_html="<p>Second</p>", text_plain="Second"
+        ),
+    },
+    num_header_rows=1,
+    num_header_cols=1,
+    title="Table with footnote UIDs",
+)
+
+
+def test_tables_to_html_footnotes_with_include_uids_false():
+    """Test that footnotes get no object attributes without include_uids"""
+    html = tables_to_html([TEST_TABLE_WITH_FOOTNOTE_UIDS], include_uids=False)
+
+    doc = bs4.BeautifulSoup(html, features="html.parser")
+
+    for element in doc.find_all(["p", "sup"]):
+        assert not any(
+            attr.startswith("object-") for attr in element.attrs
+        ), f"Found unexpected object-* attribute: {element.attrs}"
+
+
+def test_tables_to_html_footnote_texts_with_include_uids_true():
+    """Test that footnote texts reference their StudySoAFootnote.uid"""
+    html = tables_to_html([TEST_TABLE_WITH_FOOTNOTE_UIDS], include_uids=True)
+
+    doc = bs4.BeautifulSoup(html, features="html.parser")
+
+    footnote_paragraphs = doc.find_all("p", class_="footnote")
+
+    # THEN each footnote text carries the uid of the footnote it renders
+    assert len(footnote_paragraphs) == 2
+    for paragraph, uid in zip(footnote_paragraphs, ["footnote-1", "footnote-2"]):
+        assert paragraph.get("object-type") == "StudySoAFootnote"
+        assert paragraph.get("object-uid") == uid
+
+
+def test_tables_to_html_footnote_symbols_with_include_uids_true():
+    """Test that footnote symbols in cells reference the footnotes they stand for"""
+    html = tables_to_html([TEST_TABLE_WITH_FOOTNOTE_UIDS], include_uids=True)
+
+    doc = bs4.BeautifulSoup(html, features="html.parser")
+
+    # symbol superscripts of each cell, keyed by the text the cell starts with
+    symbols = {
+        cell.contents[0]: cell.find("sup") for cell in doc.find_all(["th", "td"])
+    }
+
+    # THEN a single symbol is referenced without numbering
+    single = symbols["V1"]
+    assert single.get("object-type") == "StudySoAFootnote"
+    assert single.get("object-uid") == "footnote-1"
+
+    # THEN multiple symbols are numbered, like multiple cell references are
+    multiple = symbols["Lab Assessment"]
+    assert multiple.get("object-type-0") == "StudySoAFootnote"
+    assert multiple.get("object-uid-0") == "footnote-1"
+    assert multiple.get("object-type-1") == "StudySoAFootnote"
+    assert multiple.get("object-uid-1") == "footnote-2"
+
+    # THEN a symbol without a matching footnote of the table is skipped
+    unmatched = symbols["X"]
+    assert not any(attr.startswith("object-") for attr in unmatched.attrs)
+
+
+def test_footnote_symbols_to_attrs_without_footnotes():
+    """Test _footnote_symbols_to_attrs when the table has no footnotes mapping"""
+    from clinical_mdr_api.services.utils.table_f import _footnote_symbols_to_attrs
+
+    assert not _footnote_symbols_to_attrs(["a"], None, include_uids=True)
+    assert not _footnote_symbols_to_attrs(None, {}, include_uids=True)
+
+
+@pytest.mark.parametrize(
+    ("propagated", "include_uids", "expected"),
+    [
+        (True, True, "true"),
+        (None, True, None),
+        (True, False, None),
+    ],
+)
+def test_cell_to_attrs_propagated(propagated, include_uids, expected):
+    """Test _cell_to_attrs marks cells propagated from hidden rows along with their uids"""
+    from clinical_mdr_api.services.utils.table_f import _cell_to_attrs
+
+    cell = TableCell(
+        text="X",
+        refs=[Ref(type_="StudyActivitySchedule", uid="schedule-1")],
+        propagated=propagated,
+    )
+
+    attrs = _cell_to_attrs(cell, include_uids=include_uids)
+
+    assert attrs.get("object-propagated") == expected

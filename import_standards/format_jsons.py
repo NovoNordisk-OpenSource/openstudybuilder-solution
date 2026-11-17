@@ -1,26 +1,67 @@
-import os
+"""
+Rewrites downloaded CDISC JSON packages as indented, readable JSON.
+
+The download script writes each package on a single line, which is unreadable
+and produces useless diffs. This script re-indents those files in place.
+
+Usage:
+
+> `pipenv run format_jsons [<directory>]`
+
+<directory> is optional and defaults to the environment variable
+'CDISC_JSON_DIR'.
+
+Files that are already indented are left untouched. That deliberately includes
+the few packages written with ensure_ascii=False - they are readable as they
+are, and re-encoding them would only churn the escaping.
+"""
+
 import json
+import sys
+from os import environ, listdir, path
 
-def format_json_files(in_dir, out_dir):
-    for filename in os.listdir(in_dir):
-        if filename.endswith(".json"):
-            filepath = os.path.join(in_dir, filename)
-            with open(filepath, "r") as file:
-                try:
-                    data = json.load(file)
-                except json.JSONDecodeError:
-                    print(f"Error decoding JSON in file: {filepath}")
-                    continue
+DEFAULT_DIRECTORY = environ.get("CDISC_JSON_DIR", "cdisc_data/packages/cdisc_ct")
 
-            formatted_data = json.dumps(data, indent=4)
 
-            new_filepath = os.path.join(out_dir, filename)
-            with open(new_filepath, "w") as new_file:
-                new_file.write(formatted_data)
+def is_minified(raw: str) -> bool:
+    """A package written by the downloader is one long line."""
+    return "\n" not in raw.strip()
 
-            print(f"Formatted JSON written to: {new_filepath}")
 
-# Usage example
-raw_directory = "./cdisc_data/packages/cdisc_ct"
-formatted_directory = "./formatted"
-format_json_files(raw_directory, formatted_directory)
+def format_json_files(directory: str):
+    """
+    Re-indents every minified .json file in <directory>, in place.
+    """
+    formatted = 0
+    skipped = 0
+
+    for filename in sorted(listdir(directory)):
+        if not filename.endswith(".json"):
+            continue
+
+        filepath = path.join(directory, filename)
+        with open(filepath, "r", encoding="utf-8") as file:
+            raw = file.read()
+
+        if not is_minified(raw):
+            skipped += 1
+            continue
+
+        try:
+            data = json.loads(raw)
+        except json.JSONDecodeError:
+            print(f"Error decoding JSON in file: {filepath}")
+            continue
+
+        with open(filepath, "w", encoding="utf-8") as file:
+            file.write(json.dumps(data, indent=4))
+            file.write("\n")
+
+        print(f"Formatted: {filename}")
+        formatted += 1
+
+    print(f"Formatted {formatted} file(s), left {skipped} already indented file(s).")
+
+
+if __name__ == "__main__":
+    format_json_files(sys.argv[1] if len(sys.argv) > 1 else DEFAULT_DIRECTORY)

@@ -1,12 +1,20 @@
 """Configuration parameters."""
 
+import json
 import os
-import string
-from typing import Any, Final, Literal
+import re
+from typing import Any, Final, Literal, cast
 from urllib.parse import urlparse
 
 from pydantic import Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+type Json = bool | int | float | str | list[Json] | dict[str, Json] | None
+
+DEFAULT_STUDIES_STUDY_NUMBER_REGEX: Final[dict[str, Json]] = {
+    "regex": r"^\d{1,4}$",
+    "message": "Study number must be a string of up to 4 digits.",
+}
 
 
 class Settings(BaseSettings):
@@ -43,6 +51,7 @@ class Settings(BaseSettings):
         "tracing_enabled",
         "tracing_metrics_header",
         "trace_request_body",
+        "standards_import_enabled",
         mode="before",
     )
     @classmethod
@@ -91,6 +100,62 @@ class Settings(BaseSettings):
     @property
     def allow_headers(self) -> list[str]:
         return self.ENV_ALLOW_HEADERS.split(",")
+
+    ENV_STUDIES_STUDY_NUMBER_REGEX: Json = Field(
+        default=DEFAULT_STUDIES_STUDY_NUMBER_REGEX,
+        alias="STUDIES_STUDY_NUMBER_REGEX",
+        description="The regular expression pattern used to validate study numbers in the system",
+    )
+
+    @field_validator("ENV_STUDIES_STUDY_NUMBER_REGEX")
+    @classmethod
+    def validate_studies_study_number_regex(cls, value: Json) -> dict[str, Json]:
+        setting = cls.parse_json_setting(value)
+        if setting is None:
+            # A blank value (e.g. `STUDIES_STUDY_NUMBER_REGEX=`) means "use the default".
+            setting = DEFAULT_STUDIES_STUDY_NUMBER_REGEX
+        if not isinstance(setting, dict):
+            raise ValueError(
+                "STUDIES_STUDY_NUMBER_REGEX must be a JSON object with a 'regex' key"
+            )
+
+        regex = setting.get("regex")
+        if not isinstance(regex, str) or not regex:
+            raise ValueError(
+                "STUDIES_STUDY_NUMBER_REGEX 'regex' must be a non-empty string"
+            )
+        try:
+            re.compile(regex)
+        except re.error as error:
+            raise ValueError(
+                f"Invalid regex pattern for STUDIES_STUDY_NUMBER_REGEX: {error}"
+            ) from error
+
+        message = setting.get("message")
+        if message is not None and not isinstance(message, str):
+            raise ValueError("STUDIES_STUDY_NUMBER_REGEX 'message' must be a string")
+
+        return {
+            "regex": regex,
+            "message": message or f"Study number must match regex '{regex}'.",
+        }
+
+    @property
+    def studies_study_number_regex(self) -> dict[str, str]:
+        # Already parsed and normalised by validate_studies_study_number_regex.
+        return cast(dict[str, str], self.ENV_STUDIES_STUDY_NUMBER_REGEX)
+
+    @classmethod
+    def parse_json_setting(cls, value: Json) -> Json:
+        if isinstance(value, str):
+            if not value.strip():
+                return None
+
+            try:
+                return json.loads(value)
+            except json.JSONDecodeError:
+                return value
+        return value
 
     # Pagination Configuration
     default_page_number: int = 1
@@ -153,6 +218,12 @@ class Settings(BaseSettings):
     # Testing & Schemathesis
     schemathesis_study_uid: str = ""
     schemathesis_hooks: str = ""
+
+    # Standards Import API — mount SI's routers on the main app under /standards-import.
+    # Defaults to enabled so the merged app serves both halves out of the box; set to
+    # false to run the main app without the SI routers (e.g. where SI is deployed
+    # separately on a different process).
+    standards_import_enabled: bool = True
 
     # Third-party Integrations
     ms_graph_integration_enabled: bool = False
@@ -259,8 +330,6 @@ class Settings(BaseSettings):
     study_epoch_epoch_uid: str = "C99079"
     study_disease_milestone_type_name: str = "Disease Milestone Type"
 
-    special_visit_letters: str = string.ascii_uppercase
-    special_visit_max_number: int = len(string.ascii_uppercase)
     study_visit_type_name: str = "VisitType"
     study_visit_type_information_visit: str = "Information"
     study_visit_repeating_frequency: str = "Repeating Visit Frequency"
@@ -293,6 +362,7 @@ class Settings(BaseSettings):
         study_field_soa_show_all_visits_lab_table,
     )
     study_soa_split_uids_field: str = "soa_split_uids"
+    study_field_manual_visit_mode: str = "manual_visit_mode"
 
     soa_insert_space_after_commas_length: int = 8
 
@@ -358,6 +428,7 @@ class Settings(BaseSettings):
     dose_frequency_cl_submval: str = "FREQ"
     time_ref_cl_submval: str = "TIMEREF"
     disease_milestone_cl_submval: str = "MIDSTYPE"
+    auxiliary_device_cl_submval: str = "DEVICE_DEF"
     flowchart_group_cl_submval: str = "FLWCRTGRP"
     data_supplier_type_cl_submval: str = "DATA_SUPPLIER_TYPE"
     edc_system_data_supplier_type_submval: str = "EDC SYSTEM"
@@ -365,6 +436,9 @@ class Settings(BaseSettings):
     origin_type_cl_submval: str = "ORIGINT"
     reason_for_lock_cl_submval: str = "RSNFL"
     reason_for_unlock_cl_submval: str = "RSNFUL"
+    development_stage_cl_submval: str = "DEVELOPMENT_STAGE"
+    age_at_baseline_rule_cl_submval: str = "AGE_AT_BASELINE_RL"
+    age_group_rule_cl_submval: str = "AGE_GRP_RL"
     final_protocol_term_submval: str = "FINAL_PROTOCOL"
 
     # endregion
@@ -373,6 +447,6 @@ class Settings(BaseSettings):
 settings = Settings()  # type: ignore[call-arg]
 
 # Validation mode constants for database integrity checks
-VALIDATION_MODE_STRICT: Final[Literal["strict"]] = "strict"
-VALIDATION_MODE_WARNING: Final[Literal["warning"]] = "warning"
+VALIDATION_MODE_STRICT: Final = "strict"
+VALIDATION_MODE_WARNING: Final = "warning"
 VALIDATION_MODE = Literal["strict", "warning"]

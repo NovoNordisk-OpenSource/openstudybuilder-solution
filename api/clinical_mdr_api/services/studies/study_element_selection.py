@@ -223,8 +223,7 @@ class StudyElementSelectionService(
                 ).model_dump()
                 for history, effective_date in zip(selection_history, effective_dates)
             ]
-            data = calculate_diffs(versions, StudySelectionElementVersion)
-            return data
+            return calculate_diffs(versions, StudySelectionElementVersion)
         finally:
             repos.close()
 
@@ -586,7 +585,7 @@ class StudyElementSelectionService(
             study_uid, study_value_version=study_value_version
         )
 
-        header_values = service_level_generic_header_filtering(
+        return service_level_generic_header_filtering(
             items=all_items.items,
             field_name=field_name,
             search_string=search_string,
@@ -594,8 +593,6 @@ class StudyElementSelectionService(
             filter_operator=filter_operator,
             page_size=page_size,
         )
-
-        return header_values
 
     @staticmethod
     def _subtypes_match(
@@ -813,66 +810,55 @@ class StudyElementSelectionService(
             operations
         )
         patched_element_uids: set[str] = set()
-        try:
-            index = 0
-            while index < len(operations):
-                operation = operations[index]
-                if operation.method == "PATCH":
-                    if isinstance(
-                        operation.content, StudySelectionElementBatchUpdateInput
-                    ):
-                        item = self.patch_selection(
-                            study_uid=study_uid,
-                            study_selection_uid=operation.content.element_uid,
-                            selection_update_input=operation.content,
-                            validate=False,
-                        )
-                        patched_element_uids.add(operation.content.element_uid)
-                        results[index] = StudySelectionElementBatchOutput(
-                            response_code=status.HTTP_200_OK,
-                            content=item,
-                        )
-                    else:
-                        raise exceptions.ValidationException(
-                            msg="PATCH operation requires StudySelectionElementBatchUpdateInput as request payload."
-                        )
-                    index += 1
-                elif operation.method == "POST":
-                    post_specs: list[StudySelectionElementCreateInput] = []
-                    post_indices: list[int] = []
-                    while (
-                        index < len(operations) and operations[index].method == "POST"
-                    ):
-                        content = operations[index].content
-                        if not isinstance(content, StudySelectionElementCreateInput):
-                            raise exceptions.ValidationException(
-                                msg="POST operation requires StudySelectionElementCreateInput as request payload."
-                            )
-                        post_specs.append(content)
-                        post_indices.append(index)
-                        index += 1
-                    create_results = self._create_elements_with_skip_deduplication(
+        index = 0
+        while index < len(operations):
+            operation = operations[index]
+            if operation.method == "PATCH":
+                if isinstance(operation.content, StudySelectionElementBatchUpdateInput):
+                    item = self.patch_selection(
                         study_uid=study_uid,
-                        specs=post_specs,
+                        study_selection_uid=operation.content.element_uid,
+                        selection_update_input=operation.content,
+                        validate=False,
                     )
-                    for result_index, create_result in zip(
-                        post_indices, create_results
-                    ):
-                        results[result_index] = create_result
+                    patched_element_uids.add(operation.content.element_uid)
+                    results[index] = StudySelectionElementBatchOutput(
+                        response_code=status.HTTP_200_OK,
+                        content=item,
+                    )
                 else:
-                    raise exceptions.MethodNotAllowedException(method=operation.method)
-
-            if patched_element_uids:
-                element_ar: StudySelectionElementAR = (
-                    self._repos.study_element_repository.find_by_study(
-                        study_uid=study_uid
+                    raise exceptions.ValidationException(
+                        msg="PATCH operation requires StudySelectionElementBatchUpdateInput as request payload."
                     )
-                )
-                for element_vo in element_ar.study_elements_selection:
-                    if element_vo.study_selection_uid in patched_element_uids:
-                        element_vo.validate(
-                            self._repos.ct_term_name_repository.term_specific_exists_by_uid
+                index += 1
+            elif operation.method == "POST":
+                post_specs: list[StudySelectionElementCreateInput] = []
+                post_indices: list[int] = []
+                while index < len(operations) and operations[index].method == "POST":
+                    content = operations[index].content
+                    if not isinstance(content, StudySelectionElementCreateInput):
+                        raise exceptions.ValidationException(
+                            msg="POST operation requires StudySelectionElementCreateInput as request payload."
                         )
-        except exceptions.MDRApiBaseException as error:
-            raise error
+                    post_specs.append(content)
+                    post_indices.append(index)
+                    index += 1
+                create_results = self._create_elements_with_skip_deduplication(
+                    study_uid=study_uid,
+                    specs=post_specs,
+                )
+                for result_index, create_result in zip(post_indices, create_results):
+                    results[result_index] = create_result
+            else:
+                raise exceptions.MethodNotAllowedException(method=operation.method)
+
+        if patched_element_uids:
+            element_ar: StudySelectionElementAR = (
+                self._repos.study_element_repository.find_by_study(study_uid=study_uid)
+            )
+            for element_vo in element_ar.study_elements_selection:
+                if element_vo.study_selection_uid in patched_element_uids:
+                    element_vo.validate(
+                        self._repos.ct_term_name_repository.term_specific_exists_by_uid
+                    )
         return [result for result in results if result is not None]

@@ -151,8 +151,8 @@ def flatten_links(data):
 
 def merge_package(session, data):
     query = """
-        MERGE (p:RawPackage {effectiveDate: $props.effectiveDate})
-        MERGE (p)-[:HAS_RAW_CATALOGUE]->(cat:RawCatalogue {name: $props.name})
+        MERGE (p:RawPackage:CDISCStaging {effectiveDate: $props.effectiveDate})
+        MERGE (p)-[:HAS_RAW_CATALOGUE]->(cat:RawCatalogue:CDISCStaging {name: $props.name})
         SET cat += $props
         WITH cat
         MATCH (prevcat:RawCatalogue {`_links.self.href`: $props.`_links.priorVersion.href`})
@@ -166,7 +166,7 @@ def merge_codelist(session, data, package_catalogue_name):
     query = """
             MATCH (cat:RawCatalogue {name: $package_catalogue_name})
             OPTIONAL MATCH (cat)-[:HAS_PRIOR_VERSION]->(prevcat:RawCatalogue)
-            MERGE (cat)-[:HAS_RAW_CODELIST]->(cl:RawCodelist {conceptId: $props.conceptId})
+            MERGE (cat)-[:HAS_RAW_CODELIST]->(cl:RawCodelist:CDISCStaging {conceptId: $props.conceptId})
             SET cl += $props
             WITH cl, cat, prevcat
             MATCH (prevcat)-[:HAS_RAW_CODELIST]->(prevcl:RawCodelist {conceptId: $props.conceptId})
@@ -184,7 +184,7 @@ def merge_terms(session, terms, package_catalogue_name, codelist_id):
     query = """
             MATCH (cat:RawCatalogue {name: $package_catalogue_name})-[:HAS_RAW_CODELIST]->(cl:RawCodelist {conceptId: $codelist_id})
             FOREACH (term in $terms |
-                MERGE (cl)-[:HAS_RAW_TERM]->(t:RawTerm {conceptId: term.conceptId})
+                MERGE (cl)-[:HAS_RAW_TERM]->(t:RawTerm:CDISCStaging {conceptId: term.conceptId})
                 SET t += term
             )
             """
@@ -328,7 +328,7 @@ def create_grouped_codelists(session, package_date, codelists_cids):
     query = """
             MATCH (p:RawPackage {effectiveDate: $package_date})
             UNWIND $codelist_cids as codelist_cid
-                MERGE (p)-[:HAS_GROUPED_CODELIST]->(gc:GroupedCodelist {conceptId: codelist_cid})
+                MERGE (p)-[:HAS_GROUPED_CODELIST]->(gc:GroupedCodelist:CDISCStaging {conceptId: codelist_cid})
                 WITH p, gc, codelist_cid
                 MATCH (p)-[:HAS_RAW_CATALOGUE]-(:RawCatalogue)-[:HAS_RAW_CODELIST]->(cl:RawCodelist {conceptId: codelist_cid})
                 MERGE (cl)<-[:SOURCE_CODELIST_DEF]-(gc)
@@ -344,7 +344,7 @@ def create_grouped_terms(session, package_date, term_cids):
     query = """
             MATCH (p:RawPackage {effectiveDate: $package_date})
             UNWIND $term_cids as term_cid
-                MERGE (p)-[:HAS_GROUPED_TERM]->(gt:GroupedTerm {conceptId: term_cid})
+                MERGE (p)-[:HAS_GROUPED_TERM]->(gt:GroupedTerm:CDISCStaging {conceptId: term_cid})
                 WITH p, gt, term_cid
                 MATCH (p)-[:HAS_RAW_CATALOGUE]-(:RawCatalogue)-[:HAS_RAW_CODELIST]->(:RawCodelist)-[:HAS_RAW_TERM]->(t:RawTerm {conceptId: term_cid})
                 MERGE (t)<-[:SOURCE_TERM_DEF]-(gt)
@@ -363,7 +363,7 @@ def add_grouped_codelist_terms(session, package_date, codelist_cid):
             WITH DISTINCT gc, p
             UNWIND $terms as term
                 MATCH (p)-[:HAS_GROUPED_TERM]->(gt:GroupedTerm {conceptId: term.cid})
-                MERGE (gc)-[ht:HAS_TERM]->(gt)
+                MERGE (gc)-[ht:HAS_GROUPED_TERM_MEMBER]->(gt)
                 ON CREATE SET ht.rawSubmissionValues = [term.submval], ht.submissionValue = term.submval
                 // Append term.submval to rawSubmissionValues only if it's not already present (list-based dedupe)
                 ON MATCH SET ht.rawSubmissionValues = CASE WHEN term.submval IN ht.rawSubmissionValues THEN ht.rawSubmissionValues ELSE ht.rawSubmissionValues + term.submval END
@@ -432,30 +432,30 @@ def merge_codelist_properties(session, package_date):
     add_props_query_multi = """
         UNWIND $codelists as props
         MATCH (p:RawPackage {effectiveDate: props.package_date})-[:HAS_GROUPED_CODELIST]-(gc:GroupedCodelist {conceptId: props.codelist_cid})
-        MERGE (gc)-[:HAS_GROUPED_PROPERTIES]->(cp:GroupedCodelistProperties)
+        MERGE (gc)-[:HAS_GROUPED_PROPERTIES]->(cp:GroupedCodelistProperties:CDISCStaging)
         SET cp += props.cl_props RETURN cp
         """
     add_inconsistency_query_multi = """
         UNWIND $codelists as props
         MATCH (p:RawPackage {effectiveDate: props.package_date})-[:HAS_GROUPED_CODELIST]-(gc:GroupedCodelist {conceptId: props.codelist_cid})
-        MERGE (gc)-[:HAS_INCONSISTENCY]->(ip:InconsistentCodelistProperties {property: props.property, inconsistency: props.details.inconsistency})
+        MERGE (gc)-[:HAS_INCONSISTENCY]->(ip:InconsistentCodelistProperties:CDISCStaging {property: props.property, inconsistency: props.details.inconsistency})
         SET ip += props.details RETURN ip
         """
     add_term_inconsistency_query = """
         MATCH (p:RawPackage {effectiveDate: $package_date})-[:HAS_GROUPED_CODELIST]-(gc:GroupedCodelist {conceptId: $codelist_cid})
-        MERGE (gc)-[:HAS_INCONSISTENCY]->(it:InconsistentCodelistTerms {property: "terms", inconsistency: "inconsistent sets of terms"})
+        MERGE (gc)-[:HAS_INCONSISTENCY]->(it:InconsistentCodelistTerms:CDISCStaging {property: "terms", inconsistency: "inconsistent sets of terms"})
         """
 
     mark_bad_submission_values_query = """
         MATCH (p:RawPackage {effectiveDate: $package_date})-[:HAS_GROUPED_CODELIST]-(cl:GroupedCodelist)-[ht]-(t:GroupedTerm)
         WHERE size(ht.rawSubmissionValues) = 1 AND ht.rawSubmissionValues[0] STARTS WITH '"' and  ht.rawSubmissionValues[0] ENDS WITH '"'
-        MERGE (cl)-[:HAS_INCONSISTENCY]->(it:InconsistentCodelistTerms {property: "term_submval", term_cid: t.conceptId, inconsistency: "unwanted quotes"})
+        MERGE (cl)-[:HAS_INCONSISTENCY]->(it:InconsistentCodelistTerms:CDISCStaging {property: "term_submval", term_cid: t.conceptId, inconsistency: "unwanted quotes"})
     """
 
     mark_conflicting_submission_values_query = """
         MATCH (p:RawPackage {effectiveDate: $package_date})-[:HAS_GROUPED_CODELIST]-(cl:GroupedCodelist)-[ht]-(t:GroupedTerm)
         WHERE size(ht.rawSubmissionValues) > 1
-        MERGE (cl)-[:HAS_INCONSISTENCY]->(it:InconsistentCodelistTerms {property: "term_submval", term_cid: t.conceptId, inconsistency: "conflicting values"})
+        MERGE (cl)-[:HAS_INCONSISTENCY]->(it:InconsistentCodelistTerms:CDISCStaging {property: "term_submval", term_cid: t.conceptId, inconsistency: "conflicting values"})
     """
 
     codelists_with_props = get_codelist_properties(session, package_date)
@@ -570,13 +570,13 @@ def merge_term_properties(session, package_date):
     add_props_query_multi = """
         UNWIND $terms as props
         MATCH (p:RawPackage {effectiveDate: props.package_date})-[:HAS_GROUPED_TERM]-(gt:GroupedTerm {conceptId: props.term_cid})
-        MERGE (gt)-[:HAS_GROUPED_PROPERTIES]->(tp:GroupedTermProperties)
+        MERGE (gt)-[:HAS_GROUPED_PROPERTIES]->(tp:GroupedTermProperties:CDISCStaging)
         SET tp += props.term_props RETURN tp
         """
     add_inconsistency_query_multi = """
         UNWIND $terms as props
         MATCH (p:RawPackage {effectiveDate: props.package_date})-[:HAS_GROUPED_TERM]-(gt:GroupedTerm {conceptId: props.term_cid})
-        MERGE (gt)-[:HAS_INCONSISTENCY]->(ip:InconsistentTermProperties {property: props.property, inconsistency: props.details.inconsistency})
+        MERGE (gt)-[:HAS_INCONSISTENCY]->(ip:InconsistentTermProperties:CDISCStaging {property: props.property, inconsistency: props.details.inconsistency})
         SET ip += props.details RETURN ip
         """
     
@@ -811,21 +811,21 @@ def solve_cl_term_inconsistencies(session, package_date):
         single_vals_query = """
             MATCH (p:RawPackage {effectiveDate: "2018-12-21"})-[:HAS_GROUPED_CODELIST]-(gcl:GroupedCodelist)-[:HAS_INCONSISTENCY]->(ip:InconsistentCodelistTerms {inconsistency: "unwanted quotes"})
             WHERE (gcl)-[:SOURCE_CODELIST_DEF]->(:RawCodelist)-[]-(:RawCatalogue {name: "SEND CT 2018-12-21"})
-            MATCH (gcl)-[ht:HAS_TERM]->(gt:GroupedTerm {conceptId: ip.term_cid})
+            MATCH (gcl)-[ht:HAS_GROUPED_TERM_MEMBER]->(gt:GroupedTerm {conceptId: ip.term_cid})
             SET ht.submissionValue = replace(substring(ht.rawSubmissionValues[0], 1, size(ht.rawSubmissionValues[0]) - 2), '""', '"')
             WITH *
-            MERGE (ip)-[:HAS_SOLUTION]->(sol:InconsistencySolution {desc: "Removed unwanted quotes from term submission value"}) 
+            MERGE (ip)-[:HAS_SOLUTION]->(sol:InconsistencySolution:CDISCStaging {desc: "Removed unwanted quotes from term submission value"}) 
             """
         run_single_query(session, single_vals_query)
         # Solve conflicting submission values where there are two value, and one has unwanted quotes
         multiple_vals_query = """
             MATCH (p:RawPackage {effectiveDate: "2018-12-21"})-[:HAS_GROUPED_CODELIST]-(gcl:GroupedCodelist)-[:HAS_INCONSISTENCY]->(ip:InconsistentCodelistTerms {inconsistency: "conflicting values"})
             WHERE (gcl)-[:SOURCE_CODELIST_DEF]->(:RawCodelist)-[]-(:RawCatalogue {name: "SEND CT 2018-12-21"})
-            MATCH (gcl)-[ht:HAS_TERM]->(gt:GroupedTerm {conceptId: ip.term_cid})
+            MATCH (gcl)-[ht:HAS_GROUPED_TERM_MEMBER]->(gt:GroupedTerm {conceptId: ip.term_cid})
             WITH ip, ht, [sv in ht.rawSubmissionValues WHERE NOT sv STARTS WITH '"' AND NOT sv ENDS WITH '"' | sv] AS clean_submvals
             SET ht.submissionValue = head(clean_submvals)
             WITH ip
-            MERGE (ip)-[:HAS_SOLUTION]->(sol:InconsistencySolution {desc: "Picked a term submission value without unwanted quotes"}) 
+            MERGE (ip)-[:HAS_SOLUTION]->(sol:InconsistencySolution:CDISCStaging {desc: "Picked a term submission value without unwanted quotes"}) 
             """
         run_single_query(session, multiple_vals_query)
 
@@ -834,10 +834,10 @@ def solve_cl_term_inconsistencies(session, package_date):
         # The Trial Screening term C48262 is incorrectly added in Protocol CT and should be removed.
         trial_type_terms_query = """
             MATCH (p:RawPackage {effectiveDate: "2017-09-29"})-[:HAS_GROUPED_CODELIST]-(gcl:GroupedCodelist {conceptId: "C66736"})-[:HAS_INCONSISTENCY]->(ip:InconsistentCodelistTerms {property: "terms", inconsistency: "inconsistent sets of terms"})
-            MATCH (gcl)-[ht:HAS_TERM]->(gt:GroupedTerm {conceptId: "C48262"})
+            MATCH (gcl)-[ht:HAS_GROUPED_TERM_MEMBER]->(gt:GroupedTerm {conceptId: "C48262"})
             DELETE ht
             WITH ip
-            MERGE (ip)-[:HAS_SOLUTION]->(sol:InconsistencySolution {desc: "Removed incorrect Screening term C48262 from Trial Intent Type codelist"})
+            MERGE (ip)-[:HAS_SOLUTION]->(sol:InconsistencySolution:CDISCStaging {desc: "Removed incorrect Screening term C48262 from Trial Intent Type codelist"})
             """
         run_single_query(session, trial_type_terms_query)
 
@@ -1057,7 +1057,7 @@ def mark_codelist_inconsistency_solved(
 ):
     query = """
         MATCH (p:RawPackage {effectiveDate: $package_date})-[:HAS_GROUPED_CODELIST]-(gcl:GroupedCodelist {conceptId: $codelist_cid})-[:HAS_INCONSISTENCY]->(ip:InconsistentCodelistProperties {inconsistency: "conflicting values", property: $property})
-        MERGE (ip)-[:HAS_SOLUTION]->(s:InconsistencySolution {solution: $solution})
+        MERGE (ip)-[:HAS_SOLUTION]->(s:InconsistencySolution:CDISCStaging {solution: $solution})
         """
     run_single_query(
         session,
@@ -1076,7 +1076,7 @@ def mark_codelist_error_solved(
 ):
     query = """
         MATCH (p:RawPackage {effectiveDate: $package_date})-[:HAS_GROUPED_CODELIST]-(gt:GroupedCodelist {conceptId: $codelist_cid})-[:HAS_INCONSISTENCY]->(ip:InconsistentCodelistProperties {inconsistency: $errortype, property: $property})
-        MERGE (ip)-[:HAS_SOLUTION]->(s:InconsistencySolution {solution: $solution})
+        MERGE (ip)-[:HAS_SOLUTION]->(s:InconsistencySolution:CDISCStaging {solution: $solution})
         """
     run_single_query(
         session,
@@ -1094,7 +1094,7 @@ def mark_codelist_error_solved(
 def mark_term_inconsistency_solved(session, package_date, term_cid, property, solution):
     query = """
         MATCH (p:RawPackage {effectiveDate: $package_date})-[:HAS_GROUPED_TERM]-(gt:GroupedTerm {conceptId: $term_cid})-[:HAS_INCONSISTENCY]->(ip:InconsistentTermProperties {inconsistency: "conflicting values", property: $property})
-        MERGE (ip)-[:HAS_SOLUTION]->(s:InconsistencySolution {solution: $solution})
+        MERGE (ip)-[:HAS_SOLUTION]->(s:InconsistencySolution:CDISCStaging {solution: $solution})
         """
     run_single_query(
         session,
@@ -1113,7 +1113,7 @@ def mark_term_error_solved(
 ):
     query = """
         MATCH (p:RawPackage {effectiveDate: $package_date})-[:HAS_GROUPED_TERM]-(gt:GroupedTerm {conceptId: $term_cid})-[:HAS_INCONSISTENCY]->(ip:InconsistentTermProperties {inconsistency: $errortype, property: $property})
-        MERGE (ip)-[:HAS_SOLUTION]->(s:InconsistencySolution {solution: $solution})
+        MERGE (ip)-[:HAS_SOLUTION]->(s:InconsistencySolution:CDISCStaging {solution: $solution})
         """
     run_single_query(
         session,
@@ -1131,7 +1131,7 @@ def mark_term_error_solved(
 def save_cleaned_codelist_properties(session, package_date, codelist_cid, properties):
     query = """
         MATCH (p:RawPackage {effectiveDate: $package_date})-[:HAS_GROUPED_CODELIST]-(gt:GroupedCodelist {conceptId: $codelist_cid})
-        MERGE (gt)-[:HAS_GROUPED_PROPERTIES]->(props:GroupedCodelistProperties)
+        MERGE (gt)-[:HAS_GROUPED_PROPERTIES]->(props:GroupedCodelistProperties:CDISCStaging)
         SET props += $properties
         """
     run_single_query(
@@ -1148,7 +1148,7 @@ def save_cleaned_codelist_properties(session, package_date, codelist_cid, proper
 def save_cleaned_term_properties(session, package_date, term_cid, properties):
     query = """
         MATCH (p:RawPackage {effectiveDate: $package_date})-[:HAS_GROUPED_TERM]-(gt:GroupedTerm {conceptId: $term_cid})
-        MERGE (gt)-[:HAS_GROUPED_PROPERTIES]->(props:GroupedTermProperties)
+        MERGE (gt)-[:HAS_GROUPED_PROPERTIES]->(props:GroupedTermProperties:CDISCStaging)
         SET props += $properties
         """
     run_single_query(
@@ -1261,7 +1261,7 @@ def resolve_inconsistencies(db_driver):
 def create_codelist_nodes(session):
     query = """
         MATCH (gc:GroupedCodelist) WITH DISTINCT gc.conceptId as cid, collect(gc) as gcs
-        MERGE (vc:VersionedCodelist {conceptId: cid})
+        MERGE (vc:VersionedCodelist:CDISCStaging {conceptId: cid})
         FOREACH (n IN gcs | MERGE (vc)-[:HAS_SOURCE_VERSION]->(n))
         """
     run_single_query(session, query)
@@ -1405,7 +1405,7 @@ def store_codelist_versions(session, codelist_cid, versions):
     query = """
         MATCH (vc:VersionedCodelist {conceptId: $codelist_cid})-[:HAS_SOURCE_VERSION]->(gc:GroupedCodelist)
         UNWIND $versions as codelist_ver
-            MERGE (vc)-[hv:HAS_VERSION {version: codelist_ver.version.version}]->(v:CodelistVersion)
+            MERGE (vc)-[hv:HAS_STAGED_VERSION {version: codelist_ver.version.version}]->(v:CodelistVersion:CDISCStaging)
             SET v = codelist_ver.props
             SET hv = codelist_ver.version
             WITH v, codelist_ver, gc
@@ -1430,7 +1430,7 @@ def handle_codelist_history(db_driver):
 def create_term_nodes(session):
     query = """
         MATCH (gt:GroupedTerm) WITH DISTINCT gt.conceptId as cid, collect(gt) as gts
-        MERGE (vt:VersionedTerm {conceptId: cid})
+        MERGE (vt:VersionedTerm:CDISCStaging {conceptId: cid})
         FOREACH (n IN gts | MERGE (vt)-[:HAS_SOURCE_VERSION]->(n))
         """
     run_single_query(session, query)
@@ -1543,7 +1543,7 @@ def store_term_versions_multi(session, term_versions):
         UNWIND $term_versions as term
         MATCH (vt:VersionedTerm {conceptId: term.cid})-[:HAS_SOURCE_VERSION]->(gt:GroupedTerm)
         UNWIND term.versions as term_ver
-            MERGE (vt)-[hv:HAS_VERSION {version: term_ver.version.version}]->(v:TermVersion)
+            MERGE (vt)-[hv:HAS_STAGED_VERSION {version: term_ver.version.version}]->(v:TermVersion:CDISCStaging)
             SET v = term_ver.props
             SET hv = term_ver.version
             WITH v, term_ver, gt
@@ -1595,7 +1595,7 @@ def get_terms_for_codelist_cid(session, codelist_cid):
     query = """
         MATCH (vcl:VersionedCodelist {conceptId: $codelist_cid})
         MATCH (vcl)--(gcl:GroupedCodelist)--(rp:RawPackage)
-        OPTIONAL MATCH (gcl)-[ht:HAS_TERM]-(gt:GroupedTerm)--(vt:VersionedTerm)
+        OPTIONAL MATCH (gcl)-[ht:HAS_GROUPED_TERM_MEMBER]-(gt:GroupedTerm)--(vt:VersionedTerm)
         WITH vcl, gcl, rp, ht.submissionValue as submval, gt, vt
         RETURN * ORDER BY date(rp.effectiveDate)
         """
@@ -1657,7 +1657,7 @@ def link_term_to_codelist(session, codelist_cid, term_cid, submval):
     query = """
         MATCH (vcl:VersionedCodelist {conceptId: $codelist_cid})
         MATCH (vt:VersionedTerm {conceptId: $term_cid})
-        MERGE (vcl)-[ht:HAS_TERM {submissionValue: $submval}]->(vt)
+        MERGE (vcl)-[ht:HAS_GROUPED_TERM_MEMBER {submissionValue: $submval}]->(vt)
         ON CREATE SET ht.start_date = $start_date
         SET ht.end_date = $end_date
         """
@@ -1678,7 +1678,7 @@ def link_terms_to_codelist(session, codelist_cid, terms_data):
         MATCH (vcl:VersionedCodelist {conceptId: $codelist_cid})
         UNWIND $terms_data as term_entry
         MATCH (vt:VersionedTerm {conceptId: term_entry.term_cid})
-        MERGE (vcl)-[ht:HAS_TERM {submissionValue: term_entry.submval}]->(vt)
+        MERGE (vcl)-[ht:HAS_GROUPED_TERM_MEMBER {submissionValue: term_entry.submval}]->(vt)
         ON CREATE SET ht.start_date = term_entry.start_date
         SET ht.end_date = term_entry.end_date
         """
@@ -1920,6 +1920,53 @@ def _get_first_submission_value_for_codelist_cids(term_data, codelist_cids):
             pass
     return None
 
+# Trial phases only ever run I to V. `IV` and `V` are matched before the `I{1,3}` run so
+# that "IV" is not read as "I" followed by a stray "V".
+TRIAL_PHASE_ROMAN_RE = re.compile(r"\b(IV|V|I{1,3})([ab])?\b")
+TRIAL_PHASE_ROMAN_VALUES = {"I": "1", "II": "2", "III": "3", "IV": "4", "V": "5"}
+
+# "Phase 0" is the one phase that is renamed rather than converted.
+TRIAL_PHASE_ZERO_RE = re.compile(r"^Phase 0(\s+Trial)?$", re.IGNORECASE)
+
+# A compound phase repeats the word: "Phase 1/2" is written "Phase 1/Phase 2".
+TRIAL_PHASE_COMPOUND_RE = re.compile(r"(?<=Phase )(\d[ab]?)((?:/\d[ab]?)+)")
+TRIAL_PHASE_TRAILING_RE = re.compile(r"\s+Trial$")
+
+
+def make_trial_phase_name(preferred_term):
+    """
+    Rewrite a CDISC trial phase into the sponsor name.
+
+    Replaces the per-term special cases this function used to carry, which covered only
+    the nine phases that existed when they were written: "Phase V" and the a/b variants
+    (Ia, Ib, IIa, IIb, IIIa, IIIb) fell through and kept their Roman numerals and their
+    trailing " Trial". Working from the shape of the name instead covers every phase
+    CDISC ships now and any it adds later.
+
+        Phase I Trial          -> Phase 1
+        Phase IIIa Trial       -> Phase 3a
+        Phase V Trial          -> Phase 5
+        Phase I/II/III Trial   -> Phase 1/Phase 2/Phase 3
+        Early Phase 1 Trial    -> Early Phase 1
+        Phase 0 Trial          -> Early Phase 1
+    """
+    name = preferred_term.strip()
+    if TRIAL_PHASE_ZERO_RE.match(name):
+        return "Early Phase 1"
+
+    name = TRIAL_PHASE_TRAILING_RE.sub("", name)
+    name = TRIAL_PHASE_ROMAN_RE.sub(
+        lambda match: TRIAL_PHASE_ROMAN_VALUES[match.group(1)] + (match.group(2) or ""),
+        name,
+    )
+    return TRIAL_PHASE_COMPOUND_RE.sub(
+        lambda match: match.group(1)
+        + "".join("/Phase " + part for part in match.group(2).split("/") if part),
+        name,
+    ).strip()
+
+
+
 def make_sponsor_term_name(term_data):
     """
     Add a sponsor name for a term based on its preferred term or submission value.
@@ -1940,43 +1987,12 @@ def make_sponsor_term_name(term_data):
         newname = "Follow-up"
         method = "Special case for 'Clinical Study Follow-up'"
 
-    # Updates related to codelist C66737 - Trial Phase Response. ICH M11 preferred term do not match NCI/CDISC preferred term
-    elif term_data["term_cid"] == "C54721":
-        # Rename Early Phase I -> Early Phase 1
-         newname = "Early Phase 1"
-         method = "Special case for 'Trial Phase Response'"
-    elif term_data["term_cid"] == "C15600":
-        # Rename Phase I Trial -> Phase 1
-         newname = "Phase 1"
-         method = "Special case for 'Trial Phase Response'"
-    elif term_data["term_cid"] == "C15693":
-        # Rename Phase I/II Trial ->  Phase 1/Phase 2
-        newname = "Phase 1/Phase 2"
-        method = "Special case for 'Trial Phase Response'"
-    elif term_data["term_cid"] == "C198366":
-        # Rename Phase I/II/III Trial ->  Phase 1/Phase 2/Phase 3
-        newname = "Phase 1/Phase 2/Phase 3"
-        method = "Special case for 'Trial Phase Response'"
-    elif term_data["term_cid"] == "C198367":
-        # Rename Phase I/III Trial -> Phase 1/Phase 3
-        newname = "Phase 1/Phase 3"
-        method = "Special case for 'Trial Phase Response'"
-    elif term_data["term_cid"] == "C15601":
-        # Rename Phase II Trial -> Phase 2
-        newname = "Phase 2"
-        method = "Special case for 'Trial Phase Response'"
-    elif term_data["term_cid"] == "C15694":
-        # Rename Phase II/III Trial -> Phase 2/Phase 3
-        newname = "Phase 2/Phase 3"
-        method = "Special case for 'Trial Phase Response'"
-    elif term_data["term_cid"] == "C15602":
-        # Rename Phase III Trial -> Phase 3
-        newname = "Phase 3"
-        method = "Special case for 'Trial Phase Response'"
-    elif term_data["term_cid"] == "C15603":
-        # Rename Phase IV Trial -> Phase 4
-        newname = "Phase 4"
-        method = "Special case for 'Trial Phase Response'"
+    elif "C66737" in term_data["cl_cid"]:
+        # Trial Phase Response codelist. ICH M11 preferred terms do not match the
+        # NCI/CDISC ones, so the phase is rewritten rather than used as published.
+        newname = make_trial_phase_name(newname)
+        method = "Trial phase rewritten from the CDISC preferred term"
+
 
     elif "C99077" in term_data["cl_cid"]:
         # Study type codelist
@@ -2133,7 +2149,7 @@ def make_sponsor_term_name(term_data):
 
 def list_versioned_terms(db_driver, page_size=100, page_number=1):
     query = """
-        MATCH (tv:TermVersion)<-[hv:HAS_VERSION]-(vt:VersionedTerm)-[ht:HAS_TERM]-(vcl:VersionedCodelist)
+        MATCH (tv:TermVersion)<-[hv:HAS_STAGED_VERSION]-(vt:VersionedTerm)-[ht:HAS_GROUPED_TERM_MEMBER]-(vcl:VersionedCodelist)
         WITH 
             tv.preferredTerm as term_name,
             vt.conceptId as term_cid,
@@ -2154,8 +2170,8 @@ def list_versioned_terms(db_driver, page_size=100, page_number=1):
 def create_sponsor_name_nodes(db_driver, terms_data):
     query = """
         UNWIND $terms_data AS term
-        MATCH (tv:TermVersion)<-[:HAS_VERSION {version: term.term_version}]->(:VersionedTerm {conceptId: term.term_cid})
-        MERGE (sn:SponsorName)-[:SPONSOR_NAME_FOR]->(tv)
+        MATCH (tv:TermVersion)<-[:HAS_STAGED_VERSION {version: term.term_version}]->(:VersionedTerm {conceptId: term.term_cid})
+        MERGE (sn:SponsorName:CDISCStaging)-[:SPONSOR_NAME_FOR]->(tv)
         SET sn.name = term.sponsor_name, sn.method = term.method
     """
     with db_driver.session(database=NEO4J_DATABASE) as session:

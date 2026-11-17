@@ -33,7 +33,7 @@
       <v-window-item value="tab-1">
         <ProtocolFlowchart
           :key="`tab-1-${tabKeys['tab-1']}`"
-          :study-uid="selectedStudy.uid"
+          :study-visits="studyVisits"
           :update="updateFlowchart"
         />
       </v-window-item>
@@ -86,6 +86,7 @@ import ProtocolFlowchart from '@/components/studies/ProtocolFlowchart.vue'
 import ProtocolTitlePage from '@/components/studies/ProtocolTitlePage.vue'
 import HelpButton from '@/components/tools/HelpButton.vue'
 import SoaSettingsForm from '@/components/studies/SoaSettingsForm.vue'
+import studyEpochs from '@/api/studyEpochs'
 import { useAppStore } from '@/stores/app'
 import { useStudiesGeneralStore } from '@/stores/studies-general'
 import { useSoaContentLoadingStore } from '@/stores/soa-content-loading'
@@ -124,6 +125,7 @@ export default {
   data() {
     return {
       tab: null,
+      studyVisits: [],
       updateFlowchart: 0,
       updateObjectives: 0,
       updateDesign: 0,
@@ -182,6 +184,7 @@ export default {
       switch (value) {
         case 'tab-1':
           this.updateFlowchart++
+          this.getStudyVisits()
           break
         case 'tab-2':
           this.updateObjectives++
@@ -214,6 +217,20 @@ export default {
     }, 100)
   },
   methods: {
+    getStudyVisits() {
+      studyEpochs
+        .getStudyVisits(this.selectedStudy.uid, {
+          page_size: 0,
+          lite: true,
+        })
+        .then((resp) => {
+          this.studyVisits = resp.data.items
+        })
+        .catch((error) => {
+          // The repository interceptor has already shown the error toast.
+          console.error('Failed to load study visits', error)
+        })
+    },
     openSoaSettings() {
       this.showSoaSettings = true
     },

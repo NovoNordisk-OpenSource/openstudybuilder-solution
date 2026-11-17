@@ -4,6 +4,8 @@ When('The edit button is disabled', () => cy.get('button[disabled] .mdi-pencil-o
 
 When('The plus button is disabled', () => cy.get('button[disabled] .mdi-plus').filter(':visible').should('exist'))
 
+When('The plus button does not exists', () => cy.get('button[disabled] .mdi-plus').should('not.exist'))
+
 Then("The {string} is displayed", (value) => cy.get("body").should("contain", value));
 
 When('The {string} submenu is clicked in the {string} section', (submenu, section) => {
@@ -15,6 +17,14 @@ When('The {string} submenu is clicked in the {string} section', (submenu, sectio
 When('The {string} tab is selected', (tabName) => cy.contains('.v-tab', tabName).click({force: true}))
 
 When('The {string} button is clicked', (button) => cy.clickButton(button))
+
+When('The {string} field is set to {string}', (field, value) => {
+    cy.selectVSelect(field, value)
+})
+
+When('The {string} field is populated with {string}', (field, value) => {
+    cy.fillInput(field, value)
+})
 
 When('The button with text {string} is clicked', (name) => cy.contains('button', name).click())
 
@@ -75,13 +85,15 @@ Then('The inactivate button is clicked', () => cy.get('button .mdi-close-octagon
 
 Then('The inactivate button is not available', () => cy.get('button .mdi-close-octagon-outline').should('not.exist'))
 
-Then('The download button is clicked', () => cy.get('button .mdi-download-outline').filter(':visible').click())
+Then('The download button is clicked', () => cy.get('.v-window-item--active .v-card-title button .mdi-download-outline').filter(':visible').click())
 
-Then('The download button is available', () => cy.get('button .mdi-download-outline').should('be.visible'))
+Then('The download button is visible', () => cy.get('button .mdi-download-outline').should('be.visible'))
 
-Then('The close overview button is clicked', () => cy.get('button .mdi-close').filter(':visible').click())
+Then('The close overview button is clicked', () => cy.get('.v-window-item--active .v-card-title button .mdi-close').click())
 
 Then('The history button is clicked', () => cy.get('button .mdi-history').click())
+
+Then('The section with title {string} is visible', (value) => cy.contains('.v-card-title', value).should('be.visible'))
 
 function expandPagesDropdown(tileName) {
     cy.wait(500)

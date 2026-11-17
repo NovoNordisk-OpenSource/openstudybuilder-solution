@@ -185,11 +185,11 @@ const organizedRows = computed(() => {
     value: props.activity.name_sentence_case || props.activity.name || '-',
   })
 
-  if (props.activity.display_name !== undefined) {
+  if (props.activity.label !== undefined) {
     fields.push({
-      key: 'display_name',
-      label: t('ActivityItemClassTable.display_name'),
-      value: props.activity.display_name || '-',
+      key: 'label',
+      label: t('ActivityItemClassTable.label'),
+      value: props.activity.label || '-',
     })
   }
 

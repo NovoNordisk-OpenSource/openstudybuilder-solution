@@ -46,7 +46,4 @@ jobs:
         run: uv run poe isort --check
 
       - name: Check for vulnerable packages
-        # Opt-out per repository: runs by default; skipped only where the
-        # Actions variable HALT_ON_CVE_FINDINGS is set to 'false'.
-        if: vars.HALT_ON_CVE_FINDINGS != 'false'
         run: uv run poe audit

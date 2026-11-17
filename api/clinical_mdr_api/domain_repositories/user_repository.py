@@ -9,7 +9,7 @@ from clinical_mdr_api.models.user import UserInfo, UserInfoPatchInput
 
 
 class UserRepository:
-    cache_get_user = TTLCache(maxsize=1000, ttl=10)
+    cache_get_user: TTLCache = TTLCache(maxsize=1000, ttl=10)
 
     def _transform_to_model(self, item: UserNode) -> UserInfo:
         def extract_roles(roles: str) -> list[str]:

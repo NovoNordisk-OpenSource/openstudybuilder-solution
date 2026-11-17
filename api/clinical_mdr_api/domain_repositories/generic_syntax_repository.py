@@ -215,9 +215,7 @@ class GenericSyntaxRepository[AggregateRootType: LibraryItemAggregateRootBase](
             for parameter in param_terms:
                 parameter_strings.append(
                     {
-                        "set_number": (
-                            parameter["set_number"] if "set_number" in parameter else 0
-                        ),
+                        "set_number": parameter.get("set_number", 0),
                         "position": parameter["position"],
                         "index": parameter["index"],
                         "parameter_name": parameter["parameter_name"],
@@ -245,7 +243,7 @@ class GenericSyntaxRepository[AggregateRootType: LibraryItemAggregateRootBase](
                 "conjunction": next(
                     x
                     for x in instance_parameters
-                    if x[0] == param["position"]  # type: ignore[arg-type,misc]
+                    if x[0] == param["position"]
                     and (
                         len(x[2]) == 0
                         or (
@@ -301,12 +299,11 @@ class GenericSyntaxRepository[AggregateRootType: LibraryItemAggregateRootBase](
         return return_dict
 
     def _parameter_from_repository_values(self, value):
-        simple_parameter_term_vo = SimpleParameterTermVO.from_repository_values(
+        return SimpleParameterTermVO.from_repository_values(
             uid=value["parameter_uid"],
             value=value["parameter_term"],
             labels=value["labels"],
         )
-        return simple_parameter_term_vo
 
     def get_template_type_uid(self, syntax_node: SyntaxTemplateRoot) -> str:
         """

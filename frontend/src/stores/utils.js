@@ -1,44 +1,45 @@
+import templateParameters from '@/utils/templateParameters'
+
 function getInternalApiName(template, values) {
   /*
    * Shall return Template [value1 , value2] or Template [value1  value2], or Template [value1 or value2]
    *
+   * Literal brackets of the template and brackets inside values are encoded as
+   * HTML entities, as the API does when it generates the instance name.
    */
-  if (!values || !values.length) {
+  if (!values) {
     return template
   }
+  const escape = templateParameters.escapeBrackets
+  const parts = templateParameters.splitTemplate(
+    template,
+    values.map((value) => value.name)
+  )
   let result = ''
   let paramIndex = 0
-  let inParam = false
-  for (const c of template) {
-    if (c === '[') {
-      inParam = true
-    } else if (c === ']') {
-      if (
-        values[paramIndex].name !== 'TextValue' &&
-        values[paramIndex].name !== 'NumericValue'
-      ) {
-        if (
-          values[paramIndex].selectedValues &&
-          values[paramIndex].selectedValues.length
-        ) {
-          const valueNames = values[paramIndex].selectedValues.map(
-            (v) => v.name
-          )
-          const separator = values[paramIndex].selectedSeparator
-            ? ' ' + values[paramIndex].selectedSeparator.trim() + ' '
-            : '  '
-          const concatenation = valueNames.join(separator)
-          result += `[${concatenation}]`
-        } else {
-          result += `[${values[paramIndex].name}]`
-        }
+  for (const part of parts) {
+    if (!part.isParameter) {
+      result += escape(part.value)
+      continue
+    }
+    const value = values[paramIndex]
+    paramIndex++
+    if (!value) {
+      continue
+    }
+    if (value.name !== 'TextValue' && value.name !== 'NumericValue') {
+      if (value.selectedValues && value.selectedValues.length) {
+        const valueNames = value.selectedValues.map((v) => escape(v.name))
+        const separator = value.selectedSeparator
+          ? ' ' + value.selectedSeparator.trim() + ' '
+          : '  '
+        const concatenation = valueNames.join(separator)
+        result += `[${concatenation}]`
       } else {
-        result += `[${values[paramIndex].selectedValues}]`
+        result += `[${value.name}]`
       }
-      paramIndex++
-      inParam = false
-    } else if (!inParam) {
-      result += c
+    } else {
+      result += `[${escape(String(value.selectedValues))}]`
     }
   }
   return result

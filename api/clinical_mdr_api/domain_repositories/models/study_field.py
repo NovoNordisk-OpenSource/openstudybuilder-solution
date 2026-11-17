@@ -104,22 +104,6 @@ class StudyTextField(StudyField):
     value = StringProperty()
     field_name = StringProperty()
 
-    def is_used(self, study_number: str) -> bool:
-        cypher_query = """
-        MATCH (stf:StudyField:StudyTextField{field_name: $field_name, value: $value})<-[HAS_TEXT_FIELD]-(sv:StudyValue)<-[:LATEST]-(s:StudyRoot)
-        where sv.study_number <> $study_number
-        return id(s)
-        """
-        result, _ = db.cypher_query(
-            cypher_query,
-            params={
-                "field_name": self.field_name,
-                "value": self.value,
-                "study_number": study_number,
-            },
-        )
-        return len(result) > 0
-
 
 class StudyIntField(StudyField):
     value = IntegerProperty()

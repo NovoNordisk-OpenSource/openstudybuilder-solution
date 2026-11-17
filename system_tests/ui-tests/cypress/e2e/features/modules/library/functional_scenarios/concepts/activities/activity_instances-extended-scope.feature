@@ -1,4 +1,4 @@
-@REQ_ID:1070683 @skip_on_prv_val
+@REQ_ID:1070683
 Feature: Library - Concepts - Activities - Activity instances - Wizard Stepper - Extended Scope
     As a user, I want to manage the Activity Instances in the Concepts Library with Wizard Stepper 
     process to ensure the data is saved and displayed correctly.

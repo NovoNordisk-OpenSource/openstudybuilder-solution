@@ -133,38 +133,37 @@
             />
           </v-col>
         </v-row>
-        <!-- Lag time only carries data migrated from MMA. -->
-        <template v-if="showLagTime">
-          <v-row v-for="field in lagTimeFields" :key="field">
-            <v-col cols="6">
-              <!-- type="text", not "number": a number input reports letters as
-                   an empty value, so the rule never sees them and the bad input
-                   is silently dropped instead of flagged. -->
-              <v-text-field
-                v-model="form[field]"
-                :data-cy="field"
-                :label="$t(`StudyEpochForm.${field}`)"
-                :hint="$t('StudyEpochForm.lag_time_hint')"
-                :rules="[lagTimeRule]"
-                type="text"
-                inputmode="numeric"
-                persistent-hint
-                clearable
-              />
-            </v-col>
-            <v-col cols="6">
-              <v-autocomplete
-                v-model="form[`${field}_unit_uid`]"
-                :data-cy="`${field}-unit`"
-                :label="$t('StudyEpochForm.lag_time_unit')"
-                :items="lagTimeUnits"
-                item-title="name"
-                item-value="uid"
-                clearable
-              />
-            </v-col>
-          </v-row>
-        </template>
+        <!-- Which lag fields show depends on two flags and the study's MMA
+             marker; see visibleLagTimeFields in the epochs store. -->
+        <v-row v-for="field in epochsStore.visibleLagTimeFields" :key="field">
+          <v-col cols="6">
+            <!-- type="text", not "number": a number input reports letters as
+                 an empty value, so the rule never sees them and the bad input
+                 is silently dropped instead of flagged. -->
+            <v-text-field
+              v-model="form[field]"
+              :data-cy="field"
+              :label="$t(`StudyEpochForm.${field}`)"
+              :hint="$t('StudyEpochForm.lag_time_hint')"
+              :rules="[lagTimeRule]"
+              type="text"
+              inputmode="numeric"
+              persistent-hint
+              clearable
+            />
+          </v-col>
+          <v-col cols="6">
+            <v-autocomplete
+              v-model="form[`${field}_unit_uid`]"
+              :data-cy="`${field}-unit`"
+              :label="$t('StudyEpochForm.lag_time_unit')"
+              :items="lagTimeUnits"
+              item-title="name"
+              item-value="uid"
+              clearable
+            />
+          </v-col>
+        </v-row>
         <div v-if="studyEpoch">
           <label class="v-label required">{{
             $t('_global.change_description')
@@ -352,7 +351,6 @@ import HorizontalStepperForm from '@/components/tools/HorizontalStepperForm.vue'
 import StudySelectorField from '@/components/studies/StudySelectorField.vue'
 import { useStudiesGeneralStore } from '@/stores/studies-general'
 import { useEpochsStore } from '@/stores/studies-epochs'
-import { useFeatureFlagsStore } from '@/stores/feature-flags'
 import unitConstants from '@/constants/units'
 import { useI18n } from 'vue-i18n'
 import { computed, inject, onMounted, ref, watch } from 'vue'
@@ -377,7 +375,6 @@ const emit = defineEmits(['close'])
 const { t } = useI18n()
 const studiesGeneralStore = useStudiesGeneralStore()
 const epochsStore = useEpochsStore()
-const featureFlagsStore = useFeatureFlagsStore()
 
 const stepper = ref()
 const observer = ref()
@@ -420,11 +417,6 @@ const selectedStudy = computed(() => studiesGeneralStore.selectedStudy)
 const groups = computed(() => epochsStore.allowedConfigs)
 const isEdit = computed(() => Boolean(props.studyEpoch))
 
-// Lag time only exists to carry legacy MMA data, so it is hidden unless the
-// installation turns the flag on.
-const showLagTime = computed(() =>
-  featureFlagsStore.getFeatureFlag('study_epoch_lag_time')
-)
 // Same picker the study visit form uses for its time units, minus the singular
 // day and week and minus year and years. The store's list is shared with the
 // visit forms, where those are valid, so filter here rather than in the store.
@@ -433,6 +425,8 @@ const lagTimeUnits = computed(() =>
     unitConstants.LAG_TIME_UNIT_NAMES.includes(unit.name)
   )
 )
+// All three, not only the visible ones: an edit loads every stored value into
+// the form, so a hidden field is sent back unchanged.
 const lagTimeFields = ['ae_lag_time', 'hypo_lag_time', 'ce_lag_time']
 
 // Emptying the field with the keyboard leaves '', and the clear button leaves
@@ -623,7 +617,7 @@ watch(
 
 onMounted(async () => {
   epochsStore.fetchAllowedConfigs()
-  if (showLagTime.value) {
+  if (epochsStore.visibleLagTimeFields.length) {
     epochsStore.fetchStudyTimeUnits()
   }
   if (isEdit.value) {

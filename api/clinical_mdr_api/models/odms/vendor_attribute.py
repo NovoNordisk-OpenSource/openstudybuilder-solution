@@ -91,9 +91,8 @@ class OdmVendorAttributeRelationModel(BaseModel):
         odm_element_version: str,
         odm_element_type: RelationType,
         find_by_uid_with_odm_element_relation: Callable[
-            [str, str, str, RelationType, bool], OdmVendorAttributeRelationVO
+            [str, str, str, RelationType], OdmVendorAttributeRelationVO
         ],
-        vendor_element_attribute: bool = True,
     ) -> Self: ...
     @overload
     @classmethod
@@ -104,9 +103,8 @@ class OdmVendorAttributeRelationModel(BaseModel):
         odm_element_version: str,
         odm_element_type: RelationType,
         find_by_uid_with_odm_element_relation: Callable[
-            [str, str, str, RelationType, bool], OdmVendorAttributeRelationVO
+            [str, str, str, RelationType], OdmVendorAttributeRelationVO
         ],
-        vendor_element_attribute: bool = True,
     ) -> None: ...
     @classmethod
     def from_uid(
@@ -116,9 +114,8 @@ class OdmVendorAttributeRelationModel(BaseModel):
         odm_element_version: str,
         odm_element_type: RelationType,
         find_by_uid_with_odm_element_relation: Callable[
-            [str, str, str, RelationType, bool], OdmVendorAttributeRelationVO
+            [str, str, str, RelationType], OdmVendorAttributeRelationVO
         ],
-        vendor_element_attribute: bool = True,
     ) -> Self | None:
         odm_vendor_element_ref_model = None
 
@@ -128,7 +125,6 @@ class OdmVendorAttributeRelationModel(BaseModel):
                 odm_element_uid,
                 odm_element_version,
                 odm_element_type,
-                vendor_element_attribute,
             )
             if odm_vendor_attribute_ref_vo is not None:
                 odm_vendor_element_ref_model = cls(
@@ -172,10 +168,9 @@ class OdmVendorElementAttributeRelationModel(BaseModel):
         odm_element_version: str,
         odm_element_type: RelationType,
         find_by_uid_with_odm_element_relation: Callable[
-            [str, str, str, RelationType, bool],
+            [str, str, str, RelationType],
             OdmVendorElementAttributeRelationVO,
         ],
-        vendor_element_attribute: bool = True,
     ) -> Self: ...
     @overload
     @classmethod
@@ -186,10 +181,9 @@ class OdmVendorElementAttributeRelationModel(BaseModel):
         odm_element_version: str,
         odm_element_type: RelationType,
         find_by_uid_with_odm_element_relation: Callable[
-            [str, str, str, RelationType, bool],
+            [str, str, str, RelationType],
             OdmVendorElementAttributeRelationVO,
         ],
-        vendor_element_attribute: bool = True,
     ) -> None: ...
     @classmethod
     def from_uid(
@@ -199,10 +193,9 @@ class OdmVendorElementAttributeRelationModel(BaseModel):
         odm_element_version: str,
         odm_element_type: RelationType,
         find_by_uid_with_odm_element_relation: Callable[
-            [str, str, str, RelationType, bool],
+            [str, str, str, RelationType],
             OdmVendorElementAttributeRelationVO,
         ],
-        vendor_element_attribute: bool = True,
     ) -> Self | None:
         odm_vendor_element_ref_model = None
 
@@ -212,7 +205,6 @@ class OdmVendorElementAttributeRelationModel(BaseModel):
                 odm_element_uid,
                 odm_element_version,
                 odm_element_type,
-                vendor_element_attribute,
             )
             if odm_vendor_element_attribute_ref_vo is not None:
                 odm_vendor_element_ref_model = cls(

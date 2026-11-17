@@ -129,7 +129,11 @@
     <template #[`step.createFromTemplate`]>
       <v-data-table :headers="selectionHeaders" :items="selectedCriteria">
         <template #[`item.name`]="{ item }">
-          <NNParameterHighlighter :name="item.name" default-color="orange" />
+          <NNParameterHighlighter
+            :name="item.name"
+            :parameter-names="item.parameters?.map((p) => p.name)"
+            default-color="orange"
+          />
         </template>
         <template #[`item.guidance_text`]="{ item }">
           <span v-html="sanitizeHTMLHandler(item.guidance_text)" />
@@ -208,6 +212,7 @@
             <NNParameterHighlighter
               v-else
               :name="item.name"
+              :parameter-names="item.parameters?.map((p) => p.name)"
               default-color="orange"
             />
           </template>
@@ -256,6 +261,19 @@
               class="pt-4"
             />
           </div>
+        </v-col>
+      </v-row>
+      <v-row>
+        <v-col cols="6">
+          <v-text-field
+            v-model="form.identifier"
+            :label="$t('EligibilityCriteriaForm.criteria_id')"
+            :placeholder="
+              $t('EligibilityCriteriaTable.criteria_id_placeholder')
+            "
+            data-cy="criteria-id"
+            clearable
+          />
         </v-col>
       </v-row>
     </template>
@@ -693,7 +711,17 @@ export default {
             library_name: libraries.LIBRARY_SPONSOR,
           },
         }
-        await study.createStudyCriteria(this.selectedStudy.uid, data)
+        const resp = await study.createStudyCriteria(
+          this.selectedStudy.uid,
+          data
+        )
+        if (this.form.identifier) {
+          await study.updateStudyCriteriaIdentifier(
+            this.selectedStudy.uid,
+            resp.data.study_criteria_uid,
+            this.form.identifier
+          )
+        }
       }
       this.notificationHub.add({
         type: 'success',

@@ -48,8 +48,7 @@ class CTCodelist(BaseModel):
             parent_codelist_uid=ct_codelist_attributes_ar._ct_codelist_attributes_vo.parent_codelist_uid,
             child_codelist_uids=(
                 ct_codelist_attributes_ar._ct_codelist_attributes_vo.child_codelist_uids
-                if ct_codelist_attributes_ar._ct_codelist_attributes_vo.child_codelist_uids
-                else []
+                or []
             ),
             paired_codes_codelist_uid=paired_codes_codelist_uid,
             paired_names_codelist_uid=paired_names_codelist_uid,
@@ -181,7 +180,7 @@ class CTCodelistNameAndAttributes(BaseModel):
         ct_codelist_attributes_ar: CTCodelistAttributesAR,
         paired_codelist: CTPairedCodelistInfo | None = None,
     ) -> Self:
-        codelist_name_and_attributes = cls(
+        return cls(
             catalogue_names=ct_codelist_attributes_ar.ct_codelist_vo.catalogue_names,
             codelist_uid=ct_codelist_attributes_ar.uid,
             parent_codelist_uid=ct_codelist_attributes_ar._ct_codelist_attributes_vo.parent_codelist_uid,
@@ -198,8 +197,6 @@ class CTCodelistNameAndAttributes(BaseModel):
             paired_codelist=paired_codelist,
         )
 
-        return codelist_name_and_attributes
-
     @classmethod
     def from_name_and_attributes(
         cls,
@@ -207,7 +204,7 @@ class CTCodelistNameAndAttributes(BaseModel):
         ct_codelist_attributes: CTCodelistAttributes,
         paired_codelist: CTPairedCodelistInfo | None = None,
     ) -> Self:
-        codelist_name_and_attributes = cls(
+        return cls(
             catalogue_names=ct_codelist_attributes.catalogue_names,
             codelist_uid=ct_codelist_attributes.codelist_uid or "",
             parent_codelist_uid=ct_codelist_attributes.parent_codelist_uid,
@@ -217,8 +214,6 @@ class CTCodelistNameAndAttributes(BaseModel):
             attributes=ct_codelist_attributes,
             paired_codelist=paired_codelist,
         )
-
-        return codelist_name_and_attributes
 
     catalogue_names: Annotated[
         list[str], Field(json_schema_extra={"remove_from_wildcard": True})
@@ -267,12 +262,10 @@ class CTCodelistPaired(BaseModel):
         else:
             paired_codes = None
 
-        paired_codelist = cls(
+        return cls(
             names=paired_names,
             codes=paired_codes,
         )
-
-        return paired_codelist
 
     names: Annotated[
         CTCodelistNameAndAttributes | None,
@@ -408,7 +401,7 @@ class CTCodelistTerm(CTCodelistTermBase):
                 "valid_null_flavor_terms": _build_codelist_valid_null_flavor_terms(vo),
                 "submission_value_test_name": vo.submission_value_test_name,
             }
-        codelist_terms = cls(
+        return cls(
             term_uid=vo.term_uid,
             submission_value=vo.submission_value,
             order=vo.order,
@@ -419,6 +412,7 @@ class CTCodelistTerm(CTCodelistTermBase):
             concept_id=vo.concept_id,
             nci_preferred_name=vo.nci_preferred_name,
             definition=vo.definition,
+            algorithm=vo.algorithm,
             name_date=vo.name_date,
             name_status=vo.name_status.value,
             name_author=vo.name_author,
@@ -430,9 +424,14 @@ class CTCodelistTerm(CTCodelistTermBase):
             **ts_kwargs,
         )
 
-        return codelist_terms
-
     submission_value: Annotated[str, Field()]
+    algorithm: Annotated[
+        str | None,
+        Field(
+            description="SDTM algorithm text read by SAS programs",
+            json_schema_extra={"nullable": True, "remove_from_wildcard": True},
+        ),
+    ] = None
     submission_value_test_name: Annotated[
         str | None,
         Field(

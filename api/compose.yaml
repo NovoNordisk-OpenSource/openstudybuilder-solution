@@ -53,6 +53,16 @@ services:
       TRACING_ENABLED: "${TRACING_ENABLED:-}"
       APPLICATIONINSIGHTS_CONNECTION_STRING: "${APPLICATIONINSIGHTS_CONNECTION_STRING:-}"
       UVICORN_LOG_CONFIG: "${UVICORN_LOG_CONFIG:-}"
+      NEO4J_STANDARDS_IMPORT_STAGING_DSN: "bolt://neo4j:$NEO4J_MDR_AUTH_PASSWORD@localhost:5002/mdrdb"
+      NEO4J_STANDARDS_IMPORT_ENABLED: "true"
+      NEO4J_MAX_PACKAGE_FILE_BYTES: 67108864
+      NEO4J_STAGING_BATCH_SIZE: 1000
+      NEO4J_JOB_STALE_AFTER_SECONDS: 144000
+      NEO4J_STANDARDS_IMPORT_CDISC_API_BASE_URL: "https://library.cdisc.org/api"
+      NEO4J_NEO4J_MDR_ROLE_USER: "neo4j"
+      NEO4J_NEO4J_MDR_ROLE_PASSWORD: "$NEO4J_MDR_AUTH_PASSWORD"
+      NEO4J_NEO4J_STAGING_ROLE_USER: "neo4j"
+      NEO4J_NEO4J_STAGING_ROLE_PASSWORD: "$NEO4J_MDR_AUTH_PASSWORD"
     ports:
       - "${BIND_ADDRESS:-127.0.0.1}:${API_PORT:-8000}:8000"
 
@@ -100,8 +110,6 @@ services:
       args:
         TARGET: ${BUILD_TARGET:-dev}
         UID: ${UID:-1000}
-    environment:
-      EXPIRED_ACCESS_TOKEN: "${EXPIRED_ACCESS_TOKEN:-}"
     image: ${DEV_IMAGE:-}
     profiles: ["dev"]
     user: ${UID:-1000}
@@ -121,6 +129,9 @@ services:
       - type: bind
         source: ./extensions/reports
         target: /app/extensions/reports
+      - type: bind
+        source: ./standards_import/reports
+        target: /app/standards_import/reports
       - type: bind
         source: ./extensions/openapi.json
         target: /app/extensions/openapi.json

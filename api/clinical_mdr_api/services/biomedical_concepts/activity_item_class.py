@@ -50,7 +50,9 @@ from common.exceptions import NotFoundException
 from common.utils import version_string_to_tuple
 
 
-class ActivityItemClassService(ConceptGenericService[ActivityItemClassAR]):
+class ActivityItemClassService(
+    ConceptGenericService[ActivityItemClassAR, ActivityItemClass]
+):
     aggregate_class = ActivityItemClassAR
     repository_interface = ActivityItemClassRepository
     version_class = ActivityItemClassVersion
@@ -151,7 +153,7 @@ class ActivityItemClassService(ConceptGenericService[ActivityItemClassAR]):
                 nci_concept_id=concept_input.nci_concept_id,
                 nci_concept_name=concept_input.nci_concept_name,
                 order=concept_input.order,
-                display_name=concept_input.display_name,
+                label=concept_input.label,
                 activity_instance_classes=[
                     ActivityInstanceClassActivityItemClassRelVO(
                         uid=item.uid,
@@ -191,10 +193,10 @@ class ActivityItemClassService(ConceptGenericService[ActivityItemClassAR]):
                 nci_concept_id=concept_edit_input.nci_concept_id,
                 nci_concept_name=concept_edit_input.nci_concept_name,
                 order=concept_edit_input.order or item.activity_item_class_vo.order,
-                display_name=(
-                    concept_edit_input.display_name
-                    if concept_edit_input.display_name is not None
-                    else item.activity_item_class_vo.display_name
+                label=(
+                    concept_edit_input.label
+                    if concept_edit_input.label is not None
+                    else item.activity_item_class_vo.label
                 ),
                 activity_instance_classes=[
                     ActivityInstanceClassActivityItemClassRelVO(
@@ -294,7 +296,7 @@ class ActivityItemClassService(ConceptGenericService[ActivityItemClassAR]):
             self._repos.activity_item_class_repository.patch_valid_codelist_mappings(
                 result.uid, concept_input.valid_codelist_uids
             )
-            result = self.get_by_uid(result.uid)
+            result = self.get_by_uid(result.uid)  # type: ignore[arg-type]
         elif not preview and result.non_standard_variable is not None:
             # nsvxmldt is derived from the DB (nearest NSVXMLDT-codelist
             # ancestor of the data_type term) rather than copied from the
@@ -302,7 +304,7 @@ class ActivityItemClassService(ConceptGenericService[ActivityItemClassAR]):
             # persisted value node - the in-memory AR built by super().create()
             # never computes it. Re-fetching is the only way to get it onto
             # the response.
-            result = self.get_by_uid(result.uid)
+            result = self.get_by_uid(result.uid)  # type: ignore[arg-type]
         return result
 
     @ensure_transaction(db)
@@ -442,7 +444,7 @@ class ActivityItemClassService(ConceptGenericService[ActivityItemClassAR]):
                 seen_uids[uid] = CompactActivityItemClass(
                     uid=uid,
                     name=item_class["aicv"]["name"],
-                    display_name=item_class["aicv"]["display_name"],
+                    label=item_class["aicv"]["label"],
                     mandatory=item_class["has_activity_instance_class"]["mandatory"],
                     is_adam_param_specific_enabled=item_class[
                         "has_activity_instance_class"
@@ -483,7 +485,7 @@ class ActivityItemClassService(ConceptGenericService[ActivityItemClassAR]):
             uid=item_class_ar.uid,
             name=item_class_ar.name,
             definition=item_class_ar.activity_item_class_vo.definition,
-            display_name=item_class_ar.display_name,
+            label=item_class_ar.label,
             nci_code=item_class_ar.activity_item_class_vo.nci_concept_id,
             nci_concept_name=item_class_ar.activity_item_class_vo.nci_concept_name,
             library_name=item_class_ar.library.name if item_class_ar.library else None,
@@ -512,8 +514,11 @@ class ActivityItemClassService(ConceptGenericService[ActivityItemClassAR]):
         )
 
         # Get all versions
-        version_history = self.get_version_history(activity_item_class_uid)
-        all_versions = list({v.version for v in version_history})
+        all_versions = (
+            self._repos.activity_item_class_repository.get_all_version_numbers(
+                activity_item_class_uid
+            )
+        )
         all_versions = self._sort_semantic_versions(all_versions, reverse=True)
 
         return ActivityItemClassOverview(

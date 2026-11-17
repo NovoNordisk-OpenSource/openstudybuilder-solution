@@ -75,7 +75,7 @@ name.
 | `impact:business_rules` | Business rule verification | Critical |
 | `impact:performance` | Performance-related checks | Normal |
 | `impact:api` | API endpoint checks | Normal |
-| `impact:consumer_api` | Consumer API checks | Normal |
+| `impact:consumer_api` | Internal (not in the public distribution) | Normal |
 | `impact:api_soa` | SOA-related API checks | Normal |
 | `impact:library_quality` | Library / dictionary content quality | Minor |
 | *(untagged)* | — | Minor |
@@ -114,7 +114,6 @@ Test scripts are dependent on the following environment variables:
 DATABASE_URL
 DATABASE_NAME
 API_BASE_URL
-CONSUMER_API_BASE_URL
 API_AUTH_TOKEN
 ```
 
@@ -124,7 +123,6 @@ Crete an `.env` file in project root locally, for example:
 DATABASE_URL=bolt://neo4j:<your-neo4j-password>@localhost:7687
 DATABASE_NAME=
 API_BASE_URL=http://localhost:8000
-CONSUMER_API_BASE_URL=http://localhost:8008
 API_AUTH_TOKEN=
 
 STUDY_UID=Study_000039                       # Study UID used to test various endpoints

@@ -3,14 +3,14 @@ name = "db-schema-migration"
 version = "0.1.0"
 requires-python = ">=3.14"
 dependencies = [
-    "requests~=2.34.2",
     "neomodel~=5.4.1",
-    "aiohttp~=3.14.0",
+    "aiohttp~=3.14.5",
     "pyyaml~=6.0",
     "pytest-order",
     "jinja2~=3.1.2",
     "httpx~=0.28.1",
-    "authlib~=1.8.0",
+    "httpx-auth~=0.23.1",
+    "authlib~=1.9.0",
     "cryptography>=50.0.0",
     "starlette~=1.0",
     "opencensus~=0.11.4",
@@ -26,6 +26,10 @@ constraint-dependencies = [
     "pyjwt>=2.15.0",  # CVE-2026-101918
     "urllib3>=2.8.0",  # CVE-2026-97687, CVE-2026-97688, CVE-2026-97689
     "multidict>=6.9.1",  # CVE-2026-104874
+    "aiohttp>=3.14.4",  # CVE-2026-111063, CVE-2026-111064, CVE-2026-111065, CVE-2026-111066, CVE-2026-111748, CVE-2026-111749, CVE-2026-111750, GHSA-2g87-pp6c-29x5
+    "certifi>=2026.10.19",  # PYSEC-2026-4320
+    "joserfc>=1.7.6",  # CVE-2026-119284
+    "pyasn1>=0.6.5",  # CVE-2026-119194, CVE-2026-119195, CVE-2026-119196, CVE-2026-119197
 ]
 
 [dependency-groups]
@@ -74,7 +78,7 @@ envfile = ".env"
 
 [tool.poe.tasks]
 build-sbom = "python3 ../_tools/build_sbom.py --uv --fallback-dir doc/licenses --level 2 --output sbom.md"
-test = "python -m pytest -s --cov-report=html:test_coverage --cov-report=xml:reports/coverage.xml --cov-append --cov --junitxml=reports/test_report.xml tests/test_migration_024.py"
+test = "python -m pytest -s --cov-report=html:test_coverage --cov-report=xml:reports/coverage.xml --cov-append --cov --junitxml=reports/test_report.xml tests/test_api_auth.py tests/test_migration_024.py"
 verify = "python -m pytest -s --cov-report=html:test_coverage --cov-report=xml:reports/coverage.xml --cov-append --cov --junitxml=reports/test_report.xml verifications/verification_024.py"
 migrate = "python -m migrations.migration_024"
 test_corrections = "python -m pytest -s --cov-report=html:test_coverage --cov-report=xml:reports/coverage.xml --cov-append --cov --junitxml=reports/test_report.xml tests/test_correction_022.py"

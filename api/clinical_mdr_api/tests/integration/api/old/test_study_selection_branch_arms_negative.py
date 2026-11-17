@@ -295,7 +295,7 @@ def test_adding_selection2(api_client):
     assert res["type"] == "ValidationException"
     assert (
         res["message"]
-        == "Value 'BranchArm_Name_1' in field Branch Arm Name is not unique for the study."
+        == "Value 'BranchArm_Name_1' in field Branch Arm Name is not unique for the Study Arm."
     )
 
 

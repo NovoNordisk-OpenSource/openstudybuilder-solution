@@ -88,14 +88,17 @@
                 v-model="studyForm.study_number"
                 :label="$t('StudyForm.number')"
                 :rules="[
-                  formRules.numeric,
+                  (value) =>
+                    regex.validateStudyNumber(
+                      value,
+                      settingsStore.settings?.studies_study_number_regex
+                    ),
                   (value) =>
                     formRules.oneOfTwo(
                       value,
                       studyForm.study_acronym,
                       $t('StudyForm.one_of_two_error_message')
                     ),
-                  (value) => formRules.max(value, appStore.studyNumberLength),
                 ]"
                 clearable
                 data-cy="study-number"
@@ -143,23 +146,23 @@
 <script setup>
 import { computed, inject, ref, watch, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useAppStore } from '@/stores/app'
 import { useStudiesGeneralStore } from '@/stores/studies-general'
 import { useStudiesManageStore } from '@/stores/studies-manage'
+import { useSettingsStore } from '@/stores/settings'
 import ConfirmDialog from '@/components/tools/ConfirmDialog.vue'
 import HorizontalStepperForm from '@/components/tools/HorizontalStepperForm.vue'
 import StudyStructureCopyForm from '@/components/studies/StudyStructureCopyForm.vue'
 import studyApi from '@/api/study'
 import studyTemplateApi from '@/api/studyTemplate'
 import jobsApi from '@/api/jobs'
+import regex from '@/utils/regex'
 
 const notificationHub = inject('notificationHub')
 const formRules = inject('formRules')
 const { t } = useI18n()
-const appStore = useAppStore()
 const studiesGeneralStore = useStudiesGeneralStore()
 const studiesManageStore = useStudiesManageStore()
-
+const settingsStore = useSettingsStore()
 const emit = defineEmits(['close'])
 
 const createMode = ref('scratch')
@@ -186,6 +189,8 @@ const steps = ref(createFromScratchSteps)
 const studyTemplate = ref({})
 
 onMounted(() => {
+  settingsStore.fetchSettings()
+
   studyTemplateApi.getStudyTemplate().then((resp) => {
     studyTemplate.value = resp.data
   })

@@ -17,6 +17,7 @@ from clinical_mdr_api.models.study_selections.study_selection import (
     StudySelectionCriteriaCore,
     StudySelectionCriteriaCreateInput,
     StudySelectionCriteriaInput,
+    StudySelectionCriteriaStudyDesignPopulationInput,
     StudySelectionCriteriaTemplateSelectInput,
 )
 from clinical_mdr_api.models.syntax_instances.criteria import (
@@ -314,6 +315,8 @@ class StudyCriteriaSelectionService(StudySelectionMixin):
                     study_selection_uid=current_vo.study_selection_uid,
                     start_date=current_vo.start_date,
                     accepted_version=current_vo.accepted_version,
+                    study_design_population_uids=current_vo.study_design_population_uids,
+                    identifier=current_vo.identifier,
                 )
                 # let the aggregate update the value object
                 selection_aggregate.update_study_criteria_on_aggregated(
@@ -610,11 +613,10 @@ class StudyCriteriaSelectionService(StudySelectionMixin):
             parsed_selections = self._transform_all_to_response_model(
                 criteria_selection_ar, no_brackets=no_brackets
             )
-            for selection in parsed_selections:
-                selections.append(selection)
+            selections.extend(parsed_selections)
 
         # Do filtering, sorting, pagination and count
-        filtered_items = service_level_generic_filtering(
+        return service_level_generic_filtering(
             items=selections,
             filter_by=filter_by,
             filter_operator=filter_operator,
@@ -623,7 +625,6 @@ class StudyCriteriaSelectionService(StudySelectionMixin):
             page_number=page_number,
             page_size=page_size,
         )
-        return filtered_items
 
     @db.transaction
     def get_distinct_values_for_header(
@@ -656,7 +657,7 @@ class StudyCriteriaSelectionService(StudySelectionMixin):
                 criteria_type_name=criteria_type_name,
             )
 
-            header_values = service_level_generic_header_filtering(
+            return service_level_generic_header_filtering(
                 items=self._transform_all_to_response_model(
                     criteria_selection_ar, no_brackets=False
                 ),
@@ -666,8 +667,6 @@ class StudyCriteriaSelectionService(StudySelectionMixin):
                 filter_operator=filter_operator,
                 page_size=page_size,
             )
-
-            return header_values
 
         # Extract the study uids to use database level filtering for these
         # instead of service level filtering
@@ -689,11 +688,10 @@ class StudyCriteriaSelectionService(StudySelectionMixin):
             parsed_selections = self._transform_all_to_response_model(
                 criteria_selection_ar, no_brackets=True
             )
-            for selection in parsed_selections:
-                selections.append(selection)
+            selections.extend(parsed_selections)
 
         # Do filtering, sorting, pagination and count
-        header_values = service_level_generic_header_filtering(
+        return service_level_generic_header_filtering(
             items=selections,
             field_name=field_name,
             search_string=search_string,
@@ -702,7 +700,6 @@ class StudyCriteriaSelectionService(StudySelectionMixin):
             page_size=page_size,
         )
         # Return values for field_name
-        return header_values
 
     @db.transaction
     def get_all_selection(
@@ -986,6 +983,8 @@ class StudyCriteriaSelectionService(StudySelectionMixin):
                 study_selection_uid=current_vo.study_selection_uid,
                 start_date=current_vo.start_date,
                 accepted_version=current_vo.accepted_version,
+                study_design_population_uids=current_vo.study_design_population_uids,
+                identifier=current_vo.identifier,
             )
 
             # let the aggregate update the value object
@@ -1004,6 +1003,159 @@ class StudyCriteriaSelectionService(StudySelectionMixin):
                 study_uid=study_uid
             )
             # add the criteria and return
+            if new_selection.is_instance:
+                return StudySelectionCriteria.from_study_selection_criteria_ar_and_order(
+                    study_selection_criteria_ar=selection_aggregate,
+                    criteria_type_order=new_selection.criteria_type_order,
+                    criteria_type_uid=new_selection.criteria_type_uid,
+                    get_criteria_by_uid_callback=self._transform_latest_criteria_model,
+                    get_criteria_by_uid_version_callback=self._transform_criteria_model,
+                    find_codelist_term_by_uid_and_submval=self._repos.ct_codelist_name_repository.get_codelist_term_by_uid_and_submval,
+                    find_project_by_study_uid=self._repos.project_repository.find_by_study_uid,
+                    terms_at_specific_datetime=terms_at_specific_datetime,
+                )
+            return StudySelectionCriteria.from_study_selection_criteria_template_ar_and_order(
+                study_selection_criteria_ar=selection_aggregate,
+                criteria_type_order=new_selection.criteria_type_order,
+                criteria_type_uid=new_selection.criteria_type_uid,
+                get_criteria_template_by_uid_callback=self._transform_latest_criteria_template_model,
+                get_criteria_template_by_uid_version_callback=self._transform_criteria_template_model,
+                find_codelist_term_by_uid_and_submval=self._repos.ct_codelist_name_repository.get_codelist_term_by_uid_and_submval,
+                find_project_by_study_uid=self._repos.project_repository.find_by_study_uid,
+                terms_at_specific_datetime=terms_at_specific_datetime,
+            )
+        finally:
+            repos.close()
+
+    @db.transaction
+    def set_identifier(
+        self, study_uid: str, study_selection_uid: str, identifier: str | None
+    ) -> StudySelectionCriteria:
+        """Set the protocol criterion identifier (USDM identifier / SDTM IETESTCD)."""
+        repos = self._repos
+        try:
+            selection_aggregate = repos.study_criteria_repository.find_by_study(
+                study_uid=study_uid, for_update=True
+            )
+            current_vo, _ = selection_aggregate.get_specific_criteria_selection(
+                study_criteria_uid=study_selection_uid
+            )
+
+            updated_selection = StudySelectionCriteriaVO.from_input_values(
+                author_id=self.author,
+                syntax_object_uid=current_vo.syntax_object_uid,
+                syntax_object_version=current_vo.syntax_object_version,
+                criteria_type_uid=current_vo.criteria_type_uid,
+                criteria_type_order=current_vo.criteria_type_order,
+                is_instance=current_vo.is_instance,
+                key_criteria=current_vo.key_criteria,
+                study_uid=current_vo.study_uid,
+                study_selection_uid=current_vo.study_selection_uid,
+                start_date=current_vo.start_date,
+                accepted_version=current_vo.accepted_version,
+                study_design_population_uids=current_vo.study_design_population_uids,
+                identifier=identifier,
+            )
+
+            selection_aggregate.update_study_criteria_on_aggregated(
+                updated_study_criteria_selection=updated_selection,
+            )
+            repos.study_criteria_repository.save(selection_aggregate, self.author)
+
+            new_selection, _ = selection_aggregate.get_specific_criteria_selection(
+                study_criteria_uid=study_selection_uid
+            )
+            terms_at_specific_datetime = self._extract_study_standards_effective_date(
+                study_uid=study_uid
+            )
+            if new_selection.is_instance:
+                return StudySelectionCriteria.from_study_selection_criteria_ar_and_order(
+                    study_selection_criteria_ar=selection_aggregate,
+                    criteria_type_order=new_selection.criteria_type_order,
+                    criteria_type_uid=new_selection.criteria_type_uid,
+                    get_criteria_by_uid_callback=self._transform_latest_criteria_model,
+                    get_criteria_by_uid_version_callback=self._transform_criteria_model,
+                    find_codelist_term_by_uid_and_submval=self._repos.ct_codelist_name_repository.get_codelist_term_by_uid_and_submval,
+                    find_project_by_study_uid=self._repos.project_repository.find_by_study_uid,
+                    terms_at_specific_datetime=terms_at_specific_datetime,
+                )
+            return StudySelectionCriteria.from_study_selection_criteria_template_ar_and_order(
+                study_selection_criteria_ar=selection_aggregate,
+                criteria_type_order=new_selection.criteria_type_order,
+                criteria_type_uid=new_selection.criteria_type_uid,
+                get_criteria_template_by_uid_callback=self._transform_latest_criteria_template_model,
+                get_criteria_template_by_uid_version_callback=self._transform_criteria_template_model,
+                find_codelist_term_by_uid_and_submval=self._repos.ct_codelist_name_repository.get_codelist_term_by_uid_and_submval,
+                find_project_by_study_uid=self._repos.project_repository.find_by_study_uid,
+                terms_at_specific_datetime=terms_at_specific_datetime,
+            )
+        finally:
+            repos.close()
+
+    @db.transaction
+    def set_study_design_population(
+        self,
+        study_uid: str,
+        study_selection_uid: str,
+        selection_input: StudySelectionCriteriaStudyDesignPopulationInput,
+    ) -> StudySelectionCriteria:
+        """Link or unlink study design populations on a study criteria selection.
+
+        Passing an empty list removes all existing links.
+        """
+        repos = self._repos
+        try:
+            if selection_input.study_design_population_uids:
+                population_vos = (
+                    repos.study_design_population_repository.find_all_by_study(
+                        study_uid=study_uid
+                    )
+                )
+                existing_uids = {vo.uid for vo in population_vos}
+                missing_uids = [
+                    uid
+                    for uid in selection_input.study_design_population_uids
+                    if uid not in existing_uids
+                ]
+                exceptions.NotFoundException.raise_if(
+                    missing_uids,
+                    msg=f"Study Design Population(s) with UID(s) '{missing_uids}' don't exist.",
+                )
+
+            selection_aggregate = repos.study_criteria_repository.find_by_study(
+                study_uid=study_uid, for_update=True
+            )
+            current_vo, _ = selection_aggregate.get_specific_criteria_selection(
+                study_criteria_uid=study_selection_uid
+            )
+
+            updated_selection = StudySelectionCriteriaVO.from_input_values(
+                author_id=self.author,
+                syntax_object_uid=current_vo.syntax_object_uid,
+                syntax_object_version=current_vo.syntax_object_version,
+                criteria_type_uid=current_vo.criteria_type_uid,
+                criteria_type_order=current_vo.criteria_type_order,
+                is_instance=current_vo.is_instance,
+                key_criteria=current_vo.key_criteria,
+                study_uid=current_vo.study_uid,
+                study_selection_uid=current_vo.study_selection_uid,
+                start_date=current_vo.start_date,
+                accepted_version=current_vo.accepted_version,
+                study_design_population_uids=selection_input.study_design_population_uids,
+                identifier=current_vo.identifier,
+            )
+
+            selection_aggregate.update_study_criteria_on_aggregated(
+                updated_study_criteria_selection=updated_selection,
+            )
+            repos.study_criteria_repository.save(selection_aggregate, self.author)
+
+            new_selection, _ = selection_aggregate.get_specific_criteria_selection(
+                study_criteria_uid=study_selection_uid
+            )
+            terms_at_specific_datetime = self._extract_study_standards_effective_date(
+                study_uid=study_uid
+            )
             if new_selection.is_instance:
                 return StudySelectionCriteria.from_study_selection_criteria_ar_and_order(
                     study_selection_criteria_ar=selection_aggregate,

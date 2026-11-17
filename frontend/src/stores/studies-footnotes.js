@@ -31,6 +31,7 @@ export const useFootnotesStore = defineStore('footnotes', {
       form,
       parameters,
       referencedItems,
+      layout,
     }) {
       const footnote = {
         footnote_template_uid: form.footnote_template.uid,
@@ -41,10 +42,23 @@ export const useFootnotesStore = defineStore('footnotes', {
         footnote_data: footnote,
         referenced_items: referencedItems,
       }
+      if (layout) {
+        data.layout = layout
+      }
       return study.createStudyFootnote(studyUid, data, true)
     },
-    selectFromStudyFootnote({ studyUid, footnoteUid, referencedItems }) {
-      return study.selectStudyFootnote(studyUid, footnoteUid, referencedItems)
+    selectFromStudyFootnote({
+      studyUid,
+      footnoteUid,
+      referencedItems,
+      layout,
+    }) {
+      return study.selectStudyFootnote(
+        studyUid,
+        footnoteUid,
+        referencedItems,
+        layout
+      )
     },
     async updateStudyFootnote({
       studyUid,

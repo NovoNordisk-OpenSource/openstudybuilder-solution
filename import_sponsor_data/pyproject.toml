@@ -16,12 +16,18 @@ dependencies = [
 
 [tool.uv]
 package = false
+# Security floors for transitive dependencies: bound the resolver to fixed
+# versions without declaring these as direct dependencies of this project.
+constraint-dependencies = [
+    "multidict>=6.9.1",  # CVE-2026-104874
+    "certifi>=2026.10.19",  # PYSEC-2026-4320
+]
 
 [dependency-groups]
 dev = [
     "ruff~=0.16.8",
     "isort~=8.0.1",
-    "black>=26.5.1",
+    "black>=26.10.1",
     "ipykernel==7.3.0",
 ]
 

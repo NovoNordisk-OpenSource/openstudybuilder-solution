@@ -1,5 +1,5 @@
 import datetime
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
 
 from neomodel import db
@@ -18,7 +18,10 @@ from clinical_mdr_api.domain_repositories.models.study_audit_trail import (
     Edit,
     StudyAction,
 )
-from clinical_mdr_api.domain_repositories.models.study_selections import StudyCriteria
+from clinical_mdr_api.domain_repositories.models.study_selections import (
+    StudyCriteria,
+    StudyDesignPopulation,
+)
 from clinical_mdr_api.domain_repositories.models.syntax import (
     CriteriaRoot,
     CriteriaTemplateRoot,
@@ -49,6 +52,8 @@ class SelectionHistory:
     syntax_object_version: str | None
     is_instance: bool = True
     key_criteria: bool = False
+    study_design_population_uids: list[str] = field(default_factory=list)
+    identifier: str | None = None
 
 
 class StudySelectionCriteriaRepository:
@@ -123,9 +128,12 @@ class StudySelectionCriteriaRepository:
                 ORDER BY ver.start_date DESC
                 LIMIT 1
             }}
-            WITH DISTINCT sr, term_uid, sc, obj, ver, is_instance
+            WITH DISTINCT sr, sv, term_uid, sc, obj, ver, is_instance
             ORDER BY term_uid, sc.order ASC
             MATCH (sc)<-[:AFTER]-(sa:StudyAction)
+            OPTIONAL MATCH (sc)-[:HAS_STUDY_DESIGN_POPULATION]->(sdp:StudyDesignPopulation)
+            WHERE (sv)-[:HAS_STUDY_DESIGN_POPULATION]->(sdp)
+            WITH sr, term_uid, sc, obj, ver, is_instance, sa, collect(DISTINCT sdp.uid) AS study_design_population_uids
             RETURN
                 sr.uid AS study_uid,
                 term_uid AS criteria_type_uid,
@@ -137,7 +145,9 @@ class StudySelectionCriteriaRepository:
                 sa.author_id AS author_id,
                 ver.version AS syntax_object_version,
                 is_instance AS is_instance,
-                sc.key_criteria as key_criteria
+                sc.key_criteria AS key_criteria,
+                sc.identifier AS identifier,
+                study_design_population_uids AS study_design_population_uids
             """
 
         all_criteria_selections = db.cypher_query(query, query_parameters)
@@ -158,6 +168,11 @@ class StudySelectionCriteriaRepository:
                 start_date=convert_to_datetime(value=selection["start_date"]),
                 author_id=selection["author_id"],
                 accepted_version=acv,
+                study_design_population_uids=selection.get(
+                    "study_design_population_uids"
+                )
+                or [],
+                identifier=selection.get("identifier"),
             )
             all_selections.append(selection_vo)
         return tuple(all_selections)
@@ -299,7 +314,7 @@ class StudySelectionCriteriaRepository:
                     # Nothing has been added, but an object might have been replaced
                     if len(_closure_data) > order - 1:
                         # check if anything has changed
-                        if selected_object is not _closure_data[order - 1]:
+                        if selected_object != _closure_data[order - 1]:
                             # update the selection by removing the old if the old exists, and adding new selection
                             selections_to_remove.setdefault(criteria_type, []).append(
                                 (order, _closure_data[order - 1])
@@ -458,6 +473,7 @@ class StudySelectionCriteriaRepository:
         )
         study_criteria_selection_node.uid = selection.study_selection_uid
         study_criteria_selection_node.accepted_version = selection.accepted_version
+        study_criteria_selection_node.identifier = selection.identifier  # type: ignore[assignment]
         study_criteria_selection_node.save()
         if not for_deletion:
             # Connect new node with study value
@@ -474,6 +490,18 @@ class StudySelectionCriteriaRepository:
             study_criteria_selection_node.has_selected_criteria_template.connect(
                 latest_criteria_template_value_node
             )
+
+        if selection.study_design_population_uids:
+            population_nodes = (
+                latest_study_value_node.has_study_design_population.filter(
+                    uid__in=selection.study_design_population_uids
+                )
+            )
+            for population_node in population_nodes:
+                study_criteria_selection_node.has_study_design_population.connect(
+                    population_node
+                )
+
         _manage_versioning_with_relations(
             study_root=study_root,
             action_type=type(audit_node),
@@ -482,6 +510,7 @@ class StudySelectionCriteriaRepository:
             exclude_relationships=[
                 CriteriaValue,
                 CriteriaTemplateValue,
+                StudyDesignPopulation,
             ],
             author_id=selection.author_id,
         )
@@ -536,7 +565,8 @@ class StudySelectionCriteriaRepository:
             ORDER BY term_uid, all_sc.order ASC
             MATCH (all_sc)<-[:AFTER]-(asa:StudyAction)
             OPTIONAL MATCH (all_sc)<-[:BEFORE]-(bsa:StudyAction)
-            WITH term_uid, all_sc, obj, asa, bsa, ver, is_instance
+            OPTIONAL MATCH (all_sc)-[:HAS_STUDY_DESIGN_POPULATION]->(sdp:StudyDesignPopulation)
+            WITH term_uid, all_sc, obj, asa, bsa, ver, is_instance, collect(DISTINCT sdp.uid) AS study_design_population_uids
             ORDER BY all_sc.uid, asa.date DESC
             RETURN
                 term_uid AS criteria_type_uid,
@@ -550,7 +580,9 @@ class StudySelectionCriteriaRepository:
                 bsa.date AS end_date,
                 ver.version AS syntax_object_version,
                 is_instance AS is_instance,
-                all_sc.key_criteria as key_criteria
+                all_sc.key_criteria AS key_criteria,
+                all_sc.identifier AS identifier,
+                study_design_population_uids AS study_design_population_uids
             """
         )
         specific_criteria_selections_audit_trail = db.cypher_query(
@@ -585,6 +617,9 @@ class StudySelectionCriteriaRepository:
                     syntax_object_version=res["syntax_object_version"],
                     is_instance=res["is_instance"],
                     key_criteria=res["key_criteria"],
+                    study_design_population_uids=res.get("study_design_population_uids")
+                    or [],
+                    identifier=res.get("identifier"),
                 )
             )
         return result

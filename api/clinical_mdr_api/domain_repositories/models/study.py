@@ -5,6 +5,7 @@ from clinical_mdr_api.domain_repositories.models.generic import (
     ClinicalMdrNodeWithUID,
     ClinicalMdrRel,
     VersionRelationship,
+    ZonedDateTimeProperty,
 )
 from clinical_mdr_api.domain_repositories.models.study_audit_trail import StudyAction
 from clinical_mdr_api.domain_repositories.models.study_field import (
@@ -43,6 +44,21 @@ from clinical_mdr_api.domain_repositories.models.study_selections import (
     StudyVersion,
 )
 from common.neomodel import StringProperty
+
+
+class StudySoASnapshot(ClinicalMdrNode):
+    """
+    Pre-rendered SoA of a locked or released study version.
+
+    Besides the declared properties, the node carries the `docx` and `xlsx` renderings
+    as byte arrays, which are written and read with raw Cypher by StudySoARepository.
+    """
+
+    layout = StringProperty()
+    html = StringProperty()
+    json = StringProperty()
+    time_unit = StringProperty()
+    created_at = ZonedDateTimeProperty()
 
 
 class StudyValue(ClinicalMdrNode, AuditTrailMixin):
@@ -153,6 +169,11 @@ class StudyValue(ClinicalMdrNode, AuditTrailMixin):
         StudyCohort, "HAS_STUDY_COHORT", model=ClinicalMdrRel
     )
 
+    has_study_auxiliary_device = RelationshipTo(
+        ".study_auxiliary_device.StudyAuxiliaryDevice",
+        "HAS_STUDY_AUXILIARY_DEVICE",
+        model=ClinicalMdrRel,
+    )
     has_study_disease_milestone = RelationshipTo(
         ".study_disease_milestone.StudyDiseaseMilestone",
         "HAS_STUDY_DISEASE_MILESTONE",
@@ -180,6 +201,14 @@ class StudyValue(ClinicalMdrNode, AuditTrailMixin):
         "HAS_STUDY_FOOTNOTE",
         model=ClinicalMdrRel,
     )
+    has_soa_snapshot = RelationshipTo(
+        StudySoASnapshot,
+        "HAS_SOA_SNAPSHOT",
+        cardinality=ZeroOrMore,
+        model=ClinicalMdrRel,
+    )
+    # LEGACY-SOA-SNAPSHOT (242942): only used by migration 024 to render pre-existing
+    # locked/released versions from HAS_PROTOCOL_SOA_CELL refs. Remove in the next release.
     has_protocol_soa_cell = RelationshipTo(
         StudySelection,
         "HAS_PROTOCOL_SOA_CELL",
@@ -196,6 +225,12 @@ class StudyValue(ClinicalMdrNode, AuditTrailMixin):
         StudySelection,
         "HAS_STUDY_DESIGN_CLASS",
         cardinality=ZeroOrOne,
+        model=ClinicalMdrRel,
+    )
+    has_study_design_population = RelationshipTo(
+        StudySelection,
+        "HAS_STUDY_DESIGN_POPULATION",
+        cardinality=ZeroOrMore,
         model=ClinicalMdrRel,
     )
     has_study_source_variable = RelationshipTo(

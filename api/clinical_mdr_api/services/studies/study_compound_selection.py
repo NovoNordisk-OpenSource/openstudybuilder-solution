@@ -118,7 +118,7 @@ class StudyCompoundSelectionService(
                 study_selection.medicinal_product_uid
             )
 
-        result = StudySelectionCompound.from_study_compound_ar(
+        return StudySelectionCompound.from_study_compound_ar(
             study_uid=study_uid,
             selection=study_selection,
             order=order,
@@ -129,7 +129,6 @@ class StudyCompoundSelectionService(
             find_project_by_study_uid=self._repos.project_repository.find_by_study_uid,
             terms_at_specific_datetime=terms_at_specific_datetime,
         )
-        return result
 
     @db.transaction
     def make_selection(
@@ -225,11 +224,10 @@ class StudyCompoundSelectionService(
             parsed_selections = self._transform_all_to_response_model(
                 compound_selection_ar,
             )
-            for selection in parsed_selections:
-                selections.append(selection)
+            selections.extend(parsed_selections)
 
         # Do filtering, sorting, pagination and count
-        filtered_items = service_level_generic_filtering(
+        return service_level_generic_filtering(
             items=selections,
             filter_by=filter_by,
             filter_operator=filter_operator,
@@ -238,7 +236,6 @@ class StudyCompoundSelectionService(
             page_number=page_number,
             page_size=page_size,
         )
-        return filtered_items
 
     @db.transaction
     def get_distinct_values_for_header(
@@ -260,7 +257,7 @@ class StudyCompoundSelectionService(
                 study_uid, study_value_version
             )
 
-            header_values = service_level_generic_header_filtering(
+            return service_level_generic_header_filtering(
                 items=self._transform_all_to_response_model(compound_selection_ar),
                 field_name=field_name,
                 search_string=search_string,
@@ -268,8 +265,6 @@ class StudyCompoundSelectionService(
                 filter_operator=filter_operator,
                 page_size=page_size,
             )
-
-            return header_values
 
         compound_selection_ars = repos.study_compound_repository.find_all(
             project_name=project_name,
@@ -283,11 +278,10 @@ class StudyCompoundSelectionService(
             parsed_selections = self._transform_all_to_response_model(
                 compound_selection_ar
             )
-            for selection in parsed_selections:
-                selections.append(selection)
+            selections.extend(parsed_selections)
 
         # Do filtering, sorting, pagination and count
-        header_values = service_level_generic_header_filtering(
+        return service_level_generic_header_filtering(
             items=selections,
             field_name=field_name,
             search_string=search_string,
@@ -296,7 +290,6 @@ class StudyCompoundSelectionService(
             page_size=page_size,
         )
         # Return values for field_name
-        return header_values
 
     @db.transaction
     def get_all_selection(

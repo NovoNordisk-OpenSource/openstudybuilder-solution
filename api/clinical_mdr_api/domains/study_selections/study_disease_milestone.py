@@ -1,16 +1,22 @@
 import datetime
-from collections import namedtuple
 from dataclasses import dataclass
+from typing import NamedTuple
 
 from clinical_mdr_api.domains.study_definition_aggregates.study_metadata import (
     StudyStatus,
 )
 
-TypeNameDefinition = namedtuple("TypeNameDefinition", ["named", "definition"])
 
-DiseaseMilestoneTypeNamedTuple = namedtuple(
-    "DiseaseMilestoneTypeNamedTuple", ["name", "value"]
-)
+class TypeNameDefinition(NamedTuple):
+    named: str
+    definition: str
+
+
+class DiseaseMilestoneTypeNamedTuple(NamedTuple):
+    name: str
+    value: TypeNameDefinition
+
+
 StudyDiseaseMilestoneType: dict[str, DiseaseMilestoneTypeNamedTuple] = {}
 
 

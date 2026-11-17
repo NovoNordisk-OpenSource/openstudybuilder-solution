@@ -9,8 +9,10 @@ cp .env.example .env           # Setup environment variables (edit NEO4J_DSN, UI
 ## Running APIs
 ```bash
 uv run poe dev                 # Start main API (localhost:8000)
+uv run poe dev --port 8001     # Start main API on another port (e.g. second worktree)
 uv run poe consumer-api-dev    # Start consumer API (localhost:8008)
 uv run poe extensions-api-dev  # Start extensions API (localhost:8009)
+uv run poe standards-import-dev # Start standards import API (localhost:8010)
 ```
 
 ## Testing
@@ -32,6 +34,11 @@ uv run poe consumer-api-testauth
 # Extensions API tests
 uv run poe extensions-test
 uv run poe extensions-testauth
+
+# Standards Import API tests
+uv run poe standards-import-test
+uv run poe standards-import-testint     # needs Neo4j; makes its own throwaway databases
+uv run poe standards-import-testauth    # separate run: RBAC is decided at import
 ```
 
 ## Code Quality
@@ -40,6 +47,7 @@ uv run poe format              # Auto-format with Black + isort
 uv run poe lint                # Run Ruff
 uv run poe mypy                # Type checking
 uv run poe sblint              # Custom static analysis (SBLint)
+ub run poe lint-imports        # Dynamic import linting to preserve independence of submodules
 ```
 
 ## API Documentation
@@ -47,5 +55,6 @@ uv run poe sblint              # Custom static analysis (SBLint)
 uv run poe openapi             # Generate openapi.json for main API
 uv run poe consumer-openapi    # Generate openapi.json for consumer API
 uv run poe extensions-openapi  # Generate openapi.json for extensions API
+uv run poe standards-import-openapi  # Generate openapi.json for standards import API
 uv run poe schemathesis        # Validate API against OpenAPI spec
 ```

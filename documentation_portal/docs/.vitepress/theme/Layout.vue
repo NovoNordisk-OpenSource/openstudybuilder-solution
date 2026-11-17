@@ -1,12 +1,19 @@
 <script setup>
 import DefaultTheme from 'vitepress/theme'
-import { useRoute } from 'vitepress'
+import { useData, useRoute } from 'vitepress'
 import { nextTick, onMounted, onUnmounted, watch } from 'vue'
 import Viewer from 'viewerjs'
 import 'viewerjs/dist/viewer.css'
+import { createMermaidRenderer } from 'vitepress-mermaid-renderer'
+import 'vitepress-mermaid-renderer/css'
 
 const { Layout } = DefaultTheme
 const route = useRoute()
+const { isDark } = useData()
+
+function initMermaid() {
+  createMermaidRenderer({ theme: isDark.value ? 'dark' : 'default' })
+}
 
 // Screenshots are authored as self-links ([![alt](img)](img)) so they still
 // open full-size without JS. Viewer.js takes over that click and shows the
@@ -63,6 +70,8 @@ function setupViewer() {
 
 // Client-only: this runs during SSR otherwise, where `document` is undefined.
 onMounted(() => {
+  initMermaid()
+  watch(isDark, initMermaid)
   setupViewer()
   watch(() => route.path, () => nextTick(setupViewer))
 })

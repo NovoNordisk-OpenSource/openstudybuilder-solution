@@ -113,7 +113,7 @@ class DataSupplierRepository(  # type: ignore[misc]
         # Check if we need version data
         need_latest_version = field_name in version_fields
         if not need_latest_version and filter_by:
-            need_latest_version = any(key in version_fields for key in filter_by.keys())
+            need_latest_version = any(key in version_fields for key in filter_by)
 
         if need_latest_version:
             return nodeset.subquery(

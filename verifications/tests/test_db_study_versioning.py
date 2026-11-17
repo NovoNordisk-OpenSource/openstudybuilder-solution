@@ -359,7 +359,8 @@ def unique_study_selection_on_each_study_value(request, prepare_report_file):
 
     query = f"""
         MATCH (sr:StudyRoot)-[sr_sv]-(sv:StudyValue)-[sv_ss]-(ss:StudySelection) 
-            WHERE NOT TYPE(sv_ss) <> "HAS_PROTOCOL_SOA_CELL" AND TYPE(sv_ss) <> "HAS_PROTOCOL_SOA_FOOTNOTE"
+            // LEGACY-SOA-SNAPSHOT (242942): drop the HAS_PROTOCOL_SOA_* condition in the next release
+            WHERE TYPE(sv_ss) <> "HAS_PROTOCOL_SOA_CELL" AND TYPE(sv_ss) <> "HAS_PROTOCOL_SOA_FOOTNOTE"
         WITH DISTINCT ss, sv
         WITH ss.uid as ss_uid, sv,  count(ss.uid) as ss_uid_count
         WHERE ss_uid_count>=2
@@ -381,23 +382,18 @@ def unique_study_selection_on_each_study_value(request, prepare_report_file):
     ), f"Number of StudySelections with two or more versions connected to the same study value : {cnt}"
 
 
-@then(
-    "only LOCKED or RELEASED study versions have HAS_PROTOCOL_SOA_CELL or HAS_PROTOCOL_SOA_FOOTNOTE relationships"
-)
-def only_locked_or_released_have_protocol_soa_relationships(
-    request, prepare_report_file
-):
-    """Only LOCKED or RELEASED versions of studies can have HAS_PROTOCOL_SOA_CELL or HAS_PROTOCOL_SOA_FOOTNOTE relationships"""
+@then("only LOCKED or RELEASED study versions have a StudySoASnapshot node")
+def only_locked_or_released_have_soa_snapshot(request, prepare_report_file):
+    """Only LOCKED or RELEASED versions of studies can have a StudySoASnapshot node"""
 
     check_id, check_description = get_name_and_doc()
     tags = get_gherkin_tags(request)
 
     query = f"""
-        // Only LOCKED or RELEASED versions can have HAS_PROTOCOL_SOA_CELL or HAS_PROTOCOL_SOA_FOOTNOTE relationships
+        // Only LOCKED or RELEASED versions can have a StudySoASnapshot node
         // Note: Checking RELEASED covers both LOCKED and RELEASED since all LOCKED versions are also RELEASED
-        MATCH (sv:StudyValue)-[rels]-(ss:StudySelection) 
-        WHERE TYPE(rels)="HAS_PROTOCOL_SOA_CELL" OR TYPE(rels)="HAS_PROTOCOL_SOA_FOOTNOTE"
-        MATCH (sv)-[versioning:HAS_VERSION]-(sr:StudyRoot)
+        MATCH (sv:StudyValue)-[:HAS_SOA_SNAPSHOT]->(:StudySoASnapshot)
+        MATCH (sv)-[versioning:HAS_VERSION|LATEST]-(sr:StudyRoot)
         WHERE NOT EXISTS((sv)-[:HAS_VERSION {{status:"RELEASED"}}]-(sr))
         {build_root_summary_return_statement('sr')}
     """
@@ -407,4 +403,4 @@ def only_locked_or_released_have_protocol_soa_relationships(
     cnt = result["noncompliant_entity_cnt"]
     assert (
         cnt == 0
-    ), f"Number of study versions with HAS_PROTOCOL_SOA_CELL or HAS_PROTOCOL_SOA_FOOTNOTE relationships that are not LOCKED or RELEASED: {cnt}"
+    ), f"Number of study versions with a StudySoASnapshot node that are not LOCKED or RELEASED: {cnt}"

@@ -65,7 +65,7 @@ When conducting reviews:
    - Are configuration values properly externalized?
    - Is error handling consistent with project patterns?
 
-4. **Validate Against the Standards Documents**: These are not in your context until you open them, and bare `CLAUDE.md` at the repo root is the monorepo index — it contains none of them. Read `api/CLAUDE.md` plus the rule files that cover what you are reviewing:
+4. **Validate Against the Standards Documents**: These are not in your context until you open them, and bare `CLAUDE.md` at the repo root is the monorepo index — it contains none of them. Read `api/AGENTS.md` plus the rule files that cover what you are reviewing:
    - DDD layer responsibilities — `api/.claude/rules/architecture.md`
    - REST API conventions — `api/.claude/rules/api-conventions.md`
    - Code style rules — `api/.claude/rules/code-standards.md`

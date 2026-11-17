@@ -357,10 +357,9 @@ def get_paired_codelists(
     codelist_uid: str = CTCodelistUID,
 ) -> CTCodelistPaired:
     ct_codelist_service = CTCodelistService()
-    results = ct_codelist_service.get_paired_codelists(
+    return ct_codelist_service.get_paired_codelists(
         codelist_uid=codelist_uid,
     )
-    return results
 
 
 @router.patch(
@@ -383,11 +382,10 @@ def update_paired_codelist(
     ],
 ) -> CTCodelistPaired:
     ct_codelist_service = CTCodelistService()
-    results = ct_codelist_service.update_paired_codelists(
+    return ct_codelist_service.update_paired_codelists(
         codelist_uid=codelist_uid,
         paired_codelists=codelist_input,
     )
-    return results
 
 
 @router.post(
@@ -604,6 +602,7 @@ def get_codelist_terms(
             "concept_id",
             "nci_preferred_name",
             "definition",
+            "algorithm",
             "name_date",
             "name_status",
             "attributes_date",

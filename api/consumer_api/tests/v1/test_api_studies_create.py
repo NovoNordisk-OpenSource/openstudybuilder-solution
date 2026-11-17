@@ -3,6 +3,10 @@ from typing import Any
 import pytest
 from fastapi.testclient import TestClient
 
+from clinical_mdr_api.domains.study_definition_aggregates.study_metadata import (
+    StudyComponentEnum,
+)
+from clinical_mdr_api.services.studies.study import StudyService
 from clinical_mdr_api.tests.integration.utils.api import inject_base_data
 from clinical_mdr_api.tests.integration.utils.utils import TestUtils
 from consumer_api.consumer_api import app
@@ -15,6 +19,7 @@ STUDY_CREATE_RESPONSE_FIELDS_ALL = [
     "id",
     "acronym",
     "description",
+    "title",
 ]
 
 STUDY_CREATE_RESPONSE_FIELDS_NOT_NULL = STUDY_CREATE_RESPONSE_FIELDS_ALL
@@ -70,6 +75,7 @@ def _build_study_payload(**overrides) -> dict[str, Any]:
         "study_acronym": TestUtils.random_str(prefix="acronym-"),
         "project_id": PROJECT_ID,
         "description": "Study description",
+        "title": TestUtils.random_str(prefix="Study title "),
     }
     payload.update(overrides)
     return payload
@@ -92,23 +98,25 @@ def test_create_study(api_client):
 
     assert res["acronym"] == payload["study_acronym"]
     assert res["description"] == payload["description"]
+    assert res["title"] == payload["title"]
     # The study ID is derived by the server, it cannot be supplied by the caller
     assert res["id"] == f"{PROJECT_ID}-{payload['study_number']}"
 
 
 def test_create_study_with_study_number_only(api_client):
-    payload = _without(_build_study_payload(), "study_acronym", "description")
+    payload = _without(_build_study_payload(), "study_acronym", "description", "title")
 
     response = api_client.post(f"{BASE_URL}/studies", json=payload)
     assert_response_status_code(response, 201)
     res = response.json()
 
     assert res["acronym"] is None
+    assert res["title"] is None
     assert res["id"] == f"{PROJECT_ID}-{payload['study_number']}"
 
 
 def test_create_study_with_study_acronym_only(api_client):
-    payload = _without(_build_study_payload(), "study_number", "description")
+    payload = _without(_build_study_payload(), "study_number", "description", "title")
 
     response = api_client.post(f"{BASE_URL}/studies", json=payload)
     assert_response_status_code(response, 201)
@@ -209,6 +217,52 @@ def test_create_study_with_duplicate_study_acronym(api_client):
     response = api_client.post(f"{BASE_URL}/studies", json=duplicate)
     assert_response_status_code(response, 409)
     assert payload["study_acronym"] in response.json()["message"]
+
+
+def test_create_study_without_title(api_client):
+    payload = _without(_build_study_payload(), "title")
+
+    response = api_client.post(f"{BASE_URL}/studies", json=payload)
+    assert_response_status_code(response, 201)
+    assert response.json()["title"] is None
+
+
+@pytest.mark.parametrize("title", ["", "   "])
+def test_create_study_with_empty_title(api_client, title):
+    """An empty or whitespace-only title is accepted and stored as no title."""
+    payload = _build_study_payload(title=title)
+
+    response = api_client.post(f"{BASE_URL}/studies", json=payload)
+    assert_response_status_code(response, 201)
+    assert response.json()["title"] is None
+
+
+def test_create_study_with_duplicate_title(api_client):
+    """Unlike the study number and acronym, the title is not unique."""
+    payload = _build_study_payload()
+
+    response = api_client.post(f"{BASE_URL}/studies", json=payload)
+    assert_response_status_code(response, 201)
+
+    duplicate = _build_study_payload(title=payload["title"])
+    response = api_client.post(f"{BASE_URL}/studies", json=duplicate)
+    assert_response_status_code(response, 201)
+    assert response.json()["title"] == payload["title"]
+
+
+def test_created_study_title_is_persisted(api_client):
+    payload = _build_study_payload()
+
+    response = api_client.post(f"{BASE_URL}/studies", json=payload)
+    assert_response_status_code(response, 201)
+    study_uid = response.json()["uid"]
+
+    # No Consumer API endpoint returns the title of a draft study, so the stored
+    # value is read back through the main API's service
+    study = StudyService().get_by_uid(
+        study_uid, include_sections=[StudyComponentEnum.STUDY_DESCRIPTION]
+    )
+    assert study.current_metadata.study_description.study_title == payload["title"]
 
 
 def test_created_study_is_returned_by_get_studies(api_client):

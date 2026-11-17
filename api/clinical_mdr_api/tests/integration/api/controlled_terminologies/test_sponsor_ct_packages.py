@@ -781,11 +781,9 @@ def initialize_persistence_tests(api_client):
     )
 
     # Create an older sponsor package, but more recent that the CDISC one
-    package = create_sponsor_package(
+    return create_sponsor_package(
         api_client, (date.today() - timedelta(days=3)).strftime("%Y-%m-%d")
     )
-
-    return package
 
 
 # Utility methods

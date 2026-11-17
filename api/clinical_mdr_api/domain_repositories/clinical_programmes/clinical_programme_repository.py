@@ -20,7 +20,7 @@ from common.exceptions import BusinessLogicException, NotFoundException
 
 
 class ClinicalProgrammeRepository:
-    cache_store_item_by_uid = TTLCache(
+    cache_store_item_by_uid: TTLCache = TTLCache(
         maxsize=settings.cache_max_size, ttl=settings.cache_ttl
     )
     lock_store_item_by_uid = Lock()

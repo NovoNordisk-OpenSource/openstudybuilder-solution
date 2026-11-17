@@ -215,17 +215,6 @@ class FootnoteTemplateVersion(FootnoteTemplate):
     changes: list[str] = Field(description=CHANGES_FIELD_DESC, default_factory=list)
 
 
-class FootnoteTemplatePreValidateInput(PostInputModel):
-    name: Annotated[
-        str,
-        Field(
-            description="The actual value/content. It may include parameters referenced by simple strings in square brackets [].",
-            min_length=1,
-            json_schema_extra={"format": "html"},
-        ),
-    ]
-
-
 class FootnoteTemplateCreateInput(PostInputModel):
     name: Annotated[
         str,

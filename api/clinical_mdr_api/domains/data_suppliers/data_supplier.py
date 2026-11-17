@@ -39,7 +39,7 @@ class DataSupplierVO:
         api_base_url: str | None,
         ui_base_url: str | None,
     ) -> Self:
-        data_supplier_vo = cls(
+        return cls(
             name=name,
             order=order,
             description=description,
@@ -49,8 +49,6 @@ class DataSupplierVO:
             api_base_url=api_base_url,
             ui_base_url=ui_base_url,
         )
-
-        return data_supplier_vo
 
     def validate(
         self,
@@ -112,13 +110,12 @@ class DataSupplierAR(LibraryItemAggregateRootBase):
         library: LibraryVO,
         item_metadata: LibraryItemMetadataVO,
     ) -> Self:
-        data_supplier_ar = cls(
+        return cls(
             _uid=uid,
             _data_supplier_vo=data_supplier_vo,
             _item_metadata=item_metadata,
             _library=library,
         )
-        return data_supplier_ar
 
     @classmethod
     def from_input_values(
@@ -142,13 +139,12 @@ class DataSupplierAR(LibraryItemAggregateRootBase):
             data_supplier_exists_by_name_callback=data_supplier_exists_by_name_callback,
             ct_term_exists_by_uid_callback=ct_term_exists_by_uid_callback,
         )
-        data_supplier_ar = cls(
+        return cls(
             _uid=generate_uid_callback(),
             _item_metadata=item_metadata,
             _library=library,
             _data_supplier_vo=data_supplier_vo,
         )
-        return data_supplier_ar
 
     def edit_draft(
         self,

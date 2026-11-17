@@ -95,8 +95,8 @@ class StudyVisitVO:
 
     visit_name_sc: TextValue | None = None
 
-    special_visit_number: int | None = None
     subvisit_number: int | None = None
+    visit_suffix: str | None = None
     time_unit_object: TimeUnit | None = None
     window_unit_object: TimeUnit | None = None
 
@@ -110,12 +110,16 @@ class StudyVisitVO:
     day_unit_object: TimeUnit | None = None
     week_unit_object: TimeUnit | None = None
 
-    visit_sublabel_reference: str | None = (
-        None  # reference (uid) of the first subvisit in subvisit stream
-    )
+    # reference (uid) of the first subvisit in subvisit stream,
+    # or of the parent visit for an Early Discontinuation visit
+    visit_sublabel_reference: str | None = None
 
     vis_unique_number: int | None = None
     vis_short_name: str | None = None
+    # visit_order as persisted, while visit_order itself is overwritten by the timeline position
+    stored_visit_order: int | None = None
+
+    expected_time_value: int | None = None
 
     repeating_frequency: SimpleCTTermNameWithConflictFlag | None = None
 
@@ -132,84 +136,74 @@ class StudyVisitVO:
     def derive_visit_name(self):
         if self.visit_class != VisitClass.MANUALLY_DEFINED_VISIT:
             if self.visit_class == VisitClass.NON_VISIT:
-                return settings.non_visit_name
+                return f"Visit {settings.non_visit_number}"
             if self.visit_class == VisitClass.UNSCHEDULED_VISIT:
-                return settings.unscheduled_visit_name
+                return f"Visit {settings.unscheduled_visit_number}"
             if self.visit_subclass == VisitSubclass.REPEATING_VISIT:
-                return f"Visit {int(self.visit_number)}.n"
-            return f"Visit {int(self.visit_number)}"
+                return f"Visit {int(self.visit_number)}{self.visit_suffix or ''}.n"
+            base = f"Visit {int(self.visit_number)}"
+            # Visits in a group of subvisits share the name of the group, the suffix only goes into the short name
+            if self.visit_class == VisitClass.SINGLE_VISIT and not self.is_in_group:
+                return base + (self.visit_suffix or "")
+            return base
         return self.visit_name_sc.name
 
     @property
+    def is_in_group(self) -> bool:
+        return self.visit_subclass in (
+            VisitSubclass.ANCHOR_VISIT_IN_GROUP_OF_SUBV,
+            VisitSubclass.ADDITIONAL_SUBVISIT_IN_A_GROUP_OF_SUBV,
+        )
+
+    @property
+    def default_visit_suffix(self) -> str | None:
+        """
+        Suffix a visit gets when none is given: D1 for the anchor visit in a group of subvisits
+        and D<day relative to the anchor> for the additional subvisits.
+        """
+        if self.visit_class != VisitClass.SINGLE_VISIT:
+            return None
+        if self.visit_subclass == VisitSubclass.ANCHOR_VISIT_IN_GROUP_OF_SUBV:
+            return "D1"
+        if self.visit_subclass == VisitSubclass.ADDITIONAL_SUBVISIT_IN_A_GROUP_OF_SUBV:
+            relative_day = self.derive_study_day_number(relative_duration=True)
+            return f"D{relative_day}" if relative_day is not None else None
+        return None
+
+    @property
+    def effective_visit_suffix(self) -> str | None:
+        """
+        Suffix used in the short name. Visits in a group of subvisits that have no visit_suffix stored
+        (created before their D<day> part became the visit_suffix) use the default one.
+        """
+        return self.visit_suffix or self.default_visit_suffix
+
+    def _visit_contact_mode_prefix(self) -> str:
+        mode = self.visit_contact_mode.sponsor_preferred_name.lower()
+        if "on site visit" in mode:
+            return "V"
+        if "phone contact" in mode:
+            return "P"
+        if "virtual visit" in mode:
+            return "O"
+        raise exceptions.BusinessLogicException(
+            msg="Unrecognized visit contact mode passed."
+        )
+
+    @property
     def visit_short_name(self):
-        if self.visit_class != VisitClass.MANUALLY_DEFINED_VISIT:
-            visit_number = int(self.visit_number)
-            if (
-                "on site visit"
-                in self.visit_contact_mode.sponsor_preferred_name.lower()
-            ):
-                visit_prefix = "V"
-            elif (
-                "phone contact"
-                in self.visit_contact_mode.sponsor_preferred_name.lower()
-            ):
-                visit_prefix = "P"
-            elif (
-                "virtual visit"
-                in self.visit_contact_mode.sponsor_preferred_name.lower()
-            ):
-                visit_prefix = "O"
-            else:
-                raise exceptions.BusinessLogicException(
-                    msg="Unrecognized visit contact mode passed."
-                )
-            visit_short_name = f"{visit_prefix}{visit_number}"
-
-            if self.visit_subclass == VisitSubclass.REPEATING_VISIT:
-                return visit_short_name + ".n"
-
-            if (
-                self.visit_subclass
-                == VisitSubclass.ADDITIONAL_SUBVISIT_IN_A_GROUP_OF_SUBV
-            ):
-                return (
-                    visit_short_name
-                    + f"D{self.derive_study_day_number(relative_duration=True)}"
-                )
-            if self.visit_subclass == VisitSubclass.ANCHOR_VISIT_IN_GROUP_OF_SUBV:
-                return visit_short_name + "D1"
-            if self.visit_class == VisitClass.SPECIAL_VISIT:
-                if (
-                    self.visit_type_name
-                    == settings.study_visit_type_early_discontinuation_visit
-                ):
-                    exceptions.BusinessLogicException.raise_if(
-                        self.special_visit_number is None
-                        or self.special_visit_number > MAX_EARLY_DISCONTINUATION_VISITS,
-                        msg=f"There can be a maximum of {MAX_EARLY_DISCONTINUATION_VISITS} Early "
-                        f"Discontinuation visits per scheduled visit and current Early "
-                        f"Discontinuation visit is set to be {self.subvisit_number}",
-                    )
-                    assert self.special_visit_number is not None
-                    chosen_letter = settings.special_visit_letters[-3:][
-                        self.special_visit_number - 1
-                    ]
-                else:
-                    exceptions.BusinessLogicException.raise_if(
-                        self.special_visit_number is None
-                        or self.special_visit_number
-                        > settings.special_visit_max_number,
-                        msg=f"There can be a maximum of {settings.special_visit_max_number} special visits per scheduled visit and current special visit is set to be {self.subvisit_number}",
-                    )
-                    assert self.special_visit_number is not None
-                    chosen_letter = settings.special_visit_letters[
-                        self.special_visit_number - 1
-                    ]
-                return visit_short_name + chosen_letter
-            if self.visit_class in [VisitClass.UNSCHEDULED_VISIT, VisitClass.NON_VISIT]:
-                return f"V{visit_number}"
-            return visit_short_name
-        return self.vis_short_name
+        if self.visit_class == VisitClass.MANUALLY_DEFINED_VISIT:
+            return self.vis_short_name
+        visit_number = int(self.visit_number)
+        prefix = self._visit_contact_mode_prefix()
+        short = f"{prefix}{visit_number}"
+        if self.visit_subclass == VisitSubclass.REPEATING_VISIT:
+            return short + (self.visit_suffix or "") + ".n"
+        if self.visit_class in (VisitClass.UNSCHEDULED_VISIT, VisitClass.NON_VISIT):
+            return f"V{visit_number}"
+        if self.visit_class == VisitClass.SINGLE_VISIT:
+            return short + (self.effective_visit_suffix or "")
+        return short
 
     @property
     def epoch_uid(self):
@@ -220,6 +214,81 @@ class StudyVisitVO:
         if self.epoch_connector:
             return self.epoch_connector.study_uid
         return self._study_uid
+
+    @property
+    def is_early_discontinuation_visit(self) -> bool:
+        return (
+            self.visit_type is not None
+            and self.visit_type_name
+            == settings.study_visit_type_early_discontinuation_visit
+        )
+
+    @property
+    def has_technical_visit_class(self) -> bool:
+        return self.visit_class in (VisitClass.NON_VISIT, VisitClass.UNSCHEDULED_VISIT)
+
+    # The Unscheduled and Non-visit visit type rules (masked timing, fixed visit window, ordering by
+    # expected timing) apply to regular visits only. Visits of the Unscheduled or Non-visit visit class
+    # carry no timing at all and follow the rules of their class, whatever their visit type.
+    @property
+    def is_unscheduled_visit_type(self) -> bool:
+        return (
+            not self.has_technical_visit_class
+            and self.visit_type is not None
+            and self.visit_type_name == settings.unscheduled_visit_name
+        )
+
+    @property
+    def is_non_visit_type(self) -> bool:
+        return (
+            not self.has_technical_visit_class
+            and self.visit_type is not None
+            and self.visit_type_name == settings.non_visit_name
+        )
+
+    @property
+    def api_time_value(self) -> int | None:
+        if (
+            self.is_early_discontinuation_visit
+            or self.is_unscheduled_visit_type
+            or self.is_non_visit_type
+        ):
+            return 0
+        return getattr(self.timepoint, "visit_value", None)
+
+    @property
+    def api_time_reference(self):
+        return getattr(self.timepoint, "visit_timereference", None)
+
+    @property
+    def api_time_unit_uid(self) -> str | None:
+        return getattr(self.timepoint, "time_unit_uid", None)
+
+    def api_visit_window_min(self, manual_visit_mode: bool = False) -> int | None:
+        if (
+            not manual_visit_mode
+            and self.visit_class != VisitClass.MANUALLY_DEFINED_VISIT
+            and (
+                self.is_early_discontinuation_visit
+                or self.is_unscheduled_visit_type
+                or self.is_non_visit_type
+            )
+        ):
+            return -9999
+        return self.visit_window_min
+
+    def api_visit_window_max(self, manual_visit_mode: bool = False) -> int | None:
+        if (
+            not manual_visit_mode
+            and self.visit_class != VisitClass.MANUALLY_DEFINED_VISIT
+            and (
+                self.is_early_discontinuation_visit
+                or self.is_unscheduled_visit_type
+                or self.is_non_visit_type
+            )
+        ):
+            return 9999
+        return self.visit_window_max
 
     @property
     def visit_type_name(self) -> str:
@@ -266,24 +335,12 @@ class StudyVisitVO:
     def study_day_number(self):
         if self.study_day:
             return self.study_day.value
-        if (
-            self.visit_class == VisitClass.SPECIAL_VISIT
-            and self.anchor_visit
-            and self.anchor_visit is not self
-        ):
-            return self.anchor_visit.study_day_number
         return None
 
     @property
     def study_week_number(self):
         if self.study_week:
             return self.study_week.value
-        if (
-            self.visit_class == VisitClass.SPECIAL_VISIT
-            and self.anchor_visit
-            and self.anchor_visit is not self
-        ):
-            return self.anchor_visit.study_week_number
         return None
 
     def derive_study_day_number(self, relative_duration=False) -> int | None:
@@ -309,8 +366,7 @@ class StudyVisitVO:
     def derive_week_value(self) -> float | None:
         duration = self.get_absolute_duration()
         if self.week_unit_object and duration is not None:
-            weeks = duration / self.week_unit_object.conversion_factor_to_master
-            return weeks
+            return duration / self.week_unit_object.conversion_factor_to_master
         return None
 
     def derive_study_week_number(self) -> int | None:
@@ -379,18 +435,25 @@ class StudyVisitVO:
             return ["edit", "delete", "lock"]
         return None
 
-    def get_absolute_duration(self, _seen: set[str] | None = None) -> int | None:
-        # Special visit doesn't have a timing but we want to place it
-        # after the anchor visit for the special visit hence we derive timing based on the anchor visit
+    def get_absolute_duration(self, _seen: set[str | None] | None = None) -> int | None:
         if _seen is None:
             _seen = set()
         if self.uid in _seen:
             raise exceptions.BusinessLogicException(
                 msg=f"Circular anchor visit reference detected at visit '{self.uid}' while resolving absolute duration."
             )
-        _seen.add(self.uid)  # type: ignore[arg-type]
-        if self.visit_class == VisitClass.SPECIAL_VISIT and self.anchor_visit:
+        _seen.add(self.uid)
+        # Early Discontinuation visits take place at the timing of the parent visit they reference
+        if self.is_early_discontinuation_visit and self.anchor_visit is not None:
             return self.anchor_visit.get_absolute_duration(_seen=_seen)
+        # Visits with expected_time_value set (converted special visits, unscheduled)
+        # are ordered solely by that value — never by the timepoint, which is 0 for all
+        # of them and would incorrectly place them all at day 0.
+        # expected_time_value is stored in the same unit as the visit's timepoint.
+        if self.expected_time_value is not None and self.time_unit_object is not None:
+            return self.time_unit_object.from_timedelta(
+                self.time_unit_object, self.expected_time_value
+            )
         if self.timepoint:
             if self.timepoint.visit_value == 0:
                 return 0

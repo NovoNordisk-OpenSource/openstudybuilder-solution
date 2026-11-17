@@ -1,3 +1,4 @@
+import contextlib
 import logging
 from collections import defaultdict
 from collections.abc import Iterable, Sequence
@@ -674,7 +675,7 @@ class SoATestData:
         for term_name in terms:
             submission_value = term_name.upper()
 
-            try:
+            with contextlib.suppress(exceptions.AlreadyExistsException):
                 codelist_terms.append(
                     TestUtils.create_ct_term(
                         codelist_uid=codelist.codelist_uid,
@@ -682,8 +683,6 @@ class SoATestData:
                         sponsor_preferred_name=term_name,
                     )
                 )
-            except exceptions.AlreadyExistsException:
-                pass
 
         return {
             item.name.sponsor_preferred_name: CTTerm.from_ct_term_name_and_attributes(
@@ -713,22 +712,18 @@ class SoATestData:
         )
 
         for term in terms.values():
-            try:
+            with contextlib.suppress(exceptions.AlreadyExistsException):
                 ct_term_service.add_parent(
                     term.term_uid,
                     term.term_uid,
                     TermParentType.PARENT_TYPE,
                 )
-            except exceptions.AlreadyExistsException:
-                pass
-            try:
+            with contextlib.suppress(exceptions.AlreadyExistsException):
                 ct_term_service.add_parent(
                     term.term_uid,
                     term.term_uid,
                     TermParentType.PARENT_SUB_TYPE,
                 )
-            except exceptions.AlreadyExistsException:
-                pass
 
         # Create codelist for study epoch type
         try:
@@ -753,7 +748,7 @@ class SoATestData:
 
         # add terms to the epoch type codelist
         for term in terms.values():
-            try:
+            with contextlib.suppress(exceptions.AlreadyExistsException):
                 ct_codelist_service.add_term(
                     codelist_uid=self._codelists[
                         settings.study_epoch_type_name
@@ -762,8 +757,6 @@ class SoATestData:
                     order=1,
                     submission_value=term.sponsor_preferred_name.upper(),
                 )
-            except exceptions.AlreadyExistsException:
-                pass
 
         # Create codelist for study epoch subtype
         try:
@@ -792,15 +785,13 @@ class SoATestData:
             self._codelists[settings.study_epoch_subtype_name] = codelist = codelists[0]
         # add terms to the epoch subtype codelist
         for term in terms.values():
-            try:
+            with contextlib.suppress(exceptions.AlreadyExistsException):
                 ct_codelist_service.add_term(
                     codelist_uid=codelist.codelist_uid,
                     term_uid=term.term_uid,
                     order=1,
                     submission_value=term.sponsor_preferred_name.upper(),
                 )
-            except exceptions.AlreadyExistsException:
-                pass
 
         return {term.sponsor_preferred_name: term for term in terms.values()}
 

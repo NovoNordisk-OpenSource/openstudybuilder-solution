@@ -24,6 +24,20 @@
           <YesNoField v-model="form.key_criteria" :disabled="editTemplate" />
         </v-col>
       </v-row>
+      <v-row>
+        <v-col cols="6">
+          <v-text-field
+            v-model="form.identifier"
+            :label="$t('EligibilityCriteriaEditForm.criteria_id')"
+            :placeholder="
+              $t('EligibilityCriteriaTable.criteria_id_placeholder')
+            "
+            data-cy="criteria-id"
+            :disabled="editTemplate"
+            clearable
+          />
+        </v-col>
+      </v-row>
     </template>
   </StudySelectionEditForm>
 </template>
@@ -95,6 +109,7 @@ export default {
   methods: {
     initForm(form) {
       form.key_criteria = this.editedObject.key_criteria
+      form.identifier = this.editedObject.identifier
       this.originalForm = JSON.parse(JSON.stringify(form))
     },
     prepareTemplatePayload(data) {
@@ -115,6 +130,10 @@ export default {
       this.notificationHub.clearErrors()
 
       const payload = { ...form }
+      // The criterion identifier (Criteria ID) has its own dedicated endpoint,
+      // so it must not be sent through the general study-criteria PATCH payload.
+      const newIdentifier = payload.identifier ?? null
+      delete payload.identifier
       // FIXME:
       // The PATCH endpoint does not behave properly since it expects a complete payload...
       // It's going to be fixed in the API but I don't know when so, for now, I commented
@@ -148,6 +167,13 @@ export default {
         this.editedObject.study_criteria_uid,
         payload
       )
+      if (newIdentifier !== (this.editedObject.identifier ?? null)) {
+        await study.updateStudyCriteriaIdentifier(
+          this.selectedStudy.uid,
+          this.editedObject.study_criteria_uid,
+          newIdentifier
+        )
+      }
       this.notificationHub.add({
         msg: this.$t('EligibilityCriteriaEditForm.update_success'),
       })

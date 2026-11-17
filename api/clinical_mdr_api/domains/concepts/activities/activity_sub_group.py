@@ -31,7 +31,7 @@ class ActivitySubGroupVO(ConceptVO):
         nci_concept_id: str | None = None,
         nci_concept_name: str | None = None,
     ) -> Self:
-        activity_subgroup_vo = cls(
+        return cls(
             name=name,
             name_sentence_case=name_sentence_case,
             definition=definition,
@@ -40,8 +40,6 @@ class ActivitySubGroupVO(ConceptVO):
             nci_concept_id=nci_concept_id,
             nci_concept_name=nci_concept_name,
         )
-
-        return activity_subgroup_vo
 
     def validate(
         self,
@@ -105,13 +103,12 @@ class ActivitySubGroupAR(ConceptARBase):
             library_name=library.name,
         )
 
-        activity_subgroup_ar = cls(
+        return cls(
             _uid=generate_uid_callback(),
             _item_metadata=item_metadata,
             _library=library,
             _concept_vo=concept_vo,
         )
-        return activity_subgroup_ar
 
     def edit_draft(
         self,

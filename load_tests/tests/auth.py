@@ -19,7 +19,6 @@ def get_token():
                 "scope": scope,
             },
             timeout=30,
-            verify=False,
         )
         response.raise_for_status()
         payload = response.json()

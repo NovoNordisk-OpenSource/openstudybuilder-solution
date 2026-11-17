@@ -36,7 +36,7 @@ from common import exceptions
 
 
 def create_random_activity_instance_grouping_vo() -> ActivityInstanceGroupingVO:
-    random_activity_instance_grouping_vo = ActivityInstanceGroupingVO(
+    return ActivityInstanceGroupingVO(
         activity_group_uid=random_str(),
         activity_group_version=random_str(),
         activity_subgroup_uid=random_str(),
@@ -44,12 +44,11 @@ def create_random_activity_instance_grouping_vo() -> ActivityInstanceGroupingVO:
         activity_uid=random_str(),
         activity_version=random_str(),
     )
-    return random_activity_instance_grouping_vo
 
 
 def create_random_activity_instance_vo() -> ActivityInstanceVO:
     name = random_str()
-    random_activity_instance_vo = ActivityInstanceVO.from_repository_values(
+    return ActivityInstanceVO.from_repository_values(
         nci_concept_id=random_str(),
         nci_concept_name=random_str(),
         name=name,
@@ -109,7 +108,6 @@ def create_random_activity_instance_vo() -> ActivityInstanceVO:
             ),
         ],
     )
-    return random_activity_instance_vo
 
 
 def create_random_activity_instance_ar(
@@ -117,7 +115,7 @@ def create_random_activity_instance_ar(
     library: str = "Library",
     is_editable: bool = True,
 ) -> ActivityInstanceAR:
-    random_activity_instance_ar = ActivityInstanceAR.from_input_values(
+    return ActivityInstanceAR.from_input_values(
         generate_uid_callback=generate_uid_callback,
         concept_vo=create_random_activity_instance_vo(),
         library=LibraryVO.from_repository_values(
@@ -136,8 +134,6 @@ def create_random_activity_instance_ar(
         get_dimension_names_by_unit_definition_uids=lambda _: [],
     )
 
-    return random_activity_instance_ar
-
 
 def _get_activity_item_class_mock():
     return ActivityItemClassAR(
@@ -155,7 +151,7 @@ def _get_activity_item_class_mock():
         ),
         _activity_item_class_vo=ActivityItemClassVO(
             name="xyz",
-            display_name="xyz",
+            label="xyz",
             definition="xyz",
             nci_concept_id=None,
             nci_concept_name=None,

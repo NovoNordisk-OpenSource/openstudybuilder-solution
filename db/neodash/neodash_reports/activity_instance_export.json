@@ -8,18 +8,39 @@
     "parameters": {
       "neodash_activity_instance_value_name": [],
       "neodash_activity_instance_value_name_display": [],
-      "neodash_": ""
+      "neodash_activity_instance": [],
+      "neodash_activity_instance_display": [],
+      "neodash_latest_or_latest_final": "Latest Final",
+      "neodash_latest_or_latest_final_display": "Latest Final"
     },
     "theme": "light"
   },
   "pages": [
     {
-      "title": "New page",
+      "title": "ReadMe",
+      "reports": [
+        {
+          "id": "03475dfa-5ff7-43e4-811e-facb5b3aea0c",
+          "title": "Guide",
+          "query": "This NeoDash report exports the **Activity Items** of one or more **Activity Instances** from the Library.\n\n**How to use it:** first choose the version in **Select Version Type** (**Latest Final** is the default, or **Latest**). Then pick one or more Activity Instances in **Select Activity Instances** (type part of a name, up to 20 can be selected), and review the **Activity items** table below. Use the download icon on the table to save the rows as a CSV file.\n\n**Latest Final** shows the latest Final version of each Activity Instance; **Latest** shows its latest version, which can be a Draft. The same choice applies to the activity grouping, the Activity Instance Class and the Activity Item Classes of the instance. The selector lists the Activity Instances alphabetically (up to 500). The export table only includes an Activity Instance if it has a grouping and an Activity Instance Class in the selected version type.\n\nEach row is one item of the instance; **ACTIVITY_ITEM_VALUE** shows the codelist and its selected terms as **codelist:term1|term2** (for example, CODELIST:TERM_A|TERM_B). An Activity Instance without any items is still listed, with ACTIVITY_ITEM_TYPE and ACTIVITY_ITEM_VALUE empty.\n",
+          "width": 24,
+          "height": 4,
+          "x": 0,
+          "y": 0,
+          "type": "text",
+          "selection": {},
+          "settings": {},
+          "schema": []
+        }
+      ]
+    },
+    {
+      "title": "Activity Items",
       "reports": [
         {
           "id": "fd7ccd21-1a54-4645-ae33-a3c455e0b449",
           "title": "Activity items",
-          "query": "MATCH (n1:ActivityInstanceValue)<-[:LATEST_FINAL]-()\nWHERE n1.name IN $neodash_activity_instance_value_name\nMATCH (n1)-[r1:CONTAINS_ACTIVITY_ITEM]-(ai:ActivityItem)\nMATCH\n  (ai)-[r2:HAS_ACTIVITY_ITEM]-\n  (i1:ActivityItemClassRoot)-[r3:LATEST_FINAL]-\n  (k1:ActivityItemClassValue)\n  MATCH (n1)-[r4:LATEST_FINAL]-(i2:ActivityInstanceRoot)\nMATCH\n  (i2)-[r5:HAS_GROUPING_ROOT]->\n  (aigr:ActivityInstanceGroupingRoot)-[r30:LATEST]->\n  (aigv:ActivityInstanceGroupingValue)-[r6:HAS_ACTIVITY]-\n  (n10:ActivityGrouping)<-[r7:HAS_GROUPING]-\n  (n11:ActivityValue)\n  MATCH\n  (n1)-[r8:ACTIVITY_INSTANCE_CLASS]-\n  (i5:ActivityInstanceClassRoot)-[r9:LATEST_FINAL]-\n  (k3:ActivityInstanceClassValue)\n  OPTIONAL MATCH\n  (ai)-[r10:HAS_CT_TERM]->(context:CTTermContext),\n  (context)-[r11:HAS_SELECTED_TERM]->\n  (i_term_root:CTTermRoot)<-[r12:HAS_TERM_ROOT]-\n  (cl_term:CTCodelistTerm),\n  (context)-[r13:HAS_SELECTED_CODELIST]->\n  (cl_root:CTCodelistRoot)-[r14:HAS_TERM]->\n  (cl_term),\n  (cl_root)-[r22:HAS_ATTRIBUTES_ROOT]-\n  (i_cl_attr_root:CTCodelistAttributesRoot)-[r88:LATEST_FINAL]-\n  (cl_attr:CTCodelistAttributesValue)\n  OPTIONAL MATCH\n  (ai)-[r21:HAS_UNIT_DEFINITION]->\n  (udr:UnitDefinitionRoot)-[r22:LATEST_FINAL]->\n  (udv:UnitDefinitionValue)\n  WITH\n  n1.name AS ACTIVITY_INSTANCE_NAME,\n  k3.name AS ACTIVITY_ITEM_CLASS_NAME,\n  k1.name AS ACTIVITY_ITEM_TYPE,\n  cl_attr.submission_value AS codelist,\n  cl_term.submission_value AS term,\n  '' AS IS_ADAM_PARAM_SPECIFIC\n  WITH\n  ACTIVITY_INSTANCE_NAME,\n  ACTIVITY_ITEM_CLASS_NAME,\n  ACTIVITY_ITEM_TYPE,\n  codelist,\n  apoc.text.join(collect(DISTINCT term), '|') AS terms,\n  IS_ADAM_PARAM_SPECIFIC\n  RETURN\n  ACTIVITY_INSTANCE_NAME,\n  ACTIVITY_ITEM_CLASS_NAME,\n  ACTIVITY_ITEM_TYPE,\n  CASE codelist\n    WHEN codelist THEN apoc.text.join([codelist, terms], ':')\n    ELSE ''\n  END AS ACTIVITY_ITEM_VALUE,\n  IS_ADAM_PARAM_SPECIFIC\n  ORDER BY ACTIVITY_INSTANCE_NAME, ACTIVITY_ITEM_TYPE;\n ",
+          "query": "MATCH (i2:ActivityInstanceRoot)-[r1:LATEST_FINAL|LATEST]->(n1:ActivityInstanceValue)\nWHERE n1.name IN $neodash_activity_instance and type(r1)=replace(toUpper($neodash_latest_or_latest_final),' ','_')\n  AND EXISTS {\n    MATCH\n      (i2)-[:HAS_GROUPING_ROOT]->\n      (:ActivityInstanceGroupingRoot)-[r2:LATEST_FINAL|LATEST]->\n      (:ActivityInstanceGroupingValue)-[:HAS_ACTIVITY]-\n      (:ActivityGrouping)<-[:HAS_GROUPING]-\n      (:ActivityValue) WHERE type(r2)=replace(toUpper($neodash_latest_or_latest_final),' ','_')\n  }\nMATCH\n  (n1)-[:ACTIVITY_INSTANCE_CLASS]-\n  (:ActivityInstanceClassRoot)-[r3:LATEST_FINAL|LATEST]-\n  (k3:ActivityInstanceClassValue) WHERE type(r3)=replace(toUpper($neodash_latest_or_latest_final),' ','_')\nOPTIONAL MATCH (n1)-[:CONTAINS_ACTIVITY_ITEM]-(ai:ActivityItem)\nOPTIONAL MATCH\n  (ai)-[:HAS_ACTIVITY_ITEM]-\n  (:ActivityItemClassRoot)-[r4:LATEST_FINAL|LATEST]-\n  (k1:ActivityItemClassValue) WHERE type(r4)=replace(toUpper($neodash_latest_or_latest_final),' ','_')\nOPTIONAL MATCH\n  (ai)-[:HAS_CT_TERM]->(context:CTTermContext),\n  (context)-[:HAS_SELECTED_TERM]->\n  (:CTTermRoot)<-[:HAS_TERM_ROOT]-\n  (cl_term:CTCodelistTerm),\n  (context)-[:HAS_SELECTED_CODELIST]->\n  (cl_root:CTCodelistRoot)-[:HAS_TERM]->\n  (cl_term),\n  (cl_root)-[:HAS_ATTRIBUTES_ROOT]-\n  (:CTCodelistAttributesRoot)-[:LATEST]-\n  (cl_attr:CTCodelistAttributesValue)\nWITH\n  n1.name AS ACTIVITY_INSTANCE_NAME,\n  k3.name AS ACTIVITY_ITEM_CLASS_NAME,\n  k1.name AS ACTIVITY_ITEM_TYPE,\n  cl_attr.submission_value AS codelist,\n  apoc.text.join(collect(DISTINCT cl_term.submission_value), '|') AS terms\nRETURN\n  ACTIVITY_INSTANCE_NAME,\n  ACTIVITY_ITEM_CLASS_NAME,\n  ACTIVITY_ITEM_TYPE,\n  CASE codelist\n    WHEN codelist THEN apoc.text.join([codelist, terms], ':')\n    ELSE ''\n  END AS ACTIVITY_ITEM_VALUE,\n  '' AS IS_ADAM_PARAM_SPECIFIC\nORDER BY ACTIVITY_INSTANCE_NAME, ACTIVITY_ITEM_TYPE;\n",
           "width": 21,
           "height": 6,
           "x": 0,
@@ -48,27 +69,47 @@
                 "customizationValue": "black"
               }
             ],
-            "noDataMessage": "Select Activity Instances above"
+            "noDataMessage": "Select Activity Instances above",
+            "refreshButtonEnabled": true
           }
         },
         {
           "id": "972e858e-4a51-4465-ab27-8fca527465f2",
           "title": "Select Activity Instances",
-          "query": "MATCH (n:`ActivityInstanceValue`) \nWHERE toLower(toString(n.`name`)) CONTAINS toLower($input) \nRETURN DISTINCT n.`name` as value,  n.`name` as display ORDER BY size(toString(value)) ASC LIMIT 5",
-          "width": 21,
+          "query": "MATCH (n:`ActivityInstanceValue`)<-[r1:LATEST_FINAL|LATEST]-()\nWHERE type(r1)=replace(toUpper($neodash_latest_or_latest_final),' ','_')\nWITH n WHERE toLower(toString(n.`name`)) CONTAINS toLower($input)\nRETURN DISTINCT n.`name` as value,  n.`name` as display ORDER BY value ASC LIMIT 500",
+          "width": 15,
+          "height": 2,
+          "x": 6,
+          "y": 0,
+          "type": "select",
+          "selection": {},
+          "settings": {
+            "type": "Custom Query",
+            "multiSelector": true,
+            "multiSelectLimit": 20,
+            "suggestionLimit": 500,
+            "entityType": "Activity Instance",
+            "parameterName": "neodash_activity_instance"
+          },
+          "schema": []
+        },
+        {
+          "id": "1b1ec077-7be6-4996-afec-f3b239689362",
+          "title": "Select Version Type",
+          "query": "with [{label:'Latest', rel:'LATEST'},{label:'Latest Final',rel:'LATEST_FINAL'}] as lst\nUNWIND lst as n\nWITH n WHERE toLower(n['label']) CONTAINS toLower($input)\nRETURN DISTINCT n['label'] as value,  n['label'] as display ORDER BY value DESC  ",
+          "width": 6,
           "height": 2,
           "x": 0,
           "y": 0,
           "type": "select",
           "selection": {},
           "settings": {
-            "type": "Node Property",
-            "entityType": "ActivityInstanceValue",
-            "propertyType": "name",
-            "propertyTypeDisplay": "name",
-            "parameterName": "neodash_activity_instance_value_name",
-            "multiSelector": true,
-            "multiSelectLimit": 20
+            "type": "Custom Query",
+            "entityType": "Latest or Latest Final",
+            "parameterName": "neodash_latest_or_latest_final",
+            "refreshButtonEnabled": true,
+            "searchType": "CONTAINS",
+            "autoSelectFirstValue": true
           },
           "schema": []
         }

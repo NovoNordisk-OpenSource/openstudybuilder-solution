@@ -111,6 +111,7 @@ def index_any_property(request, prepare_report_file):
         "VariableClassInstance",
         "ScenarioVariableImplementation",
         "UpdateSoASnapshot",
+        "StudySoASnapshot",
         "SchemaMigration",
         "DataCorrection",
     ]

@@ -51,7 +51,7 @@ class ObjectiveTemplateService(GenericSyntaxTemplateService[ObjectiveTemplateAR]
         ) = self._get_indexings(template)
 
         # Process item to save
-        item = ObjectiveTemplateAR.from_input_values(
+        return ObjectiveTemplateAR.from_input_values(
             author_id=self.author_id,
             template=template_vo,
             library=library_vo,
@@ -61,5 +61,3 @@ class ObjectiveTemplateService(GenericSyntaxTemplateService[ObjectiveTemplateAR]
             indications=indications,
             categories=categories,
         )
-
-        return item

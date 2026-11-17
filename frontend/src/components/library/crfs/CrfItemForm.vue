@@ -3,7 +3,7 @@
     ref="stepper"
     :title="title"
     :help-items="helpItems"
-    :steps="steps"
+    :steps="displaySteps"
     :form-observer-getter="getObserver"
     :form-url="formUrl"
     :editable="isEdit()"
@@ -15,8 +15,19 @@
     <template #[`step.form`]="{ step }">
       <v-form :ref="`observer${step}`">
         <v-card elevation="1" class="mx-auto pa-4">
-          <div class="text-headline-medium mb-4">
-            {{ $t('CRFForms.definition') }}
+          <div class="d-flex align-center justify-space-between mb-4">
+            <div class="text-headline-medium">
+              {{ $t('CRFForms.definition') }}
+            </div>
+            <v-switch
+              :model-value="isComment"
+              :label="$t('CRFItems.is_comment')"
+              data-cy="item-is-comment"
+              color="primary"
+              hide-details
+              :disabled="isReadOnly"
+              @update:model-value="toggleComment"
+            />
           </div>
           <v-row v-if="showLibraryDropdown">
             <v-col>
@@ -55,14 +66,14 @@
             <v-col cols="4">
               <v-select
                 v-model="form.datatype"
-                :label="$t('CRFItems.data_type') + '*'"
+                :label="$t('CRFItems.data_type') + (isComment ? '' : '*')"
                 data-cy="item-data-type"
+                :disabled="isComment"
                 :items="dataTypes"
                 item-title="submission_value"
                 item-value="term_uid"
                 return-object
-                :rules="[formRules.required]"
-                :clearable="!isReadOnly"
+                :rules="isComment ? [] : [formRules.required]"
                 :readonly="isReadOnly"
                 @update:model-value="checkIfNumeric()"
               />
@@ -74,6 +85,7 @@
                 v-model="form.length"
                 :label="$t('CRFItems.length')"
                 data-cy="item-length"
+                :disabled="isComment"
                 :rules="[lengthRequired]"
                 :clearable="!isReadOnly"
                 class="mt-3"
@@ -86,6 +98,7 @@
                 v-model="form.significant_digits"
                 :label="$t('CRFItems.significant_digits')"
                 data-cy="item-significant-digits"
+                :disabled="isComment"
                 :rules="[significantDigitsRequired]"
                 :clearable="!isReadOnly"
                 class="mt-3"
@@ -105,6 +118,7 @@
                 v-model="form.sas_field_name"
                 :label="$t('CRFItems.sas_name')"
                 data-cy="item-sas-name"
+                :disabled="isComment"
                 :clearable="!isReadOnly"
                 :readonly="isReadOnly"
               />
@@ -114,6 +128,7 @@
                 v-model="form.sds_var_name"
                 :label="$t('CRFItems.sds_name')"
                 data-cy="item-sds-name"
+                :disabled="isComment"
                 :clearable="!isReadOnly"
                 :readonly="isReadOnly"
               />
@@ -125,6 +140,7 @@
                 v-model="form.origin"
                 :label="$t('CRFItems.origin')"
                 data-cy="item-origin"
+                :disabled="isComment"
                 :items="origins"
                 item-title="nci_preferred_name"
                 item-value="nci_preferred_name"
@@ -137,6 +153,7 @@
                 v-model="form.comment"
                 :label="$t('CRFItems.comment')"
                 data-cy="item-comment"
+                :disabled="isComment"
                 :clearable="!isReadOnly"
                 :readonly="isReadOnly"
               />
@@ -154,7 +171,7 @@
       </v-form>
     </template>
     <template #[`step.external_question`]="{ step }">
-      <v-form :ref="`observer${step}`">
+      <v-form :ref="`observer${step}`" :disabled="isComment">
         <v-card elevation="1" class="mx-auto pa-4">
           <div class="text-headline-medium mb-4">
             {{ $t('CRFItems.external_question') }}
@@ -221,7 +238,7 @@
       </v-form>
     </template>
     <template #[`step.codelist`]="{ step }">
-      <v-form :ref="`observer${step}`">
+      <v-form :ref="`observer${step}`" :disabled="isComment">
         <v-data-table
           height="135px"
           :headers="selectedCodelistHeaders"
@@ -234,6 +251,7 @@
             <v-btn
               icon="mdi-delete-outline"
               data-cy="remove-codelist"
+              :disabled="isComment"
               class="mt-1"
               size="small"
               variant="outlined"
@@ -263,6 +281,7 @@
             <v-btn
               icon="mdi-plus"
               data-cy="add-codelist"
+              :disabled="isComment"
               class="mt-1"
               size="small"
               variant="outlined"
@@ -275,7 +294,7 @@
       </v-col>
     </template>
     <template #[`step.terms`]="{ step }">
-      <v-form :ref="`observer${step}`">
+      <v-form :ref="`observer${step}`" :disabled="isComment">
         <v-data-table
           :headers="selectedTermsHeaders"
           :items="selectedTerms"
@@ -321,6 +340,7 @@
                   <v-btn
                     icon="mdi-delete-outline"
                     data-cy="remove-term"
+                    :disabled="isComment"
                     class="mt-1"
                     variant="text"
                     :color="isTermRemoved(item) ? 'error' : ''"
@@ -364,6 +384,7 @@
               variant="text"
               :readonly="isReadOnly"
               :disabled="
+                isComment ||
                 selectedTerms.find((e) => e.term_uid === item.term_uid)
               "
               @click="addTerm(item)"
@@ -373,7 +394,7 @@
       </v-col>
     </template>
     <template #[`step.unit`]="{ step }">
-      <v-form :ref="`observer${step}`">
+      <v-form :ref="`observer${step}`" :disabled="isComment">
         <NNTable
           table-id="crf-item-form-unit"
           :headers="unitHeaders"
@@ -388,6 +409,7 @@
             <v-btn
               class="ml-2"
               data-cy="add-unit"
+              :disabled="isComment"
               icon
               size="small"
               variant="outlined"
@@ -423,6 +445,7 @@
               icon="mdi-delete-outline"
               class="mt-n5"
               data-cy="remove-unit"
+              :disabled="isComment"
               variant="text"
               :readonly="isReadOnly"
               @click="removeUnit(index)"
@@ -432,11 +455,11 @@
       </v-form>
     </template>
     <template #[`step.activity_instance_links`]="{ step }">
-      <v-form :ref="`observer${step}`">
+      <v-form :ref="`observer${step}`" :disabled="isComment">
         <CrfActivityInstanceManagement
           v-model="form.activity_instances"
           :form-view="formView"
-          :read-only="isReadOnly"
+          :read-only="isReadOnly || isComment"
         />
       </v-form>
     </template>
@@ -611,6 +634,31 @@ const form = ref(createEmptyForm())
 const originalForm = ref({})
 const selectedExtensions = ref([])
 
+const COMMENT_ITEM_EMPTY_PROPERTIES = {
+  datatype_uid: null,
+  prompt: null,
+  length: null,
+  significant_digits: null,
+  sas_field_name: null,
+  sds_var_name: null,
+  origin: null,
+  comment: null,
+  unit_definitions: [],
+  external_question: null,
+  codelist: null,
+  terms: [],
+  activity_instances: [],
+}
+const isComment = ref(false)
+
+function toggleComment(enabled) {
+  isComment.value = !!enabled
+  if (enabled) {
+    form.value.datatype = null
+    form.value.datatype_uid = null
+    checkIfNumeric()
+  }
+}
 const { libraries: editableLibraries, showDropdown: showLibraryDropdown } =
   useEditableLibraries()
 const selectedLibraryName = ref(libConstants.LIBRARY_SPONSOR)
@@ -716,6 +764,20 @@ const selectedTermsHeaders = ref([
 ])
 
 const steps = ref([])
+const COMMENT_ITEM_ENABLED_STEPS = [
+  'form',
+  'translated_texts',
+  'extensions',
+  'alias',
+  'change_description',
+]
+const displaySteps = computed(() =>
+  isComment.value
+    ? steps.value.filter((step) =>
+        COMMENT_ITEM_ENABLED_STEPS.includes(step.name)
+      )
+    : steps.value
+)
 
 function buildCreateSteps() {
   return [
@@ -941,7 +1003,7 @@ onMounted(async () => {
 function lengthRequired(value) {
   if (
     ['string', 'text'].includes(
-      form.value.datatype.submission_value?.toLowerCase()
+      form.value.datatype?.submission_value?.toLowerCase()
     ) ||
     (form.value.significant_digits !== null &&
       form.value.significant_digits !== undefined)
@@ -965,7 +1027,7 @@ function checkFieldAvailable(dataType) {
 
   if (
     !['text', 'string', 'integer', 'float'].includes(
-      dataType.submission_value?.toLowerCase()
+      dataType?.submission_value?.toLowerCase()
     )
   ) {
     lengthFieldCheck.value = false
@@ -1138,6 +1200,7 @@ function close() {
   selectedCodelists.value = []
   selectedTerms.value = []
   selectedExtensions.value = []
+  isComment.value = false
   stepper.value?.reset()
   emit('close')
 }
@@ -1206,13 +1269,13 @@ async function submit() {
 
   if (
     !['base64float', 'double', 'float', 'hexfloat', 'integer'].includes(
-      form.value.datatype.submission_value?.toLowerCase()
+      form.value.datatype?.submission_value?.toLowerCase()
     )
   ) {
     form.value.unit_definitions = []
   }
 
-  if (form.value.datatype.submission_value === 'string') {
+  if (form.value.datatype?.submission_value === 'string') {
     if (
       !_isEmpty(selectedCodelists.value) &&
       selectedCodelists.value[0].codelist_uid
@@ -1261,7 +1324,7 @@ async function submit() {
   form.value.vendor_element_attributes = elementAttributes
   form.value.vendor_attributes = attributes
   form.value.datatype_uid =
-    form.value.datatype.uid || form.value.datatype.term_uid
+    form.value.datatype?.uid || form.value.datatype?.term_uid || null
 
   form.value.external_question = null
   if (
@@ -1275,10 +1338,14 @@ async function submit() {
       selectedExternalQuestionCodelist.value?.codelist_uid
   }
 
+  const payload = isComment.value
+    ? { ...form.value, ...COMMENT_ITEM_EMPTY_PROPERTIES }
+    : form.value
+
   try {
     if (isEdit()) {
       await crfs
-        .updateItem(form.value, props.selectedItem.uid)
+        .updateItem(payload, props.selectedItem.uid)
         .then(async (resp) => {
           notificationHub.add({
             msg: t('CRFItems.item_updated'),
@@ -1287,7 +1354,7 @@ async function submit() {
           close()
         })
     } else {
-      await crfs.createItem(form.value).then(async (resp) => {
+      await crfs.createItem(payload).then(async (resp) => {
         notificationHub.add({
           msg: t('CRFItems.item_created'),
         })
@@ -1330,6 +1397,7 @@ async function initForm(item) {
   originalForm.value = JSON.parse(JSON.stringify(item))
 
   form.value = item
+  isComment.value = !item.datatype
   form.value.aliases = item.aliases
   form.value.translated_texts = item.translated_texts
   selectedLibraryName.value = item.library_name || libConstants.LIBRARY_SPONSOR

@@ -36,6 +36,6 @@ class TimeframeTemplateRepository(GenericSyntaxTemplateRepository[TimeframeTempl
                 is_library_editable_callback=lambda _: library.is_editable,
             ),
             item_metadata=self._library_item_metadata_vo_from_relation(relationship),
-            template=self._get_template(value),
+            template=self._get_template(value, kwargs["template_parameter_names"]),
             study_count=study_count,
         )

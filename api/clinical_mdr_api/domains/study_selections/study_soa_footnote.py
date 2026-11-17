@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import Self
 
 from clinical_mdr_api.domains.study_selections.study_selection_base import SoAItemType
-from common.exceptions import AlreadyExistsException
+from common.exceptions import AlreadyExistsException, ValidationException
 
 
 @dataclass
@@ -14,6 +14,21 @@ class ReferencedItemVO:
     item_name: str | None = None
     visible_in_protocol_soa: bool | None = None
     order: list[int] | None = None
+    # Referenced through a checkmark propagated from hidden rows in the Protocol SoA,
+    # so the footnote is shown on the propagated checkmark as well as on the item's own cell
+    via_propagated_cell: bool = False
+
+
+def merge_duplicate_referenced_items(
+    referenced_items: list[ReferencedItemVO],
+) -> list[ReferencedItemVO]:
+    """Keeps one reference per item, preferring the one via a propagated cell,
+    as that one is also shown on the item's own cell."""
+    merged: dict[str, ReferencedItemVO] = {}
+    for item in referenced_items:
+        if item.item_uid not in merged or item.via_propagated_cell:
+            merged[item.item_uid] = item
+    return list(merged.values())
 
 
 @dataclass
@@ -89,7 +104,7 @@ class StudySoAFootnoteVO:
         author_username: str | None = None,
         layout: str | None = None,
     ) -> Self:
-        footnote_ar = cls(
+        return cls(
             uid=generate_uid_callback(),
             study_uid=study_uid,
             footnote_uid=footnote_uid,
@@ -106,14 +121,13 @@ class StudySoAFootnoteVO:
             footnote_template_name_plain=footnote_template_name_plain,
             footnote_template_library_name=footnote_template_library_name,
             footnote_template_parameters=footnote_template_parameters,
-            referenced_items=referenced_items,
+            referenced_items=merge_duplicate_referenced_items(referenced_items),
             author_id=author_id,
             author_username=author_username,
             modified=modified,
             accepted_version=accepted_version,
             layout=layout,
         )
-        return footnote_ar
 
     @classmethod
     def from_repository_values(
@@ -141,7 +155,7 @@ class StudySoAFootnoteVO:
         author_username: str | None = None,
         layout: str | None = None,
     ) -> Self:
-        footnote_ar = cls(
+        return cls(
             uid=uid,
             study_uid=study_uid,
             footnote_uid=footnote_uid,
@@ -165,7 +179,6 @@ class StudySoAFootnoteVO:
             accepted_version=accepted_version,
             layout=layout,
         )
-        return footnote_ar
 
     def validate(self):
         AlreadyExistsException.raise_if(
@@ -175,6 +188,17 @@ class StudySoAFootnoteVO:
         AlreadyExistsException.raise_if(
             not self.footnote_uid and not self.footnote_template_uid,
             msg=f"At least one of Footnote UID '{self.footnote_uid}' and Footnote Template UID '{self.footnote_template_uid}' must be set.",
+        )
+
+    def validate_referenced_items(self):
+        # only checkmarks are propagated from hidden rows
+        ValidationException.raise_if(
+            any(
+                item.via_propagated_cell
+                and item.item_type != SoAItemType.STUDY_ACTIVITY_SCHEDULE
+                for item in self.referenced_items
+            ),
+            msg=f"Only items of type '{SoAItemType.STUDY_ACTIVITY_SCHEDULE.value}' can be referenced via a propagated cell.",
         )
 
     def accept_versions(self):

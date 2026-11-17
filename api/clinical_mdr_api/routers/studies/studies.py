@@ -774,7 +774,7 @@ def get(
     ] = None,
 ) -> Study:
     study_service = StudyService()
-    study_definition = study_service.get_by_uid(
+    return study_service.get_by_uid(
         uid=study_uid,
         include_sections=include_sections,
         exclude_sections=exclude_sections,
@@ -782,7 +782,6 @@ def get(
         status=status,
         study_value_version=study_value_version,
     )
-    return study_definition
 
 
 @router.get(
@@ -865,11 +864,10 @@ def get_pharma_cm_representation(
         study_uid=study_uid, study_value_version=study_value_version
     )
     study_pharma_service = StudyPharmaCMService()
-    study_pharma = study_pharma_service.get_pharma_cm_representation(
+    return study_pharma_service.get_pharma_cm_representation(
         study_uid=study_uid,
         study_value_version=study_value_version,
     )
-    return study_pharma
 
 
 @router.get(
@@ -897,7 +895,7 @@ def get_pharma_cm_xml_representation(
         study_uid=study_uid,
         study_value_version=study_value_version,
     )
-    response = Response(
+    return Response(
         dict2xml(
             study_pharma,
             indent="  ",
@@ -911,7 +909,6 @@ def get_pharma_cm_xml_representation(
             "Content-Security-Policy": "default-src 'none'",
         },
     )
-    return response
 
 
 @router.patch(
@@ -968,8 +965,7 @@ def patch(
         study_patch_request is None, msg="No data to patch was provided."
     )
 
-    response = study_service.patch(study_uid, dry, study_patch_request)
-    return response
+    return study_service.patch(study_uid, dry, study_patch_request)
 
 
 @router.get(
@@ -1065,12 +1061,11 @@ def get_fields_audit_trail(
     ] = None,
 ) -> list[StudyFieldAuditTrailEntry]:
     study_service = StudyService()
-    study_fields_audit_trail = study_service.get_fields_audit_trail_by_uid(
+    return study_service.get_fields_audit_trail_by_uid(
         uid=study_uid,
         include_sections=include_sections,
         exclude_sections=exclude_sections,
     )
-    return study_fields_audit_trail
 
 
 @router.get(
@@ -1173,11 +1168,10 @@ def clone_study(
     clone_input: StudyCloneInput,
 ) -> Study:
     study_service = StudyService()
-    new_study = study_service.clone_study(
+    return study_service.clone_study(
         study_src_uid=study_uid,
         study_clone_input=clone_input,
     )
-    return new_study
 
 
 @router.post(

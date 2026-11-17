@@ -45,7 +45,7 @@ class ActivityInstanceClassVO:
         nci_concept_id: str | None = None,
         nci_concept_name: str | None = None,
     ) -> Self:
-        activity_instance_class_vo = cls(
+        return cls(
             name=name,
             order=order,
             definition=definition,
@@ -56,8 +56,6 @@ class ActivityInstanceClassVO:
             nci_concept_id=nci_concept_id,
             nci_concept_name=nci_concept_name,
         )
-
-        return activity_instance_class_vo
 
     def validate(
         self,
@@ -117,13 +115,12 @@ class ActivityInstanceClassAR(LibraryItemAggregateRootBase):
         library: LibraryVO,
         item_metadata: LibraryItemMetadataVO,
     ) -> Self:
-        activity_instance_class_ar = cls(
+        return cls(
             _uid=uid,
             _activity_instance_class_vo=activity_instance_class_vo,
             _item_metadata=item_metadata,
             _library=library,
         )
-        return activity_instance_class_ar
 
     @classmethod
     def from_input_values(
@@ -147,13 +144,12 @@ class ActivityInstanceClassAR(LibraryItemAggregateRootBase):
             activity_instance_class_exists_by_name_callback=activity_instance_class_exists_by_name_callback,
             dataset_class_exists_by_uid=dataset_class_exists_by_uid,
         )
-        activity_instance_class_ar = cls(
+        return cls(
             _uid=generate_uid_callback(),
             _item_metadata=item_metadata,
             _library=library,
             _activity_instance_class_vo=activity_instance_class_vo,
         )
-        return activity_instance_class_ar
 
     def edit_draft(
         self,

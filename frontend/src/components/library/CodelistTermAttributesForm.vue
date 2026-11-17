@@ -26,6 +26,13 @@
             auto-grow
           />
           <v-textarea
+            v-model="form.algorithm"
+            :label="$t('CodelistTermCreationForm.algorithm')"
+            clearable
+            rows="1"
+            auto-grow
+          />
+          <v-textarea
             v-model="form.change_description"
             :label="$t('HistoryTable.change_description')"
             :rules="[formRules.required]"
@@ -90,6 +97,7 @@ watch(
             concept_id: resp.data.concept_id,
             nci_preferred_name: resp.data.nci_preferred_name,
             definition: resp.data.definition,
+            algorithm: resp.data.algorithm,
           }
           formStore.save(form.value)
         })

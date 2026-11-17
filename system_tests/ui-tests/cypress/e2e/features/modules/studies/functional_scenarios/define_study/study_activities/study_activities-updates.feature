@@ -1,9 +1,9 @@
 @REQ_ID:1074260
 Feature: Studies - Define Study - Study Activities - Study Activities - Updates
 
-    As a system user,
-    I want the system to ensure [Scenario],
-    So that I can make complete and consistent specification of study activities.
+         As a user,
+         I must be able to accept or reject updates of activities from the library,
+         So that I can control what updates that are applied for my study.
 
     Background: User is logged in and study has been selected
         Given The user is logged in

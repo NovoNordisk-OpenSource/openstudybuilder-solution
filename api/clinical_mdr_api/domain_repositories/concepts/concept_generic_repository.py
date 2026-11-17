@@ -115,7 +115,7 @@ class ConceptGenericRepository[AggregateRootType](LibraryItemRepositoryImplBase,
         concept_label = self.root_class.__label__
         concept_value_label = self.value_class.__label__
 
-        version = kwargs.get("version", None)
+        version = kwargs.get("version")
         rel = (
             "hv:HAS_VERSION WHERE hv.version = $requested_version"
             if version is not None
@@ -142,7 +142,7 @@ class ConceptGenericRepository[AggregateRootType](LibraryItemRepositoryImplBase,
             library_relationship = self.root_class.LIBRARY_REL_LABEL
 
         # we do not support minimal count queries when a specific version is requested
-        if kwargs.get("version", None) is not None:
+        if kwargs.get("version") is not None:
             return None, {}
 
         filter_by = validate_filter_by_dict(filter_by)
@@ -180,7 +180,7 @@ class ConceptGenericRepository[AggregateRootType](LibraryItemRepositoryImplBase,
         return None, {}
 
     def generic_alias_clause(self, **kwargs):
-        version = kwargs.get("version", None)
+        version = kwargs.get("version")
         where_version = (
             "WHERE hv.version = $requested_version" if version is not None else ""
         )
@@ -426,7 +426,7 @@ class ConceptGenericRepository[AggregateRootType](LibraryItemRepositoryImplBase,
             one_element_extra=filtering_active,
         )
 
-        if kwargs.get("version", None) is not None:
+        if kwargs.get("version") is not None:
             query.parameters.update({"requested_version": kwargs["version"]})
 
         query.parameters.update(filter_query_parameters)
@@ -465,9 +465,7 @@ class ConceptGenericRepository[AggregateRootType](LibraryItemRepositoryImplBase,
         """
         concept_ars = []
         for concept in result_array:
-            concept_dictionary = {}
-            for concept_property, attribute_name in zip(concept, attribute_names):
-                concept_dictionary[attribute_name] = concept_property
+            concept_dictionary = dict(zip(attribute_names, concept))
             concept_ars.append(
                 self._create_aggregate_root_instance_from_cypher_result(
                     concept_dictionary
@@ -867,10 +865,7 @@ class ConceptGenericRepository[AggregateRootType](LibraryItemRepositoryImplBase,
     @classmethod
     def is_concept_node_a_tp(cls, concept_node: VersionValue) -> bool:
         labels = concept_node.labels()
-        for label in labels:
-            if "TemplateParameterTermValue" in label:
-                return True
-        return False
+        return any("TemplateParameterTermValue" in label for label in labels)
 
     def _maintain_parameters(
         self,

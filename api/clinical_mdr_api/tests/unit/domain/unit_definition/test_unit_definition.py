@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import UTC, datetime
 from typing import Any, Self
 
@@ -141,10 +141,9 @@ class CTSimpleCodelistTermAR:
         cls,
         ct_simple_codelist_term_vo: CTSimpleCodelistTermVO,
     ) -> Self:
-        ct_simple_codelist_term_ar = cls(
+        return cls(
             _ct_simple_codelist_term_vo=ct_simple_codelist_term_vo,
         )
-        return ct_simple_codelist_term_ar
 
 
 def get_mock_ct_item(name):
@@ -250,7 +249,7 @@ def draft_unit_definitions(
     valid_unit_ct_uid_set: list[str] | None = None,
     valid_library_names_set: list[str] | None = None,
 ):
-    result = UnitDefinitionAR.from_input_values(
+    return UnitDefinitionAR.from_input_values(
         unit_definition_value=draw(
             unit_definition_values(valid_unit_ct_uid_set=valid_unit_ct_uid_set)
         ),
@@ -262,7 +261,6 @@ def draft_unit_definitions(
         concept_exists_by_callback=lambda x, y, z: False,
         master_unit_exists_for_dimension_predicate=lambda _: False,
     )
-    return result
 
 
 @composite
@@ -1002,6 +1000,38 @@ def test__unit_definition_ar__edit_draft_making_another_master_unit__failure(
             concept_exists_by_callback=lambda x, y, z: False,
             master_unit_exists_for_dimension_predicate=lambda _: _
             == new_unit_definition_value.unit_dimension_uid,
+        )
+
+
+@settings(max_examples=int(max(10, settings.default.max_examples / 10)), deadline=None)
+@given(
+    unit_definition_ar=final_unit_definitions(),
+    new_unit_dimension_uid=one_of(none(), stripped_non_empty_strings()),
+    change_description=stripped_non_empty_strings(),
+    author_id=stripped_non_empty_strings(),
+)
+def test__unit_definition_ar__edit_draft_dimension_change_after_approval__failure(
+    unit_definition_ar: UnitDefinitionAR,
+    new_unit_dimension_uid: str | None,
+    change_description: str,
+    author_id: str,
+):
+    # given
+    assume(new_unit_dimension_uid != unit_definition_ar.concept_vo.unit_dimension_uid)
+    unit_definition_ar.create_new_version(author_id=author_id)
+    new_unit_definition_value = replace(
+        unit_definition_ar.concept_vo, unit_dimension_uid=new_unit_dimension_uid
+    )
+
+    # then
+    with pytest.raises(BusinessLogicException):
+        # when
+        unit_definition_ar.edit_draft(
+            author_id=author_id,
+            change_description=change_description,
+            new_unit_definition_value=new_unit_definition_value,
+            concept_exists_by_callback=lambda x, y, z: False,
+            master_unit_exists_for_dimension_predicate=lambda _: False,
         )
 
 

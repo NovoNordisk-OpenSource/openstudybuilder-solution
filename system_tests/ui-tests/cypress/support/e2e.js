@@ -2,10 +2,13 @@
 import '@shelex/cypress-allure-plugin'
 import '@4tw/cypress-drag-drop'
 import './api_requests/authorisation_methods'
+import './api_requests/auxiliary_devices_requests'
+import './api_requests/age_rules_requests'
 import './api_requests/crf_requests'
 import './api_requests/ct_requests'
 import './api_requests/disease_milestones_requests'
 import './api_requests/library_activities'
+import './api_requests/library_concepts_requests'
 import './api_requests/library_syntax_templates'
 import './api_requests/library_units'
 import './api_requests/library_trial_summary_parameters_requests'
@@ -16,6 +19,8 @@ import './api_requests/study_desgin_matirx_requests'
 import './api_requests/study_arm_requests'
 import './api_requests/study_branch_requests'
 import './api_requests/study_cohorts_requests'
+import './api_requests/study_criteria_requests'
+import './api_requests/study_design_populations_requests'
 import './api_requests/study_elements_requests'
 import './api_requests/study_epochs_requests'
 import './api_requests/study_visits_requests'
@@ -49,6 +54,8 @@ before(function() {
     cy.createTestStudy('9881', 'Empty study')
     cy.createTestStudy('9882', 'Study template testing')
     cy.createTestStudy('9883', 'Empty study 2')
+    cy.createTestStudy('9884', 'Footnotes testing study A')
+    cy.createTestStudy('9885', 'Footnotes testing study B')
     cy.createTestStudy('9901', 'Lock/Unlock study')
     cy.createTestStudy('9902', 'Lock/Unlock study - Final Protocol')
     cy.createTestStudy('8014', 'Data completness tags - complete study')

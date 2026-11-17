@@ -49,6 +49,7 @@ The request body must accept:
 - `study_acronym`: optional
 - `project_id`: the ID of an existing project, required
 - `description`: optional
+- `title`: optional. Not required to be unique; several studies may share the same title. An empty or whitespace-only value is accepted and treated as no title.
 
 At least one of `study_number` and `study_acronym` must be provided.
 
@@ -68,7 +69,7 @@ Creating study subparts is not supported by this endpoint.
 
 ### Response
 
-On success, the endpoint must return the created study in `DRAFT` status, including its `uid`, the server-derived `id` (`{project_id}-{study_number}`), `acronym` and `description`.
+On success, the endpoint must return the created study in `DRAFT` status, including its `uid`, the server-derived `id` (`{project_id}-{study_number}`), `acronym`, `description` and `title`.
 
 The `id` must be derived the same way as in the `GET /studies` response, so that a study is identified identically by both endpoints. If the study has no study number, the number part of the `id` is empty.
 
@@ -87,6 +88,10 @@ The `id` must be derived the same way as in the `GET /studies` response, so that
 | tests/v1/test_api_studies_create.py | test_create_study_with_unknown_field                     |
 | tests/v1/test_api_studies_create.py | test_create_study_with_duplicate_study_number            |
 | tests/v1/test_api_studies_create.py | test_create_study_with_duplicate_study_acronym           |
+| tests/v1/test_api_studies_create.py | test_create_study_without_title                          |
+| tests/v1/test_api_studies_create.py | test_create_study_with_empty_title                       |
+| tests/v1/test_api_studies_create.py | test_create_study_with_duplicate_title                   |
+| tests/v1/test_api_studies_create.py | test_created_study_title_is_persisted                    |
 | tests/v1/test_api_studies_create.py | test_created_study_is_returned_by_get_studies            |
 
 # Study Structure

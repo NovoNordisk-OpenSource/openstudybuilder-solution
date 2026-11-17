@@ -1,0 +1,7 @@
+CODELIST_SUBMVAL,TERM_SUBMVAL,SPONSOR_NAME,SPONSOR_NAME_SENTENCE_CASE,NCI_PREFERRED_NAME,ORDER,CONCEPT_ID,CATALOGUES,DEFINITION,ORDINAL
+ADAQ_01|ADAQ_02,NEVER,Never,never,Never,1,,,Never,0|0
+ADAQ_01|ADAQ_02,RARELY,Rarely,rarely,Rarely,2,,,Rarely,1|1
+ADAQ_01|ADAQ_02,SOMETIMES,Sometimes,sometimes,Sometimes,3,,,Sometimes,2|2
+ADAQ_01|ADAQ_02,OFTEN,Often,often,Often,4,,,Often,3|3
+ADAQ_01|ADAQ_02,I STOPPED TAKING MY MEDICATION(S) COMPLETELY,I Stopped Taking My Medication(S) Completely,i stopped taking my medication(s) completely,I Stopped Taking My Medication(S) Completely,5,,,I Stopped Taking My Medication(S) Completely,4|4
+ADAQ_02,I HAVE NOT BEEN ADVISED TO TAKE MY MEDICATION(S) AT A CERTAIN TIME,I Have Not Been Advised To Take My Medication(S) At A Certain Time,i have not been advised to take my medication(s) at a certain time,I Have Not Been Advised To Take My Medication(S) At A Certain Time,6,,,I Have Not Been Advised To Take My Medication(S) At A Certain Time,999999

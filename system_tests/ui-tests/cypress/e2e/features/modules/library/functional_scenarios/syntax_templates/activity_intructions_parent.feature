@@ -15,13 +15,6 @@ Feature: Library - Syntax Templates - Activity Instructions - Parent
         And The activity instruction is searched and found
         Then Sequence number is incremented
 
-    @pending_implementation
-    Scenario: Template Instantiations must be update when parent template has been updated
-        Given The test Activity Parent Template exists with a status as 'Draft'
-        When The'Approve' option is clicked from the three dot menu list
-        Then all related activity template instantiations must be cascade updated to new version and approved
-        And the displayed pop-up snack must include information on number of updated activity template instantiations
-
     @smoke_test
     Scenario: [Create][Positive case] User must be able to create Activity Instruction template
         Given The 'library/activity_instruction_templates/parent' page is opened
@@ -138,12 +131,19 @@ Feature: Library - Syntax Templates - Activity Instructions - Parent
         Then The validation appears for Activity field
         And The form is not closed
 
-    Scenario: [Create][Syntax validation] User must be able to verify syntax when creating Activity Instruction template
+    Scenario: [Create][Brackets restriction] User must be able to add value in brackets in the syntax template
         Given The 'library/activity_instruction_templates/parent' page is opened
         And The Add template button is clicked
         When The new template name is prepared with a parameters
-        And The syntax is verified
-        Then The pop up displays "This syntax is valid"
+        And User adds to template value in brackets
+        And Form continue button is clicked
+        And Form continue button is clicked
+        When All Not Applicable checkboxes are checked
+        And The mandatory indexes are filled
+        And User intercepts activity templates request
+        And Form save button is clicked
+        And User waits for activity templates request
+        Then The pop up displays 'template added'
 
     Scenario: [Create][Hide parameters] User must be able to hide parameter of the Activity Instruction template
         Given The 'library/activity_instruction_templates/parent' page is opened
@@ -275,44 +275,31 @@ Feature: Library - Syntax Templates - Activity Instructions - Parent
         Then The pop up displays 'Activity template is now in Final state'
         And The item has status 'Final' and version '1.0'
 
-    @manual_test
-    Scenario: User must be able to view the history for the Parent Activity template with a status as 'Retired'
-        Given [API] Activity in status Final with Final group and subgroub exists
-        And [API] Activity Instruction in status Draft exists
-        And [API] Activity Instruction is approved
-        And [API] Activity Instruction is inactivated
-        Then User intercepts activity templates request
-        And The 'library/activity_instruction_templates/parent' page is opened
-        And User waits for activity templates request
-        And The activity instruction is searched and found
-        When The 'Reactivate' option is clicked from the three dot menu list
-        Then The 'History for template' window is displayed with the following column list with values
-            | Column | Header                 |
-            | 1      | Indication or disorder |
-            | 2      | Criterion category     |
-            | 3      | Criterion sub-category |
-            | 4      | Template               |
-            | 5      | Guidance text          |
-            | 6      | Status                 |
-            | 7      | Version                |
-            | 8      | Change type            |
-            | 9      | User                   |
-            | 10     | From                   |
-            | 11     | To                     |
+    Scenario: [Actions][History] User must be able to view the history for the Activity Instructions
+        Given The '/library/activity_instruction_templates/parent' page is opened
+        And The 'History' option is clicked from the three dot menu list
+        Then The History page is displayed
+        And The following column list with values will exist
+        | header                 |
+        | Sequence number        |
+        | Parent template        |
+        | Status                 |
+        | Version                |
+        | Change type            |
+        | User                   |
+        | From                   |
+        | To                     |
+        And The history table is not empty
+        When The CLOSE button is clicked
+        Then The current URL is '/library/activity_instruction_templates/parent'
 
-    @manual_test
-    Scenario: User must be able to read change history of output
-        Given The 'library/activity_instruction_templates/parent' page is opened
-        When The user opens version history
-        Then The user is presented with version history of the output containing timestamp and username
-
-    @manual_test
-    Scenario: User must be able to read change history of selected element
-        Given The 'library/activity_instruction_templates/parent' page is opened
-        And The 'Show history' option is clicked from the three dot menu list
-        When The user clicks on History for particular element
-        Then The user is presented with history of changes for that element
-        And The history contains timestamps and usernames
+    #@manual_test
+    #Scenario: User must be able to read change history of selected element
+    #    Given The 'library/activity_instruction_templates/parent' page is opened
+    #    And The 'Show history' option is clicked from the three dot menu list
+    #    When The user clicks on History for particular element
+    #    Then The user is presented with history of changes for that element
+    #    And The history contains timestamps and usernames
 
     Scenario: [Cancel][Creation] User must be able to Cancel creation of the Activity Instruction template
         Given The 'library/activity_instruction_templates/parent' page is opened

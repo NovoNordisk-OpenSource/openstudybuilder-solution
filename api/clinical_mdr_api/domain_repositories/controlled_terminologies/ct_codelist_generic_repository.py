@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from collections.abc import Iterable
 from datetime import UTC, datetime
-from typing import Any, cast
+from typing import Any
 
 from cachetools import cached
 from cachetools.keys import hashkey
@@ -112,10 +112,7 @@ class CTCodelistGenericRepository[AggregateRootType](
     @classmethod
     def is_ct_node_a_tp(cls, ct_value_node) -> bool:
         labels = ct_value_node.labels()
-        for label in labels:
-            if "TemplateParameter" in label:
-                return True
-        return False
+        return any("TemplateParameter" in label for label in labels)
 
     @abstractmethod
     def _create_aggregate_root_instance_from_version_root_relationship_and_value(
@@ -144,7 +141,7 @@ class CTCodelistGenericRepository[AggregateRootType](
 
     def find_uid_by_name(self, name: str) -> str | None:
         cypher_query = f"""
-            MATCH (codelist_root:CTCodelistRoot)-[:{cast(str, self.relationship_from_root).upper()}]->(:{self.root_class.__label__})-
+            MATCH (codelist_root:CTCodelistRoot)-[:{self.relationship_from_root.upper()}]->(:{self.root_class.__label__})-
             [:LATEST_FINAL|LATEST_DRAFT|LATEST_RETIRED]->(:{self.value_class.__label__} {{name: $name}})
             RETURN codelist_root.uid
         """
@@ -320,7 +317,7 @@ class CTCodelistGenericRepository[AggregateRootType](
                 """
         else:
             match_clause = f"""
-            MATCH (codelist_root:CTCodelistRoot)-[:{cast(str, self.relationship_from_root).upper()}]-(codelist_ver_root)-[:LATEST_FINAL]->(codelist_ver_value)
+            MATCH (codelist_root:CTCodelistRoot)-[:{self.relationship_from_root.upper()}]-(codelist_ver_root)-[:LATEST_FINAL]->(codelist_ver_value)
             """
 
         return match_clause
@@ -336,9 +333,7 @@ class CTCodelistGenericRepository[AggregateRootType](
         """
         codelist_ars = []
         for codelist in result_array:
-            codelist_dictionary = {}
-            for codelist_property, attribute_name in zip(codelist, attribute_names):
-                codelist_dictionary[attribute_name] = codelist_property
+            codelist_dictionary = dict(zip(attribute_names, codelist))
             codelist_ars.append(
                 self._create_aggregate_root_instance_from_cypher_result(
                     codelist_dictionary
@@ -375,15 +370,13 @@ class CTCodelistGenericRepository[AggregateRootType](
         ct_codelist_name_root_node = ct_codelist_root.__getattribute__(
             self.relationship_from_root
         ).single()
-        codelist_ar = self.find_by_uid_2(
+        return self.find_by_uid_2(
             uid=str(ct_codelist_name_root_node.element_id),
             version=version,
             status=status,
             at_specific_date=at_specific_date,
             for_update=for_update,
         )
-
-        return codelist_ar
 
     def get_all_versions(self, codelist_uid: str) -> Iterable[AggregateRootType] | None:
         ct_codelist_root: CTCodelistRoot = CTCodelistRoot.nodes.get_or_none(
@@ -394,10 +387,7 @@ class CTCodelistGenericRepository[AggregateRootType](
             ct_codelist_name_root_node = ct_codelist_root.__getattribute__(
                 self.relationship_from_root
             ).single()
-            versions = self.get_all_versions_2(
-                str(ct_codelist_name_root_node.element_id)
-            )
-            return versions
+            return self.get_all_versions_2(str(ct_codelist_name_root_node.element_id))
         return None
 
     @sb_clear_cache(
@@ -419,9 +409,7 @@ class CTCodelistGenericRepository[AggregateRootType](
             RETURN codelist_root
             """
         result, _ = db.cypher_query(query, {"uid": codelist_uid})
-        if len(result) > 0 and len(result[0]) > 0:
-            return True
-        return False
+        return len(result) > 0 and len(result[0]) > 0
 
     @sb_clear_cache(
         caches=["cache_store_item_by_uid", "cache_store_term_by_uid_and_submval"]
@@ -656,9 +644,7 @@ class CTCodelistGenericRepository[AggregateRootType](
         result, _ = db.cypher_query(
             query, {"codelist_uid": codelist_uid, "term_uid": term_uid}
         )
-        if len(result) > 0:
-            return True
-        return False
+        return len(result) > 0
 
     def hashkey_codelist_term(
         self,

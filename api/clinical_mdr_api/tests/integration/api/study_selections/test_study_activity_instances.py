@@ -871,7 +871,7 @@ def test_create_study_activity_instance(api_client):
     assert_response_status_code(response, 409)
     assert (
         response.json()["message"]
-        == f"There is already a Study Activity Instance with UID '{new_activity_instance_linked_to_weight.uid}' linked to the Activity with UID '{weight_activity.uid}'."
+        == f"There is already a Study Activity Instance with Name '{new_activity_instance_linked_to_weight.name}' linked to the Activity with Name '{weight_activity.name}'."
     )
     TestUtils.delete_study(test_study.uid)
 
@@ -1326,6 +1326,8 @@ def test_study_activity_instance_audit_trails(api_client):
     assert res[1]["show_activity_instance_in_protocol_flowchart"] is False
     assert res[2]["activity"]["name"] == body_mes_activity.name
     assert res[2]["activity_instance"]["name"] == body_mes_activity_instance.name
+    for item in res:
+        assert item["study_soa_group"]["soa_group_term_uid"] == term_efficacy_uid
     response = api_client.get(
         f"/studies/{test_study.uid}/study-activity-instances/{study_activity_instance_uid}/audit-trail"
     )
@@ -1336,6 +1338,8 @@ def test_study_activity_instance_audit_trails(api_client):
     assert res[0]["show_activity_instance_in_protocol_flowchart"] is True
     assert res[1]["activity"]["name"] == randomized_activity.name
     assert res[1]["show_activity_instance_in_protocol_flowchart"] is False
+    for item in res:
+        assert item["study_soa_group"]["soa_group_term_uid"] == term_efficacy_uid
     TestUtils.delete_study(test_study.uid)
 
 

@@ -481,7 +481,7 @@
                 :model-value="aic.uid"
                 :label="$t('ActivityInstanceForm.activity_item_class')"
                 :items="[aic]"
-                item-title="display_name"
+                item-title="label"
                 item-value="uid"
                 bg-color="white"
                 class="w-50"

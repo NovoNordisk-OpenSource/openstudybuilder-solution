@@ -249,7 +249,7 @@ const headers = [
     key: 'non_standard_variable.code',
     title: t('NonStandardVariablesTable.nsv_code'),
   },
-  { key: 'display_name', title: t('NonStandardVariablesTable.nsv_label') },
+  { key: 'label', title: t('NonStandardVariablesTable.nsv_label') },
   { key: 'name', title: t('_global.name') },
   {
     key: 'nci_concept_id',

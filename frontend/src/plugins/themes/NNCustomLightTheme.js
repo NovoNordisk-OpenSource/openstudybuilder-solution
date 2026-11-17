@@ -54,6 +54,7 @@ export default {
     tableChildRow: '#E6EFFB',
     nnTableRowExpanded: '#C2D8F4',
     nnTableRowChild: '#E6EFFB',
+    nnTableHeaderDark: '#272e41',
     lightSuccess: '#D1E7CF',
     nnAlertRed: '#C44836',
   },

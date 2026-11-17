@@ -272,9 +272,7 @@ class DictionaryTermGenericRepository(
         """
         term_ars = []
         for term in result_array:
-            term_dictionary = {}
-            for term_property, attribute_name in zip(term, attribute_names):
-                term_dictionary[attribute_name] = term_property
+            term_dictionary = dict(zip(attribute_names, term))
             term_ars.append(
                 self._create_aggregate_root_instance_from_cypher_result(term_dictionary)
             )

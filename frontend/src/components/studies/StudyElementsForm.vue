@@ -4,7 +4,6 @@
     :title="title"
     :steps="steps"
     :help-items="helpItems"
-    :help-text="$t('_help.StudyDefineForm.general')"
     :form-observer-getter="getObserver"
     :edit-data="editData"
     custom-actions

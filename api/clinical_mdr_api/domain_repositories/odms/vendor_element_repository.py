@@ -82,7 +82,7 @@ class VendorElementRepository(OdmGenericRepository[OdmVendorElementAR]):
             "Creating OdmVendorElementAR from Cypher result for uid=%s",
             input_dict["uid"],
         )
-        odm_vendor_element_ar = OdmVendorElementAR.from_repository_values(
+        return OdmVendorElementAR.from_repository_values(
             uid=input_dict["uid"],
             odm_vo=OdmVendorElementVO.from_repository_values(
                 name=input_dict["name"],
@@ -107,8 +107,6 @@ class VendorElementRepository(OdmGenericRepository[OdmVendorElementAR]):
                 minor_version=int(minor),
             ),
         )
-
-        return odm_vendor_element_ar
 
     def _get_specific_field_mapping(self) -> dict[str, str]:
         """Field mappings for vendor element specific fields."""

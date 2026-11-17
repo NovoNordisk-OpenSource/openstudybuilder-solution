@@ -1877,11 +1877,26 @@ def test_delete_draft_that_had_been_accepted_fail(api_client):
     assert res["message"] == "Object has been accepted"
 
 
+def test_patch_next_major_version_dimension_fail(api_client):
+    data = {
+        "change_description": "Patched version 2 (failed)",
+        "unit_dimension": "unit1-dimension-patched-2",
+    }
+    response = api_client.patch(f"/concepts/unit-definitions/{UNIT_UID}", json=data)
+    assert_response_status_code(response, 400)
+    res = response.json()
+
+    assert res["type"] == "BusinessLogicException"
+    assert (
+        res["message"]
+        == f"The unit dimension of '{UNIT_UID}' cannot be changed because it has already been approved."
+    )
+
+
 def test_patch_next_major_version(api_client):
     data = {
         "change_description": "Patched version 2",
         "name": "unit1-patched-2",
-        "unit_dimension": "unit1-dimension-patched-2",
     }
     response = api_client.patch(f"/concepts/unit-definitions/{UNIT_UID}", json=data)
     assert_response_status_code(response, 200)
@@ -1904,14 +1919,14 @@ def test_patch_next_major_version(api_client):
     ]
     assert res["unit_subsets"] == []
     assert res["unit_dimension"] == {
-        "term_uid": "unit1-dimension-patched-2",
-        "term_name": "CT Unit Dim term 4",
+        "term_uid": "unit1-dimension-patched",
+        "term_name": "CT Unit Dim term 3",
         "codelist_uid": "CTCodelist_000002",
         "codelist_name": "CT Unit Dimension",
         "codelist_submission_value": "UNITDIM",
-        "order": 4,
+        "order": 3,
         "preferred_term": "test",
-        "submission_value": "CT Unit Dim term 4",
+        "submission_value": "CT Unit Dim term 3",
         "queried_effective_date": None,
         "date_conflict": False,
     }
@@ -1959,14 +1974,14 @@ def test_get_specific_latest2(api_client):
     ]
     assert res["unit_subsets"] == []
     assert res["unit_dimension"] == {
-        "term_uid": "unit1-dimension-patched-2",
-        "term_name": "CT Unit Dim term 4",
+        "term_uid": "unit1-dimension-patched",
+        "term_name": "CT Unit Dim term 3",
         "codelist_uid": "CTCodelist_000002",
         "codelist_name": "CT Unit Dimension",
         "codelist_submission_value": "UNITDIM",
-        "order": 4,
+        "order": 3,
         "preferred_term": "test",
-        "submission_value": "CT Unit Dim term 4",
+        "submission_value": "CT Unit Dim term 3",
         "queried_effective_date": None,
         "date_conflict": False,
     }
@@ -2069,14 +2084,14 @@ def test_get_versions1(api_client):
     ]
     assert res[0]["unit_subsets"] == []
     assert res[0]["unit_dimension"] == {
-        "term_uid": "unit1-dimension-patched-2",
-        "term_name": "CT Unit Dim term 4",
+        "term_uid": "unit1-dimension-patched",
+        "term_name": "CT Unit Dim term 3",
         "codelist_uid": "CTCodelist_000002",
         "codelist_name": "CT Unit Dimension",
         "codelist_submission_value": "UNITDIM",
-        "order": 4,
+        "order": 3,
         "preferred_term": "test",
-        "submission_value": "CT Unit Dim term 4",
+        "submission_value": "CT Unit Dim term 3",
         "queried_effective_date": None,
         "date_conflict": False,
     }
@@ -2400,7 +2415,7 @@ def test_adding_another_master_unit_in_the_same_dimension(api_client):
         "display_unit": True,
         "master_unit": True,
         "us_conventional_unit": True,
-        "unit_dimension": "unit1-dimension-patched-2",
+        "unit_dimension": "unit1-dimension-patched",
         "conversion_factor_to_master": 1.0,
         "order": 1,
     }
@@ -2411,7 +2426,7 @@ def test_adding_another_master_unit_in_the_same_dimension(api_client):
     assert res["type"] == "BusinessLogicException"
     assert (
         res["message"]
-        == "Attempt to create another master unit in dimension 'unit1-dimension-patched-2'."
+        == "Attempt to create another master unit in dimension 'unit1-dimension-patched'."
     )
 
 
@@ -2488,7 +2503,7 @@ def test_adding_another_master_unit_in_different_dimension(api_client):
 def test_patch_into_another_master_unit_in_the_same_dimension(api_client):
     data = {
         "change_description": "Patched version",
-        "unit_dimension": "unit1-dimension-patched-2",
+        "unit_dimension": "unit1-dimension-patched",
     }
     response = api_client.patch(f"/concepts/unit-definitions/{UNIT_UID}", json=data)
     assert_response_status_code(response, 400)
@@ -2497,7 +2512,7 @@ def test_patch_into_another_master_unit_in_the_same_dimension(api_client):
     assert res["type"] == "BusinessLogicException"
     assert (
         res["message"]
-        == f"Attempt to make '{UNIT_UID}' another master unit in dimension 'unit1-dimension-patched-2'."
+        == f"Attempt to make '{UNIT_UID}' another master unit in dimension 'unit1-dimension-patched'."
     )
 
 
@@ -2506,7 +2521,7 @@ def test_patch1(api_client):
         "change_description": "Patched version",
         "ct_units": ["unit1-ct-uid", "unit1-ct-uid-2"],
         "unit_subsets": ["unit-subset-uid-1", "unit-subset-uid-2"],
-        "unit_dimension": "unit1-dimension-patched",
+        "unit_dimension": "unit1-dimension-patched-2",
     }
     response = api_client.patch(f"/concepts/unit-definitions/{UNIT_UID}", json=data)
     assert_response_status_code(response, 200)
@@ -2567,14 +2582,14 @@ def test_patch1(api_client):
         },
     ]
     assert res["unit_dimension"] == {
-        "term_uid": "unit1-dimension-patched",
-        "term_name": "CT Unit Dim term 3",
+        "term_uid": "unit1-dimension-patched-2",
+        "term_name": "CT Unit Dim term 4",
         "codelist_uid": "CTCodelist_000002",
         "codelist_name": "CT Unit Dimension",
         "codelist_submission_value": "UNITDIM",
-        "order": 3,
+        "order": 4,
         "preferred_term": "test",
-        "submission_value": "CT Unit Dim term 3",
+        "submission_value": "CT Unit Dim term 4",
         "queried_effective_date": None,
         "date_conflict": False,
     }

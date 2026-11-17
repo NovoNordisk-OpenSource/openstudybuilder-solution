@@ -232,7 +232,7 @@ class StudySoAFootnoteRepository:
         # StudyActivitySchedule part
         query.append(
             dedent(
-                """[(sf)-[:REFERENCES_STUDY_ACTIVITY_SCHEDULE]->(study_activity_schedule:StudyActivitySchedule)<-[:HAS_STUDY_ACTIVITY_SCHEDULE]-(sv)
+                """[(sf)-[references_schedule:REFERENCES_STUDY_ACTIVITY_SCHEDULE]->(study_activity_schedule:StudyActivitySchedule)<-[:HAS_STUDY_ACTIVITY_SCHEDULE]-(sv)
               -[:HAS_STUDY_VISIT]->(study_visit:StudyVisit)-[:STUDY_VISIT_HAS_SCHEDULE]->(study_activity_schedule)
               <-[:STUDY_ACTIVITY_HAS_SCHEDULE]-(study_activity:StudyActivity)-[:HAS_SELECTED_ACTIVITY]->(activity_value:ActivityValue)
               WHERE (sv)-[:HAS_STUDY_ACTIVITY]->(study_activity) |
@@ -248,6 +248,7 @@ class StudySoAFootnoteRepository:
                         WHERE (study_activity_subgroup)<-[:HAS_STUDY_ACTIVITY_SUBGROUP]-(sv) | study_activity_subgroup.order]),
                     study_activity_order: study_activity.order,
                     study_activity_schedule_order: toInteger(study_visit.unique_visit_number),
+                    via_propagated_cell: coalesce(references_schedule.via_propagated_cell, false),
                     type: 'StudyActivitySchedule'
             """
             )
@@ -312,13 +313,8 @@ class StudySoAFootnoteRepository:
         query.append(
             dedent("} as footnote_template ORDER BY ver.start_date DESC LIMIT 1} ")
         )
-        # Main Return part
-        query.append(dedent("""RETURN DISTINCT
-                sr.uid AS study_uid,
-                sf.uid AS uid,
-                sf.layout AS layout,
-                footnote,
-                footnote_template,
+        # Referenced items part, sorted by their position in the SoA
+        query.append(dedent("""WITH *,
                 apoc.coll.sortMulti(apoc.coll.toSet(referenced_study_activities) +
                 apoc.coll.toSet(referenced_study_activity_subgroups) +
                 apoc.coll.toSet(referenced_study_activity_groups) +
@@ -336,6 +332,45 @@ class StudySoAFootnoteRepository:
                         '^study_activity_schedule_order'
                     ])  AS referenced_items
                 """))
+        # Dates part, from the versions of the footnote (every edit creates a new version):
+        # created_date is the earliest action of any version, as a cloned footnote has no Create action;
+        # assigned_date is when the footnote was (last) assigned to its first referenced item,
+        # the earliest action of the unbroken run of latest versions referencing that item
+        query.append(dedent("""CALL (sf, referenced_items) {
+                MATCH (version:StudySoAFootnote {uid: sf.uid})<-[:AFTER]-(action:StudyAction)
+                WITH version, action, referenced_items[0].uid AS first_item_uid
+                ORDER BY action.date DESC
+                WITH collect({
+                    date: action.date,
+                    references_first_item: EXISTS {
+                        (version)-[:REFERENCES_STUDY_ACTIVITY|REFERENCES_STUDY_ACTIVITY_SUBGROUP
+                            |REFERENCES_STUDY_ACTIVITY_GROUP|REFERENCES_STUDY_SOA_GROUP
+                            |REFERENCES_STUDY_ACTIVITY_SCHEDULE|REFERENCES_STUDY_VISIT
+                            |REFERENCES_STUDY_EPOCH]->(item)
+                        WHERE item.uid = first_item_uid
+                    }
+                }) AS versions
+                RETURN
+                    last(versions).date AS created_date,
+                    reduce(run = {date: null, open: true}, v IN versions |
+                        CASE WHEN run.open AND v.references_first_item
+                            THEN {date: v.date, open: true}
+                            ELSE {date: run.date, open: false}
+                        END
+                    ).date AS assigned_date
+            }
+            """))
+        # Main Return part
+        query.append(dedent("""RETURN DISTINCT
+                sr.uid AS study_uid,
+                sf.uid AS uid,
+                sf.layout AS layout,
+                created_date,
+                assigned_date,
+                footnote,
+                footnote_template,
+                referenced_items
+                """))
         # Extra return part
         if full_query:
             query.append(dedent(""",latest_footnote,
@@ -351,14 +386,19 @@ class StudySoAFootnoteRepository:
     def order_by_soa_order(self):
         # The referenced_items array of each SoAFootnote is pre-sorted so that always first item of referenced_items array is the first item that appears in SoA.
         # In this ordering section we can sort SoAFootnotes based on the first item in the referenced_items array as this array was already pre sorted.
+        # Footnotes tied on the first item are ordered by when they were assigned to it,
+        # footnotes without referenced items by creation date.
         return """ORDER BY
-                referenced_items[0].epoch_order, 
-                referenced_items[0].visit_order, 
-                referenced_items[0].study_soa_group_order, 
-                referenced_items[0].study_activity_group_order, 
-                referenced_items[0].study_activity_subgroup_order, 
-                referenced_items[0].study_activity_order, 
-                referenced_items[0].study_activity_schedule_order"""
+                referenced_items[0].epoch_order,
+                referenced_items[0].visit_order,
+                referenced_items[0].study_soa_group_order,
+                referenced_items[0].study_activity_group_order,
+                referenced_items[0].study_activity_subgroup_order,
+                referenced_items[0].study_activity_order,
+                referenced_items[0].study_activity_schedule_order,
+                assigned_date,
+                created_date,
+                uid"""
 
     def order_by_date(self):
         return "ORDER BY modified_date DESC"
@@ -374,16 +414,15 @@ class StudySoAFootnoteRepository:
                     item_name=item.get("name"),
                     visible_in_protocol_soa=item.get("visible_in_protocol_soa"),
                     order=item.get("order"),
+                    via_propagated_cell=bool(item.get("via_propagated_cell")),
                 )
             )
-
-        referenced_items.sort(key=lambda ref_item: ref_item.item_name or "")
         return referenced_items
 
     def create_vo_from_db_output(self, selection: dict[str, Any]) -> StudySoAFootnoteVO:
         referenced_items = self.get_referenced_items_from_selection(selection=selection)
 
-        selection_vo = StudySoAFootnoteVO.from_repository_values(
+        return StudySoAFootnoteVO.from_repository_values(
             study_uid=selection["study_uid"],
             footnote_uid=selection.get("footnote", {}).get("uid"),
             footnote_version=selection.get("footnote", {}).get("version"),
@@ -419,17 +458,19 @@ class StudySoAFootnoteRepository:
             author_username=selection.get("author_username"),
             layout=selection.get("layout"),
         )
-        return selection_vo
 
     def create_vo_history_from_db_output(
         self, selection: dict[str, Any]
     ) -> StudySoAFootnoteVOHistory:
         referenced_items = self.get_referenced_items_from_selection(selection=selection)
+        # sorted by name, as the SoA order is not tied to one study version here,
+        # so consecutive versions compare without spurious changes
+        referenced_items.sort(key=lambda ref_item: ref_item.item_name or "")
         change_type = ""
         for action in selection["change_type"]:
             if "StudyAction" not in action:
                 change_type = action
-        selection_vo = StudySoAFootnoteVOHistory(
+        return StudySoAFootnoteVOHistory(
             study_uid=selection["study_uid"],
             footnote_uid=selection.get("footnote").get("uid"),
             footnote_version=selection.get("footnote").get("version"),
@@ -453,7 +494,6 @@ class StudySoAFootnoteRepository:
             author_username=selection.get("author_username"),
             layout=selection.get("layout"),
         )
-        return selection_vo
 
     @trace_calls
     def find_all_footnotes(
@@ -545,8 +585,7 @@ class StudySoAFootnoteRepository:
             msg=f"Returned more than one StudySoAFootnote with uid {uid}",
         )
 
-        selection_vo = self.create_vo_from_db_output(selection=soa_footnote[0])
-        return selection_vo
+        return self.create_vo_from_db_output(selection=soa_footnote[0])
 
     def save(self, soa_footnote_vo: StudySoAFootnoteVO, create: bool = True):
         study_root = StudyRoot.nodes.get(uid=soa_footnote_vo.study_uid)
@@ -663,7 +702,12 @@ class StudySoAFootnoteRepository:
                 )
                 if sas_referenced_node:
                     soa_footnote_node.references_study_activity_schedule.connect(
-                        sas_referenced_node
+                        sas_referenced_node,
+                        (
+                            {"via_propagated_cell": True}
+                            if referenced_item.via_propagated_cell
+                            else {}
+                        ),
                     )
                 else:
                     not_found_items.append(referenced_item)
@@ -693,7 +737,7 @@ class StudySoAFootnoteRepository:
         ValidationException.raise_if(
             not_found_items,
             msg=f"The following referenced nodes were not found "
-            f"{[not_found_item.item_name if not_found_item.item_name else not_found_item.item_uid for not_found_item in not_found_items]}",
+            f"{[not_found_item.item_name or not_found_item.item_uid for not_found_item in not_found_items]}",
         )
 
         if create:
@@ -778,12 +822,19 @@ class StudySoAFootnoteRepository:
         return all_selections
 
     def check_exists_soa_footnotes_for_footnote_and_study_uid(
-        self, study_uid: str, footnote_uid: str, soa_footnote_uid_to_exclude: str
+        self,
+        study_uid: str,
+        footnote_uid: str,
+        soa_footnote_uid_to_exclude: str,
+        layout: str | None = None,
     ) -> str | None:
+        # The same footnote may be selected once per layout. A footnote without a
+        # layout applies to every layout, so it clashes with any other selection.
         query = """
             MATCH (study_root:StudyRoot {uid: $study_uid})-[:LATEST]->(study_value:StudyValue)-[:HAS_STUDY_FOOTNOTE]->(study_soa_footnote:StudySoAFootnote)
                 -[:HAS_SELECTED_FOOTNOTE]->(footnote_value:FootnoteValue)<-[:HAS_VERSION]-(footnote_root:FootnoteRoot {uid: $footnote_uid})
             WHERE study_soa_footnote.uid <> $soa_footnote_uid_to_exclude AND NOT (study_soa_footnote)-[:BEFORE]-() AND NOT (study_soa_footnote)--(:Delete)
+                AND ($layout IS NULL OR study_soa_footnote.layout IS NULL OR study_soa_footnote.layout = $layout)
             RETURN DISTINCT footnote_value.name_plain
         """
         existing_footnote, _ = db.cypher_query(
@@ -792,6 +843,7 @@ class StudySoAFootnoteRepository:
                 "study_uid": study_uid,
                 "footnote_uid": footnote_uid,
                 "soa_footnote_uid_to_exclude": soa_footnote_uid_to_exclude,
+                "layout": layout,
             },
         )
         return existing_footnote[0][0] if len(existing_footnote) > 0 else None

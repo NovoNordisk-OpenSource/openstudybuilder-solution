@@ -192,6 +192,16 @@
         icon="mdi-file-document-outline"
         @click="downloadHtml"
       />
+      <v-btn
+        v-for="action in exportActions"
+        :key="action.key"
+        size="small"
+        color="nnGreen1"
+        class="ml-4 mt-3"
+        :title="action.title"
+        :icon="action.icon"
+        @click="openExportAction(action)"
+      />
       <v-spacer />
       <v-switch
         v-model="showOdmXml"
@@ -201,6 +211,12 @@
         inset
       ></v-switch>
     </v-row>
+    <component
+      :is="activeExportAction.dialog"
+      v-if="activeExportAction"
+      :context="exportContext"
+      @close="closeExportAction"
+    />
     <div v-show="loading">
       <v-row
         class="align-center justify-center"
@@ -250,6 +266,7 @@ import { ref, watch, onMounted, computed, inject } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { useShake } from '@/composables/shake'
+import { useCrfExportActions } from '@/composables/crfExportActions'
 
 const props = defineProps({
   typeProp: {
@@ -270,6 +287,12 @@ const router = useRouter()
 const { t } = useI18n()
 
 const { isShaking, activateShake } = useShake()
+const {
+  exportActions,
+  activeExportAction,
+  openExportAction,
+  closeExportAction,
+} = useCrfExportActions()
 
 const elementLoading = ref(false)
 
@@ -317,6 +340,14 @@ const types = [
 ]
 const elementVersion = ref(t('OdmViewer.latest_version'))
 let url = ''
+
+// Element of the last generated preview: what every export button exports
+const exportedTargetType = ref(null)
+const exportedTargets = ref([])
+const exportContext = computed(() => ({
+  targetType: exportedTargetType.value,
+  targets: exportedTargets.value,
+}))
 
 watch(
   () => props.refresh,
@@ -491,6 +522,12 @@ async function loadXml() {
 
   data.value.allowed_namespaces = getAllowedNamespaces()
   data.value.targets = `targets=${data.value.target_uid},${data.value.version}&`
+  exportedTargetType.value = data.value.target_type
+  exportedTargets.value = [
+    data.value.version
+      ? `${data.value.target_uid},${data.value.version}`
+      : data.value.target_uid,
+  ]
   router.push({
     name: 'CrfBuilder',
     params: {

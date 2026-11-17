@@ -34,7 +34,7 @@ class TimePointVO(SimpleConceptVO):
         numeric_value_uid: str,
         time_reference_uid: str,
     ) -> Self:
-        simple_concept_vo = cls(
+        return cls(
             name=name,
             name_sentence_case=name_sentence_case,
             definition=definition,
@@ -44,8 +44,6 @@ class TimePointVO(SimpleConceptVO):
             numeric_value_uid=numeric_value_uid,
             time_reference_uid=time_reference_uid,
         )
-
-        return simple_concept_vo
 
     @classmethod
     def from_input_values(
@@ -79,7 +77,7 @@ class TimePointVO(SimpleConceptVO):
             msg=f"{cls.__name__} tried to connect to non-existent CT Term with UID '{time_reference_uid}'.",
         )
 
-        simple_concept_vo = cls(
+        return cls(
             name=f"{numeric_value.name} {unit_definition.name} after {time_reference.name}",
             name_sentence_case=name_sentence_case,
             definition=definition,
@@ -89,8 +87,6 @@ class TimePointVO(SimpleConceptVO):
             numeric_value_uid=numeric_value_uid,
             time_reference_uid=time_reference_uid,
         )
-
-        return simple_concept_vo
 
 
 class TimePointAR(SimpleConceptAR):

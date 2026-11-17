@@ -70,7 +70,7 @@ class LibraryItemRepositoryImplBase(
         maxsize=settings.cache_max_size, ttl=settings.cache_ttl
     )
     lock_store_item_by_uid = Lock()
-    cache_store_term_by_uid_and_submval = TTLCache(
+    cache_store_term_by_uid_and_submval: TTLCache = TTLCache(
         maxsize=settings.cache_max_size, ttl=settings.cache_ttl
     )
     lock_store_term_by_uid_and_submval = Lock()
@@ -274,8 +274,7 @@ class LibraryItemRepositoryImplBase(
         return new_value
 
     def _has_data_changed(self, ar: _AggregateRootType, value: VersionValue) -> bool:
-        base_comparison = ar.name != value.name
-        return base_comparison
+        return ar.name != value.name
 
     def _is_new_version_necessary(
         self, ar: _AggregateRootType, value: VersionValue
@@ -633,11 +632,10 @@ class LibraryItemRepositoryImplBase(
 
     def _get_max_version(self, relationships):
         all_versions = [rel.version for rel in relationships]
-        highest_version = max(
+        return max(
             all_versions,
             key=version_string_to_tuple,
         )
-        return highest_version
 
     def _find_latest_version_in(self, relationships):
         if len(relationships) == 1:
@@ -1500,7 +1498,7 @@ class LibraryItemRepositoryImplBase(
             )
             cypher_query += (
                 ", false AS is_latest_fallback "
-                + " UNION ALL "
+                " UNION ALL "
                 + latest_match_stmt
                 + latest_return_stmt
                 + ", true AS is_latest_fallback"
@@ -1557,7 +1555,6 @@ class LibraryItemRepositoryImplBase(
             activity_instance_root,
             activity_root,
             activity_subgroups_root,
-            unit_definition,
             indications,
             categories,
             subcategories,
@@ -1566,6 +1563,7 @@ class LibraryItemRepositoryImplBase(
             activity_subgroups,
             template_type,
             instance_template,
+            template_parameter_names,
         ) in result:
             if library and library_name is not None and library_name != library.name:
                 continue
@@ -1580,7 +1578,6 @@ class LibraryItemRepositoryImplBase(
                 activity_instance_root=activity_instance_root,
                 activity_root=activity_root,
                 activity_subgroups_root=activity_subgroups_root,
-                unit_definition=unit_definition,
                 indications=indications,
                 template_type=template_type,
                 categories=categories,
@@ -1589,6 +1586,7 @@ class LibraryItemRepositoryImplBase(
                 activity_groups=activity_groups,
                 activity_subgroups=activity_subgroups,
                 instance_template=instance_template,
+                template_parameter_names=template_parameter_names,
             )
 
             if value and relationship:
@@ -1710,6 +1708,7 @@ class LibraryItemRepositoryImplBase(
             with_at_specific_date=bool(at_specific_date),
             return_study_count=return_study_count,
             where_stmt=where_stmt,
+            filter_operator=filter_operator,
             sort_by=sort_by,
             for_audit_trail=for_audit_trail,
             include_retired_versions=include_retired_versions,
@@ -1742,12 +1741,13 @@ class LibraryItemRepositoryImplBase(
                 with_pagination=bool(page_size),
                 return_study_count=return_study_count,
                 where_stmt=where_stmt,
+                filter_operator=filter_operator,
                 for_audit_trail=for_audit_trail,
                 include_retired_versions=include_retired_versions,
             )
             cypher_query += (
                 ", false AS is_latest_fallback "
-                + " UNION ALL "
+                " UNION ALL "
                 + latest_match_stmt
                 + latest_return_stmt
                 + ", true AS is_latest_fallback"
@@ -1829,7 +1829,6 @@ class LibraryItemRepositoryImplBase(
             activity_instance_root,
             activity_root,
             activity_subgroups_root,
-            unit_definition,
             indications,
             categories,
             subcategories,
@@ -1838,6 +1837,7 @@ class LibraryItemRepositoryImplBase(
             activity_subgroups,
             template_type,
             instance_template,
+            template_parameter_names,
         ) in result:
             if library and library_name is not None and library_name != library.name:
                 continue
@@ -1852,7 +1852,6 @@ class LibraryItemRepositoryImplBase(
                 activity_instance_root=activity_instance_root,
                 activity_root=activity_root,
                 activity_subgroups_root=activity_subgroups_root,
-                unit_definition=unit_definition,
                 indications=indications,
                 template_type=template_type,
                 categories=categories,
@@ -1861,6 +1860,7 @@ class LibraryItemRepositoryImplBase(
                 activity_groups=activity_groups,
                 activity_subgroups=activity_subgroups,
                 instance_template=instance_template,
+                template_parameter_names=template_parameter_names,
                 **kwargs,
             )
 
@@ -2079,7 +2079,7 @@ class LibraryItemRepositoryImplBase(
         version_specific_uids: dict[str, Iterable[str]] | None = None,
     ):
         def date_stmt(filter_by: dict[str, dict[str, Any]], name: str):
-            if name in filter_by:  # type: ignore[operator]
+            if name in filter_by:
                 if (
                     "op" not in filter_by[name]
                     or filter_by[name]["op"] in ComparisonOperator.EQUALS.value
@@ -2110,7 +2110,7 @@ class LibraryItemRepositoryImplBase(
 
         if filter_by:
             if "*" in filter_by:
-                for _, cypher_name in mapping.items():
+                for cypher_name in mapping.values():
                     if (
                         "op" in filter_by["*"]
                         and filter_by["*"]["op"] == ComparisonOperator.EQUALS.value
@@ -2364,6 +2364,7 @@ END
         with_versions_in_where: bool = False,
         return_study_count: bool = False,
         where_stmt: str = "",
+        filter_operator: FilterOperator = FilterOperator.AND,
         sort_by: dict[str, bool] | None = None,
         uid: str | None = None,
         for_audit_trail: bool = False,
@@ -2506,9 +2507,30 @@ END
             if not version_call
             else ""
         )
+        # A batched CT term lookup filters by element id, but that predicate is
+        # applied again after the codelist expansion and apoc.when below. Without
+        # it here, one study term lookup traverses every CTTermNameRoot first.
+        #
+        # Only safe to hoist when every returned row must satisfy the uid
+        # predicate anyway:
+        #   - it is the only filter (e.g. find_by_uids), regardless of
+        #     filter_operator, because a single-element OR/AND join is a no-op, or
+        #   - filter_operator is AND, so uid is required alongside any other filter.
+        # When filter_operator is OR and another filter is present, hoisting would
+        # drop rows matched only by that other filter before the OR ever sees them.
+        root_where_stmt = uid_where_stmt
+        normalized_where_stmt = " ".join(where_stmt.split())
+        uid_is_only_filter = normalized_where_stmt == "WHERE elementID(root) IN $uids"
+        if (
+            not uid
+            and issubclass(self.root_class, CTTermNameRoot)
+            and "elementID(root) IN $uids" in where_stmt
+            and (uid_is_only_filter or filter_operator == FilterOperator.AND)
+        ):
+            root_where_stmt = "WHERE elementID(root) IN $uids"
         match_stmt = f"""
             MATCH (root:{self.root_class.__label__}){value_matching}
-            {uid_where_stmt}
+            {root_where_stmt}
             {library__stmt}
             {version_call}
         """
@@ -2540,8 +2562,8 @@ END
         activity_instance_root_return = ", null as activity_instance_root"
         activity_root_return = ", null as activity_root"
         activity_subgroups_root_return = ", null as activity_subgroups_root"
-        unit_definition_return = ", null as unit_definition"
         instance_template_return = ", null as instance_template"
+        template_parameter_names_return = ", null as template_parameter_names"
         indications_return = ", null as indication"
         template_type_return = ", null as template_type"
         categories_return = ", null as categories"
@@ -2575,11 +2597,6 @@ END
 
             match_stmt += stmt
 
-        if self.root_class.__label__ == "UnitDefinitionRoot":
-            stmt, unit_definition_return = self._unit_definition_match_return_stmt()
-
-            match_stmt += stmt
-
         if "SyntaxInstanceRoot" in [
             ith_class.__label__ if hasattr(ith_class, "__label__") else None
             for ith_class in self.root_class.mro()
@@ -2588,6 +2605,17 @@ END
             for ith_class in self.root_class.mro()
         ]:
             stmt, instance_template_return = self._instance_template_match_return_stmt()
+
+            match_stmt += stmt
+
+        if "SyntaxTemplateRoot" in [
+            ith_class.__label__ if hasattr(ith_class, "__label__") else None
+            for ith_class in self.root_class.mro()
+        ]:
+            (
+                stmt,
+                template_parameter_names_return,
+            ) = self._template_parameter_names_match_return_stmt()
 
             match_stmt += stmt
 
@@ -2665,7 +2693,6 @@ END
                 {activity_instance_root_return}
                 {activity_root_return}
                 {activity_subgroups_root_return}
-                {unit_definition_return}
                 {indications_return}
                 {categories_return}
                 {subcategories_return}
@@ -2674,6 +2701,7 @@ END
                 {activity_subgroups_return}
                 {template_type_return}
                 {instance_template_return}
+                {template_parameter_names_return}
             """
 
         if not for_audit_trail:
@@ -2933,34 +2961,6 @@ END
 
         return match_stmt, activity_subgroups_root_return
 
-    def _unit_definition_match_return_stmt(self):
-        match_stmt = """
-            CALL(*) {
-                MATCH (root)-[:LATEST]->(:UnitDefinitionValue)-[:HAS_CT_UNIT]->(ctterm_root_unit_definition:CTTermRoot)
-                MATCH (ctterm_root_unit_definition)-->(:CTTermNameRoot)-[:LATEST_FINAL]->(ct_name_value:CTTermNameValue)
-                RETURN collect(DISTINCT {uid:ctterm_root_unit_definition.uid, name:ct_name_value.name }) as ct_units
-            }
-            CALL(*) {
-                MATCH (root)-[:LATEST]->(:UnitDefinitionValue)-[:HAS_UNIT_SUBSET]-(ct_unit_subset:CTTermRoot)-->(:CTTermNameRoot)-[:LATEST_FINAL]->(name_value:CTTermNameValue)
-                return collect(DISTINCT {uid:ct_unit_subset.uid, name:name_value.name})  as unit_subsets
-            }
-            OPTIONAL MATCH (root)-[:LATEST]->(:UnitDefinitionValue)-[:HAS_CT_DIMENSION]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(ct_dimension:CTTermRoot)
-            OPTIONAL MATCH (root)-[:LATEST]->(:UnitDefinitionValue)-[:HAS_UCUM_TERM]->(ucum_term_root:UCUMTermRoot)
-
-        """
-
-        unit_definition_return = """,
-            {
-                ct_units: ct_units,
-                unit_subsets: unit_subsets,
-                ct_dimension_uid: ct_dimension.uid,
-                ucum_term_uid: ucum_term_root.uid, 
-                bool_template: CASE WHEN "TemplateParameterTermValue" in LABELS(value) THEN TRUE else FALSE END 
-            } as unit_definition
-        """
-
-        return match_stmt, unit_definition_return
-
     def _only_instances_with_studies(self):
         return f"""
 MATCH (root)-->(:SyntaxInstanceValue)<-[:{self.value_class.STUDY_SELECTION_REL_LABEL}]-(:StudySelection)<--(:StudyValue)<-[:HAS_VERSION|LATEST_DRAFT|LATEST_FINAL|LATEST_RETIRED]-(isr:StudyRoot)
@@ -3097,6 +3097,18 @@ WHERE cnt > 0
             return match_stmt, instance_template_return
 
         return "", ", null as instance_template "
+
+    def _template_parameter_names_match_return_stmt(self):
+        match_stmt = f"""
+            CALL (root) {{
+                OPTIONAL MATCH (root)-[uses_parameter:{self.root_class.PARAMETERS_LABEL}]->(template_parameter:TemplateParameter)
+                WITH uses_parameter, template_parameter
+                ORDER BY uses_parameter.position
+                RETURN collect(template_parameter.name) AS template_parameter_names
+            }}
+        """
+
+        return match_stmt, ", template_parameter_names"
 
     def _indication_match_return_stmt(self):
         match_stmt = """

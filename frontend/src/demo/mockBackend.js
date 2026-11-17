@@ -14,12 +14,13 @@ import openapi from '@openapi-spec'
 import { loadDemoUser } from './demoAuth.js'
 import { studyHandlers } from './fixtures/studies.js'
 import { libraryHandlers } from './fixtures/library.js'
+import { crfHandlers } from './fixtures/crfs.js'
 
 const STORAGE_KEY = 'studybuilder.demo.state.v1'
 const MAX_DEPTH = 12
 const SUCCESS_CODES = ['200', '201', '202']
 
-const handHandlers = [...studyHandlers, ...libraryHandlers]
+const handHandlers = [...studyHandlers, ...libraryHandlers, ...crfHandlers]
 const componentSchemas = openapi.components?.schemas ?? {}
 const operations = compileOperations(openapi)
 const responseCache = new Map()

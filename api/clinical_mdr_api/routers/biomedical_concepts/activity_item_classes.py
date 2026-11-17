@@ -68,7 +68,7 @@ Possible errors:
     {
         "defaults": [
             "uid",
-            "display_name",
+            "label",
             "name",
             "nci_concept_id",
             "nci_concept_name",
@@ -89,7 +89,7 @@ Possible errors:
                     "uid",
                     "activity_instance_classes.name",
                     "non_standard_variable.code",
-                    "display_name",
+                    "label",
                     "name",
                     "nci_concept_id",
                     "nci_concept_name",

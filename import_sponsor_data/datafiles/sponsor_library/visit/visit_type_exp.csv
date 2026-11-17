@@ -20,4 +20,3 @@ TIMELB,NONVISIT VISIT TYPE,Non-visit,non-visit,,,,,"Non-visit related recordings
 TIMELB,UNSCHED VISIT TYPE,Unscheduled,unscheduled,,,,,Unscheduled visit
 TIMELB,INFO VISIT TYPE,Information,information,,,,,Information visit
 TIMELB,EARLY DISCON VISIT TYPE,Early discontinuation,early discontinuation,,,,,Early discontinuation visit
-TIMELB,NO FIXED STUDY DAY VISIT TYPE,Visit with no fixed study day,visit with no fixed study day,,,,,Visit with no fixed study day

@@ -96,7 +96,7 @@ class FormRepository(OdmGenericRepository[OdmFormAR]):
         self, input_dict: dict[str, Any]
     ) -> OdmFormAR:
         major, minor = input_dict["version"].split(".")
-        odm_form_ar = OdmFormAR.from_repository_values(
+        return OdmFormAR.from_repository_values(
             uid=input_dict["uid"],
             odm_vo=OdmFormVO.from_repository_values(
                 oid=input_dict.get("oid"),
@@ -139,8 +139,6 @@ class FormRepository(OdmGenericRepository[OdmFormAR]):
                 minor_version=int(minor),
             ),
         )
-
-        return odm_form_ar
 
     def _get_specific_field_mapping(self) -> dict[str, str]:
         """Form specific field mappings - simple fields only."""

@@ -16,6 +16,7 @@ from clinical_mdr_api.domains.study_definition_aggregates.registry_identifiers i
 )
 from clinical_mdr_api.utils import normalize_string
 from common import exceptions
+from common.config import settings
 
 
 class StudyStatus(Enum):
@@ -58,12 +59,11 @@ class StudyCompactComponentEnum(StrEnum):
     STUDY_DESCRIPTION = "study_description"
 
 
-_STUDY_NUMBER_PATTERN = re.compile(r"\d{1,4}")
 _STUDY_SUBPART_ACRONYM_PATTERN = re.compile(r"[A-Z0-9]+")
 MAX_STUDY_SUBPART_ACRONYM_LENGTH = 10
 
 
-FIX_SOME_VALUE_DEFAULT = """
+FIX_SOME_VALUE_DEFAULT: Any = """
 ############################################
 ##########_FIX_SOME_VALUE_DEFAULT_##########
 ############################################
@@ -80,6 +80,12 @@ class StudyIdentificationMetadataVO:
     study_id_prefix: str | None
     description: str | None
     registry_identifiers: RegistryIdentifiersVO
+    # Set by the MMA migration. Gates the legacy epoch lag time fields in the UI
+    # so they only surface on studies that came from MMA.
+    # No null value code: the marker is either true or it is absent, there is no
+    # "reason for missing" to record. No CDISC term exists for it either.
+    migrated_study_indicator: bool | None
+    migrated_study_comment: str | None
 
     def __init__(
         self,
@@ -93,6 +99,8 @@ class StudyIdentificationMetadataVO:
         _study_id_prefix: str | None = None,
         # we denote this param with underscore, for "internal" use
         # (i.e.) use with caution and where You know what You are doing (setting an arbitrary value here)
+        migrated_study_indicator: bool | None = None,
+        migrated_study_comment: str | None = None,
     ):
         call_default_init(
             self,
@@ -104,6 +112,8 @@ class StudyIdentificationMetadataVO:
             study_id_prefix=normalize_string(_study_id_prefix),
             description=normalize_string(description),
             registry_identifiers=registry_identifiers,
+            migrated_study_indicator=migrated_study_indicator,
+            migrated_study_comment=normalize_string(migrated_study_comment),
         )
 
     @classmethod
@@ -116,6 +126,8 @@ class StudyIdentificationMetadataVO:
         description: str | None,
         registry_identifiers: RegistryIdentifiersVO | None,
         study_subpart_acronym: str | None = None,
+        migrated_study_indicator: bool | None = None,
+        migrated_study_comment: str | None = None,
     ) -> Self:
         return cls(
             study_number=study_number,
@@ -125,6 +137,8 @@ class StudyIdentificationMetadataVO:
             project_number=project_number,
             description=description,
             registry_identifiers=registry_identifiers,
+            migrated_study_indicator=migrated_study_indicator,
+            migrated_study_comment=migrated_study_comment,
         )
 
     @property
@@ -209,6 +223,12 @@ class StudyIdentificationMetadataVO:
         )
 
         exceptions.ValidationException.raise_if(
+            self.migrated_study_comment is not None
+            and self.migrated_study_indicator is not True,
+            msg="Migrated Study Comment can only be set when Migrated Study Indicator is true.",
+        )
+
+        exceptions.ValidationException.raise_if(
             self.study_subpart_acronym is not None
             and len(self.study_subpart_acronym) > MAX_STUDY_SUBPART_ACRONYM_LENGTH,
             msg=f"Study Subpart Acronym must not exceed {MAX_STUDY_SUBPART_ACRONYM_LENGTH} characters, got {len(self.study_subpart_acronym) if self.study_subpart_acronym else 0}.",
@@ -225,8 +245,10 @@ class StudyIdentificationMetadataVO:
         exceptions.ValidationException.raise_if(
             not is_subpart
             and self.study_number is not None
-            and not _STUDY_NUMBER_PATTERN.fullmatch(self.study_number),
-            msg=f"Provided study number can only be up to 4 digits string '{self.study_number}'.",
+            and not re.compile(settings.studies_study_number_regex["regex"]).fullmatch(
+                self.study_number
+            ),
+            msg=settings.studies_study_number_regex["message"],
         )
 
         exceptions.BusinessLogicException.raise_if(
@@ -285,7 +307,9 @@ class StudyIdentificationMetadataVO:
         study_subpart_acronym: str | None = FIX_SOME_VALUE_DEFAULT,
         study_id_prefix: str | None = FIX_SOME_VALUE_DEFAULT,
         description: str | None = FIX_SOME_VALUE_DEFAULT,
-        registry_identifiers: RegistryIdentifiersVO | None = FIX_SOME_VALUE_DEFAULT,  # type: ignore[assignment]
+        registry_identifiers: RegistryIdentifiersVO | None = FIX_SOME_VALUE_DEFAULT,
+        migrated_study_indicator: bool | None = FIX_SOME_VALUE_DEFAULT,
+        migrated_study_comment: str | None = FIX_SOME_VALUE_DEFAULT,
     ) -> Self:
         """
         Helper function to produce a new object with some of values different from self.
@@ -310,6 +334,12 @@ class StudyIdentificationMetadataVO:
                 registry_identifiers, self.registry_identifiers
             ),
             _study_id_prefix=helper(study_id_prefix, self.study_id_prefix),
+            migrated_study_indicator=helper(
+                migrated_study_indicator, self.migrated_study_indicator
+            ),
+            migrated_study_comment=helper(
+                migrated_study_comment, self.migrated_study_comment
+            ),
         )
 
 
@@ -325,7 +355,7 @@ class StudyVersionMetadataVO:
     def __init__(
         self,
         study_status: StudyStatus = StudyStatus.DRAFT,
-        version_timestamp: datetime | None = FIX_SOME_VALUE_DEFAULT,  # type: ignore[assignment]
+        version_timestamp: datetime | None = FIX_SOME_VALUE_DEFAULT,
         version_author: str | None = None,
         version_description: str | None = None,
         version_number: Decimal | None = None,
@@ -400,6 +430,10 @@ class HighLevelStudyDesignVO:
 
     development_stage_code: str | None = None
 
+    age_at_baseline_rule_code: str | None = None
+
+    age_group_rule_code: str | None = None
+
     is_extension_trial: bool | None = None
     is_extension_trial_null_value_code: str | None = None
 
@@ -428,7 +462,6 @@ class HighLevelStudyDesignVO:
         trial_intent_type_exists_callback: Callable[[str], bool] = lambda _: True,
         trial_type_exists_callback: Callable[[str], bool] = lambda _: True,
         trial_phase_exists_callback: Callable[[str], bool] = lambda _: True,
-        development_stage_exists_callback: Callable[[str], bool] = (lambda _: True),
         null_value_exists_callback: Callable[[str], bool] = lambda _: True,
     ) -> None:
         """
@@ -439,7 +472,6 @@ class HighLevelStudyDesignVO:
         :param trial_intent_type_exists_callback: (optional) callback for checking intent_type_codes
         :param trial_type_exists_callback: (optional) callback for checking trail_type_codes
         :param trial_phase_exists_callback: (optional) callback for checking trial_phase_codes
-        :param development_stage_exists_callback: (optional) callback for checking development_stage_code
         :param null_value_exists_callback: (optional) callback for checking null_value_code for all specific values
         """
 
@@ -517,12 +549,6 @@ class HighLevelStudyDesignVO:
             msg=f"Non-existent study type code provided '{self.study_type_code}'.",
         )
 
-        exceptions.ValidationException.raise_if(
-            self.development_stage_code is not None
-            and not development_stage_exists_callback(self.development_stage_code),
-            msg=f"Non-existent development stage code provided '{self.development_stage_code}'.",
-        )
-
         for trial_type_code in self.trial_type_codes:
             exceptions.ValidationException.raise_if_not(
                 trial_type_exists_callback(trial_type_code),
@@ -535,7 +561,6 @@ class HighLevelStudyDesignVO:
         trial_intent_type_exists_callback: Callable[[str], bool] = lambda _: True,
         trial_type_exists_callback: Callable[[str], bool] = lambda _: True,
         trial_phase_exists_callback: Callable[[str], bool] = lambda _: True,
-        development_stage_exists_callback: Callable[[str], bool] = lambda _: True,
     ) -> bool:
         """
         Convenience method (mostly for testing purposes).
@@ -547,7 +572,6 @@ class HighLevelStudyDesignVO:
                 trial_intent_type_exists_callback=trial_intent_type_exists_callback,
                 trial_type_exists_callback=trial_type_exists_callback,
                 trial_phase_exists_callback=trial_phase_exists_callback,
-                development_stage_exists_callback=development_stage_exists_callback,
             )
         except exceptions.ValidationException:
             return False
@@ -562,9 +586,11 @@ class HighLevelStudyDesignVO:
         trial_phase_code: str | None = FIX_SOME_VALUE_DEFAULT,
         trial_phase_null_value_code: str | None = FIX_SOME_VALUE_DEFAULT,
         development_stage_code: str | None = FIX_SOME_VALUE_DEFAULT,
-        is_extension_trial: bool | None = FIX_SOME_VALUE_DEFAULT,  # type: ignore[assignment]
+        age_at_baseline_rule_code: str | None = FIX_SOME_VALUE_DEFAULT,
+        age_group_rule_code: str | None = FIX_SOME_VALUE_DEFAULT,
+        is_extension_trial: bool | None = FIX_SOME_VALUE_DEFAULT,
         is_extension_trial_null_value_code: str | None = FIX_SOME_VALUE_DEFAULT,
-        is_adaptive_design: bool | None = FIX_SOME_VALUE_DEFAULT,  # type: ignore[assignment]
+        is_adaptive_design: bool | None = FIX_SOME_VALUE_DEFAULT,
         is_adaptive_design_null_value_code: str | None = FIX_SOME_VALUE_DEFAULT,
         study_stop_rules: str | None = FIX_SOME_VALUE_DEFAULT,
         study_stop_rules_null_value_code: str | None = FIX_SOME_VALUE_DEFAULT,
@@ -572,7 +598,7 @@ class HighLevelStudyDesignVO:
         confirmed_response_minimum_duration_null_value_code: (
             str | None
         ) = FIX_SOME_VALUE_DEFAULT,
-        post_auth_indicator: bool | None = FIX_SOME_VALUE_DEFAULT,  # type: ignore[assignment]
+        post_auth_indicator: bool | None = FIX_SOME_VALUE_DEFAULT,
         post_auth_indicator_null_value_code: str | None = FIX_SOME_VALUE_DEFAULT,
     ) -> Self:
         """
@@ -586,6 +612,8 @@ class HighLevelStudyDesignVO:
         :param trial_phase_code:
         :param trial_phase_null_value_code:
         :param development_stage_code:
+        :param age_at_baseline_rule_code:
+        :param age_group_rule_code:
         :param is_extension_trial:
         :param is_extension_trial_null_value_code:
         :param is_adaptive_design:
@@ -618,6 +646,10 @@ class HighLevelStudyDesignVO:
             development_stage_code=helper(
                 development_stage_code, self.development_stage_code
             ),
+            age_at_baseline_rule_code=helper(
+                age_at_baseline_rule_code, self.age_at_baseline_rule_code
+            ),
+            age_group_rule_code=helper(age_group_rule_code, self.age_group_rule_code),
             is_extension_trial=helper(is_extension_trial, self.is_extension_trial),
             is_extension_trial_null_value_code=helper(
                 is_extension_trial_null_value_code,
@@ -658,6 +690,8 @@ class HighLevelStudyDesignVO:
         trial_phase_code: str | None,
         trial_phase_null_value_code: str | None,
         development_stage_code: str | None,
+        age_at_baseline_rule_code: str | None,
+        age_group_rule_code: str | None,
         is_extension_trial: bool | None,
         is_extension_trial_null_value_code: str | None,
         is_adaptive_design: bool | None,
@@ -677,6 +711,8 @@ class HighLevelStudyDesignVO:
             trial_phase_code=trial_phase_code,
             trial_phase_null_value_code=trial_phase_null_value_code,
             development_stage_code=development_stage_code,
+            age_at_baseline_rule_code=age_at_baseline_rule_code,
+            age_group_rule_code=age_group_rule_code,
             is_extension_trial=is_extension_trial,
             is_extension_trial_null_value_code=is_extension_trial_null_value_code,
             is_adaptive_design=is_adaptive_design,
@@ -1010,9 +1046,9 @@ class StudyPopulationVO:
         diagnosis_group_null_value_code: str | None = FIX_SOME_VALUE_DEFAULT,
         sex_of_participants_code: str | None = FIX_SOME_VALUE_DEFAULT,
         sex_of_participants_null_value_code: str | None = FIX_SOME_VALUE_DEFAULT,
-        rare_disease_indicator: bool | None = FIX_SOME_VALUE_DEFAULT,  # type: ignore[assignment]
+        rare_disease_indicator: bool | None = FIX_SOME_VALUE_DEFAULT,
         rare_disease_indicator_null_value_code: str | None = FIX_SOME_VALUE_DEFAULT,
-        healthy_subject_indicator: bool | None = FIX_SOME_VALUE_DEFAULT,  # type: ignore[assignment]
+        healthy_subject_indicator: bool | None = FIX_SOME_VALUE_DEFAULT,
         healthy_subject_indicator_null_value_code: str | None = FIX_SOME_VALUE_DEFAULT,
         planned_minimum_age_of_subjects: str | None = FIX_SOME_VALUE_DEFAULT,
         planned_minimum_age_of_subjects_null_value_code: (
@@ -1026,19 +1062,19 @@ class StudyPopulationVO:
         stable_disease_minimum_duration_null_value_code: (
             str | None
         ) = FIX_SOME_VALUE_DEFAULT,
-        pediatric_study_indicator: bool | None = FIX_SOME_VALUE_DEFAULT,  # type: ignore[assignment]
+        pediatric_study_indicator: bool | None = FIX_SOME_VALUE_DEFAULT,
         pediatric_study_indicator_null_value_code: str | None = FIX_SOME_VALUE_DEFAULT,
-        pediatric_postmarket_study_indicator: bool | None = FIX_SOME_VALUE_DEFAULT,  # type: ignore[assignment]
+        pediatric_postmarket_study_indicator: bool | None = FIX_SOME_VALUE_DEFAULT,
         pediatric_postmarket_study_indicator_null_value_code: (
             str | None
         ) = FIX_SOME_VALUE_DEFAULT,
-        pediatric_investigation_plan_indicator: bool | None = FIX_SOME_VALUE_DEFAULT,  # type: ignore[assignment]
+        pediatric_investigation_plan_indicator: bool | None = FIX_SOME_VALUE_DEFAULT,
         pediatric_investigation_plan_indicator_null_value_code: (
             str | None
         ) = FIX_SOME_VALUE_DEFAULT,
         relapse_criteria: str | None = FIX_SOME_VALUE_DEFAULT,
         relapse_criteria_null_value_code: str | None = FIX_SOME_VALUE_DEFAULT,
-        number_of_expected_subjects: int | None = FIX_SOME_VALUE_DEFAULT,  # type: ignore[assignment]
+        number_of_expected_subjects: int | None = FIX_SOME_VALUE_DEFAULT,
         number_of_expected_subjects_null_value_code: (
             str | None
         ) = FIX_SOME_VALUE_DEFAULT,
@@ -1158,7 +1194,7 @@ class StudyInterventionVO:
     add_on_to_existing_treatments: bool | None = None
     add_on_to_existing_treatments_null_value_code: str | None = None
 
-    control_type_code: str | None = None
+    control_type_codes: list[str] = field(default_factory=list)
     control_type_null_value_code: str | None = None
 
     intervention_model_code: str | None = None
@@ -1187,7 +1223,7 @@ class StudyInterventionVO:
         intervention_type_null_value_code: str | None,
         add_on_to_existing_treatments: bool | None,
         add_on_to_existing_treatments_null_value_code: str | None,
-        control_type_code: str | None,
+        control_type_codes: list[str],
         control_type_null_value_code: str | None,
         intervention_model_code: str | None,
         intervention_model_null_value_code: str | None,
@@ -1211,7 +1247,7 @@ class StudyInterventionVO:
             add_on_to_existing_treatments_null_value_code=normalize_string(
                 add_on_to_existing_treatments_null_value_code
             ),
-            control_type_code=normalize_string(control_type_code),
+            control_type_codes=[] if control_type_codes is None else control_type_codes,
             control_type_null_value_code=normalize_string(control_type_null_value_code),
             intervention_model_code=intervention_model_code,
             intervention_model_null_value_code=normalize_string(
@@ -1281,9 +1317,9 @@ class StudyInterventionVO:
         )
 
         validate_value_and_associated_null_value_valid(
-            value=self.control_type_code,
+            value=self.control_type_codes,
             associated_null_value_code=self.control_type_null_value_code,
-            name_of_verified_value="control_type",
+            name_of_verified_value="control_type_codes",
         )
 
         validate_value_and_associated_null_value_valid(
@@ -1328,11 +1364,11 @@ class StudyInterventionVO:
             msg=f"Unknown intervention type code '{self.intervention_type_code}'.",
         )
 
-        exceptions.ValidationException.raise_if(
-            self.control_type_code is not None
-            and not control_type_exists_callback(self.control_type_code),
-            msg=f"Unknown control  type code '{self.control_type_code}'.",
-        )
+        for control_type_code in self.control_type_codes:
+            exceptions.ValidationException.raise_if(
+                not control_type_exists_callback(control_type_code),
+                msg=f"Unknown control type code '{control_type_code}'.",
+            )
 
         exceptions.ValidationException.raise_if(
             self.intervention_model_code is not None
@@ -1374,15 +1410,15 @@ class StudyInterventionVO:
         *,
         intervention_type_code: str | None = FIX_SOME_VALUE_DEFAULT,
         intervention_type_null_value_code: str | None = FIX_SOME_VALUE_DEFAULT,
-        add_on_to_existing_treatments: bool | None = FIX_SOME_VALUE_DEFAULT,  # type: ignore[assignment]
+        add_on_to_existing_treatments: bool | None = FIX_SOME_VALUE_DEFAULT,
         add_on_to_existing_treatments_null_value_code: (
             str | None
         ) = FIX_SOME_VALUE_DEFAULT,
-        control_type_code: str | None = FIX_SOME_VALUE_DEFAULT,
+        control_type_codes: list[str] = FIX_SOME_VALUE_DEFAULT,
         control_type_null_value_code: str | None = FIX_SOME_VALUE_DEFAULT,
-        intervention_model_code: bool | None = FIX_SOME_VALUE_DEFAULT,  # type: ignore[assignment]
+        intervention_model_code: bool | None = FIX_SOME_VALUE_DEFAULT,
         intervention_model_null_value_code: str | None = FIX_SOME_VALUE_DEFAULT,
-        is_trial_randomised: bool | None = FIX_SOME_VALUE_DEFAULT,  # type: ignore[assignment]
+        is_trial_randomised: bool | None = FIX_SOME_VALUE_DEFAULT,
         is_trial_randomised_null_value_code: str | None = FIX_SOME_VALUE_DEFAULT,
         stratification_factor: str | None = FIX_SOME_VALUE_DEFAULT,
         stratification_factor_null_value_code: str | None = FIX_SOME_VALUE_DEFAULT,
@@ -1390,7 +1426,7 @@ class StudyInterventionVO:
         trial_blinding_schema_null_value_code: str | None = FIX_SOME_VALUE_DEFAULT,
         planned_study_length: str | None = FIX_SOME_VALUE_DEFAULT,
         planned_study_length_null_value_code: str | None = FIX_SOME_VALUE_DEFAULT,
-        trial_intent_types_codes: list[str] = FIX_SOME_VALUE_DEFAULT,  # type: ignore[assignment]
+        trial_intent_types_codes: list[str] = FIX_SOME_VALUE_DEFAULT,
         trial_itent_type_null_value_code: str | None = FIX_SOME_VALUE_DEFAULT,
     ) -> Self:
         def helper(parameter: Any, def_value: Any):
@@ -1411,7 +1447,7 @@ class StudyInterventionVO:
                 add_on_to_existing_treatments_null_value_code,
                 self.add_on_to_existing_treatments_null_value_code,
             ),
-            control_type_code=helper(control_type_code, self.control_type_code),
+            control_type_codes=helper(control_type_codes, self.control_type_codes),
             control_type_null_value_code=helper(
                 control_type_null_value_code, self.control_type_null_value_code
             ),
@@ -1470,51 +1506,6 @@ class StudyDescriptionVO:
             study_title=normalize_string(study_title),
             study_short_title=normalize_string(study_short_title),
         )
-
-    def validate(
-        self,
-        study_number: str | None,
-        *,
-        study_title_exists_callback: Callable[[str, str], bool] = (
-            lambda _, study_number: True
-        ),
-        study_short_title_exists_callback: Callable[[str, str], bool] = (
-            lambda _, study_number: True
-        ),
-    ) -> None:
-        exceptions.AlreadyExistsException.raise_if(
-            self.study_title is not None
-            and study_number
-            and study_title_exists_callback(self.study_title, study_number),
-            msg=f"Study Title '{self.study_title}' already exists.",
-        )
-        exceptions.AlreadyExistsException.raise_if(
-            self.study_short_title is not None
-            and study_number
-            and study_short_title_exists_callback(self.study_short_title, study_number),
-            msg=f"Study Short Title '{self.study_short_title}' already exists.",
-        )
-
-    def is_valid(
-        self,
-        study_number: str,
-        *,
-        title_exists_callback: Callable[[str, str], bool] = (
-            lambda _, study_number: True
-        ),
-        short_title_exists_callback: Callable[[str, str], bool] = (
-            lambda _, study_number: True
-        ),
-    ) -> bool:
-        try:
-            self.validate(
-                study_title_exists_callback=title_exists_callback,
-                study_short_title_exists_callback=short_title_exists_callback,
-                study_number=study_number,
-            )
-        except exceptions.ValidationException:
-            return False
-        return True
 
     def fix_some_values(
         self,
@@ -1626,7 +1617,6 @@ class StudyMetadataVO:
         trial_intent_type_exists_callback: Callable[[str], bool] = lambda _: True,
         trial_type_exists_callback: Callable[[str], bool] = lambda _: True,
         trial_phase_exists_callback: Callable[[str], bool] = lambda _: True,
-        development_stage_exists_callback: Callable[[str], bool] = lambda _: True,
         null_value_exists_callback: Callable[[str], bool] = lambda _: True,
         therapeutic_area_exists_callback: Callable[[str], bool] = lambda _: True,
         disease_condition_or_indication_exists_callback: Callable[[str], bool] = (
@@ -1638,12 +1628,6 @@ class StudyMetadataVO:
         control_type_exists_callback: Callable[[str], bool] = lambda _: True,
         intervention_model_exists_callback: Callable[[str], bool] = lambda _: True,
         trial_blinding_schema_exists_callback: Callable[[str], bool] = lambda _: True,
-        study_title_exists_callback: Callable[[str, str], bool] = (
-            lambda _, study_number: False
-        ),
-        study_short_title_exists_callback: Callable[[str, str], bool] = (
-            lambda _, study_number: False
-        ),
         is_subpart: bool = False,
     ) -> None:
         """
@@ -1658,15 +1642,9 @@ class StudyMetadataVO:
             is_subpart=is_subpart,
         )
         self.ver_metadata.validate()
-        self.study_description.validate(
-            study_title_exists_callback=study_title_exists_callback,
-            study_short_title_exists_callback=study_short_title_exists_callback,
-            study_number=self.id_metadata.study_number,
-        )
         self.high_level_study_design.validate(
             study_type_exists_callback=study_type_exists_callback,
             trial_phase_exists_callback=trial_phase_exists_callback,
-            development_stage_exists_callback=development_stage_exists_callback,
             trial_type_exists_callback=trial_type_exists_callback,
             trial_intent_type_exists_callback=trial_intent_type_exists_callback,
             null_value_exists_callback=null_value_exists_callback,

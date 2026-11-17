@@ -46,7 +46,7 @@ from common.utils import get_field_type
 _AggregateRootType = TypeVar("_AggregateRootType")
 
 
-class ConceptGenericService[AggregateRootType](ABC):
+class ConceptGenericService[AggregateRootType, ModelT: BaseModel = BaseModel](ABC):
     aggregate_class: type
     version_class: type
     repository_interface: type
@@ -91,14 +91,9 @@ class ConceptGenericService[AggregateRootType](ABC):
             reference_base_model.model_fields_set
             - base_model_with_missing_values.model_fields_set
         ).intersection(base_model_with_missing_values.model_fields):
-            if isinstance(getattr(reference_base_model, field_name), SimpleTermModel):
-                setattr(
-                    base_model_with_missing_values,
-                    field_name,
-                    getattr(reference_base_model, field_name).term_uid,
-                )
-            elif isinstance(
-                getattr(reference_base_model, field_name), SimpleCodelistTermModel
+            if isinstance(
+                getattr(reference_base_model, field_name),
+                (SimpleTermModel, SimpleCodelistTermModel),
             ):
                 setattr(
                     base_model_with_missing_values,
@@ -201,7 +196,7 @@ class ConceptGenericService[AggregateRootType](ABC):
     @abstractmethod
     def _transform_aggregate_root_to_pydantic_model(
         self, item_ar: AggregateRootType
-    ) -> BaseModel:
+    ) -> ModelT:
         raise NotImplementedError
 
     @abstractmethod
@@ -211,7 +206,7 @@ class ConceptGenericService[AggregateRootType](ABC):
         library: LibraryVO,
         preview: bool = False,
     ) -> AggregateRootType:
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @abstractmethod
     def _edit_aggregate(
@@ -310,7 +305,7 @@ class ConceptGenericService[AggregateRootType](ABC):
         filter_operator: FilterOperator = FilterOperator.AND,
         total_count: bool = False,
         **kwargs,
-    ) -> GenericFilteringReturn[BaseModel]:
+    ) -> GenericFilteringReturn[ModelT]:
         self.enforce_library(library)
 
         item_ars, total = self.repository.find_all(
@@ -338,7 +333,7 @@ class ConceptGenericService[AggregateRootType](ABC):
         version: str | None = None,
         at_specific_date: datetime | None = None,
         status: LibraryItemStatus | None = None,
-    ) -> BaseModel:
+    ) -> ModelT:
         item = self._find_by_uid_or_raise_not_found(
             uid=uid, version=version, at_specific_date=at_specific_date, status=status
         )
@@ -367,7 +362,7 @@ class ConceptGenericService[AggregateRootType](ABC):
         return item
 
     @db.transaction
-    def get_version_history(self, uid: str) -> list[BaseModel]:
+    def get_version_history(self, uid: str) -> list[ModelT]:
         if self.version_class is not None:
             all_versions = self.repository.get_all_versions_2(uid=uid)
 
@@ -391,7 +386,7 @@ class ConceptGenericService[AggregateRootType](ABC):
         cascade_new_version: bool = False,
         force_new_value_node: bool = False,
         ignore_exc: bool = False,
-    ) -> BaseModel:
+    ) -> ModelT:
         item = self._find_by_uid_or_raise_not_found(uid, for_update=True)
         try:
             item.create_new_version(author_id=self.author_id)
@@ -411,7 +406,7 @@ class ConceptGenericService[AggregateRootType](ABC):
     @ensure_transaction(db)
     def edit_draft(
         self, uid: str, concept_edit_input: BaseModel, patch_mode: bool = True
-    ) -> BaseModel:
+    ) -> ModelT:
         item = self._find_by_uid_or_raise_not_found(uid=uid, for_update=True)
         if patch_mode:
             self._fill_missing_values_in_base_model_from_reference_base_model(
@@ -567,8 +562,7 @@ class ConceptGenericService[AggregateRootType](ABC):
         final_topic_code = "_".join(without_special_characters.upper().split(" "))
         final_topic_code = "_".join(final_topic_code.split(r"-"))
         final_topic_code = "_".join(final_topic_code.upper().split(r"/"))
-        final_topic_code = re.sub(r"_+", "_", final_topic_code)
-        return final_topic_code
+        return re.sub(r"_+", "_", final_topic_code)
 
     def generate_default_name_sentence_case(self, response_model):
 
@@ -705,10 +699,10 @@ class ConceptGenericService[AggregateRootType](ABC):
         return final_generated_name
 
     @ensure_transaction(db)
-    def create(self, concept_input: BaseModel, preview: bool = False) -> BaseModel:
+    def create(self, concept_input: BaseModel, preview: bool = False) -> ModelT:
         BusinessLogicException.raise_if_not(
             self._repos.library_repository.library_exists(
-                normalize_string(concept_input.library_name)  # type: ignore[arg-type]
+                normalize_string(concept_input.library_name)
             ),
             msg=f"Library with Name '{concept_input.library_name}' doesn't exist.",
         )
@@ -750,7 +744,7 @@ class ConceptGenericService[AggregateRootType](ABC):
     @ensure_transaction(db)
     def approve(
         self, uid: str, cascade_edit_and_approve: bool = False, ignore_exc: bool = False
-    ) -> BaseModel:
+    ) -> ModelT:
         item = self._find_by_uid_or_raise_not_found(uid, for_update=True)
         try:
             item.approve(author_id=self.author_id)
@@ -769,7 +763,7 @@ class ConceptGenericService[AggregateRootType](ABC):
         uid: str,
         cascade_inactivate: bool = False,
         force_new_value_node: bool = False,
-    ) -> BaseModel:
+    ) -> ModelT:
         item = self._find_by_uid_or_raise_not_found(uid, for_update=True)
         item.inactivate(
             author_id=self.author_id, force_new_value_node=force_new_value_node
@@ -785,7 +779,7 @@ class ConceptGenericService[AggregateRootType](ABC):
         uid: str,
         cascade_reactivate: bool = False,
         force_new_value_node: bool = False,
-    ) -> BaseModel:
+    ) -> ModelT:
         item = self._find_by_uid_or_raise_not_found(uid, for_update=True)
         item.reactivate(
             author_id=self.author_id, force_new_value_node=force_new_value_node
@@ -836,7 +830,7 @@ class ConceptGenericService[AggregateRootType](ABC):
         pass
 
     @ensure_transaction(db)
-    def archive(self, uid: str) -> BaseModel:
+    def archive(self, uid: str) -> ModelT:
         """Move the item to 'Archived' Library"""
 
         # Check if the item exists and is not yet archived

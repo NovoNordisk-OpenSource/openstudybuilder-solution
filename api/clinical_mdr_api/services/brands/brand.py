@@ -1,8 +1,8 @@
-from neomodel import db  # type: ignore
+from neomodel import db
 
 from clinical_mdr_api.domains.brands.brand import BrandAR
 from clinical_mdr_api.models.brands.brand import Brand, BrandCreateInput
-from clinical_mdr_api.services._meta_repository import MetaRepository  # type: ignore
+from clinical_mdr_api.services._meta_repository import MetaRepository
 from common.auth.user import user
 from common.exceptions import NotFoundException
 

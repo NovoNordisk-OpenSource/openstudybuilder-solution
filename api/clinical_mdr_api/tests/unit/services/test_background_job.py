@@ -140,9 +140,8 @@ def test_decorator_requires_author_id_on_service():
     class NoAuthorService:
         pass
 
-    with _patched_repo_and_db():
-        with pytest.raises(RuntimeError, match=r"self\.author_id"):
-            do_work(NoAuthorService(), background_tasks=bg_tasks)
+    with _patched_repo_and_db(), pytest.raises(RuntimeError, match=r"self\.author_id"):
+        do_work(NoAuthorService(), background_tasks=bg_tasks)
 
 
 def test_run_job_marks_completed_on_success():

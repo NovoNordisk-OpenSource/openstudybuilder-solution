@@ -23,7 +23,7 @@ def test_neomodel_schema_payload_shape_and_canonical_roundtrip() -> None:
     for node in payload["nodes"]:
         assert set(node.keys()) == required_node_keys
         assert isinstance(node["properties"], dict)
-        for _prop_name, prop_type in node["properties"].items():
+        for prop_type in node["properties"].values():
             assert isinstance(prop_type, str)
 
         for rel in node["relationships"]:

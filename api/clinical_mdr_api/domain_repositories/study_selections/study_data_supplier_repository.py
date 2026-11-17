@@ -44,7 +44,7 @@ class StudyDataSupplierRepository:
 
         study_data_supplier_uid = self.generate_uid()
 
-        rs = db.cypher_query(
+        return db.cypher_query(
             """
             MATCH (data_supplier_root:DataSupplierRoot {uid: $data_supplier_uid})-[:LATEST]->(data_supplier_value:DataSupplierValue)
             -[:HAS_DATA_SUPPLIER_TYPE]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(data_supplier_type:CTTermRoot)
@@ -82,8 +82,6 @@ class StudyDataSupplierRepository:
                 "blinded": selection_input.blinded,
             },
         )
-
-        return rs
 
     def retrieve(
         self,
@@ -152,7 +150,7 @@ class StudyDataSupplierRepository:
             ORDER BY study_data_supplier_order ASC, study_data_supplier_uid ASC
             """
 
-        rs = db.cypher_query(
+        return db.cypher_query(
             query,
             params={
                 "study_uid": study_uid,
@@ -160,8 +158,6 @@ class StudyDataSupplierRepository:
                 "study_value_version": study_value_version,
             },
         )
-
-        return rs
 
     def retrieve_audit_trail(
         self, study_uid: str, study_data_supplier_uid: str | None = None
@@ -212,7 +208,7 @@ class StudyDataSupplierRepository:
             ORDER BY study_data_supplier_uid DESC, start_date DESC
             """
 
-        rs = db.cypher_query(
+        return db.cypher_query(
             query,
             params={
                 "study_uid": study_uid,
@@ -220,15 +216,13 @@ class StudyDataSupplierRepository:
             },
         )
 
-        return rs
-
     def update(
         self,
         study_uid: str,
         study_data_supplier_uid: str,
         selection_input: StudySelectionDataSupplierInput,
     ):
-        rs = db.cypher_query(
+        return db.cypher_query(
             f"""
             MATCH (study_root:StudyRoot {{uid: $study_uid}})-[:LATEST]->(study_value:StudyValue)
             MATCH (study_root)-[study_has_version:HAS_VERSION WHERE study_has_version.end_date IS NULL]->(study_value)
@@ -277,8 +271,6 @@ class StudyDataSupplierRepository:
                 "blinded": selection_input.blinded,
             },
         )
-
-        return rs
 
     def delete(self, study_uid: str, study_data_supplier_uid: str):
         rs = db.cypher_query(

@@ -129,7 +129,7 @@ class BaseModel(PydanticBaseModel):
                 path += "_relationship"
             if not hasattr(node_to_extract, "_relations"):
                 return None
-            if path not in node_to_extract._relations.keys():
+            if path not in node_to_extract._relations:
                 # it means that the field is Optional and None was set to be a default value
                 if field.default is None:
                     return None

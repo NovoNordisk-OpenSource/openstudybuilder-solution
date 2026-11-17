@@ -13,6 +13,7 @@
       <template #[`item.template.name`]="{ item }">
         <NNParameterHighlighter
           :name="item.template.name"
+          :parameter-names="item.parameter_terms?.map((p) => p.parameter_name)"
           default-color="orange"
         />
       </template>
@@ -68,6 +69,9 @@
       <InstanceStudiesDialog
         v-if="selectedInstance"
         :template="selectedInstance.template.name"
+        :template-parameter-names="
+          selectedInstance.parameter_terms?.map((p) => p.parameter_name)
+        "
         :text="selectedInstance.name"
         :type="type"
         :studies="studies"

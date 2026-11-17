@@ -117,12 +117,23 @@ Feature: Library - Data Collection Standards - CRF Builder - Items
         When The 'Delete' option is clicked from the three dot menu list
         Then The CRF Item created via API is searched and not found
 
-    @manual_test    
-    Scenario: User must be able to read change history of selected element
+    Scenario: [Actions][History] User must be able to read change history of selected element
         Given The '/library/crf-builder/items' page is opened
-        And User waits for CRF Items data to load
-        And Created CRF Item is found
-        And The 'Show history' option is clicked from the three dot menu list
-        When The user clicks on History for particular element
-        Then The user is presented with history of changes for that element
-        And The history contains timestamps and usernames
+        And The 'History' option is clicked from the three dot menu list
+        Then The History page is displayed
+        And The following column list with values will exist
+        | header                 |
+        | Library                |
+        | OID                    |
+        | Name                   |
+        | Type                   |
+        | Length                 |
+        | Version                |
+        | Status                 |
+        | Change type            |
+        | User                   |
+        | From                   |
+        | To                     |
+        And The history table is not empty
+        When The CLOSE button is clicked
+        Then The current URL is '/library/crf-builder/items'

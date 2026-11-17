@@ -72,10 +72,12 @@ class StudyVisit(StudySelection):
     visit_name_label = StringProperty()
     short_visit_label = StringProperty()
     unique_visit_number = StringProperty()
+    visit_suffix = StringProperty()
     show_visit = BooleanProperty()
 
     visit_window_min = IntegerProperty()
     visit_window_max = IntegerProperty()
+    expected_time_value = IntegerProperty()
 
     has_window_unit = RelationshipTo(
         UnitDefinitionRoot,

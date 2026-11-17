@@ -28,7 +28,7 @@ For each study, consumers must also be able to retrieve the data suppliers selec
 
 # URS-ConsumerApi-Studies-Create
 
-Consumers with write access must be able to create a new top-level study definition via the Consumer API by providing a study number and/or a study acronym, together with the ID of an existing project.
+Consumers with write access must be able to create a new top-level study definition via the Consumer API by providing a study number and/or a study acronym, together with the ID of an existing project. Consumers may optionally provide a study title, which does not need to be unique.
 
 The API must reject requests that identify a non-existent project, that provide neither a study number nor a study acronym, or that would result in a duplicate study number or a duplicate study acronym already used by another study.
 Creating study subparts is out of scope for the Consumer API.
@@ -55,12 +55,17 @@ Consumers must be able to retrieve the following entities related to Schedule of
 
 - Detailed SoA
 - Operational SoA
+- Study Auxiliary Devices
 
 # URS-ConsumerApi-Library-Papillons-NonStandardVariables
 
 Consumers must be able to retrieve Non-Standard Variables via the Consumer API, in a format suitable for MMA SDTM_QNAM import.
 
 Consumers must also be able to resolve a single SEMTCDT (Semantic Data Type) term to its NSVXMLDT (NSV XML Data Type) equivalent.
+
+# URS-ConsumerApi-Library-Papillons-TopicCodeDefinitions
+
+Consumers must be able to retrieve the topic code definitions (`TOPIC_CD_DEF`) of library activity instances via the Consumer API, in the format used by Papillons.
 
 # URS-ConsumerApi-Studies-AuditTrail
 

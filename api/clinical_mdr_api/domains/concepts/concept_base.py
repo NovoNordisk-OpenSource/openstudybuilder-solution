@@ -175,13 +175,12 @@ class ConceptARBase[ConceptVOType: ConceptVO](LibraryItemAggregateRootBase):
         library: LibraryVO,
         item_metadata: LibraryItemMetadataVO,
     ) -> Self:
-        concept_ar = cls(
+        return cls(
             _uid=uid,
             _concept_vo=concept_vo,
             _item_metadata=item_metadata,
             _library=library,
         )
-        return concept_ar
 
     @classmethod
     def from_input_values(
@@ -207,13 +206,12 @@ class ConceptARBase[ConceptVOType: ConceptVO](LibraryItemAggregateRootBase):
         ConceptVO.duplication_check(
             [("name", concept_vo.name or "", None)], concept_exists_by_callback
         )
-        concept_ar = cls(
+        return cls(
             _uid=generate_uid_callback(),
             _item_metadata=item_metadata,
             _library=library,
             _concept_vo=concept_vo,
         )
-        return concept_ar
 
     def edit_draft(
         self,

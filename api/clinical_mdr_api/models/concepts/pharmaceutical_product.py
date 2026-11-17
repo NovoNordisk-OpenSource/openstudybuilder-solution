@@ -82,7 +82,7 @@ class Formulation(BaseModel):
 
 class FormulationCreateInput(PostInputModel):
     external_id: Annotated[str | None, Field(min_length=1)] = None
-    ingredients: Annotated[list[IngredientCreateInput] | None, Field()] = None
+    ingredients: Annotated[list[IngredientCreateInput], Field(min_length=1)]
 
 
 class FormulationEditInput(PatchInputModel):
@@ -197,14 +197,13 @@ class PharmaceuticalProduct(VersionProperties):
                         ],
                         key=lambda item: (
                             item.active_substance.analyte_number
-                            if item.active_substance.analyte_number
-                            else item.active_substance.uid
+                            or item.active_substance.uid
                         ),
                     ),
                 )
                 for formulation in pharmaceutical_product_ar.concept_vo.formulations
             ],
-            key=lambda item: item.external_id if item.external_id else "",
+            key=lambda item: item.external_id or "",
         )
 
         return cls(
@@ -213,11 +212,11 @@ class PharmaceuticalProduct(VersionProperties):
             external_id=pharmaceutical_product_ar.concept_vo.external_id,
             dosage_forms=sorted(
                 dosage_form_terms,
-                key=lambda item: item.term_name if item.term_name else "",
+                key=lambda item: item.term_name or "",
             ),
             routes_of_administration=sorted(
                 admin_route_terms,
-                key=lambda item: item.term_name if item.term_name else "",
+                key=lambda item: item.term_name or "",
             ),
             formulations=formulations,
             library_name=Library.from_library_vo(
@@ -252,9 +251,7 @@ class PharmaceuticalProduct(VersionProperties):
                     if sub
                     else "?"
                 )
-                form_name = (
-                    ingredient.formulation_name if ingredient.formulation_name else ""
-                )
+                form_name = ingredient.formulation_name or ""
                 part = f"{ingredient_name.strip()} {form_name.strip()}"
                 if ingredient.strength:
                     value = ingredient.strength.value

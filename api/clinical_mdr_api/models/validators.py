@@ -110,11 +110,12 @@ def validate_regex(value, info: ValidationInfo):
             )
         try:
             re.compile(value)
-            return value
         except re.error as exc:
             raise ValueError(
                 f"Provided regex value '{value}' for field '{info.field_name}' is invalid."
             ) from exc
+        else:
+            return value
     return value
 
 
@@ -206,10 +207,11 @@ def is_language_supported(value: str):
         try:
             # This function will throw an exception if the language isn't found
             get_iso_lang_data(query=value, return_key=key)  # type: ignore[call-overload]
-            return value
         except ValidationException:
             if key == keys[-1]:
                 raise
+        else:
+            return value
 
     return None
 

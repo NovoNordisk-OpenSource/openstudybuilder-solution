@@ -9,7 +9,7 @@ and the test suites.
 
 | Directory | Purpose | Stack |
 |---|---|---|
-| `api/` | REST API. Hosts three FastAPI apps off one codebase: `clinical_mdr_api` (port 8000), `consumer_api` (8008), `extensions` (8009) | Python, FastAPI, Neo4j |
+| `api/` | REST API. Hosts FastAPI apps off one codebase: `clinical_mdr_api` (port 8000), `extensions` (8009). External read access: see the `consumer_sample` extension ([README](api/extensions/consumer_sample/README.md)) | Python, FastAPI, Neo4j |
 | `frontend/` | OpenStudyBuilder web application | Vue 3, Vite, npm |
 | `db/` | Neo4j database setup, initialisation, backup and restore | Docker, Python |
 | `db_schema_migration/` | Numbered schema migrations and data corrections | Python |
@@ -205,7 +205,6 @@ chat by entering its name, for example `/osb-summarize-pr`.
 | Skill | Use it for |
 |---|---|
 | `/osb-develop-main-api` | Implement or change endpoints in the main Clinical MDR API. |
-| `/osb-develop-consumer-api` | Implement or change Consumer API endpoints. |
 | `/osb-develop-extensions-api` | Implement or change Extensions API endpoints. |
 | `/osb-develop-frontend` | Implement or change the OpenStudyBuilder Vue frontend. |
 | `/osb-review-api` | Review API branch changes against `origin/main`. |
@@ -214,6 +213,7 @@ chat by entering its name, for example `/osb-summarize-pr`.
 | `/osb-summarize-pr-api` | Create a detailed PR description for changes under `api/`. |
 | `/osb-summarize-pr-frontend` | Create a detailed PR description for changes under `frontend/`. |
 | `/osb-neodash-ai-documentation` | Create NeoDash report documentation with annotated screenshots. |
+| `/osb-app-ai-documentation` | Draft User Guide content for the OSB web application with annotated, masked screenshots. |
 
 Skill and subagent definitions live in `.claude/skills/` and `.claude/agents/`
 at the repository root, so every command is available whichever component you

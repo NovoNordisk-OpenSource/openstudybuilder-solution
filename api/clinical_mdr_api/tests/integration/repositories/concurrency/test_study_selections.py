@@ -18,9 +18,6 @@ from clinical_mdr_api.domain_repositories.controlled_terminologies.ct_term_name_
 from clinical_mdr_api.domain_repositories.study_definitions.study_definition_repository import (
     StudyDefinitionRepository,
 )
-from clinical_mdr_api.domain_repositories.study_definitions.study_title.study_title_repository import (
-    StudyTitleRepository,
-)
 from clinical_mdr_api.domain_repositories.study_selections.study_objective_repository import (
     StudySelectionObjectiveRepository,
 )
@@ -81,7 +78,6 @@ class TestData:
     author_id = "TEST"
     template_name = "Example Template"
     parameter_terms: ClassVar[list[ParameterTermEntryVO]] = []
-    study_title_repository: StudyTitleRepository
     studies_repository: StudyDefinitionRepository
     ct_term_attributes_repository: CTTermAttributesRepository
     ct_term_names_repository: CTTermNameRepository
@@ -117,7 +113,6 @@ def set_up_base_graph_for_studies():
     db.cypher_query(STARTUP_CT_TERM_ATTRIBUTES_CYPHER)
     db.cypher_query("CREATE CONSTRAINT FOR (n:CTTermRoot) REQUIRE n.uid IS UNIQUE;")
 
-    test_data.study_title_repository = test_data._repos.study_title_repository
     test_data.studies_repository = test_data._repos.study_definition_repository
     test_data.ct_term_attributes_repository = (
         test_data._repos.ct_term_attributes_repository
@@ -167,8 +162,6 @@ def set_up_base_graph_for_studies():
                 ),
             ),
             project_exists_callback=lambda _: True,
-            study_title_exists_callback=lambda _, study_number: False,
-            study_short_title_exists_callback=lambda _, study_number: False,
             study_number_exists_callback=lambda x, y: False,
             study_acronym_exists_callback=lambda x, y: False,
             author_id=AUTHOR_ID,
@@ -178,8 +171,6 @@ def set_up_base_graph_for_studies():
         # update study_title because it has to be set before locking
         study = test_data.studies_repository.find_by_uid(study_ar.uid, for_update=True)
         study.edit_metadata(
-            study_title_exists_callback=lambda _, study_number: False,
-            study_short_title_exists_callback=lambda _, study_number: False,
             new_study_description=StudyDescriptionVO.from_input_values(
                 study_title="new_study_title", study_short_title="study_short_title"
             ),
@@ -438,4 +429,3 @@ def test_stack_cleanup():
 
     See https://github.com/pytest-dev/pytest-forked/issues/67#issuecomment-1964718720
     """
-    pass

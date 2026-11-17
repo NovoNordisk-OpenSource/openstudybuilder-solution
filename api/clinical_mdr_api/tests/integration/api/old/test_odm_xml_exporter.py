@@ -355,12 +355,14 @@ def test_get_odm_xml_with_mapper_csv(api_client):
         files={
             "mapper_file": (
                 "mapper.csv",
-                "type,parent,from_name,to_name,to_alias,from_alias,alias_context\n"
-                "attribute,FormDef,osb:version,ov,,,\n"
-                "element,,ItemRef,osb:ItemRef,,,\n"
-                "element,FormDef,ItemGroupRef,osb:ItemGroupRef,,,\n"
-                "element,*,MeasurementUnitRef,osb:measurementUnitRef,,,\n"
-                "element,*,osb:DomainColor,DomainColor,,,",
+                (
+                    "type,parent,from_name,to_name,to_alias,from_alias,alias_context\n"
+                    "attribute,FormDef,osb:version,ov,,,\n"
+                    "element,,ItemRef,osb:ItemRef,,,\n"
+                    "element,FormDef,ItemGroupRef,osb:ItemGroupRef,,,\n"
+                    "element,*,MeasurementUnitRef,osb:measurementUnitRef,,,\n"
+                    "element,*,osb:DomainColor,DomainColor,,,"
+                ),
                 "text/csv",
             )
         },
@@ -415,8 +417,10 @@ def test_throw_exception_if_mapper_is_non_csv(api_client):
         files={
             "mapper_file": (
                 "mapper.json",
-                "type,parent,from_name,to_name,to_alias\n"
-                "attribute,,osb:instruction,CompletionInstructions,\n",
+                (
+                    "type,parent,from_name,to_name,to_alias\n"
+                    "attribute,,osb:instruction,CompletionInstructions,\n"
+                ),
             )
         },
     )
@@ -433,8 +437,10 @@ def test_throw_exception_if_csv_header_missing(api_client):
         files={
             "mapper_file": (
                 "mapper.csv",
-                "parent,from_name,to_name,to_alias\n"
-                ",osb:instruction,CompletionInstructions,\n",
+                (
+                    "parent,from_name,to_name,to_alias\n"
+                    ",osb:instruction,CompletionInstructions,\n"
+                ),
                 "text/csv",
             )
         },

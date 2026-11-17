@@ -21,7 +21,7 @@ Then('The newly added unit is visible within the Units table', () => {
   cy.checkRowByIndex(0, 'Master unit', masterUnit)
   cy.checkRowByIndex(0, 'Display unit', displayUnit)
   cy.checkRowByIndex(0, 'Unit subsets', unitSubsets)
-  cy.checkRowByIndex(0, 'CDISC CT Submission Values', ctUnitsSymbol)
+  cy.checkRowByIndex(0, 'CT Submission Values', ctUnitsSymbol)
   cy.checkRowByIndex(0, 'Convertible unit', convertableUnit)
   cy.checkRowByIndex(0, 'US conventional unit', usConventionalUnit)
   cy.checkRowByIndex(0, 'Unit dimension', unitDimension)

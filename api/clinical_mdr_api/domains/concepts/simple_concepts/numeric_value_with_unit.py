@@ -39,7 +39,7 @@ class NumericValueWithUnitVO(NumericValueVO):
         unit_definition_uid: str,
     ) -> Self:
         value = cls.derive_value_property(value=value)
-        simple_concept_vo = cls(
+        return cls(
             name=str(value),
             value=value,
             name_sentence_case=str(value).lower(),
@@ -48,8 +48,6 @@ class NumericValueWithUnitVO(NumericValueVO):
             is_template_parameter=is_template_parameter,
             unit_definition_uid=unit_definition_uid,
         )
-
-        return simple_concept_vo
 
     @classmethod
     def from_input_values(
@@ -67,7 +65,7 @@ class NumericValueWithUnitVO(NumericValueVO):
             msg=f"{cls.__name__} tried to connect to non-existent Unit Definition with UID '{unit_definition_uid}'.",
         )
         value = cls.derive_value_property(value=value)
-        simple_concept_vo = cls(
+        return cls(
             name=f"{value} [{unit_definition_uid}]",
             value=value,
             name_sentence_case=str(value).lower(),
@@ -76,8 +74,6 @@ class NumericValueWithUnitVO(NumericValueVO):
             is_template_parameter=is_template_parameter,
             unit_definition_uid=unit_definition_uid,
         )
-
-        return simple_concept_vo
 
 
 class NumericValueWithUnitAR(NumericValueAR):
@@ -127,7 +123,7 @@ class NumericValueWithUnitAR(NumericValueAR):
             if simple_concept_vo.name is not None:
                 simple_concept_uid = find_uid_by_name_callback(simple_concept_vo.name)
 
-        simple_concept_ar = cls(
+        return cls(
             _uid=(
                 generate_uid_callback()
                 if simple_concept_uid is None
@@ -137,4 +133,3 @@ class NumericValueWithUnitAR(NumericValueAR):
             _library=library,
             _concept_vo=simple_concept_vo,
         )
-        return simple_concept_ar

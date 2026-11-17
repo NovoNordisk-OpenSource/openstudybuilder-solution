@@ -65,8 +65,6 @@ Given('The user is logged out', () => {
 
 Given('The user is logged in', () => {
     cy.loginUser()
-    window.localStorage.setItem('userData', '{"darkTheme":false,"rows":0,"studyNumberLength":4}')
-
 })
 
 When('The top bar button has logout option available', () => {
@@ -78,37 +76,33 @@ Then('The user can navigate to authentication provider via top bar login button'
     cy.get('[data-cy="topbar-login"]').should('have.attr', 'href', '/login')
 })
 
-When('I click the {string} download button', (title) => {
-    cy.get([`"title=${title}"`])
-})
-
 Then('The study specific {string} file without date timestamp is downloaded in {string} format', (filename, format) => {
     const filePath = `cypress/downloads/Study ${getCurrStudyUid()} ${filename}.${format}`
-    cy.readFile(filePath).then((file ) => {cy.log(file)})
+    cy.readFile(filePath)
 })
 
 Then('The study specific {string} file is downloaded in {string} format', (filename, format) => {
     let currentDate1 = formatDateToMMMDDYYYY()
     let currentStudy = getCurrentStudyId()
     const filePath = `cypress/downloads/${currentStudy} ${filename} ${currentDate1}.${format}`
-    cy.readFile(filePath).then((file ) => {cy.log(file)})
+    cy.readFile(filePath)
 })
 
 Then('The {string} file is downloaded in {string} format', (filename, format) => {
     let currentDate1 = formatDateToMMMDDYYYY()
     const filePath = `cypress/downloads/${filename} ${currentDate1}.${format}`
-    cy.readFile(filePath).then((file ) => {cy.log(file)})
+    cy.readFile(filePath)
 })
 
 Then('The {string} file without timestamp is downloaded in {string} format', (filename, format) => {
     const filePath = `cypress/downloads/${filename}.${format}`
-    cy.readFile(filePath).then((file ) => {cy.log(file)})
+    cy.readFile(filePath)
 })
 
 Then('The study specific {string} file without timestamp is downloaded in {string} format', (filename, format) => {
     let currentStudy = getCurrentStudyId()
     const filePath = `cypress/downloads/${currentStudy} ${filename}.${format}`
-    cy.readFile(filePath).then((file ) => {cy.log(file)})
+    cy.readFile(filePath)
 })
 
 function checkTableHeaders(actionsAvailable) {

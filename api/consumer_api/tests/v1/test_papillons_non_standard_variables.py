@@ -294,7 +294,7 @@ def test_data():
 
     def _create_nsv(
         code: str,
-        display_name: str,
+        label: str,
         data_type_uid: str,
         length: int,
         is_multiple: bool = False,
@@ -319,7 +319,7 @@ def test_data():
         )
         return TestUtils.create_activity_item_class(
             name=code,
-            display_name=display_name,
+            label=label,
             definition=definition,
             order=order,
             activity_instance_classes=[aic_rel],
@@ -339,7 +339,7 @@ def test_data():
 
     _create_nsv(
         NSV1_ASSIGNED,
-        display_name="Papillons Test NSV Assigned",
+        label="Papillons Test NSV Assigned",
         definition="Definition of the Assigned-origin test NSV",
         data_type_uid=dt_leaf.term_uid,
         length=10,
@@ -351,7 +351,7 @@ def test_data():
     )
     _create_nsv(
         NSV2_CRF_ZERO_LENGTH,
-        display_name="Papillons Test NSV CRF Zero Length",
+        label="Papillons Test NSV CRF Zero Length",
         data_type_uid=dt_two_hop.term_uid,
         length=0,
         origin_type_name="Collected Value",
@@ -359,7 +359,7 @@ def test_data():
     )
     _create_nsv(
         NSV3_DERIVED,
-        display_name="Papillons Test NSV Derived",
+        label="Papillons Test NSV Derived",
         data_type_uid=dt_leaf.term_uid,
         length=5,
         origin_type_name="Derived Value",
@@ -367,7 +367,7 @@ def test_data():
     )
     _create_nsv(
         NSV4_EDT,
-        display_name="Papillons Test NSV eDT",
+        label="Papillons Test NSV eDT",
         data_type_uid=dt_leaf.term_uid,
         length=20,
         origin_type_name="Collected Value",
@@ -375,14 +375,14 @@ def test_data():
     )
     _create_nsv(
         NSV5_NO_ORIGIN_MAPPING,
-        display_name="Papillons Test NSV No Origin Mapping",
+        label="Papillons Test NSV No Origin Mapping",
         data_type_uid=dt_two_hop.term_uid,
         length=15,
     )
     # Left in Draft status - must not appear in the (Final-only) export.
     _create_nsv(
         NSV6_DRAFT_EXCLUDED,
-        display_name="Papillons Test NSV Draft Excluded",
+        label="Papillons Test NSV Draft Excluded",
         data_type_uid=dt_leaf.term_uid,
         length=1,
         approve=False,

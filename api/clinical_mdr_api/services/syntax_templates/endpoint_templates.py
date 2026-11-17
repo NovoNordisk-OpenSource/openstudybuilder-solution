@@ -53,7 +53,7 @@ class EndpointTemplateService(GenericSyntaxTemplateService[EndpointTemplateAR]):
         ) = self._get_indexings(template)
 
         # Process item to save
-        item = EndpointTemplateAR.from_input_values(
+        return EndpointTemplateAR.from_input_values(
             author_id=self.author_id,
             template=template_vo,
             library=library_vo,
@@ -63,5 +63,3 @@ class EndpointTemplateService(GenericSyntaxTemplateService[EndpointTemplateAR]):
             categories=categories,
             sub_categories=sub_categories,
         )
-
-        return item

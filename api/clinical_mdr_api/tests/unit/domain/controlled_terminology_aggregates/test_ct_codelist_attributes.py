@@ -17,7 +17,7 @@ def create_random_ct_codelist_attributes_vo(
 ) -> CTCodelistAttributesVO:
     if submission_value is None:
         submission_value = random_str()
-    random_ct_codelist_attributes_vo = CTCodelistAttributesVO.from_repository_values(
+    return CTCodelistAttributesVO.from_repository_values(
         catalogue_names=[catalogue],
         name=random_str(),
         parent_codelist_uid=None,
@@ -27,7 +27,6 @@ def create_random_ct_codelist_attributes_vo(
         definition=random_str(),
         extensible=True,
     )
-    return random_ct_codelist_attributes_vo
 
 
 def create_random_ct_codelist_attributes_ar(
@@ -36,7 +35,7 @@ def create_random_ct_codelist_attributes_ar(
     catalogue: str = "Catalogue",
     generate_uid_callback=random_str,
 ) -> CTCodelistAttributesAR:
-    random_ct_codelist_attributes_ar = CTCodelistAttributesAR.from_input_values(
+    return CTCodelistAttributesAR.from_input_values(
         generate_uid_callback=generate_uid_callback,
         ct_codelist_attributes_vo=create_random_ct_codelist_attributes_vo(
             catalogue=catalogue
@@ -46,7 +45,6 @@ def create_random_ct_codelist_attributes_ar(
         ),
         author_id=AUTHOR_ID,
     )
-    return random_ct_codelist_attributes_ar
 
 
 class TestCTCodelistAttributeAR(unittest.TestCase):

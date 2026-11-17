@@ -1,6 +1,8 @@
 from dataclasses import dataclass
+from typing import dataclass_transform
 
 
+@dataclass_transform()
 def dataclass_with_default_init(*args, _cls=None, **kwargs):
     def wrap(cls):
         # Save the current __init__ and remove it so dataclass will

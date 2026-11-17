@@ -243,9 +243,7 @@ RETURN
     counts
 """
 
-        rs = db.cypher_query(query=query)
-
-        return rs
+        return db.cypher_query(query=query)
 
     def get_study_structure_overview_headers(
         self,
@@ -317,6 +315,7 @@ RETURN
         """
         query = """
         MATCH (sr:StudyRoot {uid: $study_uid})-[:LATEST]->(sv:StudyValue)-[rel]->(ss:StudySelection)
+        // LEGACY-SOA-SNAPSHOT (242942): drop the HAS_PROTOCOL_SOA_* condition in the next release
         WHERE type(rel) <> 'HAS_PROTOCOL_SOA_CELL' AND type(rel) <> 'HAS_PROTOCOL_SOA_FOOTNOTE'
         UNWIND labels(ss) AS lb
         WITH lb
@@ -345,6 +344,7 @@ RETURN
         query = """
         UNWIND $labels AS want
         OPTIONAL MATCH (sr:StudyRoot {uid: $study_uid})-[:LATEST]->(sv:StudyValue)-[rel]->(ss:StudySelection)
+        // LEGACY-SOA-SNAPSHOT (242942): drop the HAS_PROTOCOL_SOA_* condition in the next release
         WHERE type(rel) <> 'HAS_PROTOCOL_SOA_CELL' AND type(rel) <> 'HAS_PROTOCOL_SOA_FOOTNOTE'
           AND want IN labels(ss)
         OPTIONAL MATCH (ss)-[]->(ctx:CTTermContext)-[:HAS_SELECTED_TERM]->(tr:CTTermRoot)
@@ -475,6 +475,7 @@ MATCH
     WHERE
         sr_target.uid = study_target
 
+// LEGACY-SOA-SNAPSHOT (242942): drop the HAS_PROTOCOL_SOA_* condition in the next release
 CALL apoc.cypher.run("
     MATCH
         (selection_src:StudySelection&(" + to_copy_labels_text + "))<-[sv_has_selection]-
@@ -533,6 +534,7 @@ MATCH
     (selection_src_to:StudySelection)
         where
             sr_from.uid = study_src
+            // LEGACY-SOA-SNAPSHOT (242942): drop the HAS_PROTOCOL_SOA_* condition in the next release
             AND type(sv_to_ss_source) <> "HAS_PROTOCOL_SOA_CELL"
             AND type(sv_to_ss_source) <> "HAS_PROTOCOL_SOA_FOOTNOTE"
 MATCH (selection_src_to)--(sv_from)
@@ -540,6 +542,11 @@ MATCH (selection_src_to)--(sv_from)
 WITH
     selection_src_from.uid as from_uid,
     type(r_ext_src) AS from_rel_type_to,
+    // footnotes attached to propagated checkmarks keep that flag on the copy
+    CASE type(r_ext_src)
+        WHEN 'REFERENCES_STUDY_ACTIVITY_SCHEDULE' THEN properties(r_ext_src)
+        ELSE {}
+    END AS from_rel_properties,
     selection_src_to.uid as to_uid,
     study_target,
     to_copy_labels
@@ -554,12 +561,14 @@ MATCH
     (sv_to)-[sv_to__b]->
     (b:StudySelection)
         WHERE
+            // LEGACY-SOA-SNAPSHOT (242942): drop the HAS_PROTOCOL_SOA_* condition in the next release
             type(sv_to__b) <> "HAS_PROTOCOL_SOA_CELL"
             AND type(sv_to__b) <> "HAS_PROTOCOL_SOA_FOOTNOTE"
 WITH
     a,
     b,
-    from_rel_type_to
+    from_rel_type_to,
+    from_rel_properties
         where
             a.uid = from_uid
             and b.uid = to_uid
@@ -571,14 +580,17 @@ WITH
 WITH DISTINCT
     a,
     b,
-    from_rel_type_to
+    from_rel_type_to,
+    from_rel_properties
 
+// properties are set on match too, so they are kept even if the relationship already exists
 call apoc.merge.relationship(
     a,
     from_rel_type_to,
     null,
-    Null,
-    b
+    from_rel_properties,
+    b,
+    from_rel_properties
 )
 yield rel
 
@@ -602,6 +614,7 @@ WITH $study_src_uid as study_src, $study_target_uid as study_target, $to_copy_la
 unwind to_copy_labels as to_copy_labels_unw
 
 MATCH (sr_target:StudyRoot)-[:LATEST]->(sv_target:StudyValue)-[relationship]-(selection_target:StudySelection)
+    // LEGACY-SOA-SNAPSHOT (242942): drop the HAS_PROTOCOL_SOA_* condition in the next release
     where sr_target.uid = study_target AND type(relationship) <> "HAS_PROTOCOL_SOA_CELL" AND type(relationship) <> "HAS_PROTOCOL_SOA_FOOTNOTE"
 
 // Update the counter value and generate new UID and
@@ -656,9 +669,7 @@ return *
             "date": datetime.datetime.now(datetime.UTC),
             "author_id": author_id,
         }
-        result = db.cypher_query(query=query, params=parameters)
-
-        return result
+        return db.cypher_query(query=query, params=parameters)
 
     def update_subpart_relationship(
         self,

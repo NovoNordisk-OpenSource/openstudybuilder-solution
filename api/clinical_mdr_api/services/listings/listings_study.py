@@ -113,7 +113,7 @@ class StudyMetadataListingService:
             )
             NotFoundException.raise_if(
                 study_uid is None,
-                msg=f"Study id {project_id}-{study_number}{subpart_acronym if subpart_acronym else None} not found.",
+                msg=f"Study id {project_id}-{study_number}{subpart_acronym or None} not found.",
             )
 
             if datetime:
@@ -147,7 +147,7 @@ class StudyMetadataListingService:
             else:
                 full_study_id = project_id + "-" + study_number + subpart_acronym
 
-            result = StudyMetadataListingModel.from_study_metadata_vo(
+            return StudyMetadataListingModel.from_study_metadata_vo(
                 api_ver=api_ver,
                 study_id=full_study_id,
                 study_ver=version or "",
@@ -199,6 +199,5 @@ class StudyMetadataListingService:
                 find_endpoint_by_uid=self.endpoint_repo.find_by_uid,
                 find_timeframe_by_uid=self.timeframe_repo.find_by_uid,
             )
-            return result
         finally:
             self._close_all_repos()

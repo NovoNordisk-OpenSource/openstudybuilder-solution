@@ -91,6 +91,10 @@ const knownCodelists = {
   deliveryDevice: { attribute: 'codelist_submission_value', value: 'DLVRDVC' },
   dispensedIn: { attribute: 'codelist_submission_value', value: 'COMPDISP' },
   adverseEvents: { attribute: 'codelist_uid', value: 'C66734' },
+  auxiliaryDevice: {
+    attribute: 'codelist_submission_value',
+    value: 'DEVICE_DEF',
+  },
   diseaseMilestoneTypes: {
     attribute: 'codelist_submission_value',
     value: 'MIDSTYPE',
@@ -135,6 +139,14 @@ const knownCodelists = {
   developmentStageCodes: {
     attribute: 'codelist_submission_value',
     value: 'DEVELOPMENT_STAGE',
+  },
+  ageAtBaselineRuleCodes: {
+    attribute: 'codelist_submission_value',
+    value: 'AGE_AT_BASELINE_RL',
+  },
+  ageGroupRuleCodes: {
+    attribute: 'codelist_submission_value',
+    value: 'AGE_GRP_RL',
   },
   reasonForLock: {
     attribute: 'codelist_submission_value',

@@ -53,7 +53,9 @@ from common.exceptions import BusinessLogicException, NotFoundException
 from common.utils import get_edit_input_or_previous_value
 
 
-class ActivityInstanceService(ConceptGenericService[ActivityInstanceAR]):
+class ActivityInstanceService(
+    ConceptGenericService[ActivityInstanceAR, ActivityInstance]
+):
     aggregate_class = ActivityInstanceAR
     repository_interface = ActivityInstanceRepository
     version_class = ActivityInstanceVersion
@@ -392,11 +394,13 @@ class ActivityInstanceAttributesService(
                 )
 
         # Check is_research_lab
-        if concept_edit_input.is_research_lab is not None:
-            if concept_edit_input.is_research_lab != item.concept_vo.is_research_lab:
-                raise BusinessLogicException(
-                    msg="Research lab flag cannot be modified after creation.",
-                )
+        if (
+            concept_edit_input.is_research_lab is not None
+            and concept_edit_input.is_research_lab != item.concept_vo.is_research_lab
+        ):
+            raise BusinessLogicException(
+                msg="Research lab flag cannot be modified after creation.",
+            )
 
         # Check activity items with param/paramcd - their ct_terms cannot be modified
         if (

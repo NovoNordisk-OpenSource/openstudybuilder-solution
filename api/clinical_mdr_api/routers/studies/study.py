@@ -60,9 +60,11 @@ from clinical_mdr_api.models.study_selections.study_selection import (
     StudySelectionCriteria,
     StudySelectionCriteriaCore,
     StudySelectionCriteriaCreateInput,
+    StudySelectionCriteriaIdentifierInput,
     StudySelectionCriteriaInput,
     StudySelectionCriteriaKeyCriteria,
     StudySelectionCriteriaNewOrder,
+    StudySelectionCriteriaStudyDesignPopulationInput,
     StudySelectionCriteriaTemplateSelectInput,
     StudySelectionDataSupplier,
     StudySelectionDataSupplierInput,
@@ -3155,6 +3157,111 @@ def patch_criteria_selection_key_criteria_property(
         study_uid=study_uid,
         study_selection_uid=study_criteria_uid,
         key_criteria=key_criteria_input.key_criteria,
+    )
+
+
+@router.patch(
+    "/studies/{study_uid}/study-criteria/{study_criteria_uid}/identifier",
+    dependencies=[security, rbac.STUDY_WRITE],
+    summary="Change the identifier (Criteria ID) property of a study criteria",
+    description="""
+State before:
+ - Study must exist and must not be locked.
+ - Study criteria selection must exist within the study.
+
+Business logic:
+ - Sets the protocol criterion identifier (e.g. IC-01, EC-05) on the selection.
+   Maps to USDM ``EligibilityCriterion.identifier`` / SDTM TI ``IETESTCD``.
+ - Passing ``identifier: null`` clears the value.
+ - The change is recorded in the study audit trail.
+
+State after:
+ - The ``identifier`` property on the ``StudyCriteria`` node reflects the new value.
+
+Possible errors:
+ - Invalid ``study_uid`` or ``study_criteria_uid``.
+""",
+    response_model_exclude_unset=True,
+    status_code=200,
+    responses={
+        403: _generic_descriptions.ERROR_403,
+        404: {
+            "model": ErrorResponse,
+            "description": "Not Found - There exists no selection between the study and criteria to change.",
+        },
+    },
+)
+@decorators.validate_if_study_is_not_locked("study_uid")
+def patch_criteria_selection_identifier_property(
+    study_uid: Annotated[str, studyUID],
+    study_criteria_uid: Annotated[str, study_criteria_uid_path],
+    identifier_input: Annotated[
+        StudySelectionCriteriaIdentifierInput,
+        Body(
+            description="New value to set for the identifier (Criteria ID) property of the selection",
+        ),
+    ],
+) -> StudySelectionCriteria:
+    service = StudyCriteriaSelectionService()
+    return service.set_identifier(
+        study_uid=study_uid,
+        study_selection_uid=study_criteria_uid,
+        identifier=identifier_input.identifier,
+    )
+
+
+@router.patch(
+    "/studies/{study_uid}/study-criteria/{study_criteria_uid}/study-design-populations",
+    dependencies=[security, rbac.STUDY_WRITE],
+    summary="Assign or remove the study design population linked to a study criteria selection",
+    description="""
+State before:
+ - Study must exist and must not be locked.
+ - Study criteria selection must exist within the study.
+ - When a ``study_design_population_uid`` is provided it must refer to an existing
+   study design population that belongs to the same study.
+
+Business logic:
+ - Links the specified criteria selection to the given study design population.
+ - Passing ``study_design_population_uid: null`` removes an existing link.
+ - The change is recorded in the study audit trail.
+
+State after:
+ - The ``HAS_STUDY_DESIGN_POPULATION`` relationship on the ``StudyCriteria`` node
+   reflects the new value.
+
+Possible errors:
+ - Invalid ``study_uid`` or ``study_criteria_uid``.
+ - ``study_design_population_uid`` does not exist within the study.
+""",
+    response_model_exclude_unset=True,
+    status_code=200,
+    responses={
+        403: _generic_descriptions.ERROR_403,
+        404: {
+            "model": ErrorResponse,
+            "description": "Not Found - study, criteria selection, or study design population not found.",
+        },
+    },
+)
+@decorators.validate_if_study_is_not_locked("study_uid")
+def patch_criteria_selection_study_design_population(
+    study_uid: Annotated[str, studyUID],
+    study_criteria_uid: Annotated[str, study_criteria_uid_path],
+    population_input: Annotated[
+        StudySelectionCriteriaStudyDesignPopulationInput,
+        Body(
+            description=(
+                "UID of the study design population to link, or null to remove the link."
+            ),
+        ),
+    ],
+) -> StudySelectionCriteria:
+    service = StudyCriteriaSelectionService()
+    return service.set_study_design_population(
+        study_uid=study_uid,
+        study_selection_uid=study_criteria_uid,
+        selection_input=population_input,
     )
 
 

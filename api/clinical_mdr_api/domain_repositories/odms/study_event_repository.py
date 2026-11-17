@@ -63,7 +63,7 @@ class StudyEventRepository(OdmGenericRepository[OdmStudyEventAR]):
         self, input_dict: dict[str, Any]
     ) -> OdmStudyEventAR:
         major, minor = input_dict["version"].split(".")
-        odm_form_ar = OdmStudyEventAR.from_repository_values(
+        return OdmStudyEventAR.from_repository_values(
             uid=input_dict["uid"],
             odm_vo=OdmStudyEventVO.from_repository_values(
                 name=input_dict["name"],
@@ -91,8 +91,6 @@ class StudyEventRepository(OdmGenericRepository[OdmStudyEventAR]):
                 minor_version=int(minor),
             ),
         )
-
-        return odm_form_ar
 
     def _get_specific_field_mapping(self) -> dict[str, str]:
         """Study Event specific field mappings - simple fields only."""

@@ -301,8 +301,7 @@ class StudyCohortSelectionService(StudySelectionMixin):
                 ).model_dump()
                 for _ in selection_history
             ]
-            data = calculate_diffs(versions, StudySelectionCohortVersion)
-            return data
+            return calculate_diffs(versions, StudySelectionCohortVersion)
         finally:
             repos.close()
 
@@ -321,12 +320,10 @@ class StudyCohortSelectionService(StudySelectionMixin):
             study_uid, study_selection_uid, study_value_version=study_value_version
         )
         terms_at_specific_datetime = (
-            self._extract_study_standards_effective_date(
-                study_uid=study_uid,
-                study_value_version=study_value_version,
+            terms_at_specific_datetime
+            or self._extract_study_standards_effective_date(
+                study_uid=study_uid, study_value_version=study_value_version
             )
-            if not terms_at_specific_datetime
-            else terms_at_specific_datetime
         )
         # Without Connected BranchArms due to only is necessary to have the StudyArm
         return StudySelectionArm.from_study_selection_arm_ar_and_order(
@@ -354,12 +351,10 @@ class StudyCohortSelectionService(StudySelectionMixin):
             study_value_version=study_value_version,
         )
         terms_at_specific_datetime = (
-            self._extract_study_standards_effective_date(
-                study_uid=study_uid,
-                study_value_version=study_value_version,
+            terms_at_specific_datetime
+            or self._extract_study_standards_effective_date(
+                study_uid=study_uid, study_value_version=study_value_version
             )
-            if not terms_at_specific_datetime
-            else terms_at_specific_datetime
         )
         return StudySelectionBranchArm.from_study_selection_branch_arm_ar_and_order(
             study_uid=study_uid,
@@ -635,5 +630,5 @@ class StudyCohortSelectionService(StudySelectionMixin):
                     content=BatchErrorResponse(message=str(error)),
                 )
             )
-            raise error
+            raise
         return results

@@ -1514,7 +1514,19 @@ async function fetchGlobalAuditTrail(options) {
   }
 }
 
-function modifyFilters(jsonFilter, params) {
+function modifyFilters(jsonFilter, params, externalFilterSource) {
+  if (
+    props.source === 'activities' &&
+    !onlyArchivedLibrary.value &&
+    jsonFilter.library_name &&
+    (externalFilterSource?.startsWith('concepts/activities/activity-groups') ||
+      externalFilterSource?.startsWith(
+        'concepts/activities/activity-sub-groups'
+      ))
+  ) {
+    params.activity_library_names = [...jsonFilter.library_name.v]
+    delete jsonFilter.library_name
+  }
   if (jsonFilter['activity_group.name']) {
     params.activity_group_names = []
     jsonFilter['activity_group.name'].v.forEach((value) => {

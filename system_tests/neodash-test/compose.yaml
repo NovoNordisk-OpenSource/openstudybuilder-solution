@@ -3,7 +3,7 @@ services:
   cypress:
     build:
       args:
-        CYPRESS_IMAGE: "${CYPRESS_IMAGE:-cypress/browsers:node-20.18.0-chrome-130.0.6723.69-1-ff-131.0.3-edge-130.0.2849.52-1}"
+        CYPRESS_IMAGE: "${CYPRESS_IMAGE:-cypress/browsers:node-24.22.1-chrome-156.0.8078.47-1-ff-158.0.1-edge-155.0.4283.62-1}"
         UID: "${UID:-1000}"
         WORKDIR: /tests
       context: ./
@@ -18,7 +18,7 @@ services:
     profiles:
       - build
     network_mode: host
-    user: "${UID-:1000}"
+    user: "${UID:-1000}"
     volumes:
       - type: bind
         source: ./results
@@ -29,7 +29,7 @@ services:
     image: "${ALLURE_IMAGE:-novo-allure}"
     profiles:
       - allure
-    user: "${UID-:1000}"
+    user: "${UID:-1000}"
     volumes:
       - type: bind
         source: ./results

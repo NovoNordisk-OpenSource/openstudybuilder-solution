@@ -66,6 +66,7 @@ class Timeframe(BaseModel):
     @classmethod
     def from_timeframe_ar(cls, timeframe_ar: TimeframeAR) -> Self:
         parameter_terms: list[MultiTemplateParameterTerm] = []
+        parameter_names = timeframe_ar.get_parameter_names()
         for position, parameter in enumerate(timeframe_ar.get_parameters()):
             terms: list[IndexedTemplateParameterTerm] = []
             # Regular way of handling simple parameters for object
@@ -81,7 +82,10 @@ class Timeframe(BaseModel):
 
             parameter_terms.append(
                 MultiTemplateParameterTerm(
-                    conjunction=conjunction, position=position + 1, terms=terms
+                    conjunction=conjunction,
+                    position=position + 1,
+                    parameter_name=parameter_names[position],
+                    terms=terms,
                 )
             )
         return cls(

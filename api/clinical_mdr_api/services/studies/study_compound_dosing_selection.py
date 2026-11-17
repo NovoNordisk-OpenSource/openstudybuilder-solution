@@ -377,8 +377,7 @@ class StudyCompoundDosingSelectionService(StudySelectionMixin):
         selections = []
         for selection_ar in selection_ars:
             parsed_selections = self._transform_all_to_response_model(selection_ar)
-            for selection in parsed_selections:
-                selections.append(selection)
+            selections.extend(parsed_selections)
 
         # Do filtering, sorting, pagination and count
         header_values = service_level_generic_header_filtering(

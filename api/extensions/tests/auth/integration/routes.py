@@ -4,6 +4,7 @@ This list must contain all routes of the Extensions API application as (path:str
 
 ADMIN_WRITE = "Admin.Write"
 ADMIN_READ = "Admin.Read"
+LIBRARY_READ = "Library.Read"
 
 ALL_ROUTES_METHODS_ROLES = (
     ("/prodex/extracts/active-substances", "POST", {ADMIN_WRITE}),
@@ -19,4 +20,5 @@ ALL_ROUTES_METHODS_ROLES = (
     ("/prodex/loads/medicinal-products", "GET", {ADMIN_READ}),
     ("/prodex/loads/medicinal-products/{uid}", "GET", {ADMIN_READ}),
     ("/hello/nodes-count", "GET", {ADMIN_READ}),
+    ("/consumer-sample/ct-terms", "GET", {LIBRARY_READ}),
 )

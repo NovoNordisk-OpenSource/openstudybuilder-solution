@@ -16,7 +16,7 @@ Usage:
 
 The wrapped service class is expected to expose `self.author_id` (already true for
 `StudyService`, `BrandService`, etc.). The author_id is captured eagerly in the
-request thread because starlette_context is not available inside the BackgroundTask.
+request thread, where the Job node is created before the response is sent.
 """
 
 from __future__ import annotations
@@ -127,9 +127,9 @@ def _run_job(
 ) -> None:
     """Execute the wrapped operation and persist its outcome to the Job node.
 
-    Runs after the HTTP response has been sent (FastAPI BackgroundTasks). The
-    starlette request context is gone here, but the job already carries the
-    author_id captured eagerly before scheduling.
+    Runs after the HTTP response has been sent (FastAPI BackgroundTasks), but still
+    inside the request's starlette context, so the job's transaction carries the
+    authenticated user in its Neo4j transaction metadata.
     """
     buffer: list[str] = []
     token = _CURRENT_JOB_LOG.set(buffer)
@@ -218,6 +218,6 @@ def background_job(default_job_name: str | None = None) -> Callable[[_F], _F]:
             background_tasks.add_task(_run_job, func, self, args, kwargs, job, repo)
             return JobResponse.from_ar(job, include_response=False)
 
-        return wrapper  # type: ignore[return-value]
+        return wrapper
 
     return decorator

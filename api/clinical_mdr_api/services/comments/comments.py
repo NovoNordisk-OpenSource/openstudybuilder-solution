@@ -1,7 +1,7 @@
 import copy
 from datetime import datetime
 
-from neomodel import db  # type: ignore
+from neomodel import db
 
 from clinical_mdr_api.domains.comments.comments import (
     CommentReplyAR,
@@ -19,7 +19,7 @@ from clinical_mdr_api.models.comments.comments import (
     CommentTopic,
 )
 from clinical_mdr_api.models.utils import GenericFilteringReturn
-from clinical_mdr_api.services._meta_repository import MetaRepository  # type: ignore
+from clinical_mdr_api.services._meta_repository import MetaRepository
 from common.auth.user import user
 from common.exceptions import ForbiddenException, NotFoundException
 

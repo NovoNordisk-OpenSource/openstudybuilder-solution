@@ -299,7 +299,7 @@ def test_batch_operations(api_client):
     res = response.json()
     assert (
         res["message"]
-        == f"Value '{branch_arm_name_2}' in field Branch Arm Name is not unique for the study."
+        == f"Value '{branch_arm_name_2}' in field Branch Arm Name is not unique for the Study Arm."
     )
 
     response = api_client.post(
@@ -867,3 +867,68 @@ def test_study_branch_arm_is_not_updated_when_same_payload_is_sent(api_client):
     assert_response_status_code(response, 200)
     res = response.json()
     assert len(res) == 1
+
+
+def test_branch_arm_name_uniqueness_is_scoped_to_the_arm(api_client):
+    """Same branch arm name is allowed under a different Study Arm, rejected under the same one."""
+    test_study = TestUtils.create_study()
+    arm_1 = TestUtils.create_study_arm(
+        study_uid=test_study.uid, name="uniqueness_arm_1", short_name="uniqueness_arm_1"
+    )
+    arm_2 = TestUtils.create_study_arm(
+        study_uid=test_study.uid, name="uniqueness_arm_2", short_name="uniqueness_arm_2"
+    )
+    branch_arm = {"name": "Zenagamtide", "short_name": "Zena"}
+
+    response = api_client.post(
+        f"/studies/{test_study.uid}/study-branch-arms",
+        json={**branch_arm, "arm_uid": arm_1.arm_uid},
+    )
+    assert_response_status_code(response, 201)
+
+    # same name and short name, different arm: allowed
+    response = api_client.post(
+        f"/studies/{test_study.uid}/study-branch-arms",
+        json={**branch_arm, "arm_uid": arm_2.arm_uid},
+    )
+    assert_response_status_code(response, 201)
+
+    # same name, same arm: still rejected
+    response = api_client.post(
+        f"/studies/{test_study.uid}/study-branch-arms",
+        json={**branch_arm, "arm_uid": arm_1.arm_uid},
+    )
+    assert_response_status_code(response, 400)
+    assert (
+        response.json()["message"]
+        == "Value 'Zenagamtide' in field Branch Arm Name is not unique for the Study Arm."
+    )
+
+
+def test_branch_arm_name_uniqueness_after_arm_edit(api_client):
+    """Editing the Study Arm leaves its old version linked to the branch arm; the duplicate check must still return 400."""
+    test_study = TestUtils.create_study()
+    arm = TestUtils.create_study_arm(
+        study_uid=test_study.uid, name="edited_arm", short_name="edited_arm"
+    )
+    branch_arm = {"name": "Zenagamtide", "short_name": "Zena", "arm_uid": arm.arm_uid}
+
+    response = api_client.post(
+        f"/studies/{test_study.uid}/study-branch-arms", json=branch_arm
+    )
+    assert_response_status_code(response, 201)
+
+    response = api_client.patch(
+        f"/studies/{test_study.uid}/study-arms/{arm.arm_uid}",
+        json={"description": "edited"},
+    )
+    assert_response_status_code(response, 200)
+
+    response = api_client.post(
+        f"/studies/{test_study.uid}/study-branch-arms", json=branch_arm
+    )
+    assert_response_status_code(response, 400)
+    assert (
+        response.json()["message"]
+        == "Value 'Zenagamtide' in field Branch Arm Name is not unique for the Study Arm."
+    )

@@ -1,4 +1,7 @@
 <template>
+  <div v-if="loading && !itemOverview" class="text-center mt-10">
+    <v-progress-circular indeterminate color="primary" size="128" />
+  </div>
   <div v-if="itemOverview" class="px-4">
     <div class="d-flex page-title">
       {{ itemOverview.activity_item_class.name }}
@@ -24,6 +27,7 @@ const appStore = useAppStore()
 
 const itemOverview = ref(null)
 const overviewComponent = ref(null)
+const loading = ref(false)
 
 const helpItems = [
   'ActivityItemClassOverview.nci_code',
@@ -32,6 +36,7 @@ const helpItems = [
 ]
 
 const fetchOverview = async () => {
+  loading.value = true
   try {
     // Fetch main overview data
     const resp = await activityItemClasses.getOverview(
@@ -55,6 +60,8 @@ const fetchOverview = async () => {
     )
   } catch (error) {
     console.error('Error fetching activity item class overview:', error)
+  } finally {
+    loading.value = false
   }
 }
 

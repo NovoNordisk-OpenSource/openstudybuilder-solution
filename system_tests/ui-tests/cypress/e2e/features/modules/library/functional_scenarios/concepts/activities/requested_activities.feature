@@ -45,25 +45,6 @@ Feature: Library - Concepts - Activities - Requested Activities
         When The 'Approve' option is clicked from the three dot menu list
         Then The item has status 'Final' and version '1.0'
 
-    @manual_test
-    Scenario: User must be able to handle and approve an activity placeholder request
-        Given The '/library/activities/requested-activities' page is opened
-        And The test activity request exists with a status as Final
-        When The 'Handle placeholder request' option is clicked from the three dot menu list
-        And The activity request is approved
-        Then The new activity request is saved with a status as 'Retired'
-        And The activity request appears as available activity in the study
-        And The activity appears in sponsor library
-
-    @manual_test
-    Scenario: User must be able to handle and reject an activity placeholder request
-        Given The '/library/activities/requested-activities' page is opened
-        And The test activity request exists with a status as Final
-        When The 'Handle placeholder request' option is clicked from the three dot menu list
-        And The activity request is rejected
-        Then The new activity request is saved with a status as 'Retired'
-        And The activity request appears as rejected for study
-
     Scenario: [Actions][Availability] User must only have access correct actions depending on item state
         Given The '/library/activities/requested-activities' page is opened
         And [API] Requested activity in status Draft exists

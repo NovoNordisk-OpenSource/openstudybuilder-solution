@@ -54,9 +54,7 @@ def find_by_name(name: str):
     )
     result_array = []
     for library in result:
-        library_dict = {}
-        for attribute, value in zip(attributes, library):
-            library_dict[attribute] = value
+        library_dict = dict(zip(attributes, library))
         result_array.append(library_dict)
     return result_array
 
@@ -74,8 +72,6 @@ def create(name: str, is_editable: bool):
     result, attributes = db.cypher_query(
         query=create_query, params={"name": name, "is_editable": is_editable}
     )
-    result_dict = {}
     if len(result) > 0:
-        for attribute, value in zip(attributes, result[0]):
-            result_dict[attribute] = value
-    return result_dict
+        return dict(zip(attributes, result[0]))
+    return {}

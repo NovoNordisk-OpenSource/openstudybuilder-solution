@@ -98,6 +98,11 @@ tab; do not guess (see `references/fail-loud.md`).
 
 ### Step 5 — Per tab: capture annotated + clean screenshots
 
+Before the first capture, hide NeoDash's red "Warning: NeoDash is running with a
+plaintext password in config.json." line with `browser_evaluate`, so it never
+reaches a published screenshot:
+`[...document.querySelectorAll('*')].filter(e => e.children.length === 0 && /plaintext password/.test(e.textContent)).forEach(e => e.style.visibility = 'hidden')`
+
 For each tab: click it, `browser_wait_for` cards to load. For each control/step
 the guide describes:
 

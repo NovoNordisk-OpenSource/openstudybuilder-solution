@@ -84,7 +84,7 @@ def test_data():
 
 @pytest.fixture(scope="module")
 def ddf_mapper(tst_study):
-    mapper = USDMMapper(
+    return USDMMapper(
         get_osb_study_design_cells=StudyDesignCellService().get_all_design_cells,
         get_osb_study_arms=StudyArmSelectionService().get_all_selection,
         get_osb_study_cohorts=StudyCohortSelectionService().get_all_selection,
@@ -97,7 +97,6 @@ def ddf_mapper(tst_study):
         get_osb_study_criteria=StudyCriteriaSelectionService().get_all_selection,
         get_osb_study_compound_dosings=StudyCompoundDosingSelectionService().get_all_compound_dosings,
     )
-    return mapper
 
 
 def test_ddf_study_arms(ddf_mapper, tst_study, study_arms):
@@ -364,6 +363,39 @@ def study_activities_with_instances(tst_study, study_activities):
     activity_instance_class = TestUtils.create_activity_instance_class(
         name="NumericFindings"
     )
+    data_type_codelist = TestUtils.create_ct_codelist(
+        name="DATATYPE", submission_value="DATATYPE", extensible=True, approve=True
+    )
+    role_codelist = TestUtils.create_ct_codelist(
+        name="ROLE", submission_value="ROLE", extensible=True, approve=True
+    )
+    activity_item_class = TestUtils.create_activity_item_class(
+        name="Position",
+        order=1,
+        activity_instance_classes=[
+            {
+                "uid": activity_instance_class.uid,
+                "mandatory": True,
+                "is_adam_param_specific_enabled": False,
+                "is_additional_optional": False,
+                "is_default_linked": False,
+            }
+        ],
+        role_uid=TestUtils.create_ct_term(
+            sponsor_preferred_name="Role", codelist_uid=role_codelist.codelist_uid
+        ).term_uid,
+        data_type_uid=TestUtils.create_ct_term(
+            sponsor_preferred_name="Data type",
+            codelist_uid=data_type_codelist.codelist_uid,
+        ).term_uid,
+    )
+    position_codelist = TestUtils.create_ct_codelist(
+        name="POSITION", submission_value="POSITION", extensible=True, approve=True
+    )
+    position_term = TestUtils.create_ct_term(
+        sponsor_preferred_name="SITTING",
+        codelist_uid=position_codelist.codelist_uid,
+    )
     activity_instance = TestUtils.create_activity_instance(
         activity_instance_class_uid=activity_instance_class.uid,
         name="Systolic Blood Pressure",
@@ -376,6 +408,19 @@ def study_activities_with_instances(tst_study, study_activities):
             study_activities[0].study_activity_subgroup.activity_subgroup_uid
         ],
         activity_groups=[study_activities[0].study_activity_group.activity_group_uid],
+        activity_items=[
+            {
+                "activity_item_class_uid": activity_item_class.uid,
+                "ct_terms": [
+                    {
+                        "term_uid": position_term.term_uid,
+                        "codelist_uid": position_codelist.codelist_uid,
+                    }
+                ],
+                "unit_definition_uids": [],
+                "is_adam_param_specific": False,
+            }
+        ],
     )
     TestUtils.batch_select_study_activity_instances(
         study_uid=tst_study.uid,
@@ -414,6 +459,24 @@ def test_biomedical_concept_reference_url(
     bc = next(bc for bc in bcs if bc.code.standardCode.code == "C25298")
     assert "/mdr/specializations/sdtm/packages/" in bc.reference
     assert bc.reference.endswith("/datasetspecializations/SYSBP")
+
+
+def test_biomedical_concept_response_codes(
+    ddf_mapper, tst_study, study_activities_with_instances
+):
+    # Activity items reach their CT terms through the CTTermContext node
+    ddf_mapper._get_study_activities(tst_study)
+    bc = next(
+        bc
+        for bc in ddf_mapper._bc_by_nci_id.values()
+        if bc.code.standardCode.code == "C25298"
+    )
+    decodes = {
+        response_code.code.decode
+        for prop in bc.properties
+        for response_code in prop.responseCodes
+    }
+    assert decodes == {"SITTING"}
 
 
 def test_ddf_study_cohorts(ddf_mapper, tst_study, monkeypatch):

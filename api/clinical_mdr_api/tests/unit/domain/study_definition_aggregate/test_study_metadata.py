@@ -5,6 +5,7 @@ from collections.abc import Callable, Iterable, Mapping
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from typing import Any
+from unittest.mock import patch
 
 import pytest
 
@@ -86,6 +87,14 @@ initialize_ct_data_map: dict[str, Any] = {
         ("DevStage_1", "Pilot Stage"),
         ("DevStage_2", "Pivotal Stage"),
         ("DevStage_3", "Post-market Stage"),
+    ],
+    "AgeAtBaselineRule": [
+        ("AgeBlRule_1", "Age at Baseline Rule 1"),
+        ("AgeBlRule_2", "Age at Baseline Rule 2"),
+    ],
+    "AgeGroupRule": [
+        ("AgeGrpRule_1", "Age Decimal"),
+        ("AgeGrpRule_2", "No Rule"),
     ],
     "StudyStopRules": ("C49698", "Study Stop Rule"),
     "IsExtensionTrial": [("C49488", "Y"), ("C49487", "N")],
@@ -191,6 +200,9 @@ initialize_ct_codelist_map = {
     "TrialIntentType": ("C66736", "Trial Indication Type", "TINDTP"),
     "TrialType": ("C66739", "Trial Type", "TTYPE"),
     "TrialPhase": ("C66737", "Trial Phase", "TPHASE"),
+    "DevelopmentStage": (None, "Development Stage", "DEVELOPMENT_STAGE"),
+    "AgeAtBaselineRule": (None, "Age at Baseline Rule", "AGE_AT_BASELINE_RL"),
+    "AgeGroupRule": (None, "Age Group Rule", "AGE_GRP_RL"),
     "StudyStopRules": ("C66738", "Trial Summary Parameter Test Code", "TSPARMCD"),
     "IsExtensionTrial": ("C66742", "No Yes Response", "NY"),
     "IsAdaptiveDesign": ("C66742", "No Yes Response", "NY"),
@@ -458,7 +470,7 @@ def random_valid_study_population(
 class TestStudyPopulation(unittest.TestCase):
     def test__validate__valid_data__success(self):
         # given
-        for test_data in [random_valid_study_population() for _ in range(0, 1000)]:
+        for test_data in [random_valid_study_population() for _ in range(1000)]:
             with self.subTest():
                 # when
                 test_data.validate()
@@ -528,7 +540,7 @@ class TestStudyPopulation(unittest.TestCase):
                     ),
                 ]
             )
-            for _ in [random_valid_study_population() for _ in range(0, 1000)]
+            for _ in [random_valid_study_population() for _ in range(1000)]
         ]
 
         # given
@@ -548,7 +560,7 @@ class TestStudyPopulation(unittest.TestCase):
                 therapeutic_area_codes=[random_str()],
                 therapeutic_area_null_value_code=None,
             )
-            for _ in range(0, 10)
+            for _ in range(10)
         ]:
             with self.subTest():
                 # then
@@ -563,7 +575,7 @@ class TestStudyPopulation(unittest.TestCase):
                 disease_condition_or_indication_codes=[random_str()],
                 disease_condition_or_indication_null_value_code=None,
             )
-            for _ in range(0, 10)
+            for _ in range(10)
         ]:
             with self.subTest():
                 # then
@@ -582,7 +594,7 @@ class TestStudyPopulation(unittest.TestCase):
                 diagnosis_group_codes=[random_str()],
                 diagnosis_group_null_value_code=None,
             )
-            for _ in range(0, 10)
+            for _ in range(10)
         ]:
             with self.subTest():
                 # then
@@ -597,7 +609,7 @@ class TestStudyPopulation(unittest.TestCase):
                 sex_of_participants_code=random_str(),
                 sex_of_participants_null_value_code=None,
             )
-            for _ in range(0, 10)
+            for _ in range(10)
         ]:
             with self.subTest():
                 # then
@@ -665,7 +677,7 @@ class TestStudyPopulation(unittest.TestCase):
                     ),
                 ]
             )
-            for _ in [random_valid_study_population() for _ in range(0, 1000)]
+            for _ in [random_valid_study_population() for _ in range(1000)]
         ]
 
         # given
@@ -687,10 +699,10 @@ def random_valid_id_metadata(
         fixed_values = _dict()
 
     def fixed_or_default(field_name: str, default_val: Any) -> Any:
-        return fixed_values[field_name] if field_name in fixed_values else default_val
+        return fixed_values.get(field_name, default_val)
 
     def random_study_number() -> str:
-        choice = [str(_) for _ in range(0, 10)]
+        choice = [str(_) for _ in range(10)]
         return (
             random.choice(choice)
             + random.choice(choice)
@@ -753,7 +765,7 @@ def random_valid_id_metadata_sequence(
 ) -> list[StudyIdentificationMetadataVO]:
     return [
         random_valid_id_metadata(condition=condition, max_tries=max_tries)
-        for _ in range(0, count)
+        for _ in range(count)
     ]
 
 
@@ -915,6 +927,66 @@ class TestIdentificationMetadataVO(unittest.TestCase):
             # then
             # nothing (just no exceptions)
 
+    @patch(
+        "clinical_mdr_api.domains.study_definition_aggregates.study_metadata.settings"
+    )
+    def test__validate__configured_study_number_regex(self, mock_settings):
+        mock_settings.studies_study_number_regex = {
+            "regex": r"[A-Z]{2}-\d{3}",
+            "message": "Use the AB-123 format.",
+        }
+
+        for study_number in ["AB-123", "XY-999"]:
+            with self.subTest(study_number=study_number):
+                StudyIdentificationMetadataVO.from_input_values(
+                    study_number=study_number,
+                    subpart_id=None,
+                    project_number="",
+                    study_acronym=None,
+                    description=None,
+                    registry_identifiers=RegistryIdentifiersVO(),
+                ).validate()
+
+        # "1234" passes the default rule, so it must be the configured one
+        # that rejects it.
+        for study_number in ["1234", "AB-1234", "ab-123"]:
+            with self.subTest(study_number=study_number):
+                study_id_metadata = StudyIdentificationMetadataVO.from_input_values(
+                    study_number=study_number,
+                    subpart_id=None,
+                    project_number="",
+                    study_acronym=None,
+                    description=None,
+                    registry_identifiers=RegistryIdentifiersVO(),
+                )
+                with self.assertRaises(exceptions.ValidationException) as ctx:
+                    study_id_metadata.validate()
+                self.assertEqual(ctx.exception.msg, "Use the AB-123 format.")
+
+    @patch(
+        "clinical_mdr_api.domains.study_definition_aggregates.study_metadata.settings"
+    )
+    def test__validate__subpart_skips_study_number_regex(self, mock_settings):
+        mock_settings.studies_study_number_regex = {
+            "regex": r"[A-Z]{2}-\d{3}",
+            "message": "Use the AB-123 format.",
+        }
+        study_id_metadata = StudyIdentificationMetadataVO.from_input_values(
+            study_number="1234",
+            subpart_id="a",
+            project_number="",
+            study_acronym=None,
+            description=None,
+            registry_identifiers=RegistryIdentifiersVO(),
+            study_subpart_acronym="SUB",
+        )
+
+        # when
+        study_id_metadata.validate(is_subpart=True)
+
+        # then
+        # nothing (just no exceptions)
+
     def test__validate__neither_study_number_nor_study_acronym__failure(self):
         for id_metadata in [
             _.fix_some_values(study_acronym=None, study_number=None)
@@ -1037,7 +1109,7 @@ def random_valid_high_level_study_design(
     count: int = 0
 
     def fixed_or_default(field_name: str, default_val: Any) -> Any:
-        return fixed_values[field_name] if field_name in fixed_values else default_val
+        return fixed_values.get(field_name, default_val)
 
     while True:
         use_study_type = random.choice([True, False])
@@ -1081,6 +1153,10 @@ def random_valid_high_level_study_design(
         development_stage_code = random.choice(
             initialize_ct_data_map["DevelopmentStage"]
         )[0]
+        age_at_baseline_rule_code = random.choice(
+            initialize_ct_data_map["AgeAtBaselineRule"]
+        )[0]
+        age_group_rule_code = random.choice(initialize_ct_data_map["AgeGroupRule"])[0]
 
         use_is_extension_trial = random.choice([True, False])
         is_extension_trial = (
@@ -1140,6 +1216,12 @@ def random_valid_high_level_study_design(
             development_stage_code=fixed_or_default(
                 "development_stage_code", development_stage_code
             ),
+            age_at_baseline_rule_code=fixed_or_default(
+                "age_at_baseline_rule_code", age_at_baseline_rule_code
+            ),
+            age_group_rule_code=fixed_or_default(
+                "age_group_rule_code", age_group_rule_code
+            ),
             is_extension_trial=fixed_or_default(
                 "is_extension_trial", is_extension_trial
             ),
@@ -1196,9 +1278,9 @@ def random_valid_high_level_study_design_sequence(
     if generators is None:
         generators = _dict()
 
-    for _ in range(0, count):
+    for _ in range(count):
         fixed_values = {}
-        for field in generators.keys():
+        for field in generators:
             fixed_values[field] = (
                 generators[field]()
                 if callable(generators[field])
@@ -1207,11 +1289,6 @@ def random_valid_high_level_study_design_sequence(
         yield random_valid_high_level_study_design(
             condition=condition, max_tries=max_tries, fixed_values=fixed_values
         )
-
-
-def random_valid_study_description_sequence(count: int) -> Iterable[StudyDescriptionVO]:
-    for _ in range(0, count):
-        yield random_valid_study_description()
 
 
 @given(
@@ -1256,6 +1333,8 @@ def test__high_level_study_design__validate__invalid_null_value_code_failure(
         trial_phase_code=None,
         trial_phase_null_value_code=trial_phase_null_value_code,
         development_stage_code=None,
+        age_at_baseline_rule_code=None,
+        age_group_rule_code=None,
         is_adaptive_design=None,
         is_adaptive_design_null_value_code=is_adaptive_design_null_value_code,
         is_extension_trial=None,
@@ -1339,6 +1418,8 @@ def test__high_level_study_design_vo__validate__valid_data__success(
         trial_phase_code=trial_phase_code,
         trial_phase_null_value_code=trial_phase_null_value_code,
         development_stage_code=development_stage_code,
+        age_at_baseline_rule_code=None,
+        age_group_rule_code=None,
         is_adaptive_design=is_adaptive_design,
         is_adaptive_design_null_value_code=is_adaptive_design_null_value_code,
         is_extension_trial=is_extension_trial,
@@ -1353,37 +1434,6 @@ def test__high_level_study_design_vo__validate__valid_data__success(
 
     # when
     high_level_study_design.validate()
-
-
-class TestStudyDescriptionVO(unittest.TestCase):
-    def test__validate__create_success(self):
-        # given
-        test_sequence = list(random_valid_study_description_sequence(count=10))
-
-        for test_item in test_sequence:
-            with self.subTest():
-                # then
-                test_item.validate(
-                    study_number="study_number",
-                    study_title_exists_callback=lambda _, study_number: False,
-                    study_short_title_exists_callback=lambda _, study_number: False,
-                )
-
-    def test__validate__create_existing_study_title__failure(self):
-        # given
-        test_sequence = list(random_valid_study_description_sequence(count=10))
-
-        for test_item in test_sequence:
-            with self.subTest():
-                # then
-                with self.assertRaises(exceptions.AlreadyExistsException):
-                    test_item.validate(
-                        study_number="study_number",
-                        study_title_exists_callback=lambda _, study_number: True,
-                        study_short_title_exists_callback=(
-                            lambda _, study_number: True
-                        ),
-                    )
 
 
 class TestHighLevelStudyDesignVO(unittest.TestCase):
@@ -1822,7 +1872,7 @@ def random_ver_metadata_sequence(
     condition: Callable[[StudyVersionMetadataVO], bool] | None = None,
     max_tries: int = 100,
 ) -> list[StudyVersionMetadataVO]:
-    return [random_ver_metadata(condition, max_tries) for _ in range(0, count)]
+    return [random_ver_metadata(condition, max_tries) for _ in range(count)]
 
 
 def random_study_metadata(
@@ -1852,7 +1902,7 @@ def random_study_metadata_sequence(
     condition: Callable[[StudyMetadataVO], bool] | None = None,
     max_tries: int = 1000,
 ) -> list[StudyMetadataVO]:
-    return [random_study_metadata(condition, max_tries) for _ in range(0, count)]
+    return [random_study_metadata(condition, max_tries) for _ in range(count)]
 
 
 def random_valid_study_description() -> StudyDescriptionVO:
@@ -1897,10 +1947,10 @@ def random_valid_study_intervention(
         )
 
         use_control_type = random.choice([True, False])
-        control_type_code = (
-            random.choice(initialize_ct_data_map["ControlType"])[0]
+        control_type_codes = (
+            [random.choice(initialize_ct_data_map["ControlType"])[0]]
             if use_control_type
-            else None
+            else []
         )
         control_type_null_value_code = (
             None
@@ -1982,7 +2032,7 @@ def random_valid_study_intervention(
             intervention_type_null_value_code=intervention_type_null_value_code,
             add_on_to_existing_treatments=add_on_to_existing_treatments,
             add_on_to_existing_treatments_null_value_code=add_on_to_existing_treatments_null_value_code,
-            control_type_code=control_type_code,
+            control_type_codes=control_type_codes,
             control_type_null_value_code=control_type_null_value_code,
             intervention_model_code=intervention_model_code,
             intervention_model_null_value_code=intervention_model_null_value_code,
@@ -2066,7 +2116,7 @@ class TestStudyMetadataVO(unittest.TestCase):
                     study_intervention=study_intervention_sequence[i],
                     study_description=study_description_sequence[i],
                 )
-                for i in range(0, len(id_metadata_sequence))
+                for i in range(len(id_metadata_sequence))
             ]
 
         test_sequence: list[StudyMetadataVO] = []
@@ -2090,7 +2140,7 @@ class TestStudyMetadataVO(unittest.TestCase):
         ]
 
         valid_study_population_sequence = [
-            random_valid_study_population() for _ in range(0, 10)
+            random_valid_study_population() for _ in range(10)
         ]
         invalid_study_population_sequence = [
             _.fix_some_values(
@@ -2101,7 +2151,7 @@ class TestStudyMetadataVO(unittest.TestCase):
         ]
 
         valid_study_intervention_sequence = [
-            random_valid_study_intervention() for _ in range(0, 10)
+            random_valid_study_intervention() for _ in range(10)
         ]
         invalid_study_intervention_sequence = [
             _.fix_some_values(
@@ -2112,7 +2162,7 @@ class TestStudyMetadataVO(unittest.TestCase):
         ]
 
         valid_study_description_sequence = [
-            random_valid_study_description() for _ in range(0, 10)
+            random_valid_study_description() for _ in range(10)
         ]
 
         # invalid high level study design

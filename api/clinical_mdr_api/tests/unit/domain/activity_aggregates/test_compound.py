@@ -10,14 +10,13 @@ from clinical_mdr_api.tests.unit.domain.utils import AUTHOR_ID, random_str
 
 
 def create_random_compound_vo() -> CompoundVO:
-    random_compound_vo = CompoundVO.from_repository_values(
+    return CompoundVO.from_repository_values(
         name=random_str(),
         name_sentence_case=random_str(),
         definition=random_str(),
         abbreviation=random_str(),
         external_id=random_str(),
     )
-    return random_compound_vo
 
 
 def create_random_compound_ar(
@@ -25,7 +24,7 @@ def create_random_compound_ar(
     library: str = "Library",
     is_editable: bool = True,
 ) -> CompoundAR:
-    random_compound_ar = CompoundAR.from_input_values(
+    return CompoundAR.from_input_values(
         generate_uid_callback=generate_uid_callback,
         concept_vo=create_random_compound_vo(),
         library=LibraryVO.from_repository_values(
@@ -34,8 +33,6 @@ def create_random_compound_ar(
         author_id=AUTHOR_ID,
         compound_uid_by_property_value_callback=lambda _, __: False,
     )
-
-    return random_compound_ar
 
 
 class TestCompound(unittest.TestCase):

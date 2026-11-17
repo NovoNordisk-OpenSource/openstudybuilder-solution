@@ -1,0 +1,4 @@
+CODELIST_SUBMVAL,TERM_SUBMVAL,SPONSOR_NAME,SPONSOR_NAME_SENTENCE_CASE,NCI_PREFERRED_NAME,ORDER,CONCEPT_ID,CATALOGUES,DEFINITION
+AGE_AT_BASELINE_RL,AGE AT BASELINE RULE 1,Age at Baseline Rule 1,age at baseline rule 1,Age at Baseline Rule 1,1,,,Age based on BirthDate and Baseline Visit Date
+AGE_AT_BASELINE_RL,AGE AT BASELINE RULE 2,Age at Baseline Rule 2,age at baseline rule 2,Age at Baseline Rule 2,2,,,Age based on BirthDate and Date of Randomisation Visit
+AGE_AT_BASELINE_RL,AGE AT BASELINE RULE 3,Age at Baseline Rule 3,age at baseline rule 3,Age at Baseline Rule 3,3,,,Age based on BirthDate and Date of Baseline/Randomisation Visit

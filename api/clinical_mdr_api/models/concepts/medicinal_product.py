@@ -69,7 +69,7 @@ class MedicinalProduct(VersionProperties):
                     SimplePharmaceuticalProduct.from_input(x)
                     for x in medicinal_product_ar.concept_vo.pharmaceutical_products
                 ],
-                key=lambda item: item.external_id if item.external_id else "",
+                key=lambda item: item.external_id or "",
             ),
             dose_values=sorted(
                 [
@@ -83,7 +83,7 @@ class MedicinalProduct(VersionProperties):
                     SimpleTermModel.from_input(input_data=x)
                     for x in medicinal_product_ar.concept_vo.dose_frequencies
                 ],
-                key=lambda item: item.name if item.name else "",
+                key=lambda item: item.name or "",
             ),
             delivery_device=(
                 SimpleTermModel.from_input(

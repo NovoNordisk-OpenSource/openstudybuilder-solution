@@ -16,7 +16,7 @@ from clinical_mdr_api.tests.integration.utils.api import (
     inject_and_clear_db,
     inject_base_data,
 )
-from clinical_mdr_api.tests.integration.utils.utils import TestUtils
+from clinical_mdr_api.tests.integration.utils.utils import CT_CODELIST_UIDS, TestUtils
 from clinical_mdr_api.tests.utils.checks import assert_response_status_code
 
 log = logging.getLogger(__name__)
@@ -283,3 +283,63 @@ def test_get_ct_terms_headers(api_client, field_name, search_string):
 
     # Assert that `?lite=true` returns the same data as `?lite=false`
     assert set(responses[True]) == set(responses[False])
+
+
+def test_term_algorithm_round_trip(api_client):
+    term = TestUtils.create_ct_term(algorithm="DIPARMCD='SERIAL'")
+    url = f"/ct/terms/{term.term_uid}/attributes"
+    assert api_client.get(url).json()["algorithm"] == "DIPARMCD='SERIAL'"
+
+    assert_response_status_code(api_client.post(f"{url}/versions"), 201)
+    response = api_client.patch(
+        url, json={"algorithm": "DIPARMCD='MODEL'", "change_description": "edit"}
+    )
+    assert_response_status_code(response, 200)
+    assert response.json()["algorithm"] == "DIPARMCD='MODEL'"
+
+    # untouched on edits of other fields
+    response = api_client.patch(
+        url, json={"definition": "new definition", "change_description": "edit"}
+    )
+    assert response.json()["algorithm"] == "DIPARMCD='MODEL'"
+
+    response = api_client.get(
+        "/ct/terms",
+        params={"filters": json.dumps({"term_uid": {"v": [term.term_uid]}})},
+    )
+    assert response.json()["items"][0]["attributes"]["algorithm"] == "DIPARMCD='MODEL'"
+
+    # explicit null clears it
+    response = api_client.patch(
+        url, json={"algorithm": None, "change_description": "clear"}
+    )
+    assert_response_status_code(response, 200)
+    assert response.json()["algorithm"] is None
+    assert api_client.get(url).json()["algorithm"] is None
+
+
+def test_codelist_terms_expose_algorithm(api_client):
+    codelist_uid = CT_CODELIST_UIDS.default
+    term = TestUtils.create_ct_term(
+        codelist_uid=codelist_uid, algorithm="DIPARMCD='SERIAL'"
+    )
+    filters = json.dumps({"term_uid": {"v": [term.term_uid]}})
+
+    for url, params in (
+        (f"/ct/codelists/{codelist_uid}/terms", {"filters": filters}),
+        ("/ct/codelists/terms", {"codelist_uid": codelist_uid, "filters": filters}),
+    ):
+        response = api_client.get(url, params=params)
+        assert_response_status_code(response, 200)
+        items = response.json()["items"]
+        assert len(items) == 1
+        assert items[0]["algorithm"] == "DIPARMCD='SERIAL'"
+
+    response = api_client.get(
+        "/ct/codelists/terms",
+        params={"codelist_uid": codelist_uid, "filters": filters},
+        headers={"Accept": "text/csv"},
+    )
+    assert_response_status_code(response, 200)
+    assert "algorithm" in response.text.splitlines()[0]
+    assert "DIPARMCD='SERIAL'" in response.text

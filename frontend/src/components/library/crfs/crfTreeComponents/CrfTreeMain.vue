@@ -63,7 +63,20 @@
     <v-progress-circular indeterminate color="primary" size="large" width="5" />
   </div>
 
-  <div v-else class="pa-2">
+  <div v-else class="pa-2 position-relative">
+    <v-overlay
+      :model-value="pageLoading"
+      contained
+      persistent
+      class="align-center justify-center"
+    >
+      <v-progress-circular
+        indeterminate
+        color="primary"
+        size="large"
+        width="5"
+      />
+    </v-overlay>
     <div v-for="item in collections" :key="item.uid" class="crf-tree-node mb-1">
       <div
         class="node-content d-flex align-center pa-2"
@@ -311,6 +324,7 @@ const router = useRouter()
 const { t } = useI18n()
 
 const pageNumber = ref(1)
+const pageLoading = ref(false)
 const pageSize = ref(10)
 
 const confirmApproval = ref(null)
@@ -466,11 +480,19 @@ async function ensureSelectedCollectionInDropdown() {
 }
 
 watch(pageNumber, () => {
-  getCollections(pageNumber.value)
+  pageLoading.value = true
+  getCollections(pageNumber.value).finally(() => {
+    pageLoading.value = false
+  })
 })
 
 watch(selectCollection, () => {
-  getCollections()
+  if (pageNumber.value !== 1) {
+    // the pageNumber watcher triggers the fetch
+    pageNumber.value = 1
+  } else {
+    getCollections()
+  }
 })
 
 // Sync loading state from InfiniteScrollList
@@ -576,7 +598,7 @@ async function handleSearchClear() {
   await infiniteScrollList.value?.reset()
 }
 
-async function getCollections(pageNumber = 1) {
+async function getCollections(page = pageNumber.value) {
   loading.value = true
   // If a specific collection is selected, fetch it directly by uid
   if (!isEmpty(selectCollection.value)) {
@@ -595,16 +617,14 @@ async function getCollections(pageNumber = 1) {
         loading.value = false
       })
   }
-  let options = { sortBy: [{ key: 'name', order: 'asc' }], page: pageNumber }
+  let options = { sortBy: [{ key: 'name', order: 'asc' }], page }
   let params = filteringParameters.prepareParameters(options, null, null)
   if (!params) {
     params = { total_count: true }
   } else {
     params.total_count = true
   }
-  // The CRF Tree view has no pagination controls, so always fetch all
-  // collections (page_size: 0 tells the API to return every row).
-  params.page_size = 0
+  params.page_size = pageSize.value
   params.fields =
     'uid,oid,name,status,version,forms,effective_date,retired_date,library_name'
 
@@ -613,7 +633,6 @@ async function getCollections(pageNumber = 1) {
     .then((resp) => {
       collections.value = resp.data.items
       totalCollections.value = resp.data.total
-      pageSize.value = resp.data.size
     })
     .finally(() => {
       loading.value = false

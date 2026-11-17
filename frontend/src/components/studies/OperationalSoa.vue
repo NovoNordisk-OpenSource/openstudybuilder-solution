@@ -33,13 +33,13 @@
           </v-btn>
         </template>
         <v-list>
-          <v-list-item link @click="downloadCSV">
+          <v-list-item link @click="download(soaDownloads.csvDownload)">
             <v-list-item-title>CSV</v-list-item-title>
           </v-list-item>
-          <v-list-item link @click="downloadEXCEL">
+          <v-list-item link @click="download(soaDownloads.excelDownload)">
             <v-list-item-title>EXCEL</v-list-item-title>
           </v-list-item>
-          <v-list-item link @click="downloadDOCX">
+          <v-list-item link @click="download(soaDownloads.docxDownload)">
             <v-list-item-title>DOCX</v-list-item-title>
           </v-list-item>
         </v-list>
@@ -64,7 +64,6 @@
               <th
                 v-for="(cell, index) in soaEpochRow"
                 :key="`epoch-${index}`"
-                class="text-vertical"
                 scope="col"
               >
                 {{ cell.text }}
@@ -141,19 +140,15 @@
           </tr>
         </thead>
         <tbody>
-          <template v-for="(row, index) in soaRows">
-            <tr
-              v-if="showSoaRow(index, row)"
-              :key="`row-${index}`"
-              :class="getSoaRowClasses(row)"
-            >
+          <template v-for="row in soaRows" :key="`row-${row.displayUid}`">
+            <tr v-if="showSoaRow(row)" :class="getSoaRowClasses(row)">
               <td>
                 <v-btn
-                  v-if="getSoaRowType(row) !== 'activityInstance'"
-                  :icon="getDisplayButtonIcon(`row-${index}`)"
+                  v-if="row.cells[0].style !== 'activityInstance'"
+                  :icon="getDisplayButtonIcon(`row-${row.displayUid}`)"
                   variant="text"
                   class="expand-btn"
-                  @click="toggleRowState(`row-${index}`)"
+                  @click="toggleRowState(`row-${row.displayUid}`)"
                 />
               </td>
               <td :class="getSoaFirstCellClasses(row.cells[0])">
@@ -164,17 +159,19 @@
                   v-else
                   href="#"
                   class="font-weight-regular"
-                  @click="redirectToActivityInstance(row.cells[0].refs[0].uid)"
+                  @click.prevent="
+                    redirectToActivityInstance(row.cells[0].refs[0].uid)
+                  "
                 >
                   {{ row.cells[0].text }}
                 </a>
               </td>
               <td />
               <td
-                v-for="(subrow, subindex) in row.cells.slice(1)"
-                :key="`row-${subindex}`"
+                v-for="(cell, cellIndex) in row.cells.slice(1)"
+                :key="`cell-${cellIndex}`"
               >
-                {{ subrow.text }}
+                {{ cell.text }}
               </td>
             </tr>
           </template>
@@ -184,315 +181,254 @@
   </div>
 </template>
 
-<script>
-import { computed } from 'vue'
+<script setup>
+import { computed, onMounted, onUpdated, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import study from '@/api/study'
-import { useAccessGuard } from '@/composables/accessGuard'
 import { useStudiesGeneralStore } from '@/stores/studies-general'
 import { useSoaContentLoadingStore } from '@/stores/soa-content-loading'
+import scheduleMethods from '@/utils/scheduleMethods'
+import {
+  applySavedExpandState,
+  assignRowDisplayUids,
+  buildRowsDisplayState,
+} from '@/utils/soaDisplayState'
 import soaDownloads from '@/utils/soaDownloads'
 
-export default {
-  props: {
-    update: {
-      type: Number,
-      default: 0,
-    },
+const props = defineProps({
+  update: {
+    type: Number,
+    default: 0,
   },
-  setup() {
-    const accessGuard = useAccessGuard()
-    const studiesGeneralStore = useStudiesGeneralStore()
-    const soaContentLoadingStore = useSoaContentLoadingStore()
-    return {
-      selectedStudy: computed(() => studiesGeneralStore.selectedStudy),
-      selectedStudyVersion: computed(
-        () => studiesGeneralStore.selectedStudyVersion
-      ),
-      studyPreferredTimeUnit: computed(
-        () => studiesGeneralStore.studyPreferredTimeUnit
-      ),
-      ...accessGuard,
-      soaContentLoadingStore,
-    }
-  },
-  data() {
-    return {
-      currentSelectionMatrix: {},
-      rowsDisplayState: {},
-      tableHeight: 500,
-      soaContent: null,
-      expandAllRows: false,
-      firstHeaderHeight: 0,
-      secondHeaderHeight: 0,
-      thirdHeaderHeight: 0,
-      showFlowchartGroups: false,
-    }
-  },
-  computed: {
-    soaEpochRow() {
-      if (this.soaContent) {
-        return this.soaContent.rows[0].cells.slice(1)
-      }
-      return []
-    },
-    soaVisitRow() {
-      if (this.soaContent) {
-        return this.soaContent.rows[1].cells.slice(1)
-      }
-      return []
-    },
-    soaDayRow() {
-      if (this.soaContent) {
-        return this.soaContent.rows[2].cells
-      }
-      return []
-    },
-    soaWindowRow() {
-      if (this.soaContent) {
-        return this.soaContent.rows[3].cells.slice(1)
-      }
-      return []
-    },
-    soaRows() {
-      if (this.soaContent) {
-        return this.soaContent.rows.slice(4)
-      }
-      return []
-    },
-    thirdHeaderRowTop() {
-      return this.firstHeaderHeight + this.secondHeaderHeight
-    },
-    fourthHeaderRowTop() {
-      return (
-        this.firstHeaderHeight +
-        this.secondHeaderHeight +
-        this.thirdHeaderHeight
-      )
-    },
-  },
-  watch: {
-    update(newVal, oldVal) {
-      if (newVal !== oldVal) this.loadSoaContent()
-    },
-  },
-  updated() {
-    this.firstHeaderHeight = this.$refs.firstHeader.clientHeight
-    this.secondHeaderHeight = this.$refs.secondHeader.clientHeight
-    this.thirdHeaderHeight = this.$refs.thirdHeader.clientHeight
-  },
-  mounted() {
-    this.loadSoaContent()
-  },
-  methods: {
-    async redirectToActivityInstance(instanceUid) {
-      const resp = await study.getStudyActivityInstance(
-        this.selectedStudy.uid,
-        instanceUid
-      )
-      this.$router.push({
-        name: 'ActivityInstanceOverview',
-        params: { id: resp.data.activity_instance.uid },
-      })
-    },
-    toggleAllRowState(value) {
-      for (const key in this.rowsDisplayState) {
-        this.rowsDisplayState[key].value = value
-      }
-    },
-    showSoaRow(index, row) {
-      let key = `row-${index}`
-      let result = true
+})
 
-      // prettier-ignore
-      while (true) {  
-        if (
-          this.rowsDisplayState[key] &&
-          this.rowsDisplayState[key].parent !== undefined &&
-          this.rowsDisplayState[key].parent !== null
-        ) {
-          const parentIndex = this.rowsDisplayState[key].parent
-          key = `row-${parentIndex}`
-          if (this.rowsDisplayState[key]) {
-            const parentHasParent =
-              this.rowsDisplayState[key].parent !== undefined &&
-              this.rowsDisplayState[key].parent !== null
-            if (
-              (this.showFlowchartGroups ||
-                (!this.showFlowchartGroups && parentHasParent)) &&
-              !this.rowsDisplayState[key].value
-            ) {
-              result = false
-              break
-            }
-          } else {
-            console.log(`Warning: key ${key} not found in displayState!!`)
-          }
-          continue
-        }
-        break
-      }
-      if (row.cells && row.cells.length) {
-        if (row.cells[0].style === 'soaGroup') {
-          return this.showFlowchartGroups
-        }
-        if (row.cells[0].style === 'group') {
-          return !this.showFlowchartGroups || result
-        }
-      }
-      return result
-    },
-    onResize() {
-      this.tableHeight =
-        window.innerHeight -
-        this.$refs.tableContainer.getBoundingClientRect().y -
-        60
-    },
-    async loadSoaContent(keepDisplayState) {
-      this.soaContentLoadingStore.changeLoadingState()
-      const resp = await study.getStudyProtocolFlowchart(
-        this.selectedStudy.uid,
-        { layout: 'operational' }
-      )
-      let currentSoaGroup
-      let currentGroup
-      let currentSubGroup
-      let currentActivity
+// Epoch, visit, day/week and window rows precede the data rows
+const HEADER_ROW_COUNT = 4
 
-      this.soaContent = resp.data
-      if (!keepDisplayState) {
-        this.rowsDisplayState = {}
-        this.expandAllRows = false
-      }
-      for (const [index, row] of this.soaRows.entries()) {
-        const key = `row-${index}`
-        if (row.cells && row.cells.length) {
-          if (row.cells[0].style === 'soaGroup') {
-            this.rowsDisplayState[key] = { value: false }
-            currentGroup = null
-            currentSubGroup = null
-            currentSoaGroup = index
-          } else if (row.cells[0].style === 'group') {
-            if (!keepDisplayState) {
-              this.rowsDisplayState[key] = {
-                value: false,
-                parent: currentSoaGroup,
-              }
-            }
-            currentSubGroup = null
-            currentGroup = index
-          } else if (row.cells[0].style === 'subGroup') {
-            if (!keepDisplayState) {
-              this.rowsDisplayState[key] = {
-                value: false,
-                parent: currentGroup,
-              }
-            }
-            currentSubGroup = index
-          } else if (
-            row.cells[0].style === 'activity' ||
-            row.cells[0].style === 'activityPlaceholder' ||
-            row.cells[0].style === 'activityPlaceholderSubmitted'
-          ) {
-            if (!keepDisplayState) {
-              this.rowsDisplayState[key] = {
-                value: false,
-                parent: currentSubGroup,
-              }
-            }
-            currentActivity = index
-          } else if (row.cells[0].style === 'activityInstance') {
-            if (!keepDisplayState) {
-              this.rowsDisplayState[key] = {
-                value: false,
-                parent: currentActivity,
-              }
-            }
-          }
-        }
-      }
-      this.soaContentLoadingStore.changeLoadingState()
-    },
-    getSoaFirstCellClasses(cell) {
-      if (cell.style === 'soaGroup' || cell.style === 'group') {
-        return 'text-strong'
-      }
-      if (cell.style === 'subGroup') {
-        return 'subgroup'
-      }
-      if (cell.style === 'activity') {
-        return 'activity'
-      }
-      if (
-        cell.style === 'activityPlaceholder' ||
-        cell.style === 'activityPlaceholderSubmitted'
-      ) {
-        return 'activity'
-      }
+const router = useRouter()
+const studiesGeneralStore = useStudiesGeneralStore()
+const soaContentLoadingStore = useSoaContentLoadingStore()
+
+const selectedStudy = computed(() => studiesGeneralStore.selectedStudy)
+const selectedStudyVersion = computed(
+  () => studiesGeneralStore.selectedStudyVersion
+)
+
+const tableContainer = ref(null)
+const firstHeader = ref(null)
+const secondHeader = ref(null)
+const thirdHeader = ref(null)
+
+const rowsDisplayState = ref({})
+const tableHeight = ref(500)
+const soaContent = ref(null)
+const expandAllRows = ref(false)
+const firstHeaderHeight = ref(0)
+const secondHeaderHeight = ref(0)
+const thirdHeaderHeight = ref(0)
+const showFlowchartGroups = ref(false)
+
+const soaEpochRow = computed(() =>
+  soaContent.value ? soaContent.value.rows[0].cells.slice(1) : []
+)
+const soaVisitRow = computed(() =>
+  soaContent.value ? soaContent.value.rows[1].cells.slice(1) : []
+)
+const soaDayRow = computed(() =>
+  soaContent.value ? soaContent.value.rows[2].cells : []
+)
+const soaWindowRow = computed(() =>
+  soaContent.value ? soaContent.value.rows[3].cells.slice(1) : []
+)
+// Rows without cells are dropped here so the template and helpers can rely on row.cells[0]
+const soaRows = computed(() =>
+  soaContent.value
+    ? soaContent.value.rows
+        .slice(HEADER_ROW_COUNT)
+        .filter((row) => row.cells?.length)
+    : []
+)
+const thirdHeaderRowTop = computed(
+  () => firstHeaderHeight.value + secondHeaderHeight.value
+)
+const fourthHeaderRowTop = computed(
+  () =>
+    firstHeaderHeight.value + secondHeaderHeight.value + thirdHeaderHeight.value
+)
+
+watch(
+  () => props.update,
+  () => loadSoaContent()
+)
+
+onUpdated(() => {
+  firstHeaderHeight.value = firstHeader.value.clientHeight
+  secondHeaderHeight.value = secondHeader.value.clientHeight
+  thirdHeaderHeight.value = thirdHeader.value.clientHeight
+})
+
+onMounted(() => {
+  loadSoaContent()
+})
+
+async function redirectToActivityInstance(instanceUid) {
+  const resp = await study.getStudyActivityInstance(
+    selectedStudy.value.uid,
+    instanceUid
+  )
+  router.push({
+    name: 'ActivityInstanceOverview',
+    params: { id: resp.data.activity_instance.uid },
+  })
+}
+
+function toggleAllRowState(value) {
+  for (const key in rowsDisplayState.value) {
+    rowsDisplayState.value[key].value = value
+  }
+}
+
+function hasParent(state) {
+  return state?.parent !== undefined && state?.parent !== null
+}
+
+function hasCollapsedAncestor(displayUid) {
+  let state = rowsDisplayState.value[`row-${displayUid}`]
+  while (hasParent(state)) {
+    const parentKey = `row-${state.parent}`
+    state = rowsDisplayState.value[parentKey]
+    if (!state) {
+      console.warn(`Key ${parentKey} not found in rowsDisplayState`)
+      return false
+    }
+    // Top-level soaGroup rows only collapse their children while they are shown
+    const isCollapsible = showFlowchartGroups.value || hasParent(state)
+    if (isCollapsible && !state.value) {
+      return true
+    }
+  }
+  return false
+}
+
+function showSoaRow(row) {
+  const visible = !hasCollapsedAncestor(row.displayUid)
+  switch (row.cells[0].style) {
+    case 'soaGroup':
+      return showFlowchartGroups.value
+    case 'group':
+      return !showFlowchartGroups.value || visible
+    default:
+      return visible
+  }
+}
+
+function onResize() {
+  tableHeight.value =
+    window.innerHeight - tableContainer.value.getBoundingClientRect().y - 60
+}
+
+function snapshotExpandState() {
+  const snapshot = {}
+  for (const key in rowsDisplayState.value) {
+    snapshot[key] = rowsDisplayState.value[key].value
+  }
+  return snapshot
+}
+
+let latestLoadRequestId = 0
+
+async function loadSoaContent() {
+  // A reload can be requested while the previous one is still running; only the latest response is applied
+  const requestId = ++latestLoadRequestId
+  soaContentLoadingStore.setLoading(true)
+  let dataRows
+  try {
+    const resp = await study.getStudyProtocolFlowchart(
+      selectedStudy.value.uid,
+      { layout: 'operational' }
+    )
+    if (requestId !== latestLoadRequestId) {
+      return
+    }
+    dataRows = resp.data.rows.slice(HEADER_ROW_COUNT)
+    assignRowDisplayUids(dataRows)
+    soaContent.value = resp.data
+  } finally {
+    if (requestId === latestLoadRequestId) {
+      soaContentLoadingStore.setLoading(false)
+    }
+  }
+
+  // Entries and parent links are rebuilt on every load; expansion values of rows that
+  // survive the reload are carried over by display uid. The first load stays collapsed.
+  const previousExpandState = Object.keys(rowsDisplayState.value).length
+    ? snapshotExpandState()
+    : null
+  const newRowsDisplayState = buildRowsDisplayState(
+    dataRows,
+    scheduleMethods.isActivityRow
+  )
+  if (previousExpandState) {
+    applySavedExpandState(newRowsDisplayState, previousExpandState)
+  }
+  rowsDisplayState.value = newRowsDisplayState
+}
+
+function getSoaFirstCellClasses(cell) {
+  switch (cell.style) {
+    case 'soaGroup':
+    case 'group':
+      return 'text-strong'
+    case 'subGroup':
+      return 'subgroup'
+    case 'activity':
+    case 'activityPlaceholder':
+    case 'activityPlaceholderSubmitted':
+      return 'activity'
+    default:
       return 'activityInstance'
-    },
-    getSoaRowClasses(row) {
-      if (row.cells && row.cells.length) {
-        if (row.cells[0].style === 'soaGroup') {
-          return 'flowchart text-uppercase'
-        }
-        if (row.cells[0].style === 'group') {
-          return 'group'
-        }
-        if (row.cells[0].style === 'activityPlaceholder') {
-          return 'bg-warning'
-        }
-        if (row.cells[0].style === 'activityPlaceholderSubmitted') {
-          return 'bg-yellow'
-        }
-      }
+  }
+}
+
+function getSoaRowClasses(row) {
+  switch (row.cells[0].style) {
+    case 'soaGroup':
+      return 'flowchart text-uppercase'
+    case 'group':
+      return 'group'
+    case 'activityPlaceholder':
+      return 'bg-warning'
+    case 'activityPlaceholderSubmitted':
+      return 'bg-yellow'
+    default:
       return ''
-    },
-    getSoaRowType(row) {
-      return row.cells[0].style
-    },
-    getCurrentDisplayValue(rowKey) {
-      const currentValue = this.rowsDisplayState[rowKey]
-        ? this.rowsDisplayState[rowKey].value
-        : undefined
-      if (currentValue === undefined) {
-        return false
-      }
-      return currentValue
-    },
-    getDisplayButtonIcon(rowKey) {
-      return this.getCurrentDisplayValue(rowKey)
-        ? 'mdi-chevron-down'
-        : 'mdi-chevron-right'
-    },
-    toggleRowState(rowKey) {
-      const currentValue = this.getCurrentDisplayValue(rowKey)
-      this.rowsDisplayState[rowKey].value = !currentValue
-    },
-    async downloadCSV() {
-      this.soaContentLoadingStore.changeLoadingState()
-      try {
-        await soaDownloads.csvDownload('operational')
-      } finally {
-        this.soaContentLoadingStore.changeLoadingState()
-      }
-    },
-    async downloadEXCEL() {
-      this.soaContentLoadingStore.changeLoadingState()
-      try {
-        await soaDownloads.excelDownload('operational')
-      } finally {
-        this.soaContentLoadingStore.changeLoadingState()
-      }
-    },
-    async downloadDOCX() {
-      this.soaContentLoadingStore.changeLoadingState()
-      try {
-        await soaDownloads.docxDownload('operational')
-      } finally {
-        this.soaContentLoadingStore.changeLoadingState()
-      }
-    },
-  },
+  }
+}
+
+function getCurrentDisplayValue(rowKey) {
+  return rowsDisplayState.value[rowKey]?.value ?? false
+}
+
+function getDisplayButtonIcon(rowKey) {
+  return getCurrentDisplayValue(rowKey)
+    ? 'mdi-chevron-down'
+    : 'mdi-chevron-right'
+}
+
+function toggleRowState(rowKey) {
+  const state = rowsDisplayState.value[rowKey]
+  if (state) {
+    state.value = !state.value
+  }
+}
+
+async function download(downloadFn) {
+  soaContentLoadingStore.setLoading(true)
+  try {
+    await downloadFn('operational')
+  } finally {
+    soaContentLoadingStore.setLoading(false)
+  }
 }
 </script>
 
@@ -509,10 +445,6 @@ thead {
 }
 tr {
   padding: 4px;
-  &.section {
-    background-color: rgb(var(--v-theme-tableGray));
-    font-weight: 600;
-  }
 }
 tbody tr {
   border-bottom: 1px solid rgb(var(--v-theme-greyBackground));
@@ -552,14 +484,8 @@ td {
   padding-left: 40px;
   font-style: italic;
 }
-.text-vertical {
-  text-orientation: mixed;
-}
 .text-strong {
   font-weight: 600;
-}
-.visitFootnote {
-  margin-bottom: 8px;
 }
 .expand-btn {
   height: 30px;

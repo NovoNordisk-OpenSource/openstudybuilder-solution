@@ -35,8 +35,7 @@ Each is `Depends(RequiresAnyRole({...}))` over these six JWT roles: `Admin.Read`
 | `ADMIN_READ` / `ADMIN_WRITE` | the matching Admin role |
 | `LIBRARY_WRITE_OR_STUDY_WRITE` | either write role |
 | `LIBRARY_READ_OR_STUDY_READ` | either read role |
-| `FEATURE_FLAG_READ` | any of `Admin.Read`, `Library.Read`, `Study.Read` |
-| `ANY` | any of the four Library/Study roles |
+| `ANY` | any of the six roles (Library/Study/Admin) |
 
 - **`RequiresAnyRole` is OR, never AND.** For a combined gate use an existing `_OR_` constant; there is no AND primitive, so do not invent one.
 - **`ANY` is not "public".** It still requires one of the four base roles. Only comments, msgraph, and jobs use it.

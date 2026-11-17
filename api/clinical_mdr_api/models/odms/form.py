@@ -67,8 +67,10 @@ class OdmForm(OdmBaseModel):
             [str, str, str, RelationType], OdmVendorElementRelationVO
         ],
         find_odm_vendor_attribute_by_uid_with_odm_element_relation: Callable[
-            [str, str, str, RelationType, bool],
-            OdmVendorAttributeRelationVO | OdmVendorElementAttributeRelationVO,
+            [str, str, str, RelationType], OdmVendorAttributeRelationVO
+        ],
+        find_odm_vendor_element_attribute_by_uid_with_odm_element_relation: Callable[
+            [str, str, str, RelationType], OdmVendorElementAttributeRelationVO
         ],
     ) -> Self:
         return cls(
@@ -122,8 +124,7 @@ class OdmForm(OdmBaseModel):
                         odm_element_uid=odm_form_ar._uid,
                         odm_element_version=odm_form_ar.item_metadata.version,
                         odm_element_type=RelationType.FORM,
-                        find_by_uid_with_odm_element_relation=find_odm_vendor_attribute_by_uid_with_odm_element_relation,  # type: ignore[arg-type]
-                        vendor_element_attribute=False,
+                        find_by_uid_with_odm_element_relation=find_odm_vendor_attribute_by_uid_with_odm_element_relation,
                     )
                     for vendor_attribute_uid in odm_form_ar.odm_vo.vendor_attribute_uids
                 ],
@@ -136,7 +137,7 @@ class OdmForm(OdmBaseModel):
                         odm_element_uid=odm_form_ar._uid,
                         odm_element_version=odm_form_ar.item_metadata.version,
                         odm_element_type=RelationType.FORM,
-                        find_by_uid_with_odm_element_relation=find_odm_vendor_attribute_by_uid_with_odm_element_relation,  # type: ignore[arg-type]
+                        find_by_uid_with_odm_element_relation=find_odm_vendor_element_attribute_by_uid_with_odm_element_relation,
                     )
                     for vendor_element_attribute_uid in odm_form_ar.odm_vo.vendor_element_attribute_uids
                 ],

@@ -106,7 +106,7 @@ class CompactUnitDefinition(BaseModel):
         str | None,
         Field(
             json_schema_extra={
-                "source": "has_unit_definition.has_latest_value.has_ct_dimension.has_name_root.has_latest_value.name",
+                "source": "has_unit_definition.has_latest_value.has_ct_dimension.has_selected_term.has_name_root.has_latest_value.name",
                 "nullable": True,
             },
         ),

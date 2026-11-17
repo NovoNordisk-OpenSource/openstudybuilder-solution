@@ -307,7 +307,7 @@ class ItemRepository(OdmGenericRepository[OdmItemAR]):
                 submission_value=external_question_dict.get("submission_value"),
             )
 
-        odm_item_ar = OdmItemAR.from_repository_values(
+        return OdmItemAR.from_repository_values(
             uid=input_dict["uid"],
             odm_vo=OdmItemVO.from_repository_values(
                 oid=input_dict.get("oid"),
@@ -326,7 +326,7 @@ class ItemRepository(OdmGenericRepository[OdmItemAR]):
                         oid=input_dict["odm_item_group"].get("oid"),
                         name=input_dict["odm_item_group"].get("name"),
                     )
-                    if input_dict.get("odm_item_group", None)
+                    if input_dict.get("odm_item_group")
                     else None
                 ),
                 translated_texts=[
@@ -351,7 +351,7 @@ class ItemRepository(OdmGenericRepository[OdmItemAR]):
                         ]
                         or False,
                     )
-                    if input_dict.get("codelist", None)
+                    if input_dict.get("codelist")
                     else None
                 ),
                 term_uids=input_dict["term_uids"],
@@ -379,8 +379,6 @@ class ItemRepository(OdmGenericRepository[OdmItemAR]):
                 minor_version=int(minor),
             ),
         )
-
-        return odm_item_ar
 
     def _get_specific_field_mapping(self) -> dict[str, str]:
         """Item specific field mappings - simple fields only."""
@@ -478,13 +476,8 @@ class ItemRepository(OdmGenericRepository[OdmItemAR]):
             ] AS vendor_element_attributes""",
         }
 
-    def specific_alias_clause(self, **kwargs) -> str:
-        return dedent(
-            "WITH *,"
-            + ", ".join(self._get_specific_field_mapping().values())
-            + ","
-            + ", ".join(self._get_computed_field_expressions().values())
-            + f"""
+    def _activity_instances_subquery(self) -> str:
+        return f"""
             CALL (*) {{
                 MATCH (odm_value)-[ltai:LINKS_TO_ACTIVITY_ITEM]->(ai:ActivityItem)
                 MATCH (ai)<-[:HAS_ACTIVITY_ITEM]-(aicr:ActivityItemClassRoot)-[:LATEST]->(aicv:ActivityItemClassValue)
@@ -544,6 +537,19 @@ class ItemRepository(OdmGenericRepository[OdmItemAR]):
                     dataset_variables: dataset_variables
                 }}) AS activity_instances
             }}
+            """
+
+    def _get_subquery_field_clauses(self) -> dict[str, str]:
+        return {"activity_instances": self._activity_instances_subquery()}
+
+    def specific_alias_clause(self, **kwargs) -> str:
+        return dedent(
+            "WITH *,"
+            + ", ".join(self._get_specific_field_mapping().values())
+            + ","
+            + ", ".join(self._get_computed_field_expressions().values())
+            + f"""
+            {self._activity_instances_subquery()}
 
             """
             + """
@@ -833,10 +839,32 @@ class ItemRepository(OdmGenericRepository[OdmItemAR]):
         rels = [rel for rel in all_rels if rel.status == status.value]
         if len(rels) == 0:
             raise RuntimeError(f"No HAS_VERSION was found with status {status}")
-        latest = max(rels, key=lambda r: version_string_to_tuple(r.version))
-        return latest
+        return max(rels, key=lambda r: version_string_to_tuple(r.version))
 
-    def find_term_with_item_relation_by_item_uid(self, uid: str, term_uid: str):
+    def _get_item_value_for_version(self, item_root, version: str | None):
+        """The item value of the given version, or the latest one if no version is given.
+
+        A draft edited in place leaves several value nodes under one version, so the
+        value is picked through its open HAS_VERSION, or else the most recently closed one.
+        """
+        if version is None:
+            return item_root.has_latest_value.single()
+
+        candidates = [
+            (rel.end_date is None, rel.end_date or rel.start_date, value)
+            for value in item_root.has_version.match(version=version)
+            for rel in item_root.has_version.all_relationships(value)
+            if rel.version == version
+        ]
+        if not candidates:
+            raise NotFoundException(
+                msg=f"ODM Item with UID '{item_root.uid}' has no version '{version}'."
+            )
+        return max(candidates, key=lambda candidate: candidate[:2])[2]
+
+    def find_term_with_item_relation_by_item_uid(
+        self, uid: str, term_uid: str, version: str | None = None
+    ):
         def _get_relationship():
             if ct_term_attributes_value_draft:
                 rel_data = self._get_latest_version_for_status(
@@ -861,7 +889,7 @@ class ItemRepository(OdmGenericRepository[OdmItemAR]):
             )
 
         item_root = self.root_class.nodes.get_or_none(uid=uid)
-        item_value = item_root.has_latest_value.single()
+        item_value = self._get_item_value_for_version(item_root, version)
 
         ct_term_root = CTTermRoot.nodes.get_or_none(uid=term_uid)
         ct_term_name_root = ct_term_root.has_name_root.get_or_none()
@@ -916,15 +944,15 @@ class ItemRepository(OdmGenericRepository[OdmItemAR]):
         return None
 
     def find_unit_definition_with_item_relation_by_item_uid(
-        self, uid: str, unit_definition_uid: str
+        self, uid: str, unit_definition_uid: str, version: str | None = None
     ):
         item_root = self.root_class.nodes.get_or_none(uid=uid)
         if not item_root:
             raise ValueError(f"ODM Item with UID '{uid}' not found.")
 
-        item_value = item_root.has_latest_value.get_or_none()
+        item_value = self._get_item_value_for_version(item_root, version)
         if not item_value:
-            raise ValueError(f"Latest value for ODM Item '{uid}' not found.")
+            raise ValueError(f"Value for ODM Item '{uid}' not found.")
 
         unit_definition_root = UnitDefinitionRoot.nodes.get_or_none(
             uid=unit_definition_uid

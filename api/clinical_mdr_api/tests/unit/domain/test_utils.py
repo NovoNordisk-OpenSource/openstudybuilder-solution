@@ -93,6 +93,10 @@ class TestServiceUtils(unittest.TestCase):
                 "<title>This is a title with a [parameter]</title>",
                 "This is a title with a parameter",
             ),
+            (
+                "<p>[parameter] and &#91;literal&#93;</p>",
+                "parameter and [literal]",
+            ),
         ]
     )
     def test_convert_to_plain(self, text, expected):
@@ -100,33 +104,35 @@ class TestServiceUtils(unittest.TestCase):
 
     @parameterized.expand(
         [
-            ("text only", []),
-            ("text with [x]", ["x"]),
-            ("text with [x] and [y]", ["x", "y"]),
+            ("text only", "text only"),
+            ("see [note]", "see &#91;note&#93;"),
+            ("x ] y [", "x &#93; y &#91;"),
         ]
     )
-    def test_extract_parameters(self, name, expected):
-        assert utils.extract_parameters(name) == expected
+    def test_escape_literal_brackets(self, text, expected):
+        assert utils.escape_literal_brackets(text) == expected
 
     @parameterized.expand(
         [
-            ("", False),
-            (" ", False),
-            ("x [", False),
-            ("x ]", False),
-            ("x []", False),
-            ("x ] y [", False),
-            ("x [y[a]]", False),
-            ("x", True),
-            ("x [y]", True),
-            ("x ()", True),
+            ("text only", []),
+            ("text with [x]", ["x"]),
+            ("text with [x] and [y]", ["x", "y"]),
+            ("text with [x] and [x]", ["x", "x"]),
+            ("text with [x] and [literal]", ["x"]),
+            ("[literal [x] text]", ["x"]),
+            ("unbalanced [x ] y [ [y]", ["y"]),
+            ("empty [] and [y]", ["y"]),
+            ("html [<b>x</b>]", []),
         ]
     )
-    def test_is_syntax_of_template_name_correct(self, name, expected):
-        assert _utils.is_syntax_of_template_name_correct(name) == expected
+    def test_extract_parameters(self, name, expected):
+        assert utils.extract_parameters(name, {"x", "y"}.__contains__) == expected
 
-    def test_is_syntax_of_template_name_correct_raises_exception(self):
-        self.assertRaises(TypeError, _utils.is_syntax_of_template_name_correct, 1)
+    def test_find_parameters(self):
+        matches = utils.find_parameters("a [x] b [literal] c", {"x"}.__contains__)
+        assert [(match.start(), match.end(), match.group(1)) for match in matches] == [
+            (2, 5, "x")
+        ]
 
     @parameterized.expand(
         [

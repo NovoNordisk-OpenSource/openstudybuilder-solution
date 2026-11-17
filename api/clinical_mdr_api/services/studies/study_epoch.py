@@ -144,11 +144,7 @@ class StudyEpochService(StudySelectionMixin):
             epoch_type_name=epoch.epoch_type.sponsor_preferred_name,
             uid=epoch.uid,
             study_uid=epoch.study_uid,
-            study_version=(
-                study_value_version
-                if study_value_version
-                else get_latest_on_datetime_str()
-            ),
+            study_version=study_value_version or get_latest_on_datetime_str(),
             order=epoch.order,
             description=epoch.description,
             start_rule=epoch.start_rule,
@@ -300,7 +296,7 @@ class StudyEpochService(StudySelectionMixin):
             for epoch in study_epochs
         ]
 
-        filtered_items = service_level_generic_filtering(
+        return service_level_generic_filtering(
             items=all_items,
             filter_by=filter_by,
             filter_operator=filter_operator,
@@ -309,8 +305,6 @@ class StudyEpochService(StudySelectionMixin):
             page_number=page_number,
             page_size=page_size,
         )
-
-        return filtered_items
 
     @classmethod
     @db.transaction
@@ -577,13 +571,11 @@ class StudyEpochService(StudySelectionMixin):
             if after_create
             else amount_of_epochs_in_subtype
         )
-        epoch = self._get_or_create_epoch_in_specific_subtype(
+        return self._get_or_create_epoch_in_specific_subtype(
             epoch_order=amount_of_epochs_in_subtype,
             subtype=subtype,
             amount_of_epochs_in_subtype=amount_of_epochs_in_subtype,
         )
-
-        return epoch
 
     def _get_epoch_type_object(self, subtype: str):
         """
@@ -676,7 +668,7 @@ class StudyEpochService(StudySelectionMixin):
                 epoch = self.study_epoch_epochs_by_uid[study_epoch_edit_input.epoch]
             else:
                 epoch = self._get_epoch_object(
-                    epochs_in_subtype=epochs_in_subtype, subtype=subtype  # type: ignore[arg-type]
+                    epochs_in_subtype=epochs_in_subtype, subtype=subtype
                 )
             # if epoch subtype was modified we have to synchronize the old epoch subtype group
             self._synchronize_epoch_orders(
@@ -696,9 +688,9 @@ class StudyEpochService(StudySelectionMixin):
             start_rule=study_epoch_edit_input.start_rule,
             end_rule=study_epoch_edit_input.end_rule,
             description=study_epoch_edit_input.description,
-            epoch=epoch if epoch else study_epoch_to_edit.epoch,
-            subtype=subtype if subtype else study_epoch_to_edit.subtype,
-            epoch_type=epoch_type if epoch_type else study_epoch_to_edit.epoch_type,
+            epoch=epoch or study_epoch_to_edit.epoch,
+            subtype=subtype or study_epoch_to_edit.subtype,
+            epoch_type=epoch_type or study_epoch_to_edit.epoch_type,
             order=study_epoch_edit_input.order,  # type: ignore[arg-type]
             change_description=study_epoch_edit_input.change_description,
             color_hash=study_epoch_edit_input.color_hash,
@@ -1246,10 +1238,10 @@ class StudyEpochService(StudySelectionMixin):
                         index += 1
                 else:
                     raise exceptions.MethodNotAllowedException(method=operation.method)
-        except MDRApiBaseException as error:
+        except MDRApiBaseException:  # noqa: TRY203
             # Abort the batch: outer API layer maps MDRApiBaseException to the error status.
             # Successful items already applied in this transaction are rolled back with it.
-            raise error
+            raise
 
         affected_existing = self._collect_affected_existing_after_creates(
             before=before_snapshot, study_uid=study_uid
@@ -1309,8 +1301,7 @@ class StudyEpochService(StudySelectionMixin):
                 ).model_dump()
             )
 
-        data = calculate_diffs(selection_history, StudyEpochVersion)
-        return data
+        return calculate_diffs(selection_history, StudyEpochVersion)
 
     @trace_calls
     @db.transaction
@@ -1374,7 +1365,7 @@ class StudyEpochService(StudySelectionMixin):
             study_uid=study_uid, study_value_version=study_value_version
         )
 
-        header_values = service_level_generic_header_filtering(
+        return service_level_generic_header_filtering(
             items=all_items.items,
             field_name=field_name,
             search_string=search_string,
@@ -1382,5 +1373,3 @@ class StudyEpochService(StudySelectionMixin):
             filter_operator=filter_operator,
             page_size=page_size,
         )
-
-        return header_values

@@ -9,26 +9,6 @@ from src.scripts.repositories.mapping import (
     map_scenarios,
 )
 
-def create_indexes_if_not_existent(tx):
-    for querystring in [
-        "CREATE INDEX index_codelist_concept_id IF NOT EXISTS FOR (n:Codelist) ON (n.concept_id)",
-        "CREATE INDEX index_term_concept_id IF NOT EXISTS FOR (n:Term) ON (n.concept_id)",
-        "CREATE INDEX index_variable IF NOT EXISTS FOR (n:DataModelVariable) ON (n.href)",
-        "CREATE CONSTRAINT constraint_import_effective_date IF NOT EXISTS FOR (n:Import) REQUIRE (n.effective_date) IS NODE KEY",
-        "CREATE CONSTRAINT data_model_import_node_key IF NOT EXISTS FOR (n:DataModelImport) REQUIRE (n.catalogue, n.version_number) IS NODE KEY",
-        "CREATE CONSTRAINT data_model_class_node_key IF NOT EXISTS FOR (n:DataModelClass) REQUIRE (n.catalogue, n.version_number, n.name) IS NODE KEY",
-        "CREATE CONSTRAINT data_model_scenario_node_key IF NOT EXISTS FOR (n:DataModelScenario) REQUIRE (n.href) IS NODE KEY",
-        "CREATE CONSTRAINT constraint_package_uid IF NOT EXISTS FOR (n:Package) REQUIRE (n.name) IS NODE KEY",
-        "CREATE CONSTRAINT contraint_version_name IF NOT EXISTS FOR (n:Version) REQUIRE (n.name) IS NODE KEY",
-        "CREATE CONSTRAINT constraint_codelist_uid IF NOT EXISTS FOR (n:Codelist) REQUIRE (n.effective_date, n.concept_id) IS NODE KEY",
-        "CREATE CONSTRAINT constraint_term_uid IF NOT EXISTS FOR (n:Term) REQUIRE (n.effective_date, n.concept_id, n.code_submission_value) IS NODE KEY",
-    ]:
-        tx.run(querystring)
-
-
-def await_indexes(tx):
-    tx.run("CALL db.awaitIndexes(5000)")
-
 
 def create_data_model_import_node(tx, dm_import: DataModelImport):
     """
@@ -43,7 +23,7 @@ def create_data_model_import_node(tx, dm_import: DataModelImport):
 
     result = tx.run(
         """
-        CREATE (import:DataModelImport{
+        CREATE (import:DataModelImport:CDISCStaging{
             library: $library,
             catalogue: $catalogue,
             version_number: $version_number,
@@ -153,7 +133,7 @@ def _create_version(tx, catalogue, version_number, version_data):
         """
         MATCH (import:DataModelImport{catalogue: $catalogue, version_number: $version_number})
         WITH import, $version AS v
-        CREATE (version:Version{
+        CREATE (version:DataModelStagingVersion:CDISCStaging{
             name: v.name
         })
         SET
@@ -177,7 +157,7 @@ def _create_classes(tx, catalogue, version_number, classes_data):
     tx.run(
         """
         UNWIND $classes AS c
-            CREATE (class:DataModelClass{
+            CREATE (class:DataModelClass:CDISCStaging{
                 catalogue: $catalogue,
                 version_number: $version_number,
                 name: c.name
@@ -202,7 +182,7 @@ def _create_scenarios(tx, catalogue, version_number, scenarios_data):
     tx.run(
         """
         UNWIND $scenarios AS s
-            CREATE (scenario:DataModelScenario{
+            CREATE (scenario:DataModelScenario:CDISCStaging{
                 catalogue: $catalogue,
                 version_number: $version_number,
                 title: s.title
@@ -214,7 +194,7 @@ def _create_scenarios(tx, catalogue, version_number, scenarios_data):
 
             WITH s, scenario
             MATCH (dataset:DataModelClass{href: s.dataset_href})
-            CREATE (dataset)-[:CONTAINS]->(scenario)
+            CREATE (dataset)-[:DM_CONTAINS]->(scenario)
         """,
         catalogue=catalogue,
         version_number=version_number,
@@ -226,7 +206,7 @@ def _create_variables(tx, catalogue, version_number, variables_data):
     tx.run(
         """
         UNWIND $variables AS v
-            CREATE (variable:DataModelVariable{href: v.href})
+            CREATE (variable:DataModelVariable:CDISCStaging{href: v.href})
             SET
                 variable.catalogue = $catalogue,
                 variable.version_number = $version_number,
@@ -268,14 +248,14 @@ def _create_version_contains_class(tx, catalogue, version_number, version_data):
     tx.run(
         """
         WITH $version AS v
-        MATCH (version:Version{name: v.name})
+        MATCH (version:DataModelStagingVersion{name: v.name})
         UNWIND v.classes AS c
             MATCH (class:DataModelClass{
                 catalogue: $catalogue,
                 version_number: $version_number,
                 name: c.name
             })
-            CREATE (version)-[contains:CONTAINS]->(class)
+            CREATE (version)-[contains:DM_CONTAINS]->(class)
         """,
         catalogue=catalogue,
         version_number=version_number,
@@ -290,7 +270,7 @@ def _create_class_contains_variable(tx, catalogue, version_number, classes_data)
             MATCH (class:DataModelClass{name: c.name, catalogue: $catalogue, version_number: $version_number})
             UNWIND c.variables AS v
                 MATCH (variable:DataModelVariable{href: v.href})
-                CREATE (class)-[contains:CONTAINS]->(variable)
+                CREATE (class)-[contains:DM_CONTAINS]->(variable)
         """,
         catalogue=catalogue,
         version_number=version_number,
@@ -305,10 +285,9 @@ def _create_scenario_contains_variable(tx, catalogue, version_number, scenarios_
             MATCH (scenario:DataModelScenario{href: s.href})
             UNWIND s.variables AS v
                 MATCH (variable:DataModelVariable{href: v.href})
-                CREATE (scenario)-[contains:CONTAINS]->(variable)
+                CREATE (scenario)-[contains:DM_CONTAINS]->(variable)
         """,
         catalogue=catalogue,
         version_number=version_number,
         scenarios=scenarios_data,
     )
-

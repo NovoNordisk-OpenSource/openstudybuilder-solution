@@ -79,6 +79,7 @@ class ObjectivePreInstance(BaseModel):
         cls, objective_pre_instance_ar: ObjectivePreInstanceAR
     ) -> Self:
         parameter_terms: list[MultiTemplateParameterTerm] = []
+        parameter_names = objective_pre_instance_ar.get_parameter_names()
         for position, parameter in enumerate(
             objective_pre_instance_ar.get_parameters()
         ):
@@ -95,7 +96,10 @@ class ObjectivePreInstance(BaseModel):
 
             parameter_terms.append(
                 MultiTemplateParameterTerm(
-                    conjunction=conjunction, position=position + 1, terms=terms
+                    conjunction=conjunction,
+                    position=position + 1,
+                    parameter_name=parameter_names[position],
+                    terms=terms,
                 )
             )
         return cls(

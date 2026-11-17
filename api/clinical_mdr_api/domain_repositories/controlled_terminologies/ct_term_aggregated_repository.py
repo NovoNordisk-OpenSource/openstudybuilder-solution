@@ -121,7 +121,7 @@ class CTTermAggregatedRepository:
             has_term_where = ""
         else:
             has_term_where = "WHERE rel_term.end_date IS NULL"
-        query = f"""
+        return f"""
             DISTINCT term_root, term_attributes_root, term_attributes_value, term_name_root, term_name_value
             ORDER BY term_name_value.name
             WITH DISTINCT term_root, term_attributes_root, term_attributes_value, term_name_root, term_name_value, 
@@ -175,14 +175,13 @@ class CTTermAggregatedRepository:
             }}
             {self.generic_final_alias_clause}
         """
-        return query
 
     def sponsor_alias_clause(self, package: str | None = None) -> str:
         if package is not None:
             has_term_where = ""
         else:
             has_term_where = "WHERE rel_term.end_date IS NULL"
-        query = f"""
+        return f"""
             DISTINCT term_root, term_attributes_root, term_attributes_value, term_name_root, term_name_value, attr_v_rel, name_v_rel
             ORDER BY term_name_value.name
             WITH DISTINCT term_root, term_attributes_root, term_attributes_value, term_name_root, term_name_value,
@@ -216,7 +215,6 @@ class CTTermAggregatedRepository:
             MATCH (codelist_root)<-[:CONTAINS_CODELIST]-(codelist_library:Library)
             {self.generic_final_alias_clause}
         """
-        return query
 
     def _create_term_aggregate_instances_from_cypher_result(
         self, term_dict: dict[str, Any]
@@ -331,9 +329,7 @@ class CTTermAggregatedRepository:
 
         terms_ars = []
         for term in result_array:
-            term_dictionary = {}
-            for term_property, attribute_name in zip(term, attributes_names):
-                term_dictionary[attribute_name] = term_property
+            term_dictionary = dict(zip(attributes_names, term))
             terms_ars.append(
                 self._create_term_aggregate_instances_from_cypher_result(
                     term_dictionary
@@ -480,7 +476,7 @@ class CTTermAggregatedRepository:
 
         # Specific match clauses for each field, so that only necessary data is fetched
 
-        if field_name in ["term_uid"]:
+        if field_name == "term_uid":
             match_clause += """
                 WITH DISTINCT term_root.uid AS term_uid
             """
@@ -524,6 +520,7 @@ class CTTermAggregatedRepository:
             "attributes.concept_id",
             "attributes.definition",
             "attributes.synonyms",
+            "attributes.algorithm",
             "attributes.nci_preferred_name",  # Alias of `preferred_term`
         ]:
             prefix = field_name.split(".", maxsplit=1)[0]
@@ -876,9 +873,7 @@ class CTTermAggregatedRepository:
     ) -> list[CTTermCodelist]:
         codelists = []
         for cl in result_array:
-            cl_dictionary = {}
-            for prop, name in zip(cl, attributes_names):
-                cl_dictionary[name] = prop
+            cl_dictionary = dict(zip(attributes_names, cl))
             codelists.append(
                 CTTermCodelist(
                     codelist_uid=cl_dictionary["codelist_uid"],

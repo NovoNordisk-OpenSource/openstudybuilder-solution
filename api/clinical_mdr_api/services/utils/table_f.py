@@ -1,7 +1,7 @@
 import os
 from collections import defaultdict
 from collections.abc import Iterable, Mapping
-from typing import Annotated, Any
+from typing import Annotated, Any, cast
 
 import yattag
 from docx.enum.text import WD_ALIGN_PARAGRAPH
@@ -13,6 +13,7 @@ from openpyxl.worksheet.table import Table, TableStyleInfo
 from openpyxl.worksheet.worksheet import Worksheet
 from pydantic import BaseModel, ConfigDict, Field
 
+from clinical_mdr_api.domains.study_selections.study_selection_base import SoAItemType
 from clinical_mdr_api.services.utils.docx_builder import DocxBuilder
 from common.telemetry import trace_calls
 
@@ -137,6 +138,13 @@ class TableCell(BaseModel):
     vertical: Annotated[
         bool | None,
         Field(description="Text text direction", json_schema_extra={"nullable": True}),
+    ] = None
+    propagated: Annotated[
+        bool | None,
+        Field(
+            description="References of the cell were propagated from hidden rows",
+            json_schema_extra={"nullable": True},
+        ),
     ] = None
 
     def __init__(self, text=None, **kwargs):
@@ -272,7 +280,9 @@ def tables_to_docx(
                     x_para.text = t_cell.text
 
                 # resolve style name and apply to paragraph
-                style_name = styles.get(t_cell.style, [None])[0] if styles else None  # type: ignore[arg-type]
+                style_name = (
+                    styles.get(t_cell.style or "", [None])[0] if styles else None
+                )
                 if style_name:
                     x_para.style = style_name
 
@@ -384,17 +394,19 @@ def tables_to_html(
                 doc.asis("<br/>")
             text(txt)
 
-        add_footnote_symbols(cell.footnotes)
+        add_footnote_symbols(
+            cell.footnotes,
+            **_footnote_symbols_to_attrs(cell.footnotes, table.footnotes, include_uids),
+        )
 
-    def add_footnote_symbols(symbols):
+    def add_footnote_symbols(symbols, **attrs):
         if not symbols:
             return
-        with tag("sup"):
-            with tag("b"):
-                for i, symbol in enumerate(symbols):
-                    if i:
-                        doc.asis("&nbsp;")
-                    text(symbol)
+        with tag("sup", **attrs), tag("b"):
+            for i, symbol in enumerate(symbols):
+                if i:
+                    doc.asis("&nbsp;")
+                text(symbol)
 
     doc, tag, text, line = yattag.Doc().ttl()
     doc.asis("<!DOCTYPE html>")
@@ -413,7 +425,11 @@ def tables_to_html(
 
                 if table.footnotes:
                     for symbol, footnote in table.footnotes.items():
-                        with tag("p", klass="footnote"):
+                        with tag(
+                            "p",
+                            klass="footnote",
+                            **_footnote_to_attrs(footnote, include_uids),
+                        ):
                             add_footnote_symbols([symbol])
                             text(footnote.text_plain)
 
@@ -431,12 +447,55 @@ def _cell_to_attrs(cell, include_uids: bool = False):
 
     if include_uids and cell.refs:
         # add data attributes for each reference in the cell
-        for i, ref in enumerate(cell.refs):
-            prefix = "object"
-            suffix = f"-{i}" if len(cell.refs) > 1 else ""
-            if ref.type:
-                attrs[f"{prefix}-type{suffix}"] = ref.type
-            attrs[f"{prefix}-uid{suffix}"] = ref.uid
+        attrs.update(_object_attrs((ref.type, ref.uid) for ref in cell.refs))
+
+        # footnotes of propagated cells are distinguished from those of the referenced items' own cells
+        if cell.propagated:
+            attrs["object-propagated"] = "true"
+
+    return attrs
+
+
+def _footnote_to_attrs(
+    footnote: SimpleFootnote, include_uids: bool = False
+) -> dict[str, str]:
+    """Renders the reference to the StudySoAFootnote of a footnote text as data attributes"""
+    if not include_uids:
+        return {}
+
+    return _object_attrs([(SoAItemType.STUDY_SOA_FOOTNOTE.value, footnote.uid)])
+
+
+def _footnote_symbols_to_attrs(
+    symbols: Iterable[str] | None,
+    footnotes: Mapping[str, SimpleFootnote] | None,
+    include_uids: bool = False,
+) -> dict[str, str]:
+    """Renders references to the StudySoAFootnotes the symbols stand for as data attributes
+
+    Symbols are looked up in the footnotes mapping of the table the cell belongs to,
+    symbols without a matching footnote are skipped.
+    """
+    if not (include_uids and symbols and footnotes):
+        return {}
+
+    return _object_attrs(
+        (SoAItemType.STUDY_SOA_FOOTNOTE.value, footnotes[symbol].uid)
+        for symbol in symbols
+        if symbol in footnotes
+    )
+
+
+def _object_attrs(refs: Iterable[tuple[str | None, str]]) -> dict[str, str]:
+    """Renders referenced item types and uids as data attributes, numbered when multiple"""
+    attrs: dict[str, str] = {}
+    refs = list(refs)
+
+    for i, (type_, uid) in enumerate(refs):
+        suffix = f"-{i}" if len(refs) > 1 else ""
+        if type_:
+            attrs[f"object-type{suffix}"] = type_
+        attrs[f"object-uid{suffix}"] = uid
 
     return attrs
 
@@ -455,7 +514,7 @@ def table_to_xlsx(
     else:
         workbook = Workbook()
 
-    worksheet: Worksheet = workbook.active
+    worksheet = cast(Worksheet, workbook.active)
 
     if table.title:
         worksheet.title = table.title
@@ -493,8 +552,8 @@ def table_to_xlsx(
             if style_name not in workbook.named_styles:
                 workbook.add_named_style(NamedStyle(style_name))
 
-        for r, row in enumerate(worksheet.iter_rows()):
-            for c, rowcell in enumerate(row):
+        for r, sheet_row in enumerate(worksheet.iter_rows()):
+            for c, rowcell in enumerate(sheet_row):
                 if (
                     c < len(visible_rows[r].cells)
                     and visible_rows[r].cells[c].style in styles

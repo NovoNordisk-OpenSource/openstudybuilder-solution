@@ -37,7 +37,7 @@ class NumericValueVO(SimpleConceptVO):
         is_template_parameter: bool,
     ) -> Self:
         value = cls.derive_value_property(value=value)
-        simple_concept_vo = cls(
+        return cls(
             name=name,
             value=value,
             name_sentence_case=name_sentence_case,
@@ -45,8 +45,6 @@ class NumericValueVO(SimpleConceptVO):
             abbreviation=abbreviation,
             is_template_parameter=is_template_parameter,
         )
-
-        return simple_concept_vo
 
     @classmethod
     def from_input_values(
@@ -57,7 +55,7 @@ class NumericValueVO(SimpleConceptVO):
         is_template_parameter: bool,
     ) -> Self:
         value = cls.derive_value_property(value=value)
-        simple_concept_vo = cls(
+        return cls(
             name=str(value),
             value=value,
             name_sentence_case=str(value).lower(),
@@ -65,8 +63,6 @@ class NumericValueVO(SimpleConceptVO):
             abbreviation=abbreviation,
             is_template_parameter=is_template_parameter,
         )
-
-        return simple_concept_vo
 
 
 class NumericValueAR(SimpleConceptAR):

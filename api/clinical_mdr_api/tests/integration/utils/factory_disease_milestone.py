@@ -94,7 +94,6 @@ def create_study_disease_milestone(disease_milestone_type):
         disease_milestone_type=disease_milestone_type,
         repetition_indicator=True,
     )
-    item = StudyDiseaseMilestoneService().create(
+    return StudyDiseaseMilestoneService().create(
         "study_root", study_disease_milestone_input=study_disease_milestone_create_input
     )
-    return item

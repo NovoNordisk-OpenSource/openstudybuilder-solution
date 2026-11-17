@@ -110,7 +110,7 @@ def generate_study_intervention_json_model() -> StudyInterventionJsonModel:
         intervention_type_null_value_code=None,
         add_on_to_existing_treatments=False,
         add_on_to_existing_treatments_null_value_code=None,
-        control_type_code=None,
+        control_type_codes=[],
         control_type_null_value_code=None,
         intervention_model_code=None,
         intervention_model_null_value_code=None,
@@ -223,6 +223,8 @@ def high_level_study_design_json_model_to_vo(
         trial_phase_code=json_model.trial_phase_code,  # type: ignore[arg-type]
         trial_phase_null_value_code=json_model.trial_phase_null_value_code,  # type: ignore[arg-type]
         development_stage_code=json_model.development_stage_code,  # type: ignore[arg-type]
+        age_at_baseline_rule_code=json_model.age_at_baseline_rule_code,  # type: ignore[arg-type]
+        age_group_rule_code=json_model.age_group_rule_code,  # type: ignore[arg-type]
         is_extension_trial=json_model.is_extension_trial,
         is_extension_trial_null_value_code=json_model.is_extension_trial_null_value_code,  # type: ignore[arg-type]
         is_adaptive_design=json_model.is_adaptive_design,
@@ -283,7 +285,7 @@ def study_intervention_json_model_to_vo(
         intervention_type_null_value_code=json_model.intervention_type_null_value_code,  # type: ignore[arg-type]
         add_on_to_existing_treatments=json_model.add_on_to_existing_treatments,
         add_on_to_existing_treatments_null_value_code=json_model.add_on_to_existing_treatments_null_value_code,  # type: ignore[arg-type]
-        control_type_code=json_model.control_type_code,  # type: ignore[arg-type]
+        control_type_codes=json_model.control_type_codes,  # type: ignore[arg-type]
         control_type_null_value_code=json_model.control_type_null_value_code,  # type: ignore[arg-type]
         intervention_model_code=json_model.intervention_model_code,  # type: ignore[arg-type]
         intervention_model_null_value_code=json_model.intervention_model_null_value_code,  # type: ignore[arg-type]

@@ -6,5 +6,6 @@ docs/.vitepress/cache
 .DS_Store
 .playwright-mcp/
 neodash-docs/
+osb-app-docs/
 __pycache__/
 *.pyc

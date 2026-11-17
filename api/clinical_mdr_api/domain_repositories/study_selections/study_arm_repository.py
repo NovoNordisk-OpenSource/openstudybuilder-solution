@@ -453,7 +453,7 @@ class StudySelectionArmRepository:
         db_property: str, value: str, arm_vo: StudySelectionArmVO
     ) -> StudyArm | None:
         kwarg_value = getattr(arm_vo, value)
-        arm_node = (
+        return (
             StudyArm.nodes.has(study_value=True)
             .filter(
                 uid__ne=arm_vo.study_selection_uid,
@@ -461,7 +461,6 @@ class StudySelectionArmRepository:
             )
             .get_or_none(**{db_property: kwarg_value})
         )
-        return arm_node
 
     @staticmethod
     def _add_new_selection(

@@ -29,4 +29,4 @@ def test_unparsable_body_uses_documented_error_response(api_client):
     )
 
     assert_response_status_code(response, 400)
-    assert ERROR_RESPONSE_REQUIRED_FIELDS <= set(response.json())
+    assert set(response.json()) >= ERROR_RESPONSE_REQUIRED_FIELDS

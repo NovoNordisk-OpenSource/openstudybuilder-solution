@@ -384,8 +384,8 @@ def test_get_footnote_templates(
     assert list(res.keys()) == ["items", "total", "page", "size"]
     assert len(res["items"]) == expected_result_len
     assert res["total"] == (len(footnote_templates) if total_count else 0)
-    assert res["page"] == (page_number if page_number else 1)
-    assert res["size"] == (page_size if page_size else 10)
+    assert res["page"] == (page_number or 1)
+    assert res["size"] == (page_size or 10)
 
     for item in res["items"]:
         assert set(list(item.keys())) == set(FOOTNOTE_TEMPLATE_FIELDS_ALL)
@@ -635,13 +635,6 @@ def test_headers(api_client, field_name):
         assert len(res) == 0
 
 
-def test_pre_validate_footnote_template_name(api_client):
-    data = {"name": "test [TextValue]"}
-    response = api_client.post(f"{URL}/pre-validate", json=data)
-    log.info("Pre Validated Footnote Template name: %s", data)
-    assert_response_status_code(response, 204)
-
-
 def test_create_footnote_template(api_client):
     data = {
         "name": "default_name [TextValue]",
@@ -705,7 +698,7 @@ def test_create_footnote_template(api_client):
 
 def test_create_new_version_of_footnote_template(api_client):
     data = {
-        "name": "new test name",
+        "name": "new test name with [TextValue]",
         "change_description": "new version",
     }
     response = api_client.post(f"{URL}/{footnote_templates[4].uid}/versions", json=data)
@@ -715,7 +708,7 @@ def test_create_new_version_of_footnote_template(api_client):
     assert_response_status_code(response, 201)
     assert res["uid"]
     assert res["sequence_id"]
-    assert res["name"] == "new test name"
+    assert res["name"] == "new test name with [TextValue]"
     assert res["type"]["term_uid"] == ct_term_schedule_of_activities.term_uid
     assert (
         res["type"]["name"]["sponsor_preferred_name"]
@@ -1424,36 +1417,3 @@ def test_cannot_change_parameter_numbers_of_footnote_template_after_approval(
         res["message"]
         == "You cannot change number or order of template parameters for a previously approved template."
     )
-
-
-def test_pre_validate_invalid_footnote_template_name(api_client):
-    data = {"name": "Missing opening bracket ]"}
-    response = api_client.post(f"{URL}/pre-validate", json=data)
-    res = response.json()
-    log.info("Pre Validated Footnote Template name: %s", res)
-
-    assert_response_status_code(response, 400)
-    assert res["message"] == f"Template string syntax incorrect: {data['name']}"
-
-    data = {"name": "Lacking closing bracket ["}
-    response = api_client.post(f"{URL}/pre-validate", json=data)
-    res = response.json()
-    log.info("Pre Validated Footnote Template name: %s", res)
-
-    assert_response_status_code(response, 400)
-    assert res["message"] == f"Template string syntax incorrect: {data['name']}"
-
-    data = {"name": " "}
-    response = api_client.post(f"{URL}/pre-validate", json=data)
-    res = response.json()
-    log.info("Pre Validated Footnote Template name: %s", res)
-
-    assert_response_status_code(response, 400)
-    assert res["details"] == [
-        {
-            "error_code": "string_too_short",
-            "field": ["body", "name"],
-            "msg": "String should have at least 1 character",
-            "ctx": {"min_length": 1},
-        }
-    ]

@@ -78,6 +78,7 @@ class ActivityInstructionPreInstance(BaseModel):
         cls, activity_instruction_pre_instance_ar: ActivityInstructionPreInstanceAR
     ) -> Self:
         parameter_terms: list[MultiTemplateParameterTerm] = []
+        parameter_names = activity_instruction_pre_instance_ar.get_parameter_names()
         for position, parameter in enumerate(
             activity_instruction_pre_instance_ar.get_parameters()
         ):
@@ -94,7 +95,10 @@ class ActivityInstructionPreInstance(BaseModel):
 
             parameter_terms.append(
                 MultiTemplateParameterTerm(
-                    conjunction=conjunction, position=position + 1, terms=terms
+                    conjunction=conjunction,
+                    position=position + 1,
+                    parameter_name=parameter_names[position],
+                    terms=terms,
                 )
             )
         return cls(

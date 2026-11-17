@@ -103,7 +103,7 @@ _DEF_INITIAL_STUDY_INTERVENTION = StudyInterventionVO(
     intervention_type_null_value_code=None,
     add_on_to_existing_treatments=None,
     add_on_to_existing_treatments_null_value_code=None,
-    control_type_code=None,
+    control_type_codes=[],
     control_type_null_value_code=None,
     intervention_model_code=None,
     intervention_model_null_value_code=None,
@@ -231,10 +231,6 @@ class StudyDefinitionAR:
         control_type_exists_callback: Callable[[str], bool] = lambda _: True,
         intervention_model_exists_callback: Callable[[str], bool] = lambda _: True,
         trial_blinding_schema_exists_callback: Callable[[str], bool] = lambda _: True,
-        study_title_exists_callback: Callable[[str, str], bool] = lambda x, y: True,
-        study_short_title_exists_callback: Callable[
-            [str, str], bool
-        ] = lambda x, y: True,
         author_id: str,
         is_subpart: bool = False,
         previous_is_subpart: bool = False,
@@ -271,6 +267,8 @@ class StudyDefinitionAR:
                     study_acronym=new_id_metadata.study_acronym,
                     study_subpart_acronym=new_id_metadata.study_subpart_acronym,
                     description=new_id_metadata.description,
+                    migrated_study_indicator=new_id_metadata.migrated_study_indicator,
+                    migrated_study_comment=new_id_metadata.migrated_study_comment,
                     registry_identifiers=RegistryIdentifiersVO(
                         ct_gov_id=new_id_metadata.registry_identifiers.ct_gov_id,
                         ct_gov_id_null_value_code=new_id_metadata.registry_identifiers.ct_gov_id_null_value_code,
@@ -328,6 +326,8 @@ class StudyDefinitionAR:
                     study_acronym=new_id_metadata.study_acronym,
                     study_subpart_acronym=new_id_metadata.study_subpart_acronym,
                     description=new_id_metadata.description,
+                    migrated_study_indicator=new_id_metadata.migrated_study_indicator,
+                    migrated_study_comment=new_id_metadata.migrated_study_comment,
                     registry_identifiers=RegistryIdentifiersVO(
                         ct_gov_id=new_id_metadata.registry_identifiers.ct_gov_id,
                         ct_gov_id_null_value_code=new_id_metadata.registry_identifiers.ct_gov_id_null_value_code,
@@ -465,12 +465,6 @@ class StudyDefinitionAR:
             new_study_description is not None
             and new_study_description != self.current_metadata.study_description
         ):
-            new_study_description.validate(
-                study_title_exists_callback=study_title_exists_callback,
-                study_short_title_exists_callback=study_short_title_exists_callback,
-                study_number=self.current_metadata.id_metadata.study_number,
-            )
-
             self._draft_metadata = StudyMetadataVO(
                 ver_metadata=new_ver_metadata,
                 id_metadata=self.current_metadata.id_metadata,
@@ -739,7 +733,7 @@ class StudyDefinitionAR:
         """Return a copy of *metadata* with study_status set on ver_metadata."""
         ver = metadata.ver_metadata
         if ver is not None:
-            new_ver = replace(ver, study_status=status)  # type: ignore[type-var]
+            new_ver = replace(ver, study_status=status)
         else:
             new_ver = StudyVersionMetadataVO(study_status=status)
         return replace(metadata, ver_metadata=new_ver)
@@ -840,16 +834,11 @@ class StudyDefinitionAR:
         trial_intent_type_exists_callback: Callable[[str], bool] = lambda _: True,
         trial_type_exists_callback: Callable[[str], bool] = lambda _: True,
         trial_phase_exists_callback: Callable[[str], bool] = lambda _: True,
-        development_stage_exists_callback: Callable[[str], bool] = lambda _: True,
         null_value_exists_callback: Callable[[str], bool] = lambda _: True,
         intervention_type_exists_callback: Callable[[str], bool] = lambda _: True,
         control_type_exists_callback: Callable[[str], bool] = lambda _: True,
         intervention_model_exists_callback: Callable[[str], bool] = lambda _: True,
         trial_blinding_schema_exists_callback: Callable[[str], bool] = lambda _: True,
-        study_title_exists_callback: Callable[[str, str], bool] = lambda x, y: True,
-        study_short_title_exists_callback: Callable[
-            [str, str], bool
-        ] = lambda x, y: True,
         is_subpart: bool = False,
     ) -> Self:
         """
@@ -887,8 +876,6 @@ class StudyDefinitionAR:
 
         :param trial_phase_exists_callback: (optional) callback for checking trial_phase_codes
 
-        :param development_stage_exists_callback: (optional) callback for checking development_stage_code
-
         :param null_value_exists_callback: (optional) callback for checking null_value_codes
 
         :param therapeutic_area_exists_callback: (optional) callback for checking therapeutic_area_codes
@@ -901,15 +888,11 @@ class StudyDefinitionAR:
 
         :param intervention_type_exists_callback:  (optional) callback for checking intervention_type_code
 
-        :param control_type_exists_callback:  (optional) callback for checking control_type_code
+        :param control_type_exists_callback:  (optional) callback for checking control_type_codes
 
         :param intervention_model_exists_callback:  (optional) callback for checking intervention_model_code
 
         :param trial_blinding_schema_exists_callback:  (optional) callback for checking trial_blinding_schema_code
-
-        :param study_title_exists_callback:  (optional) callback for checking study_title
-
-        :param study_short_title_exists_callback:  (optional) callback for checking study_short_title
 
         :raises: exceptions.ValidationException -- when passed arguments do not comply with business rules relevant to Study creation
 
@@ -924,6 +907,8 @@ class StudyDefinitionAR:
             study_acronym=initial_id_metadata.study_acronym,
             study_subpart_acronym=initial_id_metadata.study_subpart_acronym,
             description=initial_id_metadata.description,
+            migrated_study_indicator=initial_id_metadata.migrated_study_indicator,
+            migrated_study_comment=initial_id_metadata.migrated_study_comment,
             registry_identifiers=RegistryIdentifiersVO(
                 ct_gov_id=initial_id_metadata.registry_identifiers.ct_gov_id,
                 ct_gov_id_null_value_code=initial_id_metadata.registry_identifiers.ct_gov_id_null_value_code,
@@ -990,7 +975,6 @@ class StudyDefinitionAR:
         initial_study_metadata.validate(
             study_type_exists_callback=study_type_exists_callback,
             trial_phase_exists_callback=trial_phase_exists_callback,
-            development_stage_exists_callback=development_stage_exists_callback,
             trial_type_exists_callback=trial_type_exists_callback,
             trial_intent_type_exists_callback=trial_intent_type_exists_callback,
             project_exists_callback=project_exists_callback,
@@ -1005,8 +989,6 @@ class StudyDefinitionAR:
             control_type_exists_callback=control_type_exists_callback,
             intervention_model_exists_callback=intervention_model_exists_callback,
             trial_blinding_schema_exists_callback=trial_blinding_schema_exists_callback,
-            study_title_exists_callback=study_title_exists_callback,
-            study_short_title_exists_callback=study_short_title_exists_callback,
             is_subpart=is_subpart,
         )
 

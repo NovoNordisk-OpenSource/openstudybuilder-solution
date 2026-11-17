@@ -390,7 +390,7 @@
               "ActivityItemClass",
               "name",
               "definition",
-              "display_name",
+              "label",
               "nci_concept_id",
               "order"
             ],
@@ -721,7 +721,7 @@
               "nci_concept_id",
               "name",
               "definition",
-              "display_name",
+              "label",
               "order"
             ],
             [
@@ -1100,7 +1100,7 @@
               "ActivityItemClass",
               "name",
               "definition",
-              "display_name",
+              "label",
               "nci_concept_id",
               "order"
             ],
@@ -1696,7 +1696,7 @@
               "nci_concept_id",
               "name",
               "definition",
-              "display_name",
+              "label",
               "order"
             ],
             [

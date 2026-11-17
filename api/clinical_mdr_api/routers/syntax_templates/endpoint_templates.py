@@ -12,7 +12,6 @@ from clinical_mdr_api.models.syntax_templates.endpoint_template import (
     EndpointTemplateCreateInput,
     EndpointTemplateEditIndexingsInput,
     EndpointTemplateEditInput,
-    EndpointTemplatePreValidateInput,
     EndpointTemplateVersion,
     EndpointTemplateWithCount,
 )
@@ -47,6 +46,7 @@ PARAMETERS_NOTE = """**Parameters in the 'name' property**:
 The 'name' of an endpoint template may contain parameters, that can - and usually will - be replaced with concrete values once an endpoint is created out of the endpoint template.
 
 Parameters are referenced by simple strings in square brackets [] that match existing parameters defined in the MDR repository.
+Any other text in square brackets is kept as literal text.
 
 See the *[GET] /template-parameters/* endpoint for available parameters and their terms.
 
@@ -731,41 +731,6 @@ def get_parameters(
     ] = None,
 ) -> list[TemplateParameter]:
     return Service().get_parameters(uid=endpoint_template_uid, study_uid=study_uid)
-
-
-@router.post(
-    "/pre-validate",
-    dependencies=[security, rbac.LIBRARY_WRITE],
-    summary="Validates the content of an endpoint template without actually processing it.",
-    description="""Be aware that - even if this request is accepted - there is no guarantee that
-a following request to e.g. *[POST] /endpoint-templates* or *[PATCH] /endpoint-templates/{endpoint_template_uid}*
-with the same content will succeed.
-
-"""
-    + PARAMETERS_NOTE,
-    status_code=204,
-    responses={
-        204: {
-            "description": "Accepted. The content is valid and may be submitted in another request."
-        },
-        400: {
-            "model": ErrorResponse,
-            "description": "Forbidden. The content is invalid - Reasons include e.g.: \n"
-            "- The syntax of the 'name' is not valid.\n"
-            "- One of the parameters wasn't found.",
-        },
-        403: _generic_descriptions.ERROR_403,
-    },
-)
-def pre_validate(
-    endpoint_template: Annotated[
-        EndpointTemplatePreValidateInput,
-        Body(
-            description="The content of the endpoint template that shall be validated.",
-        ),
-    ],
-):
-    Service().validate_template_syntax(endpoint_template.name)
 
 
 @router.post(

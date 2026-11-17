@@ -47,7 +47,7 @@ class FootnoteTemplateRepository(GenericSyntaxTemplateRepository[FootnoteTemplat
                 is_library_editable_callback=lambda _: library.is_editable,
             ),
             item_metadata=self._library_item_metadata_vo_from_relation(relationship),
-            template=self._get_template(value),
+            template=self._get_template(value, kwargs["template_parameter_names"]),
             footnote_type=SimpleCTTermNameAndAttributes(
                 term_uid=kwargs["template_type"]["term_uid"],
                 name=SimpleTermName(

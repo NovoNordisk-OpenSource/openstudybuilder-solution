@@ -38,7 +38,7 @@ class SponsorModelVO:
         schema_version: int | None = None,
         extra_properties: dict[str, Any] | None = None,
     ) -> Self:
-        sponsor_model_vo = cls(
+        return cls(
             ig_uid=ig_uid,
             ig_version_number=ig_version_number,
             version_number=version_number,
@@ -47,8 +47,6 @@ class SponsorModelVO:
             schema_version=schema_version,
             extra_properties=extra_properties or {},
         )
-
-        return sponsor_model_vo
 
 
 class SponsorModelMetadataVO(LibraryItemMetadataVO):
@@ -111,13 +109,12 @@ class SponsorModelAR(LibraryItemAggregateRootBase):
         library: LibraryVO,
         item_metadata: SponsorModelMetadataVO,
     ) -> Self:
-        sponsor_model_ar = cls(
+        return cls(
             _uid=ig_uid,
             _sponsor_model_vo=sponsor_model_vo,
             _item_metadata=item_metadata,
             _library=library,
         )
-        return sponsor_model_ar
 
     @classmethod
     def from_input_values(
@@ -131,13 +128,12 @@ class SponsorModelAR(LibraryItemAggregateRootBase):
             author_id=author_id, version=sponsor_model_vo.version_number
         )
 
-        sponsor_model_ar = cls(
+        return cls(
             _uid=sponsor_model_vo.ig_uid,
             _item_metadata=item_metadata,
             _library=library,
             _sponsor_model_vo=sponsor_model_vo,
         )
-        return sponsor_model_ar
 
     def edit_draft(
         self, author_id: str, change_description: str, sponsor_model_vo: SponsorModelVO

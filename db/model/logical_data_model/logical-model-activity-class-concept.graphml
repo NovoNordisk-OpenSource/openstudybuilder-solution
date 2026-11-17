@@ -207,7 +207,7 @@ legacy_usage: Derived Boolean<y:LabelModel><y:ErdAttributesNodeLabelModel/></y:L
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
           <y:NodeLabel alignment="center" autoSizePolicy="content" backgroundColor="#B7C9E3" configuration="com.yworks.entityRelationship.label.name" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasLineColor="false" height="18.1328125" horizontalTextPosition="center" iconTextGap="4" modelName="internal" modelPosition="t" textColor="#000000" verticalTextPosition="bottom" visible="true" width="103.287109375" x="78.93573089800839" xml:space="preserve" y="4.0">ActivityItemClass</y:NodeLabel>
           <y:NodeLabel alignment="left" autoSizePolicy="content" configuration="com.yworks.entityRelationship.label.attributes" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="117.0625" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="top" visible="true" width="205.533203125" x="2.0" xml:space="preserve" y="30.13281249999997">name: String
-display_name: String
+label: String
 order: Integer
 nci_concept_id: String
 nci_concept_name: String

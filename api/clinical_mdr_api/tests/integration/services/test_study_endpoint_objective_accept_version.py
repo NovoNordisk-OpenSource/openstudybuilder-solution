@@ -131,6 +131,7 @@ class TestData:
         self.template_vo = TemplateVO(
             name=self.default_template_name,
             name_plain=self.default_template_name,
+            parameter_names=[self.TPR_LABEL],
         )
         self.item_metadata = LibraryItemMetadataVO.get_initial_item_metadata(
             author_id="Test"
@@ -198,6 +199,7 @@ class TestData:
         self.ntv = TemplateVO(
             name=self.changed_template_name,
             name_plain=self.changed_template_name,
+            parameter_names=[self.TPR_LABEL],
         )
         self.tt_ar.edit_draft(
             author_id="TEST", change_description="Change", template=self.ntv

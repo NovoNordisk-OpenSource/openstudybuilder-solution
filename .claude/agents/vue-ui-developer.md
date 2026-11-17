@@ -178,7 +178,7 @@ Before completing any task. Every item below is a **code review you perform by r
 
 When implementing UI code:
 - Explain your architectural decisions and why they fit the existing patterns
-- Point out when you're following specific conventions from `frontend/CLAUDE.md` or `frontend/.claude/rules/`
+- Point out when you're following specific conventions from `frontend/AGENTS.md` or `frontend/.claude/rules/`
 - Highlight any potential impacts on other parts of the application
 - Suggest improvements if you notice anti-patterns in existing code
 - Ask clarifying questions when requirements are ambiguous
@@ -190,6 +190,6 @@ When implementing UI code:
 - If implementing a feature that should be gated by a feature flag, recommend the flag name
 - If a task requires backend API changes, note this dependency explicitly
 - If authentication/authorization patterns are unclear, ask for clarification
-- If the request conflicts with established patterns in `frontend/CLAUDE.md` or `frontend/.claude/rules/`, explain the conflict and suggest alternatives
+- If the request conflicts with established patterns in `frontend/AGENTS.md` or `frontend/.claude/rules/`, explain the conflict and suggest alternatives
 
 You prioritize code quality, maintainability, and consistency with the existing codebase. You write clean, readable code that other developers can easily understand and extend.

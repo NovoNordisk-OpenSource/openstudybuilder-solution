@@ -75,7 +75,7 @@
           </v-col>
           <v-col cols="3">
             <v-text-field
-              v-model="form.display_name"
+              v-model="form.label"
               :label="$t('NonStandardVariableForm.nsv_label') + '*'"
               :rules="[formRules.required, (v) => formRules.max(v, 40)]"
               maxlength="40"
@@ -426,7 +426,7 @@ function getDefaultRoleUid() {
 function emptyForm() {
   return {
     name: null,
-    display_name: null,
+    label: null,
     definition: null,
     change_description: null,
     nci_concept_id: null,
@@ -488,7 +488,7 @@ function populateForm(item) {
   const nsv = item.non_standard_variable || {}
   form.value = {
     name: item.name ?? null,
-    display_name: item.display_name ?? null,
+    label: item.label ?? null,
     definition: item.definition ?? null,
     change_description: null,
     nci_concept_id: item.nci_concept_id ?? null,
@@ -599,7 +599,7 @@ function buildPayload() {
 
   return pickDefined({
     name: form.value.name,
-    display_name: form.value.display_name,
+    label: form.value.label,
     definition: form.value.definition,
     nci_concept_id: form.value.nci_concept_id,
     nci_concept_name: form.value.nci_concept_name,

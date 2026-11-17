@@ -96,6 +96,34 @@ const routes = [
         ],
       },
       {
+        path: 'standards_import',
+        component: () => import('../components/layout/PassThrough.vue'),
+        meta: {
+          resetBreadcrumbs: false,
+          authRequired: true,
+          featureFlag: 'standards_import',
+        },
+        children: [
+          {
+            path: '',
+            name: 'StandardsImport',
+            component: () => import('../views/library/StandardsImport.vue'),
+            meta: {
+              authRequired: true,
+            },
+          },
+          {
+            path: ':effective_date',
+            name: 'StandardsImportRelease',
+            component: () =>
+              import('../views/library/StandardsImportRelease.vue'),
+            meta: {
+              authRequired: true,
+            },
+          },
+        ],
+      },
+      {
         path: 'trial_parameter',
         component: () => import('../components/layout/PassThrough.vue'),
         meta: {
@@ -689,6 +717,15 @@ const routes = [
         },
       },
       {
+        path: ':study_id/study_comparison',
+        name: 'StudyComparison',
+        component: () => import('../views/studies/StudyComparison.vue'),
+        meta: {
+          studyRequired: true,
+          authRequired: true,
+        },
+      },
+      {
         path: ':study_id/data_standard_versions/:tab?',
         name: 'StudyDataStandardVersions',
         component: () =>
@@ -897,7 +934,7 @@ const routes = [
         path: ':study_id/study_structure/visits/:id/overview',
         name: 'StudyVisitOverview',
         component: () =>
-          import('../components/studies/overviews/StudyVisitOverview.vue'),
+          import('../components/studies/visits/StudyVisitOverview.vue'),
         meta: {
           studyRequired: true,
           authRequired: true,
@@ -988,7 +1025,7 @@ const routes = [
         },
       },
       {
-        path: ':study_id/population',
+        path: ':study_id/population/:tab?',
         name: 'StudyPopulation',
         component: () => import('../views/studies/PopulationPage.vue'),
         meta: {
@@ -1158,6 +1195,18 @@ const routes = [
           requiredPermission: roles.ADMIN_READ,
         },
       },
+      {
+        path: 'standards-import-config',
+        name: 'StandardsImportConfig',
+        component: () =>
+          import('../views/administration/StandardsImportConfig.vue'),
+        meta: {
+          resetBreadcrumbs: true,
+          authRequired: true,
+          requiredPermission: roles.LIBRARY_IMPORT,
+          featureFlag: 'standards_import',
+        },
+      },
     ],
   },
   {
@@ -1275,7 +1324,12 @@ router.beforeEach(async (to, from, next) => {
 
   // Feature flags require read permissions when OAuth is enabled
   if (!$config.OAUTH_ENABLED || authStore.userInfo) {
-    await featureFlagsStore.fetchFeatureFlags()
+    try {
+      await featureFlagsStore.fetchFeatureFlags()
+    } catch {
+      // Users without read roles can't fetch flags; treat them all as
+      // disabled instead of aborting navigation (e.g. to Logout)
+    }
   }
   if (
     to.meta.featureFlag &&

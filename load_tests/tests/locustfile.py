@@ -24,7 +24,7 @@ def on_test_start(environment, **kwargs):
         host = Params.CONSUMER_API_BASE_URL if Params.TARGET_CONSUMER_API else Params.API_BASE_URL
         for url, params in get_all_endpoints(Params.TARGET_CONSUMER_API):
             print(f"Pre-fetching {pretty_print_endpoint(host, url, params)}")
-            res = requests.get(f"{host}{url}", headers=Params.API_HEADERS, params=params, verify=False, timeout=300)
+            res = requests.get(f"{host}{url}", headers=Params.API_HEADERS, params=params, timeout=300)
             print(f" => {res.status_code}")
 
 
@@ -43,32 +43,32 @@ class StudyBuilder(HttpUser):
     def get_random(self):
         """Issues GET request to a random endpoint"""
         url, params = get_random_endpoint(Params.TARGET_CONSUMER_API)
-        self.client.get(url, headers=Params.API_HEADERS, params=params, verify=False)
+        self.client.get(url, headers=Params.API_HEADERS, params=params)
 
     @task(0 if Params.TARGET_CONSUMER_API else 30)
     def clear_caches(self):
         url = "/admin/caches"
-        self.client.delete(url, headers=Params.API_HEADERS, verify=False)
+        self.client.delete(url, headers=Params.API_HEADERS)
 
     @task(0)
     def get_study_compounds(self):
         url = f"/studies/{Params.STUDY_ID}/study-compounds"
-        self.client.get(url, headers=Params.API_HEADERS, verify=False)
+        self.client.get(url, headers=Params.API_HEADERS)
 
     @task(0)
     def get_library_compounds(self):
         # url = '/concepts/compounds?page_number=1&page_size=10&total_count=true&filters=%7B"*"+:%7B+"v":+[""]%7D%7D&sort_by=%7B"name":true%7D'
         url = f"/concepts/compounds?page_number=1&page_size={PAGE_SIZE}&total_count=true"
-        self.client.get(url, headers=Params.API_HEADERS, verify=False)
+        self.client.get(url, headers=Params.API_HEADERS)
 
     @task(0)
     def get_ct_terms(self):
         page_number = random.randint(1, 150)
         url = f"/ct/codelists?page_number={page_number}&page_size={PAGE_SIZE}&total_count=true"
-        self.client.get(url, headers=Params.API_HEADERS, verify=False)
+        self.client.get(url, headers=Params.API_HEADERS)
 
     @task(0)
     def get_activities(self):
         page_number = random.randint(1, 150)
         url = f'/concepts/activities/activities?page_number={page_number}&page_size={PAGE_SIZE}&total_count=true&sort_by={{"activity_group.name":false}}'
-        self.client.get(url, headers=Params.API_HEADERS, verify=False)
+        self.client.get(url, headers=Params.API_HEADERS)

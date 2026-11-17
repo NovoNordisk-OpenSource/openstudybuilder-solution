@@ -46,7 +46,6 @@ let ctLibrariesPromise = null
 export const useAppStore = defineStore('app', {
   state: () => ({
     rowsPerPage: 10,
-    studyNumberLength: 4,
     drawer: true,
     sidebarAutoMinimize: false,
     theme: DEFAULT_THEME,
@@ -92,6 +91,11 @@ export const useAppStore = defineStore('app', {
               {
                 title: i18n.t('Sidebar.library.ct_packages'),
                 url: { name: 'CtPackages' },
+              },
+              {
+                title: i18n.t('Sidebar.library.import'),
+                url: { name: 'StandardsImport' },
+                featureFlag: 'standards_import',
               },
               {
                 title: i18n.t('Sidebar.library.sponsor'),
@@ -411,6 +415,14 @@ export const useAppStore = defineStore('app', {
                 studyRequired: true,
               },
               {
+                title: i18n.t('Sidebar.study.study_comparison'),
+                url: {
+                  name: 'StudyComparison',
+                  params: { study_id: studyId },
+                },
+                studyRequired: true,
+              },
+              {
                 title: i18n.t('Sidebar.study.data_standard_versions'),
                 url: {
                   name: 'StudyDataStandardVersions',
@@ -676,6 +688,12 @@ export const useAppStore = defineStore('app', {
             url: { name: 'OdmVendorExtensions' },
             icon: 'mdi-puzzle-outline',
           },
+          {
+            title: i18n.t('Sidebar.admin.standards_import_config'),
+            url: { name: 'StandardsImportConfig' },
+            icon: 'mdi-cog-outline',
+            featureFlag: 'standards_import',
+          },
         ],
       },
       Help: {},
@@ -839,7 +857,6 @@ export const useAppStore = defineStore('app', {
         console.error('Failed to load preferences:', error)
         // Use hardcoded defaults if API is unavailable
         this.rowsPerPage = 10
-        this.studyNumberLength = 4
         this.drawer = true
         this.sidebarAutoMinimize = false
         this.applyThemePreference(DEFAULT_THEME)

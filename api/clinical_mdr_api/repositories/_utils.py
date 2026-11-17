@@ -161,7 +161,7 @@ def get_wildcard_filter(filter_elem, model: type[BaseModel]):
             elif (
                 get_field_type(field.annotation) is str
                 and get_sub_fields(field) is None
-                and name not in ["possible_actions"]
+                and name != "possible_actions"
             ):
                 q_obj = Q(**{f"{field_source}__icontains": filter_elem.v[0]})
                 wildcard_filter.append(q_obj)
@@ -453,9 +453,10 @@ def is_date(string):
         # parse was interpreting for instance '1.0' as date
         # and '1.0' is commonly used value in version filtering
         isoparse(string)
-        return True
     except ValueError:
         return False
+    else:
+        return True
 
 
 class GenericFilteringReturn:
@@ -877,7 +878,7 @@ class CypherQueryBuilder:
                                     elif (
                                         get_sub_fields(attr_desc) is not None
                                         and get_field_type(attr_desc.annotation) is str
-                                        and attribute not in ["possible_actions"]
+                                        and attribute != "possible_actions"
                                     ):
                                         _predicates.append(
                                             f"ANY(x IN {attribute} WHERE toLower(x){_parsed_operator}$wildcard_{index})"
@@ -1140,28 +1141,10 @@ class CypherQueryBuilder:
         _return_clause = "RETURN *"
 
         # Set clause
-        self.full_query = " ".join(
-            [
-                self.match_clause,
-                _with_alias_clause,
-                self.filter_clause,
-                _return_clause,
-                self.sort_clause,
-                self.pagination_clause,
-            ]
-        )
+        self.full_query = f"{self.match_clause} {_with_alias_clause} {self.filter_clause} {_return_clause} {self.sort_clause} {self.pagination_clause}"
         if self.union_match_clause:
             self.full_query += " UNION "
-            self.full_query += " ".join(
-                [
-                    self.union_match_clause,
-                    _with_alias_clause,
-                    self.filter_clause,
-                    _return_clause,
-                    self.sort_clause,
-                    self.pagination_clause,
-                ]
-            )
+            self.full_query += f"{self.union_match_clause} {_with_alias_clause} {self.filter_clause} {_return_clause} {self.sort_clause} {self.pagination_clause}"
 
     def build_count_query(self) -> None:
         """
@@ -1176,27 +1159,11 @@ class CypherQueryBuilder:
 
         # Set clause
         if not self.union_match_clause:
-            self.count_query = " ".join(
-                [
-                    self.match_clause,
-                    _with_alias_clause,
-                    self.filter_clause,
-                    _return_count_clause,
-                ]
-            )
+            self.count_query = f"{self.match_clause} {_with_alias_clause} {self.filter_clause} {_return_count_clause}"
         else:
-            self.count_query = " ".join(
-                [
-                    self.match_clause,
-                    _with_alias_clause,
-                    self.filter_clause,
-                    _return_count_clause,
-                    "UNION",
-                    self.union_match_clause,
-                    _with_alias_clause,
-                    self.filter_clause,
-                    _return_count_clause,
-                ]
+            self.count_query = (
+                f"{self.match_clause} {_with_alias_clause} {self.filter_clause} {_return_count_clause} "
+                f"UNION {self.union_match_clause} {_with_alias_clause} {self.filter_clause} {_return_count_clause}"
             )
 
     def build_header_query(self, header_alias: str, page_size: int) -> str:
@@ -1255,14 +1222,7 @@ class CypherQueryBuilder:
         {_escaped_header_alias} ORDER BY {_escaped_header_alias} LIMIT {page_size}
         RETURN apoc.coll.toSet(apoc.coll.flatten(collect(DISTINCT {_escaped_header_alias}))) AS values"""
 
-        return " ".join(
-            [
-                self.match_clause,
-                _with_alias_clause,
-                self.filter_clause,
-                _return_header_clause,
-            ]
-        )
+        return f"{self.match_clause} {_with_alias_clause} {self.filter_clause} {_return_header_clause}"
 
     def escape_alias(self, alias: str) -> str:
         """
@@ -1278,7 +1238,7 @@ class CypherQueryBuilder:
                 params=self.parameters,
             )
         except CypherSyntaxError as ex:
-            log.error("%s: %s", ex.code, ex.message)
+            log.exception("%s: %s", ex.code, ex.message)
             raise ValidationException(
                 msg="Unsupported filters, sort_by or fields parameters or other syntax error in Cypher query"
             ) from ex
@@ -1330,8 +1290,7 @@ def sb_clear_cache(caches: list[str] | None = None):
         @functools.wraps(function)
         def wrapper(self, *args, **kwargs):
             try:
-                result = function(self, *args, **kwargs)
-                return result
+                return function(self, *args, **kwargs)
             finally:
                 for cache_name in caches:
                     cache = getattr(self, cache_name, None)

@@ -13,7 +13,7 @@ from clinical_mdr_api.models.standard_data_models.dataset import (
 from common.exceptions import ValidationException
 
 
-class DatasetRepository(StandardDataModelRepository):
+class DatasetRepository(StandardDataModelRepository[DatasetAPIModel]):
     root_class = Dataset
     value_class = DatasetInstance
     return_model = DatasetAPIModel
@@ -55,9 +55,7 @@ class DatasetRepository(StandardDataModelRepository):
         extended_filter_statements = " AND ".join(filter_parameters)
         if filter_statements_from_standard != "":
             if len(extended_filter_statements) > 0:
-                filter_statements_to_return = " AND ".join(
-                    [filter_statements_from_standard, extended_filter_statements]
-                )
+                filter_statements_to_return = f"{filter_statements_from_standard} AND {extended_filter_statements}"
             else:
                 filter_statements_to_return = filter_statements_from_standard
         else:

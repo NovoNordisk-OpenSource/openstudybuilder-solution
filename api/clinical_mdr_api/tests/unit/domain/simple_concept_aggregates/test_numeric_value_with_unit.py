@@ -31,7 +31,7 @@ class MockObject:
 
 
 def create_random_numeric_value_vo(unit_definition) -> NumericValueWithUnitVO:
-    random_numeric_value_vo = NumericValueWithUnitVO.from_input_values(
+    return NumericValueWithUnitVO.from_input_values(
         value=1.23,
         definition=random_str(),
         abbreviation=random_str(),
@@ -39,7 +39,6 @@ def create_random_numeric_value_vo(unit_definition) -> NumericValueWithUnitVO:
         unit_definition_uid=unit_definition.uid,
         find_unit_definition_by_uid=lambda _: unit_definition,
     )
-    return random_numeric_value_vo
 
 
 def create_random_numeric_value_ar(
@@ -48,7 +47,7 @@ def create_random_numeric_value_ar(
     library: str = "Library",
     is_editable: bool = True,
 ) -> NumericValueWithUnitAR:
-    random_numeric_value_ar = NumericValueWithUnitAR.from_input_values(
+    return NumericValueWithUnitAR.from_input_values(
         generate_uid_callback=generate_uid_callback,
         simple_concept_vo=create_random_numeric_value_vo(unit_definition),
         library=LibraryVO.from_repository_values(
@@ -58,8 +57,6 @@ def create_random_numeric_value_ar(
         find_uid_by_name_callback=lambda _: unit_definition,
         find_uid_by_value_and_unit_callback=lambda _, __: random_str(),
     )
-
-    return random_numeric_value_ar
 
 
 class TestNumericValueWithUnit(unittest.TestCase):

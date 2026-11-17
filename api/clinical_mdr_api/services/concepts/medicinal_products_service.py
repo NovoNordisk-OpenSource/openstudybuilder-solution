@@ -23,7 +23,9 @@ from clinical_mdr_api.services.concepts.concept_generic_service import (
 )
 
 
-class MedicinalProductService(ConceptGenericService[MedicinalProductAR]):
+class MedicinalProductService(
+    ConceptGenericService[MedicinalProductAR, MedicinalProduct]
+):
     aggregate_class = MedicinalProductAR
     version_class = MedicinalProductVersion
     repository_interface = MedicinalProductRepository

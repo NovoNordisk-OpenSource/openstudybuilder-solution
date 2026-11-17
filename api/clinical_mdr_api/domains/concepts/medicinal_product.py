@@ -80,7 +80,7 @@ class MedicinalProductVO(ConceptVO):
         if not dose_frequencies:
             dose_frequencies = []
 
-        medicinal_product_vo = cls(
+        return cls(
             external_id=external_id,
             compound_uid=compound_uid,
             pharmaceutical_product_uids=pharmaceutical_product_uids,
@@ -100,8 +100,6 @@ class MedicinalProductVO(ConceptVO):
             dose_frequencies=dose_frequencies,
             compound=compound,
         )
-
-        return medicinal_product_vo
 
     def validate(
         self,
@@ -204,13 +202,12 @@ class MedicinalProductAR(ConceptARBase):
             pharmaceutical_product_exists_callback=pharmaceutical_product_exists_callback,
         )
 
-        medicinal_product_ar = cls(
+        return cls(
             _uid=uid,
             _item_metadata=item_metadata,
             _library=library,
             _concept_vo=concept_vo,
         )
-        return medicinal_product_ar
 
     def edit_draft(
         self,

@@ -166,21 +166,21 @@
       :exchange-mode="exchangeActivityMode"
       :exchange-activity-uid="selectedStudyActivity?.study_activity_uid"
       @close="closeForm"
-      @added="onStudyActivitiesUpdated"
+      @added="onStudyActivitiesChanged"
     />
   </v-dialog>
   <v-dialog v-model="showActivityEditForm" max-width="800px">
     <StudyActivityEditForm
       :study-activity="selectedStudyActivity"
       @close="closeEditForm"
-      @updated="onStudyActivitiesUpdated"
+      @updated="onStudyActivitiesChanged"
     />
   </v-dialog>
   <v-dialog v-model="showDraftedActivityEditForm" max-width="800px">
     <StudyDraftedActivityEditForm
       :study-activity="selectedStudyActivity"
       @close="closeEditForm"
-      @updated="onStudyActivitiesUpdated"
+      @updated="onStudyActivitiesChanged"
     />
   </v-dialog>
   <v-dialog
@@ -201,18 +201,20 @@
   <StudyActivityBatchEditForm
     :open="showBatchEditForm"
     :selection="currentSelection"
-    @updated="onStudyActivitiesUpdated"
+    @updated="onStudyActivitiesChanged"
     @close="closeBatchEditForm"
     @remove="unselectItem"
   />
   <UpdateActivityRequestForm
     :activity="selectedStudyActivity"
     :open="showRequestUpdateForm"
+    @updated="onStudyActivitiesChanged"
     @close="closeUpdateForm"
   />
   <UpdateActivityForm
     :activity="selectedStudyActivity"
     :open="showUpdateForm"
+    @updated="onStudyActivitiesChanged"
     @close="closeUpdateForm"
   />
   <v-dialog
@@ -220,7 +222,10 @@
     fullscreen
     content-class="fullscreen-dialog"
   >
-    <BatchUpdateActivityForm @close="closeBatchUpdateForm" />
+    <BatchUpdateActivityForm
+      @updated="onStudyActivitiesChanged"
+      @close="closeBatchUpdateForm"
+    />
   </v-dialog>
   <v-dialog v-model="showComments" max-width="1000px">
     <CommentThreadDialog
@@ -402,6 +407,8 @@ const props = defineProps({
     default: null,
   },
 })
+// Signals that study activities were changed from this table, so the host page can refetch the SoA
+const emit = defineEmits(['activitiesChanged'])
 
 watch(
   () => props.update,
@@ -496,7 +503,7 @@ async function showRejectingInfo(item) {
         item.study_activity_uid
       )
       .then(() => {
-        table.value.filterTable()
+        onStudyActivitiesChanged()
         notificationHub.add({
           type: 'success',
           msg: t('StudyActivityTable.delete_success'),
@@ -537,7 +544,6 @@ function closeUpdateForm() {
   selectedStudyActivity.value = null
   showRequestUpdateForm.value = false
   showUpdateForm.value = false
-  table.value.filterTable()
 }
 
 function openBatchUpdateForm() {
@@ -546,7 +552,6 @@ function openBatchUpdateForm() {
 
 function closeBatchUpdateForm() {
   showBatchUpdateForm.value = false
-  table.value.filterTable()
 }
 
 function actionsMenuBadge(item) {
@@ -592,7 +597,7 @@ async function deleteStudyActivity(sa) {
         sa.study_activity_uid
       )
       .then(() => {
-        table.value.filterTable()
+        onStudyActivitiesChanged()
         notificationHub.add({
           type: 'success',
           msg: t('StudyActivityTable.delete_success'),
@@ -761,6 +766,13 @@ function closeBatchEditForm() {
 
 function onStudyActivitiesUpdated() {
   table.value.filterTable()
+}
+
+// For changes made here; onStudyActivitiesUpdated stays silent because the host page
+// also calls it for changes made on the SoA tab, which must not mark the SoA outdated
+function onStudyActivitiesChanged() {
+  onStudyActivitiesUpdated()
+  emit('activitiesChanged')
 }
 
 function unselectItem(item) {

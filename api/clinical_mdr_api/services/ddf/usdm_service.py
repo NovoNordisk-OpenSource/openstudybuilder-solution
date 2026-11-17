@@ -69,5 +69,4 @@ class USDMService:
             ],
         )
 
-        usdm_wrapped_study = self._usdm_mapper.map(osb_study)
-        return usdm_wrapped_study
+        return self._usdm_mapper.map(osb_study)

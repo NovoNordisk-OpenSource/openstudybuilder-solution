@@ -383,7 +383,7 @@ import libraries from '@/constants/libraries'
 
 const notificationHub = inject('notificationHub')
 const { t } = useI18n()
-const emit = defineEmits(['close', 'added'])
+const emit = defineEmits(['close', 'added', 'updated'])
 const studiesGeneralStore = useStudiesGeneralStore()
 const activitiesStore = useStudyActivitiesStore()
 
@@ -600,6 +600,9 @@ async function submit() {
             }),
             type: 'success',
           })
+        }
+        if (errors.length < resp.data.length) {
+          emit('updated')
         }
         resetLoading.value += 1
         close()

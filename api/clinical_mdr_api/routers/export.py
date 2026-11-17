@@ -153,10 +153,7 @@ def _convert_data_to_list(data: dict[Any, Any], headers: list[Any]) -> list[Any]
     """Generate a list of dictionaries based on given data."""
     # First, convert received headers to a more usable representation
     dict_headers = _convert_headers_to_dict(headers)
-    result = []
-    for value in _extract_values_from_data(data, dict_headers):
-        result.append(value)
-    return result
+    return list(_extract_values_from_data(data, dict_headers))
 
 
 @register_export_format("text/csv")

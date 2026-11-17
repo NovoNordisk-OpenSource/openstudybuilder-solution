@@ -1,5 +1,16 @@
-@REQ_ID:1074260
+@REQ_ID:3679901
+
 Feature: Studies - Define Study - Study Structure and Study Activities - E2E verification
+
+         As a user taking part in study specification for protocol authoring,
+         I must be able to define:
+         - Study epochs
+         - Study visits
+         - Study activities
+         - Request activities as placeholders
+         - Study SoA
+         - Footnotes for SoA
+         So structured study metadata specification can enable a more automated clinical system setup and downstream digital dataflow.
 
     Background: User is logged in and study has been selected
         Given The user is logged in
@@ -27,7 +38,7 @@ Feature: Studies - Define Study - Study Structure and Study Activities - E2E ver
         And [API] Activity is added to the selected study
         And [API] Footnote with text 'My other footnote' is added to the selected study
 
-    Scenario: [Epochs] User must be able to define epochs Screening, type Pre treatment, Treatment, type Treatment, Follow-up, type Post treatment on selected study
+    Scenario: [Epochs] User must be able to define epochs Screening, type Pre treatment, Treatment, type Treatment, Follow-up, type Post treatment, Basic, No treatment on selected study
         Given The page 'study_structure/epochs' is opened for current study
         When User click create epoch button
         And User continues to next step of study structure stepper
@@ -65,176 +76,285 @@ Feature: Studies - Define Study - Study Structure and Study Activities - E2E ver
         When The form is no longer available
         And Study Epoch is found
         Then The added Epoch name, type 'Post Treatment' and subtype 'Follow-Up' is visible in the table
+        When User click create epoch button
+        And User continues to next step of study structure stepper
+        And User waits for 1 seconds
+        And User sets epoch 'type' as 'No Treatment'
+        And User sets epoch 'subtype' as 'Basic'
+        And User sets epoch description
+        And User intercepts epochs data
+        And User continues to next step of study structure stepper
+        And User waits for epochs data
+        When The form is no longer available
+        And Study Epoch is found
+        Then The added Epoch name, type 'No Treatment' and subtype 'Basic' is visible in the table
 
-    Scenario: [Visit][V0] User must be able to define scheduled visit V0 connected to Screening epoch
-        Given User intercepts epochs data
-        Given User intercepts epochs codelists request
-        When The page 'study_structure/visits' is opened for current study
-        And User waits for epochs codelists request
-        And User waits for epochs data
-        When Add visit button is clicked
-        And Form continue button is clicked
-        And Epoch 'Screening' is selected for the visit
-        And Form continue button is clicked
-        And Visit Type is selected as 'Information'
-        And Contact mode is selected as 'On Site Visit'
-        And Time reference is selected as 'Global anchor visit'
-        And Time unit 'weeks' is selected for the visit
-        And Visit timing -2 is selected for the visit
-        And User intercepts create visit request
-        When Form save button is clicked
-        Then The study visit is created
-        And User searches for 'V0'
-        And Study visit class is 'Scheduled visit' and the timing is '-2 weeks'
 
-    Scenario:[Visit][V1][Global Anchor] User must be able to define one scheduled visit V1 that will be a global anchor connected to the Treatment epoch
-        Given User intercepts epochs data
-        Given User intercepts epochs codelists request
-        When The page 'study_structure/visits' is opened for current study
-        And User waits for epochs codelists request
-        And User waits for epochs data
-        When Add visit button is clicked
-        And Form continue button is clicked
-        And Epoch 'Treatment' is selected for the visit
-        And Form continue button is clicked
-        And Visit Type is selected as 'Randomisation'
-        And Contact mode is selected as 'On Site Visit'
-        And Time unit 'weeks' is selected for the visit
-        And Anchor visit checkbox is checked
-        And User intercepts create visit request
-        When Form save button is clicked
-        Then The study visit is created
-        And User searches for 'V1'
-        And Study visit class is 'Scheduled visit' and the timing is '0 weeks'
-    
-    Scenario: [Visit][V1] User must be able to add additional visit between existing V0 and V1
-        Given User intercepts epochs data
-        Given User intercepts epochs codelists request
-        When The page 'study_structure/visits' is opened for current study
-        And User waits for epochs codelists request
-        And User waits for epochs data
-        When Add visit button is clicked
-        And Form continue button is clicked
-        And Epoch 'Screening' is selected for the visit
-        And Form continue button is clicked
-        And Visit Type is selected as 'Screening'
-        And Contact mode is selected as 'On Site Visit'
-        And Time reference is selected as 'Global anchor visit'
-        And Time unit 'weeks' is selected for the visit
-        And Visit timing -1 is selected for the visit
-        And User intercepts create visit request
-        When Form save button is clicked
-        Then The study visit is created
-        And User searches for 'V1'
-        And Study visit class is 'Scheduled visit' and the timing is '-1 weeks'
-        And User searches for 'V2'
-        And Study visit class is 'Scheduled visit' and the timing is '0 weeks'
+    Scenario: [Visit][Create] User must be able to define scheduled Information visit
+        And The page 'study_structure/visits' is opened for current study
+        When The user defines a visit in the timeline view with following data:
+            | visitType           | Information         |
+            | contactMode         | On Site Visit       |
+            | timeReference       | Global anchor visit |
+            | timing              | -8                  |
+            | timeUnit            | days                |
+            | visitWindowMin      | 0                   |
+            | visitWindowMax      | 0                   |
+            | visitWindowUnit     | days                |
+            | epoch               | Screening           |
+            | showVisitInProtocol | true                |
+            | soaMilestone        | true                |
+        And The user intercepts study visit 'create' request
+        And The 'created' visit is saved
 
-    Scenario: [Visit][V3][V4] User must be able to define two scheduled visits V3 and V4 connected to the Treatment epoch
-        Given User intercepts epochs data
-        Given User intercepts epochs codelists request
-        When The page 'study_structure/visits' is opened for current study
-        And User waits for epochs codelists request
-        And User waits for epochs data
-        When Add visit button is clicked
-        And Form continue button is clicked
-        And Epoch 'Treatment' is selected for the visit
-        And Form continue button is clicked
-        And Visit Type is selected as 'Treatment'
-        And Contact mode is selected as 'On Site Visit'
-        And Time reference is selected as 'Global anchor visit'
-        And Time unit 'weeks' is selected for the visit
-        And Visit timing 1 is selected for the visit
-        And User intercepts create visit request
-        When Form save button is clicked
-        Then The study visit is created
-        And User searches for 'V3' 
-        And Study visit class is 'Scheduled visit' and the timing is '1 weeks'
-        When Add visit button is clicked
-        And Form continue button is clicked
-        And Epoch 'Treatment' is selected for the visit
-        And Form continue button is clicked
-        And Visit Type is selected as 'Treatment'
-        And Contact mode is selected as 'On Site Visit'
-        And Time reference is selected as 'Global anchor visit'
-        And Time unit 'weeks' is selected for the visit
-        And Visit timing 2 is selected for the visit
-        And User intercepts create visit request
-        When Form save button is clicked
-        Then The study visit is created
-        And User searches for 'V4'
-        And Study visit class is 'Scheduled visit' and the timing is '2 weeks'
+    Scenario: [Visit][Create] User must be able to define scheduled Screening visit
+        And The page 'study_structure/visits' is opened for current study
+        When The user defines a visit in the timeline view with following data:
+            | visitType           | Screening           |
+            | contactMode         | On Site Visit       |
+            | timeReference       | Global anchor visit |
+            | timing              | -7                  |
+            | timeUnit            | days                |
+            | visitWindowMin      | -1                  |
+            | visitWindowMax      | 1                   |
+            | visitWindowUnit     | days                |
+            | epoch               | Screening           |
+            | showVisitInProtocol | true                |
+            | soaMilestone        | true                |
+        And The user intercepts study visit 'create' request
+        And The 'created' visit is saved
 
-    Scenario: [Visit][V4X] User must be able to define special visit V4X in reference to Vist V4
-        Given User intercepts epochs data
-        Given User intercepts epochs codelists request
-        When The page 'study_structure/visits' is opened for current study
-        And User waits for epochs codelists request
-        And User waits for epochs data
-        When Add visit button is clicked
-        And Visit scheduling type is selected as 'SPECIAL_VISIT'
-        And Form continue button is clicked
-        And Epoch 'Treatment' is selected for the visit
-        And Form continue button is clicked
-        And Visit Type is selected as 'Early discontinuation'
-        And Contact mode is selected as 'On Site Visit'
-        And Time reference is selected as 'Visit 4'
-        And Form save button is clicked
-        And The pop up displays 'Visit added'
-        And User searches for 'V4X'
-        And Study visit class is 'Special visit' and the timing is ''
+    Scenario: [Visit][Create] User must be able to define scheduled Randomisation visit
+        And The page 'study_structure/visits' is opened for current study
+        When The user defines a visit in the timeline view with following data:
+            | visitType           | Randomisation       |
+            | contactMode         | On Site Visit       |
+            | timeReference       | Global anchor visit |
+            | timing              | 0                   |
+            | timeUnit            | days                |
+            | visitWindowMin      | -1                  |
+            | visitWindowMax      | 1                   |
+            | visitWindowUnit     | days                |
+            | epoch               | Treatment           |
+            | showVisitInProtocol | true                |
+            | soaMilestone        | true                |
+        And The user intercepts study visit 'create' request
+        And The 'created' visit is saved
 
-    Scenario: [Visit][V5] User must be able to define scheduled visit V5 connected to Follow-up epoch
-        Given User intercepts epochs data
-        Given User intercepts epochs codelists request
-        When The page 'study_structure/visits' is opened for current study
-        And User waits for epochs codelists request
-        And User waits for epochs data
-        When Add visit button is clicked
-        And Form continue button is clicked
-        And Epoch 'Follow-Up' is selected for the visit
-        And Form continue button is clicked
-        And Visit Type is selected as 'End of trial'
-        And Contact mode is selected as 'On Site Visit'
-        And Time reference is selected as 'Global anchor visit'
-        And Time unit 'weeks' is selected for the visit
-        And Visit timing 3 is selected for the visit
-        And User intercepts create visit request
-        When Form save button is clicked
-        Then The study visit is created
-        And User searches for 'V5'
-        And Study visit class is 'Scheduled visit' and the timing is '3 weeks'
+    Scenario: [Visit][Create] User must be able to define scheduled Treatment visit
+        And The page 'study_structure/visits' is opened for current study
+        When The user defines a visit in the timeline view with following data:
+            | visitType           | Treatment           |
+            | contactMode         | On Site Visit       |
+            | timeReference       | Global anchor visit |
+            | timing              | 21                  |
+            | timeUnit            | days                |
+            | visitWindowMin      | -3                  |
+            | visitWindowMax      | 3                   |
+            | visitWindowUnit     | days                |
+            | epoch               | Treatment           |
+            | showVisitInProtocol | true                |
+            | soaMilestone        | true                |
+        And The user intercepts study visit 'create' request
+        And The 'created' visit is saved
 
-    Scenario: [Visit][V3B] User must be able to add manually defined visit between V3 and V4
-        Given User intercepts epochs data
-        Given User intercepts epochs codelists request
-        When The page 'study_structure/visits' is opened for current study
-        And User waits for epochs codelists request
-        And User waits for epochs data
-        When Add visit button is clicked
-        And Visit scheduling type is selected as 'MANUALLY_DEFINED_VISIT'
-        And Form continue button is clicked
-        And Epoch 'Treatment' is selected for the visit
-        And Form continue button is clicked
-        And Visit Type is selected as 'Treatment'
-        And Contact mode is selected as 'On Site Visit'
-        And Time reference is selected as 'Global anchor visit'
-        And Time unit 'weeks' is selected for the visit
-        And Visit timing 1 is selected for the visit
-        And Visit name is set to 'Visit 3B'
-        And Visit short name is set to 'V3B'
-        And Visit number is set to '3.01'
-        And Visit unique number is set to 301
-        And Form save button is clicked
-        And The pop up displays 'Visit added'
-        And User searches for 'V3B'
-        And Study visit class is 'Manually defined visit' and the timing is '1 weeks'
-        And User searches for 'V4'
-        And Study visit class is 'Scheduled visit' and the timing is '2 weeks'
-        And User searches for 'V4X'
-        And Study visit class is 'Special visit' and the timing is ''
-        And User searches for 'V5'
-        And Study visit class is 'Scheduled visit' and the timing is '3 weeks'
+    Scenario: [Visit][Create] User must be able to define Anchor visit in visit group
+        And The page 'study_structure/visits' is opened for current study
+        When The user defines a visit in the timeline view with following data:
+            | visitClass          | Anchor visit in visit group |
+            | visitType           | Treatment                   |
+            | contactMode         | On Site Visit               |
+            | timeReference       | Global anchor visit         |
+            | timing              | 7                           |
+            | timeUnit            | days                        |
+            | visitWindowMin      | 0                           |
+            | visitWindowMax      | 0                           |
+            | visitWindowUnit     | days                        |
+            | epoch               | Treatment                   |
+            | showVisitInProtocol | true                        |
+            | soaMilestone        | true                        |
+        And The user intercepts study visit 'create' request
+        And The 'created' visit is saved
+
+    Scenario: [Visit][Create] User must be able to define scheduled Treatment visit referenced in timing to Visit 3
+        And The page 'study_structure/visits' is opened for current study
+        When The user defines a visit in the timeline view with following data:
+            | visitGroup          | Visit 3       |
+            | visitType           | Treatment     |
+            | contactMode         | On Site Visit |
+            | timing              | 7             |
+            | timeUnit            | days          |
+            | visitWindowMin      | 0             |
+            | visitWindowMax      | 0             |
+            | visitWindowUnit     | days          |
+            | epoch               | Treatment     |
+            | showVisitInProtocol | true          |
+            | soaMilestone        | true          |
+        And The user intercepts study visit 'create' request
+        And The 'created' visit is saved
+
+    Scenario: [Visit][Create] User must be able to define scheduled Repeating visit
+        And The page 'study_structure/visits' is opened for current study
+        When The user defines a visit in the timeline view with following data:
+            | visitClass          | Repeating visit     |
+            | visitType           | Treatment           |
+            | contactMode         | Phone Contact       |
+            | timeReference       | Global anchor visit |
+            | expectedTiming      | 30                  |
+            | timeUnit            | days                |
+            | visitWindowMin      | 0                   |
+            | visitWindowMax      | 0                   |
+            | visitWindowUnit     | days                |
+            | epoch               | Treatment           |
+            | showVisitInProtocol | true                |
+            | soaMilestone        | false               |
+        And The user intercepts study visit 'create' request
+        And The 'created' visit is saved
+
+    Scenario: [Visit][Create] User must be able to define Manually Defined Visit
+        And The page 'study_structure/visits' is opened for current study
+        When The user defines a visit in the timeline view with following data:
+            | visitClass          | Manually defined visit |
+            | visitType           | Treatment              |
+            | contactMode         | Virtual                |
+            | timeReference       | Global anchor visit    |
+            | visitName           | V4-PITSTOP             |
+            | visitShortName      | V4PIT                  |
+            | timing              | 26                     |
+            | timeUnit            | days                   |
+            | uniqueVisitNumber   | 410                    |
+            | visitWindowMin      | 0                      |
+            | visitWindowMax      | 0                      |
+            | visitWindowUnit     | days                   |
+            | epoch               | Treatment              |
+            | showVisitInProtocol | true                   |
+            | soaMilestone        | false                  |
+        And The user intercepts study visit 'create' request
+        And The 'created' visit is saved
+
+    Scenario: [Visit][Create] User must be able to define scheduled End of Treatment visit
+        And The page 'study_structure/visits' is opened for current study
+        When The user defines a visit in the timeline view with following data:
+            | visitType           | End of treatment    |
+            | contactMode         | On Site Visit       |
+            | timeReference       | Global anchor visit |
+            | timing              | 40                  |
+            | timeUnit            | days                |
+            | visitWindowMin      | -3                  |
+            | visitWindowMax      | 3                   |
+            | visitWindowUnit     | days                |
+            | epoch               | Treatment           |
+            | showVisitInProtocol | true                |
+            | soaMilestone        | true                |
+        And The user intercepts study visit 'create' request
+        And The 'created' visit is saved
+
+    Scenario: [Visit][Create] User must be able to define Early discontinuation
+        And The page 'study_structure/visits' is opened for current study
+        When The user defines a visit in the timeline view with following data:
+            | visitType           | Early discontinuation |
+            | contactMode         | On Site Visit         |
+            | timeReference       | Visit 6               |
+            | visitSuffix         | A                     |
+            | timeUnit            | days                  |
+            | visitWindowUnit     | days                  |
+            | epoch               | Treatment             |
+            | showVisitInProtocol | true                  |
+            | soaMilestone        | true                  |
+        And The user intercepts study visit 'create' request
+        And The 'created' visit is saved
+
+    Scenario: [Visit][Remove] User must not be able to delete a visit which is time reference for another visit
+        And The page 'study_structure/visits' is opened for current study
+        When The user selects visit 'V3D1' in the timeline view
+        And The 'delete-visit-timeline' button is clicked
+        And Action is confirmed by clicking continue
+        Then The user is prompted with a notification message "The Visit can't be deleted as other visits (['V3D8']) are referencing this Visit"
+
+    Scenario: [Visit][Create] User must be able to define Non-visit
+        And The page 'study_structure/visits' is opened for current study
+        When The user defines a visit in the timeline view with following data:
+            | visitType           | Non-visit |
+            | isTechnicalVisit    | true      |
+            | contactMode         | Virtual   |
+            | visitWindowUnit     | days      |
+            | epoch               | Treatment |
+            | showVisitInProtocol | true      |
+        And The user intercepts study visit 'create' request
+        And The 'created' visit is saved
+
+
+    Scenario: [Visit][Create] User must be able to define Unscheduled visit
+        And The page 'study_structure/visits' is opened for current study
+        When The user defines a visit in the timeline view with following data:
+            | visitType           | Unscheduled |
+            | isTechnicalVisit    | true        |
+            | contactMode         | Virtual     |
+            | visitWindowUnit     | days        |
+            | epoch               | Treatment   |
+            | showVisitInProtocol | true        |
+        And The user intercepts study visit 'create' request
+        And The 'created' visit is saved
+
+    Scenario: [Visit][Create] User must be able to define Unscheduled visit connected to Basic epoch
+        And The page 'study_structure/visits' is opened for current study
+        When The user defines a visit in the timeline view with following data:
+            | visitType           | Unscheduled |
+            | contactMode         | Virtual     |
+            | expectedTiming      | 35          |
+            | timeUnit            | days        |
+            | visitWindowUnit     | days        |
+            | epoch               | Basic       |
+            | showVisitInProtocol | true        |
+        And The user intercepts study visit 'create' request
+        And The 'created' visit is saved
+        Then The visit 'V0' is visible in the Study Visits timeline view:
+            | visitType   | Information |
+            | studyDay    | -8          |
+            | studyWeek   | -1          |
+            | visitWindow | ±0D         |
+        And The visit 'V1' is visible in the Study Visits timeline view:
+            | visitType   | Screening |
+            | studyDay    | -7        |
+            | studyWeek   | -1        |
+            | visitWindow | ±1D       |
+        And The visit 'V2' is visible in the Study Visits timeline view:
+            | visitType   | Randomisation |
+            | studyDay    | 0             |
+            | studyWeek   | 0             |
+            | visitWindow | ±1D           |
+        And The visit 'V3D1' is visible in the Study Visits timeline view:
+            | visitType   | Treatment |
+            | studyDay    | 7         |
+            | studyWeek   | 1         |
+            | visitWindow | ±0D       |
+        And The visit 'V3D8' is visible in the Study Visits timeline view:
+            | visitType   | Treatment |
+            | studyDay    | 14        |
+            | studyWeek   | 2         |
+            | visitWindow | ±0D       |
+        And The visit 'V4' is visible in the Study Visits timeline view:
+            | visitType   | Treatment |
+            | studyDay    | 21        |
+            | studyWeek   | 3         |
+            | visitWindow | ±3D       |
+        And The visit 'V4PIT' is visible in the Study Visits timeline view:
+            | visitType   | Treatment |
+            | studyDay    | 26        |
+            | studyWeek   | 3         |
+            | visitWindow | ±0D       |
+        And The visit 'P5.n' is visible in the Study Visits timeline view:
+            | visitType   | Treatment |
+            | studyDay    | 30        |
+            | studyWeek   | 4         |
+            | visitWindow | ±0D       |
+        And The visit 'O6' is visible in the Study Visits timeline view:
+            | visitType | Unscheduled |
+        And The visit 'V7' is visible in the Study Visits timeline view:
+            | visitType   | End of treatment |
+            | studyDay    | 40               |
+            | studyWeek   | 5                |
+            | visitWindow | ±3D              |
 
     Scenario: [Add][Activity][From Library] User must be able to add from list view two Activities to the study from Library
         Given The page 'activities/list' is opened for current study
@@ -357,24 +477,24 @@ Feature: Studies - Define Study - Study Structure and Study Activities - E2E ver
         When User assign activity 'Albumin' to visit 'V0'
         And User assign activity 'Albumin' to visit 'V1'
         And User assign activity 'Weight' to visit 'V2'
-        And User assign activity 'Weight' to visit 'V5'
-        And User assign activity 'Alanine Aminotransferase' to visit 'V5'
+        And User assign activity 'Weight' to visit 'V4'
+        And User assign activity 'Alanine Aminotransferase' to visit 'V4'
         And User assign activity 'E2E_placeholder_' to visit 'V1'
         And User assign activity 'E2E_placeholder_' to visit 'V2'
         And User assign activity 'E2E_placeholder_2_' to visit 'V4'
         And User assign activity 'E2E_FirstActivity' to visit 'V1'
         And User assign activity 'E2E_FirstActivity' to visit 'V3'
-        And User assign activity 'E2E_FirstActivity' to visit 'V3B'
+        And User assign activity 'E2E_FirstActivity' to visit 'VD1'
         And User assign activity 'E2E_SecondActivity' to visit 'V4'
-        And User assign activity 'E2E_SecondActivity' to visit 'V4X'
-        And User assign activity 'E2E_SecondActivity' to visit 'V5'
+        And User assign activity 'E2E_SecondActivity' to visit 'V4PIT'
+        And User assign activity 'E2E_SecondActivity' to visit 'V4'
         And User waits for 1 seconds
         And User switches to the 'protocol' view
         Then User confirms activity 'Albumin' is assigned to visit 'V0'
         And User confirms activity 'Albumin' is assigned to visit 'V1'
         And User confirms activity 'Weight' is assigned to visit 'V2'
-        And User confirms activity 'Weight' is assigned to visit 'V5'
-        And User confirms activity 'Alanine Aminotransferase' is assigned to visit 'V5'
+        And User confirms activity 'Weight' is assigned to visit 'V4'
+        And User confirms activity 'Alanine Aminotransferase' is assigned to visit 'V4'
         And User confirms activity placeholder 'E2E_placeholder_' is assigned to visit 'V1'
         And User confirms activity placeholder 'E2E_placeholder_' is assigned to visit 'V2'
         And User confirms activity placeholder 'E2E_placeholder_2_' is assigned to visit 'V4'
@@ -382,8 +502,8 @@ Feature: Studies - Define Study - Study Structure and Study Activities - E2E ver
         And User confirms activity 'E2E_FirstActivity' is assigned to visit 'V3'
         And User confirms activity 'E2E_FirstActivity' is assigned to visit 'V3B'
         And User confirms activity 'E2E_SecondActivity' is assigned to visit 'V4'
-        And User confirms activity 'E2E_SecondActivity' is assigned to visit 'V4X'
-        And User confirms activity 'E2E_SecondActivity' is assigned to visit 'V5'
+        And User confirms activity 'E2E_SecondActivity' is assigned to visit 'V4PIT'
+        And User confirms activity 'E2E_SecondActivity' is assigned to visit 'V4'
 
     Scenario: [Exchange][Activity] User must be able to exchange an activity from Detailed SoA view, keeping the visits assignment
         Given The page 'activities/soa' is opened for current study
@@ -400,13 +520,13 @@ Feature: Studies - Define Study - Study Structure and Study Activities - E2E ver
         And User clicks eye icon on activity 'Cause of Death' level
         And User switches to the 'protocol' view
         Then User confirms activity 'Cause of Death' is assigned to visit 'V2'
-        And User confirms activity 'Cause of Death' is assigned to visit 'V5'
+        And User confirms activity 'Cause of Death' is assigned to visit 'V4'
 
     Scenario: [Exchange][Placeholder] User must be able to exchange an activity placeholder with two activities from Detailed SoA view, keeping the visits assigment
         Given The page 'activities/soa' is opened for current study
         And Detailed SoA table is loaded
         And User expand table
-        And Action 'Exchange Activity' is selected for activity 'E2E_placeholder_2_'
+        And Action 'Exchange Activity' is selected for activity 'E2E_placeholder_'
         And Form continue button is clicked
         When The Study Activity with name 'Adverse Event' is searched for
         And The first matching activity is selected
@@ -464,20 +584,20 @@ Feature: Studies - Define Study - Study Structure and Study Activities - E2E ver
         Given The page 'activities/soa' is opened for current study
         And Detailed SoA table is loaded
         And User expand table
-        And Action 'Edit Activity' is selected for activity 'E2E_placeholder_'
+        And Action 'Edit Activity' is selected for activity 'E2E_placeholder_2_'
         And User waits for 1 seconds
         When User edits Activity SoA group to 'GENETICS'
         And User waits for 1 seconds
         And The activity group is edited to 'Laboratory Assessments'
         And The activity subgroup is edited to 'Biochemistry'
-        And User change placeholder name to 'New_E2E_placeholder_'
+        And User change placeholder name to 'New_E2E_placeholder_2_'
         And Modal window 'Save' button is clicked
         And Detailed SoA table is loaded
         And User expand table
-        Then Activity 'New_E2E_placeholder_' is visible under subgroup 'Biochemistry', group 'Laboratory Assessments' and soa group 'GENETICS'
+        Then Activity 'New_E2E_placeholder_2_' is visible under subgroup 'Biochemistry', group 'Laboratory Assessments' and soa group 'GENETICS'
 
     Scenario: [Edit][Activity][Red bell handling] User must be able to see the red bell notification next to edited activities
-        Given The page 'activities/list' is opened for current study 
+        Given The page 'activities/list' is opened for current study
         And User searches for 'E2E_FirstActivity'
         When User gets full activity name starting with 'E2E_FirstActivity'
         Given The '/library/activities/activities' page is opened
@@ -492,7 +612,7 @@ Feature: Studies - Define Study - Study Structure and Study Activities - E2E ver
         And User fills in the reason for change
         And Form save button is clicked
         When The 'Approve' option is clicked from the three dot menu list
-        Given The page 'activities/list' is opened for current study 
+        Given The page 'activities/list' is opened for current study
         And User searches for 'E2E_SecondActivity'
         When User gets full activity name starting with 'E2E_SecondActivity'
         Given The '/library/activities/activities' page is opened
@@ -508,7 +628,7 @@ Feature: Studies - Define Study - Study Structure and Study Activities - E2E ver
         Then The red alert badge is present
 
     Scenario: [Edit][Activity][Red bell handling] User must be able to accept changes for first activity and decline them for the second activity
-        Given The page 'activities/list' is opened for current study 
+        Given The page 'activities/list' is opened for current study
         And The user opens bulk review changes window
         Then The activity 'E2E_FirstActivity' is displayed as changed with new 'name' value from 'E2E_FirstActivity' to 'Update E2E_FirstActivity'
         And The activity 'E2E_FirstActivity' is displayed as changed with new 'group' value from 'API_Group' to 'General'
@@ -535,8 +655,7 @@ Feature: Studies - Define Study - Study Structure and Study Activities - E2E ver
         And Action is confirmed by clicking continue
         Then The pop up displays 'Study activity removed'
         And The page is reloaded
-        And The Study Activity is searched for
-        And No activities are found
+        And User searches for 'Alanine Aminotransferase' and confirms no results returned
 
     Scenario: [Footnotes][From Scratch][Link] User must be able to define new footnote and link it to two existing visits
         Given The page 'activities/soa' is opened for current study
@@ -544,7 +663,7 @@ Feature: Studies - Define Study - Study Structure and Study Activities - E2E ver
         And User expand table
         And User clicks plus icon to initate adding a footnote
         And User clicks plus icon in the activity 'Adverse Event' row for visit 'V2'
-        And User clicks plus icon in the activity 'E2E_SecondActivity' row for visit 'V4X'
+        And User clicks plus icon in the activity 'E2E_SecondActivity' row for visit 'V4PIT'
         When The button with text 'Continue' is clicked
         And User selects to create a footnote from scratch
         And Form continue button is clicked
@@ -555,13 +674,13 @@ Feature: Studies - Define Study - Study Structure and Study Activities - E2E ver
         Then Added footnote 'My First footnote' is visible in the table, including index 'a'
         And Footnote 'My First footnote' linkage to 'Adverse Event V2' is visible in the footnotes table
         And Footnote 'My First footnote' linkage to 'E2E_SecondActivity' is visible in the footnotes table
-        And Footnote 'My First footnote' linkage to 'V4X' is visible in the footnotes table
+        And Footnote 'My First footnote' linkage to 'V4PIT' is visible in the footnotes table
         And Footnote index 'a' is visible in the detaied SoA next to activity 'Adverse Event' visit 'V2'
-        And Footnote index 'a' is visible in the detaied SoA next to activity 'E2E_SecondActivity' visit 'V4X'
+        And Footnote index 'a' is visible in the detaied SoA next to activity 'E2E_SecondActivity' visit 'V4PIT'
         And User switches to the 'protocol' view
         And Footnote index 'a' has footnote text 'My First footnote' displayed on the protocol page
         And Footnote index 'a' is assgined to visit 'V2' for activity 'Adverse Event'
-        And Footnote index 'a' is assgined to visit 'V4X' for activity 'E2E_SecondActivity'
+        And Footnote index 'a' is assgined to visit 'V4PIT' for activity 'E2E_SecondActivity'
 
     Scenario: [Footnotes][From Studies][Link] User must be able to add footnote from another studies and link it to one existing visit
         Given The page 'activities/soa' is opened for current study
@@ -625,4 +744,4 @@ Feature: Studies - Define Study - Study Structure and Study Activities - E2E ver
         And User switches to the 'protocol' view
         And Footnote 'My other footnote' is no longer available on the protocol page
 
-    #Scenario: User must be able to see that the detailed SoA is reflected in the Protocol view
+#Scenario: User must be able to see that the detailed SoA is reflected in the Protocol view

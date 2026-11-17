@@ -41,15 +41,13 @@ class CTCodelistNameVO:
         is_ordinal: bool = False,
         codelist_type: str = DEFAULT_CODELIST_TYPE,
     ) -> Self:
-        ct_codelist_name_vo = cls(
+        return cls(
             name=name,
             catalogue_names=catalogue_names,
             is_template_parameter=is_template_parameter,
             is_ordinal=is_ordinal,
             codelist_type=codelist_type,
         )
-
-        return ct_codelist_name_vo
 
     @classmethod
     def from_input_values(
@@ -74,15 +72,13 @@ class CTCodelistNameVO:
             "Name",
         )
 
-        ct_codelist_name_vo = cls(
+        return cls(
             name=name,
             catalogue_names=catalogue_names,
             is_template_parameter=is_template_parameter,
             is_ordinal=bool(is_ordinal),
             codelist_type=codelist_type,
         )
-
-        return ct_codelist_name_vo
 
 
 @dataclass
@@ -108,13 +104,12 @@ class CTCodelistNameAR(LibraryItemAggregateRootBase):
         library: LibraryVO,
         item_metadata: LibraryItemMetadataVO,
     ) -> Self:
-        ct_codelist_ar = cls(
+        return cls(
             _uid=uid,
             _ct_codelist_name_vo=ct_codelist_name_vo,
             _item_metadata=item_metadata,
             _library=library,
         )
-        return ct_codelist_ar
 
     @classmethod
     def from_input_values(
@@ -184,13 +179,13 @@ class CTCodelistNameAR(LibraryItemAggregateRootBase):
         """
         Inactivates latest version.
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def reactivate(self, author_id: str, change_description: str | None = None):
         """
         Reactivates latest retired version and sets the version to draft.
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def soft_delete(self):
-        raise NotImplementedError()
+        raise NotImplementedError

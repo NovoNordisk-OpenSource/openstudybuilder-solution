@@ -43,6 +43,7 @@ services:
       NEO4J_server_bolt_advertised__address: "localhost:5002"
       NEO4J_server_http_advertised__address: "localhost:5001"
       NEO4J_AUTH: "neo4j/${NEO4J_MDR_AUTH_PASSWORD:?Set NEO4J_MDR_AUTH_PASSWORD in .env or environment}"
+      
 
     ports:
       - "${BIND_ADDRESS:-127.0.0.1}:${NEO4J_BOLT_PORT:-5002}:7687"
@@ -83,6 +84,17 @@ services:
       OAUTH_APP_SECRET: "${OAUTH_APP_SECRET:-}"
       OAUTH_CLIENT_ID: "${OAUTH_CLIENT_ID:-}"
       OIDC_METADATA_DOCUMENT: "${OIDC_METADATA_DOCUMENT:-}"
+      NEO4J_STANDARDS_IMPORT_ENABLED: "true"
+      NEO4J_MAX_PACKAGE_FILE_BYTES: 67108864
+      NEO4J_STAGING_BATCH_SIZE: 1000
+      NEO4J_JOB_STALE_AFTER_SECONDS: 144000
+      NEO4J_STANDARDS_IMPORT_CDISC_API_BASE_URL: "https://library.cdisc.org/api"
+      NEO4J_NEO4J_MDR_ROLE_USER: "neo4j"
+      NEO4J_NEO4J_STAGING_ROLE_USER: "neo4j"
+      NEO4J_AUTH: "neo4j/${NEO4J_MDR_AUTH_PASSWORD:?Set NEO4J_MDR_AUTH_PASSWORD in .env or environment}"
+      NEO4J_STANDARDS_IMPORT_STAGING_DSN: "${NEO4J_DSN:-bolt://neo4j:${NEO4J_MDR_AUTH_PASSWORD:?Set NEO4J_MDR_AUTH_PASSWORD in .env or environment}@database:7687/mdrdb}"
+      NEO4J_NEO4J_MDR_ROLE_PASSWORD: "${NEO4J_MDR_AUTH_PASSWORD:?Set NEO4J_MDR_AUTH_PASSWORD in .env or environment}"
+      NEO4J_NEO4J_STAGING_ROLE_PASSWORD: "${NEO4J_MDR_AUTH_PASSWORD:?Set NEO4J_MDR_AUTH_PASSWORD in .env or environment}"
 
   # Consumer API image & service
   consumerapi:

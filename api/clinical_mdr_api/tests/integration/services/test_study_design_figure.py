@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 @pytest.fixture(scope="module")
 def tst_study(request, temp_database):
     """Initialize test study"""
-    logging.info("%s fixture: injecting magic data", request.fixturename)
+    logger.info("%s fixture: injecting magic data", request.fixturename)
     study, _test_data_dict = inject_base_data()
     return study
 

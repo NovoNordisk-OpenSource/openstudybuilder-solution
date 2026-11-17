@@ -1,4 +1,5 @@
 import abc
+import logging
 import threading
 from collections import defaultdict
 from collections.abc import Callable, Iterable
@@ -34,6 +35,8 @@ from common import exceptions
 from common.auth.user import user
 from common.config import settings
 from common.telemetry import trace_calls
+
+log = logging.getLogger(__name__)
 
 
 class StudyActivitySelectionBaseService[
@@ -123,11 +126,8 @@ class StudyActivitySelectionBaseService[
                 # TTLCache may have internal timers that need explicit cleanup
                 if hasattr(self._batch_cache, "expire"):
                     self._batch_cache.expire()
-            except Exception as e:
-                # Log but don't fail - cleanup is best-effort
-                import logging
-
-                logging.warning("Error during batch cache cleanup: %s", e)
+            except Exception as e:  # noqa: BLE001
+                log.warning("Error during batch cache cleanup: %s", e)
             finally:
                 self._batch_cache = None
 
@@ -193,7 +193,7 @@ class StudyActivitySelectionBaseService[
             # Remove all cache entries for this study (across all versions)
             keys_to_remove = [
                 key
-                for key in cls._shared_terms_date_cache.keys()
+                for key in cls._shared_terms_date_cache
                 if key[0]
                 == study_uid  # Cache key format: (study_uid, study_value_version)
             ]
@@ -220,7 +220,7 @@ class StudyActivitySelectionBaseService[
         self._batch_cache.pop(scope_key, None)
 
         # Parent hierarchy may need re-compaction after deletion
-        reordered_keys = [k for k in self._batch_cache.keys() if k[0] == "reordered"]
+        reordered_keys = [k for k in self._batch_cache if k[0] == "reordered"]
         for key in reordered_keys:
             del self._batch_cache[key]
 
@@ -361,9 +361,10 @@ class StudyActivitySelectionBaseService[
             assert activity_selection_ar is not None
             if filter_by is not None:
                 validate_is_dict("filter_by", filter_by)
-            if sort_by is not None:
-                validate_is_dict("sort_by", sort_by)
-            elif (sort_by := self.get_default_sorting()) is not None:
+            if (
+                sort_by is not None
+                or (sort_by := self.get_default_sorting()) is not None
+            ):
                 validate_is_dict("sort_by", sort_by)
 
             simple_filters = build_simple_filters(
@@ -641,7 +642,7 @@ class StudyActivitySelectionBaseService[
         else:
             all_items = all_items.items
 
-        header_values = service_level_generic_header_filtering(
+        return service_level_generic_header_filtering(
             items=all_items,
             field_name=field_name,
             search_string=search_string,
@@ -649,8 +650,6 @@ class StudyActivitySelectionBaseService[
             filter_operator=filter_operator,
             page_size=page_size,
         )
-
-        return header_values
 
     @ensure_transaction(db)
     def set_new_order(
@@ -685,12 +684,11 @@ class StudyActivitySelectionBaseService[
             )
 
             # add the activity and return
-            reordered_item = self._transform_from_vo_to_response_model(
+            return self._transform_from_vo_to_response_model(
                 study_uid=study_uid,
                 specific_selection=specific_selection,
                 terms_at_specific_datetime=terms_at_specific_datetime,
             )
-            return reordered_item
         finally:
             repos.close()
 

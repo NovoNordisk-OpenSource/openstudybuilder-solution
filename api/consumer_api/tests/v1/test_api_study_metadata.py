@@ -67,6 +67,7 @@ STUDY_METADATA_LISTING_TOP_LEVEL_KEYS = [
     "criteria",
     "objectives",
     "endpoints",
+    "auxiliary_devices",
 ]
 
 # StudyArmListingModel keys (for arms in study-metadata response)
@@ -267,6 +268,8 @@ STUDY_TYPE_LISTING_KEYS = [
     "trial_type_nf",
     "phase",
     "phase_nf",
+    "age_bl_rule",
+    "age_grp_rule",
     "extension",
     "extension_nf",
     "adaptive",
@@ -368,12 +371,10 @@ def test_data(api_client):
     study, _test_data_dict = inject_base_data()
     create_study_visit_codelists(create_unit_definitions=False, use_test_utils=True)
 
-    studies = [study]  # type: ignore[list-item]
+    studies = [study]
     for _idx in range(1, total_studies):
         rand_str = TestUtils.random_str(4)
-        studies.append(
-            TestUtils.create_study(acronym=f"ACR-{rand_str}")  # type: ignore[arg-type]
-        )
+        studies.append(TestUtils.create_study(acronym=f"ACR-{rand_str}"))
 
     study_epoch = create_study_epoch("EpochSubType_0001", study_uid=studies[0].uid)
     study_epoch = edit_study_epoch(study_epoch.uid, study_uid=studies[0].uid)
@@ -396,10 +397,10 @@ def test_data(api_client):
 
     visit_to_create = generate_default_input_data_for_visit().copy()
     study_visits = []
-    for _idx in range(0, total_study_visits_version_1):
+    for _idx in range(total_study_visits_version_1):
         visit_to_create.update({"time_value": _idx})
         study_visits.append(
-            TestUtils.create_study_visit(  # type: ignore[arg-type]
+            TestUtils.create_study_visit(
                 study_uid=studies[0].uid,
                 study_epoch_uid=study_epoch.uid,
                 **visit_to_create,
@@ -617,6 +618,23 @@ def test_data(api_client):
         objective_level_uid=objective_level_term.term_uid,
         endpoint_level_uid=endpoint_level_term.term_uid,
     )
+    auxiliary_device_codelist = TestUtils.create_ct_codelist(
+        name="Device definitions",
+        sponsor_preferred_name="Device definitions",
+        submission_value=settings.auxiliary_device_cl_submval,
+        extensible=True,
+        approve=True,
+    )
+    auxiliary_device_term = TestUtils.create_ct_term(
+        codelist_uid=auxiliary_device_codelist.codelist_uid,
+        sponsor_preferred_name="Glucose Meter",
+        submission_value="GLUCMETER",
+        algorithm="DIPARMCD='SERIAL'",
+    )
+    TestUtils.create_study_auxiliary_device(
+        study_uid=studies[0].uid,
+        auxiliary_device_term_uid=auxiliary_device_term.term_uid,
+    )
     study_service = StudyService()
     study_service.lock(
         uid=studies[0].uid,
@@ -633,7 +651,7 @@ def test_data(api_client):
     # Extra visit for latest version (no activity)
     visit_to_create.update({"time_value": total_study_visits_version_1})
     study_visits.append(
-        TestUtils.create_study_visit(  # type: ignore[arg-type]
+        TestUtils.create_study_visit(
             study_uid=studies[0].uid,
             study_epoch_uid=study_epoch.uid,
             **visit_to_create,
@@ -729,6 +747,24 @@ def test_get_study_metadata_arms_shape_and_content(api_client):
             assert (
                 arm["type"]["queried_effective_date"] is None
             ), "queried_effective_date should be null when fallback/latest is used"
+
+
+def test_get_study_metadata_auxiliary_devices_shape_and_content(api_client):
+    """GET /v1/papillons/study-metadata returns the study's auxiliary devices."""
+    res = _get_study_metadata_response(api_client)
+    devices = res["auxiliary_devices"]
+    assert len(devices) == 1
+    device = devices[0]
+    assert device["uid"]
+    assert device["order"] == 1
+    assert device["algorithm"] == "DIPARMCD='SERIAL'"
+    assert_ct_conflict_object(device["device"], "auxiliary_devices.device")
+    assert device["device"]["sponsor_preferred_name"] == "Glucose Meter"
+    assert device["device"]["submission_value"] == "GLUCMETER"
+    assert (
+        device["device"]["codelist_submission_value"]
+        == settings.auxiliary_device_cl_submval
+    )
 
 
 def test_get_study_metadata_arms_date_conflict_true_on_ct_package_mismatch(api_client):
@@ -967,7 +1003,7 @@ def test_get_study_metadata_epochs_shape_and_content(api_client):
 
 
 def test_get_study_metadata_epochs_lag_time(api_client):
-    """Lag time only carries data migrated from MMA, so unset slots stay null."""
+    """Lag time is optional on every epoch, so unset slots stay null."""
     res = _get_study_metadata_response(api_client)
     epochs = res["epochs"]
     lag_epochs = [e for e in epochs if e["ae_lag_time"] is not None]
@@ -1261,6 +1297,8 @@ def test_get_study_metadata_study_type_shape_and_content(api_client):
             "trial_type_nf",
             "phase",
             "phase_nf",
+            "age_bl_rule",
+            "age_grp_rule",
             "extension_nf",
             "adaptive_nf",
             "stop_rule_nf",
@@ -1301,7 +1339,6 @@ def test_get_study_metadata_study_attributes_shape_and_content(api_client):
             "intv_type",
             "intv_type_nf",
             "add_on_nf",
-            "control_type",
             "control_type_nf",
             "intv_model",
             "intv_model_nf",
@@ -1322,6 +1359,63 @@ def test_get_study_metadata_study_attributes_shape_and_content(api_client):
         for item in study_attributes["study_intent"]:
             assert isinstance(item, dict), "study_intent items must be dicts"
             assert_ct_conflict_object(item, "study_attributes.study_intent[]")
+        assert isinstance(
+            study_attributes["control_type"], list
+        ), "study_attributes.control_type must be a list"
+        for item in study_attributes["control_type"]:
+            assert isinstance(item, dict), "control_type items must be dicts"
+            assert_ct_conflict_object(item, "study_attributes.control_type[]")
+
+
+def test_get_study_metadata_study_attributes_multiple_control_types(api_client):
+    """GET study-metadata returns every selected Control Type term.
+
+    The consumer API resolves control_type with its own Cypher over the
+    StudyArrayField, separately from the main API, so it needs its own check
+    that more than one term comes back.
+    """
+    control_types = [("C49648", "Placebo Control"), ("C49649", "Active Control")]
+    TestUtils.create_study_ct_data_map(
+        codelist_uid=None,
+        ct_data_map={"ControlType": control_types},
+        ct_codelist_map={"ControlType": ("C66785", "Control Type", "TCNTRL")},
+    )
+    control_type_study = TestUtils.create_study(
+        acronym=f"MCP-CT-{TestUtils.random_str(4)}"
+    )
+    TestUtils.set_study_title(
+        control_type_study.uid, study_title="MCP control type metadata study"
+    )
+    _patch_and_lock_study(
+        control_type_study.uid,
+        study_intervention=StudyInterventionJsonModel(
+            control_type_codes=[
+                SimpleCTTermNameWithConflictFlag(term_uid=term_uid)
+                for term_uid, _ in control_types
+            ],
+        ),
+    )
+
+    id_metadata = control_type_study.current_metadata.identification_metadata
+    response = api_client.get(
+        f"{BASE_URL}/papillons/study-metadata",
+        params={
+            "project_id": id_metadata.project_number,
+            "study_number": id_metadata.study_number,
+            "datetime": "2099-12-30T00:00:00Z",
+        },
+    )
+    assert_response_status_code(response, 200)
+
+    control_type = response.json()["study_attributes"]["control_type"]
+    for item in control_type:
+        assert_ct_conflict_object(item, "study_attributes.control_type[]")
+    assert (
+        sorted(
+            (term["term_uid"], term["sponsor_preferred_name"]) for term in control_type
+        )
+        == control_types
+    )
 
 
 def test_get_study_metadata_study_population_shape_and_content(api_client):
@@ -1450,7 +1544,7 @@ def _assert_null_flavor(
     assert nf["sponsor_preferred_name"] == null_name
 
 
-def _patch_study_null_flavor(
+def _patch_and_lock_study(
     study_uid: str,
     *,
     high_level_study_design: HighLevelStudyDesignJsonModel | None = None,
@@ -1479,7 +1573,7 @@ def _patch_study_null_flavor(
     )
     study_service.lock(
         uid=study_uid,
-        change_description="lock after null flavor patch",
+        change_description="lock after metadata patch",
         reason_for_lock_term_uid=_test_data_dict["reason_for_lock_terms"][0].term_uid,
     )
 
@@ -1501,7 +1595,7 @@ def test_get_study_metadata_null_flavors_returned_for_study_type_fields(api_clie
     """GET study-metadata returns *_nf for study_type text/boolean/array/time fields."""
     null_term_uid, null_name = TestUtils.get_null_value_code()
     nf = _null_flavor_term(null_term_uid)
-    _patch_study_null_flavor(
+    _patch_and_lock_study(
         null_flavor_study.uid,
         high_level_study_design=HighLevelStudyDesignJsonModel(
             study_type_code=None,
@@ -1549,7 +1643,7 @@ def test_get_study_metadata_null_flavors_returned_for_study_attributes_fields(
     """GET study-metadata returns *_nf for study_attributes text/boolean/array/time fields."""
     null_term_uid, null_name = TestUtils.get_null_value_code()
     nf = _null_flavor_term(null_term_uid)
-    _patch_study_null_flavor(
+    _patch_and_lock_study(
         null_flavor_study.uid,
         study_intervention=StudyInterventionJsonModel(
             intervention_type_code=None,
@@ -1558,7 +1652,7 @@ def test_get_study_metadata_null_flavors_returned_for_study_attributes_fields(
             planned_study_length_null_value_code=nf,
             add_on_to_existing_treatments=None,
             add_on_to_existing_treatments_null_value_code=nf,
-            control_type_code=None,
+            control_type_codes=None,
             control_type_null_value_code=nf,
             intervention_model_code=None,
             intervention_model_null_value_code=nf,
@@ -1599,7 +1693,7 @@ def test_get_study_metadata_null_flavors_returned_for_study_population_fields(
     """GET study-metadata returns *_nf for study_population text/boolean/array/time/int fields."""
     null_term_uid, null_name = TestUtils.get_null_value_code()
     nf = _null_flavor_term(null_term_uid)
-    _patch_study_null_flavor(
+    _patch_and_lock_study(
         null_flavor_study.uid,
         study_population=StudyPopulationJsonModel(
             therapeutic_area_codes=None,
@@ -1658,6 +1752,48 @@ def test_get_study_metadata_null_flavors_returned_for_study_population_fields(
         )
 
 
+def test_get_study_metadata_age_rules_resolved(api_client):
+    """Age rules resolve through the CTTermContext of their sponsor codelist."""
+    age_rules_study = TestUtils.create_study(
+        acronym=f"MCP-AGE-{TestUtils.random_str(4)}"
+    )
+    TestUtils.set_study_title(age_rules_study.uid, study_title="Age rules study")
+    # Terms seeded by create_study_ct_data_map in the module fixture
+    _patch_and_lock_study(
+        age_rules_study.uid,
+        high_level_study_design=HighLevelStudyDesignJsonModel(
+            age_at_baseline_rule_code=SimpleCTTermNameWithConflictFlag(
+                term_uid="AgeBlRule_1"
+            ),
+            age_group_rule_code=SimpleCTTermNameWithConflictFlag(
+                term_uid="AgeGrpRule_1"
+            ),
+        ),
+    )
+    identification = age_rules_study.current_metadata.identification_metadata
+    response = api_client.get(
+        f"{BASE_URL}/papillons/study-metadata",
+        params={
+            "project_id": identification.project_number,
+            "study_number": identification.study_number,
+            "datetime": "2099-12-30T00:00:00Z",
+        },
+    )
+    assert_response_status_code(response, 200)
+    study_type = response.json()["study_type"]
+
+    for key, term_uid, submission_value, term_name in (
+        ("age_bl_rule", "AgeBlRule_1", "AGE_AT_BASELINE_RL", "Age at Baseline Rule 1"),
+        ("age_grp_rule", "AgeGrpRule_1", "AGE_GRP_RL", "Age Decimal"),
+    ):
+        rule = study_type[key]
+        assert_ct_conflict_object(rule, f"study_type.{key}")
+        assert rule["term_uid"] == term_uid
+        assert rule["sponsor_preferred_name"] == term_name
+        assert rule["codelist_submission_value"] == submission_value
+
+
+# Keep last: rewrites every SDTM CT package date, which breaks later study locks.
 def test_get_study_metadata_null_flavors_date_conflict_true_on_ct_package_mismatch(
     api_client,
 ):

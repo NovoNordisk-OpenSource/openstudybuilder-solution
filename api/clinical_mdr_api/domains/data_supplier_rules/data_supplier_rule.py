@@ -1,5 +1,5 @@
 from collections.abc import Callable, Set
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Self
 
 from clinical_mdr_api.domains.versioned_object_aggregate import (
@@ -25,6 +25,21 @@ class DataSupplierRuleActivityGroupingVO:
     activity_name: str | None = None
     activity_group_name: str | None = None
     activity_subgroup_name: str | None = None
+    activity_grouping_uid: str | None = field(default=None, compare=False)
+    # Warning flags are computed on read and never take part in equality checks.
+    is_activity_retired: bool = field(default=False, compare=False)
+    is_activity_group_retired: bool = field(default=False, compare=False)
+    is_activity_subgroup_retired: bool = field(default=False, compare=False)
+    grouping_exists: bool = field(default=True, compare=False)
+
+    @property
+    def has_warnings(self) -> bool:
+        return (
+            self.is_activity_retired
+            or self.is_activity_group_retired
+            or self.is_activity_subgroup_retired
+            or not self.grouping_exists
+        )
 
     @classmethod
     def from_repository_values(
@@ -35,6 +50,11 @@ class DataSupplierRuleActivityGroupingVO:
         activity_name: str | None = None,
         activity_group_name: str | None = None,
         activity_subgroup_name: str | None = None,
+        activity_grouping_uid: str | None = None,
+        is_activity_retired: bool = False,
+        is_activity_group_retired: bool = False,
+        is_activity_subgroup_retired: bool = False,
+        grouping_exists: bool = True,
     ) -> Self:
         return cls(
             activity_uid=activity_uid,
@@ -43,6 +63,11 @@ class DataSupplierRuleActivityGroupingVO:
             activity_name=activity_name,
             activity_group_name=activity_group_name,
             activity_subgroup_name=activity_subgroup_name,
+            activity_grouping_uid=activity_grouping_uid,
+            is_activity_retired=is_activity_retired,
+            is_activity_group_retired=is_activity_group_retired,
+            is_activity_subgroup_retired=is_activity_subgroup_retired,
+            grouping_exists=grouping_exists,
         )
 
 
@@ -65,19 +90,18 @@ class DataSupplierRuleVO:
         activity_groupings: tuple[DataSupplierRuleActivityGroupingVO, ...] = (),
         data_supplier_type_uid: str | None = None,
     ) -> Self:
-        data_supplier_rule_vo = cls(
+        return cls(
             description=description,
             name=name,
             activity_groupings=tuple(activity_groupings),
             data_supplier_type_uid=data_supplier_type_uid,
         )
 
-        return data_supplier_rule_vo
-
     def validate(
         self,
         ct_term_exists_by_uid_callback: Callable[[str], bool],
         activity_grouping_exists_callback: Callable[[str, str, str], bool],
+        activity_grouping_retired_parts_callback: Callable[[str, str, str], list[str]],
         data_supplier_rule_name_exists_callback: Callable[[str], bool],
         data_supplier_type_disallows_rules_callback: Callable[[str], bool],
     ) -> None:
@@ -114,6 +138,22 @@ class DataSupplierRuleVO:
                     f"'{grouping.activity_subgroup_uid}'."
                 ),
             )
+            if self.data_supplier_type_uid:
+                retired_parts = activity_grouping_retired_parts_callback(
+                    grouping.activity_uid,
+                    grouping.activity_group_uid,
+                    grouping.activity_subgroup_uid,
+                )
+                BusinessLogicException.raise_if(
+                    retired_parts,
+                    msg=(
+                        "The ActivityGrouping for Activity with UID "
+                        f"'{grouping.activity_uid}', Activity Group with UID "
+                        f"'{grouping.activity_group_uid}' and Activity Subgroup with UID "
+                        f"'{grouping.activity_subgroup_uid}' can't be used because the "
+                        f"following are retired: {', '.join(retired_parts)}."
+                    ),
+                )
 
 
 @dataclass
@@ -144,13 +184,12 @@ class DataSupplierRuleAR(LibraryItemAggregateRootBase):
         library: LibraryVO,
         item_metadata: LibraryItemMetadataVO,
     ) -> Self:
-        data_supplier_rule_ar = cls(
+        return cls(
             _uid=uid,
             _data_supplier_rule_vo=data_supplier_rule_vo,
             _item_metadata=item_metadata,
             _library=library,
         )
-        return data_supplier_rule_ar
 
     @classmethod
     def from_input_values(
@@ -161,6 +200,7 @@ class DataSupplierRuleAR(LibraryItemAggregateRootBase):
         library: LibraryVO,
         ct_term_exists_by_uid_callback: Callable[[str], bool],
         activity_grouping_exists_callback: Callable[[str, str, str], bool],
+        activity_grouping_retired_parts_callback: Callable[[str, str, str], list[str]],
         data_supplier_rule_name_exists_callback: Callable[[str], bool],
         data_supplier_type_disallows_rules_callback: Callable[[str], bool],
         generate_uid_callback: Callable[[], str | None] = (lambda: None),
@@ -175,16 +215,16 @@ class DataSupplierRuleAR(LibraryItemAggregateRootBase):
         data_supplier_rule_vo.validate(
             ct_term_exists_by_uid_callback=ct_term_exists_by_uid_callback,
             activity_grouping_exists_callback=activity_grouping_exists_callback,
+            activity_grouping_retired_parts_callback=activity_grouping_retired_parts_callback,
             data_supplier_rule_name_exists_callback=data_supplier_rule_name_exists_callback,
             data_supplier_type_disallows_rules_callback=data_supplier_type_disallows_rules_callback,
         )
-        data_supplier_rule_ar = cls(
+        return cls(
             _uid=generate_uid_callback(),
             _item_metadata=item_metadata,
             _library=library,
             _data_supplier_rule_vo=data_supplier_rule_vo,
         )
-        return data_supplier_rule_ar
 
     def edit_draft(
         self,
@@ -193,6 +233,7 @@ class DataSupplierRuleAR(LibraryItemAggregateRootBase):
         data_supplier_rule_vo: DataSupplierRuleVO,
         ct_term_exists_by_uid_callback: Callable[[str], bool],
         activity_grouping_exists_callback: Callable[[str, str, str], bool],
+        activity_grouping_retired_parts_callback: Callable[[str, str, str], list[str]],
         data_supplier_rule_name_exists_callback: Callable[[str], bool],
         data_supplier_type_disallows_rules_callback: Callable[[str], bool],
     ) -> None:
@@ -203,6 +244,7 @@ class DataSupplierRuleAR(LibraryItemAggregateRootBase):
         data_supplier_rule_vo.validate(
             ct_term_exists_by_uid_callback=ct_term_exists_by_uid_callback,
             activity_grouping_exists_callback=activity_grouping_exists_callback,
+            activity_grouping_retired_parts_callback=activity_grouping_retired_parts_callback,
             data_supplier_rule_name_exists_callback=data_supplier_rule_name_exists_callback,
             data_supplier_type_disallows_rules_callback=data_supplier_type_disallows_rules_callback,
         )

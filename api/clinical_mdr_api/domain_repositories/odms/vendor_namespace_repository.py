@@ -83,7 +83,7 @@ class VendorNamespaceRepository(OdmGenericRepository[OdmVendorNamespaceAR]):
             "Creating OdmVendorNamespaceAR from Cypher result for uid=%s",
             input_dict["uid"],
         )
-        odm_vendor_namespace_ar = OdmVendorNamespaceAR.from_repository_values(
+        return OdmVendorNamespaceAR.from_repository_values(
             uid=input_dict["uid"],
             odm_vo=OdmVendorNamespaceVO.from_repository_values(
                 name=input_dict["name"],
@@ -109,8 +109,6 @@ class VendorNamespaceRepository(OdmGenericRepository[OdmVendorNamespaceAR]):
                 minor_version=int(minor),
             ),
         )
-
-        return odm_vendor_namespace_ar
 
     def _get_specific_field_mapping(self) -> dict[str, str]:
         """Field mappings for vendor namespace specific fields."""

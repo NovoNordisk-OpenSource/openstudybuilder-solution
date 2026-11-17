@@ -3,123 +3,68 @@
 
 | Package                  | Version      | License                                     |
 |--------------------------|--------------|---------------------------------------------|
-| starlette                | 1.6.0        | [BSD-3-Clause](#starlette)                  |
-| anyio                    | 4.15.1       | [MIT](#anyio)                               |
-| typing_extensions        | 4.16.0       | [PSF-2.0](#typing_extensions)               |
-| idna                     | 3.19         | [BSD-3-Clause](#idna)                       |
-| requests                 | 2.33.1       | [Apache-2.0](#requests)                     |
-| urllib3                  | 2.8.0        | [MIT](#urllib3)                             |
-| charset-normalizer       | 3.5.1        | [MIT](#charset-normalizer)                  |
-| certifi                  | 2026.7.22    | [MPL-2.0](#certifi)                         |
-| PyYAML                   | 6.0.3        | [MIT](#pyyaml)                              |
-| pytest-order             | 1.5.0        | [MIT](#pytest-order)                        |
-| pytest                   | 9.0.3        | [MIT](#pytest)                              |
-| Pygments                 | 2.21.0       | [BSD-2-Clause](#pygments)                   |
-| pluggy                   | 1.6.0        | [MIT](#pluggy)                              |
-| packaging                | 26.3         | [Apache-2.0 OR BSD-2-Clause](#packaging)    |
-| iniconfig                | 2.3.0        | [MIT](#iniconfig)                           |
-| colorama                 | 0.4.6        | [see below](#colorama)                      |
-| pydantic                 | 1.10.26      | [MIT](#pydantic)                            |
-| opencensus-ext-azure     | 1.1.15       | [Apache-2.0](#opencensus-ext-azure)         |
-| psutil                   | 7.2.2        | [BSD-3-Clause](#psutil)                     |
-| opencensus               | 0.11.4       | [Apache-2.0](#opencensus)                   |
-| six                      | 1.17.0       | [MIT](#six)                                 |
-| opencensus-context       | 0.1.3        | [Apache-2.0](#opencensus-context)           |
-| google-api-core          | 2.37.0       | [Apache 2.0](#google-api-core)              |
-| protobuf                 | 7.36.1       | [3-Clause BSD License](#protobuf)           |
-| proto-plus               | 1.28.4       | [Apache 2.0](#proto-plus)                   |
-| opentelemetry-api        | 1.44.0       | [Apache-2.0](#opentelemetry-api)            |
-| googleapis-common-protos | 1.75.3       | [Apache-2.0](#googleapis-common-protos)     |
-| google-auth              | 2.58.0       | [Apache 2.0](#google-auth)                  |
-| pyasn1_modules           | 0.4.2        | [BSD](#pyasn1_modules)                      |
-| pyasn1                   | 0.6.4        | [BSD-2-Clause](#pyasn1)                     |
-| cryptography             | 50.0.1       | [Apache-2.0 OR BSD-3-Clause](#cryptography) |
-| cffi                     | 2.1.1        | [MIT-0](#cffi)                              |
-| pycparser                | 3.0          | [BSD-3-Clause](#pycparser)                  |
-| azure-identity           | 1.25.3       | [MIT](#azure-identity)                      |
-| msal-extensions          | 1.3.1        | [MIT License](#msal-extensions)             |
-| msal                     | 1.38.0       | [MIT](#msal)                                |
-| PyJWT                    | 2.15.1       | [MIT](#pyjwt)                               |
-| azure-core               | 1.41.0       | [MIT](#azure-core)                          |
-| neomodel                 | 5.4.5        | [MIT](#neomodel)                            |
-| neo4j                    | 5.28.6       | [Apache License, Version 2.0](#neo4j)       |
-| pytz                     | 2026.3.post1 | [MIT](#pytz)                                |
-| Jinja2                   | 3.1.6        | [see below](#jinja2)                        |
-| MarkupSafe               | 3.0.3        | [BSD-3-Clause](#markupsafe)                 |
-| httpx                    | 0.28.1       | [BSD-3-Clause](#httpx)                      |
-| httpcore                 | 1.0.9        | [BSD-3-Clause](#httpcore)                   |
-| h11                      | 0.16.0       | [MIT](#h11)                                 |
-| Authlib                  | 1.7.2        | [BSD-3-Clause](#authlib)                    |
-| joserfc                  | 1.7.5        | [BSD-3-Clause](#joserfc)                    |
-| aiohttp                  | 3.14.3       | [Apache-2.0 AND MIT](#aiohttp)              |
-| yarl                     | 1.24.5       | [Apache-2.0](#yarl)                         |
-| propcache                | 0.5.2        | [Apache-2.0](#propcache)                    |
-| multidict                | 6.8.0        | [Apache License 2.0](#multidict)            |
-| frozenlist               | 1.8.0        | [Apache-2.0](#frozenlist)                   |
-| attrs                    | 26.1.0       | [MIT](#attrs)                               |
-| aiosignal                | 1.4.0        | [Apache 2.0](#aiosignal)                    |
 | aiohappyeyeballs         | 2.7.1        | [PSF-2.0](#aiohappyeyeballs)                |
+| aiohttp                  | 3.14.5       | [Apache-2.0 AND MIT](#aiohttp)              |
+| aiosignal                | 1.4.0        | [Apache 2.0](#aiosignal)                    |
+| anyio                    | 4.15.1       | [MIT](#anyio)                               |
+| attrs                    | 26.1.0       | [MIT](#attrs)                               |
+| Authlib                  | 1.9.1        | [BSD-3-Clause](#authlib)                    |
+| azure-core               | 1.41.0       | [MIT](#azure-core)                          |
+| azure-identity           | 1.25.3       | [MIT](#azure-identity)                      |
+| certifi                  | 2026.10.19   | [MPL-2.0](#certifi)                         |
+| cffi                     | 2.1.1        | [MIT-0](#cffi)                              |
+| charset-normalizer       | 3.5.1        | [MIT](#charset-normalizer)                  |
+| colorama                 | 0.4.6        | [see below](#colorama)                      |
+| cryptography             | 50.0.1       | [Apache-2.0 OR BSD-3-Clause](#cryptography) |
+| frozenlist               | 1.8.0        | [Apache-2.0](#frozenlist)                   |
+| google-api-core          | 2.37.0       | [Apache 2.0](#google-api-core)              |
+| google-auth              | 2.58.0       | [Apache 2.0](#google-auth)                  |
+| googleapis-common-protos | 1.75.3       | [Apache-2.0](#googleapis-common-protos)     |
+| h11                      | 0.16.0       | [MIT](#h11)                                 |
+| httpcore                 | 1.0.9        | [BSD-3-Clause](#httpcore)                   |
+| httpx                    | 0.28.1       | [BSD-3-Clause](#httpx)                      |
+| httpx_auth               | 0.23.1       | [see below](#httpx_auth)                    |
+| idna                     | 3.19         | [BSD-3-Clause](#idna)                       |
+| iniconfig                | 2.3.0        | [MIT](#iniconfig)                           |
+| Jinja2                   | 3.1.6        | [see below](#jinja2)                        |
+| joserfc                  | 1.7.7        | [BSD-3-Clause](#joserfc)                    |
+| MarkupSafe               | 3.0.3        | [BSD-3-Clause](#markupsafe)                 |
+| msal                     | 1.38.0       | [MIT](#msal)                                |
+| msal-extensions          | 1.3.1        | [MIT License](#msal-extensions)             |
+| multidict                | 6.9.1        | [Apache License 2.0](#multidict)            |
+| neo4j                    | 5.28.6       | [Apache License, Version 2.0](#neo4j)       |
+| neomodel                 | 5.4.5        | [MIT](#neomodel)                            |
+| opencensus               | 0.11.4       | [Apache-2.0](#opencensus)                   |
+| opencensus-context       | 0.1.3        | [Apache-2.0](#opencensus-context)           |
+| opencensus-ext-azure     | 1.1.15       | [Apache-2.0](#opencensus-ext-azure)         |
+| opentelemetry-api        | 1.45.1       | [Apache-2.0](#opentelemetry-api)            |
+| packaging                | 26.3         | [Apache-2.0 OR BSD-2-Clause](#packaging)    |
+| pluggy                   | 1.6.0        | [MIT](#pluggy)                              |
+| propcache                | 0.5.2        | [Apache-2.0](#propcache)                    |
+| proto-plus               | 1.28.4       | [Apache 2.0](#proto-plus)                   |
+| protobuf                 | 7.36.1       | [3-Clause BSD License](#protobuf)           |
+| psutil                   | 7.2.2        | [BSD-3-Clause](#psutil)                     |
+| pyasn1                   | 0.6.5        | [BSD-2-Clause](#pyasn1)                     |
+| pyasn1_modules           | 0.4.2        | [BSD](#pyasn1_modules)                      |
+| pycparser                | 3.0          | [BSD-3-Clause](#pycparser)                  |
+| pydantic                 | 1.10.26      | [MIT](#pydantic)                            |
+| Pygments                 | 2.21.0       | [BSD-2-Clause](#pygments)                   |
+| PyJWT                    | 2.15.1       | [MIT](#pyjwt)                               |
+| pytest                   | 9.1.1        | [MIT](#pytest)                              |
+| pytest-order             | 1.5.0        | [MIT](#pytest-order)                        |
+| pytz                     | 2026.3.post1 | [MIT](#pytz)                                |
+| PyYAML                   | 6.0.3        | [MIT](#pyyaml)                              |
+| requests                 | 2.34.2       | [Apache-2.0](#requests)                     |
+| six                      | 1.17.0       | [MIT](#six)                                 |
+| starlette                | 1.6.0        | [BSD-3-Clause](#starlette)                  |
+| typing_extensions        | 4.16.0       | [PSF-2.0](#typing_extensions)               |
+| urllib3                  | 2.8.0        | [MIT](#urllib3)                             |
+| yarl                     | 1.25.1       | [Apache-2.0](#yarl)                         |
 
 
 ## Third-party package licenses
 
----
-### starlette
-
-    Copyright © 2018, [Encode OSS Ltd](https://www.encode.io/).
-    All rights reserved.
-
-    Redistribution and use in source and binary forms, with or without
-    modification, are permitted provided that the following conditions are met:
-
-    * Redistributions of source code must retain the above copyright notice, this
-      list of conditions and the following disclaimer.
-
-    * Redistributions in binary form must reproduce the above copyright notice,
-      this list of conditions and the following disclaimer in the documentation
-      and/or other materials provided with the distribution.
-
-    * Neither the name of the copyright holder nor the names of its
-      contributors may be used to endorse or promote products derived from
-      this software without specific prior written permission.
-
-    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-    AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-    IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-    DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-    FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-    DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-    SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-    CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-    OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-    OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
----
-### anyio
-
-    The MIT License (MIT)
-
-    Copyright (c) 2018 Alex Grönholm
-
-    Permission is hereby granted, free of charge, to any person obtaining a copy of
-    this software and associated documentation files (the "Software"), to deal in
-    the Software without restriction, including without limitation the rights to
-    use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
-    the Software, and to permit persons to whom the Software is furnished to do so,
-    subject to the following conditions:
-
-    The above copyright notice and this permission notice shall be included in all
-    copies or substantial portions of the Software.
-
-    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-    FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-    COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-    IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-    CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
----
-### typing_extensions
+### aiohappyeyeballs
 
     A. HISTORY OF THE SOFTWARE
     ==========================
@@ -401,43 +346,1106 @@
     OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
     PERFORMANCE OF THIS SOFTWARE.
 
----
-### idna
+### aiohttp
+
+    Apache License
+                               Version 2.0, January 2004
+                            http://www.apache.org/licenses/
+
+       TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
+
+       1. Definitions.
+
+          "License" shall mean the terms and conditions for use, reproduction,
+          and distribution as defined by Sections 1 through 9 of this document.
+
+          "Licensor" shall mean the copyright owner or entity authorized by
+          the copyright owner that is granting the License.
+
+          "Legal Entity" shall mean the union of the acting entity and all
+          other entities that control, are controlled by, or are under common
+          control with that entity. For the purposes of this definition,
+          "control" means (i) the power, direct or indirect, to cause the
+          direction or management of such entity, whether by contract or
+          otherwise, or (ii) ownership of fifty percent (50%) or more of the
+          outstanding shares, or (iii) beneficial ownership of such entity.
+
+          "You" (or "Your") shall mean an individual or Legal Entity
+          exercising permissions granted by this License.
+
+          "Source" form shall mean the preferred form for making modifications,
+          including but not limited to software source code, documentation
+          source, and configuration files.
+
+          "Object" form shall mean any form resulting from mechanical
+          transformation or translation of a Source form, including but
+          not limited to compiled object code, generated documentation,
+          and conversions to other media types.
+
+          "Work" shall mean the work of authorship, whether in Source or
+          Object form, made available under the License, as indicated by a
+          copyright notice that is included in or attached to the work
+          (an example is provided in the Appendix below).
+
+          "Derivative Works" shall mean any work, whether in Source or Object
+          form, that is based on (or derived from) the Work and for which the
+          editorial revisions, annotations, elaborations, or other modifications
+          represent, as a whole, an original work of authorship. For the purposes
+          of this License, Derivative Works shall not include works that remain
+          separable from, or merely link (or bind by name) to the interfaces of,
+          the Work and Derivative Works thereof.
+
+          "Contribution" shall mean any work of authorship, including
+          the original version of the Work and any modifications or additions
+          to that Work or Derivative Works thereof, that is intentionally
+          submitted to Licensor for inclusion in the Work by the copyright owner
+          or by an individual or Legal Entity authorized to submit on behalf of
+          the copyright owner. For the purposes of this definition, "submitted"
+          means any form of electronic, verbal, or written communication sent
+          to the Licensor or its representatives, including but not limited to
+          communication on electronic mailing lists, source code control systems,
+          and issue tracking systems that are managed by, or on behalf of, the
+          Licensor for the purpose of discussing and improving the Work, but
+          excluding communication that is conspicuously marked or otherwise
+          designated in writing by the copyright owner as "Not a Contribution."
+
+          "Contributor" shall mean Licensor and any individual or Legal Entity
+          on behalf of whom a Contribution has been received by Licensor and
+          subsequently incorporated within the Work.
+
+       2. Grant of Copyright License. Subject to the terms and conditions of
+          this License, each Contributor hereby grants to You a perpetual,
+          worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+          copyright license to reproduce, prepare Derivative Works of,
+          publicly display, publicly perform, sublicense, and distribute the
+          Work and such Derivative Works in Source or Object form.
+
+       3. Grant of Patent License. Subject to the terms and conditions of
+          this License, each Contributor hereby grants to You a perpetual,
+          worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+          (except as stated in this section) patent license to make, have made,
+          use, offer to sell, sell, import, and otherwise transfer the Work,
+          where such license applies only to those patent claims licensable
+          by such Contributor that are necessarily infringed by their
+          Contribution(s) alone or by combination of their Contribution(s)
+          with the Work to which such Contribution(s) was submitted. If You
+          institute patent litigation against any entity (including a
+          cross-claim or counterclaim in a lawsuit) alleging that the Work
+          or a Contribution incorporated within the Work constitutes direct
+          or contributory patent infringement, then any patent licenses
+          granted to You under this License for that Work shall terminate
+          as of the date such litigation is filed.
+
+       4. Redistribution. You may reproduce and distribute copies of the
+          Work or Derivative Works thereof in any medium, with or without
+          modifications, and in Source or Object form, provided that You
+          meet the following conditions:
+
+          (a) You must give any other recipients of the Work or
+              Derivative Works a copy of this License; and
+
+          (b) You must cause any modified files to carry prominent notices
+              stating that You changed the files; and
+
+          (c) You must retain, in the Source form of any Derivative Works
+              that You distribute, all copyright, patent, trademark, and
+              attribution notices from the Source form of the Work,
+              excluding those notices that do not pertain to any part of
+              the Derivative Works; and
+
+          (d) If the Work includes a "NOTICE" text file as part of its
+              distribution, then any Derivative Works that You distribute must
+              include a readable copy of the attribution notices contained
+              within such NOTICE file, excluding those notices that do not
+              pertain to any part of the Derivative Works, in at least one
+              of the following places: within a NOTICE text file distributed
+              as part of the Derivative Works; within the Source form or
+              documentation, if provided along with the Derivative Works; or,
+              within a display generated by the Derivative Works, if and
+              wherever such third-party notices normally appear. The contents
+              of the NOTICE file are for informational purposes only and
+              do not modify the License. You may add Your own attribution
+              notices within Derivative Works that You distribute, alongside
+              or as an addendum to the NOTICE text from the Work, provided
+              that such additional attribution notices cannot be construed
+              as modifying the License.
+
+          You may add Your own copyright statement to Your modifications and
+          may provide additional or different license terms and conditions
+          for use, reproduction, or distribution of Your modifications, or
+          for any such Derivative Works as a whole, provided Your use,
+          reproduction, and distribution of the Work otherwise complies with
+          the conditions stated in this License.
+
+       5. Submission of Contributions. Unless You explicitly state otherwise,
+          any Contribution intentionally submitted for inclusion in the Work
+          by You to the Licensor shall be under the terms and conditions of
+          this License, without any additional terms or conditions.
+          Notwithstanding the above, nothing herein shall supersede or modify
+          the terms of any separate license agreement you may have executed
+          with Licensor regarding such Contributions.
+
+       6. Trademarks. This License does not grant permission to use the trade
+          names, trademarks, service marks, or product names of the Licensor,
+          except as required for reasonable and customary use in describing the
+          origin of the Work and reproducing the content of the NOTICE file.
+
+       7. Disclaimer of Warranty. Unless required by applicable law or
+          agreed to in writing, Licensor provides the Work (and each
+          Contributor provides its Contributions) on an "AS IS" BASIS,
+          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+          implied, including, without limitation, any warranties or conditions
+          of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A
+          PARTICULAR PURPOSE. You are solely responsible for determining the
+          appropriateness of using or redistributing the Work and assume any
+          risks associated with Your exercise of permissions under this License.
+
+       8. Limitation of Liability. In no event and under no legal theory,
+          whether in tort (including negligence), contract, or otherwise,
+          unless required by applicable law (such as deliberate and grossly
+          negligent acts) or agreed to in writing, shall any Contributor be
+          liable to You for damages, including any direct, indirect, special,
+          incidental, or consequential damages of any character arising as a
+          result of this License or out of the use or inability to use the
+          Work (including but not limited to damages for loss of goodwill,
+          work stoppage, computer failure or malfunction, or any and all
+          other commercial damages or losses), even if such Contributor
+          has been advised of the possibility of such damages.
+
+       9. Accepting Warranty or Additional Liability. While redistributing
+          the Work or Derivative Works thereof, You may choose to offer,
+          and charge a fee for, acceptance of support, warranty, indemnity,
+          or other liability obligations and/or rights consistent with this
+          License. However, in accepting such obligations, You may act only
+          on Your own behalf and on Your sole responsibility, not on behalf
+          of any other Contributor, and only if You agree to indemnify,
+          defend, and hold each Contributor harmless for any liability
+          incurred by, or claims asserted against, such Contributor by reason
+          of your accepting any such warranty or additional liability.
+
+       END OF TERMS AND CONDITIONS
+
+       APPENDIX: How to apply the Apache License to your work.
+
+          To apply the Apache License to your work, attach the following
+          boilerplate notice, with the fields enclosed by brackets "{}"
+          replaced with your own identifying information. (Don't include
+          the brackets!)  The text should be enclosed in the appropriate
+          comment syntax for the file format. We also recommend that a
+          file or class name and description of purpose be included on the
+          same "printed page" as the copyright notice for easier
+          identification within third-party archives.
+
+       Copyright aio-libs contributors
+
+       Licensed under the Apache License, Version 2.0 (the "License");
+       you may not use this file except in compliance with the License.
+       You may obtain a copy of the License at
+
+           http://www.apache.org/licenses/LICENSE-2.0
+
+       Unless required by applicable law or agreed to in writing, software
+       distributed under the License is distributed on an "AS IS" BASIS,
+       WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+       See the License for the specific language governing permissions and
+       limitations under the License.
+
+    MIT License
+
+    Copyright © 2018 Fedor Indutny
+
+    Permission is hereby granted, free of charge, to any person obtaining a
+    copy of this software and associated documentation files (the
+    "Software"), to deal in the Software without restriction, including
+    without limitation the rights to use, copy, modify, merge, publish,
+    distribute, sublicense, and/or sell copies of the Software, and to permit
+    persons to whom the Software is furnished to do so, subject to the
+    following conditions:
+
+    The above copyright notice and this permission notice shall be included
+    in all copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+    OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+    MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+    NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+    DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+    OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+    USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+### aiosignal
+
+    Apache License
+                               Version 2.0, January 2004
+                            http://www.apache.org/licenses/
+
+       TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
+
+       1. Definitions.
+
+          "License" shall mean the terms and conditions for use, reproduction,
+          and distribution as defined by Sections 1 through 9 of this document.
+
+          "Licensor" shall mean the copyright owner or entity authorized by
+          the copyright owner that is granting the License.
+
+          "Legal Entity" shall mean the union of the acting entity and all
+          other entities that control, are controlled by, or are under common
+          control with that entity. For the purposes of this definition,
+          "control" means (i) the power, direct or indirect, to cause the
+          direction or management of such entity, whether by contract or
+          otherwise, or (ii) ownership of fifty percent (50%) or more of the
+          outstanding shares, or (iii) beneficial ownership of such entity.
+
+          "You" (or "Your") shall mean an individual or Legal Entity
+          exercising permissions granted by this License.
+
+          "Source" form shall mean the preferred form for making modifications,
+          including but not limited to software source code, documentation
+          source, and configuration files.
+
+          "Object" form shall mean any form resulting from mechanical
+          transformation or translation of a Source form, including but
+          not limited to compiled object code, generated documentation,
+          and conversions to other media types.
+
+          "Work" shall mean the work of authorship, whether in Source or
+          Object form, made available under the License, as indicated by a
+          copyright notice that is included in or attached to the work
+          (an example is provided in the Appendix below).
+
+          "Derivative Works" shall mean any work, whether in Source or Object
+          form, that is based on (or derived from) the Work and for which the
+          editorial revisions, annotations, elaborations, or other modifications
+          represent, as a whole, an original work of authorship. For the purposes
+          of this License, Derivative Works shall not include works that remain
+          separable from, or merely link (or bind by name) to the interfaces of,
+          the Work and Derivative Works thereof.
+
+          "Contribution" shall mean any work of authorship, including
+          the original version of the Work and any modifications or additions
+          to that Work or Derivative Works thereof, that is intentionally
+          submitted to Licensor for inclusion in the Work by the copyright owner
+          or by an individual or Legal Entity authorized to submit on behalf of
+          the copyright owner. For the purposes of this definition, "submitted"
+          means any form of electronic, verbal, or written communication sent
+          to the Licensor or its representatives, including but not limited to
+          communication on electronic mailing lists, source code control systems,
+          and issue tracking systems that are managed by, or on behalf of, the
+          Licensor for the purpose of discussing and improving the Work, but
+          excluding communication that is conspicuously marked or otherwise
+          designated in writing by the copyright owner as "Not a Contribution."
+
+          "Contributor" shall mean Licensor and any individual or Legal Entity
+          on behalf of whom a Contribution has been received by Licensor and
+          subsequently incorporated within the Work.
+
+       2. Grant of Copyright License. Subject to the terms and conditions of
+          this License, each Contributor hereby grants to You a perpetual,
+          worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+          copyright license to reproduce, prepare Derivative Works of,
+          publicly display, publicly perform, sublicense, and distribute the
+          Work and such Derivative Works in Source or Object form.
+
+       3. Grant of Patent License. Subject to the terms and conditions of
+          this License, each Contributor hereby grants to You a perpetual,
+          worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+          (except as stated in this section) patent license to make, have made,
+          use, offer to sell, sell, import, and otherwise transfer the Work,
+          where such license applies only to those patent claims licensable
+          by such Contributor that are necessarily infringed by their
+          Contribution(s) alone or by combination of their Contribution(s)
+          with the Work to which such Contribution(s) was submitted. If You
+          institute patent litigation against any entity (including a
+          cross-claim or counterclaim in a lawsuit) alleging that the Work
+          or a Contribution incorporated within the Work constitutes direct
+          or contributory patent infringement, then any patent licenses
+          granted to You under this License for that Work shall terminate
+          as of the date such litigation is filed.
+
+       4. Redistribution. You may reproduce and distribute copies of the
+          Work or Derivative Works thereof in any medium, with or without
+          modifications, and in Source or Object form, provided that You
+          meet the following conditions:
+
+          (a) You must give any other recipients of the Work or
+              Derivative Works a copy of this License; and
+
+          (b) You must cause any modified files to carry prominent notices
+              stating that You changed the files; and
+
+          (c) You must retain, in the Source form of any Derivative Works
+              that You distribute, all copyright, patent, trademark, and
+              attribution notices from the Source form of the Work,
+              excluding those notices that do not pertain to any part of
+              the Derivative Works; and
+
+          (d) If the Work includes a "NOTICE" text file as part of its
+              distribution, then any Derivative Works that You distribute must
+              include a readable copy of the attribution notices contained
+              within such NOTICE file, excluding those notices that do not
+              pertain to any part of the Derivative Works, in at least one
+              of the following places: within a NOTICE text file distributed
+              as part of the Derivative Works; within the Source form or
+              documentation, if provided along with the Derivative Works; or,
+              within a display generated by the Derivative Works, if and
+              wherever such third-party notices normally appear. The contents
+              of the NOTICE file are for informational purposes only and
+              do not modify the License. You may add Your own attribution
+              notices within Derivative Works that You distribute, alongside
+              or as an addendum to the NOTICE text from the Work, provided
+              that such additional attribution notices cannot be construed
+              as modifying the License.
+
+          You may add Your own copyright statement to Your modifications and
+          may provide additional or different license terms and conditions
+          for use, reproduction, or distribution of Your modifications, or
+          for any such Derivative Works as a whole, provided Your use,
+          reproduction, and distribution of the Work otherwise complies with
+          the conditions stated in this License.
+
+       5. Submission of Contributions. Unless You explicitly state otherwise,
+          any Contribution intentionally submitted for inclusion in the Work
+          by You to the Licensor shall be under the terms and conditions of
+          this License, without any additional terms or conditions.
+          Notwithstanding the above, nothing herein shall supersede or modify
+          the terms of any separate license agreement you may have executed
+          with Licensor regarding such Contributions.
+
+       6. Trademarks. This License does not grant permission to use the trade
+          names, trademarks, service marks, or product names of the Licensor,
+          except as required for reasonable and customary use in describing the
+          origin of the Work and reproducing the content of the NOTICE file.
+
+       7. Disclaimer of Warranty. Unless required by applicable law or
+          agreed to in writing, Licensor provides the Work (and each
+          Contributor provides its Contributions) on an "AS IS" BASIS,
+          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+          implied, including, without limitation, any warranties or conditions
+          of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A
+          PARTICULAR PURPOSE. You are solely responsible for determining the
+          appropriateness of using or redistributing the Work and assume any
+          risks associated with Your exercise of permissions under this License.
+
+       8. Limitation of Liability. In no event and under no legal theory,
+          whether in tort (including negligence), contract, or otherwise,
+          unless required by applicable law (such as deliberate and grossly
+          negligent acts) or agreed to in writing, shall any Contributor be
+          liable to You for damages, including any direct, indirect, special,
+          incidental, or consequential damages of any character arising as a
+          result of this License or out of the use or inability to use the
+          Work (including but not limited to damages for loss of goodwill,
+          work stoppage, computer failure or malfunction, or any and all
+          other commercial damages or losses), even if such Contributor
+          has been advised of the possibility of such damages.
+
+       9. Accepting Warranty or Additional Liability. While redistributing
+          the Work or Derivative Works thereof, You may choose to offer,
+          and charge a fee for, acceptance of support, warranty, indemnity,
+          or other liability obligations and/or rights consistent with this
+          License. However, in accepting such obligations, You may act only
+          on Your own behalf and on Your sole responsibility, not on behalf
+          of any other Contributor, and only if You agree to indemnify,
+          defend, and hold each Contributor harmless for any liability
+          incurred by, or claims asserted against, such Contributor by reason
+          of your accepting any such warranty or additional liability.
+
+       END OF TERMS AND CONDITIONS
+
+       APPENDIX: How to apply the Apache License to your work.
+
+          To apply the Apache License to your work, attach the following
+          boilerplate notice, with the fields enclosed by brackets "{}"
+          replaced with your own identifying information. (Don't include
+          the brackets!)  The text should be enclosed in the appropriate
+          comment syntax for the file format. We also recommend that a
+          file or class name and description of purpose be included on the
+          same "printed page" as the copyright notice for easier
+          identification within third-party archives.
+
+       Copyright 2013-2019 Nikolay Kim and Andrew Svetlov
+
+       Licensed under the Apache License, Version 2.0 (the "License");
+       you may not use this file except in compliance with the License.
+       You may obtain a copy of the License at
+
+           http://www.apache.org/licenses/LICENSE-2.0
+
+       Unless required by applicable law or agreed to in writing, software
+       distributed under the License is distributed on an "AS IS" BASIS,
+       WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+       See the License for the specific language governing permissions and
+       limitations under the License.
+
+### anyio
+
+    The MIT License (MIT)
+
+    Copyright (c) 2018 Alex Grönholm
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy of
+    this software and associated documentation files (the "Software"), to deal in
+    the Software without restriction, including without limitation the rights to
+    use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+    the Software, and to permit persons to whom the Software is furnished to do so,
+    subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in all
+    copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+    FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+    COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+    IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+    CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+### attrs
+
+    The MIT License (MIT)
+
+    Copyright (c) 2015 Hynek Schlawack and the attrs contributors
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"), to deal
+    in the Software without restriction, including without limitation the rights
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in all
+    copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+    SOFTWARE.
+
+### Authlib
 
     BSD 3-Clause License
 
-    Copyright (c) 2013-2026, Kim Davies and contributors.
+    Copyright (c) 2017, Hsiaoming Yang
     All rights reserved.
 
     Redistribution and use in source and binary forms, with or without
-    modification, are permitted provided that the following conditions are
-    met:
+    modification, are permitted provided that the following conditions are met:
 
-    1. Redistributions of source code must retain the above copyright
-       notice, this list of conditions and the following disclaimer.
+    * Redistributions of source code must retain the above copyright notice, this
+      list of conditions and the following disclaimer.
 
-    2. Redistributions in binary form must reproduce the above copyright
-       notice, this list of conditions and the following disclaimer in the
-       documentation and/or other materials provided with the distribution.
+    * Redistributions in binary form must reproduce the above copyright notice,
+      this list of conditions and the following disclaimer in the documentation
+      and/or other materials provided with the distribution.
 
-    3. Neither the name of the copyright holder nor the names of its
-       contributors may be used to endorse or promote products derived from
-       this software without specific prior written permission.
+    * Neither the name of the copyright holder nor the names of its
+      contributors may be used to endorse or promote products derived from
+      this software without specific prior written permission.
 
-    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-    "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-    LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-    A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-    HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-    SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
-    TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-    PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-    LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-    NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+    AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+    IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+    DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+    FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+    DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+    SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+    CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+    OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+    OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+### azure-core
+
+    Copyright (c) Microsoft Corporation.
+
+    MIT License
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"), to deal
+    in the Software without restriction, including without limitation the rights
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in all
+    copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+    SOFTWARE.
+
+### azure-identity
+
+    Copyright (c) Microsoft Corporation.
+
+    MIT License
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"), to deal
+    in the Software without restriction, including without limitation the rights
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in all
+    copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+    SOFTWARE.
+
+### certifi
+
+    This package contains a modified version of ca-bundle.crt:
+
+    ca-bundle.crt -- Bundle of CA Root Certificates
+
+    This is a bundle of X.509 certificates of public Certificate Authorities
+    (CA). These were automatically extracted from Mozilla's root certificates
+    file (certdata.txt).  This file can be found in the mozilla source tree:
+    https://hg.mozilla.org/mozilla-central/file/tip/security/nss/lib/ckfw/builtins/certdata.txt
+    It contains the certificates in PEM format and therefore
+    can be directly used with curl / libcurl / php_curl, or with
+    an Apache+mod_ssl webserver for SSL client authentication.
+    Just configure this file as the SSLCACertificateFile.#
+
+    ***** BEGIN LICENSE BLOCK *****
+    This Source Code Form is subject to the terms of the Mozilla Public License,
+    v. 2.0. If a copy of the MPL was not distributed with this file, You can obtain
+    one at http://mozilla.org/MPL/2.0/.
+
+    ***** END LICENSE BLOCK *****
+    @(#) $RCSfile: certdata.txt,v $ $Revision: 1.80 $ $Date: 2011/11/03 15:11:58 $
+
+### cffi
+
+    Except when otherwise stated (look for LICENSE files in directories or
+    information at the beginning of each file) all software and
+    documentation is licensed as follows: 
+
+        MIT No Attribution
+
+        Permission is hereby granted, free of charge, to any person 
+        obtaining a copy of this software and associated documentation 
+        files (the "Software"), to deal in the Software without 
+        restriction, including without limitation the rights to use, 
+        copy, modify, merge, publish, distribute, sublicense, and/or 
+        sell copies of the Software, and to permit persons to whom the 
+        Software is furnished to do so.
+
+        THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS 
+        OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+        FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
+        THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+        LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
+        FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
+        DEALINGS IN THE SOFTWARE.
+
+### charset-normalizer
+
+    MIT License
+
+    Copyright (c) 2025 TAHRI Ahmed R.
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"), to deal
+    in the Software without restriction, including without limitation the rights
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in all
+    copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+    SOFTWARE.
+
+### colorama
+
+    Copyright (c) 2010 Jonathan Hartley
+    All rights reserved.
+
+    Redistribution and use in source and binary forms, with or without
+    modification, are permitted provided that the following conditions are met:
+
+    * Redistributions of source code must retain the above copyright notice, this
+      list of conditions and the following disclaimer.
+
+    * Redistributions in binary form must reproduce the above copyright notice,
+      this list of conditions and the following disclaimer in the documentation
+      and/or other materials provided with the distribution.
+
+    * Neither the name of the copyright holders, nor those of its contributors
+      may be used to endorse or promote products derived from this software without
+      specific prior written permission.
+
+    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+    ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+    WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+    DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+    FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+    DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+    SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+    CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+    OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+    OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+### cryptography
+
+    This software is made available under the terms of *either* of the licenses
+    found in LICENSE.APACHE or LICENSE.BSD. Contributions to cryptography are made
+    under the terms of *both* these licenses.
+
+                                  Apache License
+                            Version 2.0, January 2004
+                         https://www.apache.org/licenses/
+
+    TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
+
+    1. Definitions.
+
+       "License" shall mean the terms and conditions for use, reproduction,
+       and distribution as defined by Sections 1 through 9 of this document.
+
+       "Licensor" shall mean the copyright owner or entity authorized by
+       the copyright owner that is granting the License.
+
+       "Legal Entity" shall mean the union of the acting entity and all
+       other entities that control, are controlled by, or are under common
+       control with that entity. For the purposes of this definition,
+       "control" means (i) the power, direct or indirect, to cause the
+       direction or management of such entity, whether by contract or
+       otherwise, or (ii) ownership of fifty percent (50%) or more of the
+       outstanding shares, or (iii) beneficial ownership of such entity.
+
+       "You" (or "Your") shall mean an individual or Legal Entity
+       exercising permissions granted by this License.
+
+       "Source" form shall mean the preferred form for making modifications,
+       including but not limited to software source code, documentation
+       source, and configuration files.
+
+       "Object" form shall mean any form resulting from mechanical
+       transformation or translation of a Source form, including but
+       not limited to compiled object code, generated documentation,
+       and conversions to other media types.
+
+       "Work" shall mean the work of authorship, whether in Source or
+       Object form, made available under the License, as indicated by a
+       copyright notice that is included in or attached to the work
+       (an example is provided in the Appendix below).
+
+       "Derivative Works" shall mean any work, whether in Source or Object
+       form, that is based on (or derived from) the Work and for which the
+       editorial revisions, annotations, elaborations, or other modifications
+       represent, as a whole, an original work of authorship. For the purposes
+       of this License, Derivative Works shall not include works that remain
+       separable from, or merely link (or bind by name) to the interfaces of,
+       the Work and Derivative Works thereof.
+
+       "Contribution" shall mean any work of authorship, including
+       the original version of the Work and any modifications or additions
+       to that Work or Derivative Works thereof, that is intentionally
+       submitted to Licensor for inclusion in the Work by the copyright owner
+       or by an individual or Legal Entity authorized to submit on behalf of
+       the copyright owner. For the purposes of this definition, "submitted"
+       means any form of electronic, verbal, or written communication sent
+       to the Licensor or its representatives, including but not limited to
+       communication on electronic mailing lists, source code control systems,
+       and issue tracking systems that are managed by, or on behalf of, the
+       Licensor for the purpose of discussing and improving the Work, but
+       excluding communication that is conspicuously marked or otherwise
+       designated in writing by the copyright owner as "Not a Contribution."
+
+       "Contributor" shall mean Licensor and any individual or Legal Entity
+       on behalf of whom a Contribution has been received by Licensor and
+       subsequently incorporated within the Work.
+
+    2. Grant of Copyright License. Subject to the terms and conditions of
+       this License, each Contributor hereby grants to You a perpetual,
+       worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+       copyright license to reproduce, prepare Derivative Works of,
+       publicly display, publicly perform, sublicense, and distribute the
+       Work and such Derivative Works in Source or Object form.
+
+    3. Grant of Patent License. Subject to the terms and conditions of
+       this License, each Contributor hereby grants to You a perpetual,
+       worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+       (except as stated in this section) patent license to make, have made,
+       use, offer to sell, sell, import, and otherwise transfer the Work,
+       where such license applies only to those patent claims licensable
+       by such Contributor that are necessarily infringed by their
+       Contribution(s) alone or by combination of their Contribution(s)
+       with the Work to which such Contribution(s) was submitted. If You
+       institute patent litigation against any entity (including a
+       cross-claim or counterclaim in a lawsuit) alleging that the Work
+       or a Contribution incorporated within the Work constitutes direct
+       or contributory patent infringement, then any patent licenses
+       granted to You under this License for that Work shall terminate
+       as of the date such litigation is filed.
+
+    4. Redistribution. You may reproduce and distribute copies of the
+       Work or Derivative Works thereof in any medium, with or without
+       modifications, and in Source or Object form, provided that You
+       meet the following conditions:
+
+       (a) You must give any other recipients of the Work or
+           Derivative Works a copy of this License; and
+
+       (b) You must cause any modified files to carry prominent notices
+           stating that You changed the files; and
+
+       (c) You must retain, in the Source form of any Derivative Works
+           that You distribute, all copyright, patent, trademark, and
+           attribution notices from the Source form of the Work,
+           excluding those notices that do not pertain to any part of
+           the Derivative Works; and
+
+       (d) If the Work includes a "NOTICE" text file as part of its
+           distribution, then any Derivative Works that You distribute must
+           include a readable copy of the attribution notices contained
+           within such NOTICE file, excluding those notices that do not
+           pertain to any part of the Derivative Works, in at least one
+           of the following places: within a NOTICE text file distributed
+           as part of the Derivative Works; within the Source form or
+           documentation, if provided along with the Derivative Works; or,
+           within a display generated by the Derivative Works, if and
+           wherever such third-party notices normally appear. The contents
+           of the NOTICE file are for informational purposes only and
+           do not modify the License. You may add Your own attribution
+           notices within Derivative Works that You distribute, alongside
+           or as an addendum to the NOTICE text from the Work, provided
+           that such additional attribution notices cannot be construed
+           as modifying the License.
+
+       You may add Your own copyright statement to Your modifications and
+       may provide additional or different license terms and conditions
+       for use, reproduction, or distribution of Your modifications, or
+       for any such Derivative Works as a whole, provided Your use,
+       reproduction, and distribution of the Work otherwise complies with
+       the conditions stated in this License.
+
+    5. Submission of Contributions. Unless You explicitly state otherwise,
+       any Contribution intentionally submitted for inclusion in the Work
+       by You to the Licensor shall be under the terms and conditions of
+       this License, without any additional terms or conditions.
+       Notwithstanding the above, nothing herein shall supersede or modify
+       the terms of any separate license agreement you may have executed
+       with Licensor regarding such Contributions.
+
+    6. Trademarks. This License does not grant permission to use the trade
+       names, trademarks, service marks, or product names of the Licensor,
+       except as required for reasonable and customary use in describing the
+       origin of the Work and reproducing the content of the NOTICE file.
+
+    7. Disclaimer of Warranty. Unless required by applicable law or
+       agreed to in writing, Licensor provides the Work (and each
+       Contributor provides its Contributions) on an "AS IS" BASIS,
+       WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+       implied, including, without limitation, any warranties or conditions
+       of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A
+       PARTICULAR PURPOSE. You are solely responsible for determining the
+       appropriateness of using or redistributing the Work and assume any
+       risks associated with Your exercise of permissions under this License.
+
+    8. Limitation of Liability. In no event and under no legal theory,
+       whether in tort (including negligence), contract, or otherwise,
+       unless required by applicable law (such as deliberate and grossly
+       negligent acts) or agreed to in writing, shall any Contributor be
+       liable to You for damages, including any direct, indirect, special,
+       incidental, or consequential damages of any character arising as a
+       result of this License or out of the use or inability to use the
+       Work (including but not limited to damages for loss of goodwill,
+       work stoppage, computer failure or malfunction, or any and all
+       other commercial damages or losses), even if such Contributor
+       has been advised of the possibility of such damages.
+
+    9. Accepting Warranty or Additional Liability. While redistributing
+       the Work or Derivative Works thereof, You may choose to offer,
+       and charge a fee for, acceptance of support, warranty, indemnity,
+       or other liability obligations and/or rights consistent with this
+       License. However, in accepting such obligations, You may act only
+       on Your own behalf and on Your sole responsibility, not on behalf
+       of any other Contributor, and only if You agree to indemnify,
+       defend, and hold each Contributor harmless for any liability
+       incurred by, or claims asserted against, such Contributor by reason
+       of your accepting any such warranty or additional liability.
+
+    END OF TERMS AND CONDITIONS
+
+    APPENDIX: How to apply the Apache License to your work.
+
+       To apply the Apache License to your work, attach the following
+       boilerplate notice, with the fields enclosed by brackets "[]"
+       replaced with your own identifying information. (Don't include
+       the brackets!)  The text should be enclosed in the appropriate
+       comment syntax for the file format. We also recommend that a
+       file or class name and description of purpose be included on the
+       same "printed page" as the copyright notice for easier
+       identification within third-party archives.
+
+    Copyright [yyyy] [name of copyright owner]
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+        https://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+    Copyright (c) Individual contributors.
+    All rights reserved.
+
+    Redistribution and use in source and binary forms, with or without
+    modification, are permitted provided that the following conditions are met:
+
+        1. Redistributions of source code must retain the above copyright notice,
+           this list of conditions and the following disclaimer.
+
+        2. Redistributions in binary form must reproduce the above copyright
+           notice, this list of conditions and the following disclaimer in the
+           documentation and/or other materials provided with the distribution.
+
+        3. Neither the name of PyCA Cryptography nor the names of its contributors
+           may be used to endorse or promote products derived from this software
+           without specific prior written permission.
+
+    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+    ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+    WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+    DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
+    ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+    (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+    LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+    ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+    (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
     SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
----
-### requests
+### frozenlist
+
+    Apache License
+                               Version 2.0, January 2004
+                            http://www.apache.org/licenses/
+
+       TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
+
+       1. Definitions.
+
+          "License" shall mean the terms and conditions for use, reproduction,
+          and distribution as defined by Sections 1 through 9 of this document.
+
+          "Licensor" shall mean the copyright owner or entity authorized by
+          the copyright owner that is granting the License.
+
+          "Legal Entity" shall mean the union of the acting entity and all
+          other entities that control, are controlled by, or are under common
+          control with that entity. For the purposes of this definition,
+          "control" means (i) the power, direct or indirect, to cause the
+          direction or management of such entity, whether by contract or
+          otherwise, or (ii) ownership of fifty percent (50%) or more of the
+          outstanding shares, or (iii) beneficial ownership of such entity.
+
+          "You" (or "Your") shall mean an individual or Legal Entity
+          exercising permissions granted by this License.
+
+          "Source" form shall mean the preferred form for making modifications,
+          including but not limited to software source code, documentation
+          source, and configuration files.
+
+          "Object" form shall mean any form resulting from mechanical
+          transformation or translation of a Source form, including but
+          not limited to compiled object code, generated documentation,
+          and conversions to other media types.
+
+          "Work" shall mean the work of authorship, whether in Source or
+          Object form, made available under the License, as indicated by a
+          copyright notice that is included in or attached to the work
+          (an example is provided in the Appendix below).
+
+          "Derivative Works" shall mean any work, whether in Source or Object
+          form, that is based on (or derived from) the Work and for which the
+          editorial revisions, annotations, elaborations, or other modifications
+          represent, as a whole, an original work of authorship. For the purposes
+          of this License, Derivative Works shall not include works that remain
+          separable from, or merely link (or bind by name) to the interfaces of,
+          the Work and Derivative Works thereof.
+
+          "Contribution" shall mean any work of authorship, including
+          the original version of the Work and any modifications or additions
+          to that Work or Derivative Works thereof, that is intentionally
+          submitted to Licensor for inclusion in the Work by the copyright owner
+          or by an individual or Legal Entity authorized to submit on behalf of
+          the copyright owner. For the purposes of this definition, "submitted"
+          means any form of electronic, verbal, or written communication sent
+          to the Licensor or its representatives, including but not limited to
+          communication on electronic mailing lists, source code control systems,
+          and issue tracking systems that are managed by, or on behalf of, the
+          Licensor for the purpose of discussing and improving the Work, but
+          excluding communication that is conspicuously marked or otherwise
+          designated in writing by the copyright owner as "Not a Contribution."
+
+          "Contributor" shall mean Licensor and any individual or Legal Entity
+          on behalf of whom a Contribution has been received by Licensor and
+          subsequently incorporated within the Work.
+
+       2. Grant of Copyright License. Subject to the terms and conditions of
+          this License, each Contributor hereby grants to You a perpetual,
+          worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+          copyright license to reproduce, prepare Derivative Works of,
+          publicly display, publicly perform, sublicense, and distribute the
+          Work and such Derivative Works in Source or Object form.
+
+       3. Grant of Patent License. Subject to the terms and conditions of
+          this License, each Contributor hereby grants to You a perpetual,
+          worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+          (except as stated in this section) patent license to make, have made,
+          use, offer to sell, sell, import, and otherwise transfer the Work,
+          where such license applies only to those patent claims licensable
+          by such Contributor that are necessarily infringed by their
+          Contribution(s) alone or by combination of their Contribution(s)
+          with the Work to which such Contribution(s) was submitted. If You
+          institute patent litigation against any entity (including a
+          cross-claim or counterclaim in a lawsuit) alleging that the Work
+          or a Contribution incorporated within the Work constitutes direct
+          or contributory patent infringement, then any patent licenses
+          granted to You under this License for that Work shall terminate
+          as of the date such litigation is filed.
+
+       4. Redistribution. You may reproduce and distribute copies of the
+          Work or Derivative Works thereof in any medium, with or without
+          modifications, and in Source or Object form, provided that You
+          meet the following conditions:
+
+          (a) You must give any other recipients of the Work or
+              Derivative Works a copy of this License; and
+
+          (b) You must cause any modified files to carry prominent notices
+              stating that You changed the files; and
+
+          (c) You must retain, in the Source form of any Derivative Works
+              that You distribute, all copyright, patent, trademark, and
+              attribution notices from the Source form of the Work,
+              excluding those notices that do not pertain to any part of
+              the Derivative Works; and
+
+          (d) If the Work includes a "NOTICE" text file as part of its
+              distribution, then any Derivative Works that You distribute must
+              include a readable copy of the attribution notices contained
+              within such NOTICE file, excluding those notices that do not
+              pertain to any part of the Derivative Works, in at least one
+              of the following places: within a NOTICE text file distributed
+              as part of the Derivative Works; within the Source form or
+              documentation, if provided along with the Derivative Works; or,
+              within a display generated by the Derivative Works, if and
+              wherever such third-party notices normally appear. The contents
+              of the NOTICE file are for informational purposes only and
+              do not modify the License. You may add Your own attribution
+              notices within Derivative Works that You distribute, alongside
+              or as an addendum to the NOTICE text from the Work, provided
+              that such additional attribution notices cannot be construed
+              as modifying the License.
+
+          You may add Your own copyright statement to Your modifications and
+          may provide additional or different license terms and conditions
+          for use, reproduction, or distribution of Your modifications, or
+          for any such Derivative Works as a whole, provided Your use,
+          reproduction, and distribution of the Work otherwise complies with
+          the conditions stated in this License.
+
+       5. Submission of Contributions. Unless You explicitly state otherwise,
+          any Contribution intentionally submitted for inclusion in the Work
+          by You to the Licensor shall be under the terms and conditions of
+          this License, without any additional terms or conditions.
+          Notwithstanding the above, nothing herein shall supersede or modify
+          the terms of any separate license agreement you may have executed
+          with Licensor regarding such Contributions.
+
+       6. Trademarks. This License does not grant permission to use the trade
+          names, trademarks, service marks, or product names of the Licensor,
+          except as required for reasonable and customary use in describing the
+          origin of the Work and reproducing the content of the NOTICE file.
+
+       7. Disclaimer of Warranty. Unless required by applicable law or
+          agreed to in writing, Licensor provides the Work (and each
+          Contributor provides its Contributions) on an "AS IS" BASIS,
+          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+          implied, including, without limitation, any warranties or conditions
+          of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A
+          PARTICULAR PURPOSE. You are solely responsible for determining the
+          appropriateness of using or redistributing the Work and assume any
+          risks associated with Your exercise of permissions under this License.
+
+       8. Limitation of Liability. In no event and under no legal theory,
+          whether in tort (including negligence), contract, or otherwise,
+          unless required by applicable law (such as deliberate and grossly
+          negligent acts) or agreed to in writing, shall any Contributor be
+          liable to You for damages, including any direct, indirect, special,
+          incidental, or consequential damages of any character arising as a
+          result of this License or out of the use or inability to use the
+          Work (including but not limited to damages for loss of goodwill,
+          work stoppage, computer failure or malfunction, or any and all
+          other commercial damages or losses), even if such Contributor
+          has been advised of the possibility of such damages.
+
+       9. Accepting Warranty or Additional Liability. While redistributing
+          the Work or Derivative Works thereof, You may choose to offer,
+          and charge a fee for, acceptance of support, warranty, indemnity,
+          or other liability obligations and/or rights consistent with this
+          License. However, in accepting such obligations, You may act only
+          on Your own behalf and on Your sole responsibility, not on behalf
+          of any other Contributor, and only if You agree to indemnify,
+          defend, and hold each Contributor harmless for any liability
+          incurred by, or claims asserted against, such Contributor by reason
+          of your accepting any such warranty or additional liability.
+
+       END OF TERMS AND CONDITIONS
+
+       APPENDIX: How to apply the Apache License to your work.
+
+          To apply the Apache License to your work, attach the following
+          boilerplate notice, with the fields enclosed by brackets "{}"
+          replaced with your own identifying information. (Don't include
+          the brackets!)  The text should be enclosed in the appropriate
+          comment syntax for the file format. We also recommend that a
+          file or class name and description of purpose be included on the
+          same "printed page" as the copyright notice for easier
+          identification within third-party archives.
+
+       Copyright 2013-2019 Nikolay Kim and Andrew Svetlov
+
+       Licensed under the Apache License, Version 2.0 (the "License");
+       you may not use this file except in compliance with the License.
+       You may obtain a copy of the License at
+
+           http://www.apache.org/licenses/LICENSE-2.0
+
+       Unless required by applicable law or agreed to in writing, software
+       distributed under the License is distributed on an "AS IS" BASIS,
+       WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+       See the License for the specific language governing permissions and
+       limitations under the License.
+
+### google-api-core
 
                                   Apache License
                             Version 2.0, January 2004
@@ -614,15 +1622,516 @@
        incurred by, or claims asserted against, such Contributor by reason
        of your accepting any such warranty or additional liability.
 
-    Requests
-    Copyright 2019 Kenneth Reitz
+    END OF TERMS AND CONDITIONS
 
----
-### urllib3
+    APPENDIX: How to apply the Apache License to your work.
+
+       To apply the Apache License to your work, attach the following
+       boilerplate notice, with the fields enclosed by brackets "[]"
+       replaced with your own identifying information. (Don't include
+       the brackets!)  The text should be enclosed in the appropriate
+       comment syntax for the file format. We also recommend that a
+       file or class name and description of purpose be included on the
+       same "printed page" as the copyright notice for easier
+       identification within third-party archives.
+
+    Copyright [yyyy] [name of copyright owner]
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+### google-auth
+
+                                  Apache License
+                            Version 2.0, January 2004
+                         http://www.apache.org/licenses/
+
+    TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
+
+    1. Definitions.
+
+       "License" shall mean the terms and conditions for use, reproduction,
+       and distribution as defined by Sections 1 through 9 of this document.
+
+       "Licensor" shall mean the copyright owner or entity authorized by
+       the copyright owner that is granting the License.
+
+       "Legal Entity" shall mean the union of the acting entity and all
+       other entities that control, are controlled by, or are under common
+       control with that entity. For the purposes of this definition,
+       "control" means (i) the power, direct or indirect, to cause the
+       direction or management of such entity, whether by contract or
+       otherwise, or (ii) ownership of fifty percent (50%) or more of the
+       outstanding shares, or (iii) beneficial ownership of such entity.
+
+       "You" (or "Your") shall mean an individual or Legal Entity
+       exercising permissions granted by this License.
+
+       "Source" form shall mean the preferred form for making modifications,
+       including but not limited to software source code, documentation
+       source, and configuration files.
+
+       "Object" form shall mean any form resulting from mechanical
+       transformation or translation of a Source form, including but
+       not limited to compiled object code, generated documentation,
+       and conversions to other media types.
+
+       "Work" shall mean the work of authorship, whether in Source or
+       Object form, made available under the License, as indicated by a
+       copyright notice that is included in or attached to the work
+       (an example is provided in the Appendix below).
+
+       "Derivative Works" shall mean any work, whether in Source or Object
+       form, that is based on (or derived from) the Work and for which the
+       editorial revisions, annotations, elaborations, or other modifications
+       represent, as a whole, an original work of authorship. For the purposes
+       of this License, Derivative Works shall not include works that remain
+       separable from, or merely link (or bind by name) to the interfaces of,
+       the Work and Derivative Works thereof.
+
+       "Contribution" shall mean any work of authorship, including
+       the original version of the Work and any modifications or additions
+       to that Work or Derivative Works thereof, that is intentionally
+       submitted to Licensor for inclusion in the Work by the copyright owner
+       or by an individual or Legal Entity authorized to submit on behalf of
+       the copyright owner. For the purposes of this definition, "submitted"
+       means any form of electronic, verbal, or written communication sent
+       to the Licensor or its representatives, including but not limited to
+       communication on electronic mailing lists, source code control systems,
+       and issue tracking systems that are managed by, or on behalf of, the
+       Licensor for the purpose of discussing and improving the Work, but
+       excluding communication that is conspicuously marked or otherwise
+       designated in writing by the copyright owner as "Not a Contribution."
+
+       "Contributor" shall mean Licensor and any individual or Legal Entity
+       on behalf of whom a Contribution has been received by Licensor and
+       subsequently incorporated within the Work.
+
+    2. Grant of Copyright License. Subject to the terms and conditions of
+       this License, each Contributor hereby grants to You a perpetual,
+       worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+       copyright license to reproduce, prepare Derivative Works of,
+       publicly display, publicly perform, sublicense, and distribute the
+       Work and such Derivative Works in Source or Object form.
+
+    3. Grant of Patent License. Subject to the terms and conditions of
+       this License, each Contributor hereby grants to You a perpetual,
+       worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+       (except as stated in this section) patent license to make, have made,
+       use, offer to sell, sell, import, and otherwise transfer the Work,
+       where such license applies only to those patent claims licensable
+       by such Contributor that are necessarily infringed by their
+       Contribution(s) alone or by combination of their Contribution(s)
+       with the Work to which such Contribution(s) was submitted. If You
+       institute patent litigation against any entity (including a
+       cross-claim or counterclaim in a lawsuit) alleging that the Work
+       or a Contribution incorporated within the Work constitutes direct
+       or contributory patent infringement, then any patent licenses
+       granted to You under this License for that Work shall terminate
+       as of the date such litigation is filed.
+
+    4. Redistribution. You may reproduce and distribute copies of the
+       Work or Derivative Works thereof in any medium, with or without
+       modifications, and in Source or Object form, provided that You
+       meet the following conditions:
+
+       (a) You must give any other recipients of the Work or
+           Derivative Works a copy of this License; and
+
+       (b) You must cause any modified files to carry prominent notices
+           stating that You changed the files; and
+
+       (c) You must retain, in the Source form of any Derivative Works
+           that You distribute, all copyright, patent, trademark, and
+           attribution notices from the Source form of the Work,
+           excluding those notices that do not pertain to any part of
+           the Derivative Works; and
+
+       (d) If the Work includes a "NOTICE" text file as part of its
+           distribution, then any Derivative Works that You distribute must
+           include a readable copy of the attribution notices contained
+           within such NOTICE file, excluding those notices that do not
+           pertain to any part of the Derivative Works, in at least one
+           of the following places: within a NOTICE text file distributed
+           as part of the Derivative Works; within the Source form or
+           documentation, if provided along with the Derivative Works; or,
+           within a display generated by the Derivative Works, if and
+           wherever such third-party notices normally appear. The contents
+           of the NOTICE file are for informational purposes only and
+           do not modify the License. You may add Your own attribution
+           notices within Derivative Works that You distribute, alongside
+           or as an addendum to the NOTICE text from the Work, provided
+           that such additional attribution notices cannot be construed
+           as modifying the License.
+
+       You may add Your own copyright statement to Your modifications and
+       may provide additional or different license terms and conditions
+       for use, reproduction, or distribution of Your modifications, or
+       for any such Derivative Works as a whole, provided Your use,
+       reproduction, and distribution of the Work otherwise complies with
+       the conditions stated in this License.
+
+    5. Submission of Contributions. Unless You explicitly state otherwise,
+       any Contribution intentionally submitted for inclusion in the Work
+       by You to the Licensor shall be under the terms and conditions of
+       this License, without any additional terms or conditions.
+       Notwithstanding the above, nothing herein shall supersede or modify
+       the terms of any separate license agreement you may have executed
+       with Licensor regarding such Contributions.
+
+    6. Trademarks. This License does not grant permission to use the trade
+       names, trademarks, service marks, or product names of the Licensor,
+       except as required for reasonable and customary use in describing the
+       origin of the Work and reproducing the content of the NOTICE file.
+
+    7. Disclaimer of Warranty. Unless required by applicable law or
+       agreed to in writing, Licensor provides the Work (and each
+       Contributor provides its Contributions) on an "AS IS" BASIS,
+       WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+       implied, including, without limitation, any warranties or conditions
+       of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A
+       PARTICULAR PURPOSE. You are solely responsible for determining the
+       appropriateness of using or redistributing the Work and assume any
+       risks associated with Your exercise of permissions under this License.
+
+    8. Limitation of Liability. In no event and under no legal theory,
+       whether in tort (including negligence), contract, or otherwise,
+       unless required by applicable law (such as deliberate and grossly
+       negligent acts) or agreed to in writing, shall any Contributor be
+       liable to You for damages, including any direct, indirect, special,
+       incidental, or consequential damages of any character arising as a
+       result of this License or out of the use or inability to use the
+       Work (including but not limited to damages for loss of goodwill,
+       work stoppage, computer failure or malfunction, or any and all
+       other commercial damages or losses), even if such Contributor
+       has been advised of the possibility of such damages.
+
+    9. Accepting Warranty or Additional Liability. While redistributing
+       the Work or Derivative Works thereof, You may choose to offer,
+       and charge a fee for, acceptance of support, warranty, indemnity,
+       or other liability obligations and/or rights consistent with this
+       License. However, in accepting such obligations, You may act only
+       on Your own behalf and on Your sole responsibility, not on behalf
+       of any other Contributor, and only if You agree to indemnify,
+       defend, and hold each Contributor harmless for any liability
+       incurred by, or claims asserted against, such Contributor by reason
+       of your accepting any such warranty or additional liability.
+
+    END OF TERMS AND CONDITIONS
+
+    APPENDIX: How to apply the Apache License to your work.
+
+       To apply the Apache License to your work, attach the following
+       boilerplate notice, with the fields enclosed by brackets "[]"
+       replaced with your own identifying information. (Don't include
+       the brackets!)  The text should be enclosed in the appropriate
+       comment syntax for the file format. We also recommend that a
+       file or class name and description of purpose be included on the
+       same "printed page" as the copyright notice for easier
+       identification within third-party archives.
+
+    Copyright [yyyy] [name of copyright owner]
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+### googleapis-common-protos
+
+                                  Apache License
+                            Version 2.0, January 2004
+                         http://www.apache.org/licenses/
+
+    TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
+
+    1. Definitions.
+
+       "License" shall mean the terms and conditions for use, reproduction,
+       and distribution as defined by Sections 1 through 9 of this document.
+
+       "Licensor" shall mean the copyright owner or entity authorized by
+       the copyright owner that is granting the License.
+
+       "Legal Entity" shall mean the union of the acting entity and all
+       other entities that control, are controlled by, or are under common
+       control with that entity. For the purposes of this definition,
+       "control" means (i) the power, direct or indirect, to cause the
+       direction or management of such entity, whether by contract or
+       otherwise, or (ii) ownership of fifty percent (50%) or more of the
+       outstanding shares, or (iii) beneficial ownership of such entity.
+
+       "You" (or "Your") shall mean an individual or Legal Entity
+       exercising permissions granted by this License.
+
+       "Source" form shall mean the preferred form for making modifications,
+       including but not limited to software source code, documentation
+       source, and configuration files.
+
+       "Object" form shall mean any form resulting from mechanical
+       transformation or translation of a Source form, including but
+       not limited to compiled object code, generated documentation,
+       and conversions to other media types.
+
+       "Work" shall mean the work of authorship, whether in Source or
+       Object form, made available under the License, as indicated by a
+       copyright notice that is included in or attached to the work
+       (an example is provided in the Appendix below).
+
+       "Derivative Works" shall mean any work, whether in Source or Object
+       form, that is based on (or derived from) the Work and for which the
+       editorial revisions, annotations, elaborations, or other modifications
+       represent, as a whole, an original work of authorship. For the purposes
+       of this License, Derivative Works shall not include works that remain
+       separable from, or merely link (or bind by name) to the interfaces of,
+       the Work and Derivative Works thereof.
+
+       "Contribution" shall mean any work of authorship, including
+       the original version of the Work and any modifications or additions
+       to that Work or Derivative Works thereof, that is intentionally
+       submitted to Licensor for inclusion in the Work by the copyright owner
+       or by an individual or Legal Entity authorized to submit on behalf of
+       the copyright owner. For the purposes of this definition, "submitted"
+       means any form of electronic, verbal, or written communication sent
+       to the Licensor or its representatives, including but not limited to
+       communication on electronic mailing lists, source code control systems,
+       and issue tracking systems that are managed by, or on behalf of, the
+       Licensor for the purpose of discussing and improving the Work, but
+       excluding communication that is conspicuously marked or otherwise
+       designated in writing by the copyright owner as "Not a Contribution."
+
+       "Contributor" shall mean Licensor and any individual or Legal Entity
+       on behalf of whom a Contribution has been received by Licensor and
+       subsequently incorporated within the Work.
+
+    2. Grant of Copyright License. Subject to the terms and conditions of
+       this License, each Contributor hereby grants to You a perpetual,
+       worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+       copyright license to reproduce, prepare Derivative Works of,
+       publicly display, publicly perform, sublicense, and distribute the
+       Work and such Derivative Works in Source or Object form.
+
+    3. Grant of Patent License. Subject to the terms and conditions of
+       this License, each Contributor hereby grants to You a perpetual,
+       worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+       (except as stated in this section) patent license to make, have made,
+       use, offer to sell, sell, import, and otherwise transfer the Work,
+       where such license applies only to those patent claims licensable
+       by such Contributor that are necessarily infringed by their
+       Contribution(s) alone or by combination of their Contribution(s)
+       with the Work to which such Contribution(s) was submitted. If You
+       institute patent litigation against any entity (including a
+       cross-claim or counterclaim in a lawsuit) alleging that the Work
+       or a Contribution incorporated within the Work constitutes direct
+       or contributory patent infringement, then any patent licenses
+       granted to You under this License for that Work shall terminate
+       as of the date such litigation is filed.
+
+    4. Redistribution. You may reproduce and distribute copies of the
+       Work or Derivative Works thereof in any medium, with or without
+       modifications, and in Source or Object form, provided that You
+       meet the following conditions:
+
+       (a) You must give any other recipients of the Work or
+           Derivative Works a copy of this License; and
+
+       (b) You must cause any modified files to carry prominent notices
+           stating that You changed the files; and
+
+       (c) You must retain, in the Source form of any Derivative Works
+           that You distribute, all copyright, patent, trademark, and
+           attribution notices from the Source form of the Work,
+           excluding those notices that do not pertain to any part of
+           the Derivative Works; and
+
+       (d) If the Work includes a "NOTICE" text file as part of its
+           distribution, then any Derivative Works that You distribute must
+           include a readable copy of the attribution notices contained
+           within such NOTICE file, excluding those notices that do not
+           pertain to any part of the Derivative Works, in at least one
+           of the following places: within a NOTICE text file distributed
+           as part of the Derivative Works; within the Source form or
+           documentation, if provided along with the Derivative Works; or,
+           within a display generated by the Derivative Works, if and
+           wherever such third-party notices normally appear. The contents
+           of the NOTICE file are for informational purposes only and
+           do not modify the License. You may add Your own attribution
+           notices within Derivative Works that You distribute, alongside
+           or as an addendum to the NOTICE text from the Work, provided
+           that such additional attribution notices cannot be construed
+           as modifying the License.
+
+       You may add Your own copyright statement to Your modifications and
+       may provide additional or different license terms and conditions
+       for use, reproduction, or distribution of Your modifications, or
+       for any such Derivative Works as a whole, provided Your use,
+       reproduction, and distribution of the Work otherwise complies with
+       the conditions stated in this License.
+
+    5. Submission of Contributions. Unless You explicitly state otherwise,
+       any Contribution intentionally submitted for inclusion in the Work
+       by You to the Licensor shall be under the terms and conditions of
+       this License, without any additional terms or conditions.
+       Notwithstanding the above, nothing herein shall supersede or modify
+       the terms of any separate license agreement you may have executed
+       with Licensor regarding such Contributions.
+
+    6. Trademarks. This License does not grant permission to use the trade
+       names, trademarks, service marks, or product names of the Licensor,
+       except as required for reasonable and customary use in describing the
+       origin of the Work and reproducing the content of the NOTICE file.
+
+    7. Disclaimer of Warranty. Unless required by applicable law or
+       agreed to in writing, Licensor provides the Work (and each
+       Contributor provides its Contributions) on an "AS IS" BASIS,
+       WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+       implied, including, without limitation, any warranties or conditions
+       of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A
+       PARTICULAR PURPOSE. You are solely responsible for determining the
+       appropriateness of using or redistributing the Work and assume any
+       risks associated with Your exercise of permissions under this License.
+
+    8. Limitation of Liability. In no event and under no legal theory,
+       whether in tort (including negligence), contract, or otherwise,
+       unless required by applicable law (such as deliberate and grossly
+       negligent acts) or agreed to in writing, shall any Contributor be
+       liable to You for damages, including any direct, indirect, special,
+       incidental, or consequential damages of any character arising as a
+       result of this License or out of the use or inability to use the
+       Work (including but not limited to damages for loss of goodwill,
+       work stoppage, computer failure or malfunction, or any and all
+       other commercial damages or losses), even if such Contributor
+       has been advised of the possibility of such damages.
+
+    9. Accepting Warranty or Additional Liability. While redistributing
+       the Work or Derivative Works thereof, You may choose to offer,
+       and charge a fee for, acceptance of support, warranty, indemnity,
+       or other liability obligations and/or rights consistent with this
+       License. However, in accepting such obligations, You may act only
+       on Your own behalf and on Your sole responsibility, not on behalf
+       of any other Contributor, and only if You agree to indemnify,
+       defend, and hold each Contributor harmless for any liability
+       incurred by, or claims asserted against, such Contributor by reason
+       of your accepting any such warranty or additional liability.
+
+    END OF TERMS AND CONDITIONS
+
+    APPENDIX: How to apply the Apache License to your work.
+
+       To apply the Apache License to your work, attach the following
+       boilerplate notice, with the fields enclosed by brackets "[]"
+       replaced with your own identifying information. (Don't include
+       the brackets!)  The text should be enclosed in the appropriate
+       comment syntax for the file format. We also recommend that a
+       file or class name and description of purpose be included on the
+       same "printed page" as the copyright notice for easier
+       identification within third-party archives.
+
+    Copyright [yyyy] [name of copyright owner]
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+### h11
+
+    The MIT License (MIT)
+
+    Copyright (c) 2016 Nathaniel J. Smith <njs@pobox.com> and other contributors
+
+    Permission is hereby granted, free of charge, to any person obtaining
+    a copy of this software and associated documentation files (the
+    "Software"), to deal in the Software without restriction, including
+    without limitation the rights to use, copy, modify, merge, publish,
+    distribute, sublicense, and/or sell copies of the Software, and to
+    permit persons to whom the Software is furnished to do so, subject to
+    the following conditions:
+
+    The above copyright notice and this permission notice shall be
+    included in all copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+    EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+    MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+    NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+    LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+    OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+    WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+### httpcore
+
+    Copyright © 2020, [Encode OSS Ltd](https://www.encode.io/).
+    All rights reserved.
+
+    Redistribution and use in source and binary forms, with or without
+    modification, are permitted provided that the following conditions are met:
+
+    * Redistributions of source code must retain the above copyright notice, this
+      list of conditions and the following disclaimer.
+
+    * Redistributions in binary form must reproduce the above copyright notice,
+      this list of conditions and the following disclaimer in the documentation
+      and/or other materials provided with the distribution.
+
+    * Neither the name of the copyright holder nor the names of its
+      contributors may be used to endorse or promote products derived from
+      this software without specific prior written permission.
+
+    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+    AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+    IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+    DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+    FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+    DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+    SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+    CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+    OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+    OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+### httpx
+
+    Copyright © 2019, [Encode OSS Ltd](https://www.encode.io/).
+    All rights reserved.
+
+    Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+
+    * Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+
+    * Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+
+    * Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
+
+    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+### httpx_auth
 
     MIT License
 
-    Copyright (c) 2008-2020 Andrey Petrov and contributors.
+    Copyright (c) 2024 Colin Bounouar
 
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"), to deal
@@ -642,60 +2151,45 @@
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
     SOFTWARE.
 
----
-### charset-normalizer
+### idna
 
-    MIT License
+    BSD 3-Clause License
 
-    Copyright (c) 2025 TAHRI Ahmed R.
+    Copyright (c) 2013-2026, Kim Davies and contributors.
+    All rights reserved.
 
-    Permission is hereby granted, free of charge, to any person obtaining a copy
-    of this software and associated documentation files (the "Software"), to deal
-    in the Software without restriction, including without limitation the rights
-    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-    copies of the Software, and to permit persons to whom the Software is
-    furnished to do so, subject to the following conditions:
+    Redistribution and use in source and binary forms, with or without
+    modification, are permitted provided that the following conditions are
+    met:
 
-    The above copyright notice and this permission notice shall be included in all
-    copies or substantial portions of the Software.
+    1. Redistributions of source code must retain the above copyright
+       notice, this list of conditions and the following disclaimer.
 
-    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-    SOFTWARE.
+    2. Redistributions in binary form must reproduce the above copyright
+       notice, this list of conditions and the following disclaimer in the
+       documentation and/or other materials provided with the distribution.
 
----
-### certifi
+    3. Neither the name of the copyright holder nor the names of its
+       contributors may be used to endorse or promote products derived from
+       this software without specific prior written permission.
 
-    This package contains a modified version of ca-bundle.crt:
+    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+    "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+    LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+    A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+    HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+    SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+    TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+    PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+    LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+    NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-    ca-bundle.crt -- Bundle of CA Root Certificates
+### iniconfig
 
-    This is a bundle of X.509 certificates of public Certificate Authorities
-    (CA). These were automatically extracted from Mozilla's root certificates
-    file (certdata.txt).  This file can be found in the mozilla source tree:
-    https://hg.mozilla.org/mozilla-central/file/tip/security/nss/lib/ckfw/builtins/certdata.txt
-    It contains the certificates in PEM format and therefore
-    can be directly used with curl / libcurl / php_curl, or with
-    an Apache+mod_ssl webserver for SSL client authentication.
-    Just configure this file as the SSLCACertificateFile.#
+    The MIT License (MIT)
 
-    ***** BEGIN LICENSE BLOCK *****
-    This Source Code Form is subject to the terms of the Mozilla Public License,
-    v. 2.0. If a copy of the MPL was not distributed with this file, You can obtain
-    one at http://mozilla.org/MPL/2.0/.
-
-    ***** END LICENSE BLOCK *****
-    @(#) $RCSfile: certdata.txt,v $ $Revision: 1.80 $ $Date: 2011/11/03 15:11:58 $
-
----
-### PyYAML
-
-    Copyright (c) 2017-2021 Ingy döt Net
-    Copyright (c) 2006-2016 Kirill Simonov
+    Copyright (c) 2010 - 2023 Holger Krekel and others
 
     Permission is hereby granted, free of charge, to any person obtaining a copy of
     this software and associated documentation files (the "Software"), to deal in
@@ -715,13 +2209,1696 @@
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
     SOFTWARE.
 
----
-### pytest-order
+### Jinja2
+
+    Copyright 2007 Pallets
+
+    Redistribution and use in source and binary forms, with or without
+    modification, are permitted provided that the following conditions are
+    met:
+
+    1.  Redistributions of source code must retain the above copyright
+        notice, this list of conditions and the following disclaimer.
+
+    2.  Redistributions in binary form must reproduce the above copyright
+        notice, this list of conditions and the following disclaimer in the
+        documentation and/or other materials provided with the distribution.
+
+    3.  Neither the name of the copyright holder nor the names of its
+        contributors may be used to endorse or promote products derived from
+        this software without specific prior written permission.
+
+    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+    "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+    LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+    PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+    HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+    SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+    TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+    PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+    LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+    NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+### joserfc
+
+    BSD 3-Clause License
+
+    Copyright (c) 2023, Hsiaoming Yang
+
+    Redistribution and use in source and binary forms, with or without
+    modification, are permitted provided that the following conditions are met:
+
+    1. Redistributions of source code must retain the above copyright notice, this
+       list of conditions and the following disclaimer.
+
+    2. Redistributions in binary form must reproduce the above copyright notice,
+       this list of conditions and the following disclaimer in the documentation
+       and/or other materials provided with the distribution.
+
+    3. Neither the name of the copyright holder nor the names of its
+       contributors may be used to endorse or promote products derived from
+       this software without specific prior written permission.
+
+    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+    AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+    IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+    DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+    FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+    DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+    SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+    CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+    OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+    OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+### MarkupSafe
+
+    Copyright 2010 Pallets
+
+    Redistribution and use in source and binary forms, with or without
+    modification, are permitted provided that the following conditions are
+    met:
+
+    1.  Redistributions of source code must retain the above copyright
+        notice, this list of conditions and the following disclaimer.
+
+    2.  Redistributions in binary form must reproduce the above copyright
+        notice, this list of conditions and the following disclaimer in the
+        documentation and/or other materials provided with the distribution.
+
+    3.  Neither the name of the copyright holder nor the names of its
+        contributors may be used to endorse or promote products derived from
+        this software without specific prior written permission.
+
+    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+    "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+    LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+    PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+    HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+    SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+    TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+    PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+    LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+    NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+### msal
 
     The MIT License (MIT)
 
-    Copyright (c) 2014 Frank Tobia.
-    Modifications copyright 2020- by contributors, as listed in AUTHORS.
+    Copyright (c) Microsoft Corporation. 
+    All rights reserved.
+
+    This code is licensed under the MIT License.
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files(the "Software"), to deal
+    in the Software without restriction, including without limitation the rights
+    to use, copy, modify, merge, publish, distribute, sublicense, and / or sell
+    copies of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions :
+
+    The above copyright notice and this permission notice shall be included in
+    all copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+    THE SOFTWARE.
+
+### msal-extensions
+
+    MIT License
+
+    Copyright (c) Microsoft Corporation. All rights reserved.
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"), to deal
+    in the Software without restriction, including without limitation the rights
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in all
+    copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+    SOFTWARE
+
+### multidict
+
+    Apache License
+                               Version 2.0, January 2004
+                            http://www.apache.org/licenses/
+
+       TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
+
+       1. Definitions.
+
+          "License" shall mean the terms and conditions for use, reproduction,
+          and distribution as defined by Sections 1 through 9 of this document.
+
+          "Licensor" shall mean the copyright owner or entity authorized by
+          the copyright owner that is granting the License.
+
+          "Legal Entity" shall mean the union of the acting entity and all
+          other entities that control, are controlled by, or are under common
+          control with that entity. For the purposes of this definition,
+          "control" means (i) the power, direct or indirect, to cause the
+          direction or management of such entity, whether by contract or
+          otherwise, or (ii) ownership of fifty percent (50%) or more of the
+          outstanding shares, or (iii) beneficial ownership of such entity.
+
+          "You" (or "Your") shall mean an individual or Legal Entity
+          exercising permissions granted by this License.
+
+          "Source" form shall mean the preferred form for making modifications,
+          including but not limited to software source code, documentation
+          source, and configuration files.
+
+          "Object" form shall mean any form resulting from mechanical
+          transformation or translation of a Source form, including but
+          not limited to compiled object code, generated documentation,
+          and conversions to other media types.
+
+          "Work" shall mean the work of authorship, whether in Source or
+          Object form, made available under the License, as indicated by a
+          copyright notice that is included in or attached to the work
+          (an example is provided in the Appendix below).
+
+          "Derivative Works" shall mean any work, whether in Source or Object
+          form, that is based on (or derived from) the Work and for which the
+          editorial revisions, annotations, elaborations, or other modifications
+          represent, as a whole, an original work of authorship. For the purposes
+          of this License, Derivative Works shall not include works that remain
+          separable from, or merely link (or bind by name) to the interfaces of,
+          the Work and Derivative Works thereof.
+
+          "Contribution" shall mean any work of authorship, including
+          the original version of the Work and any modifications or additions
+          to that Work or Derivative Works thereof, that is intentionally
+          submitted to Licensor for inclusion in the Work by the copyright owner
+          or by an individual or Legal Entity authorized to submit on behalf of
+          the copyright owner. For the purposes of this definition, "submitted"
+          means any form of electronic, verbal, or written communication sent
+          to the Licensor or its representatives, including but not limited to
+          communication on electronic mailing lists, source code control systems,
+          and issue tracking systems that are managed by, or on behalf of, the
+          Licensor for the purpose of discussing and improving the Work, but
+          excluding communication that is conspicuously marked or otherwise
+          designated in writing by the copyright owner as "Not a Contribution."
+
+          "Contributor" shall mean Licensor and any individual or Legal Entity
+          on behalf of whom a Contribution has been received by Licensor and
+          subsequently incorporated within the Work.
+
+       2. Grant of Copyright License. Subject to the terms and conditions of
+          this License, each Contributor hereby grants to You a perpetual,
+          worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+          copyright license to reproduce, prepare Derivative Works of,
+          publicly display, publicly perform, sublicense, and distribute the
+          Work and such Derivative Works in Source or Object form.
+
+       3. Grant of Patent License. Subject to the terms and conditions of
+          this License, each Contributor hereby grants to You a perpetual,
+          worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+          (except as stated in this section) patent license to make, have made,
+          use, offer to sell, sell, import, and otherwise transfer the Work,
+          where such license applies only to those patent claims licensable
+          by such Contributor that are necessarily infringed by their
+          Contribution(s) alone or by combination of their Contribution(s)
+          with the Work to which such Contribution(s) was submitted. If You
+          institute patent litigation against any entity (including a
+          cross-claim or counterclaim in a lawsuit) alleging that the Work
+          or a Contribution incorporated within the Work constitutes direct
+          or contributory patent infringement, then any patent licenses
+          granted to You under this License for that Work shall terminate
+          as of the date such litigation is filed.
+
+       4. Redistribution. You may reproduce and distribute copies of the
+          Work or Derivative Works thereof in any medium, with or without
+          modifications, and in Source or Object form, provided that You
+          meet the following conditions:
+
+          (a) You must give any other recipients of the Work or
+              Derivative Works a copy of this License; and
+
+          (b) You must cause any modified files to carry prominent notices
+              stating that You changed the files; and
+
+          (c) You must retain, in the Source form of any Derivative Works
+              that You distribute, all copyright, patent, trademark, and
+              attribution notices from the Source form of the Work,
+              excluding those notices that do not pertain to any part of
+              the Derivative Works; and
+
+          (d) If the Work includes a "NOTICE" text file as part of its
+              distribution, then any Derivative Works that You distribute must
+              include a readable copy of the attribution notices contained
+              within such NOTICE file, excluding those notices that do not
+              pertain to any part of the Derivative Works, in at least one
+              of the following places: within a NOTICE text file distributed
+              as part of the Derivative Works; within the Source form or
+              documentation, if provided along with the Derivative Works; or,
+              within a display generated by the Derivative Works, if and
+              wherever such third-party notices normally appear. The contents
+              of the NOTICE file are for informational purposes only and
+              do not modify the License. You may add Your own attribution
+              notices within Derivative Works that You distribute, alongside
+              or as an addendum to the NOTICE text from the Work, provided
+              that such additional attribution notices cannot be construed
+              as modifying the License.
+
+          You may add Your own copyright statement to Your modifications and
+          may provide additional or different license terms and conditions
+          for use, reproduction, or distribution of Your modifications, or
+          for any such Derivative Works as a whole, provided Your use,
+          reproduction, and distribution of the Work otherwise complies with
+          the conditions stated in this License.
+
+       5. Submission of Contributions. Unless You explicitly state otherwise,
+          any Contribution intentionally submitted for inclusion in the Work
+          by You to the Licensor shall be under the terms and conditions of
+          this License, without any additional terms or conditions.
+          Notwithstanding the above, nothing herein shall supersede or modify
+          the terms of any separate license agreement you may have executed
+          with Licensor regarding such Contributions.
+
+       6. Trademarks. This License does not grant permission to use the trade
+          names, trademarks, service marks, or product names of the Licensor,
+          except as required for reasonable and customary use in describing the
+          origin of the Work and reproducing the content of the NOTICE file.
+
+       7. Disclaimer of Warranty. Unless required by applicable law or
+          agreed to in writing, Licensor provides the Work (and each
+          Contributor provides its Contributions) on an "AS IS" BASIS,
+          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+          implied, including, without limitation, any warranties or conditions
+          of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A
+          PARTICULAR PURPOSE. You are solely responsible for determining the
+          appropriateness of using or redistributing the Work and assume any
+          risks associated with Your exercise of permissions under this License.
+
+       8. Limitation of Liability. In no event and under no legal theory,
+          whether in tort (including negligence), contract, or otherwise,
+          unless required by applicable law (such as deliberate and grossly
+          negligent acts) or agreed to in writing, shall any Contributor be
+          liable to You for damages, including any direct, indirect, special,
+          incidental, or consequential damages of any character arising as a
+          result of this License or out of the use or inability to use the
+          Work (including but not limited to damages for loss of goodwill,
+          work stoppage, computer failure or malfunction, or any and all
+          other commercial damages or losses), even if such Contributor
+          has been advised of the possibility of such damages.
+
+       9. Accepting Warranty or Additional Liability. While redistributing
+          the Work or Derivative Works thereof, You may choose to offer,
+          and charge a fee for, acceptance of support, warranty, indemnity,
+          or other liability obligations and/or rights consistent with this
+          License. However, in accepting such obligations, You may act only
+          on Your own behalf and on Your sole responsibility, not on behalf
+          of any other Contributor, and only if You agree to indemnify,
+          defend, and hold each Contributor harmless for any liability
+          incurred by, or claims asserted against, such Contributor by reason
+          of your accepting any such warranty or additional liability.
+
+       END OF TERMS AND CONDITIONS
+
+       APPENDIX: How to apply the Apache License to your work.
+
+          To apply the Apache License to your work, attach the following
+          boilerplate notice, with the fields enclosed by brackets "{}"
+          replaced with your own identifying information. (Don't include
+          the brackets!)  The text should be enclosed in the appropriate
+          comment syntax for the file format. We also recommend that a
+          file or class name and description of purpose be included on the
+          same "printed page" as the copyright notice for easier
+          identification within third-party archives.
+
+       Copyright aio-libs contributors
+
+       Licensed under the Apache License, Version 2.0 (the "License");
+       you may not use this file except in compliance with the License.
+       You may obtain a copy of the License at
+
+           http://www.apache.org/licenses/LICENSE-2.0
+
+       Unless required by applicable law or agreed to in writing, software
+       distributed under the License is distributed on an "AS IS" BASIS,
+       WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+       See the License for the specific language governing permissions and
+       limitations under the License.
+
+### neo4j
+
+                                  Apache License
+                            Version 2.0, January 2004
+                         https://www.apache.org/licenses/
+
+    TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
+
+    1. Definitions.
+
+       "License" shall mean the terms and conditions for use, reproduction,
+       and distribution as defined by Sections 1 through 9 of this document.
+
+       "Licensor" shall mean the copyright owner or entity authorized by
+       the copyright owner that is granting the License.
+
+       "Legal Entity" shall mean the union of the acting entity and all
+       other entities that control, are controlled by, or are under common
+       control with that entity. For the purposes of this definition,
+       "control" means (i) the power, direct or indirect, to cause the
+       direction or management of such entity, whether by contract or
+       otherwise, or (ii) ownership of fifty percent (50%) or more of the
+       outstanding shares, or (iii) beneficial ownership of such entity.
+
+       "You" (or "Your") shall mean an individual or Legal Entity
+       exercising permissions granted by this License.
+
+       "Source" form shall mean the preferred form for making modifications,
+       including but not limited to software source code, documentation
+       source, and configuration files.
+
+       "Object" form shall mean any form resulting from mechanical
+       transformation or translation of a Source form, including but
+       not limited to compiled object code, generated documentation,
+       and conversions to other media types.
+
+       "Work" shall mean the work of authorship, whether in Source or
+       Object form, made available under the License, as indicated by a
+       copyright notice that is included in or attached to the work
+       (an example is provided in the Appendix below).
+
+       "Derivative Works" shall mean any work, whether in Source or Object
+       form, that is based on (or derived from) the Work and for which the
+       editorial revisions, annotations, elaborations, or other modifications
+       represent, as a whole, an original work of authorship. For the purposes
+       of this License, Derivative Works shall not include works that remain
+       separable from, or merely link (or bind by name) to the interfaces of,
+       the Work and Derivative Works thereof.
+
+       "Contribution" shall mean any work of authorship, including
+       the original version of the Work and any modifications or additions
+       to that Work or Derivative Works thereof, that is intentionally
+       submitted to Licensor for inclusion in the Work by the copyright owner
+       or by an individual or Legal Entity authorized to submit on behalf of
+       the copyright owner. For the purposes of this definition, "submitted"
+       means any form of electronic, verbal, or written communication sent
+       to the Licensor or its representatives, including but not limited to
+       communication on electronic mailing lists, source code control systems,
+       and issue tracking systems that are managed by, or on behalf of, the
+       Licensor for the purpose of discussing and improving the Work, but
+       excluding communication that is conspicuously marked or otherwise
+       designated in writing by the copyright owner as "Not a Contribution."
+
+       "Contributor" shall mean Licensor and any individual or Legal Entity
+       on behalf of whom a Contribution has been received by Licensor and
+       subsequently incorporated within the Work.
+
+    2. Grant of Copyright License. Subject to the terms and conditions of
+       this License, each Contributor hereby grants to You a perpetual,
+       worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+       copyright license to reproduce, prepare Derivative Works of,
+       publicly display, publicly perform, sublicense, and distribute the
+       Work and such Derivative Works in Source or Object form.
+
+    3. Grant of Patent License. Subject to the terms and conditions of
+       this License, each Contributor hereby grants to You a perpetual,
+       worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+       (except as stated in this section) patent license to make, have made,
+       use, offer to sell, sell, import, and otherwise transfer the Work,
+       where such license applies only to those patent claims licensable
+       by such Contributor that are necessarily infringed by their
+       Contribution(s) alone or by combination of their Contribution(s)
+       with the Work to which such Contribution(s) was submitted. If You
+       institute patent litigation against any entity (including a
+       cross-claim or counterclaim in a lawsuit) alleging that the Work
+       or a Contribution incorporated within the Work constitutes direct
+       or contributory patent infringement, then any patent licenses
+       granted to You under this License for that Work shall terminate
+       as of the date such litigation is filed.
+
+    4. Redistribution. You may reproduce and distribute copies of the
+       Work or Derivative Works thereof in any medium, with or without
+       modifications, and in Source or Object form, provided that You
+       meet the following conditions:
+
+       (a) You must give any other recipients of the Work or
+           Derivative Works a copy of this License; and
+
+       (b) You must cause any modified files to carry prominent notices
+           stating that You changed the files; and
+
+       (c) You must retain, in the Source form of any Derivative Works
+           that You distribute, all copyright, patent, trademark, and
+           attribution notices from the Source form of the Work,
+           excluding those notices that do not pertain to any part of
+           the Derivative Works; and
+
+       (d) If the Work includes a "NOTICE" text file as part of its
+           distribution, then any Derivative Works that You distribute must
+           include a readable copy of the attribution notices contained
+           within such NOTICE file, excluding those notices that do not
+           pertain to any part of the Derivative Works, in at least one
+           of the following places: within a NOTICE text file distributed
+           as part of the Derivative Works; within the Source form or
+           documentation, if provided along with the Derivative Works; or,
+           within a display generated by the Derivative Works, if and
+           wherever such third-party notices normally appear. The contents
+           of the NOTICE file are for informational purposes only and
+           do not modify the License. You may add Your own attribution
+           notices within Derivative Works that You distribute, alongside
+           or as an addendum to the NOTICE text from the Work, provided
+           that such additional attribution notices cannot be construed
+           as modifying the License.
+
+       You may add Your own copyright statement to Your modifications and
+       may provide additional or different license terms and conditions
+       for use, reproduction, or distribution of Your modifications, or
+       for any such Derivative Works as a whole, provided Your use,
+       reproduction, and distribution of the Work otherwise complies with
+       the conditions stated in this License.
+
+    5. Submission of Contributions. Unless You explicitly state otherwise,
+       any Contribution intentionally submitted for inclusion in the Work
+       by You to the Licensor shall be under the terms and conditions of
+       this License, without any additional terms or conditions.
+       Notwithstanding the above, nothing herein shall supersede or modify
+       the terms of any separate license agreement you may have executed
+       with Licensor regarding such Contributions.
+
+    6. Trademarks. This License does not grant permission to use the trade
+       names, trademarks, service marks, or product names of the Licensor,
+       except as required for reasonable and customary use in describing the
+       origin of the Work and reproducing the content of the NOTICE file.
+
+    7. Disclaimer of Warranty. Unless required by applicable law or
+       agreed to in writing, Licensor provides the Work (and each
+       Contributor provides its Contributions) on an "AS IS" BASIS,
+       WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+       implied, including, without limitation, any warranties or conditions
+       of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A
+       PARTICULAR PURPOSE. You are solely responsible for determining the
+       appropriateness of using or redistributing the Work and assume any
+       risks associated with Your exercise of permissions under this License.
+
+    8. Limitation of Liability. In no event and under no legal theory,
+       whether in tort (including negligence), contract, or otherwise,
+       unless required by applicable law (such as deliberate and grossly
+       negligent acts) or agreed to in writing, shall any Contributor be
+       liable to You for damages, including any direct, indirect, special,
+       incidental, or consequential damages of any character arising as a
+       result of this License or out of the use or inability to use the
+       Work (including but not limited to damages for loss of goodwill,
+       work stoppage, computer failure or malfunction, or any and all
+       other commercial damages or losses), even if such Contributor
+       has been advised of the possibility of such damages.
+
+    9. Accepting Warranty or Additional Liability. While redistributing
+       the Work or Derivative Works thereof, You may choose to offer,
+       and charge a fee for, acceptance of support, warranty, indemnity,
+       or other liability obligations and/or rights consistent with this
+       License. However, in accepting such obligations, You may act only
+       on Your own behalf and on Your sole responsibility, not on behalf
+       of any other Contributor, and only if You agree to indemnify,
+       defend, and hold each Contributor harmless for any liability
+       incurred by, or claims asserted against, such Contributor by reason
+       of your accepting any such warranty or additional liability.
+
+    END OF TERMS AND CONDITIONS
+
+    APPENDIX: How to apply the Apache License to your work.
+
+       To apply the Apache License to your work, attach the following
+       boilerplate notice, with the fields enclosed by brackets "[]"
+       replaced with your own identifying information. (Don't include
+       the brackets!)  The text should be enclosed in the appropriate
+       comment syntax for the file format. We also recommend that a
+       file or class name and description of purpose be included on the
+       same "printed page" as the copyright notice for easier
+       identification within third-party archives.
+
+    Copyright [yyyy] [name of copyright owner]
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+        https://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+    Python software and documentation are licensed under the
+    Python Software Foundation License Version 2.
+
+    Starting with Python 3.8.6, examples, recipes, and other code in
+    the documentation are dual licensed under the PSF License Version 2
+    and the Zero-Clause BSD license.
+
+
+    PYTHON SOFTWARE FOUNDATION LICENSE VERSION 2
+    --------------------------------------------
+
+    1. This LICENSE AGREEMENT is between the Python Software Foundation
+    ("PSF"), and the Individual or Organization ("Licensee") accessing and
+    otherwise using this software ("Python") in source or binary form and
+    its associated documentation.
+
+    2. Subject to the terms and conditions of this License Agreement, PSF hereby
+    grants Licensee a nonexclusive, royalty-free, world-wide license to reproduce,
+    analyze, test, perform and/or display publicly, prepare derivative works,
+    distribute, and otherwise use Python alone or in any derivative version,
+    provided, however, that PSF's License Agreement and PSF's notice of copyright,
+    i.e., "Copyright (c) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
+    2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022 Python Software Foundation;
+    All Rights Reserved" are retained in Python alone or in any derivative version
+    prepared by Licensee.
+
+    3. In the event Licensee prepares a derivative work that is based on
+    or incorporates Python or any part thereof, and wants to make
+    the derivative work available to others as provided herein, then
+    Licensee hereby agrees to include in any such work a brief summary of
+    the changes made to Python.
+
+    4. PSF is making Python available to Licensee on an "AS IS"
+    basis.  PSF MAKES NO REPRESENTATIONS OR WARRANTIES, EXPRESS OR
+    IMPLIED.  BY WAY OF EXAMPLE, BUT NOT LIMITATION, PSF MAKES NO AND
+    DISCLAIMS ANY REPRESENTATION OR WARRANTY OF MERCHANTABILITY OR FITNESS
+    FOR ANY PARTICULAR PURPOSE OR THAT THE USE OF PYTHON WILL NOT
+    INFRINGE ANY THIRD PARTY RIGHTS.
+
+    5. PSF SHALL NOT BE LIABLE TO LICENSEE OR ANY OTHER USERS OF PYTHON
+    FOR ANY INCIDENTAL, SPECIAL, OR CONSEQUENTIAL DAMAGES OR LOSS AS
+    A RESULT OF MODIFYING, DISTRIBUTING, OR OTHERWISE USING PYTHON,
+    OR ANY DERIVATIVE THEREOF, EVEN IF ADVISED OF THE POSSIBILITY THEREOF.
+
+    6. This License Agreement will automatically terminate upon a material
+    breach of its terms and conditions.
+
+    7. Nothing in this License Agreement shall be deemed to create any
+    relationship of agency, partnership, or joint venture between PSF and
+    Licensee.  This License Agreement does not grant permission to use PSF
+    trademarks or trade name in a trademark sense to endorse or promote
+    products or services of Licensee, or any third party.
+
+    8. By copying, installing or otherwise using Python, Licensee
+    agrees to be bound by the terms and conditions of this License
+    Agreement.
+
+    Unless stated otherwise, this software is distributed under the terms of the Apache License 2.0.
+    See the LICENSE.APACHE2.txt file for the full license text.
+
+    Parts of this software is distributed under the terms of the Python Software Foundation License Version 2.
+    See the LICENSE.PYTHON.txt file for the full license text.
+    The pieces of code covered by the Python Software Foundation License Version 2 are marked as such.
+
+    Neo4j
+    Copyright (c) Neo4j Sweden AB (referred to in this notice as "Neo4j") [https://neo4j.com]
+
+    This product includes software ("Software") developed by Neo4j
+
+### neomodel
+
+    The MIT License (MIT)
+
+    Copyright 2013 Robin Edwards and other contributors
+
+    Permission is hereby granted, free of charge, to any person obtaining
+    a copy of this software and associated documentation files (the
+    "Software"), to deal in the Software without restriction, including
+    without limitation the rights to use, copy, modify, merge, publish,
+    distribute, sublicense, and/or sell copies of the Software, and to
+    permit persons to whom the Software is furnished to do so, subject to
+    the following conditions:
+
+    The above copyright notice and this permission notice shall be
+    included in all copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+    EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+    MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+    NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+    LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+    OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+    WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+    Dave Vernon - https://github.com/the4thv
+    Laura Willis - https://github.com/laurawillis
+    Marianna Polatoglou - https://github.com/mar-chi-pan
+    Murtaza Gulamali - https://github.com/mygulamali
+    Nigel Small - https://github.com/nigelsmall
+    Panos Katseas - https://github.com/pkatseas
+    Peter Neubauer - https://github.com/peterneubauer
+    Rafael Pivato - https://github.com/rafaelpivato
+    Robin Edwards - https://github.com/robinedwards
+    Romain Thalineau - https://github.com/romaintha
+    Sam Millar - https://github.com/millr
+    Siddharth Maheshwari - https://github.com/siddharthm
+    Tony Landis - https://github.com/tony-landis
+    Wes Freeman - https://github.com/wfreeman
+    Laurie Clark-Michalek - https://github.com/bluepeppers
+
+### opencensus
+
+                             Apache License
+                            Version 2.0, January 2004
+                         http://www.apache.org/licenses/
+
+    TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
+
+    1. Definitions.
+
+       "License" shall mean the terms and conditions for use, reproduction,
+       and distribution as defined by Sections 1 through 9 of this document.
+
+       "Licensor" shall mean the copyright owner or entity authorized by
+       the copyright owner that is granting the License.
+
+       "Legal Entity" shall mean the union of the acting entity and all
+       other entities that control, are controlled by, or are under common
+       control with that entity. For the purposes of this definition,
+       "control" means (i) the power, direct or indirect, to cause the
+       direction or management of such entity, whether by contract or
+       otherwise, or (ii) ownership of fifty percent (50%) or more of the
+       outstanding shares, or (iii) beneficial ownership of such entity.
+
+       "You" (or "Your") shall mean an individual or Legal Entity
+       exercising permissions granted by this License.
+
+       "Source" form shall mean the preferred form for making modifications,
+       including but not limited to software source code, documentation
+       source, and configuration files.
+
+       "Object" form shall mean any form resulting from mechanical
+       transformation or translation of a Source form, including but
+       not limited to compiled object code, generated documentation,
+       and conversions to other media types.
+
+       "Work" shall mean the work of authorship, whether in Source or
+       Object form, made available under the License, as indicated by a
+       copyright notice that is included in or attached to the work
+       (an example is provided in the Appendix below).
+
+       "Derivative Works" shall mean any work, whether in Source or Object
+       form, that is based on (or derived from) the Work and for which the
+       editorial revisions, annotations, elaborations, or other modifications
+       represent, as a whole, an original work of authorship. For the purposes
+       of this License, Derivative Works shall not include works that remain
+       separable from, or merely link (or bind by name) to the interfaces of,
+       the Work and Derivative Works thereof.
+
+       "Contribution" shall mean any work of authorship, including
+       the original version of the Work and any modifications or additions
+       to that Work or Derivative Works thereof, that is intentionally
+       submitted to Licensor for inclusion in the Work by the copyright owner
+       or by an individual or Legal Entity authorized to submit on behalf of
+       the copyright owner. For the purposes of this definition, "submitted"
+       means any form of electronic, verbal, or written communication sent
+       to the Licensor or its representatives, including but not limited to
+       communication on electronic mailing lists, source code control systems,
+       and issue tracking systems that are managed by, or on behalf of, the
+       Licensor for the purpose of discussing and improving the Work, but
+       excluding communication that is conspicuously marked or otherwise
+       designated in writing by the copyright owner as "Not a Contribution."
+
+       "Contributor" shall mean Licensor and any individual or Legal Entity
+       on behalf of whom a Contribution has been received by Licensor and
+       subsequently incorporated within the Work.
+
+    2. Grant of Copyright License. Subject to the terms and conditions of
+       this License, each Contributor hereby grants to You a perpetual,
+       worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+       copyright license to reproduce, prepare Derivative Works of,
+       publicly display, publicly perform, sublicense, and distribute the
+       Work and such Derivative Works in Source or Object form.
+
+    3. Grant of Patent License. Subject to the terms and conditions of
+       this License, each Contributor hereby grants to You a perpetual,
+       worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+       (except as stated in this section) patent license to make, have made,
+       use, offer to sell, sell, import, and otherwise transfer the Work,
+       where such license applies only to those patent claims licensable
+       by such Contributor that are necessarily infringed by their
+       Contribution(s) alone or by combination of their Contribution(s)
+       with the Work to which such Contribution(s) was submitted. If You
+       institute patent litigation against any entity (including a
+       cross-claim or counterclaim in a lawsuit) alleging that the Work
+       or a Contribution incorporated within the Work constitutes direct
+       or contributory patent infringement, then any patent licenses
+       granted to You under this License for that Work shall terminate
+       as of the date such litigation is filed.
+
+    4. Redistribution. You may reproduce and distribute copies of the
+       Work or Derivative Works thereof in any medium, with or without
+       modifications, and in Source or Object form, provided that You
+       meet the following conditions:
+
+       (a) You must give any other recipients of the Work or
+           Derivative Works a copy of this License; and
+
+       (b) You must cause any modified files to carry prominent notices
+           stating that You changed the files; and
+
+       (c) You must retain, in the Source form of any Derivative Works
+           that You distribute, all copyright, patent, trademark, and
+           attribution notices from the Source form of the Work,
+           excluding those notices that do not pertain to any part of
+           the Derivative Works; and
+
+       (d) If the Work includes a "NOTICE" text file as part of its
+           distribution, then any Derivative Works that You distribute must
+           include a readable copy of the attribution notices contained
+           within such NOTICE file, excluding those notices that do not
+           pertain to any part of the Derivative Works, in at least one
+           of the following places: within a NOTICE text file distributed
+           as part of the Derivative Works; within the Source form or
+           documentation, if provided along with the Derivative Works; or,
+           within a display generated by the Derivative Works, if and
+           wherever such third-party notices normally appear. The contents
+           of the NOTICE file are for informational purposes only and
+           do not modify the License. You may add Your own attribution
+           notices within Derivative Works that You distribute, alongside
+           or as an addendum to the NOTICE text from the Work, provided
+           that such additional attribution notices cannot be construed
+           as modifying the License.
+
+       You may add Your own copyright statement to Your modifications and
+       may provide additional or different license terms and conditions
+       for use, reproduction, or distribution of Your modifications, or
+       for any such Derivative Works as a whole, provided Your use,
+       reproduction, and distribution of the Work otherwise complies with
+       the conditions stated in this License.
+
+    5. Submission of Contributions. Unless You explicitly state otherwise,
+       any Contribution intentionally submitted for inclusion in the Work
+       by You to the Licensor shall be under the terms and conditions of
+       this License, without any additional terms or conditions.
+       Notwithstanding the above, nothing herein shall supersede or modify
+       the terms of any separate license agreement you may have executed
+       with Licensor regarding such Contributions.
+
+    6. Trademarks. This License does not grant permission to use the trade
+       names, trademarks, service marks, or product names of the Licensor,
+       except as required for reasonable and customary use in describing the
+       origin of the Work and reproducing the content of the NOTICE file.
+
+    7. Disclaimer of Warranty. Unless required by applicable law or
+       agreed to in writing, Licensor provides the Work (and each
+       Contributor provides its Contributions) on an "AS IS" BASIS,
+       WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+       implied, including, without limitation, any warranties or conditions
+       of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A
+       PARTICULAR PURPOSE. You are solely responsible for determining the
+       appropriateness of using or redistributing the Work and assume any
+       risks associated with Your exercise of permissions under this License.
+
+    8. Limitation of Liability. In no event and under no legal theory,
+       whether in tort (including negligence), contract, or otherwise,
+       unless required by applicable law (such as deliberate and grossly
+       negligent acts) or agreed to in writing, shall any Contributor be
+       liable to You for damages, including any direct, indirect, special,
+       incidental, or consequential damages of any character arising as a
+       result of this License or out of the use or inability to use the
+       Work (including but not limited to damages for loss of goodwill,
+       work stoppage, computer failure or malfunction, or any and all
+       other commercial damages or losses), even if such Contributor
+       has been advised of the possibility of such damages.
+
+    9. Accepting Warranty or Additional Liability. While redistributing
+       the Work or Derivative Works thereof, You may choose to offer,
+       and charge a fee for, acceptance of support, warranty, indemnity,
+       or other liability obligations and/or rights consistent with this
+       License. However, in accepting such obligations, You may act only
+       on Your own behalf and on Your sole responsibility, not on behalf
+       of any other Contributor, and only if You agree to indemnify,
+       defend, and hold each Contributor harmless for any liability
+       incurred by, or claims asserted against, such Contributor by reason
+       of your accepting any such warranty or additional liability.
+
+    END OF TERMS AND CONDITIONS
+
+    APPENDIX: How to apply the Apache License to your work.
+
+       To apply the Apache License to your work, attach the following
+       boilerplate notice, with the fields enclosed by brackets "[]"
+       replaced with your own identifying information. (Don't include
+       the brackets!)  The text should be enclosed in the appropriate
+       comment syntax for the file format. We also recommend that a
+       file or class name and description of purpose be included on the
+       same "printed page" as the copyright notice for easier
+       identification within third-party archives.
+
+    Copyright [yyyy] [name of copyright owner]
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+### opencensus-context
+
+                            Apache License
+                           Version 2.0, January 2004
+                        http://www.apache.org/licenses/
+
+    TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
+
+    1. Definitions.
+
+      "License" shall mean the terms and conditions for use, reproduction,
+      and distribution as defined by Sections 1 through 9 of this document.
+
+      "Licensor" shall mean the copyright owner or entity authorized by
+      the copyright owner that is granting the License.
+
+      "Legal Entity" shall mean the union of the acting entity and all
+      other entities that control, are controlled by, or are under common
+      control with that entity. For the purposes of this definition,
+      "control" means (i) the power, direct or indirect, to cause the
+      direction or management of such entity, whether by contract or
+      otherwise, or (ii) ownership of fifty percent (50%) or more of the
+      outstanding shares, or (iii) beneficial ownership of such entity.
+
+      "You" (or "Your") shall mean an individual or Legal Entity
+      exercising permissions granted by this License.
+
+      "Source" form shall mean the preferred form for making modifications,
+      including but not limited to software source code, documentation
+      source, and configuration files.
+
+      "Object" form shall mean any form resulting from mechanical
+      transformation or translation of a Source form, including but
+      not limited to compiled object code, generated documentation,
+      and conversions to other media types.
+
+      "Work" shall mean the work of authorship, whether in Source or
+      Object form, made available under the License, as indicated by a
+      copyright notice that is included in or attached to the work
+      (an example is provided in the Appendix below).
+
+      "Derivative Works" shall mean any work, whether in Source or Object
+      form, that is based on (or derived from) the Work and for which the
+      editorial revisions, annotations, elaborations, or other modifications
+      represent, as a whole, an original work of authorship. For the purposes
+      of this License, Derivative Works shall not include works that remain
+      separable from, or merely link (or bind by name) to the interfaces of,
+      the Work and Derivative Works thereof.
+
+      "Contribution" shall mean any work of authorship, including
+      the original version of the Work and any modifications or additions
+      to that Work or Derivative Works thereof, that is intentionally
+      submitted to Licensor for inclusion in the Work by the copyright owner
+      or by an individual or Legal Entity authorized to submit on behalf of
+      the copyright owner. For the purposes of this definition, "submitted"
+      means any form of electronic, verbal, or written communication sent
+      to the Licensor or its representatives, including but not limited to
+      communication on electronic mailing lists, source code control systems,
+      and issue tracking systems that are managed by, or on behalf of, the
+      Licensor for the purpose of discussing and improving the Work, but
+      excluding communication that is conspicuously marked or otherwise
+      designated in writing by the copyright owner as "Not a Contribution."
+
+      "Contributor" shall mean Licensor and any individual or Legal Entity
+      on behalf of whom a Contribution has been received by Licensor and
+      subsequently incorporated within the Work.
+
+    2. Grant of Copyright License. Subject to the terms and conditions of
+      this License, each Contributor hereby grants to You a perpetual,
+      worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+      copyright license to reproduce, prepare Derivative Works of,
+      publicly display, publicly perform, sublicense, and distribute the
+      Work and such Derivative Works in Source or Object form.
+
+    3. Grant of Patent License. Subject to the terms and conditions of
+      this License, each Contributor hereby grants to You a perpetual,
+      worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+      (except as stated in this section) patent license to make, have made,
+      use, offer to sell, sell, import, and otherwise transfer the Work,
+      where such license applies only to those patent claims licensable
+      by such Contributor that are necessarily infringed by their
+      Contribution(s) alone or by combination of their Contribution(s)
+      with the Work to which such Contribution(s) was submitted. If You
+      institute patent litigation against any entity (including a
+      cross-claim or counterclaim in a lawsuit) alleging that the Work
+      or a Contribution incorporated within the Work constitutes direct
+      or contributory patent infringement, then any patent licenses
+      granted to You under this License for that Work shall terminate
+      as of the date such litigation is filed.
+
+    4. Redistribution. You may reproduce and distribute copies of the
+      Work or Derivative Works thereof in any medium, with or without
+      modifications, and in Source or Object form, provided that You
+      meet the following conditions:
+
+      (a) You must give any other recipients of the Work or
+          Derivative Works a copy of this License; and
+
+      (b) You must cause any modified files to carry prominent notices
+          stating that You changed the files; and
+
+      (c) You must retain, in the Source form of any Derivative Works
+          that You distribute, all copyright, patent, trademark, and
+          attribution notices from the Source form of the Work,
+          excluding those notices that do not pertain to any part of
+          the Derivative Works; and
+
+      (d) If the Work includes a "NOTICE" text file as part of its
+          distribution, then any Derivative Works that You distribute must
+          include a readable copy of the attribution notices contained
+          within such NOTICE file, excluding those notices that do not
+          pertain to any part of the Derivative Works, in at least one
+          of the following places: within a NOTICE text file distributed
+          as part of the Derivative Works; within the Source form or
+          documentation, if provided along with the Derivative Works; or,
+          within a display generated by the Derivative Works, if and
+          wherever such third-party notices normally appear. The contents
+          of the NOTICE file are for informational purposes only and
+          do not modify the License. You may add Your own attribution
+          notices within Derivative Works that You distribute, alongside
+          or as an addendum to the NOTICE text from the Work, provided
+          that such additional attribution notices cannot be construed
+          as modifying the License.
+
+      You may add Your own copyright statement to Your modifications and
+      may provide additional or different license terms and conditions
+      for use, reproduction, or distribution of Your modifications, or
+      for any such Derivative Works as a whole, provided Your use,
+      reproduction, and distribution of the Work otherwise complies with
+      the conditions stated in this License.
+
+    5. Submission of Contributions. Unless You explicitly state otherwise,
+      any Contribution intentionally submitted for inclusion in the Work
+      by You to the Licensor shall be under the terms and conditions of
+      this License, without any additional terms or conditions.
+      Notwithstanding the above, nothing herein shall supersede or modify
+      the terms of any separate license agreement you may have executed
+      with Licensor regarding such Contributions.
+
+    6. Trademarks. This License does not grant permission to use the trade
+      names, trademarks, service marks, or product names of the Licensor,
+      except as required for reasonable and customary use in describing the
+      origin of the Work and reproducing the content of the NOTICE file.
+
+    7. Disclaimer of Warranty. Unless required by applicable law or
+      agreed to in writing, Licensor provides the Work (and each
+      Contributor provides its Contributions) on an "AS IS" BASIS,
+      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+      implied, including, without limitation, any warranties or conditions
+      of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A
+      PARTICULAR PURPOSE. You are solely responsible for determining the
+      appropriateness of using or redistributing the Work and assume any
+      risks associated with Your exercise of permissions under this License.
+
+    8. Limitation of Liability. In no event and under no legal theory,
+      whether in tort (including negligence), contract, or otherwise,
+      unless required by applicable law (such as deliberate and grossly
+      negligent acts) or agreed to in writing, shall any Contributor be
+      liable to You for damages, including any direct, indirect, special,
+      incidental, or consequential damages of any character arising as a
+      result of this License or out of the use or inability to use the
+      Work (including but not limited to damages for loss of goodwill,
+      work stoppage, computer failure or malfunction, or any and all
+      other commercial damages or losses), even if such Contributor
+      has been advised of the possibility of such damages.
+
+    9. Accepting Warranty or Additional Liability. While redistributing
+      the Work or Derivative Works thereof, You may choose to offer,
+      and charge a fee for, acceptance of support, warranty, indemnity,
+      or other liability obligations and/or rights consistent with this
+      License. However, in accepting such obligations, You may act only
+      on Your own behalf and on Your sole responsibility, not on behalf
+      of any other Contributor, and only if You agree to indemnify,
+      defend, and hold each Contributor harmless for any liability
+      incurred by, or claims asserted against, such Contributor by reason
+      of your accepting any such warranty or additional liability.
+
+    END OF TERMS AND CONDITIONS
+
+    APPENDIX: How to apply the Apache License to your work.
+
+      To apply the Apache License to your work, attach the following
+      boilerplate notice, with the fields enclosed by brackets "[]"
+      replaced with your own identifying information. (Don't include
+      the brackets!)  The text should be enclosed in the appropriate
+      comment syntax for the file format. We also recommend that a
+      file or class name and description of purpose be included on the
+      same "printed page" as the copyright notice for easier
+      identification within third-party archives.
+
+    Copyright [yyyy] [name of copyright owner]
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+### opencensus-ext-azure
+
+                            Apache License
+                           Version 2.0, January 2004
+                        http://www.apache.org/licenses/
+
+    TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
+
+    1. Definitions.
+
+      "License" shall mean the terms and conditions for use, reproduction,
+      and distribution as defined by Sections 1 through 9 of this document.
+
+      "Licensor" shall mean the copyright owner or entity authorized by
+      the copyright owner that is granting the License.
+
+      "Legal Entity" shall mean the union of the acting entity and all
+      other entities that control, are controlled by, or are under common
+      control with that entity. For the purposes of this definition,
+      "control" means (i) the power, direct or indirect, to cause the
+      direction or management of such entity, whether by contract or
+      otherwise, or (ii) ownership of fifty percent (50%) or more of the
+      outstanding shares, or (iii) beneficial ownership of such entity.
+
+      "You" (or "Your") shall mean an individual or Legal Entity
+      exercising permissions granted by this License.
+
+      "Source" form shall mean the preferred form for making modifications,
+      including but not limited to software source code, documentation
+      source, and configuration files.
+
+      "Object" form shall mean any form resulting from mechanical
+      transformation or translation of a Source form, including but
+      not limited to compiled object code, generated documentation,
+      and conversions to other media types.
+
+      "Work" shall mean the work of authorship, whether in Source or
+      Object form, made available under the License, as indicated by a
+      copyright notice that is included in or attached to the work
+      (an example is provided in the Appendix below).
+
+      "Derivative Works" shall mean any work, whether in Source or Object
+      form, that is based on (or derived from) the Work and for which the
+      editorial revisions, annotations, elaborations, or other modifications
+      represent, as a whole, an original work of authorship. For the purposes
+      of this License, Derivative Works shall not include works that remain
+      separable from, or merely link (or bind by name) to the interfaces of,
+      the Work and Derivative Works thereof.
+
+      "Contribution" shall mean any work of authorship, including
+      the original version of the Work and any modifications or additions
+      to that Work or Derivative Works thereof, that is intentionally
+      submitted to Licensor for inclusion in the Work by the copyright owner
+      or by an individual or Legal Entity authorized to submit on behalf of
+      the copyright owner. For the purposes of this definition, "submitted"
+      means any form of electronic, verbal, or written communication sent
+      to the Licensor or its representatives, including but not limited to
+      communication on electronic mailing lists, source code control systems,
+      and issue tracking systems that are managed by, or on behalf of, the
+      Licensor for the purpose of discussing and improving the Work, but
+      excluding communication that is conspicuously marked or otherwise
+      designated in writing by the copyright owner as "Not a Contribution."
+
+      "Contributor" shall mean Licensor and any individual or Legal Entity
+      on behalf of whom a Contribution has been received by Licensor and
+      subsequently incorporated within the Work.
+
+    2. Grant of Copyright License. Subject to the terms and conditions of
+      this License, each Contributor hereby grants to You a perpetual,
+      worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+      copyright license to reproduce, prepare Derivative Works of,
+      publicly display, publicly perform, sublicense, and distribute the
+      Work and such Derivative Works in Source or Object form.
+
+    3. Grant of Patent License. Subject to the terms and conditions of
+      this License, each Contributor hereby grants to You a perpetual,
+      worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+      (except as stated in this section) patent license to make, have made,
+      use, offer to sell, sell, import, and otherwise transfer the Work,
+      where such license applies only to those patent claims licensable
+      by such Contributor that are necessarily infringed by their
+      Contribution(s) alone or by combination of their Contribution(s)
+      with the Work to which such Contribution(s) was submitted. If You
+      institute patent litigation against any entity (including a
+      cross-claim or counterclaim in a lawsuit) alleging that the Work
+      or a Contribution incorporated within the Work constitutes direct
+      or contributory patent infringement, then any patent licenses
+      granted to You under this License for that Work shall terminate
+      as of the date such litigation is filed.
+
+    4. Redistribution. You may reproduce and distribute copies of the
+      Work or Derivative Works thereof in any medium, with or without
+      modifications, and in Source or Object form, provided that You
+      meet the following conditions:
+
+      (a) You must give any other recipients of the Work or
+          Derivative Works a copy of this License; and
+
+      (b) You must cause any modified files to carry prominent notices
+          stating that You changed the files; and
+
+      (c) You must retain, in the Source form of any Derivative Works
+          that You distribute, all copyright, patent, trademark, and
+          attribution notices from the Source form of the Work,
+          excluding those notices that do not pertain to any part of
+          the Derivative Works; and
+
+      (d) If the Work includes a "NOTICE" text file as part of its
+          distribution, then any Derivative Works that You distribute must
+          include a readable copy of the attribution notices contained
+          within such NOTICE file, excluding those notices that do not
+          pertain to any part of the Derivative Works, in at least one
+          of the following places: within a NOTICE text file distributed
+          as part of the Derivative Works; within the Source form or
+          documentation, if provided along with the Derivative Works; or,
+          within a display generated by the Derivative Works, if and
+          wherever such third-party notices normally appear. The contents
+          of the NOTICE file are for informational purposes only and
+          do not modify the License. You may add Your own attribution
+          notices within Derivative Works that You distribute, alongside
+          or as an addendum to the NOTICE text from the Work, provided
+          that such additional attribution notices cannot be construed
+          as modifying the License.
+
+      You may add Your own copyright statement to Your modifications and
+      may provide additional or different license terms and conditions
+      for use, reproduction, or distribution of Your modifications, or
+      for any such Derivative Works as a whole, provided Your use,
+      reproduction, and distribution of the Work otherwise complies with
+      the conditions stated in this License.
+
+    5. Submission of Contributions. Unless You explicitly state otherwise,
+      any Contribution intentionally submitted for inclusion in the Work
+      by You to the Licensor shall be under the terms and conditions of
+      this License, without any additional terms or conditions.
+      Notwithstanding the above, nothing herein shall supersede or modify
+      the terms of any separate license agreement you may have executed
+      with Licensor regarding such Contributions.
+
+    6. Trademarks. This License does not grant permission to use the trade
+      names, trademarks, service marks, or product names of the Licensor,
+      except as required for reasonable and customary use in describing the
+      origin of the Work and reproducing the content of the NOTICE file.
+
+    7. Disclaimer of Warranty. Unless required by applicable law or
+      agreed to in writing, Licensor provides the Work (and each
+      Contributor provides its Contributions) on an "AS IS" BASIS,
+      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+      implied, including, without limitation, any warranties or conditions
+      of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A
+      PARTICULAR PURPOSE. You are solely responsible for determining the
+      appropriateness of using or redistributing the Work and assume any
+      risks associated with Your exercise of permissions under this License.
+
+    8. Limitation of Liability. In no event and under no legal theory,
+      whether in tort (including negligence), contract, or otherwise,
+      unless required by applicable law (such as deliberate and grossly
+      negligent acts) or agreed to in writing, shall any Contributor be
+      liable to You for damages, including any direct, indirect, special,
+      incidental, or consequential damages of any character arising as a
+      result of this License or out of the use or inability to use the
+      Work (including but not limited to damages for loss of goodwill,
+      work stoppage, computer failure or malfunction, or any and all
+      other commercial damages or losses), even if such Contributor
+      has been advised of the possibility of such damages.
+
+    9. Accepting Warranty or Additional Liability. While redistributing
+      the Work or Derivative Works thereof, You may choose to offer,
+      and charge a fee for, acceptance of support, warranty, indemnity,
+      or other liability obligations and/or rights consistent with this
+      License. However, in accepting such obligations, You may act only
+      on Your own behalf and on Your sole responsibility, not on behalf
+      of any other Contributor, and only if You agree to indemnify,
+      defend, and hold each Contributor harmless for any liability
+      incurred by, or claims asserted against, such Contributor by reason
+      of your accepting any such warranty or additional liability.
+
+    END OF TERMS AND CONDITIONS
+
+    APPENDIX: How to apply the Apache License to your work.
+
+      To apply the Apache License to your work, attach the following
+      boilerplate notice, with the fields enclosed by brackets "[]"
+      replaced with your own identifying information. (Don't include
+      the brackets!)  The text should be enclosed in the appropriate
+      comment syntax for the file format. We also recommend that a
+      file or class name and description of purpose be included on the
+      same "printed page" as the copyright notice for easier
+      identification within third-party archives.
+
+    Copyright [yyyy] [name of copyright owner]
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+### opentelemetry-api
+
+                                  Apache License
+                            Version 2.0, January 2004
+                         http://www.apache.org/licenses/
+
+    TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
+
+    1. Definitions.
+
+       "License" shall mean the terms and conditions for use, reproduction,
+       and distribution as defined by Sections 1 through 9 of this document.
+
+       "Licensor" shall mean the copyright owner or entity authorized by
+       the copyright owner that is granting the License.
+
+       "Legal Entity" shall mean the union of the acting entity and all
+       other entities that control, are controlled by, or are under common
+       control with that entity. For the purposes of this definition,
+       "control" means (i) the power, direct or indirect, to cause the
+       direction or management of such entity, whether by contract or
+       otherwise, or (ii) ownership of fifty percent (50%) or more of the
+       outstanding shares, or (iii) beneficial ownership of such entity.
+
+       "You" (or "Your") shall mean an individual or Legal Entity
+       exercising permissions granted by this License.
+
+       "Source" form shall mean the preferred form for making modifications,
+       including but not limited to software source code, documentation
+       source, and configuration files.
+
+       "Object" form shall mean any form resulting from mechanical
+       transformation or translation of a Source form, including but
+       not limited to compiled object code, generated documentation,
+       and conversions to other media types.
+
+       "Work" shall mean the work of authorship, whether in Source or
+       Object form, made available under the License, as indicated by a
+       copyright notice that is included in or attached to the work
+       (an example is provided in the Appendix below).
+
+       "Derivative Works" shall mean any work, whether in Source or Object
+       form, that is based on (or derived from) the Work and for which the
+       editorial revisions, annotations, elaborations, or other modifications
+       represent, as a whole, an original work of authorship. For the purposes
+       of this License, Derivative Works shall not include works that remain
+       separable from, or merely link (or bind by name) to the interfaces of,
+       the Work and Derivative Works thereof.
+
+       "Contribution" shall mean any work of authorship, including
+       the original version of the Work and any modifications or additions
+       to that Work or Derivative Works thereof, that is intentionally
+       submitted to Licensor for inclusion in the Work by the copyright owner
+       or by an individual or Legal Entity authorized to submit on behalf of
+       the copyright owner. For the purposes of this definition, "submitted"
+       means any form of electronic, verbal, or written communication sent
+       to the Licensor or its representatives, including but not limited to
+       communication on electronic mailing lists, source code control systems,
+       and issue tracking systems that are managed by, or on behalf of, the
+       Licensor for the purpose of discussing and improving the Work, but
+       excluding communication that is conspicuously marked or otherwise
+       designated in writing by the copyright owner as "Not a Contribution."
+
+       "Contributor" shall mean Licensor and any individual or Legal Entity
+       on behalf of whom a Contribution has been received by Licensor and
+       subsequently incorporated within the Work.
+
+    2. Grant of Copyright License. Subject to the terms and conditions of
+       this License, each Contributor hereby grants to You a perpetual,
+       worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+       copyright license to reproduce, prepare Derivative Works of,
+       publicly display, publicly perform, sublicense, and distribute the
+       Work and such Derivative Works in Source or Object form.
+
+    3. Grant of Patent License. Subject to the terms and conditions of
+       this License, each Contributor hereby grants to You a perpetual,
+       worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+       (except as stated in this section) patent license to make, have made,
+       use, offer to sell, sell, import, and otherwise transfer the Work,
+       where such license applies only to those patent claims licensable
+       by such Contributor that are necessarily infringed by their
+       Contribution(s) alone or by combination of their Contribution(s)
+       with the Work to which such Contribution(s) was submitted. If You
+       institute patent litigation against any entity (including a
+       cross-claim or counterclaim in a lawsuit) alleging that the Work
+       or a Contribution incorporated within the Work constitutes direct
+       or contributory patent infringement, then any patent licenses
+       granted to You under this License for that Work shall terminate
+       as of the date such litigation is filed.
+
+    4. Redistribution. You may reproduce and distribute copies of the
+       Work or Derivative Works thereof in any medium, with or without
+       modifications, and in Source or Object form, provided that You
+       meet the following conditions:
+
+       (a) You must give any other recipients of the Work or
+           Derivative Works a copy of this License; and
+
+       (b) You must cause any modified files to carry prominent notices
+           stating that You changed the files; and
+
+       (c) You must retain, in the Source form of any Derivative Works
+           that You distribute, all copyright, patent, trademark, and
+           attribution notices from the Source form of the Work,
+           excluding those notices that do not pertain to any part of
+           the Derivative Works; and
+
+       (d) If the Work includes a "NOTICE" text file as part of its
+           distribution, then any Derivative Works that You distribute must
+           include a readable copy of the attribution notices contained
+           within such NOTICE file, excluding those notices that do not
+           pertain to any part of the Derivative Works, in at least one
+           of the following places: within a NOTICE text file distributed
+           as part of the Derivative Works; within the Source form or
+           documentation, if provided along with the Derivative Works; or,
+           within a display generated by the Derivative Works, if and
+           wherever such third-party notices normally appear. The contents
+           of the NOTICE file are for informational purposes only and
+           do not modify the License. You may add Your own attribution
+           notices within Derivative Works that You distribute, alongside
+           or as an addendum to the NOTICE text from the Work, provided
+           that such additional attribution notices cannot be construed
+           as modifying the License.
+
+       You may add Your own copyright statement to Your modifications and
+       may provide additional or different license terms and conditions
+       for use, reproduction, or distribution of Your modifications, or
+       for any such Derivative Works as a whole, provided Your use,
+       reproduction, and distribution of the Work otherwise complies with
+       the conditions stated in this License.
+
+    5. Submission of Contributions. Unless You explicitly state otherwise,
+       any Contribution intentionally submitted for inclusion in the Work
+       by You to the Licensor shall be under the terms and conditions of
+       this License, without any additional terms or conditions.
+       Notwithstanding the above, nothing herein shall supersede or modify
+       the terms of any separate license agreement you may have executed
+       with Licensor regarding such Contributions.
+
+    6. Trademarks. This License does not grant permission to use the trade
+       names, trademarks, service marks, or product names of the Licensor,
+       except as required for reasonable and customary use in describing the
+       origin of the Work and reproducing the content of the NOTICE file.
+
+    7. Disclaimer of Warranty. Unless required by applicable law or
+       agreed to in writing, Licensor provides the Work (and each
+       Contributor provides its Contributions) on an "AS IS" BASIS,
+       WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+       implied, including, without limitation, any warranties or conditions
+       of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A
+       PARTICULAR PURPOSE. You are solely responsible for determining the
+       appropriateness of using or redistributing the Work and assume any
+       risks associated with Your exercise of permissions under this License.
+
+    8. Limitation of Liability. In no event and under no legal theory,
+       whether in tort (including negligence), contract, or otherwise,
+       unless required by applicable law (such as deliberate and grossly
+       negligent acts) or agreed to in writing, shall any Contributor be
+       liable to You for damages, including any direct, indirect, special,
+       incidental, or consequential damages of any character arising as a
+       result of this License or out of the use or inability to use the
+       Work (including but not limited to damages for loss of goodwill,
+       work stoppage, computer failure or malfunction, or any and all
+       other commercial damages or losses), even if such Contributor
+       has been advised of the possibility of such damages.
+
+    9. Accepting Warranty or Additional Liability. While redistributing
+       the Work or Derivative Works thereof, You may choose to offer,
+       and charge a fee for, acceptance of support, warranty, indemnity,
+       or other liability obligations and/or rights consistent with this
+       License. However, in accepting such obligations, You may act only
+       on Your own behalf and on Your sole responsibility, not on behalf
+       of any other Contributor, and only if You agree to indemnify,
+       defend, and hold each Contributor harmless for any liability
+       incurred by, or claims asserted against, such Contributor by reason
+       of your accepting any such warranty or additional liability.
+
+    END OF TERMS AND CONDITIONS
+
+    APPENDIX: How to apply the Apache License to your work.
+
+       To apply the Apache License to your work, attach the following
+       boilerplate notice, with the fields enclosed by brackets "[]"
+       replaced with your own identifying information. (Don't include
+       the brackets!)  The text should be enclosed in the appropriate
+       comment syntax for the file format. We also recommend that a
+       file or class name and description of purpose be included on the
+       same "printed page" as the copyright notice for easier
+       identification within third-party archives.
+
+    Copyright [yyyy] [name of copyright owner]
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+### packaging
+
+    This software is made available under the terms of *either* of the licenses
+    found in LICENSE.APACHE or LICENSE.BSD. Contributions to this software is made
+    under the terms of *both* these licenses.
+
+                                  Apache License
+                            Version 2.0, January 2004
+                         http://www.apache.org/licenses/
+
+    TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
+
+    1. Definitions.
+
+       "License" shall mean the terms and conditions for use, reproduction,
+       and distribution as defined by Sections 1 through 9 of this document.
+
+       "Licensor" shall mean the copyright owner or entity authorized by
+       the copyright owner that is granting the License.
+
+       "Legal Entity" shall mean the union of the acting entity and all
+       other entities that control, are controlled by, or are under common
+       control with that entity. For the purposes of this definition,
+       "control" means (i) the power, direct or indirect, to cause the
+       direction or management of such entity, whether by contract or
+       otherwise, or (ii) ownership of fifty percent (50%) or more of the
+       outstanding shares, or (iii) beneficial ownership of such entity.
+
+       "You" (or "Your") shall mean an individual or Legal Entity
+       exercising permissions granted by this License.
+
+       "Source" form shall mean the preferred form for making modifications,
+       including but not limited to software source code, documentation
+       source, and configuration files.
+
+       "Object" form shall mean any form resulting from mechanical
+       transformation or translation of a Source form, including but
+       not limited to compiled object code, generated documentation,
+       and conversions to other media types.
+
+       "Work" shall mean the work of authorship, whether in Source or
+       Object form, made available under the License, as indicated by a
+       copyright notice that is included in or attached to the work
+       (an example is provided in the Appendix below).
+
+       "Derivative Works" shall mean any work, whether in Source or Object
+       form, that is based on (or derived from) the Work and for which the
+       editorial revisions, annotations, elaborations, or other modifications
+       represent, as a whole, an original work of authorship. For the purposes
+       of this License, Derivative Works shall not include works that remain
+       separable from, or merely link (or bind by name) to the interfaces of,
+       the Work and Derivative Works thereof.
+
+       "Contribution" shall mean any work of authorship, including
+       the original version of the Work and any modifications or additions
+       to that Work or Derivative Works thereof, that is intentionally
+       submitted to Licensor for inclusion in the Work by the copyright owner
+       or by an individual or Legal Entity authorized to submit on behalf of
+       the copyright owner. For the purposes of this definition, "submitted"
+       means any form of electronic, verbal, or written communication sent
+       to the Licensor or its representatives, including but not limited to
+       communication on electronic mailing lists, source code control systems,
+       and issue tracking systems that are managed by, or on behalf of, the
+       Licensor for the purpose of discussing and improving the Work, but
+       excluding communication that is conspicuously marked or otherwise
+       designated in writing by the copyright owner as "Not a Contribution."
+
+       "Contributor" shall mean Licensor and any individual or Legal Entity
+       on behalf of whom a Contribution has been received by Licensor and
+       subsequently incorporated within the Work.
+
+    2. Grant of Copyright License. Subject to the terms and conditions of
+       this License, each Contributor hereby grants to You a perpetual,
+       worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+       copyright license to reproduce, prepare Derivative Works of,
+       publicly display, publicly perform, sublicense, and distribute the
+       Work and such Derivative Works in Source or Object form.
+
+    3. Grant of Patent License. Subject to the terms and conditions of
+       this License, each Contributor hereby grants to You a perpetual,
+       worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+       (except as stated in this section) patent license to make, have made,
+       use, offer to sell, sell, import, and otherwise transfer the Work,
+       where such license applies only to those patent claims licensable
+       by such Contributor that are necessarily infringed by their
+       Contribution(s) alone or by combination of their Contribution(s)
+       with the Work to which such Contribution(s) was submitted. If You
+       institute patent litigation against any entity (including a
+       cross-claim or counterclaim in a lawsuit) alleging that the Work
+       or a Contribution incorporated within the Work constitutes direct
+       or contributory patent infringement, then any patent licenses
+       granted to You under this License for that Work shall terminate
+       as of the date such litigation is filed.
+
+    4. Redistribution. You may reproduce and distribute copies of the
+       Work or Derivative Works thereof in any medium, with or without
+       modifications, and in Source or Object form, provided that You
+       meet the following conditions:
+
+       (a) You must give any other recipients of the Work or
+           Derivative Works a copy of this License; and
+
+       (b) You must cause any modified files to carry prominent notices
+           stating that You changed the files; and
+
+       (c) You must retain, in the Source form of any Derivative Works
+           that You distribute, all copyright, patent, trademark, and
+           attribution notices from the Source form of the Work,
+           excluding those notices that do not pertain to any part of
+           the Derivative Works; and
+
+       (d) If the Work includes a "NOTICE" text file as part of its
+           distribution, then any Derivative Works that You distribute must
+           include a readable copy of the attribution notices contained
+           within such NOTICE file, excluding those notices that do not
+           pertain to any part of the Derivative Works, in at least one
+           of the following places: within a NOTICE text file distributed
+           as part of the Derivative Works; within the Source form or
+           documentation, if provided along with the Derivative Works; or,
+           within a display generated by the Derivative Works, if and
+           wherever such third-party notices normally appear. The contents
+           of the NOTICE file are for informational purposes only and
+           do not modify the License. You may add Your own attribution
+           notices within Derivative Works that You distribute, alongside
+           or as an addendum to the NOTICE text from the Work, provided
+           that such additional attribution notices cannot be construed
+           as modifying the License.
+
+       You may add Your own copyright statement to Your modifications and
+       may provide additional or different license terms and conditions
+       for use, reproduction, or distribution of Your modifications, or
+       for any such Derivative Works as a whole, provided Your use,
+       reproduction, and distribution of the Work otherwise complies with
+       the conditions stated in this License.
+
+    5. Submission of Contributions. Unless You explicitly state otherwise,
+       any Contribution intentionally submitted for inclusion in the Work
+       by You to the Licensor shall be under the terms and conditions of
+       this License, without any additional terms or conditions.
+       Notwithstanding the above, nothing herein shall supersede or modify
+       the terms of any separate license agreement you may have executed
+       with Licensor regarding such Contributions.
+
+    6. Trademarks. This License does not grant permission to use the trade
+       names, trademarks, service marks, or product names of the Licensor,
+       except as required for reasonable and customary use in describing the
+       origin of the Work and reproducing the content of the NOTICE file.
+
+    7. Disclaimer of Warranty. Unless required by applicable law or
+       agreed to in writing, Licensor provides the Work (and each
+       Contributor provides its Contributions) on an "AS IS" BASIS,
+       WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+       implied, including, without limitation, any warranties or conditions
+       of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A
+       PARTICULAR PURPOSE. You are solely responsible for determining the
+       appropriateness of using or redistributing the Work and assume any
+       risks associated with Your exercise of permissions under this License.
+
+    8. Limitation of Liability. In no event and under no legal theory,
+       whether in tort (including negligence), contract, or otherwise,
+       unless required by applicable law (such as deliberate and grossly
+       negligent acts) or agreed to in writing, shall any Contributor be
+       liable to You for damages, including any direct, indirect, special,
+       incidental, or consequential damages of any character arising as a
+       result of this License or out of the use or inability to use the
+       Work (including but not limited to damages for loss of goodwill,
+       work stoppage, computer failure or malfunction, or any and all
+       other commercial damages or losses), even if such Contributor
+       has been advised of the possibility of such damages.
+
+    9. Accepting Warranty or Additional Liability. While redistributing
+       the Work or Derivative Works thereof, You may choose to offer,
+       and charge a fee for, acceptance of support, warranty, indemnity,
+       or other liability obligations and/or rights consistent with this
+       License. However, in accepting such obligations, You may act only
+       on Your own behalf and on Your sole responsibility, not on behalf
+       of any other Contributor, and only if You agree to indemnify,
+       defend, and hold each Contributor harmless for any liability
+       incurred by, or claims asserted against, such Contributor by reason
+       of your accepting any such warranty or additional liability.
+
+    END OF TERMS AND CONDITIONS
+
+    Copyright (c) Donald Stufft and individual contributors.
+    All rights reserved.
+
+    Redistribution and use in source and binary forms, with or without
+    modification, are permitted provided that the following conditions are met:
+
+        1. Redistributions of source code must retain the above copyright notice,
+           this list of conditions and the following disclaimer.
+
+        2. Redistributions in binary form must reproduce the above copyright
+           notice, this list of conditions and the following disclaimer in the
+           documentation and/or other materials provided with the distribution.
+
+    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+    ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+    WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+    DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+    FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+    DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+    SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+    CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+    OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+    OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+### pluggy
+
+    The MIT License (MIT)
+
+    Copyright (c) 2015 holger krekel (rather uses bitbucket/hpk42)
 
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"), to deal
@@ -741,19 +3918,591 @@
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
     SOFTWARE.
 
----
-### pytest
+### propcache
+
+                                  Apache License
+                            Version 2.0, January 2004
+                         http://www.apache.org/licenses/
+
+    TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
+
+    1. Definitions.
+
+       "License" shall mean the terms and conditions for use, reproduction,
+       and distribution as defined by Sections 1 through 9 of this document.
+
+       "Licensor" shall mean the copyright owner or entity authorized by
+       the copyright owner that is granting the License.
+
+       "Legal Entity" shall mean the union of the acting entity and all
+       other entities that control, are controlled by, or are under common
+       control with that entity. For the purposes of this definition,
+       "control" means (i) the power, direct or indirect, to cause the
+       direction or management of such entity, whether by contract or
+       otherwise, or (ii) ownership of fifty percent (50%) or more of the
+       outstanding shares, or (iii) beneficial ownership of such entity.
+
+       "You" (or "Your") shall mean an individual or Legal Entity
+       exercising permissions granted by this License.
+
+       "Source" form shall mean the preferred form for making modifications,
+       including but not limited to software source code, documentation
+       source, and configuration files.
+
+       "Object" form shall mean any form resulting from mechanical
+       transformation or translation of a Source form, including but
+       not limited to compiled object code, generated documentation,
+       and conversions to other media types.
+
+       "Work" shall mean the work of authorship, whether in Source or
+       Object form, made available under the License, as indicated by a
+       copyright notice that is included in or attached to the work
+       (an example is provided in the Appendix below).
+
+       "Derivative Works" shall mean any work, whether in Source or Object
+       form, that is based on (or derived from) the Work and for which the
+       editorial revisions, annotations, elaborations, or other modifications
+       represent, as a whole, an original work of authorship. For the purposes
+       of this License, Derivative Works shall not include works that remain
+       separable from, or merely link (or bind by name) to the interfaces of,
+       the Work and Derivative Works thereof.
+
+       "Contribution" shall mean any work of authorship, including
+       the original version of the Work and any modifications or additions
+       to that Work or Derivative Works thereof, that is intentionally
+       submitted to Licensor for inclusion in the Work by the copyright owner
+       or by an individual or Legal Entity authorized to submit on behalf of
+       the copyright owner. For the purposes of this definition, "submitted"
+       means any form of electronic, verbal, or written communication sent
+       to the Licensor or its representatives, including but not limited to
+       communication on electronic mailing lists, source code control systems,
+       and issue tracking systems that are managed by, or on behalf of, the
+       Licensor for the purpose of discussing and improving the Work, but
+       excluding communication that is conspicuously marked or otherwise
+       designated in writing by the copyright owner as "Not a Contribution."
+
+       "Contributor" shall mean Licensor and any individual or Legal Entity
+       on behalf of whom a Contribution has been received by Licensor and
+       subsequently incorporated within the Work.
+
+    2. Grant of Copyright License. Subject to the terms and conditions of
+       this License, each Contributor hereby grants to You a perpetual,
+       worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+       copyright license to reproduce, prepare Derivative Works of,
+       publicly display, publicly perform, sublicense, and distribute the
+       Work and such Derivative Works in Source or Object form.
+
+    3. Grant of Patent License. Subject to the terms and conditions of
+       this License, each Contributor hereby grants to You a perpetual,
+       worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+       (except as stated in this section) patent license to make, have made,
+       use, offer to sell, sell, import, and otherwise transfer the Work,
+       where such license applies only to those patent claims licensable
+       by such Contributor that are necessarily infringed by their
+       Contribution(s) alone or by combination of their Contribution(s)
+       with the Work to which such Contribution(s) was submitted. If You
+       institute patent litigation against any entity (including a
+       cross-claim or counterclaim in a lawsuit) alleging that the Work
+       or a Contribution incorporated within the Work constitutes direct
+       or contributory patent infringement, then any patent licenses
+       granted to You under this License for that Work shall terminate
+       as of the date such litigation is filed.
+
+    4. Redistribution. You may reproduce and distribute copies of the
+       Work or Derivative Works thereof in any medium, with or without
+       modifications, and in Source or Object form, provided that You
+       meet the following conditions:
+
+       (a) You must give any other recipients of the Work or
+           Derivative Works a copy of this License; and
+
+       (b) You must cause any modified files to carry prominent notices
+           stating that You changed the files; and
+
+       (c) You must retain, in the Source form of any Derivative Works
+           that You distribute, all copyright, patent, trademark, and
+           attribution notices from the Source form of the Work,
+           excluding those notices that do not pertain to any part of
+           the Derivative Works; and
+
+       (d) If the Work includes a "NOTICE" text file as part of its
+           distribution, then any Derivative Works that You distribute must
+           include a readable copy of the attribution notices contained
+           within such NOTICE file, excluding those notices that do not
+           pertain to any part of the Derivative Works, in at least one
+           of the following places: within a NOTICE text file distributed
+           as part of the Derivative Works; within the Source form or
+           documentation, if provided along with the Derivative Works; or,
+           within a display generated by the Derivative Works, if and
+           wherever such third-party notices normally appear. The contents
+           of the NOTICE file are for informational purposes only and
+           do not modify the License. You may add Your own attribution
+           notices within Derivative Works that You distribute, alongside
+           or as an addendum to the NOTICE text from the Work, provided
+           that such additional attribution notices cannot be construed
+           as modifying the License.
+
+       You may add Your own copyright statement to Your modifications and
+       may provide additional or different license terms and conditions
+       for use, reproduction, or distribution of Your modifications, or
+       for any such Derivative Works as a whole, provided Your use,
+       reproduction, and distribution of the Work otherwise complies with
+       the conditions stated in this License.
+
+    5. Submission of Contributions. Unless You explicitly state otherwise,
+       any Contribution intentionally submitted for inclusion in the Work
+       by You to the Licensor shall be under the terms and conditions of
+       this License, without any additional terms or conditions.
+       Notwithstanding the above, nothing herein shall supersede or modify
+       the terms of any separate license agreement you may have executed
+       with Licensor regarding such Contributions.
+
+    6. Trademarks. This License does not grant permission to use the trade
+       names, trademarks, service marks, or product names of the Licensor,
+       except as required for reasonable and customary use in describing the
+       origin of the Work and reproducing the content of the NOTICE file.
+
+    7. Disclaimer of Warranty. Unless required by applicable law or
+       agreed to in writing, Licensor provides the Work (and each
+       Contributor provides its Contributions) on an "AS IS" BASIS,
+       WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+       implied, including, without limitation, any warranties or conditions
+       of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A
+       PARTICULAR PURPOSE. You are solely responsible for determining the
+       appropriateness of using or redistributing the Work and assume any
+       risks associated with Your exercise of permissions under this License.
+
+    8. Limitation of Liability. In no event and under no legal theory,
+       whether in tort (including negligence), contract, or otherwise,
+       unless required by applicable law (such as deliberate and grossly
+       negligent acts) or agreed to in writing, shall any Contributor be
+       liable to You for damages, including any direct, indirect, special,
+       incidental, or consequential damages of any character arising as a
+       result of this License or out of the use or inability to use the
+       Work (including but not limited to damages for loss of goodwill,
+       work stoppage, computer failure or malfunction, or any and all
+       other commercial damages or losses), even if such Contributor
+       has been advised of the possibility of such damages.
+
+    9. Accepting Warranty or Additional Liability. While redistributing
+       the Work or Derivative Works thereof, You may choose to offer,
+       and charge a fee for, acceptance of support, warranty, indemnity,
+       or other liability obligations and/or rights consistent with this
+       License. However, in accepting such obligations, You may act only
+       on Your own behalf and on Your sole responsibility, not on behalf
+       of any other Contributor, and only if You agree to indemnify,
+       defend, and hold each Contributor harmless for any liability
+       incurred by, or claims asserted against, such Contributor by reason
+       of your accepting any such warranty or additional liability.
+
+    END OF TERMS AND CONDITIONS
+
+    APPENDIX: How to apply the Apache License to your work.
+
+       To apply the Apache License to your work, attach the following
+       boilerplate notice, with the fields enclosed by brackets "[]"
+       replaced with your own identifying information. (Don't include
+       the brackets!)  The text should be enclosed in the appropriate
+       comment syntax for the file format. We also recommend that a
+       file or class name and description of purpose be included on the
+       same "printed page" as the copyright notice for easier
+       identification within third-party archives.
+
+    Copyright [yyyy] [name of copyright owner]
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+    Copyright 2016-2021, Andrew Svetlov and aio-libs team
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+### proto-plus
+
+                                  Apache License
+                            Version 2.0, January 2004
+                         http://www.apache.org/licenses/
+
+    TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
+
+    1. Definitions.
+
+       "License" shall mean the terms and conditions for use, reproduction,
+       and distribution as defined by Sections 1 through 9 of this document.
+
+       "Licensor" shall mean the copyright owner or entity authorized by
+       the copyright owner that is granting the License.
+
+       "Legal Entity" shall mean the union of the acting entity and all
+       other entities that control, are controlled by, or are under common
+       control with that entity. For the purposes of this definition,
+       "control" means (i) the power, direct or indirect, to cause the
+       direction or management of such entity, whether by contract or
+       otherwise, or (ii) ownership of fifty percent (50%) or more of the
+       outstanding shares, or (iii) beneficial ownership of such entity.
+
+       "You" (or "Your") shall mean an individual or Legal Entity
+       exercising permissions granted by this License.
+
+       "Source" form shall mean the preferred form for making modifications,
+       including but not limited to software source code, documentation
+       source, and configuration files.
+
+       "Object" form shall mean any form resulting from mechanical
+       transformation or translation of a Source form, including but
+       not limited to compiled object code, generated documentation,
+       and conversions to other media types.
+
+       "Work" shall mean the work of authorship, whether in Source or
+       Object form, made available under the License, as indicated by a
+       copyright notice that is included in or attached to the work
+       (an example is provided in the Appendix below).
+
+       "Derivative Works" shall mean any work, whether in Source or Object
+       form, that is based on (or derived from) the Work and for which the
+       editorial revisions, annotations, elaborations, or other modifications
+       represent, as a whole, an original work of authorship. For the purposes
+       of this License, Derivative Works shall not include works that remain
+       separable from, or merely link (or bind by name) to the interfaces of,
+       the Work and Derivative Works thereof.
+
+       "Contribution" shall mean any work of authorship, including
+       the original version of the Work and any modifications or additions
+       to that Work or Derivative Works thereof, that is intentionally
+       submitted to Licensor for inclusion in the Work by the copyright owner
+       or by an individual or Legal Entity authorized to submit on behalf of
+       the copyright owner. For the purposes of this definition, "submitted"
+       means any form of electronic, verbal, or written communication sent
+       to the Licensor or its representatives, including but not limited to
+       communication on electronic mailing lists, source code control systems,
+       and issue tracking systems that are managed by, or on behalf of, the
+       Licensor for the purpose of discussing and improving the Work, but
+       excluding communication that is conspicuously marked or otherwise
+       designated in writing by the copyright owner as "Not a Contribution."
+
+       "Contributor" shall mean Licensor and any individual or Legal Entity
+       on behalf of whom a Contribution has been received by Licensor and
+       subsequently incorporated within the Work.
+
+    2. Grant of Copyright License. Subject to the terms and conditions of
+       this License, each Contributor hereby grants to You a perpetual,
+       worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+       copyright license to reproduce, prepare Derivative Works of,
+       publicly display, publicly perform, sublicense, and distribute the
+       Work and such Derivative Works in Source or Object form.
+
+    3. Grant of Patent License. Subject to the terms and conditions of
+       this License, each Contributor hereby grants to You a perpetual,
+       worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+       (except as stated in this section) patent license to make, have made,
+       use, offer to sell, sell, import, and otherwise transfer the Work,
+       where such license applies only to those patent claims licensable
+       by such Contributor that are necessarily infringed by their
+       Contribution(s) alone or by combination of their Contribution(s)
+       with the Work to which such Contribution(s) was submitted. If You
+       institute patent litigation against any entity (including a
+       cross-claim or counterclaim in a lawsuit) alleging that the Work
+       or a Contribution incorporated within the Work constitutes direct
+       or contributory patent infringement, then any patent licenses
+       granted to You under this License for that Work shall terminate
+       as of the date such litigation is filed.
+
+    4. Redistribution. You may reproduce and distribute copies of the
+       Work or Derivative Works thereof in any medium, with or without
+       modifications, and in Source or Object form, provided that You
+       meet the following conditions:
+
+       (a) You must give any other recipients of the Work or
+           Derivative Works a copy of this License; and
+
+       (b) You must cause any modified files to carry prominent notices
+           stating that You changed the files; and
+
+       (c) You must retain, in the Source form of any Derivative Works
+           that You distribute, all copyright, patent, trademark, and
+           attribution notices from the Source form of the Work,
+           excluding those notices that do not pertain to any part of
+           the Derivative Works; and
+
+       (d) If the Work includes a "NOTICE" text file as part of its
+           distribution, then any Derivative Works that You distribute must
+           include a readable copy of the attribution notices contained
+           within such NOTICE file, excluding those notices that do not
+           pertain to any part of the Derivative Works, in at least one
+           of the following places: within a NOTICE text file distributed
+           as part of the Derivative Works; within the Source form or
+           documentation, if provided along with the Derivative Works; or,
+           within a display generated by the Derivative Works, if and
+           wherever such third-party notices normally appear. The contents
+           of the NOTICE file are for informational purposes only and
+           do not modify the License. You may add Your own attribution
+           notices within Derivative Works that You distribute, alongside
+           or as an addendum to the NOTICE text from the Work, provided
+           that such additional attribution notices cannot be construed
+           as modifying the License.
+
+       You may add Your own copyright statement to Your modifications and
+       may provide additional or different license terms and conditions
+       for use, reproduction, or distribution of Your modifications, or
+       for any such Derivative Works as a whole, provided Your use,
+       reproduction, and distribution of the Work otherwise complies with
+       the conditions stated in this License.
+
+    5. Submission of Contributions. Unless You explicitly state otherwise,
+       any Contribution intentionally submitted for inclusion in the Work
+       by You to the Licensor shall be under the terms and conditions of
+       this License, without any additional terms or conditions.
+       Notwithstanding the above, nothing herein shall supersede or modify
+       the terms of any separate license agreement you may have executed
+       with Licensor regarding such Contributions.
+
+    6. Trademarks. This License does not grant permission to use the trade
+       names, trademarks, service marks, or product names of the Licensor,
+       except as required for reasonable and customary use in describing the
+       origin of the Work and reproducing the content of the NOTICE file.
+
+    7. Disclaimer of Warranty. Unless required by applicable law or
+       agreed to in writing, Licensor provides the Work (and each
+       Contributor provides its Contributions) on an "AS IS" BASIS,
+       WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+       implied, including, without limitation, any warranties or conditions
+       of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A
+       PARTICULAR PURPOSE. You are solely responsible for determining the
+       appropriateness of using or redistributing the Work and assume any
+       risks associated with Your exercise of permissions under this License.
+
+    8. Limitation of Liability. In no event and under no legal theory,
+       whether in tort (including negligence), contract, or otherwise,
+       unless required by applicable law (such as deliberate and grossly
+       negligent acts) or agreed to in writing, shall any Contributor be
+       liable to You for damages, including any direct, indirect, special,
+       incidental, or consequential damages of any character arising as a
+       result of this License or out of the use or inability to use the
+       Work (including but not limited to damages for loss of goodwill,
+       work stoppage, computer failure or malfunction, or any and all
+       other commercial damages or losses), even if such Contributor
+       has been advised of the possibility of such damages.
+
+    9. Accepting Warranty or Additional Liability. While redistributing
+       the Work or Derivative Works thereof, You may choose to offer,
+       and charge a fee for, acceptance of support, warranty, indemnity,
+       or other liability obligations and/or rights consistent with this
+       License. However, in accepting such obligations, You may act only
+       on Your own behalf and on Your sole responsibility, not on behalf
+       of any other Contributor, and only if You agree to indemnify,
+       defend, and hold each Contributor harmless for any liability
+       incurred by, or claims asserted against, such Contributor by reason
+       of your accepting any such warranty or additional liability.
+
+    END OF TERMS AND CONDITIONS
+
+    APPENDIX: How to apply the Apache License to your work.
+
+       To apply the Apache License to your work, attach the following
+       boilerplate notice, with the fields enclosed by brackets "[]"
+       replaced with your own identifying information. (Don't include
+       the brackets!)  The text should be enclosed in the appropriate
+       comment syntax for the file format. We also recommend that a
+       file or class name and description of purpose be included on the
+       same "printed page" as the copyright notice for easier
+       identification within third-party archives.
+
+    Copyright [yyyy] [name of copyright owner]
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+### protobuf
+
+    Copyright 2008 Google Inc.  All rights reserved.
+
+    Redistribution and use in source and binary forms, with or without
+    modification, are permitted provided that the following conditions are
+    met:
+
+        * Redistributions of source code must retain the above copyright
+    notice, this list of conditions and the following disclaimer.
+        * Redistributions in binary form must reproduce the above
+    copyright notice, this list of conditions and the following disclaimer
+    in the documentation and/or other materials provided with the
+    distribution.
+        * Neither the name of Google Inc. nor the names of its
+    contributors may be used to endorse or promote products derived from
+    this software without specific prior written permission.
+
+    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+    "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+    LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+    A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+    OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+    SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+    LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+    DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+    THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+    (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+    OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+    Code generated by the Protocol Buffer compiler is owned by the owner
+    of the input file used when generating it.  This code is not
+    standalone and requires a support library to be linked with it.  This
+    support library is itself covered by the above license.
+
+### psutil
+
+    BSD 3-Clause License
+
+    Copyright (c) 2009, Jay Loden, Dave Daeschler, Giampaolo Rodola
+    All rights reserved.
+
+    Redistribution and use in source and binary forms, with or without modification,
+    are permitted provided that the following conditions are met:
+
+     * Redistributions of source code must retain the above copyright notice, this
+       list of conditions and the following disclaimer.
+
+     * Redistributions in binary form must reproduce the above copyright notice,
+       this list of conditions and the following disclaimer in the documentation
+       and/or other materials provided with the distribution.
+
+     * Neither the name of the psutil authors nor the names of its contributors
+       may be used to endorse or promote products derived from this software without
+       specific prior written permission.
+
+    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+    ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+    WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+    DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
+    ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+    (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+    LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+    ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+    (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+### pyasn1
+
+    Copyright (c) 2005-2020, Ilya Etingof <etingof@gmail.com>
+    All rights reserved.
+
+    Redistribution and use in source and binary forms, with or without
+    modification, are permitted provided that the following conditions are met:
+
+      * Redistributions of source code must retain the above copyright notice, 
+        this list of conditions and the following disclaimer.
+
+      * Redistributions in binary form must reproduce the above copyright notice,
+        this list of conditions and the following disclaimer in the documentation
+        and/or other materials provided with the distribution.
+
+    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+    AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
+    IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE 
+    ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+    LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+    CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+    SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+    INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+    CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+    ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+    POSSIBILITY OF SUCH DAMAGE.
+
+### pyasn1_modules
+
+    Copyright (c) 2005-2020, Ilya Etingof <etingof@gmail.com>
+    All rights reserved.
+
+    Redistribution and use in source and binary forms, with or without
+    modification, are permitted provided that the following conditions are met:
+
+      * Redistributions of source code must retain the above copyright notice, 
+        this list of conditions and the following disclaimer.
+
+      * Redistributions in binary form must reproduce the above copyright notice,
+        this list of conditions and the following disclaimer in the documentation
+        and/or other materials provided with the distribution.
+
+    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+    AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
+    IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE 
+    ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+    LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+    CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+    SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+    INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+    CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+    ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+    POSSIBILITY OF SUCH DAMAGE.
+
+### pycparser
+
+    pycparser -- A C parser in Python
+
+    Copyright (c) 2008-2022, Eli Bendersky
+    All rights reserved.
+
+    Redistribution and use in source and binary forms, with or without modification,
+    are permitted provided that the following conditions are met:
+
+    * Redistributions of source code must retain the above copyright notice, this 
+      list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright notice, 
+      this list of conditions and the following disclaimer in the documentation 
+      and/or other materials provided with the distribution.
+    * Neither the name of the copyright holder nor the names of its contributors may 
+      be used to endorse or promote products derived from this software without 
+      specific prior written permission.
+
+    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
+    ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED 
+    WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE 
+    DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE 
+    LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR 
+    CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE 
+    GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
+    HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT 
+    LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT 
+    OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+### pydantic
 
     The MIT License (MIT)
 
-    Copyright (c) 2004 Holger Krekel and others
+    Copyright (c) 2017, 2018, 2019, 2020, 2021 Samuel Colvin and other contributors
 
-    Permission is hereby granted, free of charge, to any person obtaining a copy of
-    this software and associated documentation files (the "Software"), to deal in
-    the Software without restriction, including without limitation the rights to
-    use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
-    of the Software, and to permit persons to whom the Software is furnished to do
-    so, subject to the following conditions:
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"), to deal
+    in the Software without restriction, including without limitation the rights
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
 
     The above copyright notice and this permission notice shall be included in all
     copies or substantial portions of the Software.
@@ -766,7 +4515,6 @@
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
     SOFTWARE.
 
----
 ### Pygments
 
     Pygments is written and maintained by Georg Brandl <georg@python.org>.
@@ -1092,2479 +4840,6 @@
     (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
     OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
----
-### pluggy
-
-    The MIT License (MIT)
-
-    Copyright (c) 2015 holger krekel (rather uses bitbucket/hpk42)
-
-    Permission is hereby granted, free of charge, to any person obtaining a copy
-    of this software and associated documentation files (the "Software"), to deal
-    in the Software without restriction, including without limitation the rights
-    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-    copies of the Software, and to permit persons to whom the Software is
-    furnished to do so, subject to the following conditions:
-
-    The above copyright notice and this permission notice shall be included in all
-    copies or substantial portions of the Software.
-
-    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-    SOFTWARE.
-
----
-### packaging
-
-    This software is made available under the terms of *either* of the licenses
-    found in LICENSE.APACHE or LICENSE.BSD. Contributions to this software is made
-    under the terms of *both* these licenses.
-
-                                  Apache License
-                            Version 2.0, January 2004
-                         http://www.apache.org/licenses/
-
-    TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
-
-    1. Definitions.
-
-       "License" shall mean the terms and conditions for use, reproduction,
-       and distribution as defined by Sections 1 through 9 of this document.
-
-       "Licensor" shall mean the copyright owner or entity authorized by
-       the copyright owner that is granting the License.
-
-       "Legal Entity" shall mean the union of the acting entity and all
-       other entities that control, are controlled by, or are under common
-       control with that entity. For the purposes of this definition,
-       "control" means (i) the power, direct or indirect, to cause the
-       direction or management of such entity, whether by contract or
-       otherwise, or (ii) ownership of fifty percent (50%) or more of the
-       outstanding shares, or (iii) beneficial ownership of such entity.
-
-       "You" (or "Your") shall mean an individual or Legal Entity
-       exercising permissions granted by this License.
-
-       "Source" form shall mean the preferred form for making modifications,
-       including but not limited to software source code, documentation
-       source, and configuration files.
-
-       "Object" form shall mean any form resulting from mechanical
-       transformation or translation of a Source form, including but
-       not limited to compiled object code, generated documentation,
-       and conversions to other media types.
-
-       "Work" shall mean the work of authorship, whether in Source or
-       Object form, made available under the License, as indicated by a
-       copyright notice that is included in or attached to the work
-       (an example is provided in the Appendix below).
-
-       "Derivative Works" shall mean any work, whether in Source or Object
-       form, that is based on (or derived from) the Work and for which the
-       editorial revisions, annotations, elaborations, or other modifications
-       represent, as a whole, an original work of authorship. For the purposes
-       of this License, Derivative Works shall not include works that remain
-       separable from, or merely link (or bind by name) to the interfaces of,
-       the Work and Derivative Works thereof.
-
-       "Contribution" shall mean any work of authorship, including
-       the original version of the Work and any modifications or additions
-       to that Work or Derivative Works thereof, that is intentionally
-       submitted to Licensor for inclusion in the Work by the copyright owner
-       or by an individual or Legal Entity authorized to submit on behalf of
-       the copyright owner. For the purposes of this definition, "submitted"
-       means any form of electronic, verbal, or written communication sent
-       to the Licensor or its representatives, including but not limited to
-       communication on electronic mailing lists, source code control systems,
-       and issue tracking systems that are managed by, or on behalf of, the
-       Licensor for the purpose of discussing and improving the Work, but
-       excluding communication that is conspicuously marked or otherwise
-       designated in writing by the copyright owner as "Not a Contribution."
-
-       "Contributor" shall mean Licensor and any individual or Legal Entity
-       on behalf of whom a Contribution has been received by Licensor and
-       subsequently incorporated within the Work.
-
-    2. Grant of Copyright License. Subject to the terms and conditions of
-       this License, each Contributor hereby grants to You a perpetual,
-       worldwide, non-exclusive, no-charge, royalty-free, irrevocable
-       copyright license to reproduce, prepare Derivative Works of,
-       publicly display, publicly perform, sublicense, and distribute the
-       Work and such Derivative Works in Source or Object form.
-
-    3. Grant of Patent License. Subject to the terms and conditions of
-       this License, each Contributor hereby grants to You a perpetual,
-       worldwide, non-exclusive, no-charge, royalty-free, irrevocable
-       (except as stated in this section) patent license to make, have made,
-       use, offer to sell, sell, import, and otherwise transfer the Work,
-       where such license applies only to those patent claims licensable
-       by such Contributor that are necessarily infringed by their
-       Contribution(s) alone or by combination of their Contribution(s)
-       with the Work to which such Contribution(s) was submitted. If You
-       institute patent litigation against any entity (including a
-       cross-claim or counterclaim in a lawsuit) alleging that the Work
-       or a Contribution incorporated within the Work constitutes direct
-       or contributory patent infringement, then any patent licenses
-       granted to You under this License for that Work shall terminate
-       as of the date such litigation is filed.
-
-    4. Redistribution. You may reproduce and distribute copies of the
-       Work or Derivative Works thereof in any medium, with or without
-       modifications, and in Source or Object form, provided that You
-       meet the following conditions:
-
-       (a) You must give any other recipients of the Work or
-           Derivative Works a copy of this License; and
-
-       (b) You must cause any modified files to carry prominent notices
-           stating that You changed the files; and
-
-       (c) You must retain, in the Source form of any Derivative Works
-           that You distribute, all copyright, patent, trademark, and
-           attribution notices from the Source form of the Work,
-           excluding those notices that do not pertain to any part of
-           the Derivative Works; and
-
-       (d) If the Work includes a "NOTICE" text file as part of its
-           distribution, then any Derivative Works that You distribute must
-           include a readable copy of the attribution notices contained
-           within such NOTICE file, excluding those notices that do not
-           pertain to any part of the Derivative Works, in at least one
-           of the following places: within a NOTICE text file distributed
-           as part of the Derivative Works; within the Source form or
-           documentation, if provided along with the Derivative Works; or,
-           within a display generated by the Derivative Works, if and
-           wherever such third-party notices normally appear. The contents
-           of the NOTICE file are for informational purposes only and
-           do not modify the License. You may add Your own attribution
-           notices within Derivative Works that You distribute, alongside
-           or as an addendum to the NOTICE text from the Work, provided
-           that such additional attribution notices cannot be construed
-           as modifying the License.
-
-       You may add Your own copyright statement to Your modifications and
-       may provide additional or different license terms and conditions
-       for use, reproduction, or distribution of Your modifications, or
-       for any such Derivative Works as a whole, provided Your use,
-       reproduction, and distribution of the Work otherwise complies with
-       the conditions stated in this License.
-
-    5. Submission of Contributions. Unless You explicitly state otherwise,
-       any Contribution intentionally submitted for inclusion in the Work
-       by You to the Licensor shall be under the terms and conditions of
-       this License, without any additional terms or conditions.
-       Notwithstanding the above, nothing herein shall supersede or modify
-       the terms of any separate license agreement you may have executed
-       with Licensor regarding such Contributions.
-
-    6. Trademarks. This License does not grant permission to use the trade
-       names, trademarks, service marks, or product names of the Licensor,
-       except as required for reasonable and customary use in describing the
-       origin of the Work and reproducing the content of the NOTICE file.
-
-    7. Disclaimer of Warranty. Unless required by applicable law or
-       agreed to in writing, Licensor provides the Work (and each
-       Contributor provides its Contributions) on an "AS IS" BASIS,
-       WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
-       implied, including, without limitation, any warranties or conditions
-       of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A
-       PARTICULAR PURPOSE. You are solely responsible for determining the
-       appropriateness of using or redistributing the Work and assume any
-       risks associated with Your exercise of permissions under this License.
-
-    8. Limitation of Liability. In no event and under no legal theory,
-       whether in tort (including negligence), contract, or otherwise,
-       unless required by applicable law (such as deliberate and grossly
-       negligent acts) or agreed to in writing, shall any Contributor be
-       liable to You for damages, including any direct, indirect, special,
-       incidental, or consequential damages of any character arising as a
-       result of this License or out of the use or inability to use the
-       Work (including but not limited to damages for loss of goodwill,
-       work stoppage, computer failure or malfunction, or any and all
-       other commercial damages or losses), even if such Contributor
-       has been advised of the possibility of such damages.
-
-    9. Accepting Warranty or Additional Liability. While redistributing
-       the Work or Derivative Works thereof, You may choose to offer,
-       and charge a fee for, acceptance of support, warranty, indemnity,
-       or other liability obligations and/or rights consistent with this
-       License. However, in accepting such obligations, You may act only
-       on Your own behalf and on Your sole responsibility, not on behalf
-       of any other Contributor, and only if You agree to indemnify,
-       defend, and hold each Contributor harmless for any liability
-       incurred by, or claims asserted against, such Contributor by reason
-       of your accepting any such warranty or additional liability.
-
-    END OF TERMS AND CONDITIONS
-
-    Copyright (c) Donald Stufft and individual contributors.
-    All rights reserved.
-
-    Redistribution and use in source and binary forms, with or without
-    modification, are permitted provided that the following conditions are met:
-
-        1. Redistributions of source code must retain the above copyright notice,
-           this list of conditions and the following disclaimer.
-
-        2. Redistributions in binary form must reproduce the above copyright
-           notice, this list of conditions and the following disclaimer in the
-           documentation and/or other materials provided with the distribution.
-
-    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-    ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-    WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-    DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-    FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-    DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-    SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-    CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-    OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-    OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
----
-### iniconfig
-
-    The MIT License (MIT)
-
-    Copyright (c) 2010 - 2023 Holger Krekel and others
-
-    Permission is hereby granted, free of charge, to any person obtaining a copy of
-    this software and associated documentation files (the "Software"), to deal in
-    the Software without restriction, including without limitation the rights to
-    use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
-    of the Software, and to permit persons to whom the Software is furnished to do
-    so, subject to the following conditions:
-
-    The above copyright notice and this permission notice shall be included in all
-    copies or substantial portions of the Software.
-
-    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-    SOFTWARE.
-
----
-### colorama
-
-    Copyright (c) 2010 Jonathan Hartley
-    All rights reserved.
-
-    Redistribution and use in source and binary forms, with or without
-    modification, are permitted provided that the following conditions are met:
-
-    * Redistributions of source code must retain the above copyright notice, this
-      list of conditions and the following disclaimer.
-
-    * Redistributions in binary form must reproduce the above copyright notice,
-      this list of conditions and the following disclaimer in the documentation
-      and/or other materials provided with the distribution.
-
-    * Neither the name of the copyright holders, nor those of its contributors
-      may be used to endorse or promote products derived from this software without
-      specific prior written permission.
-
-    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-    ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-    WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-    DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-    FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-    DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-    SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-    CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-    OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-    OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
----
-### pydantic
-
-    The MIT License (MIT)
-
-    Copyright (c) 2017, 2018, 2019, 2020, 2021 Samuel Colvin and other contributors
-
-    Permission is hereby granted, free of charge, to any person obtaining a copy
-    of this software and associated documentation files (the "Software"), to deal
-    in the Software without restriction, including without limitation the rights
-    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-    copies of the Software, and to permit persons to whom the Software is
-    furnished to do so, subject to the following conditions:
-
-    The above copyright notice and this permission notice shall be included in all
-    copies or substantial portions of the Software.
-
-    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-    SOFTWARE.
-
----
-### opencensus-ext-azure
-
-                            Apache License
-                           Version 2.0, January 2004
-                        http://www.apache.org/licenses/
-
-    TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
-
-    1. Definitions.
-
-      "License" shall mean the terms and conditions for use, reproduction,
-      and distribution as defined by Sections 1 through 9 of this document.
-
-      "Licensor" shall mean the copyright owner or entity authorized by
-      the copyright owner that is granting the License.
-
-      "Legal Entity" shall mean the union of the acting entity and all
-      other entities that control, are controlled by, or are under common
-      control with that entity. For the purposes of this definition,
-      "control" means (i) the power, direct or indirect, to cause the
-      direction or management of such entity, whether by contract or
-      otherwise, or (ii) ownership of fifty percent (50%) or more of the
-      outstanding shares, or (iii) beneficial ownership of such entity.
-
-      "You" (or "Your") shall mean an individual or Legal Entity
-      exercising permissions granted by this License.
-
-      "Source" form shall mean the preferred form for making modifications,
-      including but not limited to software source code, documentation
-      source, and configuration files.
-
-      "Object" form shall mean any form resulting from mechanical
-      transformation or translation of a Source form, including but
-      not limited to compiled object code, generated documentation,
-      and conversions to other media types.
-
-      "Work" shall mean the work of authorship, whether in Source or
-      Object form, made available under the License, as indicated by a
-      copyright notice that is included in or attached to the work
-      (an example is provided in the Appendix below).
-
-      "Derivative Works" shall mean any work, whether in Source or Object
-      form, that is based on (or derived from) the Work and for which the
-      editorial revisions, annotations, elaborations, or other modifications
-      represent, as a whole, an original work of authorship. For the purposes
-      of this License, Derivative Works shall not include works that remain
-      separable from, or merely link (or bind by name) to the interfaces of,
-      the Work and Derivative Works thereof.
-
-      "Contribution" shall mean any work of authorship, including
-      the original version of the Work and any modifications or additions
-      to that Work or Derivative Works thereof, that is intentionally
-      submitted to Licensor for inclusion in the Work by the copyright owner
-      or by an individual or Legal Entity authorized to submit on behalf of
-      the copyright owner. For the purposes of this definition, "submitted"
-      means any form of electronic, verbal, or written communication sent
-      to the Licensor or its representatives, including but not limited to
-      communication on electronic mailing lists, source code control systems,
-      and issue tracking systems that are managed by, or on behalf of, the
-      Licensor for the purpose of discussing and improving the Work, but
-      excluding communication that is conspicuously marked or otherwise
-      designated in writing by the copyright owner as "Not a Contribution."
-
-      "Contributor" shall mean Licensor and any individual or Legal Entity
-      on behalf of whom a Contribution has been received by Licensor and
-      subsequently incorporated within the Work.
-
-    2. Grant of Copyright License. Subject to the terms and conditions of
-      this License, each Contributor hereby grants to You a perpetual,
-      worldwide, non-exclusive, no-charge, royalty-free, irrevocable
-      copyright license to reproduce, prepare Derivative Works of,
-      publicly display, publicly perform, sublicense, and distribute the
-      Work and such Derivative Works in Source or Object form.
-
-    3. Grant of Patent License. Subject to the terms and conditions of
-      this License, each Contributor hereby grants to You a perpetual,
-      worldwide, non-exclusive, no-charge, royalty-free, irrevocable
-      (except as stated in this section) patent license to make, have made,
-      use, offer to sell, sell, import, and otherwise transfer the Work,
-      where such license applies only to those patent claims licensable
-      by such Contributor that are necessarily infringed by their
-      Contribution(s) alone or by combination of their Contribution(s)
-      with the Work to which such Contribution(s) was submitted. If You
-      institute patent litigation against any entity (including a
-      cross-claim or counterclaim in a lawsuit) alleging that the Work
-      or a Contribution incorporated within the Work constitutes direct
-      or contributory patent infringement, then any patent licenses
-      granted to You under this License for that Work shall terminate
-      as of the date such litigation is filed.
-
-    4. Redistribution. You may reproduce and distribute copies of the
-      Work or Derivative Works thereof in any medium, with or without
-      modifications, and in Source or Object form, provided that You
-      meet the following conditions:
-
-      (a) You must give any other recipients of the Work or
-          Derivative Works a copy of this License; and
-
-      (b) You must cause any modified files to carry prominent notices
-          stating that You changed the files; and
-
-      (c) You must retain, in the Source form of any Derivative Works
-          that You distribute, all copyright, patent, trademark, and
-          attribution notices from the Source form of the Work,
-          excluding those notices that do not pertain to any part of
-          the Derivative Works; and
-
-      (d) If the Work includes a "NOTICE" text file as part of its
-          distribution, then any Derivative Works that You distribute must
-          include a readable copy of the attribution notices contained
-          within such NOTICE file, excluding those notices that do not
-          pertain to any part of the Derivative Works, in at least one
-          of the following places: within a NOTICE text file distributed
-          as part of the Derivative Works; within the Source form or
-          documentation, if provided along with the Derivative Works; or,
-          within a display generated by the Derivative Works, if and
-          wherever such third-party notices normally appear. The contents
-          of the NOTICE file are for informational purposes only and
-          do not modify the License. You may add Your own attribution
-          notices within Derivative Works that You distribute, alongside
-          or as an addendum to the NOTICE text from the Work, provided
-          that such additional attribution notices cannot be construed
-          as modifying the License.
-
-      You may add Your own copyright statement to Your modifications and
-      may provide additional or different license terms and conditions
-      for use, reproduction, or distribution of Your modifications, or
-      for any such Derivative Works as a whole, provided Your use,
-      reproduction, and distribution of the Work otherwise complies with
-      the conditions stated in this License.
-
-    5. Submission of Contributions. Unless You explicitly state otherwise,
-      any Contribution intentionally submitted for inclusion in the Work
-      by You to the Licensor shall be under the terms and conditions of
-      this License, without any additional terms or conditions.
-      Notwithstanding the above, nothing herein shall supersede or modify
-      the terms of any separate license agreement you may have executed
-      with Licensor regarding such Contributions.
-
-    6. Trademarks. This License does not grant permission to use the trade
-      names, trademarks, service marks, or product names of the Licensor,
-      except as required for reasonable and customary use in describing the
-      origin of the Work and reproducing the content of the NOTICE file.
-
-    7. Disclaimer of Warranty. Unless required by applicable law or
-      agreed to in writing, Licensor provides the Work (and each
-      Contributor provides its Contributions) on an "AS IS" BASIS,
-      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
-      implied, including, without limitation, any warranties or conditions
-      of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A
-      PARTICULAR PURPOSE. You are solely responsible for determining the
-      appropriateness of using or redistributing the Work and assume any
-      risks associated with Your exercise of permissions under this License.
-
-    8. Limitation of Liability. In no event and under no legal theory,
-      whether in tort (including negligence), contract, or otherwise,
-      unless required by applicable law (such as deliberate and grossly
-      negligent acts) or agreed to in writing, shall any Contributor be
-      liable to You for damages, including any direct, indirect, special,
-      incidental, or consequential damages of any character arising as a
-      result of this License or out of the use or inability to use the
-      Work (including but not limited to damages for loss of goodwill,
-      work stoppage, computer failure or malfunction, or any and all
-      other commercial damages or losses), even if such Contributor
-      has been advised of the possibility of such damages.
-
-    9. Accepting Warranty or Additional Liability. While redistributing
-      the Work or Derivative Works thereof, You may choose to offer,
-      and charge a fee for, acceptance of support, warranty, indemnity,
-      or other liability obligations and/or rights consistent with this
-      License. However, in accepting such obligations, You may act only
-      on Your own behalf and on Your sole responsibility, not on behalf
-      of any other Contributor, and only if You agree to indemnify,
-      defend, and hold each Contributor harmless for any liability
-      incurred by, or claims asserted against, such Contributor by reason
-      of your accepting any such warranty or additional liability.
-
-    END OF TERMS AND CONDITIONS
-
-    APPENDIX: How to apply the Apache License to your work.
-
-      To apply the Apache License to your work, attach the following
-      boilerplate notice, with the fields enclosed by brackets "[]"
-      replaced with your own identifying information. (Don't include
-      the brackets!)  The text should be enclosed in the appropriate
-      comment syntax for the file format. We also recommend that a
-      file or class name and description of purpose be included on the
-      same "printed page" as the copyright notice for easier
-      identification within third-party archives.
-
-    Copyright [yyyy] [name of copyright owner]
-
-    Licensed under the Apache License, Version 2.0 (the "License");
-    you may not use this file except in compliance with the License.
-    You may obtain a copy of the License at
-
-       http://www.apache.org/licenses/LICENSE-2.0
-
-    Unless required by applicable law or agreed to in writing, software
-    distributed under the License is distributed on an "AS IS" BASIS,
-    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    See the License for the specific language governing permissions and
-    limitations under the License.
-
----
-### psutil
-
-    BSD 3-Clause License
-
-    Copyright (c) 2009, Jay Loden, Dave Daeschler, Giampaolo Rodola
-    All rights reserved.
-
-    Redistribution and use in source and binary forms, with or without modification,
-    are permitted provided that the following conditions are met:
-
-     * Redistributions of source code must retain the above copyright notice, this
-       list of conditions and the following disclaimer.
-
-     * Redistributions in binary form must reproduce the above copyright notice,
-       this list of conditions and the following disclaimer in the documentation
-       and/or other materials provided with the distribution.
-
-     * Neither the name of the psutil authors nor the names of its contributors
-       may be used to endorse or promote products derived from this software without
-       specific prior written permission.
-
-    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-    ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-    WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-    DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
-    ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-    (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-    LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
-    ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-    (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
----
-### opencensus
-
-                             Apache License
-                            Version 2.0, January 2004
-                         http://www.apache.org/licenses/
-
-    TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
-
-    1. Definitions.
-
-       "License" shall mean the terms and conditions for use, reproduction,
-       and distribution as defined by Sections 1 through 9 of this document.
-
-       "Licensor" shall mean the copyright owner or entity authorized by
-       the copyright owner that is granting the License.
-
-       "Legal Entity" shall mean the union of the acting entity and all
-       other entities that control, are controlled by, or are under common
-       control with that entity. For the purposes of this definition,
-       "control" means (i) the power, direct or indirect, to cause the
-       direction or management of such entity, whether by contract or
-       otherwise, or (ii) ownership of fifty percent (50%) or more of the
-       outstanding shares, or (iii) beneficial ownership of such entity.
-
-       "You" (or "Your") shall mean an individual or Legal Entity
-       exercising permissions granted by this License.
-
-       "Source" form shall mean the preferred form for making modifications,
-       including but not limited to software source code, documentation
-       source, and configuration files.
-
-       "Object" form shall mean any form resulting from mechanical
-       transformation or translation of a Source form, including but
-       not limited to compiled object code, generated documentation,
-       and conversions to other media types.
-
-       "Work" shall mean the work of authorship, whether in Source or
-       Object form, made available under the License, as indicated by a
-       copyright notice that is included in or attached to the work
-       (an example is provided in the Appendix below).
-
-       "Derivative Works" shall mean any work, whether in Source or Object
-       form, that is based on (or derived from) the Work and for which the
-       editorial revisions, annotations, elaborations, or other modifications
-       represent, as a whole, an original work of authorship. For the purposes
-       of this License, Derivative Works shall not include works that remain
-       separable from, or merely link (or bind by name) to the interfaces of,
-       the Work and Derivative Works thereof.
-
-       "Contribution" shall mean any work of authorship, including
-       the original version of the Work and any modifications or additions
-       to that Work or Derivative Works thereof, that is intentionally
-       submitted to Licensor for inclusion in the Work by the copyright owner
-       or by an individual or Legal Entity authorized to submit on behalf of
-       the copyright owner. For the purposes of this definition, "submitted"
-       means any form of electronic, verbal, or written communication sent
-       to the Licensor or its representatives, including but not limited to
-       communication on electronic mailing lists, source code control systems,
-       and issue tracking systems that are managed by, or on behalf of, the
-       Licensor for the purpose of discussing and improving the Work, but
-       excluding communication that is conspicuously marked or otherwise
-       designated in writing by the copyright owner as "Not a Contribution."
-
-       "Contributor" shall mean Licensor and any individual or Legal Entity
-       on behalf of whom a Contribution has been received by Licensor and
-       subsequently incorporated within the Work.
-
-    2. Grant of Copyright License. Subject to the terms and conditions of
-       this License, each Contributor hereby grants to You a perpetual,
-       worldwide, non-exclusive, no-charge, royalty-free, irrevocable
-       copyright license to reproduce, prepare Derivative Works of,
-       publicly display, publicly perform, sublicense, and distribute the
-       Work and such Derivative Works in Source or Object form.
-
-    3. Grant of Patent License. Subject to the terms and conditions of
-       this License, each Contributor hereby grants to You a perpetual,
-       worldwide, non-exclusive, no-charge, royalty-free, irrevocable
-       (except as stated in this section) patent license to make, have made,
-       use, offer to sell, sell, import, and otherwise transfer the Work,
-       where such license applies only to those patent claims licensable
-       by such Contributor that are necessarily infringed by their
-       Contribution(s) alone or by combination of their Contribution(s)
-       with the Work to which such Contribution(s) was submitted. If You
-       institute patent litigation against any entity (including a
-       cross-claim or counterclaim in a lawsuit) alleging that the Work
-       or a Contribution incorporated within the Work constitutes direct
-       or contributory patent infringement, then any patent licenses
-       granted to You under this License for that Work shall terminate
-       as of the date such litigation is filed.
-
-    4. Redistribution. You may reproduce and distribute copies of the
-       Work or Derivative Works thereof in any medium, with or without
-       modifications, and in Source or Object form, provided that You
-       meet the following conditions:
-
-       (a) You must give any other recipients of the Work or
-           Derivative Works a copy of this License; and
-
-       (b) You must cause any modified files to carry prominent notices
-           stating that You changed the files; and
-
-       (c) You must retain, in the Source form of any Derivative Works
-           that You distribute, all copyright, patent, trademark, and
-           attribution notices from the Source form of the Work,
-           excluding those notices that do not pertain to any part of
-           the Derivative Works; and
-
-       (d) If the Work includes a "NOTICE" text file as part of its
-           distribution, then any Derivative Works that You distribute must
-           include a readable copy of the attribution notices contained
-           within such NOTICE file, excluding those notices that do not
-           pertain to any part of the Derivative Works, in at least one
-           of the following places: within a NOTICE text file distributed
-           as part of the Derivative Works; within the Source form or
-           documentation, if provided along with the Derivative Works; or,
-           within a display generated by the Derivative Works, if and
-           wherever such third-party notices normally appear. The contents
-           of the NOTICE file are for informational purposes only and
-           do not modify the License. You may add Your own attribution
-           notices within Derivative Works that You distribute, alongside
-           or as an addendum to the NOTICE text from the Work, provided
-           that such additional attribution notices cannot be construed
-           as modifying the License.
-
-       You may add Your own copyright statement to Your modifications and
-       may provide additional or different license terms and conditions
-       for use, reproduction, or distribution of Your modifications, or
-       for any such Derivative Works as a whole, provided Your use,
-       reproduction, and distribution of the Work otherwise complies with
-       the conditions stated in this License.
-
-    5. Submission of Contributions. Unless You explicitly state otherwise,
-       any Contribution intentionally submitted for inclusion in the Work
-       by You to the Licensor shall be under the terms and conditions of
-       this License, without any additional terms or conditions.
-       Notwithstanding the above, nothing herein shall supersede or modify
-       the terms of any separate license agreement you may have executed
-       with Licensor regarding such Contributions.
-
-    6. Trademarks. This License does not grant permission to use the trade
-       names, trademarks, service marks, or product names of the Licensor,
-       except as required for reasonable and customary use in describing the
-       origin of the Work and reproducing the content of the NOTICE file.
-
-    7. Disclaimer of Warranty. Unless required by applicable law or
-       agreed to in writing, Licensor provides the Work (and each
-       Contributor provides its Contributions) on an "AS IS" BASIS,
-       WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
-       implied, including, without limitation, any warranties or conditions
-       of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A
-       PARTICULAR PURPOSE. You are solely responsible for determining the
-       appropriateness of using or redistributing the Work and assume any
-       risks associated with Your exercise of permissions under this License.
-
-    8. Limitation of Liability. In no event and under no legal theory,
-       whether in tort (including negligence), contract, or otherwise,
-       unless required by applicable law (such as deliberate and grossly
-       negligent acts) or agreed to in writing, shall any Contributor be
-       liable to You for damages, including any direct, indirect, special,
-       incidental, or consequential damages of any character arising as a
-       result of this License or out of the use or inability to use the
-       Work (including but not limited to damages for loss of goodwill,
-       work stoppage, computer failure or malfunction, or any and all
-       other commercial damages or losses), even if such Contributor
-       has been advised of the possibility of such damages.
-
-    9. Accepting Warranty or Additional Liability. While redistributing
-       the Work or Derivative Works thereof, You may choose to offer,
-       and charge a fee for, acceptance of support, warranty, indemnity,
-       or other liability obligations and/or rights consistent with this
-       License. However, in accepting such obligations, You may act only
-       on Your own behalf and on Your sole responsibility, not on behalf
-       of any other Contributor, and only if You agree to indemnify,
-       defend, and hold each Contributor harmless for any liability
-       incurred by, or claims asserted against, such Contributor by reason
-       of your accepting any such warranty or additional liability.
-
-    END OF TERMS AND CONDITIONS
-
-    APPENDIX: How to apply the Apache License to your work.
-
-       To apply the Apache License to your work, attach the following
-       boilerplate notice, with the fields enclosed by brackets "[]"
-       replaced with your own identifying information. (Don't include
-       the brackets!)  The text should be enclosed in the appropriate
-       comment syntax for the file format. We also recommend that a
-       file or class name and description of purpose be included on the
-       same "printed page" as the copyright notice for easier
-       identification within third-party archives.
-
-    Copyright [yyyy] [name of copyright owner]
-
-    Licensed under the Apache License, Version 2.0 (the "License");
-    you may not use this file except in compliance with the License.
-    You may obtain a copy of the License at
-
-        http://www.apache.org/licenses/LICENSE-2.0
-
-    Unless required by applicable law or agreed to in writing, software
-    distributed under the License is distributed on an "AS IS" BASIS,
-    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    See the License for the specific language governing permissions and
-    limitations under the License.
-
----
-### six
-
-    Copyright (c) 2010-2024 Benjamin Peterson
-
-    Permission is hereby granted, free of charge, to any person obtaining a copy of
-    this software and associated documentation files (the "Software"), to deal in
-    the Software without restriction, including without limitation the rights to
-    use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
-    the Software, and to permit persons to whom the Software is furnished to do so,
-    subject to the following conditions:
-
-    The above copyright notice and this permission notice shall be included in all
-    copies or substantial portions of the Software.
-
-    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-    FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-    COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-    IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-    CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
----
-### opencensus-context
-
-                            Apache License
-                           Version 2.0, January 2004
-                        http://www.apache.org/licenses/
-
-    TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
-
-    1. Definitions.
-
-      "License" shall mean the terms and conditions for use, reproduction,
-      and distribution as defined by Sections 1 through 9 of this document.
-
-      "Licensor" shall mean the copyright owner or entity authorized by
-      the copyright owner that is granting the License.
-
-      "Legal Entity" shall mean the union of the acting entity and all
-      other entities that control, are controlled by, or are under common
-      control with that entity. For the purposes of this definition,
-      "control" means (i) the power, direct or indirect, to cause the
-      direction or management of such entity, whether by contract or
-      otherwise, or (ii) ownership of fifty percent (50%) or more of the
-      outstanding shares, or (iii) beneficial ownership of such entity.
-
-      "You" (or "Your") shall mean an individual or Legal Entity
-      exercising permissions granted by this License.
-
-      "Source" form shall mean the preferred form for making modifications,
-      including but not limited to software source code, documentation
-      source, and configuration files.
-
-      "Object" form shall mean any form resulting from mechanical
-      transformation or translation of a Source form, including but
-      not limited to compiled object code, generated documentation,
-      and conversions to other media types.
-
-      "Work" shall mean the work of authorship, whether in Source or
-      Object form, made available under the License, as indicated by a
-      copyright notice that is included in or attached to the work
-      (an example is provided in the Appendix below).
-
-      "Derivative Works" shall mean any work, whether in Source or Object
-      form, that is based on (or derived from) the Work and for which the
-      editorial revisions, annotations, elaborations, or other modifications
-      represent, as a whole, an original work of authorship. For the purposes
-      of this License, Derivative Works shall not include works that remain
-      separable from, or merely link (or bind by name) to the interfaces of,
-      the Work and Derivative Works thereof.
-
-      "Contribution" shall mean any work of authorship, including
-      the original version of the Work and any modifications or additions
-      to that Work or Derivative Works thereof, that is intentionally
-      submitted to Licensor for inclusion in the Work by the copyright owner
-      or by an individual or Legal Entity authorized to submit on behalf of
-      the copyright owner. For the purposes of this definition, "submitted"
-      means any form of electronic, verbal, or written communication sent
-      to the Licensor or its representatives, including but not limited to
-      communication on electronic mailing lists, source code control systems,
-      and issue tracking systems that are managed by, or on behalf of, the
-      Licensor for the purpose of discussing and improving the Work, but
-      excluding communication that is conspicuously marked or otherwise
-      designated in writing by the copyright owner as "Not a Contribution."
-
-      "Contributor" shall mean Licensor and any individual or Legal Entity
-      on behalf of whom a Contribution has been received by Licensor and
-      subsequently incorporated within the Work.
-
-    2. Grant of Copyright License. Subject to the terms and conditions of
-      this License, each Contributor hereby grants to You a perpetual,
-      worldwide, non-exclusive, no-charge, royalty-free, irrevocable
-      copyright license to reproduce, prepare Derivative Works of,
-      publicly display, publicly perform, sublicense, and distribute the
-      Work and such Derivative Works in Source or Object form.
-
-    3. Grant of Patent License. Subject to the terms and conditions of
-      this License, each Contributor hereby grants to You a perpetual,
-      worldwide, non-exclusive, no-charge, royalty-free, irrevocable
-      (except as stated in this section) patent license to make, have made,
-      use, offer to sell, sell, import, and otherwise transfer the Work,
-      where such license applies only to those patent claims licensable
-      by such Contributor that are necessarily infringed by their
-      Contribution(s) alone or by combination of their Contribution(s)
-      with the Work to which such Contribution(s) was submitted. If You
-      institute patent litigation against any entity (including a
-      cross-claim or counterclaim in a lawsuit) alleging that the Work
-      or a Contribution incorporated within the Work constitutes direct
-      or contributory patent infringement, then any patent licenses
-      granted to You under this License for that Work shall terminate
-      as of the date such litigation is filed.
-
-    4. Redistribution. You may reproduce and distribute copies of the
-      Work or Derivative Works thereof in any medium, with or without
-      modifications, and in Source or Object form, provided that You
-      meet the following conditions:
-
-      (a) You must give any other recipients of the Work or
-          Derivative Works a copy of this License; and
-
-      (b) You must cause any modified files to carry prominent notices
-          stating that You changed the files; and
-
-      (c) You must retain, in the Source form of any Derivative Works
-          that You distribute, all copyright, patent, trademark, and
-          attribution notices from the Source form of the Work,
-          excluding those notices that do not pertain to any part of
-          the Derivative Works; and
-
-      (d) If the Work includes a "NOTICE" text file as part of its
-          distribution, then any Derivative Works that You distribute must
-          include a readable copy of the attribution notices contained
-          within such NOTICE file, excluding those notices that do not
-          pertain to any part of the Derivative Works, in at least one
-          of the following places: within a NOTICE text file distributed
-          as part of the Derivative Works; within the Source form or
-          documentation, if provided along with the Derivative Works; or,
-          within a display generated by the Derivative Works, if and
-          wherever such third-party notices normally appear. The contents
-          of the NOTICE file are for informational purposes only and
-          do not modify the License. You may add Your own attribution
-          notices within Derivative Works that You distribute, alongside
-          or as an addendum to the NOTICE text from the Work, provided
-          that such additional attribution notices cannot be construed
-          as modifying the License.
-
-      You may add Your own copyright statement to Your modifications and
-      may provide additional or different license terms and conditions
-      for use, reproduction, or distribution of Your modifications, or
-      for any such Derivative Works as a whole, provided Your use,
-      reproduction, and distribution of the Work otherwise complies with
-      the conditions stated in this License.
-
-    5. Submission of Contributions. Unless You explicitly state otherwise,
-      any Contribution intentionally submitted for inclusion in the Work
-      by You to the Licensor shall be under the terms and conditions of
-      this License, without any additional terms or conditions.
-      Notwithstanding the above, nothing herein shall supersede or modify
-      the terms of any separate license agreement you may have executed
-      with Licensor regarding such Contributions.
-
-    6. Trademarks. This License does not grant permission to use the trade
-      names, trademarks, service marks, or product names of the Licensor,
-      except as required for reasonable and customary use in describing the
-      origin of the Work and reproducing the content of the NOTICE file.
-
-    7. Disclaimer of Warranty. Unless required by applicable law or
-      agreed to in writing, Licensor provides the Work (and each
-      Contributor provides its Contributions) on an "AS IS" BASIS,
-      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
-      implied, including, without limitation, any warranties or conditions
-      of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A
-      PARTICULAR PURPOSE. You are solely responsible for determining the
-      appropriateness of using or redistributing the Work and assume any
-      risks associated with Your exercise of permissions under this License.
-
-    8. Limitation of Liability. In no event and under no legal theory,
-      whether in tort (including negligence), contract, or otherwise,
-      unless required by applicable law (such as deliberate and grossly
-      negligent acts) or agreed to in writing, shall any Contributor be
-      liable to You for damages, including any direct, indirect, special,
-      incidental, or consequential damages of any character arising as a
-      result of this License or out of the use or inability to use the
-      Work (including but not limited to damages for loss of goodwill,
-      work stoppage, computer failure or malfunction, or any and all
-      other commercial damages or losses), even if such Contributor
-      has been advised of the possibility of such damages.
-
-    9. Accepting Warranty or Additional Liability. While redistributing
-      the Work or Derivative Works thereof, You may choose to offer,
-      and charge a fee for, acceptance of support, warranty, indemnity,
-      or other liability obligations and/or rights consistent with this
-      License. However, in accepting such obligations, You may act only
-      on Your own behalf and on Your sole responsibility, not on behalf
-      of any other Contributor, and only if You agree to indemnify,
-      defend, and hold each Contributor harmless for any liability
-      incurred by, or claims asserted against, such Contributor by reason
-      of your accepting any such warranty or additional liability.
-
-    END OF TERMS AND CONDITIONS
-
-    APPENDIX: How to apply the Apache License to your work.
-
-      To apply the Apache License to your work, attach the following
-      boilerplate notice, with the fields enclosed by brackets "[]"
-      replaced with your own identifying information. (Don't include
-      the brackets!)  The text should be enclosed in the appropriate
-      comment syntax for the file format. We also recommend that a
-      file or class name and description of purpose be included on the
-      same "printed page" as the copyright notice for easier
-      identification within third-party archives.
-
-    Copyright [yyyy] [name of copyright owner]
-
-    Licensed under the Apache License, Version 2.0 (the "License");
-    you may not use this file except in compliance with the License.
-    You may obtain a copy of the License at
-
-       http://www.apache.org/licenses/LICENSE-2.0
-
-    Unless required by applicable law or agreed to in writing, software
-    distributed under the License is distributed on an "AS IS" BASIS,
-    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    See the License for the specific language governing permissions and
-    limitations under the License.
-
----
-### google-api-core
-
-                                  Apache License
-                            Version 2.0, January 2004
-                         http://www.apache.org/licenses/
-
-    TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
-
-    1. Definitions.
-
-       "License" shall mean the terms and conditions for use, reproduction,
-       and distribution as defined by Sections 1 through 9 of this document.
-
-       "Licensor" shall mean the copyright owner or entity authorized by
-       the copyright owner that is granting the License.
-
-       "Legal Entity" shall mean the union of the acting entity and all
-       other entities that control, are controlled by, or are under common
-       control with that entity. For the purposes of this definition,
-       "control" means (i) the power, direct or indirect, to cause the
-       direction or management of such entity, whether by contract or
-       otherwise, or (ii) ownership of fifty percent (50%) or more of the
-       outstanding shares, or (iii) beneficial ownership of such entity.
-
-       "You" (or "Your") shall mean an individual or Legal Entity
-       exercising permissions granted by this License.
-
-       "Source" form shall mean the preferred form for making modifications,
-       including but not limited to software source code, documentation
-       source, and configuration files.
-
-       "Object" form shall mean any form resulting from mechanical
-       transformation or translation of a Source form, including but
-       not limited to compiled object code, generated documentation,
-       and conversions to other media types.
-
-       "Work" shall mean the work of authorship, whether in Source or
-       Object form, made available under the License, as indicated by a
-       copyright notice that is included in or attached to the work
-       (an example is provided in the Appendix below).
-
-       "Derivative Works" shall mean any work, whether in Source or Object
-       form, that is based on (or derived from) the Work and for which the
-       editorial revisions, annotations, elaborations, or other modifications
-       represent, as a whole, an original work of authorship. For the purposes
-       of this License, Derivative Works shall not include works that remain
-       separable from, or merely link (or bind by name) to the interfaces of,
-       the Work and Derivative Works thereof.
-
-       "Contribution" shall mean any work of authorship, including
-       the original version of the Work and any modifications or additions
-       to that Work or Derivative Works thereof, that is intentionally
-       submitted to Licensor for inclusion in the Work by the copyright owner
-       or by an individual or Legal Entity authorized to submit on behalf of
-       the copyright owner. For the purposes of this definition, "submitted"
-       means any form of electronic, verbal, or written communication sent
-       to the Licensor or its representatives, including but not limited to
-       communication on electronic mailing lists, source code control systems,
-       and issue tracking systems that are managed by, or on behalf of, the
-       Licensor for the purpose of discussing and improving the Work, but
-       excluding communication that is conspicuously marked or otherwise
-       designated in writing by the copyright owner as "Not a Contribution."
-
-       "Contributor" shall mean Licensor and any individual or Legal Entity
-       on behalf of whom a Contribution has been received by Licensor and
-       subsequently incorporated within the Work.
-
-    2. Grant of Copyright License. Subject to the terms and conditions of
-       this License, each Contributor hereby grants to You a perpetual,
-       worldwide, non-exclusive, no-charge, royalty-free, irrevocable
-       copyright license to reproduce, prepare Derivative Works of,
-       publicly display, publicly perform, sublicense, and distribute the
-       Work and such Derivative Works in Source or Object form.
-
-    3. Grant of Patent License. Subject to the terms and conditions of
-       this License, each Contributor hereby grants to You a perpetual,
-       worldwide, non-exclusive, no-charge, royalty-free, irrevocable
-       (except as stated in this section) patent license to make, have made,
-       use, offer to sell, sell, import, and otherwise transfer the Work,
-       where such license applies only to those patent claims licensable
-       by such Contributor that are necessarily infringed by their
-       Contribution(s) alone or by combination of their Contribution(s)
-       with the Work to which such Contribution(s) was submitted. If You
-       institute patent litigation against any entity (including a
-       cross-claim or counterclaim in a lawsuit) alleging that the Work
-       or a Contribution incorporated within the Work constitutes direct
-       or contributory patent infringement, then any patent licenses
-       granted to You under this License for that Work shall terminate
-       as of the date such litigation is filed.
-
-    4. Redistribution. You may reproduce and distribute copies of the
-       Work or Derivative Works thereof in any medium, with or without
-       modifications, and in Source or Object form, provided that You
-       meet the following conditions:
-
-       (a) You must give any other recipients of the Work or
-           Derivative Works a copy of this License; and
-
-       (b) You must cause any modified files to carry prominent notices
-           stating that You changed the files; and
-
-       (c) You must retain, in the Source form of any Derivative Works
-           that You distribute, all copyright, patent, trademark, and
-           attribution notices from the Source form of the Work,
-           excluding those notices that do not pertain to any part of
-           the Derivative Works; and
-
-       (d) If the Work includes a "NOTICE" text file as part of its
-           distribution, then any Derivative Works that You distribute must
-           include a readable copy of the attribution notices contained
-           within such NOTICE file, excluding those notices that do not
-           pertain to any part of the Derivative Works, in at least one
-           of the following places: within a NOTICE text file distributed
-           as part of the Derivative Works; within the Source form or
-           documentation, if provided along with the Derivative Works; or,
-           within a display generated by the Derivative Works, if and
-           wherever such third-party notices normally appear. The contents
-           of the NOTICE file are for informational purposes only and
-           do not modify the License. You may add Your own attribution
-           notices within Derivative Works that You distribute, alongside
-           or as an addendum to the NOTICE text from the Work, provided
-           that such additional attribution notices cannot be construed
-           as modifying the License.
-
-       You may add Your own copyright statement to Your modifications and
-       may provide additional or different license terms and conditions
-       for use, reproduction, or distribution of Your modifications, or
-       for any such Derivative Works as a whole, provided Your use,
-       reproduction, and distribution of the Work otherwise complies with
-       the conditions stated in this License.
-
-    5. Submission of Contributions. Unless You explicitly state otherwise,
-       any Contribution intentionally submitted for inclusion in the Work
-       by You to the Licensor shall be under the terms and conditions of
-       this License, without any additional terms or conditions.
-       Notwithstanding the above, nothing herein shall supersede or modify
-       the terms of any separate license agreement you may have executed
-       with Licensor regarding such Contributions.
-
-    6. Trademarks. This License does not grant permission to use the trade
-       names, trademarks, service marks, or product names of the Licensor,
-       except as required for reasonable and customary use in describing the
-       origin of the Work and reproducing the content of the NOTICE file.
-
-    7. Disclaimer of Warranty. Unless required by applicable law or
-       agreed to in writing, Licensor provides the Work (and each
-       Contributor provides its Contributions) on an "AS IS" BASIS,
-       WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
-       implied, including, without limitation, any warranties or conditions
-       of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A
-       PARTICULAR PURPOSE. You are solely responsible for determining the
-       appropriateness of using or redistributing the Work and assume any
-       risks associated with Your exercise of permissions under this License.
-
-    8. Limitation of Liability. In no event and under no legal theory,
-       whether in tort (including negligence), contract, or otherwise,
-       unless required by applicable law (such as deliberate and grossly
-       negligent acts) or agreed to in writing, shall any Contributor be
-       liable to You for damages, including any direct, indirect, special,
-       incidental, or consequential damages of any character arising as a
-       result of this License or out of the use or inability to use the
-       Work (including but not limited to damages for loss of goodwill,
-       work stoppage, computer failure or malfunction, or any and all
-       other commercial damages or losses), even if such Contributor
-       has been advised of the possibility of such damages.
-
-    9. Accepting Warranty or Additional Liability. While redistributing
-       the Work or Derivative Works thereof, You may choose to offer,
-       and charge a fee for, acceptance of support, warranty, indemnity,
-       or other liability obligations and/or rights consistent with this
-       License. However, in accepting such obligations, You may act only
-       on Your own behalf and on Your sole responsibility, not on behalf
-       of any other Contributor, and only if You agree to indemnify,
-       defend, and hold each Contributor harmless for any liability
-       incurred by, or claims asserted against, such Contributor by reason
-       of your accepting any such warranty or additional liability.
-
-    END OF TERMS AND CONDITIONS
-
-    APPENDIX: How to apply the Apache License to your work.
-
-       To apply the Apache License to your work, attach the following
-       boilerplate notice, with the fields enclosed by brackets "[]"
-       replaced with your own identifying information. (Don't include
-       the brackets!)  The text should be enclosed in the appropriate
-       comment syntax for the file format. We also recommend that a
-       file or class name and description of purpose be included on the
-       same "printed page" as the copyright notice for easier
-       identification within third-party archives.
-
-    Copyright [yyyy] [name of copyright owner]
-
-    Licensed under the Apache License, Version 2.0 (the "License");
-    you may not use this file except in compliance with the License.
-    You may obtain a copy of the License at
-
-        http://www.apache.org/licenses/LICENSE-2.0
-
-    Unless required by applicable law or agreed to in writing, software
-    distributed under the License is distributed on an "AS IS" BASIS,
-    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    See the License for the specific language governing permissions and
-    limitations under the License.
-
----
-### protobuf
-
-    Copyright 2008 Google Inc.  All rights reserved.
-
-    Redistribution and use in source and binary forms, with or without
-    modification, are permitted provided that the following conditions are
-    met:
-
-        * Redistributions of source code must retain the above copyright
-    notice, this list of conditions and the following disclaimer.
-        * Redistributions in binary form must reproduce the above
-    copyright notice, this list of conditions and the following disclaimer
-    in the documentation and/or other materials provided with the
-    distribution.
-        * Neither the name of Google Inc. nor the names of its
-    contributors may be used to endorse or promote products derived from
-    this software without specific prior written permission.
-
-    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-    "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-    LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-    A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-    OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-    SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-    LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-    DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-    THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-    (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-    OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-    Code generated by the Protocol Buffer compiler is owned by the owner
-    of the input file used when generating it.  This code is not
-    standalone and requires a support library to be linked with it.  This
-    support library is itself covered by the above license.
-
----
-### proto-plus
-
-                                  Apache License
-                            Version 2.0, January 2004
-                         http://www.apache.org/licenses/
-
-    TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
-
-    1. Definitions.
-
-       "License" shall mean the terms and conditions for use, reproduction,
-       and distribution as defined by Sections 1 through 9 of this document.
-
-       "Licensor" shall mean the copyright owner or entity authorized by
-       the copyright owner that is granting the License.
-
-       "Legal Entity" shall mean the union of the acting entity and all
-       other entities that control, are controlled by, or are under common
-       control with that entity. For the purposes of this definition,
-       "control" means (i) the power, direct or indirect, to cause the
-       direction or management of such entity, whether by contract or
-       otherwise, or (ii) ownership of fifty percent (50%) or more of the
-       outstanding shares, or (iii) beneficial ownership of such entity.
-
-       "You" (or "Your") shall mean an individual or Legal Entity
-       exercising permissions granted by this License.
-
-       "Source" form shall mean the preferred form for making modifications,
-       including but not limited to software source code, documentation
-       source, and configuration files.
-
-       "Object" form shall mean any form resulting from mechanical
-       transformation or translation of a Source form, including but
-       not limited to compiled object code, generated documentation,
-       and conversions to other media types.
-
-       "Work" shall mean the work of authorship, whether in Source or
-       Object form, made available under the License, as indicated by a
-       copyright notice that is included in or attached to the work
-       (an example is provided in the Appendix below).
-
-       "Derivative Works" shall mean any work, whether in Source or Object
-       form, that is based on (or derived from) the Work and for which the
-       editorial revisions, annotations, elaborations, or other modifications
-       represent, as a whole, an original work of authorship. For the purposes
-       of this License, Derivative Works shall not include works that remain
-       separable from, or merely link (or bind by name) to the interfaces of,
-       the Work and Derivative Works thereof.
-
-       "Contribution" shall mean any work of authorship, including
-       the original version of the Work and any modifications or additions
-       to that Work or Derivative Works thereof, that is intentionally
-       submitted to Licensor for inclusion in the Work by the copyright owner
-       or by an individual or Legal Entity authorized to submit on behalf of
-       the copyright owner. For the purposes of this definition, "submitted"
-       means any form of electronic, verbal, or written communication sent
-       to the Licensor or its representatives, including but not limited to
-       communication on electronic mailing lists, source code control systems,
-       and issue tracking systems that are managed by, or on behalf of, the
-       Licensor for the purpose of discussing and improving the Work, but
-       excluding communication that is conspicuously marked or otherwise
-       designated in writing by the copyright owner as "Not a Contribution."
-
-       "Contributor" shall mean Licensor and any individual or Legal Entity
-       on behalf of whom a Contribution has been received by Licensor and
-       subsequently incorporated within the Work.
-
-    2. Grant of Copyright License. Subject to the terms and conditions of
-       this License, each Contributor hereby grants to You a perpetual,
-       worldwide, non-exclusive, no-charge, royalty-free, irrevocable
-       copyright license to reproduce, prepare Derivative Works of,
-       publicly display, publicly perform, sublicense, and distribute the
-       Work and such Derivative Works in Source or Object form.
-
-    3. Grant of Patent License. Subject to the terms and conditions of
-       this License, each Contributor hereby grants to You a perpetual,
-       worldwide, non-exclusive, no-charge, royalty-free, irrevocable
-       (except as stated in this section) patent license to make, have made,
-       use, offer to sell, sell, import, and otherwise transfer the Work,
-       where such license applies only to those patent claims licensable
-       by such Contributor that are necessarily infringed by their
-       Contribution(s) alone or by combination of their Contribution(s)
-       with the Work to which such Contribution(s) was submitted. If You
-       institute patent litigation against any entity (including a
-       cross-claim or counterclaim in a lawsuit) alleging that the Work
-       or a Contribution incorporated within the Work constitutes direct
-       or contributory patent infringement, then any patent licenses
-       granted to You under this License for that Work shall terminate
-       as of the date such litigation is filed.
-
-    4. Redistribution. You may reproduce and distribute copies of the
-       Work or Derivative Works thereof in any medium, with or without
-       modifications, and in Source or Object form, provided that You
-       meet the following conditions:
-
-       (a) You must give any other recipients of the Work or
-           Derivative Works a copy of this License; and
-
-       (b) You must cause any modified files to carry prominent notices
-           stating that You changed the files; and
-
-       (c) You must retain, in the Source form of any Derivative Works
-           that You distribute, all copyright, patent, trademark, and
-           attribution notices from the Source form of the Work,
-           excluding those notices that do not pertain to any part of
-           the Derivative Works; and
-
-       (d) If the Work includes a "NOTICE" text file as part of its
-           distribution, then any Derivative Works that You distribute must
-           include a readable copy of the attribution notices contained
-           within such NOTICE file, excluding those notices that do not
-           pertain to any part of the Derivative Works, in at least one
-           of the following places: within a NOTICE text file distributed
-           as part of the Derivative Works; within the Source form or
-           documentation, if provided along with the Derivative Works; or,
-           within a display generated by the Derivative Works, if and
-           wherever such third-party notices normally appear. The contents
-           of the NOTICE file are for informational purposes only and
-           do not modify the License. You may add Your own attribution
-           notices within Derivative Works that You distribute, alongside
-           or as an addendum to the NOTICE text from the Work, provided
-           that such additional attribution notices cannot be construed
-           as modifying the License.
-
-       You may add Your own copyright statement to Your modifications and
-       may provide additional or different license terms and conditions
-       for use, reproduction, or distribution of Your modifications, or
-       for any such Derivative Works as a whole, provided Your use,
-       reproduction, and distribution of the Work otherwise complies with
-       the conditions stated in this License.
-
-    5. Submission of Contributions. Unless You explicitly state otherwise,
-       any Contribution intentionally submitted for inclusion in the Work
-       by You to the Licensor shall be under the terms and conditions of
-       this License, without any additional terms or conditions.
-       Notwithstanding the above, nothing herein shall supersede or modify
-       the terms of any separate license agreement you may have executed
-       with Licensor regarding such Contributions.
-
-    6. Trademarks. This License does not grant permission to use the trade
-       names, trademarks, service marks, or product names of the Licensor,
-       except as required for reasonable and customary use in describing the
-       origin of the Work and reproducing the content of the NOTICE file.
-
-    7. Disclaimer of Warranty. Unless required by applicable law or
-       agreed to in writing, Licensor provides the Work (and each
-       Contributor provides its Contributions) on an "AS IS" BASIS,
-       WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
-       implied, including, without limitation, any warranties or conditions
-       of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A
-       PARTICULAR PURPOSE. You are solely responsible for determining the
-       appropriateness of using or redistributing the Work and assume any
-       risks associated with Your exercise of permissions under this License.
-
-    8. Limitation of Liability. In no event and under no legal theory,
-       whether in tort (including negligence), contract, or otherwise,
-       unless required by applicable law (such as deliberate and grossly
-       negligent acts) or agreed to in writing, shall any Contributor be
-       liable to You for damages, including any direct, indirect, special,
-       incidental, or consequential damages of any character arising as a
-       result of this License or out of the use or inability to use the
-       Work (including but not limited to damages for loss of goodwill,
-       work stoppage, computer failure or malfunction, or any and all
-       other commercial damages or losses), even if such Contributor
-       has been advised of the possibility of such damages.
-
-    9. Accepting Warranty or Additional Liability. While redistributing
-       the Work or Derivative Works thereof, You may choose to offer,
-       and charge a fee for, acceptance of support, warranty, indemnity,
-       or other liability obligations and/or rights consistent with this
-       License. However, in accepting such obligations, You may act only
-       on Your own behalf and on Your sole responsibility, not on behalf
-       of any other Contributor, and only if You agree to indemnify,
-       defend, and hold each Contributor harmless for any liability
-       incurred by, or claims asserted against, such Contributor by reason
-       of your accepting any such warranty or additional liability.
-
-    END OF TERMS AND CONDITIONS
-
-    APPENDIX: How to apply the Apache License to your work.
-
-       To apply the Apache License to your work, attach the following
-       boilerplate notice, with the fields enclosed by brackets "[]"
-       replaced with your own identifying information. (Don't include
-       the brackets!)  The text should be enclosed in the appropriate
-       comment syntax for the file format. We also recommend that a
-       file or class name and description of purpose be included on the
-       same "printed page" as the copyright notice for easier
-       identification within third-party archives.
-
-    Copyright [yyyy] [name of copyright owner]
-
-    Licensed under the Apache License, Version 2.0 (the "License");
-    you may not use this file except in compliance with the License.
-    You may obtain a copy of the License at
-
-        http://www.apache.org/licenses/LICENSE-2.0
-
-    Unless required by applicable law or agreed to in writing, software
-    distributed under the License is distributed on an "AS IS" BASIS,
-    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    See the License for the specific language governing permissions and
-    limitations under the License.
-
----
-### opentelemetry-api
-
-                                  Apache License
-                            Version 2.0, January 2004
-                         http://www.apache.org/licenses/
-
-    TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
-
-    1. Definitions.
-
-       "License" shall mean the terms and conditions for use, reproduction,
-       and distribution as defined by Sections 1 through 9 of this document.
-
-       "Licensor" shall mean the copyright owner or entity authorized by
-       the copyright owner that is granting the License.
-
-       "Legal Entity" shall mean the union of the acting entity and all
-       other entities that control, are controlled by, or are under common
-       control with that entity. For the purposes of this definition,
-       "control" means (i) the power, direct or indirect, to cause the
-       direction or management of such entity, whether by contract or
-       otherwise, or (ii) ownership of fifty percent (50%) or more of the
-       outstanding shares, or (iii) beneficial ownership of such entity.
-
-       "You" (or "Your") shall mean an individual or Legal Entity
-       exercising permissions granted by this License.
-
-       "Source" form shall mean the preferred form for making modifications,
-       including but not limited to software source code, documentation
-       source, and configuration files.
-
-       "Object" form shall mean any form resulting from mechanical
-       transformation or translation of a Source form, including but
-       not limited to compiled object code, generated documentation,
-       and conversions to other media types.
-
-       "Work" shall mean the work of authorship, whether in Source or
-       Object form, made available under the License, as indicated by a
-       copyright notice that is included in or attached to the work
-       (an example is provided in the Appendix below).
-
-       "Derivative Works" shall mean any work, whether in Source or Object
-       form, that is based on (or derived from) the Work and for which the
-       editorial revisions, annotations, elaborations, or other modifications
-       represent, as a whole, an original work of authorship. For the purposes
-       of this License, Derivative Works shall not include works that remain
-       separable from, or merely link (or bind by name) to the interfaces of,
-       the Work and Derivative Works thereof.
-
-       "Contribution" shall mean any work of authorship, including
-       the original version of the Work and any modifications or additions
-       to that Work or Derivative Works thereof, that is intentionally
-       submitted to Licensor for inclusion in the Work by the copyright owner
-       or by an individual or Legal Entity authorized to submit on behalf of
-       the copyright owner. For the purposes of this definition, "submitted"
-       means any form of electronic, verbal, or written communication sent
-       to the Licensor or its representatives, including but not limited to
-       communication on electronic mailing lists, source code control systems,
-       and issue tracking systems that are managed by, or on behalf of, the
-       Licensor for the purpose of discussing and improving the Work, but
-       excluding communication that is conspicuously marked or otherwise
-       designated in writing by the copyright owner as "Not a Contribution."
-
-       "Contributor" shall mean Licensor and any individual or Legal Entity
-       on behalf of whom a Contribution has been received by Licensor and
-       subsequently incorporated within the Work.
-
-    2. Grant of Copyright License. Subject to the terms and conditions of
-       this License, each Contributor hereby grants to You a perpetual,
-       worldwide, non-exclusive, no-charge, royalty-free, irrevocable
-       copyright license to reproduce, prepare Derivative Works of,
-       publicly display, publicly perform, sublicense, and distribute the
-       Work and such Derivative Works in Source or Object form.
-
-    3. Grant of Patent License. Subject to the terms and conditions of
-       this License, each Contributor hereby grants to You a perpetual,
-       worldwide, non-exclusive, no-charge, royalty-free, irrevocable
-       (except as stated in this section) patent license to make, have made,
-       use, offer to sell, sell, import, and otherwise transfer the Work,
-       where such license applies only to those patent claims licensable
-       by such Contributor that are necessarily infringed by their
-       Contribution(s) alone or by combination of their Contribution(s)
-       with the Work to which such Contribution(s) was submitted. If You
-       institute patent litigation against any entity (including a
-       cross-claim or counterclaim in a lawsuit) alleging that the Work
-       or a Contribution incorporated within the Work constitutes direct
-       or contributory patent infringement, then any patent licenses
-       granted to You under this License for that Work shall terminate
-       as of the date such litigation is filed.
-
-    4. Redistribution. You may reproduce and distribute copies of the
-       Work or Derivative Works thereof in any medium, with or without
-       modifications, and in Source or Object form, provided that You
-       meet the following conditions:
-
-       (a) You must give any other recipients of the Work or
-           Derivative Works a copy of this License; and
-
-       (b) You must cause any modified files to carry prominent notices
-           stating that You changed the files; and
-
-       (c) You must retain, in the Source form of any Derivative Works
-           that You distribute, all copyright, patent, trademark, and
-           attribution notices from the Source form of the Work,
-           excluding those notices that do not pertain to any part of
-           the Derivative Works; and
-
-       (d) If the Work includes a "NOTICE" text file as part of its
-           distribution, then any Derivative Works that You distribute must
-           include a readable copy of the attribution notices contained
-           within such NOTICE file, excluding those notices that do not
-           pertain to any part of the Derivative Works, in at least one
-           of the following places: within a NOTICE text file distributed
-           as part of the Derivative Works; within the Source form or
-           documentation, if provided along with the Derivative Works; or,
-           within a display generated by the Derivative Works, if and
-           wherever such third-party notices normally appear. The contents
-           of the NOTICE file are for informational purposes only and
-           do not modify the License. You may add Your own attribution
-           notices within Derivative Works that You distribute, alongside
-           or as an addendum to the NOTICE text from the Work, provided
-           that such additional attribution notices cannot be construed
-           as modifying the License.
-
-       You may add Your own copyright statement to Your modifications and
-       may provide additional or different license terms and conditions
-       for use, reproduction, or distribution of Your modifications, or
-       for any such Derivative Works as a whole, provided Your use,
-       reproduction, and distribution of the Work otherwise complies with
-       the conditions stated in this License.
-
-    5. Submission of Contributions. Unless You explicitly state otherwise,
-       any Contribution intentionally submitted for inclusion in the Work
-       by You to the Licensor shall be under the terms and conditions of
-       this License, without any additional terms or conditions.
-       Notwithstanding the above, nothing herein shall supersede or modify
-       the terms of any separate license agreement you may have executed
-       with Licensor regarding such Contributions.
-
-    6. Trademarks. This License does not grant permission to use the trade
-       names, trademarks, service marks, or product names of the Licensor,
-       except as required for reasonable and customary use in describing the
-       origin of the Work and reproducing the content of the NOTICE file.
-
-    7. Disclaimer of Warranty. Unless required by applicable law or
-       agreed to in writing, Licensor provides the Work (and each
-       Contributor provides its Contributions) on an "AS IS" BASIS,
-       WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
-       implied, including, without limitation, any warranties or conditions
-       of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A
-       PARTICULAR PURPOSE. You are solely responsible for determining the
-       appropriateness of using or redistributing the Work and assume any
-       risks associated with Your exercise of permissions under this License.
-
-    8. Limitation of Liability. In no event and under no legal theory,
-       whether in tort (including negligence), contract, or otherwise,
-       unless required by applicable law (such as deliberate and grossly
-       negligent acts) or agreed to in writing, shall any Contributor be
-       liable to You for damages, including any direct, indirect, special,
-       incidental, or consequential damages of any character arising as a
-       result of this License or out of the use or inability to use the
-       Work (including but not limited to damages for loss of goodwill,
-       work stoppage, computer failure or malfunction, or any and all
-       other commercial damages or losses), even if such Contributor
-       has been advised of the possibility of such damages.
-
-    9. Accepting Warranty or Additional Liability. While redistributing
-       the Work or Derivative Works thereof, You may choose to offer,
-       and charge a fee for, acceptance of support, warranty, indemnity,
-       or other liability obligations and/or rights consistent with this
-       License. However, in accepting such obligations, You may act only
-       on Your own behalf and on Your sole responsibility, not on behalf
-       of any other Contributor, and only if You agree to indemnify,
-       defend, and hold each Contributor harmless for any liability
-       incurred by, or claims asserted against, such Contributor by reason
-       of your accepting any such warranty or additional liability.
-
-    END OF TERMS AND CONDITIONS
-
-    APPENDIX: How to apply the Apache License to your work.
-
-       To apply the Apache License to your work, attach the following
-       boilerplate notice, with the fields enclosed by brackets "[]"
-       replaced with your own identifying information. (Don't include
-       the brackets!)  The text should be enclosed in the appropriate
-       comment syntax for the file format. We also recommend that a
-       file or class name and description of purpose be included on the
-       same "printed page" as the copyright notice for easier
-       identification within third-party archives.
-
-    Copyright [yyyy] [name of copyright owner]
-
-    Licensed under the Apache License, Version 2.0 (the "License");
-    you may not use this file except in compliance with the License.
-    You may obtain a copy of the License at
-
-        http://www.apache.org/licenses/LICENSE-2.0
-
-    Unless required by applicable law or agreed to in writing, software
-    distributed under the License is distributed on an "AS IS" BASIS,
-    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    See the License for the specific language governing permissions and
-    limitations under the License.
-
----
-### googleapis-common-protos
-
-                                  Apache License
-                            Version 2.0, January 2004
-                         http://www.apache.org/licenses/
-
-    TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
-
-    1. Definitions.
-
-       "License" shall mean the terms and conditions for use, reproduction,
-       and distribution as defined by Sections 1 through 9 of this document.
-
-       "Licensor" shall mean the copyright owner or entity authorized by
-       the copyright owner that is granting the License.
-
-       "Legal Entity" shall mean the union of the acting entity and all
-       other entities that control, are controlled by, or are under common
-       control with that entity. For the purposes of this definition,
-       "control" means (i) the power, direct or indirect, to cause the
-       direction or management of such entity, whether by contract or
-       otherwise, or (ii) ownership of fifty percent (50%) or more of the
-       outstanding shares, or (iii) beneficial ownership of such entity.
-
-       "You" (or "Your") shall mean an individual or Legal Entity
-       exercising permissions granted by this License.
-
-       "Source" form shall mean the preferred form for making modifications,
-       including but not limited to software source code, documentation
-       source, and configuration files.
-
-       "Object" form shall mean any form resulting from mechanical
-       transformation or translation of a Source form, including but
-       not limited to compiled object code, generated documentation,
-       and conversions to other media types.
-
-       "Work" shall mean the work of authorship, whether in Source or
-       Object form, made available under the License, as indicated by a
-       copyright notice that is included in or attached to the work
-       (an example is provided in the Appendix below).
-
-       "Derivative Works" shall mean any work, whether in Source or Object
-       form, that is based on (or derived from) the Work and for which the
-       editorial revisions, annotations, elaborations, or other modifications
-       represent, as a whole, an original work of authorship. For the purposes
-       of this License, Derivative Works shall not include works that remain
-       separable from, or merely link (or bind by name) to the interfaces of,
-       the Work and Derivative Works thereof.
-
-       "Contribution" shall mean any work of authorship, including
-       the original version of the Work and any modifications or additions
-       to that Work or Derivative Works thereof, that is intentionally
-       submitted to Licensor for inclusion in the Work by the copyright owner
-       or by an individual or Legal Entity authorized to submit on behalf of
-       the copyright owner. For the purposes of this definition, "submitted"
-       means any form of electronic, verbal, or written communication sent
-       to the Licensor or its representatives, including but not limited to
-       communication on electronic mailing lists, source code control systems,
-       and issue tracking systems that are managed by, or on behalf of, the
-       Licensor for the purpose of discussing and improving the Work, but
-       excluding communication that is conspicuously marked or otherwise
-       designated in writing by the copyright owner as "Not a Contribution."
-
-       "Contributor" shall mean Licensor and any individual or Legal Entity
-       on behalf of whom a Contribution has been received by Licensor and
-       subsequently incorporated within the Work.
-
-    2. Grant of Copyright License. Subject to the terms and conditions of
-       this License, each Contributor hereby grants to You a perpetual,
-       worldwide, non-exclusive, no-charge, royalty-free, irrevocable
-       copyright license to reproduce, prepare Derivative Works of,
-       publicly display, publicly perform, sublicense, and distribute the
-       Work and such Derivative Works in Source or Object form.
-
-    3. Grant of Patent License. Subject to the terms and conditions of
-       this License, each Contributor hereby grants to You a perpetual,
-       worldwide, non-exclusive, no-charge, royalty-free, irrevocable
-       (except as stated in this section) patent license to make, have made,
-       use, offer to sell, sell, import, and otherwise transfer the Work,
-       where such license applies only to those patent claims licensable
-       by such Contributor that are necessarily infringed by their
-       Contribution(s) alone or by combination of their Contribution(s)
-       with the Work to which such Contribution(s) was submitted. If You
-       institute patent litigation against any entity (including a
-       cross-claim or counterclaim in a lawsuit) alleging that the Work
-       or a Contribution incorporated within the Work constitutes direct
-       or contributory patent infringement, then any patent licenses
-       granted to You under this License for that Work shall terminate
-       as of the date such litigation is filed.
-
-    4. Redistribution. You may reproduce and distribute copies of the
-       Work or Derivative Works thereof in any medium, with or without
-       modifications, and in Source or Object form, provided that You
-       meet the following conditions:
-
-       (a) You must give any other recipients of the Work or
-           Derivative Works a copy of this License; and
-
-       (b) You must cause any modified files to carry prominent notices
-           stating that You changed the files; and
-
-       (c) You must retain, in the Source form of any Derivative Works
-           that You distribute, all copyright, patent, trademark, and
-           attribution notices from the Source form of the Work,
-           excluding those notices that do not pertain to any part of
-           the Derivative Works; and
-
-       (d) If the Work includes a "NOTICE" text file as part of its
-           distribution, then any Derivative Works that You distribute must
-           include a readable copy of the attribution notices contained
-           within such NOTICE file, excluding those notices that do not
-           pertain to any part of the Derivative Works, in at least one
-           of the following places: within a NOTICE text file distributed
-           as part of the Derivative Works; within the Source form or
-           documentation, if provided along with the Derivative Works; or,
-           within a display generated by the Derivative Works, if and
-           wherever such third-party notices normally appear. The contents
-           of the NOTICE file are for informational purposes only and
-           do not modify the License. You may add Your own attribution
-           notices within Derivative Works that You distribute, alongside
-           or as an addendum to the NOTICE text from the Work, provided
-           that such additional attribution notices cannot be construed
-           as modifying the License.
-
-       You may add Your own copyright statement to Your modifications and
-       may provide additional or different license terms and conditions
-       for use, reproduction, or distribution of Your modifications, or
-       for any such Derivative Works as a whole, provided Your use,
-       reproduction, and distribution of the Work otherwise complies with
-       the conditions stated in this License.
-
-    5. Submission of Contributions. Unless You explicitly state otherwise,
-       any Contribution intentionally submitted for inclusion in the Work
-       by You to the Licensor shall be under the terms and conditions of
-       this License, without any additional terms or conditions.
-       Notwithstanding the above, nothing herein shall supersede or modify
-       the terms of any separate license agreement you may have executed
-       with Licensor regarding such Contributions.
-
-    6. Trademarks. This License does not grant permission to use the trade
-       names, trademarks, service marks, or product names of the Licensor,
-       except as required for reasonable and customary use in describing the
-       origin of the Work and reproducing the content of the NOTICE file.
-
-    7. Disclaimer of Warranty. Unless required by applicable law or
-       agreed to in writing, Licensor provides the Work (and each
-       Contributor provides its Contributions) on an "AS IS" BASIS,
-       WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
-       implied, including, without limitation, any warranties or conditions
-       of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A
-       PARTICULAR PURPOSE. You are solely responsible for determining the
-       appropriateness of using or redistributing the Work and assume any
-       risks associated with Your exercise of permissions under this License.
-
-    8. Limitation of Liability. In no event and under no legal theory,
-       whether in tort (including negligence), contract, or otherwise,
-       unless required by applicable law (such as deliberate and grossly
-       negligent acts) or agreed to in writing, shall any Contributor be
-       liable to You for damages, including any direct, indirect, special,
-       incidental, or consequential damages of any character arising as a
-       result of this License or out of the use or inability to use the
-       Work (including but not limited to damages for loss of goodwill,
-       work stoppage, computer failure or malfunction, or any and all
-       other commercial damages or losses), even if such Contributor
-       has been advised of the possibility of such damages.
-
-    9. Accepting Warranty or Additional Liability. While redistributing
-       the Work or Derivative Works thereof, You may choose to offer,
-       and charge a fee for, acceptance of support, warranty, indemnity,
-       or other liability obligations and/or rights consistent with this
-       License. However, in accepting such obligations, You may act only
-       on Your own behalf and on Your sole responsibility, not on behalf
-       of any other Contributor, and only if You agree to indemnify,
-       defend, and hold each Contributor harmless for any liability
-       incurred by, or claims asserted against, such Contributor by reason
-       of your accepting any such warranty or additional liability.
-
-    END OF TERMS AND CONDITIONS
-
-    APPENDIX: How to apply the Apache License to your work.
-
-       To apply the Apache License to your work, attach the following
-       boilerplate notice, with the fields enclosed by brackets "[]"
-       replaced with your own identifying information. (Don't include
-       the brackets!)  The text should be enclosed in the appropriate
-       comment syntax for the file format. We also recommend that a
-       file or class name and description of purpose be included on the
-       same "printed page" as the copyright notice for easier
-       identification within third-party archives.
-
-    Copyright [yyyy] [name of copyright owner]
-
-    Licensed under the Apache License, Version 2.0 (the "License");
-    you may not use this file except in compliance with the License.
-    You may obtain a copy of the License at
-
-        http://www.apache.org/licenses/LICENSE-2.0
-
-    Unless required by applicable law or agreed to in writing, software
-    distributed under the License is distributed on an "AS IS" BASIS,
-    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    See the License for the specific language governing permissions and
-    limitations under the License.
-
----
-### google-auth
-
-                                  Apache License
-                            Version 2.0, January 2004
-                         http://www.apache.org/licenses/
-
-    TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
-
-    1. Definitions.
-
-       "License" shall mean the terms and conditions for use, reproduction,
-       and distribution as defined by Sections 1 through 9 of this document.
-
-       "Licensor" shall mean the copyright owner or entity authorized by
-       the copyright owner that is granting the License.
-
-       "Legal Entity" shall mean the union of the acting entity and all
-       other entities that control, are controlled by, or are under common
-       control with that entity. For the purposes of this definition,
-       "control" means (i) the power, direct or indirect, to cause the
-       direction or management of such entity, whether by contract or
-       otherwise, or (ii) ownership of fifty percent (50%) or more of the
-       outstanding shares, or (iii) beneficial ownership of such entity.
-
-       "You" (or "Your") shall mean an individual or Legal Entity
-       exercising permissions granted by this License.
-
-       "Source" form shall mean the preferred form for making modifications,
-       including but not limited to software source code, documentation
-       source, and configuration files.
-
-       "Object" form shall mean any form resulting from mechanical
-       transformation or translation of a Source form, including but
-       not limited to compiled object code, generated documentation,
-       and conversions to other media types.
-
-       "Work" shall mean the work of authorship, whether in Source or
-       Object form, made available under the License, as indicated by a
-       copyright notice that is included in or attached to the work
-       (an example is provided in the Appendix below).
-
-       "Derivative Works" shall mean any work, whether in Source or Object
-       form, that is based on (or derived from) the Work and for which the
-       editorial revisions, annotations, elaborations, or other modifications
-       represent, as a whole, an original work of authorship. For the purposes
-       of this License, Derivative Works shall not include works that remain
-       separable from, or merely link (or bind by name) to the interfaces of,
-       the Work and Derivative Works thereof.
-
-       "Contribution" shall mean any work of authorship, including
-       the original version of the Work and any modifications or additions
-       to that Work or Derivative Works thereof, that is intentionally
-       submitted to Licensor for inclusion in the Work by the copyright owner
-       or by an individual or Legal Entity authorized to submit on behalf of
-       the copyright owner. For the purposes of this definition, "submitted"
-       means any form of electronic, verbal, or written communication sent
-       to the Licensor or its representatives, including but not limited to
-       communication on electronic mailing lists, source code control systems,
-       and issue tracking systems that are managed by, or on behalf of, the
-       Licensor for the purpose of discussing and improving the Work, but
-       excluding communication that is conspicuously marked or otherwise
-       designated in writing by the copyright owner as "Not a Contribution."
-
-       "Contributor" shall mean Licensor and any individual or Legal Entity
-       on behalf of whom a Contribution has been received by Licensor and
-       subsequently incorporated within the Work.
-
-    2. Grant of Copyright License. Subject to the terms and conditions of
-       this License, each Contributor hereby grants to You a perpetual,
-       worldwide, non-exclusive, no-charge, royalty-free, irrevocable
-       copyright license to reproduce, prepare Derivative Works of,
-       publicly display, publicly perform, sublicense, and distribute the
-       Work and such Derivative Works in Source or Object form.
-
-    3. Grant of Patent License. Subject to the terms and conditions of
-       this License, each Contributor hereby grants to You a perpetual,
-       worldwide, non-exclusive, no-charge, royalty-free, irrevocable
-       (except as stated in this section) patent license to make, have made,
-       use, offer to sell, sell, import, and otherwise transfer the Work,
-       where such license applies only to those patent claims licensable
-       by such Contributor that are necessarily infringed by their
-       Contribution(s) alone or by combination of their Contribution(s)
-       with the Work to which such Contribution(s) was submitted. If You
-       institute patent litigation against any entity (including a
-       cross-claim or counterclaim in a lawsuit) alleging that the Work
-       or a Contribution incorporated within the Work constitutes direct
-       or contributory patent infringement, then any patent licenses
-       granted to You under this License for that Work shall terminate
-       as of the date such litigation is filed.
-
-    4. Redistribution. You may reproduce and distribute copies of the
-       Work or Derivative Works thereof in any medium, with or without
-       modifications, and in Source or Object form, provided that You
-       meet the following conditions:
-
-       (a) You must give any other recipients of the Work or
-           Derivative Works a copy of this License; and
-
-       (b) You must cause any modified files to carry prominent notices
-           stating that You changed the files; and
-
-       (c) You must retain, in the Source form of any Derivative Works
-           that You distribute, all copyright, patent, trademark, and
-           attribution notices from the Source form of the Work,
-           excluding those notices that do not pertain to any part of
-           the Derivative Works; and
-
-       (d) If the Work includes a "NOTICE" text file as part of its
-           distribution, then any Derivative Works that You distribute must
-           include a readable copy of the attribution notices contained
-           within such NOTICE file, excluding those notices that do not
-           pertain to any part of the Derivative Works, in at least one
-           of the following places: within a NOTICE text file distributed
-           as part of the Derivative Works; within the Source form or
-           documentation, if provided along with the Derivative Works; or,
-           within a display generated by the Derivative Works, if and
-           wherever such third-party notices normally appear. The contents
-           of the NOTICE file are for informational purposes only and
-           do not modify the License. You may add Your own attribution
-           notices within Derivative Works that You distribute, alongside
-           or as an addendum to the NOTICE text from the Work, provided
-           that such additional attribution notices cannot be construed
-           as modifying the License.
-
-       You may add Your own copyright statement to Your modifications and
-       may provide additional or different license terms and conditions
-       for use, reproduction, or distribution of Your modifications, or
-       for any such Derivative Works as a whole, provided Your use,
-       reproduction, and distribution of the Work otherwise complies with
-       the conditions stated in this License.
-
-    5. Submission of Contributions. Unless You explicitly state otherwise,
-       any Contribution intentionally submitted for inclusion in the Work
-       by You to the Licensor shall be under the terms and conditions of
-       this License, without any additional terms or conditions.
-       Notwithstanding the above, nothing herein shall supersede or modify
-       the terms of any separate license agreement you may have executed
-       with Licensor regarding such Contributions.
-
-    6. Trademarks. This License does not grant permission to use the trade
-       names, trademarks, service marks, or product names of the Licensor,
-       except as required for reasonable and customary use in describing the
-       origin of the Work and reproducing the content of the NOTICE file.
-
-    7. Disclaimer of Warranty. Unless required by applicable law or
-       agreed to in writing, Licensor provides the Work (and each
-       Contributor provides its Contributions) on an "AS IS" BASIS,
-       WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
-       implied, including, without limitation, any warranties or conditions
-       of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A
-       PARTICULAR PURPOSE. You are solely responsible for determining the
-       appropriateness of using or redistributing the Work and assume any
-       risks associated with Your exercise of permissions under this License.
-
-    8. Limitation of Liability. In no event and under no legal theory,
-       whether in tort (including negligence), contract, or otherwise,
-       unless required by applicable law (such as deliberate and grossly
-       negligent acts) or agreed to in writing, shall any Contributor be
-       liable to You for damages, including any direct, indirect, special,
-       incidental, or consequential damages of any character arising as a
-       result of this License or out of the use or inability to use the
-       Work (including but not limited to damages for loss of goodwill,
-       work stoppage, computer failure or malfunction, or any and all
-       other commercial damages or losses), even if such Contributor
-       has been advised of the possibility of such damages.
-
-    9. Accepting Warranty or Additional Liability. While redistributing
-       the Work or Derivative Works thereof, You may choose to offer,
-       and charge a fee for, acceptance of support, warranty, indemnity,
-       or other liability obligations and/or rights consistent with this
-       License. However, in accepting such obligations, You may act only
-       on Your own behalf and on Your sole responsibility, not on behalf
-       of any other Contributor, and only if You agree to indemnify,
-       defend, and hold each Contributor harmless for any liability
-       incurred by, or claims asserted against, such Contributor by reason
-       of your accepting any such warranty or additional liability.
-
-    END OF TERMS AND CONDITIONS
-
-    APPENDIX: How to apply the Apache License to your work.
-
-       To apply the Apache License to your work, attach the following
-       boilerplate notice, with the fields enclosed by brackets "[]"
-       replaced with your own identifying information. (Don't include
-       the brackets!)  The text should be enclosed in the appropriate
-       comment syntax for the file format. We also recommend that a
-       file or class name and description of purpose be included on the
-       same "printed page" as the copyright notice for easier
-       identification within third-party archives.
-
-    Copyright [yyyy] [name of copyright owner]
-
-    Licensed under the Apache License, Version 2.0 (the "License");
-    you may not use this file except in compliance with the License.
-    You may obtain a copy of the License at
-
-        http://www.apache.org/licenses/LICENSE-2.0
-
-    Unless required by applicable law or agreed to in writing, software
-    distributed under the License is distributed on an "AS IS" BASIS,
-    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    See the License for the specific language governing permissions and
-    limitations under the License.
-
----
-### pyasn1_modules
-
-    Copyright (c) 2005-2020, Ilya Etingof <etingof@gmail.com>
-    All rights reserved.
-
-    Redistribution and use in source and binary forms, with or without
-    modification, are permitted provided that the following conditions are met:
-
-      * Redistributions of source code must retain the above copyright notice, 
-        this list of conditions and the following disclaimer.
-
-      * Redistributions in binary form must reproduce the above copyright notice,
-        this list of conditions and the following disclaimer in the documentation
-        and/or other materials provided with the distribution.
-
-    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-    AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
-    IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE 
-    ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-    LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-    CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-    SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-    INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-    CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-    ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-    POSSIBILITY OF SUCH DAMAGE.
-
----
-### pyasn1
-
-    Copyright (c) 2005-2020, Ilya Etingof <etingof@gmail.com>
-    All rights reserved.
-
-    Redistribution and use in source and binary forms, with or without
-    modification, are permitted provided that the following conditions are met:
-
-      * Redistributions of source code must retain the above copyright notice, 
-        this list of conditions and the following disclaimer.
-
-      * Redistributions in binary form must reproduce the above copyright notice,
-        this list of conditions and the following disclaimer in the documentation
-        and/or other materials provided with the distribution.
-
-    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-    AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
-    IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE 
-    ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-    LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-    CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-    SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-    INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-    CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-    ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-    POSSIBILITY OF SUCH DAMAGE.
-
----
-### cryptography
-
-    This software is made available under the terms of *either* of the licenses
-    found in LICENSE.APACHE or LICENSE.BSD. Contributions to cryptography are made
-    under the terms of *both* these licenses.
-
-                                  Apache License
-                            Version 2.0, January 2004
-                         https://www.apache.org/licenses/
-
-    TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
-
-    1. Definitions.
-
-       "License" shall mean the terms and conditions for use, reproduction,
-       and distribution as defined by Sections 1 through 9 of this document.
-
-       "Licensor" shall mean the copyright owner or entity authorized by
-       the copyright owner that is granting the License.
-
-       "Legal Entity" shall mean the union of the acting entity and all
-       other entities that control, are controlled by, or are under common
-       control with that entity. For the purposes of this definition,
-       "control" means (i) the power, direct or indirect, to cause the
-       direction or management of such entity, whether by contract or
-       otherwise, or (ii) ownership of fifty percent (50%) or more of the
-       outstanding shares, or (iii) beneficial ownership of such entity.
-
-       "You" (or "Your") shall mean an individual or Legal Entity
-       exercising permissions granted by this License.
-
-       "Source" form shall mean the preferred form for making modifications,
-       including but not limited to software source code, documentation
-       source, and configuration files.
-
-       "Object" form shall mean any form resulting from mechanical
-       transformation or translation of a Source form, including but
-       not limited to compiled object code, generated documentation,
-       and conversions to other media types.
-
-       "Work" shall mean the work of authorship, whether in Source or
-       Object form, made available under the License, as indicated by a
-       copyright notice that is included in or attached to the work
-       (an example is provided in the Appendix below).
-
-       "Derivative Works" shall mean any work, whether in Source or Object
-       form, that is based on (or derived from) the Work and for which the
-       editorial revisions, annotations, elaborations, or other modifications
-       represent, as a whole, an original work of authorship. For the purposes
-       of this License, Derivative Works shall not include works that remain
-       separable from, or merely link (or bind by name) to the interfaces of,
-       the Work and Derivative Works thereof.
-
-       "Contribution" shall mean any work of authorship, including
-       the original version of the Work and any modifications or additions
-       to that Work or Derivative Works thereof, that is intentionally
-       submitted to Licensor for inclusion in the Work by the copyright owner
-       or by an individual or Legal Entity authorized to submit on behalf of
-       the copyright owner. For the purposes of this definition, "submitted"
-       means any form of electronic, verbal, or written communication sent
-       to the Licensor or its representatives, including but not limited to
-       communication on electronic mailing lists, source code control systems,
-       and issue tracking systems that are managed by, or on behalf of, the
-       Licensor for the purpose of discussing and improving the Work, but
-       excluding communication that is conspicuously marked or otherwise
-       designated in writing by the copyright owner as "Not a Contribution."
-
-       "Contributor" shall mean Licensor and any individual or Legal Entity
-       on behalf of whom a Contribution has been received by Licensor and
-       subsequently incorporated within the Work.
-
-    2. Grant of Copyright License. Subject to the terms and conditions of
-       this License, each Contributor hereby grants to You a perpetual,
-       worldwide, non-exclusive, no-charge, royalty-free, irrevocable
-       copyright license to reproduce, prepare Derivative Works of,
-       publicly display, publicly perform, sublicense, and distribute the
-       Work and such Derivative Works in Source or Object form.
-
-    3. Grant of Patent License. Subject to the terms and conditions of
-       this License, each Contributor hereby grants to You a perpetual,
-       worldwide, non-exclusive, no-charge, royalty-free, irrevocable
-       (except as stated in this section) patent license to make, have made,
-       use, offer to sell, sell, import, and otherwise transfer the Work,
-       where such license applies only to those patent claims licensable
-       by such Contributor that are necessarily infringed by their
-       Contribution(s) alone or by combination of their Contribution(s)
-       with the Work to which such Contribution(s) was submitted. If You
-       institute patent litigation against any entity (including a
-       cross-claim or counterclaim in a lawsuit) alleging that the Work
-       or a Contribution incorporated within the Work constitutes direct
-       or contributory patent infringement, then any patent licenses
-       granted to You under this License for that Work shall terminate
-       as of the date such litigation is filed.
-
-    4. Redistribution. You may reproduce and distribute copies of the
-       Work or Derivative Works thereof in any medium, with or without
-       modifications, and in Source or Object form, provided that You
-       meet the following conditions:
-
-       (a) You must give any other recipients of the Work or
-           Derivative Works a copy of this License; and
-
-       (b) You must cause any modified files to carry prominent notices
-           stating that You changed the files; and
-
-       (c) You must retain, in the Source form of any Derivative Works
-           that You distribute, all copyright, patent, trademark, and
-           attribution notices from the Source form of the Work,
-           excluding those notices that do not pertain to any part of
-           the Derivative Works; and
-
-       (d) If the Work includes a "NOTICE" text file as part of its
-           distribution, then any Derivative Works that You distribute must
-           include a readable copy of the attribution notices contained
-           within such NOTICE file, excluding those notices that do not
-           pertain to any part of the Derivative Works, in at least one
-           of the following places: within a NOTICE text file distributed
-           as part of the Derivative Works; within the Source form or
-           documentation, if provided along with the Derivative Works; or,
-           within a display generated by the Derivative Works, if and
-           wherever such third-party notices normally appear. The contents
-           of the NOTICE file are for informational purposes only and
-           do not modify the License. You may add Your own attribution
-           notices within Derivative Works that You distribute, alongside
-           or as an addendum to the NOTICE text from the Work, provided
-           that such additional attribution notices cannot be construed
-           as modifying the License.
-
-       You may add Your own copyright statement to Your modifications and
-       may provide additional or different license terms and conditions
-       for use, reproduction, or distribution of Your modifications, or
-       for any such Derivative Works as a whole, provided Your use,
-       reproduction, and distribution of the Work otherwise complies with
-       the conditions stated in this License.
-
-    5. Submission of Contributions. Unless You explicitly state otherwise,
-       any Contribution intentionally submitted for inclusion in the Work
-       by You to the Licensor shall be under the terms and conditions of
-       this License, without any additional terms or conditions.
-       Notwithstanding the above, nothing herein shall supersede or modify
-       the terms of any separate license agreement you may have executed
-       with Licensor regarding such Contributions.
-
-    6. Trademarks. This License does not grant permission to use the trade
-       names, trademarks, service marks, or product names of the Licensor,
-       except as required for reasonable and customary use in describing the
-       origin of the Work and reproducing the content of the NOTICE file.
-
-    7. Disclaimer of Warranty. Unless required by applicable law or
-       agreed to in writing, Licensor provides the Work (and each
-       Contributor provides its Contributions) on an "AS IS" BASIS,
-       WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
-       implied, including, without limitation, any warranties or conditions
-       of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A
-       PARTICULAR PURPOSE. You are solely responsible for determining the
-       appropriateness of using or redistributing the Work and assume any
-       risks associated with Your exercise of permissions under this License.
-
-    8. Limitation of Liability. In no event and under no legal theory,
-       whether in tort (including negligence), contract, or otherwise,
-       unless required by applicable law (such as deliberate and grossly
-       negligent acts) or agreed to in writing, shall any Contributor be
-       liable to You for damages, including any direct, indirect, special,
-       incidental, or consequential damages of any character arising as a
-       result of this License or out of the use or inability to use the
-       Work (including but not limited to damages for loss of goodwill,
-       work stoppage, computer failure or malfunction, or any and all
-       other commercial damages or losses), even if such Contributor
-       has been advised of the possibility of such damages.
-
-    9. Accepting Warranty or Additional Liability. While redistributing
-       the Work or Derivative Works thereof, You may choose to offer,
-       and charge a fee for, acceptance of support, warranty, indemnity,
-       or other liability obligations and/or rights consistent with this
-       License. However, in accepting such obligations, You may act only
-       on Your own behalf and on Your sole responsibility, not on behalf
-       of any other Contributor, and only if You agree to indemnify,
-       defend, and hold each Contributor harmless for any liability
-       incurred by, or claims asserted against, such Contributor by reason
-       of your accepting any such warranty or additional liability.
-
-    END OF TERMS AND CONDITIONS
-
-    APPENDIX: How to apply the Apache License to your work.
-
-       To apply the Apache License to your work, attach the following
-       boilerplate notice, with the fields enclosed by brackets "[]"
-       replaced with your own identifying information. (Don't include
-       the brackets!)  The text should be enclosed in the appropriate
-       comment syntax for the file format. We also recommend that a
-       file or class name and description of purpose be included on the
-       same "printed page" as the copyright notice for easier
-       identification within third-party archives.
-
-    Copyright [yyyy] [name of copyright owner]
-
-    Licensed under the Apache License, Version 2.0 (the "License");
-    you may not use this file except in compliance with the License.
-    You may obtain a copy of the License at
-
-        https://www.apache.org/licenses/LICENSE-2.0
-
-    Unless required by applicable law or agreed to in writing, software
-    distributed under the License is distributed on an "AS IS" BASIS,
-    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    See the License for the specific language governing permissions and
-    limitations under the License.
-
-    Copyright (c) Individual contributors.
-    All rights reserved.
-
-    Redistribution and use in source and binary forms, with or without
-    modification, are permitted provided that the following conditions are met:
-
-        1. Redistributions of source code must retain the above copyright notice,
-           this list of conditions and the following disclaimer.
-
-        2. Redistributions in binary form must reproduce the above copyright
-           notice, this list of conditions and the following disclaimer in the
-           documentation and/or other materials provided with the distribution.
-
-        3. Neither the name of PyCA Cryptography nor the names of its contributors
-           may be used to endorse or promote products derived from this software
-           without specific prior written permission.
-
-    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-    ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-    WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-    DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
-    ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-    (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-    LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
-    ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-    (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
----
-### cffi
-
-    Except when otherwise stated (look for LICENSE files in directories or
-    information at the beginning of each file) all software and
-    documentation is licensed as follows: 
-
-        MIT No Attribution
-
-        Permission is hereby granted, free of charge, to any person 
-        obtaining a copy of this software and associated documentation 
-        files (the "Software"), to deal in the Software without 
-        restriction, including without limitation the rights to use, 
-        copy, modify, merge, publish, distribute, sublicense, and/or 
-        sell copies of the Software, and to permit persons to whom the 
-        Software is furnished to do so.
-
-        THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS 
-        OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
-        FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
-        THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
-        LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
-        FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
-        DEALINGS IN THE SOFTWARE.
-
----
-### pycparser
-
-    pycparser -- A C parser in Python
-
-    Copyright (c) 2008-2022, Eli Bendersky
-    All rights reserved.
-
-    Redistribution and use in source and binary forms, with or without modification,
-    are permitted provided that the following conditions are met:
-
-    * Redistributions of source code must retain the above copyright notice, this 
-      list of conditions and the following disclaimer.
-    * Redistributions in binary form must reproduce the above copyright notice, 
-      this list of conditions and the following disclaimer in the documentation 
-      and/or other materials provided with the distribution.
-    * Neither the name of the copyright holder nor the names of its contributors may 
-      be used to endorse or promote products derived from this software without 
-      specific prior written permission.
-
-    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
-    ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED 
-    WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE 
-    DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE 
-    LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR 
-    CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE 
-    GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
-    HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT 
-    LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT 
-    OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
----
-### azure-identity
-
-    Copyright (c) Microsoft Corporation.
-
-    MIT License
-
-    Permission is hereby granted, free of charge, to any person obtaining a copy
-    of this software and associated documentation files (the "Software"), to deal
-    in the Software without restriction, including without limitation the rights
-    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-    copies of the Software, and to permit persons to whom the Software is
-    furnished to do so, subject to the following conditions:
-
-    The above copyright notice and this permission notice shall be included in all
-    copies or substantial portions of the Software.
-
-    THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-    SOFTWARE.
-
----
-### msal-extensions
-
-    MIT License
-
-    Copyright (c) Microsoft Corporation. All rights reserved.
-
-    Permission is hereby granted, free of charge, to any person obtaining a copy
-    of this software and associated documentation files (the "Software"), to deal
-    in the Software without restriction, including without limitation the rights
-    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-    copies of the Software, and to permit persons to whom the Software is
-    furnished to do so, subject to the following conditions:
-
-    The above copyright notice and this permission notice shall be included in all
-    copies or substantial portions of the Software.
-
-    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-    SOFTWARE
-
----
-### msal
-
-    The MIT License (MIT)
-
-    Copyright (c) Microsoft Corporation. 
-    All rights reserved.
-
-    This code is licensed under the MIT License.
-
-    Permission is hereby granted, free of charge, to any person obtaining a copy
-    of this software and associated documentation files(the "Software"), to deal
-    in the Software without restriction, including without limitation the rights
-    to use, copy, modify, merge, publish, distribute, sublicense, and / or sell
-    copies of the Software, and to permit persons to whom the Software is
-    furnished to do so, subject to the following conditions :
-
-    The above copyright notice and this permission notice shall be included in
-    all copies or substantial portions of the Software.
-
-    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.IN NO EVENT SHALL THE
-    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-    THE SOFTWARE.
-
----
 ### PyJWT
 
     The MIT License (MIT)
@@ -3597,12 +4872,36 @@
 
     A full list of contributors can be found on GitHub’s `overview <https://github.com/jpadilla/pyjwt/graphs/contributors>`_.
 
----
-### azure-core
+### pytest
 
-    Copyright (c) Microsoft Corporation.
+    The MIT License (MIT)
 
-    MIT License
+    Copyright (c) 2004 Holger Krekel and others
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy of
+    this software and associated documentation files (the "Software"), to deal in
+    the Software without restriction, including without limitation the rights to
+    use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+    of the Software, and to permit persons to whom the Software is furnished to do
+    so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in all
+    copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+    SOFTWARE.
+
+### pytest-order
+
+    The MIT License (MIT)
+
+    Copyright (c) 2014 Frank Tobia.
+    Modifications copyright 2020- by contributors, as listed in AUTHORS.
 
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"), to deal
@@ -3614,7 +4913,7 @@
     The above copyright notice and this permission notice shall be included in all
     copies or substantial portions of the Software.
 
-    THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
     IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
     FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
     AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
@@ -3622,323 +4921,6 @@
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
     SOFTWARE.
 
----
-### neomodel
-
-    The MIT License (MIT)
-
-    Copyright 2013 Robin Edwards and other contributors
-
-    Permission is hereby granted, free of charge, to any person obtaining
-    a copy of this software and associated documentation files (the
-    "Software"), to deal in the Software without restriction, including
-    without limitation the rights to use, copy, modify, merge, publish,
-    distribute, sublicense, and/or sell copies of the Software, and to
-    permit persons to whom the Software is furnished to do so, subject to
-    the following conditions:
-
-    The above copyright notice and this permission notice shall be
-    included in all copies or substantial portions of the Software.
-
-    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-    EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-    MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-    NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-    LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
-    OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
-    WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-    Dave Vernon - https://github.com/the4thv
-    Laura Willis - https://github.com/laurawillis
-    Marianna Polatoglou - https://github.com/mar-chi-pan
-    Murtaza Gulamali - https://github.com/mygulamali
-    Nigel Small - https://github.com/nigelsmall
-    Panos Katseas - https://github.com/pkatseas
-    Peter Neubauer - https://github.com/peterneubauer
-    Rafael Pivato - https://github.com/rafaelpivato
-    Robin Edwards - https://github.com/robinedwards
-    Romain Thalineau - https://github.com/romaintha
-    Sam Millar - https://github.com/millr
-    Siddharth Maheshwari - https://github.com/siddharthm
-    Tony Landis - https://github.com/tony-landis
-    Wes Freeman - https://github.com/wfreeman
-    Laurie Clark-Michalek - https://github.com/bluepeppers
-
----
-### neo4j
-
-                                  Apache License
-                            Version 2.0, January 2004
-                         https://www.apache.org/licenses/
-
-    TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
-
-    1. Definitions.
-
-       "License" shall mean the terms and conditions for use, reproduction,
-       and distribution as defined by Sections 1 through 9 of this document.
-
-       "Licensor" shall mean the copyright owner or entity authorized by
-       the copyright owner that is granting the License.
-
-       "Legal Entity" shall mean the union of the acting entity and all
-       other entities that control, are controlled by, or are under common
-       control with that entity. For the purposes of this definition,
-       "control" means (i) the power, direct or indirect, to cause the
-       direction or management of such entity, whether by contract or
-       otherwise, or (ii) ownership of fifty percent (50%) or more of the
-       outstanding shares, or (iii) beneficial ownership of such entity.
-
-       "You" (or "Your") shall mean an individual or Legal Entity
-       exercising permissions granted by this License.
-
-       "Source" form shall mean the preferred form for making modifications,
-       including but not limited to software source code, documentation
-       source, and configuration files.
-
-       "Object" form shall mean any form resulting from mechanical
-       transformation or translation of a Source form, including but
-       not limited to compiled object code, generated documentation,
-       and conversions to other media types.
-
-       "Work" shall mean the work of authorship, whether in Source or
-       Object form, made available under the License, as indicated by a
-       copyright notice that is included in or attached to the work
-       (an example is provided in the Appendix below).
-
-       "Derivative Works" shall mean any work, whether in Source or Object
-       form, that is based on (or derived from) the Work and for which the
-       editorial revisions, annotations, elaborations, or other modifications
-       represent, as a whole, an original work of authorship. For the purposes
-       of this License, Derivative Works shall not include works that remain
-       separable from, or merely link (or bind by name) to the interfaces of,
-       the Work and Derivative Works thereof.
-
-       "Contribution" shall mean any work of authorship, including
-       the original version of the Work and any modifications or additions
-       to that Work or Derivative Works thereof, that is intentionally
-       submitted to Licensor for inclusion in the Work by the copyright owner
-       or by an individual or Legal Entity authorized to submit on behalf of
-       the copyright owner. For the purposes of this definition, "submitted"
-       means any form of electronic, verbal, or written communication sent
-       to the Licensor or its representatives, including but not limited to
-       communication on electronic mailing lists, source code control systems,
-       and issue tracking systems that are managed by, or on behalf of, the
-       Licensor for the purpose of discussing and improving the Work, but
-       excluding communication that is conspicuously marked or otherwise
-       designated in writing by the copyright owner as "Not a Contribution."
-
-       "Contributor" shall mean Licensor and any individual or Legal Entity
-       on behalf of whom a Contribution has been received by Licensor and
-       subsequently incorporated within the Work.
-
-    2. Grant of Copyright License. Subject to the terms and conditions of
-       this License, each Contributor hereby grants to You a perpetual,
-       worldwide, non-exclusive, no-charge, royalty-free, irrevocable
-       copyright license to reproduce, prepare Derivative Works of,
-       publicly display, publicly perform, sublicense, and distribute the
-       Work and such Derivative Works in Source or Object form.
-
-    3. Grant of Patent License. Subject to the terms and conditions of
-       this License, each Contributor hereby grants to You a perpetual,
-       worldwide, non-exclusive, no-charge, royalty-free, irrevocable
-       (except as stated in this section) patent license to make, have made,
-       use, offer to sell, sell, import, and otherwise transfer the Work,
-       where such license applies only to those patent claims licensable
-       by such Contributor that are necessarily infringed by their
-       Contribution(s) alone or by combination of their Contribution(s)
-       with the Work to which such Contribution(s) was submitted. If You
-       institute patent litigation against any entity (including a
-       cross-claim or counterclaim in a lawsuit) alleging that the Work
-       or a Contribution incorporated within the Work constitutes direct
-       or contributory patent infringement, then any patent licenses
-       granted to You under this License for that Work shall terminate
-       as of the date such litigation is filed.
-
-    4. Redistribution. You may reproduce and distribute copies of the
-       Work or Derivative Works thereof in any medium, with or without
-       modifications, and in Source or Object form, provided that You
-       meet the following conditions:
-
-       (a) You must give any other recipients of the Work or
-           Derivative Works a copy of this License; and
-
-       (b) You must cause any modified files to carry prominent notices
-           stating that You changed the files; and
-
-       (c) You must retain, in the Source form of any Derivative Works
-           that You distribute, all copyright, patent, trademark, and
-           attribution notices from the Source form of the Work,
-           excluding those notices that do not pertain to any part of
-           the Derivative Works; and
-
-       (d) If the Work includes a "NOTICE" text file as part of its
-           distribution, then any Derivative Works that You distribute must
-           include a readable copy of the attribution notices contained
-           within such NOTICE file, excluding those notices that do not
-           pertain to any part of the Derivative Works, in at least one
-           of the following places: within a NOTICE text file distributed
-           as part of the Derivative Works; within the Source form or
-           documentation, if provided along with the Derivative Works; or,
-           within a display generated by the Derivative Works, if and
-           wherever such third-party notices normally appear. The contents
-           of the NOTICE file are for informational purposes only and
-           do not modify the License. You may add Your own attribution
-           notices within Derivative Works that You distribute, alongside
-           or as an addendum to the NOTICE text from the Work, provided
-           that such additional attribution notices cannot be construed
-           as modifying the License.
-
-       You may add Your own copyright statement to Your modifications and
-       may provide additional or different license terms and conditions
-       for use, reproduction, or distribution of Your modifications, or
-       for any such Derivative Works as a whole, provided Your use,
-       reproduction, and distribution of the Work otherwise complies with
-       the conditions stated in this License.
-
-    5. Submission of Contributions. Unless You explicitly state otherwise,
-       any Contribution intentionally submitted for inclusion in the Work
-       by You to the Licensor shall be under the terms and conditions of
-       this License, without any additional terms or conditions.
-       Notwithstanding the above, nothing herein shall supersede or modify
-       the terms of any separate license agreement you may have executed
-       with Licensor regarding such Contributions.
-
-    6. Trademarks. This License does not grant permission to use the trade
-       names, trademarks, service marks, or product names of the Licensor,
-       except as required for reasonable and customary use in describing the
-       origin of the Work and reproducing the content of the NOTICE file.
-
-    7. Disclaimer of Warranty. Unless required by applicable law or
-       agreed to in writing, Licensor provides the Work (and each
-       Contributor provides its Contributions) on an "AS IS" BASIS,
-       WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
-       implied, including, without limitation, any warranties or conditions
-       of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A
-       PARTICULAR PURPOSE. You are solely responsible for determining the
-       appropriateness of using or redistributing the Work and assume any
-       risks associated with Your exercise of permissions under this License.
-
-    8. Limitation of Liability. In no event and under no legal theory,
-       whether in tort (including negligence), contract, or otherwise,
-       unless required by applicable law (such as deliberate and grossly
-       negligent acts) or agreed to in writing, shall any Contributor be
-       liable to You for damages, including any direct, indirect, special,
-       incidental, or consequential damages of any character arising as a
-       result of this License or out of the use or inability to use the
-       Work (including but not limited to damages for loss of goodwill,
-       work stoppage, computer failure or malfunction, or any and all
-       other commercial damages or losses), even if such Contributor
-       has been advised of the possibility of such damages.
-
-    9. Accepting Warranty or Additional Liability. While redistributing
-       the Work or Derivative Works thereof, You may choose to offer,
-       and charge a fee for, acceptance of support, warranty, indemnity,
-       or other liability obligations and/or rights consistent with this
-       License. However, in accepting such obligations, You may act only
-       on Your own behalf and on Your sole responsibility, not on behalf
-       of any other Contributor, and only if You agree to indemnify,
-       defend, and hold each Contributor harmless for any liability
-       incurred by, or claims asserted against, such Contributor by reason
-       of your accepting any such warranty or additional liability.
-
-    END OF TERMS AND CONDITIONS
-
-    APPENDIX: How to apply the Apache License to your work.
-
-       To apply the Apache License to your work, attach the following
-       boilerplate notice, with the fields enclosed by brackets "[]"
-       replaced with your own identifying information. (Don't include
-       the brackets!)  The text should be enclosed in the appropriate
-       comment syntax for the file format. We also recommend that a
-       file or class name and description of purpose be included on the
-       same "printed page" as the copyright notice for easier
-       identification within third-party archives.
-
-    Copyright [yyyy] [name of copyright owner]
-
-    Licensed under the Apache License, Version 2.0 (the "License");
-    you may not use this file except in compliance with the License.
-    You may obtain a copy of the License at
-
-        https://www.apache.org/licenses/LICENSE-2.0
-
-    Unless required by applicable law or agreed to in writing, software
-    distributed under the License is distributed on an "AS IS" BASIS,
-    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    See the License for the specific language governing permissions and
-    limitations under the License.
-
-    Python software and documentation are licensed under the
-    Python Software Foundation License Version 2.
-
-    Starting with Python 3.8.6, examples, recipes, and other code in
-    the documentation are dual licensed under the PSF License Version 2
-    and the Zero-Clause BSD license.
-
-
-    PYTHON SOFTWARE FOUNDATION LICENSE VERSION 2
-    --------------------------------------------
-
-    1. This LICENSE AGREEMENT is between the Python Software Foundation
-    ("PSF"), and the Individual or Organization ("Licensee") accessing and
-    otherwise using this software ("Python") in source or binary form and
-    its associated documentation.
-
-    2. Subject to the terms and conditions of this License Agreement, PSF hereby
-    grants Licensee a nonexclusive, royalty-free, world-wide license to reproduce,
-    analyze, test, perform and/or display publicly, prepare derivative works,
-    distribute, and otherwise use Python alone or in any derivative version,
-    provided, however, that PSF's License Agreement and PSF's notice of copyright,
-    i.e., "Copyright (c) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
-    2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022 Python Software Foundation;
-    All Rights Reserved" are retained in Python alone or in any derivative version
-    prepared by Licensee.
-
-    3. In the event Licensee prepares a derivative work that is based on
-    or incorporates Python or any part thereof, and wants to make
-    the derivative work available to others as provided herein, then
-    Licensee hereby agrees to include in any such work a brief summary of
-    the changes made to Python.
-
-    4. PSF is making Python available to Licensee on an "AS IS"
-    basis.  PSF MAKES NO REPRESENTATIONS OR WARRANTIES, EXPRESS OR
-    IMPLIED.  BY WAY OF EXAMPLE, BUT NOT LIMITATION, PSF MAKES NO AND
-    DISCLAIMS ANY REPRESENTATION OR WARRANTY OF MERCHANTABILITY OR FITNESS
-    FOR ANY PARTICULAR PURPOSE OR THAT THE USE OF PYTHON WILL NOT
-    INFRINGE ANY THIRD PARTY RIGHTS.
-
-    5. PSF SHALL NOT BE LIABLE TO LICENSEE OR ANY OTHER USERS OF PYTHON
-    FOR ANY INCIDENTAL, SPECIAL, OR CONSEQUENTIAL DAMAGES OR LOSS AS
-    A RESULT OF MODIFYING, DISTRIBUTING, OR OTHERWISE USING PYTHON,
-    OR ANY DERIVATIVE THEREOF, EVEN IF ADVISED OF THE POSSIBILITY THEREOF.
-
-    6. This License Agreement will automatically terminate upon a material
-    breach of its terms and conditions.
-
-    7. Nothing in this License Agreement shall be deemed to create any
-    relationship of agency, partnership, or joint venture between PSF and
-    Licensee.  This License Agreement does not grant permission to use PSF
-    trademarks or trade name in a trademark sense to endorse or promote
-    products or services of Licensee, or any third party.
-
-    8. By copying, installing or otherwise using Python, Licensee
-    agrees to be bound by the terms and conditions of this License
-    Agreement.
-
-    Unless stated otherwise, this software is distributed under the terms of the Apache License 2.0.
-    See the LICENSE.APACHE2.txt file for the full license text.
-
-    Parts of this software is distributed under the terms of the Python Software Foundation License Version 2.
-    See the LICENSE.PYTHON.txt file for the full license text.
-    The pieces of code covered by the Python Software Foundation License Version 2 are marked as such.
-
-    Neo4j
-    Copyright (c) Neo4j Sweden AB (referred to in this notice as "Neo4j") [https://neo4j.com]
-
-    This product includes software ("Software") developed by Neo4j
-
----
 ### pytz
 
     Copyright (c) 2003-2019 Stuart Bishop <stuart@stuartbishop.net>
@@ -3961,1297 +4943,17 @@
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
     DEALINGS IN THE SOFTWARE.
 
----
-### Jinja2
-
-    Copyright 2007 Pallets
-
-    Redistribution and use in source and binary forms, with or without
-    modification, are permitted provided that the following conditions are
-    met:
-
-    1.  Redistributions of source code must retain the above copyright
-        notice, this list of conditions and the following disclaimer.
-
-    2.  Redistributions in binary form must reproduce the above copyright
-        notice, this list of conditions and the following disclaimer in the
-        documentation and/or other materials provided with the distribution.
-
-    3.  Neither the name of the copyright holder nor the names of its
-        contributors may be used to endorse or promote products derived from
-        this software without specific prior written permission.
-
-    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-    "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-    LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
-    PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-    HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-    SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
-    TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-    PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-    LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-    NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
----
-### MarkupSafe
-
-    Copyright 2010 Pallets
-
-    Redistribution and use in source and binary forms, with or without
-    modification, are permitted provided that the following conditions are
-    met:
-
-    1.  Redistributions of source code must retain the above copyright
-        notice, this list of conditions and the following disclaimer.
-
-    2.  Redistributions in binary form must reproduce the above copyright
-        notice, this list of conditions and the following disclaimer in the
-        documentation and/or other materials provided with the distribution.
-
-    3.  Neither the name of the copyright holder nor the names of its
-        contributors may be used to endorse or promote products derived from
-        this software without specific prior written permission.
-
-    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-    "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-    LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
-    PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-    HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-    SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
-    TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-    PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-    LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-    NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
----
-### httpx
-
-    Copyright © 2019, [Encode OSS Ltd](https://www.encode.io/).
-    All rights reserved.
-
-    Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
-
-    * Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
-
-    * Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
-
-    * Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
-
-    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
----
-### httpcore
-
-    Copyright © 2020, [Encode OSS Ltd](https://www.encode.io/).
-    All rights reserved.
-
-    Redistribution and use in source and binary forms, with or without
-    modification, are permitted provided that the following conditions are met:
-
-    * Redistributions of source code must retain the above copyright notice, this
-      list of conditions and the following disclaimer.
-
-    * Redistributions in binary form must reproduce the above copyright notice,
-      this list of conditions and the following disclaimer in the documentation
-      and/or other materials provided with the distribution.
-
-    * Neither the name of the copyright holder nor the names of its
-      contributors may be used to endorse or promote products derived from
-      this software without specific prior written permission.
-
-    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-    AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-    IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-    DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-    FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-    DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-    SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-    CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-    OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-    OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
----
-### h11
-
-    The MIT License (MIT)
-
-    Copyright (c) 2016 Nathaniel J. Smith <njs@pobox.com> and other contributors
-
-    Permission is hereby granted, free of charge, to any person obtaining
-    a copy of this software and associated documentation files (the
-    "Software"), to deal in the Software without restriction, including
-    without limitation the rights to use, copy, modify, merge, publish,
-    distribute, sublicense, and/or sell copies of the Software, and to
-    permit persons to whom the Software is furnished to do so, subject to
-    the following conditions:
-
-    The above copyright notice and this permission notice shall be
-    included in all copies or substantial portions of the Software.
-
-    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-    EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-    MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-    NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-    LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
-    OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
-    WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
----
-### Authlib
-
-    BSD 3-Clause License
-
-    Copyright (c) 2017, Hsiaoming Yang
-    All rights reserved.
-
-    Redistribution and use in source and binary forms, with or without
-    modification, are permitted provided that the following conditions are met:
-
-    * Redistributions of source code must retain the above copyright notice, this
-      list of conditions and the following disclaimer.
-
-    * Redistributions in binary form must reproduce the above copyright notice,
-      this list of conditions and the following disclaimer in the documentation
-      and/or other materials provided with the distribution.
-
-    * Neither the name of the copyright holder nor the names of its
-      contributors may be used to endorse or promote products derived from
-      this software without specific prior written permission.
-
-    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-    AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-    IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-    DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-    FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-    DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-    SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-    CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-    OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-    OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
----
-### joserfc
-
-    BSD 3-Clause License
-
-    Copyright (c) 2023, Hsiaoming Yang
-
-    Redistribution and use in source and binary forms, with or without
-    modification, are permitted provided that the following conditions are met:
-
-    1. Redistributions of source code must retain the above copyright notice, this
-       list of conditions and the following disclaimer.
-
-    2. Redistributions in binary form must reproduce the above copyright notice,
-       this list of conditions and the following disclaimer in the documentation
-       and/or other materials provided with the distribution.
-
-    3. Neither the name of the copyright holder nor the names of its
-       contributors may be used to endorse or promote products derived from
-       this software without specific prior written permission.
-
-    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-    AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-    IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-    DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-    FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-    DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-    SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-    CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-    OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-    OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
----
-### aiohttp
-
-    Apache License
-                               Version 2.0, January 2004
-                            http://www.apache.org/licenses/
-
-       TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
-
-       1. Definitions.
-
-          "License" shall mean the terms and conditions for use, reproduction,
-          and distribution as defined by Sections 1 through 9 of this document.
-
-          "Licensor" shall mean the copyright owner or entity authorized by
-          the copyright owner that is granting the License.
-
-          "Legal Entity" shall mean the union of the acting entity and all
-          other entities that control, are controlled by, or are under common
-          control with that entity. For the purposes of this definition,
-          "control" means (i) the power, direct or indirect, to cause the
-          direction or management of such entity, whether by contract or
-          otherwise, or (ii) ownership of fifty percent (50%) or more of the
-          outstanding shares, or (iii) beneficial ownership of such entity.
-
-          "You" (or "Your") shall mean an individual or Legal Entity
-          exercising permissions granted by this License.
-
-          "Source" form shall mean the preferred form for making modifications,
-          including but not limited to software source code, documentation
-          source, and configuration files.
-
-          "Object" form shall mean any form resulting from mechanical
-          transformation or translation of a Source form, including but
-          not limited to compiled object code, generated documentation,
-          and conversions to other media types.
-
-          "Work" shall mean the work of authorship, whether in Source or
-          Object form, made available under the License, as indicated by a
-          copyright notice that is included in or attached to the work
-          (an example is provided in the Appendix below).
-
-          "Derivative Works" shall mean any work, whether in Source or Object
-          form, that is based on (or derived from) the Work and for which the
-          editorial revisions, annotations, elaborations, or other modifications
-          represent, as a whole, an original work of authorship. For the purposes
-          of this License, Derivative Works shall not include works that remain
-          separable from, or merely link (or bind by name) to the interfaces of,
-          the Work and Derivative Works thereof.
-
-          "Contribution" shall mean any work of authorship, including
-          the original version of the Work and any modifications or additions
-          to that Work or Derivative Works thereof, that is intentionally
-          submitted to Licensor for inclusion in the Work by the copyright owner
-          or by an individual or Legal Entity authorized to submit on behalf of
-          the copyright owner. For the purposes of this definition, "submitted"
-          means any form of electronic, verbal, or written communication sent
-          to the Licensor or its representatives, including but not limited to
-          communication on electronic mailing lists, source code control systems,
-          and issue tracking systems that are managed by, or on behalf of, the
-          Licensor for the purpose of discussing and improving the Work, but
-          excluding communication that is conspicuously marked or otherwise
-          designated in writing by the copyright owner as "Not a Contribution."
-
-          "Contributor" shall mean Licensor and any individual or Legal Entity
-          on behalf of whom a Contribution has been received by Licensor and
-          subsequently incorporated within the Work.
-
-       2. Grant of Copyright License. Subject to the terms and conditions of
-          this License, each Contributor hereby grants to You a perpetual,
-          worldwide, non-exclusive, no-charge, royalty-free, irrevocable
-          copyright license to reproduce, prepare Derivative Works of,
-          publicly display, publicly perform, sublicense, and distribute the
-          Work and such Derivative Works in Source or Object form.
-
-       3. Grant of Patent License. Subject to the terms and conditions of
-          this License, each Contributor hereby grants to You a perpetual,
-          worldwide, non-exclusive, no-charge, royalty-free, irrevocable
-          (except as stated in this section) patent license to make, have made,
-          use, offer to sell, sell, import, and otherwise transfer the Work,
-          where such license applies only to those patent claims licensable
-          by such Contributor that are necessarily infringed by their
-          Contribution(s) alone or by combination of their Contribution(s)
-          with the Work to which such Contribution(s) was submitted. If You
-          institute patent litigation against any entity (including a
-          cross-claim or counterclaim in a lawsuit) alleging that the Work
-          or a Contribution incorporated within the Work constitutes direct
-          or contributory patent infringement, then any patent licenses
-          granted to You under this License for that Work shall terminate
-          as of the date such litigation is filed.
-
-       4. Redistribution. You may reproduce and distribute copies of the
-          Work or Derivative Works thereof in any medium, with or without
-          modifications, and in Source or Object form, provided that You
-          meet the following conditions:
-
-          (a) You must give any other recipients of the Work or
-              Derivative Works a copy of this License; and
-
-          (b) You must cause any modified files to carry prominent notices
-              stating that You changed the files; and
-
-          (c) You must retain, in the Source form of any Derivative Works
-              that You distribute, all copyright, patent, trademark, and
-              attribution notices from the Source form of the Work,
-              excluding those notices that do not pertain to any part of
-              the Derivative Works; and
-
-          (d) If the Work includes a "NOTICE" text file as part of its
-              distribution, then any Derivative Works that You distribute must
-              include a readable copy of the attribution notices contained
-              within such NOTICE file, excluding those notices that do not
-              pertain to any part of the Derivative Works, in at least one
-              of the following places: within a NOTICE text file distributed
-              as part of the Derivative Works; within the Source form or
-              documentation, if provided along with the Derivative Works; or,
-              within a display generated by the Derivative Works, if and
-              wherever such third-party notices normally appear. The contents
-              of the NOTICE file are for informational purposes only and
-              do not modify the License. You may add Your own attribution
-              notices within Derivative Works that You distribute, alongside
-              or as an addendum to the NOTICE text from the Work, provided
-              that such additional attribution notices cannot be construed
-              as modifying the License.
-
-          You may add Your own copyright statement to Your modifications and
-          may provide additional or different license terms and conditions
-          for use, reproduction, or distribution of Your modifications, or
-          for any such Derivative Works as a whole, provided Your use,
-          reproduction, and distribution of the Work otherwise complies with
-          the conditions stated in this License.
-
-       5. Submission of Contributions. Unless You explicitly state otherwise,
-          any Contribution intentionally submitted for inclusion in the Work
-          by You to the Licensor shall be under the terms and conditions of
-          this License, without any additional terms or conditions.
-          Notwithstanding the above, nothing herein shall supersede or modify
-          the terms of any separate license agreement you may have executed
-          with Licensor regarding such Contributions.
-
-       6. Trademarks. This License does not grant permission to use the trade
-          names, trademarks, service marks, or product names of the Licensor,
-          except as required for reasonable and customary use in describing the
-          origin of the Work and reproducing the content of the NOTICE file.
-
-       7. Disclaimer of Warranty. Unless required by applicable law or
-          agreed to in writing, Licensor provides the Work (and each
-          Contributor provides its Contributions) on an "AS IS" BASIS,
-          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
-          implied, including, without limitation, any warranties or conditions
-          of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A
-          PARTICULAR PURPOSE. You are solely responsible for determining the
-          appropriateness of using or redistributing the Work and assume any
-          risks associated with Your exercise of permissions under this License.
-
-       8. Limitation of Liability. In no event and under no legal theory,
-          whether in tort (including negligence), contract, or otherwise,
-          unless required by applicable law (such as deliberate and grossly
-          negligent acts) or agreed to in writing, shall any Contributor be
-          liable to You for damages, including any direct, indirect, special,
-          incidental, or consequential damages of any character arising as a
-          result of this License or out of the use or inability to use the
-          Work (including but not limited to damages for loss of goodwill,
-          work stoppage, computer failure or malfunction, or any and all
-          other commercial damages or losses), even if such Contributor
-          has been advised of the possibility of such damages.
-
-       9. Accepting Warranty or Additional Liability. While redistributing
-          the Work or Derivative Works thereof, You may choose to offer,
-          and charge a fee for, acceptance of support, warranty, indemnity,
-          or other liability obligations and/or rights consistent with this
-          License. However, in accepting such obligations, You may act only
-          on Your own behalf and on Your sole responsibility, not on behalf
-          of any other Contributor, and only if You agree to indemnify,
-          defend, and hold each Contributor harmless for any liability
-          incurred by, or claims asserted against, such Contributor by reason
-          of your accepting any such warranty or additional liability.
-
-       END OF TERMS AND CONDITIONS
-
-       APPENDIX: How to apply the Apache License to your work.
-
-          To apply the Apache License to your work, attach the following
-          boilerplate notice, with the fields enclosed by brackets "{}"
-          replaced with your own identifying information. (Don't include
-          the brackets!)  The text should be enclosed in the appropriate
-          comment syntax for the file format. We also recommend that a
-          file or class name and description of purpose be included on the
-          same "printed page" as the copyright notice for easier
-          identification within third-party archives.
-
-       Copyright aio-libs contributors
-
-       Licensed under the Apache License, Version 2.0 (the "License");
-       you may not use this file except in compliance with the License.
-       You may obtain a copy of the License at
-
-           http://www.apache.org/licenses/LICENSE-2.0
-
-       Unless required by applicable law or agreed to in writing, software
-       distributed under the License is distributed on an "AS IS" BASIS,
-       WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-       See the License for the specific language governing permissions and
-       limitations under the License.
-
-    MIT License
-
-    Copyright © 2018 Fedor Indutny
-
-    Permission is hereby granted, free of charge, to any person obtaining a
-    copy of this software and associated documentation files (the
-    "Software"), to deal in the Software without restriction, including
-    without limitation the rights to use, copy, modify, merge, publish,
-    distribute, sublicense, and/or sell copies of the Software, and to permit
-    persons to whom the Software is furnished to do so, subject to the
-    following conditions:
-
-    The above copyright notice and this permission notice shall be included
-    in all copies or substantial portions of the Software.
-
-    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-    OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-    MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
-    NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-    DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-    OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
-    USE OR OTHER DEALINGS IN THE SOFTWARE.
-
----
-### yarl
-
-                                  Apache License
-                            Version 2.0, January 2004
-                         http://www.apache.org/licenses/
-
-    TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
-
-    1. Definitions.
-
-       "License" shall mean the terms and conditions for use, reproduction,
-       and distribution as defined by Sections 1 through 9 of this document.
-
-       "Licensor" shall mean the copyright owner or entity authorized by
-       the copyright owner that is granting the License.
-
-       "Legal Entity" shall mean the union of the acting entity and all
-       other entities that control, are controlled by, or are under common
-       control with that entity. For the purposes of this definition,
-       "control" means (i) the power, direct or indirect, to cause the
-       direction or management of such entity, whether by contract or
-       otherwise, or (ii) ownership of fifty percent (50%) or more of the
-       outstanding shares, or (iii) beneficial ownership of such entity.
-
-       "You" (or "Your") shall mean an individual or Legal Entity
-       exercising permissions granted by this License.
-
-       "Source" form shall mean the preferred form for making modifications,
-       including but not limited to software source code, documentation
-       source, and configuration files.
-
-       "Object" form shall mean any form resulting from mechanical
-       transformation or translation of a Source form, including but
-       not limited to compiled object code, generated documentation,
-       and conversions to other media types.
-
-       "Work" shall mean the work of authorship, whether in Source or
-       Object form, made available under the License, as indicated by a
-       copyright notice that is included in or attached to the work
-       (an example is provided in the Appendix below).
-
-       "Derivative Works" shall mean any work, whether in Source or Object
-       form, that is based on (or derived from) the Work and for which the
-       editorial revisions, annotations, elaborations, or other modifications
-       represent, as a whole, an original work of authorship. For the purposes
-       of this License, Derivative Works shall not include works that remain
-       separable from, or merely link (or bind by name) to the interfaces of,
-       the Work and Derivative Works thereof.
-
-       "Contribution" shall mean any work of authorship, including
-       the original version of the Work and any modifications or additions
-       to that Work or Derivative Works thereof, that is intentionally
-       submitted to Licensor for inclusion in the Work by the copyright owner
-       or by an individual or Legal Entity authorized to submit on behalf of
-       the copyright owner. For the purposes of this definition, "submitted"
-       means any form of electronic, verbal, or written communication sent
-       to the Licensor or its representatives, including but not limited to
-       communication on electronic mailing lists, source code control systems,
-       and issue tracking systems that are managed by, or on behalf of, the
-       Licensor for the purpose of discussing and improving the Work, but
-       excluding communication that is conspicuously marked or otherwise
-       designated in writing by the copyright owner as "Not a Contribution."
-
-       "Contributor" shall mean Licensor and any individual or Legal Entity
-       on behalf of whom a Contribution has been received by Licensor and
-       subsequently incorporated within the Work.
-
-    2. Grant of Copyright License. Subject to the terms and conditions of
-       this License, each Contributor hereby grants to You a perpetual,
-       worldwide, non-exclusive, no-charge, royalty-free, irrevocable
-       copyright license to reproduce, prepare Derivative Works of,
-       publicly display, publicly perform, sublicense, and distribute the
-       Work and such Derivative Works in Source or Object form.
-
-    3. Grant of Patent License. Subject to the terms and conditions of
-       this License, each Contributor hereby grants to You a perpetual,
-       worldwide, non-exclusive, no-charge, royalty-free, irrevocable
-       (except as stated in this section) patent license to make, have made,
-       use, offer to sell, sell, import, and otherwise transfer the Work,
-       where such license applies only to those patent claims licensable
-       by such Contributor that are necessarily infringed by their
-       Contribution(s) alone or by combination of their Contribution(s)
-       with the Work to which such Contribution(s) was submitted. If You
-       institute patent litigation against any entity (including a
-       cross-claim or counterclaim in a lawsuit) alleging that the Work
-       or a Contribution incorporated within the Work constitutes direct
-       or contributory patent infringement, then any patent licenses
-       granted to You under this License for that Work shall terminate
-       as of the date such litigation is filed.
-
-    4. Redistribution. You may reproduce and distribute copies of the
-       Work or Derivative Works thereof in any medium, with or without
-       modifications, and in Source or Object form, provided that You
-       meet the following conditions:
-
-       (a) You must give any other recipients of the Work or
-           Derivative Works a copy of this License; and
-
-       (b) You must cause any modified files to carry prominent notices
-           stating that You changed the files; and
-
-       (c) You must retain, in the Source form of any Derivative Works
-           that You distribute, all copyright, patent, trademark, and
-           attribution notices from the Source form of the Work,
-           excluding those notices that do not pertain to any part of
-           the Derivative Works; and
-
-       (d) If the Work includes a "NOTICE" text file as part of its
-           distribution, then any Derivative Works that You distribute must
-           include a readable copy of the attribution notices contained
-           within such NOTICE file, excluding those notices that do not
-           pertain to any part of the Derivative Works, in at least one
-           of the following places: within a NOTICE text file distributed
-           as part of the Derivative Works; within the Source form or
-           documentation, if provided along with the Derivative Works; or,
-           within a display generated by the Derivative Works, if and
-           wherever such third-party notices normally appear. The contents
-           of the NOTICE file are for informational purposes only and
-           do not modify the License. You may add Your own attribution
-           notices within Derivative Works that You distribute, alongside
-           or as an addendum to the NOTICE text from the Work, provided
-           that such additional attribution notices cannot be construed
-           as modifying the License.
-
-       You may add Your own copyright statement to Your modifications and
-       may provide additional or different license terms and conditions
-       for use, reproduction, or distribution of Your modifications, or
-       for any such Derivative Works as a whole, provided Your use,
-       reproduction, and distribution of the Work otherwise complies with
-       the conditions stated in this License.
-
-    5. Submission of Contributions. Unless You explicitly state otherwise,
-       any Contribution intentionally submitted for inclusion in the Work
-       by You to the Licensor shall be under the terms and conditions of
-       this License, without any additional terms or conditions.
-       Notwithstanding the above, nothing herein shall supersede or modify
-       the terms of any separate license agreement you may have executed
-       with Licensor regarding such Contributions.
-
-    6. Trademarks. This License does not grant permission to use the trade
-       names, trademarks, service marks, or product names of the Licensor,
-       except as required for reasonable and customary use in describing the
-       origin of the Work and reproducing the content of the NOTICE file.
-
-    7. Disclaimer of Warranty. Unless required by applicable law or
-       agreed to in writing, Licensor provides the Work (and each
-       Contributor provides its Contributions) on an "AS IS" BASIS,
-       WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
-       implied, including, without limitation, any warranties or conditions
-       of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A
-       PARTICULAR PURPOSE. You are solely responsible for determining the
-       appropriateness of using or redistributing the Work and assume any
-       risks associated with Your exercise of permissions under this License.
-
-    8. Limitation of Liability. In no event and under no legal theory,
-       whether in tort (including negligence), contract, or otherwise,
-       unless required by applicable law (such as deliberate and grossly
-       negligent acts) or agreed to in writing, shall any Contributor be
-       liable to You for damages, including any direct, indirect, special,
-       incidental, or consequential damages of any character arising as a
-       result of this License or out of the use or inability to use the
-       Work (including but not limited to damages for loss of goodwill,
-       work stoppage, computer failure or malfunction, or any and all
-       other commercial damages or losses), even if such Contributor
-       has been advised of the possibility of such damages.
-
-    9. Accepting Warranty or Additional Liability. While redistributing
-       the Work or Derivative Works thereof, You may choose to offer,
-       and charge a fee for, acceptance of support, warranty, indemnity,
-       or other liability obligations and/or rights consistent with this
-       License. However, in accepting such obligations, You may act only
-       on Your own behalf and on Your sole responsibility, not on behalf
-       of any other Contributor, and only if You agree to indemnify,
-       defend, and hold each Contributor harmless for any liability
-       incurred by, or claims asserted against, such Contributor by reason
-       of your accepting any such warranty or additional liability.
-
-    END OF TERMS AND CONDITIONS
-
-    APPENDIX: How to apply the Apache License to your work.
-
-       To apply the Apache License to your work, attach the following
-       boilerplate notice, with the fields enclosed by brackets "[]"
-       replaced with your own identifying information. (Don't include
-       the brackets!)  The text should be enclosed in the appropriate
-       comment syntax for the file format. We also recommend that a
-       file or class name and description of purpose be included on the
-       same "printed page" as the copyright notice for easier
-       identification within third-party archives.
-
-    Copyright [yyyy] [name of copyright owner]
-
-    Licensed under the Apache License, Version 2.0 (the "License");
-    you may not use this file except in compliance with the License.
-    You may obtain a copy of the License at
-
-        http://www.apache.org/licenses/LICENSE-2.0
-
-    Unless required by applicable law or agreed to in writing, software
-    distributed under the License is distributed on an "AS IS" BASIS,
-    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    See the License for the specific language governing permissions and
-    limitations under the License.
-
-    Copyright 2016-2021, Andrew Svetlov and aio-libs team
-
-    Licensed under the Apache License, Version 2.0 (the "License");
-    you may not use this file except in compliance with the License.
-    You may obtain a copy of the License at
-
-        http://www.apache.org/licenses/LICENSE-2.0
-
-    Unless required by applicable law or agreed to in writing, software
-    distributed under the License is distributed on an "AS IS" BASIS,
-    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    See the License for the specific language governing permissions and
-    limitations under the License.
-
----
-### propcache
-
-                                  Apache License
-                            Version 2.0, January 2004
-                         http://www.apache.org/licenses/
-
-    TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
-
-    1. Definitions.
-
-       "License" shall mean the terms and conditions for use, reproduction,
-       and distribution as defined by Sections 1 through 9 of this document.
-
-       "Licensor" shall mean the copyright owner or entity authorized by
-       the copyright owner that is granting the License.
-
-       "Legal Entity" shall mean the union of the acting entity and all
-       other entities that control, are controlled by, or are under common
-       control with that entity. For the purposes of this definition,
-       "control" means (i) the power, direct or indirect, to cause the
-       direction or management of such entity, whether by contract or
-       otherwise, or (ii) ownership of fifty percent (50%) or more of the
-       outstanding shares, or (iii) beneficial ownership of such entity.
-
-       "You" (or "Your") shall mean an individual or Legal Entity
-       exercising permissions granted by this License.
-
-       "Source" form shall mean the preferred form for making modifications,
-       including but not limited to software source code, documentation
-       source, and configuration files.
-
-       "Object" form shall mean any form resulting from mechanical
-       transformation or translation of a Source form, including but
-       not limited to compiled object code, generated documentation,
-       and conversions to other media types.
-
-       "Work" shall mean the work of authorship, whether in Source or
-       Object form, made available under the License, as indicated by a
-       copyright notice that is included in or attached to the work
-       (an example is provided in the Appendix below).
-
-       "Derivative Works" shall mean any work, whether in Source or Object
-       form, that is based on (or derived from) the Work and for which the
-       editorial revisions, annotations, elaborations, or other modifications
-       represent, as a whole, an original work of authorship. For the purposes
-       of this License, Derivative Works shall not include works that remain
-       separable from, or merely link (or bind by name) to the interfaces of,
-       the Work and Derivative Works thereof.
-
-       "Contribution" shall mean any work of authorship, including
-       the original version of the Work and any modifications or additions
-       to that Work or Derivative Works thereof, that is intentionally
-       submitted to Licensor for inclusion in the Work by the copyright owner
-       or by an individual or Legal Entity authorized to submit on behalf of
-       the copyright owner. For the purposes of this definition, "submitted"
-       means any form of electronic, verbal, or written communication sent
-       to the Licensor or its representatives, including but not limited to
-       communication on electronic mailing lists, source code control systems,
-       and issue tracking systems that are managed by, or on behalf of, the
-       Licensor for the purpose of discussing and improving the Work, but
-       excluding communication that is conspicuously marked or otherwise
-       designated in writing by the copyright owner as "Not a Contribution."
-
-       "Contributor" shall mean Licensor and any individual or Legal Entity
-       on behalf of whom a Contribution has been received by Licensor and
-       subsequently incorporated within the Work.
-
-    2. Grant of Copyright License. Subject to the terms and conditions of
-       this License, each Contributor hereby grants to You a perpetual,
-       worldwide, non-exclusive, no-charge, royalty-free, irrevocable
-       copyright license to reproduce, prepare Derivative Works of,
-       publicly display, publicly perform, sublicense, and distribute the
-       Work and such Derivative Works in Source or Object form.
-
-    3. Grant of Patent License. Subject to the terms and conditions of
-       this License, each Contributor hereby grants to You a perpetual,
-       worldwide, non-exclusive, no-charge, royalty-free, irrevocable
-       (except as stated in this section) patent license to make, have made,
-       use, offer to sell, sell, import, and otherwise transfer the Work,
-       where such license applies only to those patent claims licensable
-       by such Contributor that are necessarily infringed by their
-       Contribution(s) alone or by combination of their Contribution(s)
-       with the Work to which such Contribution(s) was submitted. If You
-       institute patent litigation against any entity (including a
-       cross-claim or counterclaim in a lawsuit) alleging that the Work
-       or a Contribution incorporated within the Work constitutes direct
-       or contributory patent infringement, then any patent licenses
-       granted to You under this License for that Work shall terminate
-       as of the date such litigation is filed.
-
-    4. Redistribution. You may reproduce and distribute copies of the
-       Work or Derivative Works thereof in any medium, with or without
-       modifications, and in Source or Object form, provided that You
-       meet the following conditions:
-
-       (a) You must give any other recipients of the Work or
-           Derivative Works a copy of this License; and
-
-       (b) You must cause any modified files to carry prominent notices
-           stating that You changed the files; and
-
-       (c) You must retain, in the Source form of any Derivative Works
-           that You distribute, all copyright, patent, trademark, and
-           attribution notices from the Source form of the Work,
-           excluding those notices that do not pertain to any part of
-           the Derivative Works; and
-
-       (d) If the Work includes a "NOTICE" text file as part of its
-           distribution, then any Derivative Works that You distribute must
-           include a readable copy of the attribution notices contained
-           within such NOTICE file, excluding those notices that do not
-           pertain to any part of the Derivative Works, in at least one
-           of the following places: within a NOTICE text file distributed
-           as part of the Derivative Works; within the Source form or
-           documentation, if provided along with the Derivative Works; or,
-           within a display generated by the Derivative Works, if and
-           wherever such third-party notices normally appear. The contents
-           of the NOTICE file are for informational purposes only and
-           do not modify the License. You may add Your own attribution
-           notices within Derivative Works that You distribute, alongside
-           or as an addendum to the NOTICE text from the Work, provided
-           that such additional attribution notices cannot be construed
-           as modifying the License.
-
-       You may add Your own copyright statement to Your modifications and
-       may provide additional or different license terms and conditions
-       for use, reproduction, or distribution of Your modifications, or
-       for any such Derivative Works as a whole, provided Your use,
-       reproduction, and distribution of the Work otherwise complies with
-       the conditions stated in this License.
-
-    5. Submission of Contributions. Unless You explicitly state otherwise,
-       any Contribution intentionally submitted for inclusion in the Work
-       by You to the Licensor shall be under the terms and conditions of
-       this License, without any additional terms or conditions.
-       Notwithstanding the above, nothing herein shall supersede or modify
-       the terms of any separate license agreement you may have executed
-       with Licensor regarding such Contributions.
-
-    6. Trademarks. This License does not grant permission to use the trade
-       names, trademarks, service marks, or product names of the Licensor,
-       except as required for reasonable and customary use in describing the
-       origin of the Work and reproducing the content of the NOTICE file.
-
-    7. Disclaimer of Warranty. Unless required by applicable law or
-       agreed to in writing, Licensor provides the Work (and each
-       Contributor provides its Contributions) on an "AS IS" BASIS,
-       WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
-       implied, including, without limitation, any warranties or conditions
-       of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A
-       PARTICULAR PURPOSE. You are solely responsible for determining the
-       appropriateness of using or redistributing the Work and assume any
-       risks associated with Your exercise of permissions under this License.
-
-    8. Limitation of Liability. In no event and under no legal theory,
-       whether in tort (including negligence), contract, or otherwise,
-       unless required by applicable law (such as deliberate and grossly
-       negligent acts) or agreed to in writing, shall any Contributor be
-       liable to You for damages, including any direct, indirect, special,
-       incidental, or consequential damages of any character arising as a
-       result of this License or out of the use or inability to use the
-       Work (including but not limited to damages for loss of goodwill,
-       work stoppage, computer failure or malfunction, or any and all
-       other commercial damages or losses), even if such Contributor
-       has been advised of the possibility of such damages.
-
-    9. Accepting Warranty or Additional Liability. While redistributing
-       the Work or Derivative Works thereof, You may choose to offer,
-       and charge a fee for, acceptance of support, warranty, indemnity,
-       or other liability obligations and/or rights consistent with this
-       License. However, in accepting such obligations, You may act only
-       on Your own behalf and on Your sole responsibility, not on behalf
-       of any other Contributor, and only if You agree to indemnify,
-       defend, and hold each Contributor harmless for any liability
-       incurred by, or claims asserted against, such Contributor by reason
-       of your accepting any such warranty or additional liability.
-
-    END OF TERMS AND CONDITIONS
-
-    APPENDIX: How to apply the Apache License to your work.
-
-       To apply the Apache License to your work, attach the following
-       boilerplate notice, with the fields enclosed by brackets "[]"
-       replaced with your own identifying information. (Don't include
-       the brackets!)  The text should be enclosed in the appropriate
-       comment syntax for the file format. We also recommend that a
-       file or class name and description of purpose be included on the
-       same "printed page" as the copyright notice for easier
-       identification within third-party archives.
-
-    Copyright [yyyy] [name of copyright owner]
-
-    Licensed under the Apache License, Version 2.0 (the "License");
-    you may not use this file except in compliance with the License.
-    You may obtain a copy of the License at
-
-        http://www.apache.org/licenses/LICENSE-2.0
-
-    Unless required by applicable law or agreed to in writing, software
-    distributed under the License is distributed on an "AS IS" BASIS,
-    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    See the License for the specific language governing permissions and
-    limitations under the License.
-
-    Copyright 2016-2021, Andrew Svetlov and aio-libs team
-
-    Licensed under the Apache License, Version 2.0 (the "License");
-    you may not use this file except in compliance with the License.
-    You may obtain a copy of the License at
-
-        http://www.apache.org/licenses/LICENSE-2.0
-
-    Unless required by applicable law or agreed to in writing, software
-    distributed under the License is distributed on an "AS IS" BASIS,
-    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    See the License for the specific language governing permissions and
-    limitations under the License.
-
----
-### multidict
-
-    Apache License
-                               Version 2.0, January 2004
-                            http://www.apache.org/licenses/
-
-       TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
-
-       1. Definitions.
-
-          "License" shall mean the terms and conditions for use, reproduction,
-          and distribution as defined by Sections 1 through 9 of this document.
-
-          "Licensor" shall mean the copyright owner or entity authorized by
-          the copyright owner that is granting the License.
-
-          "Legal Entity" shall mean the union of the acting entity and all
-          other entities that control, are controlled by, or are under common
-          control with that entity. For the purposes of this definition,
-          "control" means (i) the power, direct or indirect, to cause the
-          direction or management of such entity, whether by contract or
-          otherwise, or (ii) ownership of fifty percent (50%) or more of the
-          outstanding shares, or (iii) beneficial ownership of such entity.
-
-          "You" (or "Your") shall mean an individual or Legal Entity
-          exercising permissions granted by this License.
-
-          "Source" form shall mean the preferred form for making modifications,
-          including but not limited to software source code, documentation
-          source, and configuration files.
-
-          "Object" form shall mean any form resulting from mechanical
-          transformation or translation of a Source form, including but
-          not limited to compiled object code, generated documentation,
-          and conversions to other media types.
-
-          "Work" shall mean the work of authorship, whether in Source or
-          Object form, made available under the License, as indicated by a
-          copyright notice that is included in or attached to the work
-          (an example is provided in the Appendix below).
-
-          "Derivative Works" shall mean any work, whether in Source or Object
-          form, that is based on (or derived from) the Work and for which the
-          editorial revisions, annotations, elaborations, or other modifications
-          represent, as a whole, an original work of authorship. For the purposes
-          of this License, Derivative Works shall not include works that remain
-          separable from, or merely link (or bind by name) to the interfaces of,
-          the Work and Derivative Works thereof.
-
-          "Contribution" shall mean any work of authorship, including
-          the original version of the Work and any modifications or additions
-          to that Work or Derivative Works thereof, that is intentionally
-          submitted to Licensor for inclusion in the Work by the copyright owner
-          or by an individual or Legal Entity authorized to submit on behalf of
-          the copyright owner. For the purposes of this definition, "submitted"
-          means any form of electronic, verbal, or written communication sent
-          to the Licensor or its representatives, including but not limited to
-          communication on electronic mailing lists, source code control systems,
-          and issue tracking systems that are managed by, or on behalf of, the
-          Licensor for the purpose of discussing and improving the Work, but
-          excluding communication that is conspicuously marked or otherwise
-          designated in writing by the copyright owner as "Not a Contribution."
-
-          "Contributor" shall mean Licensor and any individual or Legal Entity
-          on behalf of whom a Contribution has been received by Licensor and
-          subsequently incorporated within the Work.
-
-       2. Grant of Copyright License. Subject to the terms and conditions of
-          this License, each Contributor hereby grants to You a perpetual,
-          worldwide, non-exclusive, no-charge, royalty-free, irrevocable
-          copyright license to reproduce, prepare Derivative Works of,
-          publicly display, publicly perform, sublicense, and distribute the
-          Work and such Derivative Works in Source or Object form.
-
-       3. Grant of Patent License. Subject to the terms and conditions of
-          this License, each Contributor hereby grants to You a perpetual,
-          worldwide, non-exclusive, no-charge, royalty-free, irrevocable
-          (except as stated in this section) patent license to make, have made,
-          use, offer to sell, sell, import, and otherwise transfer the Work,
-          where such license applies only to those patent claims licensable
-          by such Contributor that are necessarily infringed by their
-          Contribution(s) alone or by combination of their Contribution(s)
-          with the Work to which such Contribution(s) was submitted. If You
-          institute patent litigation against any entity (including a
-          cross-claim or counterclaim in a lawsuit) alleging that the Work
-          or a Contribution incorporated within the Work constitutes direct
-          or contributory patent infringement, then any patent licenses
-          granted to You under this License for that Work shall terminate
-          as of the date such litigation is filed.
-
-       4. Redistribution. You may reproduce and distribute copies of the
-          Work or Derivative Works thereof in any medium, with or without
-          modifications, and in Source or Object form, provided that You
-          meet the following conditions:
-
-          (a) You must give any other recipients of the Work or
-              Derivative Works a copy of this License; and
-
-          (b) You must cause any modified files to carry prominent notices
-              stating that You changed the files; and
-
-          (c) You must retain, in the Source form of any Derivative Works
-              that You distribute, all copyright, patent, trademark, and
-              attribution notices from the Source form of the Work,
-              excluding those notices that do not pertain to any part of
-              the Derivative Works; and
-
-          (d) If the Work includes a "NOTICE" text file as part of its
-              distribution, then any Derivative Works that You distribute must
-              include a readable copy of the attribution notices contained
-              within such NOTICE file, excluding those notices that do not
-              pertain to any part of the Derivative Works, in at least one
-              of the following places: within a NOTICE text file distributed
-              as part of the Derivative Works; within the Source form or
-              documentation, if provided along with the Derivative Works; or,
-              within a display generated by the Derivative Works, if and
-              wherever such third-party notices normally appear. The contents
-              of the NOTICE file are for informational purposes only and
-              do not modify the License. You may add Your own attribution
-              notices within Derivative Works that You distribute, alongside
-              or as an addendum to the NOTICE text from the Work, provided
-              that such additional attribution notices cannot be construed
-              as modifying the License.
-
-          You may add Your own copyright statement to Your modifications and
-          may provide additional or different license terms and conditions
-          for use, reproduction, or distribution of Your modifications, or
-          for any such Derivative Works as a whole, provided Your use,
-          reproduction, and distribution of the Work otherwise complies with
-          the conditions stated in this License.
-
-       5. Submission of Contributions. Unless You explicitly state otherwise,
-          any Contribution intentionally submitted for inclusion in the Work
-          by You to the Licensor shall be under the terms and conditions of
-          this License, without any additional terms or conditions.
-          Notwithstanding the above, nothing herein shall supersede or modify
-          the terms of any separate license agreement you may have executed
-          with Licensor regarding such Contributions.
-
-       6. Trademarks. This License does not grant permission to use the trade
-          names, trademarks, service marks, or product names of the Licensor,
-          except as required for reasonable and customary use in describing the
-          origin of the Work and reproducing the content of the NOTICE file.
-
-       7. Disclaimer of Warranty. Unless required by applicable law or
-          agreed to in writing, Licensor provides the Work (and each
-          Contributor provides its Contributions) on an "AS IS" BASIS,
-          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
-          implied, including, without limitation, any warranties or conditions
-          of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A
-          PARTICULAR PURPOSE. You are solely responsible for determining the
-          appropriateness of using or redistributing the Work and assume any
-          risks associated with Your exercise of permissions under this License.
-
-       8. Limitation of Liability. In no event and under no legal theory,
-          whether in tort (including negligence), contract, or otherwise,
-          unless required by applicable law (such as deliberate and grossly
-          negligent acts) or agreed to in writing, shall any Contributor be
-          liable to You for damages, including any direct, indirect, special,
-          incidental, or consequential damages of any character arising as a
-          result of this License or out of the use or inability to use the
-          Work (including but not limited to damages for loss of goodwill,
-          work stoppage, computer failure or malfunction, or any and all
-          other commercial damages or losses), even if such Contributor
-          has been advised of the possibility of such damages.
-
-       9. Accepting Warranty or Additional Liability. While redistributing
-          the Work or Derivative Works thereof, You may choose to offer,
-          and charge a fee for, acceptance of support, warranty, indemnity,
-          or other liability obligations and/or rights consistent with this
-          License. However, in accepting such obligations, You may act only
-          on Your own behalf and on Your sole responsibility, not on behalf
-          of any other Contributor, and only if You agree to indemnify,
-          defend, and hold each Contributor harmless for any liability
-          incurred by, or claims asserted against, such Contributor by reason
-          of your accepting any such warranty or additional liability.
-
-       END OF TERMS AND CONDITIONS
-
-       APPENDIX: How to apply the Apache License to your work.
-
-          To apply the Apache License to your work, attach the following
-          boilerplate notice, with the fields enclosed by brackets "{}"
-          replaced with your own identifying information. (Don't include
-          the brackets!)  The text should be enclosed in the appropriate
-          comment syntax for the file format. We also recommend that a
-          file or class name and description of purpose be included on the
-          same "printed page" as the copyright notice for easier
-          identification within third-party archives.
-
-       Copyright aio-libs contributors
-
-       Licensed under the Apache License, Version 2.0 (the "License");
-       you may not use this file except in compliance with the License.
-       You may obtain a copy of the License at
-
-           http://www.apache.org/licenses/LICENSE-2.0
-
-       Unless required by applicable law or agreed to in writing, software
-       distributed under the License is distributed on an "AS IS" BASIS,
-       WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-       See the License for the specific language governing permissions and
-       limitations under the License.
-
----
-### frozenlist
-
-    Apache License
-                               Version 2.0, January 2004
-                            http://www.apache.org/licenses/
-
-       TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
-
-       1. Definitions.
-
-          "License" shall mean the terms and conditions for use, reproduction,
-          and distribution as defined by Sections 1 through 9 of this document.
-
-          "Licensor" shall mean the copyright owner or entity authorized by
-          the copyright owner that is granting the License.
-
-          "Legal Entity" shall mean the union of the acting entity and all
-          other entities that control, are controlled by, or are under common
-          control with that entity. For the purposes of this definition,
-          "control" means (i) the power, direct or indirect, to cause the
-          direction or management of such entity, whether by contract or
-          otherwise, or (ii) ownership of fifty percent (50%) or more of the
-          outstanding shares, or (iii) beneficial ownership of such entity.
-
-          "You" (or "Your") shall mean an individual or Legal Entity
-          exercising permissions granted by this License.
-
-          "Source" form shall mean the preferred form for making modifications,
-          including but not limited to software source code, documentation
-          source, and configuration files.
-
-          "Object" form shall mean any form resulting from mechanical
-          transformation or translation of a Source form, including but
-          not limited to compiled object code, generated documentation,
-          and conversions to other media types.
-
-          "Work" shall mean the work of authorship, whether in Source or
-          Object form, made available under the License, as indicated by a
-          copyright notice that is included in or attached to the work
-          (an example is provided in the Appendix below).
-
-          "Derivative Works" shall mean any work, whether in Source or Object
-          form, that is based on (or derived from) the Work and for which the
-          editorial revisions, annotations, elaborations, or other modifications
-          represent, as a whole, an original work of authorship. For the purposes
-          of this License, Derivative Works shall not include works that remain
-          separable from, or merely link (or bind by name) to the interfaces of,
-          the Work and Derivative Works thereof.
-
-          "Contribution" shall mean any work of authorship, including
-          the original version of the Work and any modifications or additions
-          to that Work or Derivative Works thereof, that is intentionally
-          submitted to Licensor for inclusion in the Work by the copyright owner
-          or by an individual or Legal Entity authorized to submit on behalf of
-          the copyright owner. For the purposes of this definition, "submitted"
-          means any form of electronic, verbal, or written communication sent
-          to the Licensor or its representatives, including but not limited to
-          communication on electronic mailing lists, source code control systems,
-          and issue tracking systems that are managed by, or on behalf of, the
-          Licensor for the purpose of discussing and improving the Work, but
-          excluding communication that is conspicuously marked or otherwise
-          designated in writing by the copyright owner as "Not a Contribution."
-
-          "Contributor" shall mean Licensor and any individual or Legal Entity
-          on behalf of whom a Contribution has been received by Licensor and
-          subsequently incorporated within the Work.
-
-       2. Grant of Copyright License. Subject to the terms and conditions of
-          this License, each Contributor hereby grants to You a perpetual,
-          worldwide, non-exclusive, no-charge, royalty-free, irrevocable
-          copyright license to reproduce, prepare Derivative Works of,
-          publicly display, publicly perform, sublicense, and distribute the
-          Work and such Derivative Works in Source or Object form.
-
-       3. Grant of Patent License. Subject to the terms and conditions of
-          this License, each Contributor hereby grants to You a perpetual,
-          worldwide, non-exclusive, no-charge, royalty-free, irrevocable
-          (except as stated in this section) patent license to make, have made,
-          use, offer to sell, sell, import, and otherwise transfer the Work,
-          where such license applies only to those patent claims licensable
-          by such Contributor that are necessarily infringed by their
-          Contribution(s) alone or by combination of their Contribution(s)
-          with the Work to which such Contribution(s) was submitted. If You
-          institute patent litigation against any entity (including a
-          cross-claim or counterclaim in a lawsuit) alleging that the Work
-          or a Contribution incorporated within the Work constitutes direct
-          or contributory patent infringement, then any patent licenses
-          granted to You under this License for that Work shall terminate
-          as of the date such litigation is filed.
-
-       4. Redistribution. You may reproduce and distribute copies of the
-          Work or Derivative Works thereof in any medium, with or without
-          modifications, and in Source or Object form, provided that You
-          meet the following conditions:
-
-          (a) You must give any other recipients of the Work or
-              Derivative Works a copy of this License; and
-
-          (b) You must cause any modified files to carry prominent notices
-              stating that You changed the files; and
-
-          (c) You must retain, in the Source form of any Derivative Works
-              that You distribute, all copyright, patent, trademark, and
-              attribution notices from the Source form of the Work,
-              excluding those notices that do not pertain to any part of
-              the Derivative Works; and
-
-          (d) If the Work includes a "NOTICE" text file as part of its
-              distribution, then any Derivative Works that You distribute must
-              include a readable copy of the attribution notices contained
-              within such NOTICE file, excluding those notices that do not
-              pertain to any part of the Derivative Works, in at least one
-              of the following places: within a NOTICE text file distributed
-              as part of the Derivative Works; within the Source form or
-              documentation, if provided along with the Derivative Works; or,
-              within a display generated by the Derivative Works, if and
-              wherever such third-party notices normally appear. The contents
-              of the NOTICE file are for informational purposes only and
-              do not modify the License. You may add Your own attribution
-              notices within Derivative Works that You distribute, alongside
-              or as an addendum to the NOTICE text from the Work, provided
-              that such additional attribution notices cannot be construed
-              as modifying the License.
-
-          You may add Your own copyright statement to Your modifications and
-          may provide additional or different license terms and conditions
-          for use, reproduction, or distribution of Your modifications, or
-          for any such Derivative Works as a whole, provided Your use,
-          reproduction, and distribution of the Work otherwise complies with
-          the conditions stated in this License.
-
-       5. Submission of Contributions. Unless You explicitly state otherwise,
-          any Contribution intentionally submitted for inclusion in the Work
-          by You to the Licensor shall be under the terms and conditions of
-          this License, without any additional terms or conditions.
-          Notwithstanding the above, nothing herein shall supersede or modify
-          the terms of any separate license agreement you may have executed
-          with Licensor regarding such Contributions.
-
-       6. Trademarks. This License does not grant permission to use the trade
-          names, trademarks, service marks, or product names of the Licensor,
-          except as required for reasonable and customary use in describing the
-          origin of the Work and reproducing the content of the NOTICE file.
-
-       7. Disclaimer of Warranty. Unless required by applicable law or
-          agreed to in writing, Licensor provides the Work (and each
-          Contributor provides its Contributions) on an "AS IS" BASIS,
-          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
-          implied, including, without limitation, any warranties or conditions
-          of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A
-          PARTICULAR PURPOSE. You are solely responsible for determining the
-          appropriateness of using or redistributing the Work and assume any
-          risks associated with Your exercise of permissions under this License.
-
-       8. Limitation of Liability. In no event and under no legal theory,
-          whether in tort (including negligence), contract, or otherwise,
-          unless required by applicable law (such as deliberate and grossly
-          negligent acts) or agreed to in writing, shall any Contributor be
-          liable to You for damages, including any direct, indirect, special,
-          incidental, or consequential damages of any character arising as a
-          result of this License or out of the use or inability to use the
-          Work (including but not limited to damages for loss of goodwill,
-          work stoppage, computer failure or malfunction, or any and all
-          other commercial damages or losses), even if such Contributor
-          has been advised of the possibility of such damages.
-
-       9. Accepting Warranty or Additional Liability. While redistributing
-          the Work or Derivative Works thereof, You may choose to offer,
-          and charge a fee for, acceptance of support, warranty, indemnity,
-          or other liability obligations and/or rights consistent with this
-          License. However, in accepting such obligations, You may act only
-          on Your own behalf and on Your sole responsibility, not on behalf
-          of any other Contributor, and only if You agree to indemnify,
-          defend, and hold each Contributor harmless for any liability
-          incurred by, or claims asserted against, such Contributor by reason
-          of your accepting any such warranty or additional liability.
-
-       END OF TERMS AND CONDITIONS
-
-       APPENDIX: How to apply the Apache License to your work.
-
-          To apply the Apache License to your work, attach the following
-          boilerplate notice, with the fields enclosed by brackets "{}"
-          replaced with your own identifying information. (Don't include
-          the brackets!)  The text should be enclosed in the appropriate
-          comment syntax for the file format. We also recommend that a
-          file or class name and description of purpose be included on the
-          same "printed page" as the copyright notice for easier
-          identification within third-party archives.
-
-       Copyright 2013-2019 Nikolay Kim and Andrew Svetlov
-
-       Licensed under the Apache License, Version 2.0 (the "License");
-       you may not use this file except in compliance with the License.
-       You may obtain a copy of the License at
-
-           http://www.apache.org/licenses/LICENSE-2.0
-
-       Unless required by applicable law or agreed to in writing, software
-       distributed under the License is distributed on an "AS IS" BASIS,
-       WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-       See the License for the specific language governing permissions and
-       limitations under the License.
-
----
-### attrs
-
-    The MIT License (MIT)
-
-    Copyright (c) 2015 Hynek Schlawack and the attrs contributors
-
-    Permission is hereby granted, free of charge, to any person obtaining a copy
-    of this software and associated documentation files (the "Software"), to deal
-    in the Software without restriction, including without limitation the rights
-    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-    copies of the Software, and to permit persons to whom the Software is
-    furnished to do so, subject to the following conditions:
+### PyYAML
+
+    Copyright (c) 2017-2021 Ingy döt Net
+    Copyright (c) 2006-2016 Kirill Simonov
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy of
+    this software and associated documentation files (the "Software"), to deal in
+    the Software without restriction, including without limitation the rights to
+    use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+    of the Software, and to permit persons to whom the Software is furnished to do
+    so, subject to the following conditions:
 
     The above copyright notice and this permission notice shall be included in all
     copies or substantial portions of the Software.
@@ -5264,213 +4966,238 @@
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
     SOFTWARE.
 
----
-### aiosignal
+### requests
 
-    Apache License
-                               Version 2.0, January 2004
-                            http://www.apache.org/licenses/
+                                  Apache License
+                            Version 2.0, January 2004
+                         http://www.apache.org/licenses/
 
-       TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
+    TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
 
-       1. Definitions.
+    1. Definitions.
 
-          "License" shall mean the terms and conditions for use, reproduction,
-          and distribution as defined by Sections 1 through 9 of this document.
+       "License" shall mean the terms and conditions for use, reproduction,
+       and distribution as defined by Sections 1 through 9 of this document.
 
-          "Licensor" shall mean the copyright owner or entity authorized by
-          the copyright owner that is granting the License.
+       "Licensor" shall mean the copyright owner or entity authorized by
+       the copyright owner that is granting the License.
 
-          "Legal Entity" shall mean the union of the acting entity and all
-          other entities that control, are controlled by, or are under common
-          control with that entity. For the purposes of this definition,
-          "control" means (i) the power, direct or indirect, to cause the
-          direction or management of such entity, whether by contract or
-          otherwise, or (ii) ownership of fifty percent (50%) or more of the
-          outstanding shares, or (iii) beneficial ownership of such entity.
+       "Legal Entity" shall mean the union of the acting entity and all
+       other entities that control, are controlled by, or are under common
+       control with that entity. For the purposes of this definition,
+       "control" means (i) the power, direct or indirect, to cause the
+       direction or management of such entity, whether by contract or
+       otherwise, or (ii) ownership of fifty percent (50%) or more of the
+       outstanding shares, or (iii) beneficial ownership of such entity.
 
-          "You" (or "Your") shall mean an individual or Legal Entity
-          exercising permissions granted by this License.
+       "You" (or "Your") shall mean an individual or Legal Entity
+       exercising permissions granted by this License.
 
-          "Source" form shall mean the preferred form for making modifications,
-          including but not limited to software source code, documentation
-          source, and configuration files.
+       "Source" form shall mean the preferred form for making modifications,
+       including but not limited to software source code, documentation
+       source, and configuration files.
 
-          "Object" form shall mean any form resulting from mechanical
-          transformation or translation of a Source form, including but
-          not limited to compiled object code, generated documentation,
-          and conversions to other media types.
+       "Object" form shall mean any form resulting from mechanical
+       transformation or translation of a Source form, including but
+       not limited to compiled object code, generated documentation,
+       and conversions to other media types.
 
-          "Work" shall mean the work of authorship, whether in Source or
-          Object form, made available under the License, as indicated by a
-          copyright notice that is included in or attached to the work
-          (an example is provided in the Appendix below).
+       "Work" shall mean the work of authorship, whether in Source or
+       Object form, made available under the License, as indicated by a
+       copyright notice that is included in or attached to the work
+       (an example is provided in the Appendix below).
 
-          "Derivative Works" shall mean any work, whether in Source or Object
-          form, that is based on (or derived from) the Work and for which the
-          editorial revisions, annotations, elaborations, or other modifications
-          represent, as a whole, an original work of authorship. For the purposes
-          of this License, Derivative Works shall not include works that remain
-          separable from, or merely link (or bind by name) to the interfaces of,
-          the Work and Derivative Works thereof.
+       "Derivative Works" shall mean any work, whether in Source or Object
+       form, that is based on (or derived from) the Work and for which the
+       editorial revisions, annotations, elaborations, or other modifications
+       represent, as a whole, an original work of authorship. For the purposes
+       of this License, Derivative Works shall not include works that remain
+       separable from, or merely link (or bind by name) to the interfaces of,
+       the Work and Derivative Works thereof.
 
-          "Contribution" shall mean any work of authorship, including
-          the original version of the Work and any modifications or additions
-          to that Work or Derivative Works thereof, that is intentionally
-          submitted to Licensor for inclusion in the Work by the copyright owner
-          or by an individual or Legal Entity authorized to submit on behalf of
-          the copyright owner. For the purposes of this definition, "submitted"
-          means any form of electronic, verbal, or written communication sent
-          to the Licensor or its representatives, including but not limited to
-          communication on electronic mailing lists, source code control systems,
-          and issue tracking systems that are managed by, or on behalf of, the
-          Licensor for the purpose of discussing and improving the Work, but
-          excluding communication that is conspicuously marked or otherwise
-          designated in writing by the copyright owner as "Not a Contribution."
+       "Contribution" shall mean any work of authorship, including
+       the original version of the Work and any modifications or additions
+       to that Work or Derivative Works thereof, that is intentionally
+       submitted to Licensor for inclusion in the Work by the copyright owner
+       or by an individual or Legal Entity authorized to submit on behalf of
+       the copyright owner. For the purposes of this definition, "submitted"
+       means any form of electronic, verbal, or written communication sent
+       to the Licensor or its representatives, including but not limited to
+       communication on electronic mailing lists, source code control systems,
+       and issue tracking systems that are managed by, or on behalf of, the
+       Licensor for the purpose of discussing and improving the Work, but
+       excluding communication that is conspicuously marked or otherwise
+       designated in writing by the copyright owner as "Not a Contribution."
 
-          "Contributor" shall mean Licensor and any individual or Legal Entity
-          on behalf of whom a Contribution has been received by Licensor and
-          subsequently incorporated within the Work.
+       "Contributor" shall mean Licensor and any individual or Legal Entity
+       on behalf of whom a Contribution has been received by Licensor and
+       subsequently incorporated within the Work.
 
-       2. Grant of Copyright License. Subject to the terms and conditions of
-          this License, each Contributor hereby grants to You a perpetual,
-          worldwide, non-exclusive, no-charge, royalty-free, irrevocable
-          copyright license to reproduce, prepare Derivative Works of,
-          publicly display, publicly perform, sublicense, and distribute the
-          Work and such Derivative Works in Source or Object form.
+    2. Grant of Copyright License. Subject to the terms and conditions of
+       this License, each Contributor hereby grants to You a perpetual,
+       worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+       copyright license to reproduce, prepare Derivative Works of,
+       publicly display, publicly perform, sublicense, and distribute the
+       Work and such Derivative Works in Source or Object form.
 
-       3. Grant of Patent License. Subject to the terms and conditions of
-          this License, each Contributor hereby grants to You a perpetual,
-          worldwide, non-exclusive, no-charge, royalty-free, irrevocable
-          (except as stated in this section) patent license to make, have made,
-          use, offer to sell, sell, import, and otherwise transfer the Work,
-          where such license applies only to those patent claims licensable
-          by such Contributor that are necessarily infringed by their
-          Contribution(s) alone or by combination of their Contribution(s)
-          with the Work to which such Contribution(s) was submitted. If You
-          institute patent litigation against any entity (including a
-          cross-claim or counterclaim in a lawsuit) alleging that the Work
-          or a Contribution incorporated within the Work constitutes direct
-          or contributory patent infringement, then any patent licenses
-          granted to You under this License for that Work shall terminate
-          as of the date such litigation is filed.
+    3. Grant of Patent License. Subject to the terms and conditions of
+       this License, each Contributor hereby grants to You a perpetual,
+       worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+       (except as stated in this section) patent license to make, have made,
+       use, offer to sell, sell, import, and otherwise transfer the Work,
+       where such license applies only to those patent claims licensable
+       by such Contributor that are necessarily infringed by their
+       Contribution(s) alone or by combination of their Contribution(s)
+       with the Work to which such Contribution(s) was submitted. If You
+       institute patent litigation against any entity (including a
+       cross-claim or counterclaim in a lawsuit) alleging that the Work
+       or a Contribution incorporated within the Work constitutes direct
+       or contributory patent infringement, then any patent licenses
+       granted to You under this License for that Work shall terminate
+       as of the date such litigation is filed.
 
-       4. Redistribution. You may reproduce and distribute copies of the
-          Work or Derivative Works thereof in any medium, with or without
-          modifications, and in Source or Object form, provided that You
-          meet the following conditions:
+    4. Redistribution. You may reproduce and distribute copies of the
+       Work or Derivative Works thereof in any medium, with or without
+       modifications, and in Source or Object form, provided that You
+       meet the following conditions:
 
-          (a) You must give any other recipients of the Work or
-              Derivative Works a copy of this License; and
+       (a) You must give any other recipients of the Work or
+           Derivative Works a copy of this License; and
 
-          (b) You must cause any modified files to carry prominent notices
-              stating that You changed the files; and
+       (b) You must cause any modified files to carry prominent notices
+           stating that You changed the files; and
 
-          (c) You must retain, in the Source form of any Derivative Works
-              that You distribute, all copyright, patent, trademark, and
-              attribution notices from the Source form of the Work,
-              excluding those notices that do not pertain to any part of
-              the Derivative Works; and
+       (c) You must retain, in the Source form of any Derivative Works
+           that You distribute, all copyright, patent, trademark, and
+           attribution notices from the Source form of the Work,
+           excluding those notices that do not pertain to any part of
+           the Derivative Works; and
 
-          (d) If the Work includes a "NOTICE" text file as part of its
-              distribution, then any Derivative Works that You distribute must
-              include a readable copy of the attribution notices contained
-              within such NOTICE file, excluding those notices that do not
-              pertain to any part of the Derivative Works, in at least one
-              of the following places: within a NOTICE text file distributed
-              as part of the Derivative Works; within the Source form or
-              documentation, if provided along with the Derivative Works; or,
-              within a display generated by the Derivative Works, if and
-              wherever such third-party notices normally appear. The contents
-              of the NOTICE file are for informational purposes only and
-              do not modify the License. You may add Your own attribution
-              notices within Derivative Works that You distribute, alongside
-              or as an addendum to the NOTICE text from the Work, provided
-              that such additional attribution notices cannot be construed
-              as modifying the License.
+       (d) If the Work includes a "NOTICE" text file as part of its
+           distribution, then any Derivative Works that You distribute must
+           include a readable copy of the attribution notices contained
+           within such NOTICE file, excluding those notices that do not
+           pertain to any part of the Derivative Works, in at least one
+           of the following places: within a NOTICE text file distributed
+           as part of the Derivative Works; within the Source form or
+           documentation, if provided along with the Derivative Works; or,
+           within a display generated by the Derivative Works, if and
+           wherever such third-party notices normally appear. The contents
+           of the NOTICE file are for informational purposes only and
+           do not modify the License. You may add Your own attribution
+           notices within Derivative Works that You distribute, alongside
+           or as an addendum to the NOTICE text from the Work, provided
+           that such additional attribution notices cannot be construed
+           as modifying the License.
 
-          You may add Your own copyright statement to Your modifications and
-          may provide additional or different license terms and conditions
-          for use, reproduction, or distribution of Your modifications, or
-          for any such Derivative Works as a whole, provided Your use,
-          reproduction, and distribution of the Work otherwise complies with
-          the conditions stated in this License.
+       You may add Your own copyright statement to Your modifications and
+       may provide additional or different license terms and conditions
+       for use, reproduction, or distribution of Your modifications, or
+       for any such Derivative Works as a whole, provided Your use,
+       reproduction, and distribution of the Work otherwise complies with
+       the conditions stated in this License.
 
-       5. Submission of Contributions. Unless You explicitly state otherwise,
-          any Contribution intentionally submitted for inclusion in the Work
-          by You to the Licensor shall be under the terms and conditions of
-          this License, without any additional terms or conditions.
-          Notwithstanding the above, nothing herein shall supersede or modify
-          the terms of any separate license agreement you may have executed
-          with Licensor regarding such Contributions.
+    5. Submission of Contributions. Unless You explicitly state otherwise,
+       any Contribution intentionally submitted for inclusion in the Work
+       by You to the Licensor shall be under the terms and conditions of
+       this License, without any additional terms or conditions.
+       Notwithstanding the above, nothing herein shall supersede or modify
+       the terms of any separate license agreement you may have executed
+       with Licensor regarding such Contributions.
 
-       6. Trademarks. This License does not grant permission to use the trade
-          names, trademarks, service marks, or product names of the Licensor,
-          except as required for reasonable and customary use in describing the
-          origin of the Work and reproducing the content of the NOTICE file.
+    6. Trademarks. This License does not grant permission to use the trade
+       names, trademarks, service marks, or product names of the Licensor,
+       except as required for reasonable and customary use in describing the
+       origin of the Work and reproducing the content of the NOTICE file.
 
-       7. Disclaimer of Warranty. Unless required by applicable law or
-          agreed to in writing, Licensor provides the Work (and each
-          Contributor provides its Contributions) on an "AS IS" BASIS,
-          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
-          implied, including, without limitation, any warranties or conditions
-          of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A
-          PARTICULAR PURPOSE. You are solely responsible for determining the
-          appropriateness of using or redistributing the Work and assume any
-          risks associated with Your exercise of permissions under this License.
+    7. Disclaimer of Warranty. Unless required by applicable law or
+       agreed to in writing, Licensor provides the Work (and each
+       Contributor provides its Contributions) on an "AS IS" BASIS,
+       WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+       implied, including, without limitation, any warranties or conditions
+       of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A
+       PARTICULAR PURPOSE. You are solely responsible for determining the
+       appropriateness of using or redistributing the Work and assume any
+       risks associated with Your exercise of permissions under this License.
 
-       8. Limitation of Liability. In no event and under no legal theory,
-          whether in tort (including negligence), contract, or otherwise,
-          unless required by applicable law (such as deliberate and grossly
-          negligent acts) or agreed to in writing, shall any Contributor be
-          liable to You for damages, including any direct, indirect, special,
-          incidental, or consequential damages of any character arising as a
-          result of this License or out of the use or inability to use the
-          Work (including but not limited to damages for loss of goodwill,
-          work stoppage, computer failure or malfunction, or any and all
-          other commercial damages or losses), even if such Contributor
-          has been advised of the possibility of such damages.
+    8. Limitation of Liability. In no event and under no legal theory,
+       whether in tort (including negligence), contract, or otherwise,
+       unless required by applicable law (such as deliberate and grossly
+       negligent acts) or agreed to in writing, shall any Contributor be
+       liable to You for damages, including any direct, indirect, special,
+       incidental, or consequential damages of any character arising as a
+       result of this License or out of the use or inability to use the
+       Work (including but not limited to damages for loss of goodwill,
+       work stoppage, computer failure or malfunction, or any and all
+       other commercial damages or losses), even if such Contributor
+       has been advised of the possibility of such damages.
 
-       9. Accepting Warranty or Additional Liability. While redistributing
-          the Work or Derivative Works thereof, You may choose to offer,
-          and charge a fee for, acceptance of support, warranty, indemnity,
-          or other liability obligations and/or rights consistent with this
-          License. However, in accepting such obligations, You may act only
-          on Your own behalf and on Your sole responsibility, not on behalf
-          of any other Contributor, and only if You agree to indemnify,
-          defend, and hold each Contributor harmless for any liability
-          incurred by, or claims asserted against, such Contributor by reason
-          of your accepting any such warranty or additional liability.
+    9. Accepting Warranty or Additional Liability. While redistributing
+       the Work or Derivative Works thereof, You may choose to offer,
+       and charge a fee for, acceptance of support, warranty, indemnity,
+       or other liability obligations and/or rights consistent with this
+       License. However, in accepting such obligations, You may act only
+       on Your own behalf and on Your sole responsibility, not on behalf
+       of any other Contributor, and only if You agree to indemnify,
+       defend, and hold each Contributor harmless for any liability
+       incurred by, or claims asserted against, such Contributor by reason
+       of your accepting any such warranty or additional liability.
 
-       END OF TERMS AND CONDITIONS
+    Requests
+    Copyright 2019 Kenneth Reitz
 
-       APPENDIX: How to apply the Apache License to your work.
+### six
 
-          To apply the Apache License to your work, attach the following
-          boilerplate notice, with the fields enclosed by brackets "{}"
-          replaced with your own identifying information. (Don't include
-          the brackets!)  The text should be enclosed in the appropriate
-          comment syntax for the file format. We also recommend that a
-          file or class name and description of purpose be included on the
-          same "printed page" as the copyright notice for easier
-          identification within third-party archives.
+    Copyright (c) 2010-2024 Benjamin Peterson
 
-       Copyright 2013-2019 Nikolay Kim and Andrew Svetlov
+    Permission is hereby granted, free of charge, to any person obtaining a copy of
+    this software and associated documentation files (the "Software"), to deal in
+    the Software without restriction, including without limitation the rights to
+    use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+    the Software, and to permit persons to whom the Software is furnished to do so,
+    subject to the following conditions:
 
-       Licensed under the Apache License, Version 2.0 (the "License");
-       you may not use this file except in compliance with the License.
-       You may obtain a copy of the License at
+    The above copyright notice and this permission notice shall be included in all
+    copies or substantial portions of the Software.
 
-           http://www.apache.org/licenses/LICENSE-2.0
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+    FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+    COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+    IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+    CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-       Unless required by applicable law or agreed to in writing, software
-       distributed under the License is distributed on an "AS IS" BASIS,
-       WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-       See the License for the specific language governing permissions and
-       limitations under the License.
+### starlette
 
----
-### aiohappyeyeballs
+    Copyright © 2018, [Encode OSS Ltd](https://www.encode.io/).
+    All rights reserved.
+
+    Redistribution and use in source and binary forms, with or without
+    modification, are permitted provided that the following conditions are met:
+
+    * Redistributions of source code must retain the above copyright notice, this
+      list of conditions and the following disclaimer.
+
+    * Redistributions in binary form must reproduce the above copyright notice,
+      this list of conditions and the following disclaimer in the documentation
+      and/or other materials provided with the distribution.
+
+    * Neither the name of the copyright holder nor the names of its
+      contributors may be used to endorse or promote products derived from
+      this software without specific prior written permission.
+
+    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+    AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+    IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+    DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+    FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+    DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+    SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+    CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+    OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+    OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+### typing_extensions
 
     A. HISTORY OF THE SOFTWARE
     ==========================
@@ -5751,4 +5478,246 @@
     LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
     OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
     PERFORMANCE OF THIS SOFTWARE.
+
+### urllib3
+
+    MIT License
+
+    Copyright (c) 2008-2020 Andrey Petrov and contributors.
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"), to deal
+    in the Software without restriction, including without limitation the rights
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in all
+    copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+    SOFTWARE.
+
+### yarl
+
+                                  Apache License
+                            Version 2.0, January 2004
+                         http://www.apache.org/licenses/
+
+    TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
+
+    1. Definitions.
+
+       "License" shall mean the terms and conditions for use, reproduction,
+       and distribution as defined by Sections 1 through 9 of this document.
+
+       "Licensor" shall mean the copyright owner or entity authorized by
+       the copyright owner that is granting the License.
+
+       "Legal Entity" shall mean the union of the acting entity and all
+       other entities that control, are controlled by, or are under common
+       control with that entity. For the purposes of this definition,
+       "control" means (i) the power, direct or indirect, to cause the
+       direction or management of such entity, whether by contract or
+       otherwise, or (ii) ownership of fifty percent (50%) or more of the
+       outstanding shares, or (iii) beneficial ownership of such entity.
+
+       "You" (or "Your") shall mean an individual or Legal Entity
+       exercising permissions granted by this License.
+
+       "Source" form shall mean the preferred form for making modifications,
+       including but not limited to software source code, documentation
+       source, and configuration files.
+
+       "Object" form shall mean any form resulting from mechanical
+       transformation or translation of a Source form, including but
+       not limited to compiled object code, generated documentation,
+       and conversions to other media types.
+
+       "Work" shall mean the work of authorship, whether in Source or
+       Object form, made available under the License, as indicated by a
+       copyright notice that is included in or attached to the work
+       (an example is provided in the Appendix below).
+
+       "Derivative Works" shall mean any work, whether in Source or Object
+       form, that is based on (or derived from) the Work and for which the
+       editorial revisions, annotations, elaborations, or other modifications
+       represent, as a whole, an original work of authorship. For the purposes
+       of this License, Derivative Works shall not include works that remain
+       separable from, or merely link (or bind by name) to the interfaces of,
+       the Work and Derivative Works thereof.
+
+       "Contribution" shall mean any work of authorship, including
+       the original version of the Work and any modifications or additions
+       to that Work or Derivative Works thereof, that is intentionally
+       submitted to Licensor for inclusion in the Work by the copyright owner
+       or by an individual or Legal Entity authorized to submit on behalf of
+       the copyright owner. For the purposes of this definition, "submitted"
+       means any form of electronic, verbal, or written communication sent
+       to the Licensor or its representatives, including but not limited to
+       communication on electronic mailing lists, source code control systems,
+       and issue tracking systems that are managed by, or on behalf of, the
+       Licensor for the purpose of discussing and improving the Work, but
+       excluding communication that is conspicuously marked or otherwise
+       designated in writing by the copyright owner as "Not a Contribution."
+
+       "Contributor" shall mean Licensor and any individual or Legal Entity
+       on behalf of whom a Contribution has been received by Licensor and
+       subsequently incorporated within the Work.
+
+    2. Grant of Copyright License. Subject to the terms and conditions of
+       this License, each Contributor hereby grants to You a perpetual,
+       worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+       copyright license to reproduce, prepare Derivative Works of,
+       publicly display, publicly perform, sublicense, and distribute the
+       Work and such Derivative Works in Source or Object form.
+
+    3. Grant of Patent License. Subject to the terms and conditions of
+       this License, each Contributor hereby grants to You a perpetual,
+       worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+       (except as stated in this section) patent license to make, have made,
+       use, offer to sell, sell, import, and otherwise transfer the Work,
+       where such license applies only to those patent claims licensable
+       by such Contributor that are necessarily infringed by their
+       Contribution(s) alone or by combination of their Contribution(s)
+       with the Work to which such Contribution(s) was submitted. If You
+       institute patent litigation against any entity (including a
+       cross-claim or counterclaim in a lawsuit) alleging that the Work
+       or a Contribution incorporated within the Work constitutes direct
+       or contributory patent infringement, then any patent licenses
+       granted to You under this License for that Work shall terminate
+       as of the date such litigation is filed.
+
+    4. Redistribution. You may reproduce and distribute copies of the
+       Work or Derivative Works thereof in any medium, with or without
+       modifications, and in Source or Object form, provided that You
+       meet the following conditions:
+
+       (a) You must give any other recipients of the Work or
+           Derivative Works a copy of this License; and
+
+       (b) You must cause any modified files to carry prominent notices
+           stating that You changed the files; and
+
+       (c) You must retain, in the Source form of any Derivative Works
+           that You distribute, all copyright, patent, trademark, and
+           attribution notices from the Source form of the Work,
+           excluding those notices that do not pertain to any part of
+           the Derivative Works; and
+
+       (d) If the Work includes a "NOTICE" text file as part of its
+           distribution, then any Derivative Works that You distribute must
+           include a readable copy of the attribution notices contained
+           within such NOTICE file, excluding those notices that do not
+           pertain to any part of the Derivative Works, in at least one
+           of the following places: within a NOTICE text file distributed
+           as part of the Derivative Works; within the Source form or
+           documentation, if provided along with the Derivative Works; or,
+           within a display generated by the Derivative Works, if and
+           wherever such third-party notices normally appear. The contents
+           of the NOTICE file are for informational purposes only and
+           do not modify the License. You may add Your own attribution
+           notices within Derivative Works that You distribute, alongside
+           or as an addendum to the NOTICE text from the Work, provided
+           that such additional attribution notices cannot be construed
+           as modifying the License.
+
+       You may add Your own copyright statement to Your modifications and
+       may provide additional or different license terms and conditions
+       for use, reproduction, or distribution of Your modifications, or
+       for any such Derivative Works as a whole, provided Your use,
+       reproduction, and distribution of the Work otherwise complies with
+       the conditions stated in this License.
+
+    5. Submission of Contributions. Unless You explicitly state otherwise,
+       any Contribution intentionally submitted for inclusion in the Work
+       by You to the Licensor shall be under the terms and conditions of
+       this License, without any additional terms or conditions.
+       Notwithstanding the above, nothing herein shall supersede or modify
+       the terms of any separate license agreement you may have executed
+       with Licensor regarding such Contributions.
+
+    6. Trademarks. This License does not grant permission to use the trade
+       names, trademarks, service marks, or product names of the Licensor,
+       except as required for reasonable and customary use in describing the
+       origin of the Work and reproducing the content of the NOTICE file.
+
+    7. Disclaimer of Warranty. Unless required by applicable law or
+       agreed to in writing, Licensor provides the Work (and each
+       Contributor provides its Contributions) on an "AS IS" BASIS,
+       WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+       implied, including, without limitation, any warranties or conditions
+       of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A
+       PARTICULAR PURPOSE. You are solely responsible for determining the
+       appropriateness of using or redistributing the Work and assume any
+       risks associated with Your exercise of permissions under this License.
+
+    8. Limitation of Liability. In no event and under no legal theory,
+       whether in tort (including negligence), contract, or otherwise,
+       unless required by applicable law (such as deliberate and grossly
+       negligent acts) or agreed to in writing, shall any Contributor be
+       liable to You for damages, including any direct, indirect, special,
+       incidental, or consequential damages of any character arising as a
+       result of this License or out of the use or inability to use the
+       Work (including but not limited to damages for loss of goodwill,
+       work stoppage, computer failure or malfunction, or any and all
+       other commercial damages or losses), even if such Contributor
+       has been advised of the possibility of such damages.
+
+    9. Accepting Warranty or Additional Liability. While redistributing
+       the Work or Derivative Works thereof, You may choose to offer,
+       and charge a fee for, acceptance of support, warranty, indemnity,
+       or other liability obligations and/or rights consistent with this
+       License. However, in accepting such obligations, You may act only
+       on Your own behalf and on Your sole responsibility, not on behalf
+       of any other Contributor, and only if You agree to indemnify,
+       defend, and hold each Contributor harmless for any liability
+       incurred by, or claims asserted against, such Contributor by reason
+       of your accepting any such warranty or additional liability.
+
+    END OF TERMS AND CONDITIONS
+
+    APPENDIX: How to apply the Apache License to your work.
+
+       To apply the Apache License to your work, attach the following
+       boilerplate notice, with the fields enclosed by brackets "[]"
+       replaced with your own identifying information. (Don't include
+       the brackets!)  The text should be enclosed in the appropriate
+       comment syntax for the file format. We also recommend that a
+       file or class name and description of purpose be included on the
+       same "printed page" as the copyright notice for easier
+       identification within third-party archives.
+
+    Copyright [yyyy] [name of copyright owner]
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+    Copyright 2016-2021, Andrew Svetlov and aio-libs team
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
 

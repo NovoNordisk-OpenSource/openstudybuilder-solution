@@ -170,9 +170,10 @@ const codelistNames = ref({})
 const codelistAttributes = ref({})
 const showRemoved = ref(false)
 
-const headers = [
+const allHeaders = [
   { title: '', key: 'actions', width: '1%' },
   { title: t('_global.order'), key: 'order', width: '4%' },
+  { title: t('CodelistTermsView.ordinal'), key: 'ordinal', width: '4%' },
   {
     title: t('CodelistTermsView.submission_value'),
     key: 'submission_value',
@@ -212,6 +213,7 @@ const headers = [
     width: '10%',
   },
   { title: t('_global.definition'), key: 'definition', width: '10%' },
+  { title: t('CodelistTermDetail.algorithm'), key: 'algorithm', width: '10%' },
   {
     title: t('CodelistTermsView.attr_status'),
     key: 'attributes_status',
@@ -223,6 +225,11 @@ const headers = [
     width: '5%',
   },
 ]
+const headers = computed(() =>
+  allHeaders.filter(
+    (header) => header.key !== 'ordinal' || codelistNames.value.is_ordinal
+  )
+)
 const historyItems = ref([])
 const historyHeaders = ref([])
 let historyType = ''
@@ -366,6 +373,7 @@ async function openCTValuesHistory(term) {
       key: 'nci_preferred_name',
     },
     { title: t('_global.definition'), key: 'definition' },
+    { title: t('CodelistTermDetail.algorithm'), key: 'algorithm' },
     { title: t('_global.status'), key: 'status' },
     { title: t('_global.version'), key: 'version' },
   ]

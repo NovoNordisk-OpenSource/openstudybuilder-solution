@@ -45,7 +45,7 @@ class SponsorModelDatasetVO:
         target_data_model_catalogue: str | None = None,
         extra_properties: dict[str, Any] | None = None,
     ) -> Self:
-        sponsor_model_dataset_vo = cls(
+        return cls(
             sponsor_model_name=sponsor_model_name,
             sponsor_model_version_number=str(sponsor_model_version_number),
             dataset_uid=dataset_uid,
@@ -57,8 +57,6 @@ class SponsorModelDatasetVO:
             target_data_model_catalogue=target_data_model_catalogue,
             extra_properties=extra_properties or {},
         )
-
-        return sponsor_model_dataset_vo
 
 
 class SponsorModelDatasetMetadataVO(LibraryItemMetadataVO):
@@ -107,13 +105,12 @@ class SponsorModelDatasetAR(LibraryItemAggregateRootBase):
         library: LibraryVO,
         item_metadata: LibraryItemMetadataVO,
     ) -> Self:
-        sponsor_model_dataset_ar = cls(
+        return cls(
             _uid=dataset_uid,
             _sponsor_model_dataset_vo=sponsor_model_dataset_vo,
             _item_metadata=item_metadata,
             _library=library,
         )
-        return sponsor_model_dataset_ar
 
     @classmethod
     def from_input_values(
@@ -128,10 +125,9 @@ class SponsorModelDatasetAR(LibraryItemAggregateRootBase):
             version=sponsor_model_dataset_vo.sponsor_model_version_number,
         )
 
-        sponsor_model_dataset_ar = cls(
+        return cls(
             _uid=sponsor_model_dataset_vo.dataset_uid,
             _item_metadata=item_metadata,
             _library=library,
             _sponsor_model_dataset_vo=sponsor_model_dataset_vo,
         )
-        return sponsor_model_dataset_ar

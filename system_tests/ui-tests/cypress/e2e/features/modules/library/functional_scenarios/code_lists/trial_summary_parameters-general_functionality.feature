@@ -46,33 +46,33 @@ Feature: Library - Code Lists - Trial Summary Parameters - General Functionality
             | Name status        |
             | Attributes status  |
 
-    # Scenario: [Export][CSV] User must be able to export the main table data in CSV format
-    #     Given The '/library/trial_summary_parameters' page is opened
-    #     When User clicks table export button
-    #     And User selects 'CSV' format to export the table content
-    #     And Action is confirmed by clicking continue
-    #     Then The 'TrialSummaryParameters' file is downloaded in 'csv' format
+    Scenario: [Export][CSV] User must be able to export the main table data in CSV format
+        Given The '/library/trial_summary_parameters' page is opened
+        When User clicks table export button
+        And User selects 'CSV' format to export the table content
+        And Action is confirmed by clicking continue
+        Then The 'TrialSummaryParameters' file is downloaded in 'csv' format
 
-    # Scenario: [Export][Json] User must be able to export the main table data in JSON format
-    #     Given The '/library/trial_summary_parameters' page is opened
-    #     When User clicks table export button
-    #     And User selects 'JSON' format to export the table content
-    #     And Action is confirmed by clicking continue
-    #     Then The 'TrialSummaryParameters' file is downloaded in 'json' format
+    Scenario: [Export][Json] User must be able to export the main table data in JSON format
+        Given The '/library/trial_summary_parameters' page is opened
+        When User clicks table export button
+        And User selects 'JSON' format to export the table content
+        And Action is confirmed by clicking continue
+        Then The 'TrialSummaryParameters' file is downloaded in 'json' format
 
-    # Scenario: [Export][Xml] User must be able to export the main table data in XML format
-    #     Given The '/library/trial_summary_parameters' page is opened
-    #     When User clicks table export button
-    #     And User selects 'XML' format to export the table content
-    #     And Action is confirmed by clicking continue
-    #     Then The 'TrialSummaryParameters' file is downloaded in 'xml' format
+    Scenario: [Export][Xml] User must be able to export the main table data in XML format
+        Given The '/library/trial_summary_parameters' page is opened
+        When User clicks table export button
+        And User selects 'XML' format to export the table content
+        And Action is confirmed by clicking continue
+        Then The 'TrialSummaryParameters' file is downloaded in 'xml' format
 
-    # Scenario: [Export][Excel] User must be able to export the main table data in Excel format
-    #     Given The '/library/trial_summary_parameters' page is opened
-    #     When User clicks table export button
-    #     And User selects 'EXCEL' format to export the table content
-    #     And Action is confirmed by clicking continue
-    #     Then The 'TrialSummaryParameters' file is downloaded in 'xlsx' format
+    Scenario: [Export][Excel] User must be able to export the main table data in Excel format
+        Given The '/library/trial_summary_parameters' page is opened
+        When User clicks table export button
+        And User selects 'EXCEL' format to export the table content
+        And Action is confirmed by clicking continue
+        Then The 'TrialSummaryParameters' file is downloaded in 'xlsx' format
 
     Scenario: [Actions][CT values history] User must be able to view CT values history of a Trial Summary Parameter
         Given The '/library/trial_summary_parameters' page is opened

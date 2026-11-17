@@ -132,6 +132,7 @@ def test_previewing_endpoint(api_client):
         {
             "conjunction": "and",
             "position": 1,
+            "parameter_name": "Indication",
             "terms": [
                 {
                     "index": 1,
@@ -193,6 +194,7 @@ def test_adding_endpoint(api_client):
         {
             "conjunction": "and",
             "position": 1,
+            "parameter_name": "Indication",
             "terms": [
                 {
                     "index": 1,

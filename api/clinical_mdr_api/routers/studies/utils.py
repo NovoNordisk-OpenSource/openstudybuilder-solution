@@ -23,3 +23,7 @@ study_compound_dosing_uid = Path(
 )
 
 study_soa_footnote_uid = Path(description="The unique id of the study soa footnote.")
+
+study_design_population_uid = Path(
+    description="The unique id of the study design population."
+)

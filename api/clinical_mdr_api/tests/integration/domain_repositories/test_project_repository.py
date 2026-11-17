@@ -129,7 +129,7 @@ class TestProjectRepository(unittest.TestCase):
                 clinical_programme_uid=self.created_clinical_programme.uid,
                 generate_uid_callback=repo.generate_uid,
             )
-            for _ in range(0, 10)
+            for _ in range(10)
         ]
         for project in test_projects:
             repo.save(project)

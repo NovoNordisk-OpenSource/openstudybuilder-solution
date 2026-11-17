@@ -10,6 +10,10 @@ from clinical_mdr_api.models.study_selections.study_visit import (
     StudyVisitCreateInput,
     StudyVisitEditInput,
     StudyVisitLite,
+    StudyVisitModeInput,
+    StudyVisitModeResponse,
+    StudyVisitPreviewInput,
+    StudyVisitReorderInput,
     StudyVisitVersion,
     VisitConsecutiveGroupInput,
 )
@@ -80,9 +84,9 @@ Possible errors:
             "visit_contact_mode.sponsor_preferred_name",
             "time_reference.sponsor_preferred_name",
             "time_value",
-            "visit_number",
             "unique_visit_number",
             "visit_short_name",
+            "visit_suffix",
             "study_day_label",
             "study_week_label",
             "time_reference.sponsor_preferred_name",
@@ -318,8 +322,8 @@ def post_new_visit_create(
 def post_preview_visit(
     study_uid: Annotated[str, studyUID],
     selection: Annotated[
-        StudyVisitCreateInput,
-        Body(description="Related parameters of the visit that shall be created."),
+        StudyVisitPreviewInput,
+        Body(description="Related parameters of the visit that shall be previewed."),
     ],
 ) -> StudyVisit:
     service = StudyVisitService(study_uid=study_uid)
@@ -342,6 +346,58 @@ def get_allowed_time_references_for_given_study(
 ) -> list[AllowedTimeReferences]:
     service = StudyVisitService(study_uid=study_uid)
     return service.get_allowed_time_references_for_study(study_uid=study_uid)
+
+
+@router.patch(
+    "/studies/{study_uid}/study-visits/reorder",
+    dependencies=[security, rbac.STUDY_WRITE],
+    summary="Reorder visits in manual mode by providing an ordered list of visit UIDs",
+    status_code=200,
+    responses={
+        400: {
+            "model": ErrorResponse,
+            "description": "Bad Request - Provided UIDs do not match the study's visit set, or study is not in manual mode.",
+        },
+        403: _generic_descriptions.ERROR_403,
+        404: _generic_descriptions.ERROR_404,
+    },
+)
+@decorators.validate_if_study_is_not_locked("study_uid")
+def reorder_study_visits(
+    study_uid: Annotated[str, studyUID],
+    body: Annotated[StudyVisitReorderInput, Body()],
+) -> list[StudyVisit]:
+    service = StudyVisitService(study_uid=study_uid, load_terms=False)
+    return service.reorder_visits(study_uid=study_uid, visit_uids=body.visit_uids)
+
+
+@router.patch(
+    "/studies/{study_uid}/study-visits/mode",
+    dependencies=[security, rbac.STUDY_WRITE],
+    summary="Switch study visits between assisted and manual mode",
+    description="""Set `manual_visit_mode` to true to switch the study to manual mode,
+or false to switch back to assisted mode. Switching back to assisted mode is only
+allowed when the study has no visits, or when no visit has been modified since manual
+mode was enabled.""",
+    status_code=200,
+    responses={
+        400: {
+            "model": ErrorResponse,
+            "description": "Bad Request - Visits have been modified since manual mode was enabled, so assisted mode cannot be restored.",
+        },
+        403: _generic_descriptions.ERROR_403,
+        404: _generic_descriptions.ERROR_404,
+    },
+)
+@decorators.validate_if_study_is_not_locked("study_uid")
+def set_study_visit_mode(
+    study_uid: Annotated[str, studyUID],
+    body: Annotated[StudyVisitModeInput, Body()],
+) -> StudyVisitModeResponse:
+    service = StudyVisitService(study_uid=study_uid, load_terms=False)
+    return service.set_visit_mode(
+        study_uid=study_uid, manual_visit_mode=body.manual_visit_mode
+    )
 
 
 @router.patch(
@@ -501,6 +557,23 @@ def get_study_visits_all_audit_trail(
 
 
 @router.get(
+    "/studies/{study_uid}/study-visits/mode",
+    dependencies=[security, rbac.STUDY_READ],
+    summary="Get the visit numbering mode for the study",
+    status_code=200,
+    responses={
+        403: _generic_descriptions.ERROR_403,
+        404: _generic_descriptions.ERROR_404,
+    },
+)
+def get_study_visit_mode(
+    study_uid: Annotated[str, studyUID],
+) -> StudyVisitModeResponse:
+    service = StudyVisitService(study_uid=study_uid, load_terms=False)
+    return service.get_visit_mode(study_uid=study_uid)
+
+
+@router.get(
     "/studies/{study_uid}/study-visits/{study_visit_uid}",
     dependencies=[security, rbac.STUDY_READ],
     summary="List all definitions for a specific study visit",
@@ -651,43 +724,6 @@ def get_anchor_visits_in_group_of_subvisits(
 ) -> list[SimpleStudyVisit]:
     service = StudyVisitService(study_uid=study_uid, load_terms=False)
     return service.get_anchor_visits_in_a_group_of_subvisits(study_uid=study_uid)
-
-
-@router.get(
-    "/studies/{study_uid}/anchor-visits-for-special-visit",
-    dependencies=[security, rbac.STUDY_READ],
-    summary="List all visits that can be anchor visits for special visit for a selected study referenced by 'study_uid' and selected study epoch referenced by 'study_epoch_uid'",
-    description="""
-State before:
-- Study must exist.
-
-Business logic:
- - Looks for a study visits that can be anchor visits for a special visit.
- - It returns only these StudyVisits that are included in the specified StudyEpoch.
-
-State after:
- - no change.
-
-Possible errors:
- - Invalid study-uid.
-    """,
-    response_model_exclude_unset=True,
-    status_code=200,
-    responses={
-        403: _generic_descriptions.ERROR_403,
-        404: _generic_descriptions.ERROR_404,
-    },
-)
-def get_anchor_visits_for_special_visit(
-    study_uid: Annotated[str, studyUID],
-    study_epoch_uid: str = Query(
-        description="The uid of StudyEpoch from which StudyVisits are returned.",
-    ),
-) -> list[SimpleStudyVisit]:
-    service = StudyVisitService(study_uid=study_uid, load_terms=False)
-    return service.get_anchor_for_special_visit(
-        study_uid=study_uid, study_epoch_uid=study_epoch_uid
-    )
 
 
 @router.get(

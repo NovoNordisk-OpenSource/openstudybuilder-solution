@@ -100,7 +100,7 @@ class SponsorModelDataset(SponsorModelBase):
         if vo.extra_properties:
             base_data.update(vo.extra_properties)
 
-        return cls(**base_data)  # type: ignore[arg-type]
+        return cls(**base_data)
 
 
 class SponsorModelDatasetInput(InputModel):

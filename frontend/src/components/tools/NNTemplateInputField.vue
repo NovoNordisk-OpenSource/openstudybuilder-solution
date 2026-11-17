@@ -27,6 +27,7 @@
         class="types"
         data-cy="types-dropdown"
         :style="`width: ${width}px;`"
+        @mousedown.prevent
       >
         <v-list class="list">
           <v-list-item

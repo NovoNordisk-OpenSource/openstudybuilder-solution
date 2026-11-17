@@ -122,7 +122,7 @@ class ItemGroupRepository(OdmGenericRepository[OdmItemGroupAR]):
         self, input_dict: dict[str, Any]
     ) -> OdmItemGroupAR:
         major, minor = input_dict["version"].split(".")
-        odm_item_group_ar = OdmItemGroupAR.from_repository_values(
+        return OdmItemGroupAR.from_repository_values(
             uid=input_dict["uid"],
             odm_vo=OdmItemGroupVO.from_repository_values(
                 oid=input_dict.get("oid"),
@@ -170,8 +170,6 @@ class ItemGroupRepository(OdmGenericRepository[OdmItemGroupAR]):
                 minor_version=int(minor),
             ),
         )
-
-        return odm_item_group_ar
 
     def _get_specific_field_mapping(self) -> dict[str, str]:
         """Item Group specific field mappings - simple fields only."""

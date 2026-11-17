@@ -15,15 +15,14 @@ from common import exceptions
 
 
 def create_random_activity_grouping_vo() -> ActivityGroupingVO:
-    random_activity_grouping_vo = ActivityGroupingVO(
+    return ActivityGroupingVO(
         activity_group_uid=random_str(), activity_subgroup_uid=random_str()
     )
-    return random_activity_grouping_vo
 
 
 def create_random_activity_vo() -> ActivityVO:
     name = random_str()
-    random_activity_vo = ActivityVO.from_repository_values(
+    return ActivityVO.from_repository_values(
         nci_concept_id=random_str(),
         nci_concept_name=random_str(),
         name=name,
@@ -39,7 +38,6 @@ def create_random_activity_vo() -> ActivityVO:
         request_rationale=random_str(),
         is_data_collected=True,
     )
-    return random_activity_vo
 
 
 def create_random_activity_ar(
@@ -47,7 +45,7 @@ def create_random_activity_ar(
     library: str = "Library",
     is_editable: bool = True,
 ) -> ActivityAR:
-    random_activity_ar = ActivityAR.from_input_values(
+    return ActivityAR.from_input_values(
         generate_uid_callback=generate_uid_callback,
         concept_vo=create_random_activity_vo(),
         library=LibraryVO.from_repository_values(
@@ -58,8 +56,6 @@ def create_random_activity_ar(
         activity_subgroup_exists=lambda _: True,
         activity_group_exists=lambda _: True,
     )
-
-    return random_activity_ar
 
 
 class TestActivity(unittest.TestCase):

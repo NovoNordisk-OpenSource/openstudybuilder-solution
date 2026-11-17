@@ -47,3 +47,28 @@ test('smoke: Epoch version history shows the lag time unit and flags a unit-only
 
   spy.assertClean()
 })
+
+// study_epoch_ae_lag_time shows AE lag time on studies not migrated from MMA;
+// hypo and CE stay limited to migrated ones. Study_000002 has no marker.
+test('smoke: Epoch table shows only the AE lag time column on a study not migrated from MMA', async ({
+  page,
+}) => {
+  await page.addInitScript(seedDemoAuth)
+
+  const spy = setupConsoleSpy(page)
+
+  await page.goto('/studies/Study_000002/study_structure/epochs')
+
+  const headers = page.locator('[data-cy="data-table"] thead th')
+  await expect(
+    headers.filter({ hasText: 'Adverse event lag time' })
+  ).toHaveCount(1, { timeout: 20_000 })
+  await expect(
+    headers.filter({ hasText: 'Hypoglycaemic event lag time' })
+  ).toHaveCount(0)
+  await expect(
+    headers.filter({ hasText: 'Clinical event lag time' })
+  ).toHaveCount(0)
+
+  spy.assertClean()
+})

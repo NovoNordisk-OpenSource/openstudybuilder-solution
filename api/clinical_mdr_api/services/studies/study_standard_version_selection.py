@@ -52,9 +52,7 @@ class StudyStandardVersionService:
         return StudyStandardVersion.from_study_standard_version_vo(
             study_standard_version_vo=standard_version,
             find_ct_package_by_uid=(
-                self._repos.ct_package_repository.find_by_uid
-                if not find_footnote_by_uid
-                else find_footnote_by_uid
+                find_footnote_by_uid or self._repos.ct_package_repository.find_by_uid
             ),
             study_value_version=study_value_version,
         )
@@ -95,15 +93,12 @@ class StudyStandardVersionService:
             **kwargs,
         )
 
-        all_items = [
+        return [
             self._transform_all_to_response_model(
                 standard_version, study_value_version=study_value_version
             )
             for standard_version in items
         ]
-
-        study_standard_versions = all_items
-        return study_standard_versions
 
     @db.transaction
     def find_by_uid(
@@ -153,13 +148,11 @@ class StudyStandardVersionService:
             study_standard_version_to_edit.edit_core_properties(
                 ct_package_uid=(
                     study_standard_version_edit_input.ct_package_uid
-                    if study_standard_version_edit_input.ct_package_uid
-                    else study_standard_version_to_edit.ct_package_uid
+                    or study_standard_version_to_edit.ct_package_uid
                 ),
                 description=(
                     study_standard_version_edit_input.description
-                    if study_standard_version_edit_input.description
-                    else study_standard_version_to_edit.description
+                    or study_standard_version_to_edit.description
                 ),
             )
 
@@ -291,18 +284,16 @@ class StudyStandardVersionService:
             self._transform_all_to_response_history_model(_).model_dump()
             for _ in all_versions
         ]
-        data = calculate_diffs(versions, StudyStandardVersionVersion)
-        return data
+        return calculate_diffs(versions, StudyStandardVersionVersion)
 
     @db.transaction
     def audit_trail_all_standard_versions(
         self,
         study_uid: str,
     ) -> list[StudyStandardVersionVersion]:
-        data = calculate_diffs_history(
+        return calculate_diffs_history(
             get_all_object_versions=self.repo.get_all_study_version_versions,
             transform_all_to_history_model=self._transform_all_to_response_history_model,
             study_uid=study_uid,
             version_object_class=StudyStandardVersionVersion,
         )
-        return data

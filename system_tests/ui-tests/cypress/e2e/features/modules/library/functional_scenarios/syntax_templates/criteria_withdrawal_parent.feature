@@ -88,12 +88,18 @@ Feature: Library - Syntax Templates - Criteria - Withdrawal - Parent
     And The validation appears for 'criterion' template subcategory field
     And The form is not closed
 
-  Scenario: [Create][Syntax validation] User must be able to verify syntax when creating Withdrawal Criteria template
-    Given The 'library/criteria_templates/Withdrawal/parent' page is opened
-    And The Add template button is clicked
-    When The new template name is prepared with a parameters
-    And The syntax is verified
-    Then The pop up displays "This syntax is valid"
+    Scenario: [Create][Brackets restriction] User must be able to add value in brackets in the syntax template
+        Given The 'library/criteria_templates/Withdrawal/parent' page is opened
+        And The Add template button is clicked
+        When The new template name is prepared with a parameters
+        And User adds to template value in brackets
+        And Form continue button is clicked
+        And Form continue button is clicked
+        When All Not Applicable checkboxes are checked
+        And User intercept getCriteria request
+        And Form save button is clicked
+        And User awaits for the getCriteria request to finish
+        Then The pop up displays 'template added'
 
   Scenario: [Create][Hide parameters] User must be able to hide parameter of the Withdrawal Criteria template
     Given The 'library/criteria_templates/Withdrawal/parent' page is opened
@@ -111,43 +117,31 @@ Feature: Library - Syntax Templates - Criteria - Withdrawal - Parent
     And The user picks the parameter from the dropdown list
     Then The parameter value is visible in the text representation
 
-  @manual_test
-  Scenario: User must be able to view the history for the Withdrawal Criteria template with a status as 'Retired'
-    Given [API] 'Withdrawal' Criteria in status Draft exists
-    And [API] Criteria is approved
-    And [API] Criteria is inactivated
-    And The 'library/criteria_templates/Withdrawal/parent' page is opened
-    And User intercept getCriteria request
-    And User awaits for the getCriteria request to finish
-    And The criteria is found
-    When The 'Reactivate' option is clicked from the three dot menu list
-    Then The 'History for template' window is displayed with the following column list with values
-      | Column | Header                 |
-      | 1      | Indication or disorder |
-      | 2      | Criterion category     |
-      | 3      | Criterion sub-category |
-      | 4      | Template               |
-      | 5      | Guidance text          |
-      | 6      | Status                 |
-      | 7      | Version                |
-      | 8      | Change type            |
-      | 9      | User                   |
-      | 10     | From                   |
-      | 11     | To                     |
-
-  @manual_test
-  Scenario: User must be able to read change history of output
+  Scenario: [Actions][History] User must be able to view the history for the Withdrawal Criteria
     Given The 'library/criteria_templates/Withdrawal/parent' page is opened
-    When The user opens version history
-    Then The user is presented with version history of the output containing timestamp and username
+    And The 'History' option is clicked from the three dot menu list
+    Then The History page is displayed
+    And The following column list with values will exist
+      | header                 |
+      | Sequence number        |
+      | Parent template        |
+      | Status                 |
+      | Version                |
+      | Change type            |
+      | User                   |
+      | From                   |
+      | To                     |
+    And The history table is not empty
+    When The CLOSE button is clicked
+    Then The current URL is 'library/criteria_templates/Withdrawal/parent'
 
-  @manual_test
-  Scenario: User must be able to read change history of selected element
-    Given The 'library/criteria_templates/Withdrawal/parent' page is opened
-    And The 'Show history' option is clicked from the three dot menu list
-    When The user clicks on History for particular element
-    Then The user is presented with history of changes for that element
-    And The history contains timestamps and usernames
+# @manual_test
+#  Scenario: User must be able to read change history of selected element
+#    Given The 'library/criteria_templates/Withdrawal/parent' page is opened
+#    And The 'Show history' option is clicked from the three dot menu list
+#    When The user clicks on History for particular element
+#    Then The user is presented with history of changes for that element
+#    And The history contains timestamps and usernames
 
   Scenario: [Cancel][Creation] User must be able to Cancel creation of the Withdrawal Criteria template
     Given The 'library/criteria_templates/Withdrawal/parent' page is opened

@@ -5,7 +5,7 @@
         v-if="isDate(item.key)"
         v-model="menuOpen"
         :close-on-content-click="false"
-        scroll-strategy="close"
+        :scroll-strategy="closeOnScroll"
       >
         <template #activator="{ props }">
           <v-text-field
@@ -50,7 +50,7 @@
         single-line
         class="filterAutocompleteLabel ml-1"
         :loading="loading"
-        :menu-props="{ scrollStrategy: 'close' }"
+        :menu-props="{ scrollStrategy: closeOnScroll }"
         @input="getColumnData(item.columnDataKey || item.key)"
         @update:model-value="filterTable"
       >
@@ -101,7 +101,7 @@
 </template>
 
 <script setup>
-import { onBeforeUnmount, ref, watch } from 'vue'
+import { onBeforeUnmount, onScopeDispose, ref, watch } from 'vue'
 import _get from 'lodash/get'
 import _isEmpty from 'lodash/isEmpty'
 import columnData from '@/api/columnData'
@@ -180,6 +180,8 @@ const adapter = useDate()
 const loading = ref(false)
 const booleanChoices = ref(null)
 let slideGroupCleanup = null
+let menuOpenedAt = 0
+let lastSettlingScrollAt = 0
 let columnDataRequestId = 0
 
 watch(searchString, () => {
@@ -234,6 +236,8 @@ watch(
 
 watch(menuOpen, (open) => {
   if (open) {
+    menuOpenedAt = performance.now()
+    lastSettlingScrollAt = 0
     if (!isDate(props.item.key)) {
       getColumnData(props.item.columnDataKey || props.item.key, {
         useBooleanCache: false,
@@ -246,8 +250,50 @@ watch(menuOpen, (open) => {
   }
 })
 
+// Focusing a partly hidden filter box makes the slide group animate it into
+// view right after the menu opens (on either edge). Scrolling that starts
+// within SCROLL_SETTLE_MS of opening, and continues without a pause longer
+// than SCROLL_QUIET_MS, must not close the menu.
+const SCROLL_SETTLE_MS = 300
+const SCROLL_QUIET_MS = 150
+
+function isSettlingScroll() {
+  const now = performance.now()
+  const settling =
+    now - menuOpenedAt < SCROLL_SETTLE_MS ||
+    now - lastSettlingScrollAt < SCROLL_QUIET_MS
+  if (settling) {
+    lastSettlingScrollAt = now
+  }
+  return settling
+}
+
 function closeMenu() {
-  menuOpen.value = false
+  if (!isSettlingScroll()) {
+    menuOpen.value = false
+  }
+}
+
+// Vuetify's built-in 'close' strategy, except that scrolls during the settle
+// window reposition the menu instead of closing it.
+function closeOnScroll(data) {
+  function onScroll(e) {
+    if (data.contentEl.value?.contains(e.target)) {
+      return
+    }
+    if (isSettlingScroll()) {
+      data.updateLocation.value?.(e)
+    } else {
+      data.isActive.value = false
+    }
+  }
+  document.addEventListener('scroll', onScroll, {
+    capture: true,
+    passive: true,
+  })
+  onScopeDispose(() => {
+    document.removeEventListener('scroll', onScroll, { capture: true })
+  })
 }
 
 function bindSlideGroupClose() {

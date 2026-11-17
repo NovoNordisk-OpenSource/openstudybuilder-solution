@@ -2,6 +2,10 @@ ARG NGINX_IMAGE=nginx:alpine
 
 FROM $NGINX_IMAGE
 
+## Upgrade the CA bundle at build time instead of trusting the base image to be current (CVE-2026-111943).
+## Name both packages: ca-certificates alone rewrites the bundle file but leaves ca-certificates-bundle at the old version.
+RUN apk upgrade --no-cache ca-certificates ca-certificates-bundle
+
 COPY ./results/allure-report /public_html
 COPY ./nginx/default.conf /etc/nginx/conf.d/
 COPY ./nginx/redirect.html /public_html/

@@ -8,7 +8,9 @@ from clinical_mdr_api.services.neomodel_ext_generic import (
 )
 
 
-class StandardDataModelService(NeomodelExtGenericService[object]):
+class StandardDataModelService[ModelT: BaseModel = BaseModel](
+    NeomodelExtGenericService[object, ModelT]
+):
     def _create_aggregate_root(self, item_input: BaseModel, library: LibraryVO):
         pass
 
@@ -24,5 +26,4 @@ class StandardDataModelService(NeomodelExtGenericService[object]):
         uid: str,
         **kwargs,
     ):
-        item = self.repository.find_by_uid(uid=uid, **kwargs)
-        return item
+        return self.repository.find_by_uid(uid=uid, **kwargs)

@@ -1,5 +1,4 @@
 import csv
-import re
 
 from .functions.parsers import map_boolean
 from .functions.utils import load_env
@@ -135,7 +134,7 @@ study_mapper = {
             "Intervention Model": "intervention_model_code",
             "Trial is Randomized": "is_trial_randomised",
             "Trial Blinding Schema": "trial_blinding_schema_code",
-            "Control Type Response": "control_type_code",
+            "Control Type Response": "control_type_codes",
             "Trial Title": "study_title",
             "Trial Phase Classification": "trial_phase_code",
             "Trial Type Response": "trial_type_codes",
@@ -220,9 +219,8 @@ class Mockdata(BaseImporter):
                 continue
             # get the values correctly with the conjections
             parameter_values = []
-            types = []
-            for temp_type in re.findall(r"\[.*?\]", template["name"]):
-                types.append(temp_type.replace("[", "").replace("]", ""))
+            # Only bracketed parameter names are placeholders, other bracketed text is literal
+            types = [parameter["name"] for parameter in template["parameters"]]
 
             # first value
             if data["first_value"]:

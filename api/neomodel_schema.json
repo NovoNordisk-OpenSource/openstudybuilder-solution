@@ -1024,7 +1024,7 @@
       "module": "clinical_mdr_api.domain_repositories.models.biomedical_concepts",
       "properties": {
         "definition": "StringProperty",
-        "display_name": "StringProperty",
+        "label": "StringProperty",
         "name": "StringProperty",
         "nci_concept_id": "StringProperty",
         "nci_concept_name": "StringProperty",
@@ -1074,9 +1074,9 @@
         "code": "StringProperty",
         "definition": "StringProperty",
         "derivation_rule": "StringProperty",
-        "display_name": "StringProperty",
         "is_cdisc_defined": "BooleanProperty",
         "is_multiple": "BooleanProperty",
+        "label": "StringProperty",
         "length": "IntegerProperty",
         "name": "StringProperty",
         "nci_concept_id": "StringProperty",
@@ -3024,6 +3024,74 @@
       ]
     },
     {
+      "class": "CTPackageCodelist",
+      "label": "CTPackageCodelist",
+      "module": "clinical_mdr_api.domain_repositories.models.controlled_terminology",
+      "properties": {
+        "uid": "StringProperty"
+      },
+      "relationships": [
+        {
+          "attribute": "contains_attributes",
+          "cardinality": "ZeroOrMore",
+          "direction": "OUTGOING",
+          "rel_properties_model": "clinical_mdr_api.domain_repositories.models.generic.ClinicalMdrRel",
+          "relation_type": "CONTAINS_ATTRIBUTES",
+          "target_class": "clinical_mdr_api.domain_repositories.models.controlled_terminology.CTCodelistAttributesValue"
+        },
+        {
+          "attribute": "contains_codelist",
+          "cardinality": "ZeroOrMore",
+          "direction": "INCOMING",
+          "rel_properties_model": "clinical_mdr_api.domain_repositories.models.generic.ClinicalMdrRel",
+          "relation_type": "CONTAINS_CODELIST",
+          "target_class": "clinical_mdr_api.domain_repositories.models.controlled_terminology.CTPackage"
+        },
+        {
+          "attribute": "contains_term",
+          "cardinality": "ZeroOrMore",
+          "direction": "OUTGOING",
+          "rel_properties_model": "clinical_mdr_api.domain_repositories.models.generic.ClinicalMdrRel",
+          "relation_type": "CONTAINS_TERM",
+          "target_class": "clinical_mdr_api.domain_repositories.models.controlled_terminology.CTPackageTerm"
+        }
+      ]
+    },
+    {
+      "class": "CTPackageTerm",
+      "label": "CTPackageTerm",
+      "module": "clinical_mdr_api.domain_repositories.models.controlled_terminology",
+      "properties": {
+        "uid": "StringProperty"
+      },
+      "relationships": [
+        {
+          "attribute": "contains_attributes",
+          "cardinality": "ZeroOrMore",
+          "direction": "OUTGOING",
+          "rel_properties_model": "clinical_mdr_api.domain_repositories.models.generic.ClinicalMdrRel",
+          "relation_type": "CONTAINS_ATTRIBUTES",
+          "target_class": "clinical_mdr_api.domain_repositories.models.controlled_terminology.CTTermAttributesValue"
+        },
+        {
+          "attribute": "contains_submission_value",
+          "cardinality": "ZeroOrMore",
+          "direction": "OUTGOING",
+          "rel_properties_model": "clinical_mdr_api.domain_repositories.models.generic.ClinicalMdrRel",
+          "relation_type": "CONTAINS_SUBMISSION_VALUE",
+          "target_class": "clinical_mdr_api.domain_repositories.models.controlled_terminology.CTCodelistTerm"
+        },
+        {
+          "attribute": "contains_term",
+          "cardinality": "ZeroOrMore",
+          "direction": "INCOMING",
+          "rel_properties_model": "clinical_mdr_api.domain_repositories.models.generic.ClinicalMdrRel",
+          "relation_type": "CONTAINS_TERM",
+          "target_class": "clinical_mdr_api.domain_repositories.models.controlled_terminology.CTPackageCodelist"
+        }
+      ]
+    },
+    {
       "class": "CTTermAttributesRoot",
       "label": "CTTermAttributesRoot",
       "module": "clinical_mdr_api.domain_repositories.models.controlled_terminology",
@@ -3084,6 +3152,7 @@
       "label": "CTTermAttributesValue",
       "module": "clinical_mdr_api.domain_repositories.models.controlled_terminology",
       "properties": {
+        "algorithm": "StringProperty",
         "concept_id": "StringProperty",
         "definition": "StringProperty",
         "preferred_term": "StringProperty",
@@ -7356,6 +7425,19 @@
       ]
     },
     {
+      "class": "StudySoASnapshot",
+      "label": "StudySoASnapshot",
+      "module": "clinical_mdr_api.domain_repositories.models.study",
+      "properties": {
+        "created_at": "ZonedDateTimeProperty",
+        "html": "StringProperty",
+        "json": "StringProperty",
+        "layout": "StringProperty",
+        "time_unit": "StringProperty"
+      },
+      "relationships": []
+    },
+    {
       "class": "StudyValue",
       "label": "StudyValue",
       "module": "clinical_mdr_api.domain_repositories.models.study",
@@ -7441,6 +7523,14 @@
           "target_class": "clinical_mdr_api.domain_repositories.models.study_selections.StudySelection"
         },
         {
+          "attribute": "has_soa_snapshot",
+          "cardinality": "ZeroOrMore",
+          "direction": "OUTGOING",
+          "rel_properties_model": "clinical_mdr_api.domain_repositories.models.generic.ClinicalMdrRel",
+          "relation_type": "HAS_SOA_SNAPSHOT",
+          "target_class": "clinical_mdr_api.domain_repositories.models.study.StudySoASnapshot"
+        },
+        {
           "attribute": "has_study_activity",
           "cardinality": "ZeroOrMore",
           "direction": "OUTGOING",
@@ -7495,6 +7585,14 @@
           "rel_properties_model": "clinical_mdr_api.domain_repositories.models.generic.ClinicalMdrRel",
           "relation_type": "HAS_STUDY_ARM",
           "target_class": "clinical_mdr_api.domain_repositories.models.study_selections.StudyArm"
+        },
+        {
+          "attribute": "has_study_auxiliary_device",
+          "cardinality": "ZeroOrMore",
+          "direction": "OUTGOING",
+          "rel_properties_model": "clinical_mdr_api.domain_repositories.models.generic.ClinicalMdrRel",
+          "relation_type": "HAS_STUDY_AUXILIARY_DEVICE",
+          "target_class": "clinical_mdr_api.domain_repositories.models.study_auxiliary_device.StudyAuxiliaryDevice"
         },
         {
           "attribute": "has_study_branch_arm",
@@ -7566,6 +7664,14 @@
           "direction": "OUTGOING",
           "rel_properties_model": "clinical_mdr_api.domain_repositories.models.generic.ClinicalMdrRel",
           "relation_type": "HAS_STUDY_DESIGN_CLASS",
+          "target_class": "clinical_mdr_api.domain_repositories.models.study_selections.StudySelection"
+        },
+        {
+          "attribute": "has_study_design_population",
+          "cardinality": "ZeroOrMore",
+          "direction": "OUTGOING",
+          "rel_properties_model": "clinical_mdr_api.domain_repositories.models.generic.ClinicalMdrRel",
+          "relation_type": "HAS_STUDY_DESIGN_POPULATION",
           "target_class": "clinical_mdr_api.domain_repositories.models.study_selections.StudySelection"
         },
         {
@@ -8035,6 +8141,50 @@
           "direction": "OUTGOING",
           "rel_properties_model": "clinical_mdr_api.domain_repositories.models.generic.ConjunctionRelation",
           "relation_type": "AFTER",
+          "target_class": "clinical_mdr_api.domain_repositories.models.study.StudyValue"
+        }
+      ]
+    },
+    {
+      "class": "StudyAuxiliaryDevice",
+      "label": "StudyAuxiliaryDevice",
+      "module": "clinical_mdr_api.domain_repositories.models.study_auxiliary_device",
+      "properties": {
+        "accepted_version": "BooleanProperty",
+        "order": "IntegerProperty",
+        "status": "StringProperty",
+        "uid": "StringProperty"
+      },
+      "relationships": [
+        {
+          "attribute": "has_after",
+          "cardinality": "One",
+          "direction": "INCOMING",
+          "rel_properties_model": "clinical_mdr_api.domain_repositories.models.generic.ConjunctionRelation",
+          "relation_type": "AFTER",
+          "target_class": "clinical_mdr_api.domain_repositories.models.study_audit_trail.StudyAction"
+        },
+        {
+          "attribute": "has_auxiliary_device",
+          "cardinality": "ZeroOrOne",
+          "direction": "OUTGOING",
+          "rel_properties_model": "clinical_mdr_api.domain_repositories.models.generic.ClinicalMdrRel",
+          "relation_type": "HAS_AUXILIARY_DEVICE",
+          "target_class": "clinical_mdr_api.domain_repositories.models.controlled_terminology.CTTermContext"
+        },
+        {
+          "attribute": "has_before",
+          "cardinality": "ZeroOrOne",
+          "direction": "INCOMING",
+          "rel_properties_model": "clinical_mdr_api.domain_repositories.models.generic.ConjunctionRelation",
+          "relation_type": "BEFORE",
+          "target_class": "clinical_mdr_api.domain_repositories.models.study_audit_trail.StudyAction"
+        },
+        {
+          "attribute": "study_value",
+          "cardinality": "ZeroOrMore",
+          "direction": "INCOMING",
+          "relation_type": "HAS_STUDY_AUXILIARY_DEVICE",
           "target_class": "clinical_mdr_api.domain_repositories.models.study.StudyValue"
         }
       ]
@@ -8996,7 +9146,7 @@
           "attribute": "study_soa_footnote_references_study_activity_schedule",
           "cardinality": "ZeroOrMore",
           "direction": "INCOMING",
-          "rel_properties_model": "clinical_mdr_api.domain_repositories.models.generic.ClinicalMdrRel",
+          "rel_properties_model": "clinical_mdr_api.domain_repositories.models.study_selections.FootnoteReferencesScheduleRel",
           "relation_type": "REFERENCES_STUDY_ACTIVITY_SCHEDULE",
           "target_class": "clinical_mdr_api.domain_repositories.models.study_selections.StudySoAFootnote"
         },
@@ -9460,6 +9610,7 @@
       "module": "clinical_mdr_api.domain_repositories.models.study_selections",
       "properties": {
         "accepted_version": "BooleanProperty",
+        "identifier": "StringProperty",
         "key_criteria": "BooleanProperty",
         "order": "IntegerProperty",
         "uid": "StringProperty"
@@ -9496,6 +9647,14 @@
           "rel_properties_model": "clinical_mdr_api.domain_repositories.models.generic.ClinicalMdrRel",
           "relation_type": "HAS_SELECTED_CRITERIA_TEMPLATE",
           "target_class": "clinical_mdr_api.domain_repositories.models.syntax.CriteriaTemplateValue"
+        },
+        {
+          "attribute": "has_study_design_population",
+          "cardinality": "ZeroOrMore",
+          "direction": "OUTGOING",
+          "rel_properties_model": "clinical_mdr_api.domain_repositories.models.generic.ClinicalMdrRel",
+          "relation_type": "HAS_STUDY_DESIGN_POPULATION",
+          "target_class": "clinical_mdr_api.domain_repositories.models.study_selections.StudyDesignPopulation"
         },
         {
           "attribute": "study_value",
@@ -9700,6 +9859,46 @@
           "direction": "INCOMING",
           "rel_properties_model": "clinical_mdr_api.domain_repositories.models.generic.ClinicalMdrRel",
           "relation_type": "HAS_STUDY_DESIGN_CLASS",
+          "target_class": "clinical_mdr_api.domain_repositories.models.study.StudyValue"
+        }
+      ]
+    },
+    {
+      "class": "StudyDesignPopulation",
+      "label": "StudyDesignPopulation",
+      "module": "clinical_mdr_api.domain_repositories.models.study_selections",
+      "properties": {
+        "accepted_version": "BooleanProperty",
+        "definition": "StringProperty",
+        "group_id": "StringProperty",
+        "name": "StringProperty",
+        "notes": "StringProperty",
+        "order": "IntegerProperty",
+        "uid": "StringProperty"
+      },
+      "relationships": [
+        {
+          "attribute": "has_after",
+          "cardinality": "One",
+          "direction": "INCOMING",
+          "rel_properties_model": "clinical_mdr_api.domain_repositories.models.generic.ConjunctionRelation",
+          "relation_type": "AFTER",
+          "target_class": "clinical_mdr_api.domain_repositories.models.study_audit_trail.StudyAction"
+        },
+        {
+          "attribute": "has_before",
+          "cardinality": "ZeroOrOne",
+          "direction": "INCOMING",
+          "rel_properties_model": "clinical_mdr_api.domain_repositories.models.generic.ConjunctionRelation",
+          "relation_type": "BEFORE",
+          "target_class": "clinical_mdr_api.domain_repositories.models.study_audit_trail.StudyAction"
+        },
+        {
+          "attribute": "has_study_design_population",
+          "cardinality": "ZeroOrMore",
+          "direction": "INCOMING",
+          "rel_properties_model": "clinical_mdr_api.domain_repositories.models.generic.ClinicalMdrRel",
+          "relation_type": "HAS_STUDY_DESIGN_POPULATION",
           "target_class": "clinical_mdr_api.domain_repositories.models.study.StudyValue"
         }
       ]
@@ -10040,7 +10239,7 @@
           "attribute": "references_study_activity_schedule",
           "cardinality": "ZeroOrMore",
           "direction": "OUTGOING",
-          "rel_properties_model": "clinical_mdr_api.domain_repositories.models.generic.ClinicalMdrRel",
+          "rel_properties_model": "clinical_mdr_api.domain_repositories.models.study_selections.FootnoteReferencesScheduleRel",
           "relation_type": "REFERENCES_STUDY_ACTIVITY_SCHEDULE",
           "target_class": "clinical_mdr_api.domain_repositories.models.study_selections.StudyActivitySchedule"
         },
@@ -10369,6 +10568,7 @@
         "accepted_version": "BooleanProperty",
         "description": "StringProperty",
         "end_rule": "StringProperty",
+        "expected_time_value": "IntegerProperty",
         "is_global_anchor_visit": "BooleanProperty",
         "is_soa_milestone": "BooleanProperty",
         "order": "IntegerProperty",
@@ -10383,6 +10583,7 @@
         "visit_number": "FloatProperty",
         "visit_subclass": "StringProperty",
         "visit_sublabel_reference": "StringProperty",
+        "visit_suffix": "StringProperty",
         "visit_window_max": "IntegerProperty",
         "visit_window_min": "IntegerProperty"
       },
@@ -13347,5 +13548,5 @@
       ]
     }
   ],
-  "structured_node_class_count": 254
+  "structured_node_class_count": 259
 }

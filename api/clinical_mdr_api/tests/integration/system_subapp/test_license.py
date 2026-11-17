@@ -6,7 +6,7 @@ from clinical_mdr_api.tests.utils.checks import (
     assert_response_status_code,
 )
 
-LICENSE_RE = re.compile(r"\blicense\b", re.I)
+LICENSE_RE = re.compile(r"\blicense\b", re.IGNORECASE)
 GNU_RE = re.compile(r"\bGNU\b")
 
 

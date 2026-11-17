@@ -7,9 +7,6 @@ from neomodel import db
 from clinical_mdr_api.domain_repositories._utils.helpers import (
     acquire_write_lock_study_value,
 )
-from clinical_mdr_api.domain_repositories.concepts.unit_definitions.unit_definition_repository import (
-    UnitDefinitionRepository,
-)
 from clinical_mdr_api.domain_repositories.controlled_terminologies.ct_codelist_attributes_repository import (
     CTCodelistAttributesRepository,
 )
@@ -42,9 +39,6 @@ from clinical_mdr_api.domain_repositories.models.study_visit import (
 )
 from clinical_mdr_api.domain_repositories.study_selections.study_epoch_repository import (
     get_ctlist_terms_by_name,
-)
-from clinical_mdr_api.domains.concepts.unit_definitions.unit_definition import (
-    UnitDefinitionAR,
 )
 from clinical_mdr_api.domains.study_definition_aggregates.study_metadata import (
     StudyStatus,
@@ -127,16 +121,6 @@ def get_valid_time_references_for_study(
 class StudyVisitRepository:
     def __init__(self):
         self.author_id = user().id()
-        unit_repository = UnitDefinitionRepository(self.author_id)
-        units, _ = unit_repository.get_all_optimized()
-        unit: UnitDefinitionAR
-        self._day_unit = None
-        self._week_unit = None
-        for unit in units:
-            if unit.concept_vo.name == "day":
-                self._day_unit = unit
-            if unit.concept_vo.name == "week":
-                self._week_unit = unit
 
     def generate_uid(self) -> str:
         return StudyVisit.get_next_free_uid_and_increment_counter()
@@ -146,8 +130,15 @@ class StudyVisitRepository:
     ) -> dict[str, list[str]]:
         return get_ctlist_terms_by_name(codelist_names, effective_date=effective_date)
 
-    def get_day_week_units(self):
-        return (self._day_unit, self._week_unit)
+    @staticmethod
+    def get_day_week_conversion_factors() -> tuple[float | None, float | None]:
+        rows, _ = db.cypher_query("""
+            MATCH (:UnitDefinitionRoot)-[:LATEST]->(unit_value:UnitDefinitionValue)
+            WHERE unit_value.name IN ["day", "week"]
+            RETURN unit_value.name, unit_value.conversion_factor_to_master
+            """)
+        factors = dict(rows)
+        return factors.get("day"), factors.get("week")
 
     def save(self, visit: StudyVisitVO, create: bool = False):
         return self._update(visit, create)
@@ -214,6 +205,7 @@ class StudyVisitRepository:
             window_unit_object=study_visit_vo.window_unit_object,
             visit_window_min=study_visit_vo.visit_window_min,
             visit_window_max=study_visit_vo.visit_window_max,
+            expected_time_value=study_visit_vo.expected_time_value,
             window_unit_uid=study_visit_vo.window_unit_uid,
             description=study_visit_vo.description,
             start_rule=study_visit_vo.start_rule,
@@ -266,6 +258,12 @@ class StudyVisitRepository:
                 if (unit_definition := timepoint.get("unit_definition"))
                 else None
             )
+
+            is_repeating_visit_placeholder = (
+                input_dict["study_visit"].get("visit_subclass")
+                == VisitSubclass.REPEATING_VISIT.name
+                and input_dict["study_visit"].get("expected_time_value") is not None
+            )
             timepoint_object = TimePoint(
                 uid=timepoint.get("uid"),
                 time_unit_uid=timepoint.get("time_unit_uid"),
@@ -275,12 +273,18 @@ class StudyVisitRepository:
                     else None
                 ),
                 visit_value=(
-                    timepoint["value"].get("value") if timepoint.get("value") else None
+                    None
+                    if is_repeating_visit_placeholder
+                    else (
+                        timepoint["value"].get("value")
+                        if timepoint.get("value")
+                        else None
+                    )
                 ),
             )
         else:
-            time_unit_object = None
             timepoint_object = None
+            time_unit_object = None
 
         window_unit_object = (
             TimeUnit(**window_unit)
@@ -365,6 +369,7 @@ class StudyVisitRepository:
             window_unit_object=window_unit_object,
             visit_window_min=study_visit.get("visit_window_min"),
             visit_window_max=study_visit.get("visit_window_max"),
+            expected_time_value=study_visit.get("expected_time_value"),
             window_unit_uid=input_dict.get("window_unit_uid"),
             description=study_visit.get("description"),
             start_rule=study_visit.get("start_rule"),
@@ -400,9 +405,15 @@ class StudyVisitRepository:
             ),
             is_global_anchor_visit=study_visit.get("is_global_anchor_visit"),
             is_soa_milestone=(study_visit.get("is_soa_milestone") or False),
-            visit_order=study_visit.get("visit_order"),
-            vis_unique_number=int(study_visit.get("unique_visit_number")),
+            visit_order=study_visit.get("order"),
+            stored_visit_order=study_visit.get("order"),
+            vis_unique_number=(
+                int(study_visit.get("unique_visit_number"))
+                if study_visit.get("unique_visit_number") is not None
+                else None
+            ),
             vis_short_name=study_visit.get("short_visit_label"),
+            visit_suffix=study_visit.get("visit_suffix"),
             repeating_frequency=(
                 SimpleCTTermNameWithConflictFlag(**input_dict["repeating_frequency"])
                 if input_dict.get("repeating_frequency")
@@ -428,9 +439,7 @@ class StudyVisitRepository:
         """
         concept_ars = []
         for concept in result_array:
-            concept_dictionary = {}
-            for concept_property, attribute_name in zip(concept, attribute_names):
-                concept_dictionary[attribute_name] = concept_property
+            concept_dictionary = dict(zip(attribute_names, concept))
             concept_ars.append(
                 cls._create_aggregate_root_instance_from_cypher_result(
                     concept_dictionary, audit_trail=audit_trail
@@ -653,10 +662,7 @@ class StudyVisitRepository:
 
         study_visits, attributes_names = db.cypher_query(query=query, params=params)
 
-        extracted_items = cls._retrieve_concepts_from_cypher_res(
-            study_visits, attributes_names
-        )
-        return extracted_items
+        return cls._retrieve_concepts_from_cypher_res(study_visits, attributes_names)
 
     @staticmethod
     @trace_calls
@@ -742,6 +748,7 @@ class StudyVisitRepository:
             RETURN
                 {
                     uid: study_visit.uid,
+                    order: study_visit.order,
                     show_visit: coalesce(study_visit.show_visit, false),
                     is_global_anchor_visit: coalesce(study_visit.is_global_anchor_visit, false),
                     is_soa_milestone: coalesce(study_visit.is_soa_milestone, false),
@@ -751,6 +758,7 @@ class StudyVisitRepository:
                     visit_subclass: study_visit.visit_subclass,
                     short_visit_label: study_visit.short_visit_label,
                     visit_name_label: study_visit.visit_name_label,
+                    visit_suffix: study_visit.visit_suffix,
                     description: study_visit.description,
                     start_rule: study_visit.start_rule,
                     end_rule: study_visit.end_rule,
@@ -876,10 +884,9 @@ class StudyVisitRepository:
             study_uid=study_uid, study_visit_uid=uid, audit_trail=True
         )
         study_visits, attributes_names = db.cypher_query(query=query, params=params)
-        extracted_items = cls._retrieve_concepts_from_cypher_res(
+        return cls._retrieve_concepts_from_cypher_res(
             study_visits, attributes_names, audit_trail=True
         )
-        return extracted_items
 
     def _update(self, study_visit: StudyVisitVO, create: bool = False):
 
@@ -1007,12 +1014,15 @@ class StudyVisitRepository:
         new_visit = StudyVisit(
             uid=study_visit.uid,
             visit_number=study_visit.visit_number,
+            order=study_visit.visit_order,
             visit_sublabel_reference=study_visit.visit_sublabel_reference,
-            short_visit_label=study_visit.visit_short_name,
-            unique_visit_number=study_visit.unique_visit_number,
+            short_visit_label=study_visit.vis_short_name,
+            unique_visit_number=study_visit.vis_unique_number,
+            visit_suffix=study_visit.visit_suffix,
             show_visit=study_visit.show_visit,
             visit_window_min=study_visit.visit_window_min,
             visit_window_max=study_visit.visit_window_max,
+            expected_time_value=study_visit.expected_time_value,
             description=study_visit.description,
             start_rule=study_visit.start_rule,
             end_rule=study_visit.end_rule,

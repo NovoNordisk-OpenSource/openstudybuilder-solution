@@ -101,7 +101,7 @@ const historyTitle = ref('')
 const headers = [
   { title: '', key: 'actions', width: '1%' },
   { key: 'name', title: t('_global.name') },
-  { key: 'display_name', title: t('ActivityItemClassTable.display_name') },
+  { key: 'label', title: t('ActivityItemClassTable.label') },
   { key: 'definition', title: t('_global.definition') },
   { key: 'nci_concept_id', title: t('ActivityItemClassTable.nci_concept_id') },
   { key: 'start_date', title: t('_global.modified') },
@@ -112,7 +112,7 @@ const headers = [
 
 const historyHeaders = [
   { key: 'name', title: t('_global.name') },
-  { key: 'display_name', title: t('ActivityItemClassForm.display_name') },
+  { key: 'label', title: t('ActivityItemClassForm.label') },
   { key: 'order', title: t('_global.order') },
   { key: 'nci_concept_id', title: t('ActivityItemClassTable.nci_concept_id') },
   { key: 'definition', title: t('_global.definition') },

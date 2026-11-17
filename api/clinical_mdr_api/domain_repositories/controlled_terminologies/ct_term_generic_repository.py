@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import Any, cast
+from typing import Any
 
 from cachetools.keys import hashkey
 from neomodel import db
@@ -214,9 +214,7 @@ class CTTermGenericRepository[AggregateRootType](LibraryItemRepositoryImplBase, 
             RETURN term_root
             """
         result, _ = db.cypher_query(query, {"uid": term_uid})
-        if len(result) > 0 and len(result[0]) > 0:
-            return True
-        return False
+        return len(result) > 0 and len(result[0]) > 0
 
     def get_term_name_and_attributes_by_codelist_uids(self, codelist_uids: list[Any]):
         query = """
@@ -443,9 +441,7 @@ class CTTermGenericRepository[AggregateRootType](LibraryItemRepositoryImplBase, 
         """
         terms_ars = []
         for term in result_array:
-            term_dictionary = {}
-            for term_property, attribute_name in zip(term, attribute_names):
-                term_dictionary[attribute_name] = term_property
+            term_dictionary = dict(zip(attribute_names, term))
             terms_ars.append(
                 self._create_aggregate_root_instance_from_cypher_result(term_dictionary)
             )
@@ -590,8 +586,7 @@ class CTTermGenericRepository[AggregateRootType](LibraryItemRepositoryImplBase, 
             ct_term_ver_root_node = ct_term_root.__getattribute__(
                 self.relationship_from_root
             ).single()
-            versions = self.get_all_versions_2(str(ct_term_ver_root_node.element_id))
-            return versions
+            return self.get_all_versions_2(str(ct_term_ver_root_node.element_id))
         return None
 
     @sb_clear_cache(
@@ -714,7 +709,7 @@ class CTTermGenericRepository[AggregateRootType](LibraryItemRepositoryImplBase, 
             params["codelist_uid"] = codelist_uid
 
         cypher_query += f"""
-            (term_root:CTTermRoot)-[:{cast(str, self.relationship_from_root).upper()}]->(:{self.root_class.__label__})-
+            (term_root:CTTermRoot)-[:{self.relationship_from_root.upper()}]->(:{self.root_class.__label__})-
             [:LATEST_FINAL|LATEST_DRAFT|LATEST_RETIRED]->(:{self.value_class.__label__} {{{field}: $field}})
             RETURN term_root.uid
         """
@@ -838,7 +833,7 @@ class CTTermGenericRepository[AggregateRootType](LibraryItemRepositoryImplBase, 
                 """
         else:
             match_clause = f"""
-            MATCH (term_root:CTTermRoot)-[:{cast(str, self.relationship_from_root).upper()}]->(term_ver_root)-[:LATEST_FINAL]->(term_ver_value)
+            MATCH (term_root:CTTermRoot)-[:{self.relationship_from_root.upper()}]->(term_ver_root)-[:LATEST_FINAL]->(term_ver_value)
             """
 
         filter_query_parameters: dict[Any, Any] = {}

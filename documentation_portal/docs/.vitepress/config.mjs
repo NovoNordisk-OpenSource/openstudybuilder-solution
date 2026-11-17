@@ -6,6 +6,14 @@ export default defineConfig({
   description:
     'The scope and purpose of the OpenStudyBuilder is to support the clinical study process from planning, study design, study specification, study set-up to drive downstream automation',
   ignoreDeadLinks: true,
+  vite: {
+    optimizeDeps: {
+      include: ['mermaid']
+    },
+    ssr: {
+      noExternal: ['vitepress-mermaid-renderer']
+    }
+  },
   themeConfig: {
     logo: '/logo-osb.png',
     lastUpdated: { text: 'Last Updated' },
@@ -29,7 +37,9 @@ export default defineConfig({
               collapsed: true,
               items: [
                 { text: 'Manage Studies', link: '/guides/userguide/studies/manage_studies' },
+                { text: 'Study Properties', link: '/guides/userguide/studies/study_properties' },
                 { text: 'Study Structure (Structural Study Design)', link: '/guides/userguide/studies/guide_study_structure' },
+                { text: 'Study Population', link: '/guides/userguide/studies/study_population' },
                 { text: 'Study Visits', link: '/guides/userguide/studies/guide_visits' },
                 { text: 'Protocol SoA Milestones', link: '/guides/userguide/studies/protocol_SoA_Milestone_row' },
                 { text: 'Study Activities', link: '/guides/userguide/studies/userguide_activities' },
@@ -41,7 +51,8 @@ export default defineConfig({
               collapsed: true,
               items: [
                 { text: 'Activity Concepts', link: '/guides/userguide/library/activity_concepts' },
-                { text: 'CRF Library', link: '/guides/userguide/userguides_crf' }
+                { text: 'CRF Library', link: '/guides/userguide/userguides_crf' },
+                { text: 'Import new CT Package', link: '/guides/userguide/library/import_new_ct_package' },
               ]
             },
             {
@@ -49,13 +60,16 @@ export default defineConfig({
               collapsed: true,
               items: [
                 { text: 'Introduction', link: '/guides/userguide/reports/' },
+                { text: 'Activity Instance Export', link: '/guides/userguide/reports/activity-instance-export' },
                 { text: 'Activity Library Dashboard', link: '/guides/userguide/reports/activity-library-dashboard' },
                 { text: 'Activity Metadata Check', link: '/guides/userguide/reports/activity-metadata-check' },
                 { text: 'Audit Trail Report', link: '/guides/userguide/reports/audit-trail-report' },
+                { text: 'Codelist / Terms history', link: '/guides/userguide/reports/codelist-terms-history' },
                 { text: 'CRF Impact Analysis', link: '/guides/userguide/reports/crf-impact-analysis' },
                 { text: 'CRF Library Versions', link: '/guides/userguide/reports/crf-library-versions' },
                 { text: 'Data Exchange Data Models', link: '/guides/userguide/reports/data-exchange-data-models' },
                 { text: 'Laboratory Data Specification', link: '/guides/userguide/reports/laboratory-data-specification' },
+                { text: 'Pre-Define', link: '/guides/userguide/reports/pre-define' },
                 { text: 'Study Metadata Comparison', link: '/guides/userguide/reports/study-metadata-comparison' },
                 { text: 'Syntax Template Dashboard', link: '/guides/userguide/reports/syntax-template-dashboard' }
               ]

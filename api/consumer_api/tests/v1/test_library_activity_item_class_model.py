@@ -19,7 +19,7 @@ def _base_row() -> dict[str, Any]:
         "definition": "Subject identifier",
         "nci_concept_id": "C12345",
         "nci_concept_name": "Subject Identifier",
-        "display_name": "Subject ID",
+        "label": "Subject ID",
         "order": 10,
         "status": "Final",
         "version": "1.0",
@@ -51,7 +51,7 @@ def test_from_input_regular_activity_item_class():
     assert item.definition == "Subject identifier"
     assert item.nci_concept_id == "C12345"
     assert item.nci_concept_name == "Subject Identifier"
-    assert item.display_name == "Subject ID"
+    assert item.label == "Subject ID"
     assert item.order == 10
     assert item.status == LibraryItemStatus.FINAL
     assert item.version == "1.0"

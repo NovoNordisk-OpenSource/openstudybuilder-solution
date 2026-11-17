@@ -84,11 +84,6 @@ const FORM_CASES = [
     addCy: 'add-study-objective',
   },
   {
-    label: 'Add study visit',
-    path: '/studies/Study_000001/study_structure/visits',
-    addCy: 'add-visit',
-  },
-  {
     label: 'Add study compound',
     path: '/studies/Study_000001/study_interventions/study_compounds',
     addCy: 'add-study-compound',
@@ -141,8 +136,6 @@ const FORM_CASES = [
   // Deferred:
   //   add-term-button — gated by `codelistAttributes.extensible`; only visible
   //     inside a specific extensible codelist's term page, not at /library/terms.
-  //   add-study-footnote — toggles SoA "footnote mode" (no modal); the actual
-  //     footnote form is reached by then clicking an SoA target.
 ]
 
 for (const { label, path, addCy } of FORM_CASES) {
@@ -191,3 +184,27 @@ for (const { label, path, addCy } of FORM_CASES) {
     spy.assertClean()
   })
 }
+
+// The visit form is an inline panel, not a dialog, so it can't go through FORM_CASES
+test('smoke: Add study visit form opens and closes cleanly', async ({
+  page,
+}) => {
+  await page.addInitScript(seedDemoAuth)
+
+  const spy = setupConsoleSpy(page)
+
+  await page.goto('/studies/Study_000001/study_structure/visits')
+
+  const addButton = page.locator('[data-cy="add-visit-timeline"]')
+  await expect(addButton).toBeVisible({ timeout: 15_000 })
+  // Disabled until the study's visit mode has loaded.
+  await expect(addButton).toBeEnabled({ timeout: 10_000 })
+  await addButton.click()
+
+  const form = page.locator('[data-cy="study-visit-timeline-form"]')
+  await expect(form).toBeVisible({ timeout: 10_000 })
+  await form.locator('[data-cy="close-visit-form"]').click()
+  await expect(form).toHaveCount(0, { timeout: 5_000 })
+
+  spy.assertClean()
+})

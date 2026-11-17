@@ -104,6 +104,7 @@ class Footnote(BaseModel):
             return None
 
         parameter_terms: list[MultiTemplateParameterTerm] = []
+        parameter_names = footnote_ar.get_parameter_names()
         for position, parameter in enumerate(footnote_ar.get_parameters()):
             terms: list[IndexedTemplateParameterTerm] = []
             for index, parameter_term in enumerate(parameter.parameters):
@@ -118,7 +119,10 @@ class Footnote(BaseModel):
 
             parameter_terms.append(
                 MultiTemplateParameterTerm(
-                    conjunction=conjunction, position=position + 1, terms=terms
+                    conjunction=conjunction,
+                    position=position + 1,
+                    parameter_name=parameter_names[position],
+                    terms=terms,
                 )
             )
         return cls(
@@ -159,6 +163,7 @@ class FootnoteWithType(Footnote):
         get_footnote_type_attributes: Callable[[SyntaxTemplateRoot], Any],
     ) -> Self:
         parameter_terms: list[MultiTemplateParameterTerm] = []
+        parameter_names = footnote_ar.get_parameter_names()
         for position, parameter in enumerate(footnote_ar.get_parameters()):
             terms: list[IndexedTemplateParameterTerm] = []
             for index, parameter_term in enumerate(parameter.parameters):
@@ -173,7 +178,10 @@ class FootnoteWithType(Footnote):
 
             parameter_terms.append(
                 MultiTemplateParameterTerm(
-                    conjunction=conjunction, position=position + 1, terms=terms
+                    conjunction=conjunction,
+                    position=position + 1,
+                    parameter_name=parameter_names[position],
+                    terms=terms,
                 )
             )
         return cls(

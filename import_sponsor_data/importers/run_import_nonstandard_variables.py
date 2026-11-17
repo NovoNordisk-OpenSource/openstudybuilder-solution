@@ -548,11 +548,12 @@ class NonStandardVariables(BaseImporter):
 
     def _canonicalize_osb(self, row: dict) -> dict | None:
         variable_name = (row.get("non_standard_variable.code") or "").strip()
-        label = (row.get("display_name") or "").strip()
+        # Exports made before the display_name -> label rename carry `display_name`
+        label = (row.get("label") or row.get("display_name") or "").strip()
         if not variable_name or not label:
             self.log.warning(
                 "Skipping OSB row with missing non_standard_variable.code or "
-                "display_name: %s",
+                "label: %s",
                 row,
             )
             return None
@@ -671,7 +672,7 @@ class NonStandardVariables(BaseImporter):
 
         body = {
             "name": name,
-            "display_name": label,
+            "label": label,
             "order": order,
             "library_name": MDR_MIGRATION_NONSTANDARD_VARIABLES_LIBRARY,
             "role_uid": role_uid,

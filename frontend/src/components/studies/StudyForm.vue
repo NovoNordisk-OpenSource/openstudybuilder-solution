@@ -54,14 +54,17 @@
               v-model="form.study_number"
               :label="$t('StudyForm.number')"
               :rules="[
-                formRules.numeric,
+                (value) =>
+                  regex.validateStudyNumber(
+                    value,
+                    settingsStore.settings?.studies_study_number_regex
+                  ),
                 (value) =>
                   formRules.oneOfTwo(
                     value,
                     form.study_acronym,
                     $t('StudyForm.one_of_two_error_message')
                   ),
-                (value) => formRules.max(value, appStore.studyNumberLength),
               ]"
               clearable
               data-cy="study-number"
@@ -107,11 +110,12 @@
 import { computed, onMounted, inject, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import SimpleFormDialog from '@/components/tools/SimpleFormDialog.vue'
-import { useAppStore } from '@/stores/app'
 import { useStudiesGeneralStore } from '@/stores/studies-general'
 import { useStudiesManageStore } from '@/stores/studies-manage'
 import studyApi from '@/api/study'
 import { useFormStore } from '@/stores/form'
+import { useSettingsStore } from '@/stores/settings'
+import regex from '@/utils/regex'
 
 const props = defineProps({
   editedStudy: {
@@ -127,7 +131,7 @@ const formRules = inject('formRules')
 const emit = defineEmits(['close', 'updated'])
 const studiesManageStore = useStudiesManageStore()
 const studiesGeneralStore = useStudiesGeneralStore()
-const appStore = useAppStore()
+const settingsStore = useSettingsStore()
 const formRef = ref()
 const formStore = useFormStore()
 
@@ -138,7 +142,7 @@ const helpItems = [
   'StudyForm.project_name',
   'StudyForm.brand_name',
   'StudyForm.study_id',
-  { key: 'StudyForm.number', context: getNumberTranslationContext },
+  { key: 'StudyForm.number', context: getStudyFormNumberRegexMessage },
   'StudyForm.acronym',
 ]
 
@@ -166,6 +170,7 @@ watch(
 )
 
 onMounted(() => {
+  settingsStore.fetchSettings()
   if (props.editedStudy) {
     initForm(props.editedStudy)
   }
@@ -233,8 +238,12 @@ function updateStudy() {
     })
 }
 
-function getNumberTranslationContext() {
-  return { length: appStore.studyNumberLength }
+function getStudyFormNumberRegexMessage() {
+  return {
+    msg:
+      settingsStore.settings?.studies_study_number_regex?.message ||
+      t('_help.StudyForm.number_default'),
+  }
 }
 
 async function submit() {

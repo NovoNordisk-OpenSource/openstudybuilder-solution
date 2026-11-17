@@ -29,7 +29,7 @@ class ActivityGroupVO(ConceptVO):
         nci_concept_id: str | None = None,
         nci_concept_name: str | None = None,
     ) -> Self:
-        activity_group_vo = cls(
+        return cls(
             name=name,
             name_sentence_case=name_sentence_case,
             definition=definition,
@@ -38,8 +38,6 @@ class ActivityGroupVO(ConceptVO):
             nci_concept_id=nci_concept_id,
             nci_concept_name=nci_concept_name,
         )
-
-        return activity_group_vo
 
     def validate(
         self,
@@ -106,13 +104,12 @@ class ActivityGroupAR(ConceptARBase):
             library_name=library.name,
         )
 
-        activity_group_ar = cls(
+        return cls(
             _uid=generate_uid_callback(),
             _item_metadata=item_metadata,
             _library=library,
             _concept_vo=concept_vo,
         )
-        return activity_group_ar
 
     def edit_draft(
         self,

@@ -252,7 +252,7 @@ const headers = [
 const filters = [
   { title: t('MedicinalProduct.compound'), key: 'compound.name' },
   { title: t('_global.name'), key: 'name' },
-  // { title: t('MedicinalProduct.dose'), key: 'dose_values' }, // Fix this!
+  { title: t('MedicinalProduct.dose'), key: 'dose_values.label' },
   { title: t('MedicinalProduct.frequency'), key: 'dose_frequencies.name' },
   { title: t('MedicinalProduct.delivery_device'), key: 'delivery_device.name' },
   { title: t('MedicinalProduct.dispenser'), key: 'dispenser.name' },

@@ -17,7 +17,9 @@ from clinical_mdr_api.services.controlled_terminologies.ct_term_generic_service 
 )
 
 
-class CTTermAttributesService(CTTermGenericService[CTTermAttributesAR]):
+class CTTermAttributesService(
+    CTTermGenericService[CTTermAttributesAR, CTTermAttributes]
+):
     aggregate_class = CTTermAttributesAR
     repository_interface = CTTermAttributesRepository
     version_class = CTTermAttributesVersion
@@ -53,6 +55,12 @@ class CTTermAttributesService(CTTermGenericService[CTTermAttributesAR]):
                 catalogue_exists_callback=lambda _: True,
                 term_uid=item.uid,
                 concept_id_exists_callback=self._repos.ct_term_attributes_repository.entity_exists_by_concept_id,
+                # explicit null clears algorithm; omitted keeps previous
+                algorithm=(
+                    term_input.algorithm
+                    if "algorithm" in term_input.model_fields_set
+                    else item.ct_term_vo.algorithm
+                ),
             ),
         )
         self.repository.save(item)

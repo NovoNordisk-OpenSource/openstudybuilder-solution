@@ -6,7 +6,7 @@ SBLint is a powerful static code analysis tool tailored to enforce custom coding
 To run SBLint and ensure your code adheres to the defined standards, use the following commands:
 
 ### Run All SBLinters
-Execute all available SBLinters against `clinical_mdr_api`, `consumer_api` and `common`:
+Execute all available SBLinters against the API packages (see the `sblint` poe task):
 ```sh
 uv run poe sblint
 ```

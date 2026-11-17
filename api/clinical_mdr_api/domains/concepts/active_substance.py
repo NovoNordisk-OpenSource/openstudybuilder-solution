@@ -33,7 +33,7 @@ class ActiveSubstanceVO(ConceptVO):
         external_id: str | None,
         unii_term_uid: str | None,
     ) -> Self:
-        active_substance_vo = cls(
+        return cls(
             analyte_number=analyte_number,
             short_number=short_number,
             long_number=long_number,
@@ -46,8 +46,6 @@ class ActiveSubstanceVO(ConceptVO):
             abbreviation=None,
             is_template_parameter=False,
         )
-
-        return active_substance_vo
 
     def validate(
         self,
@@ -144,13 +142,12 @@ class ActiveSubstanceAR(ConceptARBase):
             dictionary_term_exists_callback=dictionary_term_exists_callback,
         )
 
-        active_substance_ar = cls(
+        return cls(
             _uid=uid,
             _item_metadata=item_metadata,
             _library=library,
             _concept_vo=concept_vo,
         )
-        return active_substance_ar
 
     def edit_draft(
         self,

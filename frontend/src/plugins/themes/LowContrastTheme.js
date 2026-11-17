@@ -40,6 +40,7 @@ export default {
     tableChildRow: '#EFEFEF',
     nnTableRowExpanded: '#E0E0E0',
     nnTableRowChild: '#EFEFEF',
+    nnTableHeaderDark: '#272e41',
     parameterBackground: '#E8E8E8',
     darkGrey: '#8A8A8A',
     tableGray: '#E0E0E0',

@@ -268,9 +268,7 @@ class DictionaryCodelistGenericRepository(
         """
         codelist_ars = []
         for codelist in result_array:
-            codelist_dictionary = {}
-            for codelist_property, attribute_name in zip(codelist, attribute_names):
-                codelist_dictionary[attribute_name] = codelist_property
+            codelist_dictionary = dict(zip(attribute_names, codelist))
             codelist_ars.append(
                 self._create_aggregate_root_instance_from_cypher_result(
                     codelist_dictionary
@@ -455,7 +453,7 @@ class DictionaryCodelistGenericRepository(
             """
             db.cypher_query(query, {"codelist_uid": versioned_object.uid})
 
-    def codelist_exists(self, codelist_uid: str) -> bool:
+    def codelist_exists(self, codelist_uid: str | None) -> bool:
         query = """
             MATCH (dictionary_codelist_root:DictionaryCodelistRoot {uid: $uid})-[:LATEST_FINAL]->(dictionary_codelist_value)
             RETURN dictionary_codelist_root

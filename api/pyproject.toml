@@ -14,13 +14,16 @@ dependencies = [
     "pydantic-settings~=2.15.0",
     "requests~=2.34.2",
     "openpyxl~=3.1.5",
+    # The CDISC terminology-change spreadsheets are the legacy binary .xls format, which
+    # openpyxl cannot open. Everything else CDISC publishes as a workbook is .xlsx.
+    "xlrd~=2.0.2",
     "dict2xml~=1.7.8",
     "hypothesis~=6.168.5",
     "python-dateutil~=2.9.0.post0",
     "yattag~=1.16.1",
     "python-docx~=1.2.0",
     "colour~=0.1.5",
-    "authlib~=1.8.0",
+    "authlib~=1.9.0",
     "pyjwt~=2.15.0",
     "cryptography~=50.0.0",
     "httpx~=0.28.1",
@@ -42,8 +45,8 @@ dependencies = [
     "nh3~=0.3.5",
     "neomodel==6.1.0",
     "deepdiff~=9.1.0",
-    "pyasn1~=0.6.3",
-    "pillow~=12.3.0",
+    "pyasn1~=0.6.5",
+    "pillow~=13.0.0",
     "mako~=1.4.3",
 ]
 
@@ -66,6 +69,9 @@ package = false
 # versions without declaring these as direct dependencies of this project.
 constraint-dependencies = [
     "werkzeug>=3.1.9",  # CVE-2026-102598
+    "certifi>=2026.10.19",  # PYSEC-2026-4320
+    "brotlicffi>=1.2.1.0",  # GHSA-9v8h-qqgm-4m35
+    "joserfc>=1.7.6",  # CVE-2026-119284
 ]
 
 [dependency-groups]
@@ -94,9 +100,16 @@ dev = [
     "uvicorn[standard]~=0.54.0",
     "markdown~=3.11.0",
     "pytest-order~=1.5.0",
-    "pip>=26.2.1",
+    "pip>=26.2.2",
     "pip-audit~=2.10.0",
     "poethepoet>=0.30",
+    "import-linter~=2.15",
+    "types-cachetools",
+    "types-pyyaml",
+    "types-openpyxl",
+    "types-markdown",
+    "types-python-dateutil",
+    "lxml-stubs",
 ]
 
 [tool.pytest.ini_options]
@@ -125,7 +138,7 @@ target-version = ['py314']
 
 [tool.isort]
 profile = 'black'
-src_paths = ['clinical_mdr_api', 'consumer_api', 'common', 'sblint', 'extensions', 'ctrxml']
+src_paths = ['clinical_mdr_api', 'consumer_api', 'common', 'sblint', 'extensions', 'standards_import', 'ctrxml']
 known_third_party = ['neomodel']
 combine_as_imports = true
 
@@ -135,6 +148,14 @@ target-version = 'py314'
 
 [tool.ruff.lint]
 select = [
+    "PERF",
+    "TRY",
+    "RET",
+    "SIM",
+    "BLE",
+    "T20",
+    "A",
+    "RSE",
     "PL",
     "UP",
     "F",
@@ -156,11 +177,36 @@ select = [
     "PGH",
     "FURB",
     "EXE",
+    "N",
+    "ICN",
+    "FAST",
+    "PYI",
+    "AIR",
+    "TID",
+    "SLOT",
+    "TC004",
+    "TC005",
+    "TC007",
+    "TC010",
+    "D419",
 ]
 ignore = [
     "PLC0415", # import-outside-toplevel
     "PLR0917", # too-many-positional-arguments
     "PLW0603", # global-statement
+    "TRY003", # long messages in exceptions: too noisy, exception classes here take free-text messages
+    "TRY004", # Pydantic validators need ValueError
+    "PERF401", # manual-list-comprehension (explicit loops are often clearer; negligible speedup)
+    "SIM108", # if-else-block-instead-of-if-exp (ternaries often hurt readability)
+    "N802", # overrides of stdlib/third-party camelCase methods (e.g. logging.Handler.createLock)
+    "N805", # Pydantic validators use `cls` without @classmethod
+    "N811", # gettext alias `_T as _gettext`
+    "N812", # `db as DB` is the established alias for neomodel's db
+    "N816", # `studyUID` is the shared path-parameter name in routers
+    "N818", # MDRApiBaseException is a public base class name
+    "PYI018", # private TypeVars are imported across modules, which ruff does not see
+    "PYI025", # `Set` from collections.abc is the established import across the domain layer
+    "FAST002", # parameters use `= Query(...)` defaults; Annotated migration would touch every router
 ]
 
 [tool.ruff.lint.isort]
@@ -169,12 +215,27 @@ combine-as-imports = true
 [tool.ruff.lint.per-file-ignores]
 "extensions/extensions_api.py" = ["E402"]
 "consumer_api/consumer_api.py" = ["E402"]
+# `id` is a public query parameter name in the consumer API
+"consumer_api/v1/**" = ["A002"]
 "clinical_mdr_api/main.py" = ["E402"]
+# Imports must follow logging/database configuration; the API description carries the licence text verbatim.
+"standards_import/main.py" = ["E402", "E501"]
 # Magic-value comparisons (status codes, counts, indices, etc.) are idiomatic
 # and expected in test assertions; only enforce PLR2004 on production code.
 # Test fixtures/data files also contain long literal payloads (XML/CSV/JSON
 # samples) that should not be reflowed.
-"**/tests/**" = ["PLR2004", "C4", "PT"]
+"**/tests/**" = ["PLR2004", "C4", "PT", "T20", "BLE", "SIM117", "N806"]
+# Local constant-style names inside the linter's check functions
+"sblint/linters/no_unnecessary_imports.py" = ["N806"]
+# The ProdEx load and the traceability generator log per-record failures and continue by design
+"extensions/prodex/**" = ["BLE"]
+# The ProdEx load log records only the formatted message (no traceback), so the exception text must be passed explicitly
+"extensions/prodex/load_service.py" = ["TRY400"]
+"consumer_api/requirements/**" = ["BLE"]
+# CLI tools and the schemathesis hooks report to stdout by design
+"clinical_mdr_api/developer_tools/**" = ["T20"]
+"clinical_mdr_api/hooks/schemathesis_hooks.py" = ["T20"]
+"sblint/**" = ["T20"]
 "clinical_mdr_api/tests/data/odm_xml.py" = ["E501"]
 
 [tool.ruff.lint.pylint]
@@ -188,11 +249,21 @@ max-nested-blocks = 10
 
 
 [tool.mypy]
-exclude = ["clinical_mdr_api/tests"]
+exclude = ["clinical_mdr_api/tests", "standards_import/tests"]
 check_untyped_defs = true
 disallow_untyped_defs = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+extra_checks = true
+disallow_incomplete_defs = true
+no_implicit_reexport = true
+disable_error_code = ["no-untyped-def","attr-defined","override","return-value","union-attr"]
 
-disable_error_code = ["no-untyped-def","attr-defined","import-untyped","override","return-value","union-attr"]
+# Third-party packages that ship neither inline types nor a stub package.
+[[tool.mypy.overrides]]
+module = ["authlib.*", "opencensus.*", "weasyprint.*", "usdm_model.*", "usdm_info.*", "colour.*", "asyncache.*", "xlrd.*"]
+ignore_missing_imports = true
+
 
 [tool.poe.tasks.dev]
 cmd = "uvicorn --host=0.0.0.0 --port=${port} clinical_mdr_api.main:app --reload"
@@ -210,36 +281,53 @@ dist = "python setup.py bdist_wheel"
 package = "pip wheel -r requirements.txt -w dist"
 testunit = "pytest -s --cov-report html:reports/coverage-unit-html --cov-report xml:reports/coverage.xml --cov-append --cov --junitxml=reports/unit_report.xml clinical_mdr_api/tests/unit/ common/tests/unit"
 testint = "pytest -s -n auto --dist loadfile --cov-report html:reports/coverage-int-html --cov-report xml:reports/coverage.xml --cov-append --cov --junitxml=reports/int_report.xml clinical_mdr_api/tests/integration/"
-testauth = "pytest -s --cov-report html:reports/coverage-auth-html --cov-report xml:reports/coverage.xml --cov-append --cov --junitxml=reports/auth_report.xml clinical_mdr_api/tests/auth/ common/tests/auth extensions/tests/auth/"
 test-telemetry = "pytest -s --cov-report html:reports/coverage-telemetry-html --cov-report xml:reports/coverage.xml --cov-append --cov --junitxml=reports/telemetry_report.xml clinical_mdr_api/tests/telemetry/"
 testunitallure = "pytest -s --cov-report html:reports/coverage-unit --cov-report xml:reports/coverage.xml --cov-append --cov=clinical_mdr_api --junitxml=reports/unit_report.xml --alluredir reports/allure-results clinical_mdr_api/tests/unit/"
 testintallure = "pytest -s -n 4 --dist loadfile --cov-report html:reports/coverage-int --cov-report xml:reports/coverage.xml --cov-append --cov=clinical_mdr_api --junitxml=reports/int_report.xml --alluredir reports/allure-results clinical_mdr_api/tests/integration/"
-lint = "ruff check clinical_mdr_api consumer_api common extensions sblint"
-mypy = "mypy clinical_mdr_api consumer_api common extensions sblint"
-sblint = "python -m sblint.main clinical_mdr_api consumer_api common extensions sblint"
-black = "python -m black clinical_mdr_api consumer_api common extensions sblint"
-isort = "python -m isort clinical_mdr_api consumer_api common extensions sblint"
-audit = "python -m pip_audit --ignore-vuln CVE-2026-4539"
+lint = "ruff check clinical_mdr_api consumer_api common extensions standards_import sblint"
+mypy = "mypy clinical_mdr_api consumer_api common extensions standards_import sblint"
+sblint = "python -m sblint.main clinical_mdr_api consumer_api common extensions standards_import sblint"
+lint-imports = "lint-imports"
+black = "python -m black clinical_mdr_api consumer_api common extensions standards_import sblint"
+isort = "python -m isort clinical_mdr_api consumer_api common extensions standards_import sblint"
+audit = "python -m pip_audit"
 neomodel-schema = "python dump_neomodel_nodes_json.py"
 seed-schemathesis = "python seed_schemathesis_data.py"
 schemathesis-help = "schemathesis run --help"
 consumer-api-dev = "uvicorn --host=0.0.0.0 --port=8008 consumer_api.consumer_api:app --reload"
 consumer-api-lint = "ruff check consumer_api common"
 consumer-api-test = "pytest -s -n 1 --dist loadfile --cov-report html:consumer_api/reports/coverage-int-html --cov-report xml:consumer_api/reports/coverage.xml --cov-append --cov --junitxml=consumer_api/reports/test_report.xml --ignore=consumer_api/tests/auth consumer_api/tests common/tests/unit"
-consumer-api-testauth = "pytest -s -n 1 --dist loadfile --cov-report html:consumer_api/reports/coverage-auth-html --cov-report xml:consumer_api/reports/coverage.xml --cov-append --cov --junitxml=consumer_api/reports/auth_report.xml consumer_api/tests/auth common/tests/auth"
 consumer-api-traceability = "python consumer_api/requirements/generate_traceability.py"
 extensions-api-dev = "uvicorn --host=0.0.0.0 --port=8009 extensions.extensions_api:app --reload"
 extensions-lint = "ruff check extensions"
 extensions-test = "pytest -s -n 1 --dist loadfile --cov-report html:extensions/reports/coverage-extensions-html --cov-report xml:extensions/reports/coverage.xml --cov-append --cov --junitxml=extensions/reports/test_report.xml --ignore=extensions/tests/auth --ignore=extensions/reports extensions/"
-extensions-testauth = "pytest -s -n 1 --dist loadfile --cov-report html:extensions/reports/coverage-auth-html --cov-report xml:extensions/reports/coverage.xml --cov-append --cov --junitxml=extensions/reports/auth_report.xml extensions/tests/auth"
+standards-import-dev = "uvicorn --host=0.0.0.0 --port=8010 standards_import.main:app --reload"
+standards-import-test = "pytest -s -n 1 --dist loadfile --cov-report html:standards_import/reports/coverage-html --cov-report xml:standards_import/reports/coverage.xml --cov-append --cov --junitxml=standards_import/reports/test_report.xml --ignore=standards_import/reports --ignore=standards_import/tests/auth --ignore=standards_import/tests/integration standards_import/tests"
+standards-import-testint = "pytest -s -n 1 --dist loadfile --cov-report html:standards_import/reports/coverage-int-html --cov-report xml:standards_import/reports/coverage.xml --cov-append --cov --junitxml=standards_import/reports/int_report.xml standards_import/tests/integration"
+standards-import-testauth = "pytest -s -n 1 --dist loadfile --cov-report html:standards_import/reports/coverage-auth-html --cov-report xml:standards_import/reports/coverage.xml --cov-append --cov --junitxml=standards_import/reports/auth_report.xml standards_import/tests/auth"
 build-sbom = "python3 ../_tools/build_sbom.py --uv --fallback-dir doc/licenses --level 2 --output sbom.md"
 
 [tool.poe.tasks.format]
 sequence = ["isort", "black"]
 
-# openapi/consumer-openapi/extensions-openapi need OAUTH_ENABLED=True. poe's
-# declarative `env` table sets it directly in the child process (no dependency
-# on a POSIX `env` binary or shell `env VAR=value cmd` prefix).
+# Auth test tasks require OAuth and RBAC.
+# openapi/consumer-openapi/extensions-openapi need OAUTH_ENABLED=True so the generated specs include the OAuth security schemes.
+#
+# Poe's declarative `env` table sets
+# these directly in the child process, overriding values loaded from `.env`.
+# This avoids a dependency on a POSIX `env` binary or shell prefix.
+[tool.poe.tasks.testauth]
+cmd = "pytest -s --cov-report html:reports/coverage-auth-html --cov-report xml:reports/coverage.xml --cov-append --cov --junitxml=reports/auth_report.xml clinical_mdr_api/tests/auth/ common/tests/auth extensions/tests/auth/"
+env = { OAUTH_ENABLED = "True", OAUTH_RBAC_ENABLED = "True" }
+
+[tool.poe.tasks.consumer-api-testauth]
+cmd = "pytest -s -n 1 --dist loadfile --cov-report html:consumer_api/reports/coverage-auth-html --cov-report xml:consumer_api/reports/coverage.xml --cov-append --cov --junitxml=consumer_api/reports/auth_report.xml consumer_api/tests/auth common/tests/auth"
+env = { OAUTH_ENABLED = "True", OAUTH_RBAC_ENABLED = "True" }
+
+[tool.poe.tasks.extensions-testauth]
+cmd = "pytest -s -n 1 --dist loadfile --cov-report html:extensions/reports/coverage-auth-html --cov-report xml:extensions/reports/coverage.xml --cov-append --cov --junitxml=extensions/reports/auth_report.xml extensions/tests/auth"
+env = { OAUTH_ENABLED = "True", OAUTH_RBAC_ENABLED = "True" }
+
 [tool.poe.tasks.openapi]
 cmd = "python generate_openapi_json.py"
 env = { OAUTH_ENABLED = "True" }
@@ -250,6 +338,12 @@ env = { OAUTH_ENABLED = "True" }
 
 [tool.poe.tasks.extensions-openapi]
 cmd = "python generate_openapi.py extensions.extensions_api:app extensions/openapi.json extensions/apiVersion"
+env = { OAUTH_ENABLED = "True" }
+
+# By default, standards-import API is pooled with main API
+# But it can be run separately with `poe standards-import-dev`
+[tool.poe.tasks.standards-import-openapi]
+cmd = "python generate_openapi.py standards_import.main:app standards_import/openapi.json standards_import/apiVersion"
 env = { OAUTH_ENABLED = "True" }
 
 # --seed=1 is pinned deliberately: reproducible contract-test failures for a
@@ -263,6 +357,21 @@ cmd = """
     --report=junit --report-junit-path=reports/schemathesis_report.xml
     openapi.json
 """
+
+[tool.poe.tasks.schemathesis-studies]
+ref = 'schemathesis --phases=examples,coverage,fuzzing --include-path-regex="^/stud" --report-junit-path=reports/schemathesis-studies.xml'
+
+[tool.poe.tasks.schemathesis-concepts]
+ref = 'schemathesis --phases=examples,coverage,fuzzing --include-path-regex="^/(concepts|activity)" --report-junit-path=reports/schemathesis-concepts.xml'
+
+[tool.poe.tasks.schemathesis-ct-odm]
+ref = 'schemathesis --phases=examples,coverage,fuzzing --include-path-regex="^/(ct|standards|dictionaries|odm)" --report-junit-path=reports/schemathesis-ct-odm.xml'
+
+[tool.poe.tasks.schemathesis-other]
+ref = 'schemathesis --phases=examples,coverage,fuzzing --exclude-path-regex="^/(stud|concepts|activity|ct|standards|dictionaries|odm)" --report-junit-path=reports/schemathesis-other.xml'
+
+[tool.poe.tasks.schemathesis-stateful]
+ref = 'schemathesis --phases=stateful --report-junit-path=reports/schemathesis-stateful.xml'
 
 [tool.poe.tasks.consumer-api-schemathesis]
 cmd = """
@@ -281,3 +390,115 @@ cmd = """
     --report=junit --report-junit-path=extensions/reports/schemathesis_report.xml
     extensions/openapi.json
 """
+
+
+[tool.importlinter]
+root_packages = [
+    "clinical_mdr_api",
+    "consumer_api",
+    "common",
+    "extensions",
+    "standards_import",
+]
+include_external_packages = true
+
+# Contract 1a: standards_import must not import clinical_mdr_api (the dangerous
+# direction — staging code calling into MDR's domain model would collapse the boundary
+# this project exists to enforce). clinical_mdr_api MAY import standards_import.routers
+# to mount the SI routes on the main app (Phase 6 of the staging/MDR merge).
+[[tool.importlinter.contracts]]
+name = "standards_import must not import clinical_mdr_api"
+type = "forbidden"
+source_modules = [
+    "standards_import",
+]
+forbidden_modules = [
+    "clinical_mdr_api",
+]
+
+# Contract 1b: clinical_mdr_api must not *directly* import standards_import's internal
+# layers (repositories, services, domain) — only the routers package is the intended
+# public mount point. Going around the routers would bypass the staging app's own
+# request-validation and auth middleware. Indirect imports (routers → services →
+# repositories) are the normal layered design and are expected.
+[[tool.importlinter.contracts]]
+name = "clinical_mdr_api must not import standards_import internals"
+type = "forbidden"
+source_modules = [
+    "clinical_mdr_api",
+]
+forbidden_modules = [
+    "standards_import.repositories",
+    "standards_import.services",
+    "standards_import.domain",
+]
+allow_indirect_imports = "True"
+
+# Contract 2: the staging repositories rely on the raw neo4j.Session-based driver,
+# not neomodel — the hard boundary between the two database interaction styles lives
+# here. mdr_repository is deliberately excluded; it alone in this package uses neomodel.
+# `common.database` is allowed as a transitive import path: staging_db.py uses its
+# `database_uri` utility (pure URL string construction, no ORM layer), which in turn
+# imports neomodel only for the config-setting side-effects in `configure_database`. The
+# rule targets direct dependency on neomodel's object-graph model, not the existence of
+# neomodel anywhere in the dependency tree.
+[[tool.importlinter.contracts]]
+name = "Staging repositories must not import neomodel"
+type = "forbidden"
+source_modules = [
+    "standards_import.repositories.analysis_repository",
+    "standards_import.repositories.changelog_repository",
+    "standards_import.repositories.codelist_review_repository",
+    "standards_import.repositories.inconsistency_repository",
+    "standards_import.repositories.job_repository",
+    "standards_import.repositories.pairing_repository",
+    "standards_import.repositories.raw_load_repository",
+    "standards_import.repositories.release_repository",
+    "standards_import.repositories.rules_repository",
+    "standards_import.repositories.semantic_repository",
+    "standards_import.repositories.staging_repository",
+    # mdr_repository.py is excluded: it alone legitimately imports neomodel
+]
+forbidden_modules = [
+    "neomodel",
+]
+ignore_imports = [
+    # staging_db.py uses common.database solely for database_uri() (pure URL string
+    # parsing), not for any neomodel model/query capability. Ignoring this transitive
+    # path keeps the contract focused on what it guards against: staging repos
+    # accidentally reaching into neomodel's object-graph machinery.
+    "common.database -> neomodel",
+    # common.database also imports common.auth.user (transaction metadata), which uses
+    # neomodel's `db` for user persistence. Same reasoning: a transitive path through
+    # shared common code, not a staging repo using the object-graph model.
+    "common.auth.user -> neomodel",
+]
+
+# Contract 3: mdr_repository writes to the MDR database through neomodel's global
+# connection; if it ever imported staging_db it would have a direct path to the staging
+# driver, collapsing the two-graph isolation this app exists to enforce.
+[[tool.importlinter.contracts]]
+name = "mdr_repository must not import staging_db"
+type = "forbidden"
+source_modules = [
+    "standards_import.repositories.mdr_repository",
+]
+forbidden_modules = [
+    "standards_import.repositories.staging_db",
+]
+
+# Contract 4: the repositories package is the layer where the staging/MDR boundary
+# lives; consumer_api and extensions should never reach into it (directly or
+# transitively). clinical_mdr_api is covered by contract 1b above, which allows
+# importing standards_import.routers but not standards_import.repositories.
+[[tool.importlinter.contracts]]
+name = "consumer_api and extensions must not import standards_import.repositories"
+type = "forbidden"
+source_modules = [
+    "consumer_api",
+    "extensions",
+]
+forbidden_modules = [
+    "standards_import.repositories",
+]
+allow_indirect_imports = "True"

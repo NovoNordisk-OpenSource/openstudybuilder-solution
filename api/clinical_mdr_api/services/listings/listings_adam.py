@@ -33,8 +33,7 @@ class ADAMListingsService:
         data = self._query_service.get_mdflow(
             study_uid=study_uid, study_value_version=study_value_version
         )
-        result = [FlowchartMetadataAdamListing.from_query(item) for item in data]
-        return result
+        return [FlowchartMetadataAdamListing.from_query(item) for item in data]
 
     @db.transaction
     def list_mdvisit(
@@ -45,8 +44,7 @@ class ADAMListingsService:
         data = self._query_service.get_mdvisit(
             study_uid=study_uid, study_value_version=study_value_version
         )
-        result = [StudyVisitAdamListing.from_query(item) for item in data]
-        return result
+        return [StudyVisitAdamListing.from_query(item) for item in data]
 
     @db.transaction
     def list_mdendpnt(
@@ -57,8 +55,7 @@ class ADAMListingsService:
         data = self._query_service.get_mdendpnt(
             study_uid=study_uid, study_value_version=study_value_version
         )
-        result = [StudyEndpntAdamListing.from_query(item) for item in data]
-        return result
+        return [StudyEndpntAdamListing.from_query(item) for item in data]
 
     def get_report(
         self,
@@ -127,7 +124,7 @@ class ADAMListingsService:
                 study_uid, study_value_version=study_value_version
             )
 
-        filtered_items = service_level_generic_header_filtering(
+        return service_level_generic_header_filtering(
             items=result,
             field_name=field_name,
             search_string=search_string,
@@ -135,4 +132,3 @@ class ADAMListingsService:
             filter_operator=filter_operator,
             page_size=page_size,
         )
-        return filtered_items

@@ -50,7 +50,13 @@ def test_name_generation_of_objective_with_0_template_parameters_values(api_clie
         "name": "Test objective",
         "objective_template_uid": "ObjectiveTemplate_000001",
         "parameter_terms": [
-            {"position": 1, "conjunction": "and", "terms": [], "value": None}
+            {
+                "position": 1,
+                "conjunction": "and",
+                "parameter_name": "Indication",
+                "terms": [],
+                "value": None,
+            }
         ],
     }
     response = api_client.post("/objectives", json=data)
@@ -78,7 +84,12 @@ def test_name_generation_of_objective_with_0_template_parameters_values(api_clie
         "library_name": "Test library",
     }
     assert res["parameter_terms"] == [
-        {"position": 1, "conjunction": "and", "terms": []}
+        {
+            "position": 1,
+            "conjunction": "and",
+            "parameter_name": "Indication",
+            "terms": [],
+        }
     ]
     assert res["library"] == {"name": "Test library", "is_editable": True}
 
@@ -131,6 +142,7 @@ def test_name_generation_of_objective_with_1_template_parameter_term(api_client)
         {
             "position": 1,
             "conjunction": "and",
+            "parameter_name": "Indication",
             "terms": [
                 {
                     "index": 1,
@@ -200,6 +212,7 @@ def test_name_generation_of_objective_with_2_template_parameters_values(api_clie
         {
             "position": 1,
             "conjunction": "and",
+            "parameter_name": "Indication",
             "terms": [
                 {
                     "index": 1,
@@ -285,6 +298,7 @@ def test_name_generation_of_objective_with_3_template_parameters_values(api_clie
         {
             "position": 1,
             "conjunction": "and",
+            "parameter_name": "Indication",
             "terms": [
                 {
                     "index": 1,

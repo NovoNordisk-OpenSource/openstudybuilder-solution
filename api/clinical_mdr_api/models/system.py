@@ -7,6 +7,26 @@ from pydantic import Field
 from clinical_mdr_api.models.utils import BaseModel
 
 
+class StudyNumberRegex(BaseModel):
+    regex: Annotated[
+        str,
+        Field(description="Python regular expression a study number must fully match"),
+    ]
+    message: Annotated[
+        str,
+        Field(description="Error message shown when a study number does not match"),
+    ]
+
+
+class SystemSettings(BaseModel):
+    studies_study_number_regex: Annotated[
+        StudyNumberRegex,
+        Field(
+            description="The regular expression pattern used to validate study numbers in the system"
+        ),
+    ]
+
+
 class SystemInformation(BaseModel):
     api_version: Annotated[str, Field(description="Version of the API specification")]
     db_version: Annotated[

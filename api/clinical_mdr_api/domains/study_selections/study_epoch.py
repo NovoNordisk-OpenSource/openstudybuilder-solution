@@ -348,8 +348,7 @@ class TimelineAR(BaseTimelineAR):
         """
         Accessor for generated order
         """
-        visits = self._generate_timeline()
-        return visits
+        return self._generate_timeline()
 
 
 @dataclass

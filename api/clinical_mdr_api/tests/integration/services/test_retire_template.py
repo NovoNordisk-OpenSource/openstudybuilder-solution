@@ -66,6 +66,7 @@ class TestStudyObjectiveUpversion(unittest.TestCase):
         self.template_vo = TemplateVO(
             name=f"Test [{self.TPR_LABEL}]",
             name_plain=f"Test {self.TPR_LABEL}",
+            parameter_names=[self.TPR_LABEL],
         )
         self.item_metadata = LibraryItemMetadataVO.get_initial_item_metadata(
             author_id="Test"

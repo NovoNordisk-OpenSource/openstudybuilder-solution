@@ -169,6 +169,7 @@ from clinical_mdr_api.models.utils import (
     get_latest_on_datetime_str,
 )
 from clinical_mdr_api.services.user_info import UserInfoService
+from clinical_mdr_api.utils import escape_literal_brackets
 from common.config import settings
 from common.exceptions import BusinessLogicException
 from common.utils import version_string_to_tuple
@@ -295,8 +296,9 @@ class StudySelection(BaseModel):
                 for term in parameter_term.terms:
                     used_template_parameters.append(term.name)
             for template_parameter in used_template_parameters:
+                # Brackets within a term are escaped in the generated name.
                 object_to_clear.name = re.sub(
-                    rf"\[?{re.escape(template_parameter)}\]?",
+                    rf"\[?{re.escape(escape_literal_brackets(template_parameter))}\]?",
                     template_parameter,
                     object_to_clear.name,
                 )
@@ -532,11 +534,7 @@ class StudySelectionObjective(StudySelectionObjectiveCore):
             order=order,
             accepted_version=accepted_version,
             study_uid=study_uid,
-            study_version=(
-                study_value_version
-                if study_value_version
-                else get_latest_on_datetime_str()
-            ),
+            study_version=study_value_version or get_latest_on_datetime_str(),
             start_date=single_study_selection.start_date,
             template=selected_objective_template,
             author_username=single_study_selection.author_username,
@@ -611,11 +609,7 @@ class StudySelectionObjective(StudySelectionObjectiveCore):
             order=order,
             accepted_version=accepted_version,
             study_uid=study_uid,
-            study_version=(
-                study_value_version
-                if study_value_version
-                else get_latest_on_datetime_str()
-            ),
+            study_version=study_value_version or get_latest_on_datetime_str(),
             objective_level=objective_level,
             start_date=single_study_selection.start_date,
             latest_objective=latest_objective,
@@ -959,11 +953,7 @@ class StudySelectionEndpoint(StudySelection):
         return StudySelectionEndpoint(
             study_objective=study_obj_model,
             study_uid=study_uid,
-            study_version=(
-                study_value_version
-                if study_value_version
-                else get_latest_on_datetime_str()
-            ),
+            study_version=study_value_version or get_latest_on_datetime_str(),
             order=order,
             accepted_version=accepted_version,
             study_endpoint_uid=study_selection.study_selection_uid,
@@ -1181,11 +1171,7 @@ class StudySelectionCompound(StudySelection):
         return cls(
             order=order,
             study_uid=study_uid,
-            study_version=(
-                study_value_version
-                if study_value_version
-                else get_latest_on_datetime_str()
-            ),
+            study_version=study_value_version or get_latest_on_datetime_str(),
             study_compound_uid=selection.study_selection_uid,
             compound=compound_model,
             compound_alias=compound_alias_model,
@@ -1537,6 +1523,27 @@ class StudySelectionCriteriaCore(StudySelection):
         bool | None, Field(json_schema_extra={"nullable": True})
     ] = False
 
+    study_design_population_uids: Annotated[
+        list[str],
+        Field(
+            description=(
+                "UIDs of the study design populations this criterion belongs to. "
+                "Corresponds to the Group ID in SDTM TI/IE datasets."
+            ),
+        ),
+    ] = Field(default_factory=list)
+
+    identifier: Annotated[
+        str | None,
+        Field(
+            description=(
+                "Protocol criterion identifier (e.g. IC-01, EC-05). "
+                "Maps to USDM EligibilityCriterion.identifier / SDTM TI IETESTCD."
+            ),
+            json_schema_extra={"nullable": True},
+        ),
+    ] = None
+
     @classmethod
     def from_study_selection_template_history(
         cls,
@@ -1562,6 +1569,8 @@ class StudySelectionCriteriaCore(StudySelection):
                 study_selection_history.author_id
             ),
             key_criteria=study_selection_history.key_criteria,
+            study_design_population_uids=study_selection_history.study_design_population_uids,
+            identifier=study_selection_history.identifier,
         )
 
     @classmethod
@@ -1587,6 +1596,8 @@ class StudySelectionCriteriaCore(StudySelection):
                 study_selection_history.author_id
             ),
             key_criteria=study_selection_history.key_criteria,
+            study_design_population_uids=study_selection_history.study_design_population_uids,
+            identifier=study_selection_history.identifier,
         )
 
 
@@ -1678,17 +1689,15 @@ class StudySelectionCriteria(StudySelectionCriteriaCore):
             order=criteria_type_order,
             accepted_version=accepted_version,
             study_uid=study_uid,
-            study_version=(
-                study_value_version
-                if study_value_version
-                else get_latest_on_datetime_str()
-            ),
+            study_version=study_value_version or get_latest_on_datetime_str(),
             start_date=single_study_selection.start_date,
             template=selected_criteria_template,
             author_username=single_study_selection.author_username,
             project_name=project.name,
             project_number=project.project_number,
             key_criteria=single_study_selection.key_criteria,
+            study_design_population_uids=single_study_selection.study_design_population_uids,
+            identifier=single_study_selection.identifier,
         )
 
     @classmethod
@@ -1756,11 +1765,7 @@ class StudySelectionCriteria(StudySelectionCriteriaCore):
             order=criteria_type_order,
             accepted_version=accepted_version,
             study_uid=study_uid,
-            study_version=(
-                study_value_version
-                if study_value_version
-                else get_latest_on_datetime_str()
-            ),
+            study_version=study_value_version or get_latest_on_datetime_str(),
             start_date=single_study_selection.start_date,
             latest_criteria=latest_criteria,
             criteria=selected_criteria,
@@ -1768,6 +1773,8 @@ class StudySelectionCriteria(StudySelectionCriteriaCore):
             project_name=project.name,
             project_number=project.project_number,
             key_criteria=single_study_selection.key_criteria,
+            study_design_population_uids=single_study_selection.study_design_population_uids,
+            identifier=single_study_selection.identifier,
         )
 
     @classmethod
@@ -1825,17 +1832,15 @@ class StudySelectionCriteria(StudySelectionCriteriaCore):
             order=study_selection_criteria_vo.criteria_type_order,
             accepted_version=accepted_version,
             study_uid=study_uid,
-            study_version=(
-                study_value_version
-                if study_value_version
-                else get_latest_on_datetime_str()
-            ),
+            study_version=study_value_version or get_latest_on_datetime_str(),
             start_date=study_selection_criteria_vo.start_date,
             template=selected_criteria_template,
             author_username=study_selection_criteria_vo.author_username,
             project_name=project.name,
             project_number=project.project_number,
             key_criteria=study_selection_criteria_vo.key_criteria,
+            study_design_population_uids=study_selection_criteria_vo.study_design_population_uids,
+            identifier=study_selection_criteria_vo.identifier,
         )
 
     @classmethod
@@ -1894,11 +1899,7 @@ class StudySelectionCriteria(StudySelectionCriteriaCore):
             order=study_selection_criteria_vo.criteria_type_order,
             accepted_version=accepted_version,
             study_uid=study_uid,
-            study_version=(
-                study_value_version
-                if study_value_version
-                else get_latest_on_datetime_str()
-            ),
+            study_version=study_value_version or get_latest_on_datetime_str(),
             start_date=study_selection_criteria_vo.start_date,
             latest_criteria=latest_criteria,
             criteria=selected_criteria,
@@ -1906,6 +1907,8 @@ class StudySelectionCriteria(StudySelectionCriteriaCore):
             project_name=project.name,
             project_number=project.project_number,
             key_criteria=study_selection_criteria_vo.key_criteria,
+            study_design_population_uids=study_selection_criteria_vo.study_design_population_uids,
+            identifier=study_selection_criteria_vo.identifier,
         )
 
 
@@ -1960,6 +1963,32 @@ class StudySelectionCriteriaKeyCriteria(PatchInputModel):
             description="New value to set for the key_criteria property of the selection",
         ),
     ]
+
+
+class StudySelectionCriteriaStudyDesignPopulationInput(PatchInputModel):
+    study_design_population_uids: Annotated[
+        list[str],
+        Field(
+            description=(
+                "UIDs of the study design populations to link to this criterion. "
+                "Pass an empty list to remove all existing links."
+            ),
+        ),
+    ] = Field(default_factory=list)
+
+
+class StudySelectionCriteriaIdentifierInput(PatchInputModel):
+    identifier: Annotated[
+        str | None,
+        Field(
+            description=(
+                "New value for the protocol criterion identifier. "
+                "Maps to USDM EligibilityCriterion.identifier / SDTM TI IETESTCD. "
+                "Pass null to clear the value."
+            ),
+            json_schema_extra={"nullable": True},
+        ),
+    ] = None
 
 
 #
@@ -2283,11 +2312,7 @@ class StudySelectionActivity(StudySelectionActivityCore):
             keep_old_version=keep_old_version,
             accepted_version=accepted_version,
             study_uid=study_uid,
-            study_version=(
-                study_value_version
-                if study_value_version
-                else get_latest_on_datetime_str()
-            ),
+            study_version=study_value_version or get_latest_on_datetime_str(),
             start_date=study_selection.start_date,
             author_username=study_selection.author_username,
         )
@@ -3510,11 +3535,7 @@ class StudyDesignCell(BaseModel):
         return cls(
             design_cell_uid=design_cell_vo.uid,
             study_uid=design_cell_vo.study_uid,
-            study_version=(
-                study_value_version
-                if study_value_version
-                else get_latest_on_datetime_str()
-            ),
+            study_version=study_value_version or get_latest_on_datetime_str(),
             study_arm_uid=design_cell_vo.study_arm_uid,
             study_arm_name=design_cell_vo.study_arm_name,
             study_branch_arm_uid=design_cell_vo.study_branch_arm_uid,
@@ -4084,11 +4105,7 @@ class StudySelectionArmWithConnectedBranchArms(StudySelectionArm):
             name=selection.name,
             short_name=selection.short_name,
             label=selection.label,
-            study_version=(
-                study_value_version
-                if study_value_version
-                else get_latest_on_datetime_str()
-            ),
+            study_version=study_value_version or get_latest_on_datetime_str(),
             code=selection.code,
             description=selection.description,
             order=order,
@@ -4308,11 +4325,7 @@ class StudyActivityInstruction(BaseModel):
         return cls(
             study_activity_instruction_uid=instruction_vo.uid,
             study_uid=instruction_vo.study_uid,
-            study_version=(
-                study_value_version
-                if study_value_version
-                else get_latest_on_datetime_str()
-            ),
+            study_version=study_value_version or get_latest_on_datetime_str(),
             study_activity_uid=instruction_vo.study_activity_uid,
             activity_instruction_name=instruction_vo.activity_instruction_name,
             activity_instruction_uid=instruction_vo.activity_instruction_uid,
@@ -4533,11 +4546,7 @@ class StudySelectionElement(StudySelection):
             element_subtype = None
         return cls(
             study_uid=study_uid,
-            study_version=(
-                study_value_version
-                if study_value_version
-                else get_latest_on_datetime_str()
-            ),
+            study_version=study_value_version or get_latest_on_datetime_str(),
             element_uid=selection.study_selection_uid,
             name=selection.name,
             short_name=selection.short_name,
@@ -4836,11 +4845,7 @@ class StudySelectionBranchArm(StudySelectionBranchArmWithoutStudyArm):
     ):
         return cls(
             study_uid=study_uid,
-            study_version=(
-                study_value_version
-                if study_value_version
-                else get_latest_on_datetime_str()
-            ),
+            study_version=study_value_version or get_latest_on_datetime_str(),
             branch_arm_uid=selection.study_selection_uid,
             name=selection.name or "",
             short_name=selection.short_name or "",
@@ -5227,11 +5232,7 @@ class StudySelectionCohort(StudySelectionCohortWithoutArmBranArmRoots):
 
         return cls(
             study_uid=study_uid,
-            study_version=(
-                study_value_version
-                if study_value_version
-                else get_latest_on_datetime_str()
-            ),
+            study_version=study_value_version or get_latest_on_datetime_str(),
             cohort_uid=selection.study_selection_uid,
             name=selection.name,
             short_name=selection.short_name,
@@ -5540,11 +5541,7 @@ class StudyCompoundDosing(StudySelection):
             order=order,
             study_compound_dosing_uid=compound_dosing_vo.study_selection_uid,
             study_uid=compound_dosing_vo.study_uid,
-            study_version=(
-                study_value_version
-                if study_value_version
-                else get_latest_on_datetime_str()
-            ),
+            study_version=study_value_version or get_latest_on_datetime_str(),
             study_compound=study_compound_model,
             study_element=study_element_model,
             dose_value=SimpleNumericValueWithUnit.from_concept_uid(
@@ -5677,6 +5674,14 @@ class ReferencedItem(BaseModel):
     visible_in_protocol_soa: Annotated[
         bool | None, Field(json_schema_extra={"nullable": True})
     ] = None
+    via_propagated_cell: Annotated[
+        bool,
+        Field(
+            description="Item is referenced through a checkmark propagated from hidden rows "
+            "in the Protocol SoA, so the footnote is shown on the propagated checkmark "
+            "and also on the item's own cell. Only applies to StudyActivitySchedule items."
+        ),
+    ] = False
 
 
 class SoAFootnoteReference(BaseModel):

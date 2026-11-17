@@ -259,7 +259,7 @@ class PharmaceuticalProductRepository(ConceptGenericRepository):
         self, input_dict: dict[str, Any]
     ) -> PharmaceuticalProductAR:
         major, minor = input_dict["version"].split(".")
-        ar = PharmaceuticalProductAR.from_repository_values(
+        return PharmaceuticalProductAR.from_repository_values(
             uid=input_dict["uid"],
             concept_vo=PharmaceuticalProductVO.from_repository_values(
                 external_id=input_dict.get("external_id"),
@@ -311,7 +311,6 @@ class PharmaceuticalProductRepository(ConceptGenericRepository):
                 minor_version=int(minor),
             ),
         )
-        return ar
 
     def _create_aggregate_root_instance_from_version_root_relationship_and_value(
         self,
@@ -330,7 +329,7 @@ class PharmaceuticalProductRepository(ConceptGenericRepository):
             for node in value.has_route_of_administration.all()
         ]
 
-        ar = PharmaceuticalProductAR.from_repository_values(
+        return PharmaceuticalProductAR.from_repository_values(
             uid=root.uid,
             concept_vo=PharmaceuticalProductVO.from_repository_values(
                 external_id=value.external_id,
@@ -373,7 +372,6 @@ class PharmaceuticalProductRepository(ConceptGenericRepository):
             ),
             item_metadata=self._library_item_metadata_vo_from_relation(relationship),
         )
-        return ar
 
     def specific_alias_clause(self, **kwargs) -> str:
         return """

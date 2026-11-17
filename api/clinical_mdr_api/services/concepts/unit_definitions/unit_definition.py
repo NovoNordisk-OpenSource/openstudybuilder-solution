@@ -23,7 +23,9 @@ from clinical_mdr_api.services.concepts.concept_generic_service import (
 )
 
 
-class UnitDefinitionService(ConceptGenericService[UnitDefinitionAR]):
+class UnitDefinitionService(
+    ConceptGenericService[UnitDefinitionAR, UnitDefinitionModel]
+):
     aggregate_class = UnitDefinitionAR
     version_class = UnitDefinitionModelVersion
     repository_interface = UnitDefinitionRepository

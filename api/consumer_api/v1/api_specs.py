@@ -3,6 +3,7 @@ EXAMPLE_POST_STUDY_REQUEST = {
     "study_acronym": "STUDY-ACRONYM",
     "project_id": "AB1234",
     "description": "Study description",
+    "title": "Study title",
 }
 
 EXAMPLE_POST_SOA_REQUEST = {

@@ -26,7 +26,7 @@ class DictionaryTermSubstanceVO(DictionaryTermVO):
         definition: str | None,
         pclass_uid: str | None,
     ) -> Self:
-        dictionary_term_vo = cls(
+        return cls(
             codelist_uid=codelist_uid,
             dictionary_id=dictionary_id,
             name=name,
@@ -35,8 +35,6 @@ class DictionaryTermSubstanceVO(DictionaryTermVO):
             definition=definition,
             pclass_uid=pclass_uid,
         )
-
-        return dictionary_term_vo
 
     @classmethod
     def from_input_values(
@@ -79,10 +77,9 @@ class DictionaryTermSubstanceAR(DictionaryTermAR):
         library: LibraryVO,
         item_metadata: LibraryItemMetadataVO,
     ) -> Self:
-        dictionary_codelist_ar = cls(
+        return cls(
             _uid=uid,
             _dictionary_term_vo=dictionary_term_vo,
             _item_metadata=item_metadata,
             _library=library,
         )
-        return dictionary_codelist_ar

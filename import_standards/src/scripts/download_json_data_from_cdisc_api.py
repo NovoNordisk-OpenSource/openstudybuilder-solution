@@ -13,11 +13,7 @@ from src.scripts.entities.cdisc_data_models.version import Version
 from src.scripts.entities.cdisc_data_models.data_model_import import (
     DataModelImport,
 )
-from src.scripts.utils import (
-    get_cdisc_neo4j_driver,
-    is_newer_than,
-)
-
+from src.scripts.utils import get_cdisc_neo4j_driver, is_older_than
 
 NEO4J_MDR_DATABASE = environ.get("NEO4J_MDR_DATABASE", "neo4j")
 CDISC_IMPORT_DATABASE = environ.get("NEO4J_CDISC_IMPORT_DATABASE", "cdisc")
@@ -26,42 +22,82 @@ HEADERS = {"api-key": AUTH_TOKEN, "Accept": "application/json"}
 BASE_URL = environ.get("CDISC_BASE_URL")
 
 
-def download_newer_packages_than(last_effective_date: str | None, to_directory: str):
+def find_downloaded_packages(directory: str) -> set[str]:
     """
-    Downloads those packages from the CDISC REST API where the effective date
-    is newer than the specified <last_effective_date>.
+    Returns the ids of the packages already stored as JSON files in <directory>,
+    e.g. {"sdtmct-2019-12-20", "adamct-2014-09-26"}.
+
+    The id is the file name without the ".json" extension, which is how
+    download_packages_data() names the files it writes.
+    """
+    if not path.isdir(directory):
+        return set()
+
+    return {
+        path.splitext(name)[0].lower()
+        for name in listdir(directory)
+        if path.splitext(name)[1] == ".json"
+    }
+
+
+def download_missing_packages(to_directory: str, not_older_than: str | None = None):
+    """
+    Downloads every package the CDISC REST API offers that is not already
+    present as a JSON file in <to_directory>.
     Stores the data in JSON files on disc.
 
-    :param last_effective_date: string (YYYY-MM-DD), date of the last loaded package.
-        Only packages newer than this date will be loaded.
-        May be None: in that case 2014-01-01 is used as default date.
+    The set of files on disc is the only thing consulted - no database is
+    involved. That keeps the check per package rather than per effective date,
+    so a gap in one catalogue is filled even when another catalogue is newer.
+
+    :param not_older_than: string (YYYY-MM-DD), optional. When given, packages
+        with an earlier effective date are left alone. Without it the whole
+        history is synced.
     """
 
-    if last_effective_date is None:
-        last_effective_date = "2014-01-01"
-
+    already_downloaded = find_downloaded_packages(to_directory)
     print(
-        f"Checking for packages newer than the effective_date='{last_effective_date}'.",
-        end="",
+        f"Found {len(already_downloaded)} already downloaded package(s) "
+        f"in directory='{to_directory}'."
     )
+    if not_older_than is not None:
+        print(f"Ignoring packages with an effective_date before '{not_older_than}'.")
 
     available_packages_in_api = get_available_packages_meta_data_from_api()
 
     packages_to_load = []
+    skipped_as_too_old = 0
     for package in available_packages_in_api["_links"]["packages"]:
         href = package["href"]
         # example for the href property: "/mdr/ct/packages/adamct-2014-09-26"
         # the package_id is the part of the href after the last slash (/)
         # e.g. "adamct-2014-09-26"
         package_id = path.basename(href)
-        # the effective date is at the end of the package id
-        # e.g. "2014-09-26"
-        effective_date = "-".join(package_id.rsplit("-", 3)[-3:])
-        catalogue_name = package_id.split("-", 1)[0]
+        # the effective date is the last three dash separated parts
+        # e.g. "2014-09-26", and the catalogue name is everything before it.
+        # Split from the right: catalogue names may contain a dash themselves
+        # ("define-xmlct", "qs-ftct").
+        catalogue_name, *date_parts = package_id.rsplit("-", 3)
+        effective_date = "-".join(date_parts)
         package["catalogue_name"] = catalogue_name.upper()
         package["effective_date"] = effective_date
-        if is_newer_than(effective_date, last_effective_date):
-            packages_to_load.append(package)
+
+        if package_id.lower() in already_downloaded:
+            continue
+        if not_older_than is not None and is_older_than(effective_date, not_older_than):
+            skipped_as_too_old += 1
+            continue
+        packages_to_load.append(package)
+
+    print(
+        f"The API offers {len(available_packages_in_api['_links']['packages'])} package(s), "
+        f"{len(packages_to_load)} of which are missing"
+        + (
+            f" ({skipped_as_too_old} skipped as too old)."
+            if skipped_as_too_old
+            else "."
+        )
+    )
 
     if len(packages_to_load) > 0:
         download_packages_data(packages_to_load, to_directory)
@@ -93,7 +129,6 @@ def get_available_packages_meta_data_from_api() -> dict:
     """
     response = requests.get(BASE_URL + "/mdr/ct/packages", headers=HEADERS, timeout=60)
     response.raise_for_status()
-    print(json.dumps(response.json(), indent=2))
     return response.json()
 
 
@@ -102,8 +137,8 @@ def download_packages_data(packages_to_download: Sequence, to_directory: str):
     Downloads the CDISC CT package data for those packages specified by <packages_to_download>.
     Stores the data in JSON files on disc.
 
-    If the corresponding JSON files are already present for one or more packages,
-    those packages will be skipped.
+    Callers are expected to have filtered out the packages that are already on
+    disc - see find_downloaded_packages().
 
     :param packages_to_download: a list of those packages that shall be downloaded.
     """
@@ -111,44 +146,30 @@ def download_packages_data(packages_to_download: Sequence, to_directory: str):
     create_cdisc_data_dir(to_directory)
     print("")
     print(f"Storing files in directory='{to_directory}'.")
-    existing_packages = set(
-        [
-            path.splitext(path.basename(x))[0]
-            for x in listdir(to_directory)
-            if path.splitext(x)[1] == ".json"
-        ]
-    )
     step = 1
     number_of_packages = len(packages_to_download)
     for package in packages_to_download:
-        package_id = (
-            package["catalogue_name"] + "-" + package["effective_date"]
+        package_id = package["catalogue_name"] + "-" + package["effective_date"]
+        print(
+            f"  Step: {step}/{number_of_packages} - Downloading package '{package_id}'."
         )
-        if path.basename(package_id.lower()) in existing_packages:
-            print(
-                f"  Step: {step}/{number_of_packages} - Package '{package_id}' already downloaded."
+        try:
+            response = requests.get(
+                BASE_URL + package["href"], headers=HEADERS, timeout=60
             )
+            response.raise_for_status()
+            package_data = response.json()
+        except HTTPError as http_err:
+            print(f"    HTTP error occurred: {http_err}")
+        except Exception as err:
+            print(f"    Other error occurred: {err}")
         else:
-            print(
-                f"  Step: {step}/{number_of_packages} - Downloading package '{package_id}'."
-            )
-            try:
-                response = requests.get(
-                    BASE_URL + package["href"], headers=HEADERS, timeout=60
-                )
-                response.raise_for_status()
-                package_data = response.json()
-            except HTTPError as http_err:
-                print(f"    HTTP error occurred: {http_err}")
-            except Exception as err:
-                print(f"    Other error occurred: {err}")
-            else:
-                filename = package_id.split("/")[-1].lower() + ".json"
-                with open(
-                    path.join(to_directory, filename), "w", encoding="utf-8"
-                ) as ctpkg_file:
-                    ctpkg_file.write(json.dumps(package_data))
-                    ctpkg_file.write("\n")
+            filename = package_id.split("/")[-1].lower() + ".json"
+            with open(
+                path.join(to_directory, filename), "w", encoding="utf-8"
+            ) as ctpkg_file:
+                ctpkg_file.write(json.dumps(package_data))
+                ctpkg_file.write("\n")
         step += 1
 
 
@@ -333,42 +354,6 @@ def create_cdisc_data_dir(directory: str):
             print(error)
 
 
-def get_latest_effective_date():
-    """
-    Get the latest imported package effective date from the CDISC Import database.
-    """
-
-    cdisc_neo4j_driver = get_cdisc_neo4j_driver()
-
-    # If using a staging database, it might not exist yet
-    # so we need to create it first
-    if CDISC_IMPORT_DATABASE != NEO4J_MDR_DATABASE:
-        try:
-            with cdisc_neo4j_driver.session(database="system") as session:
-                session.run(
-                    "CREATE DATABASE $database IF NOT EXISTS",
-                    database=CDISC_IMPORT_DATABASE,
-                )
-        except ServiceUnavailable:
-            print("Can't connect to neo4j database, using default latest date")
-            return None
-
-    with cdisc_neo4j_driver.session(database=CDISC_IMPORT_DATABASE) as session:
-        with session.begin_transaction() as tx:
-            record = tx.run(
-                """
-                MATCH (import:Import)
-                WITH import.effective_date AS effective_date
-                ORDER BY effective_date DESC
-                LIMIT 1
-                RETURN
-                    effective_date.year + '-' + right('0' + effective_date.month, 2) + '-' + right('0' + effective_date.day, 2)
-                        AS effective_date
-                """
-            ).single()
-            return record["effective_date"] if record is not None else None
-
-
 def get_latest_data_model_versions():
     """
     Get the latest imported data model versions from the CDISC Import database.
@@ -392,23 +377,23 @@ def get_latest_data_model_versions():
     with cdisc_neo4j_driver.session(database=CDISC_IMPORT_DATABASE) as session:
         with session.begin_transaction() as tx:
             output = {}
-            result = tx.run(
-                """
+            result = tx.run("""
                 MATCH (import:DataModelImport)
                 WITH import.catalogue as catalogue, collect(import.version_number) AS versions
                 RETURN catalogue, versions
-                """
-            )
+                """)
             for record in result.data():
                 output[record["catalogue"]] = record["versions"]
             return output
 
 
-def download_ct_json_data_from_cdisc_api(to_directory: str):
+def download_ct_json_data_from_cdisc_api(
+    to_directory: str, not_older_than: str | None = None
+):
     """
     Download the CT JSON data from the CDISC API.
     """
-    download_newer_packages_than(get_latest_effective_date(), to_directory)
+    download_missing_packages(to_directory, not_older_than)
 
 
 def download_data_model_json_data_from_cdisc_api(to_directory: str):

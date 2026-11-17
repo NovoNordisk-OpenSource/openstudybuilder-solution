@@ -200,7 +200,7 @@ defineExpose({ itemOverview })
 function adaptForSummary(activityItemClass) {
   const adapted = {
     name: activityItemClass.name,
-    display_name: activityItemClass.display_name,
+    label: activityItemClass.label,
     start_date: activityItemClass.start_date,
     end_date: activityItemClass.end_date,
     status: activityItemClass.status,
@@ -421,7 +421,7 @@ watch(
 }
 
 .activity-item-class-overview-container :deep(.v-data-table__th) {
-  background-color: #272e41 !important;
+  background-color: rgb(var(--v-theme-nnTableHeaderDark)) !important;
 }
 
 .activity-item-class-overview-container :deep(.v-data-table__tbody tr) {

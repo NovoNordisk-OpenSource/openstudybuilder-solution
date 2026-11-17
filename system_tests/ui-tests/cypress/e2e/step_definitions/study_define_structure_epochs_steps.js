@@ -65,9 +65,8 @@ Then('The study epoch lag-time columns are not visible', () => {
     ['Adverse event lag time', 'Hypoglycaemic event lag time', 'Clinical event lag time'].forEach((header) => cy.get('table thead').should('not.contain', header))
 })
 
-Then('The study epoch lag-time columns are visible', () => {
-    ['Adverse event lag time', 'Hypoglycaemic event lag time', 'Clinical event lag time'].forEach((header) => cy.headerContains(header))
-})
+// Hypo and CE lag time only show on studies migrated from MMA, and no test study is migrated
+Then('The study epoch AE lag-time column is visible', () => cy.headerContains('Adverse event lag time'))
 
 Then('User can select only plural lag-time units', () => {
     cy.get('[data-cy="ae_lag_time-unit"] .v-field__input').click()

@@ -118,7 +118,7 @@ def object_diff(objt1, objt2=None) -> list[str]:
     if objt2 is None:
         return []
 
-    return [name for name in objt1.keys() if objt1[name] != objt2[name]]
+    return [name for name in objt1 if objt1[name] != objt2[name]]
 
 
 def get_otv(version_object_class, object1, object2=None):
@@ -256,16 +256,8 @@ class FieldsDirective:
         for nested_field in _nested_include_specs.keys() | _nested_exclude_specs.keys():
             _nested_fields_directives[nested_field] = (
                 cls._from_include_and_exclude_spec_sets(
-                    include_spec_set=(
-                        _nested_include_specs[nested_field]
-                        if nested_field in _nested_include_specs
-                        else set()
-                    ),
-                    exclude_spec_set=(
-                        _nested_exclude_specs[nested_field]
-                        if nested_field in _nested_exclude_specs
-                        else set()
-                    ),
+                    include_spec_set=(_nested_include_specs.get(nested_field, set())),
+                    exclude_spec_set=(_nested_exclude_specs.get(nested_field, set())),
                 )
             )
 
@@ -416,8 +408,7 @@ def create_duration_object_from_api_input(
             msg=f"Unit '{duration_unit}' is not a valid unit for a duration field. "
             f"Only units in the '{settings.study_time_unit_subset}' subset are supported.",
         )
-        duration = f"P{value!s}{duration_unit[0].upper()}"
-        return duration
+        return f"P{value!s}{duration_unit[0].upper()}"
     return None
 
 
@@ -643,9 +634,7 @@ def generic_item_filtering(
             # If all orders for SortKeys are the same we can order the list in a single sort function call
             if len(distinct_sort_orders) == 1:
                 filtered_items.sort(
-                    key=lambda x: [
-                        _sort_value(x, sort_key) for sort_key in sort_by.keys()
-                    ],
+                    key=lambda x: [_sort_value(x, sort_key) for sort_key in sort_by],
                     reverse=not distinct_sort_orders.pop(),
                 )
             # If orders for SortKeys are different we have to order list calling sort function a few times, once per each SortKey.
@@ -942,11 +931,10 @@ def filter_aggregated_items(item, filter_key, filter_values, filter_operator):
     if isinstance(_item_value_for_key, list):
         if not filter_values:
             return not _item_value_for_key
-        for _val in _item_value_for_key:
-            # Return true as soon as any value matches with the operator
-            if apply_filter_operator(_val, filter_operator, filter_values):
-                return True
-        return False
+        return any(
+            apply_filter_operator(_val, filter_operator, filter_values)
+            for _val in _item_value_for_key
+        )
     if isinstance(_item_value_for_key, Enum):
         return apply_filter_operator(
             _item_value_for_key.value, filter_operator, filter_values
@@ -1196,12 +1184,8 @@ def build_simple_filters(
     sort_by: dict[Any, Any] | None,
 ) -> dict[Any, Any] | None:
     if (
-        filter_by is None
-        or all(key in _vo_to_ar_filter_map.keys() for key in filter_by.keys())
-    ) and (
-        sort_by is None
-        or all(key in _vo_to_ar_filter_map.keys() for key in sort_by.keys())
-    ):
+        filter_by is None or all(key in _vo_to_ar_filter_map for key in filter_by)
+    ) and (sort_by is None or all(key in _vo_to_ar_filter_map for key in sort_by)):
         if filter_by is not None:
             simple_filter_by = {
                 _vo_to_ar_filter_map[key]: value for key, value in filter_by.items()

@@ -114,7 +114,7 @@ ENV NEO4J_MDR_BOLT_PORT=7687 \
     NEO4J_CDISC_IMPORT_BOLT_PORT=7687 \
     NEO4J_CDISC_IMPORT_HOST=localhost \
     NEO4J_CDISC_IMPORT_AUTH_USER=neo4j \
-    NEO4J_CDISC_IMPORT_DATABASE=cdisc-import \
+    NEO4J_CDISC_IMPORT_DATABASE=mdrdb \
     SPONSOR_DATASET_DIR=$SPONSOR_DATASET_DIR \
     CDISC_DATA_DIR=$CDISC_DATA_DIR/packages \
     CDISC_JSON_DIR=$CDISC_DATA_DIR/packages/cdisc_ct \
@@ -320,6 +320,12 @@ RUN if [ -n "${EXTRA_CA_CERT}" ]; then \
         && update-ca-certificates ; \
     fi \
     && rm -f /tmp/extra-ca-cert
+
+# Upgrade the OS CA bundle at build time instead of trusting the base image to be current (CVE-2026-111943).
+# Keep this ahead of the APOC download below - wget verifies against this bundle.
+RUN apt-get update \
+    && apt-get -y install --only-upgrade ca-certificates \
+    && apt-get clean && rm -rf /var/lib/apt/lists
 
 # Match id of neo4j user with the current user on the host for correct premissions of db dumps mounted folder
 ARG UID=1000

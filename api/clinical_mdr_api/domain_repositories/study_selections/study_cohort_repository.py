@@ -293,7 +293,7 @@ class StudySelectionCohortRepository:
         db_property: str, value: str, cohort_vo: StudySelectionCohortVO
     ) -> StudyArm:
         kwarg_value = getattr(cohort_vo, value)
-        cohort_node = (
+        return (
             StudyCohort.nodes.has(study_value=True)
             .filter(
                 uid__ne=cohort_vo.study_selection_uid,
@@ -301,7 +301,6 @@ class StudySelectionCohortRepository:
             )
             .get_or_none(**{db_property: kwarg_value})
         )
-        return cohort_node
 
     def save(self, study_selection: StudySelectionCohortAR, author_id: str) -> None:
         """

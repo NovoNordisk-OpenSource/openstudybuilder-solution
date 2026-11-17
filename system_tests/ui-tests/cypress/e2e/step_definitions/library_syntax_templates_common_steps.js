@@ -18,8 +18,6 @@ Then('The validation appears for {string} template subcategory field', (template
 
 Then('The validation appears for Template name', () => cy.checkIfValidationAppears('template-text-field'))
 
-When('The syntax is verified', () => cy.clickButton('verify-syntax-button'))
-
 When('Template change description is provided', () => cy.fillInput('template-change-description', 'updated for test'))
 
 Then('Indication or Disorder index is cleared', () => cy.clearField('template-indication-dropdown'))
@@ -50,6 +48,8 @@ When('The new template name is prepared with a parameters', () => {
   cy.wait(1000)
   cy.fillTextArea('template-text-field', 'Test [Activity] and [Event] template')
 })
+
+When('User adds to template value in brackets', () => cy.get('[data-cy="template-text-field"] .ql-editor').type('[xxx]'))
 
 When('The indication indexes edition is initiated', () => {
   cy.wait(1000)

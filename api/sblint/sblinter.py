@@ -42,7 +42,13 @@ class SBLinter(ABC):
         from sblint.linters.no_http_methods_with_disallowed_status_code import (
             NoHTTPMethodsWithDisallowedStatusCode,
         )
+        from sblint.linters.no_neomodel_node_for_staging_label import (
+            NoNeomodelNodeForStagingLabel,
+        )
         from sblint.linters.no_relative_imports import NoRelativeImports
+        from sblint.linters.no_staging_label_without_cdisc_staging_marker import (
+            NoStagingLabelWithoutCDISCStagingMarker,
+        )
         from sblint.linters.no_type_hints_with_implicit_any import (
             NoTypeHintsWithImplicitAny,
         )
@@ -58,6 +64,8 @@ class SBLinter(ABC):
             NoRelativeImports,
             NoUnnecessaryImports,
             NoDuplicatedApiModelNames,
+            NoStagingLabelWithoutCDISCStagingMarker,
+            NoNeomodelNodeForStagingLabel,
         ]
 
     @classmethod

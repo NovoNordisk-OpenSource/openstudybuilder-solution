@@ -8,6 +8,7 @@ from pydantic import BaseModel
 
 from clinical_mdr_api.domain_repositories.study_selections.study_soa_repository import (
     SoALayout,
+    SoASnapshotFormat,
 )
 from clinical_mdr_api.domains.study_selections.study_selection_base import SoAItemType
 from clinical_mdr_api.models.concepts.activities.activity import (
@@ -24,6 +25,8 @@ from clinical_mdr_api.models.study_selections.study_selection import (
     SimpleStudyActivityGroup,
     SimpleStudyActivitySubGroup,
     SimpleStudySoAGroup,
+    SoACellReference,
+    SoAFootnoteReference,
     StudyActivitySchedule,
     StudySelectionActivity,
 )
@@ -44,6 +47,7 @@ from clinical_mdr_api.services.utils.table_f import (
     TableCell,
     TableRow,
     TableWithFootnotes,
+    tables_to_html,
 )
 from clinical_mdr_api.tests.unit.services.soa_test_data import (
     ADD_PROTOCOL_SECTION_COLUMN_CASE1,
@@ -60,7 +64,7 @@ from clinical_mdr_api.tests.unit.services.soa_test_data import (
     TINY_SOA_TABLE,
 )
 from common.config import settings
-from common.exceptions import ValidationException
+from common.exceptions import NotFoundException, ValidationException
 from common.utils import VisitClass
 
 
@@ -254,12 +258,17 @@ def check_flowchart_table_first_rows(
 def check_flowchart_table_footnotes(
     table: Table, soa_footnotes: list[StudySoAFootnote], layout: SoALayout
 ):
-    """check footnotes and their references in flowchart table"""
+    """check footnotes and their references in flowchart table
 
-    symbol_ref_uid_map: dict[str, set[Any]] = defaultdict(set)
-    soa_ref_uids = set()
-    # Collect ref UIDs from visible rows only, matching add_footnotes filtering logic
-    visible_ref_uids = set()
+    References are compared by (uid, via propagated cell) keys. Footnotes attached via a propagated cell
+    are shown on propagated cells and, in the Protocol SoA, also on the referenced item's own cell when
+    that cell is visible; other footnotes are only shown on the referenced item's own cell.
+    """
+
+    symbol_ref_key_map: dict[str, set[Any]] = defaultdict(set)
+    soa_ref_keys = set()
+    # Collect ref keys from visible rows only, matching add_footnotes filtering logic
+    visible_ref_keys = set()
 
     for r_idx, row in enumerate(table.rows):
         for c_idx, cell in enumerate(row.cells):
@@ -274,15 +283,16 @@ def check_flowchart_table_footnotes(
                 continue
 
             for ref in cell.refs:
-                soa_ref_uids.add(ref.uid)
+                ref_key = (ref.uid, bool(cell.propagated))
+                soa_ref_keys.add(ref_key)
                 if not row.hide:
-                    visible_ref_uids.add(ref.uid)
+                    visible_ref_keys.add(ref_key)
 
                 if has_footnotes:
                     for symbol in cell.footnotes:
-                        symbol_ref_uid_map[symbol].add(ref.uid)
+                        symbol_ref_key_map[symbol].add(ref_key)
 
-    keys = list(symbol_ref_uid_map.keys())
+    keys = list(symbol_ref_key_map.keys())
     assert keys == sorted(keys), "Invalid order of footnotes symbols"
 
     if keys:
@@ -302,9 +312,14 @@ def check_flowchart_table_footnotes(
     for soa_footnote in soa_footnotes:
         if layout == SoALayout.PROTOCOL:
             # Footnotes are excluded from the table by add_footnotes if none of their
-            # referenced items appear in visible rows (matching add_footnotes filtering)
+            # referenced items appear in visible rows (matching add_footnotes filtering).
+            # A footnote attached via a propagated cell also matches the item's own visible cell.
             has_visible_refs = any(
-                ref.item_uid in visible_ref_uids
+                (ref.item_uid, ref.via_propagated_cell) in visible_ref_keys
+                or (
+                    ref.via_propagated_cell
+                    and (ref.item_uid, False) in visible_ref_keys
+                )
                 for ref in soa_footnote.referenced_items
             )
             if not has_visible_refs:
@@ -322,24 +337,32 @@ def check_flowchart_table_footnotes(
         assert table.footnotes[symbol].text_plain == soa_footnote.footnote.name_plain
         assert table.footnotes[symbol].text_html == soa_footnote.footnote.name
 
+        # Cell keys the footnote is expected to be shown on: the referenced item's own key,
+        # plus (in Protocol SoA) the item's own visible cell for footnotes attached via a propagated cell.
         # Must filter out uids not giving any SoA row unless Activities can share StudyActivityGroup and SubGroup nodes
-        footnote_referenced_uids = {
-            ref.item_uid
-            for ref in soa_footnote.referenced_items
-            if ref.item_uid in soa_ref_uids
-        }
-        referenced_uids_in_soa = set(symbol_ref_uid_map[symbol])
+        footnote_referenced_keys = set()
+        for ref in soa_footnote.referenced_items:
+            base_key = (ref.item_uid, ref.via_propagated_cell)
+            if base_key in soa_ref_keys:
+                footnote_referenced_keys.add(base_key)
+            if (
+                layout == SoALayout.PROTOCOL
+                and ref.via_propagated_cell
+                and (ref.item_uid, False) in visible_ref_keys
+            ):
+                footnote_referenced_keys.add((ref.item_uid, False))
+        referenced_keys_in_soa = set(symbol_ref_key_map[symbol])
 
-        if footnote_referenced_uids:
+        if footnote_referenced_keys:
             # THEN verify footnotes are referenced in SoA
-            footnote_uids_not_referenced_in_soa = (
-                footnote_referenced_uids - referenced_uids_in_soa
+            footnote_keys_not_referenced_in_soa = (
+                footnote_referenced_keys - referenced_keys_in_soa
             )
-            assert not footnote_uids_not_referenced_in_soa
+            assert not footnote_keys_not_referenced_in_soa
 
         else:
             # THEN a footnote without references should not be referenced in any cell of the SoA
-            assert not referenced_uids_in_soa
+            assert not referenced_keys_in_soa
 
 
 def check_flowchart_table_visit_rows(
@@ -598,6 +621,8 @@ def test_get_flowchart_item_uid_coordinates(mock_study_flowchart_service):
     assert coordinates == COORDINATES
 
 
+# LEGACY-SOA-SNAPSHOT (242942): only used by migration 024 to render pre-existing
+# locked/released versions from HAS_PROTOCOL_SOA_CELL refs. Remove in the next release.
 @pytest.mark.parametrize(
     "layout",
     [SoALayout.PROTOCOL_LAB_TABLE, SoALayout.DETAILED, SoALayout.OPERATIONAL],
@@ -613,15 +638,347 @@ def test_load_soa_snapshot_rejects_non_protocol_layout(
 
 @pytest.mark.parametrize(
     "layout",
-    [SoALayout.PROTOCOL_LAB_TABLE, SoALayout.DETAILED, SoALayout.OPERATIONAL],
+    [SoALayout.DETAILED, SoALayout.OPERATIONAL],
 )
-def test_update_soa_snapshot_rejects_non_protocol_layout(
+def test_get_soa_snapshot_rejects_non_protocol_layout(
     mock_study_flowchart_service, layout
 ):
     with pytest.raises(ValidationException, match="only supported for layout"):
-        mock_study_flowchart_service.update_soa_snapshot(
+        mock_study_flowchart_service.get_soa_snapshot(
             study_uid="anything", layout=layout
         )
+
+
+class MockSoASnapshotRepository:
+    """Returns the same saved SoA snapshot rendering for any study version"""
+
+    def __init__(self, snapshot: tuple[str | bytes, str | None] | None):
+        self.snapshot = snapshot
+        self.calls = 0
+
+    def load_snapshot(self, *_args, time_unit=None, **_kwargs):
+        self.calls += 1
+        if self.snapshot is not None and time_unit not in (None, self.snapshot[1]):
+            # like the db query, withhold the rendering rendered in another time unit
+            return None, self.snapshot[1]
+        return self.snapshot
+
+
+class MockStudyFlowchartServiceWithoutSplits(MockStudyFlowchartService):
+    def split_soa(self, study_uid, study_value_version, table):
+        return self.split_flowchart_table(table, set())
+
+
+def test_render_protocol_soa_snapshot():
+    service = MockStudyFlowchartServiceWithoutSplits()
+    table = deepcopy(PROTOCOL_SOA_TABLE)
+    service.remove_hidden_rows(table)
+    original_table = deepcopy(table)
+
+    snapshot = service.render_protocol_soa_snapshot(
+        study_uid="", study_value_version=None, table=table, time_unit="week"
+    )
+
+    # THEN all renderings are produced from the same table
+    assert snapshot.json == original_table.model_dump_json()
+    assert (
+        TableWithFootnotes.model_validate_json(snapshot.json).model_dump()
+        == original_table.model_dump()
+    )
+    assert snapshot.html == tables_to_html([deepcopy(original_table)])
+    # DOCX and XLSX are ZIP archives
+    assert snapshot.docx.startswith(b"PK")
+    assert snapshot.xlsx.startswith(b"PK")
+    assert snapshot.time_unit == "week"
+
+    # THEN the input table is not modified, as rendering DOCX adds a column
+    assert table.model_dump() == original_table.model_dump()
+
+
+@pytest.mark.parametrize(
+    "study_value_version, layout, time_unit, saved_snapshot, expected_content, expected_repository_calls",
+    [
+        pytest.param(
+            "1", SoALayout.PROTOCOL, None, ("saved", "week"), "saved", 1, id="saved"
+        ),
+        pytest.param(
+            "1",
+            SoALayout.PROTOCOL,
+            "week",
+            ("saved", "week"),
+            "saved",
+            1,
+            id="same-time-unit",
+        ),
+        pytest.param(
+            "1",
+            SoALayout.PROTOCOL,
+            "day",
+            ("saved", "week"),
+            None,
+            1,
+            id="other-time-unit",
+        ),
+        pytest.param(
+            None, SoALayout.PROTOCOL, None, ("saved", "week"), None, 0, id="draft"
+        ),
+        pytest.param(
+            "1",
+            SoALayout.PROTOCOL_LAB_TABLE,
+            None,
+            ("saved", "week"),
+            "saved",
+            1,
+            id="lab-table-layout",
+        ),
+        pytest.param(
+            "1",
+            SoALayout.PROTOCOL_LAB_TABLE,
+            "day",
+            ("saved", "week"),
+            None,
+            1,
+            id="lab-table-other-time-unit",
+        ),
+        pytest.param(
+            None,
+            SoALayout.PROTOCOL_LAB_TABLE,
+            None,
+            ("saved", "week"),
+            None,
+            0,
+            id="lab-table-draft",
+        ),
+        pytest.param(
+            "1",
+            SoALayout.DETAILED,
+            None,
+            ("saved", "week"),
+            None,
+            0,
+            id="detailed-layout",
+        ),
+        pytest.param(
+            "1",
+            SoALayout.OPERATIONAL,
+            None,
+            ("saved", "week"),
+            None,
+            0,
+            id="operational-layout",
+        ),
+    ],
+)
+def test_load_soa_snapshot_format(
+    study_value_version,
+    layout,
+    time_unit,
+    saved_snapshot,
+    expected_content,
+    expected_repository_calls,
+):
+    service = MockStudyFlowchartService()
+    service._repository = repository = MockSoASnapshotRepository(saved_snapshot)
+
+    content = service._load_soa_snapshot_format(
+        study_uid="",
+        study_value_version=study_value_version,
+        layout=layout,
+        snapshot_format=SoASnapshotFormat.HTML,
+        time_unit=time_unit,
+    )
+
+    assert content == expected_content
+    assert repository.calls == expected_repository_calls
+
+
+def test_load_soa_snapshot_format_not_saved():
+    service = MockStudyFlowchartService()
+    service._repository = MockSoASnapshotRepository(None)
+
+    # THEN a locked or released study version without SoA snapshot is not found, rather than built
+    with pytest.raises(NotFoundException, match="No SoA snapshot found"):
+        service._load_soa_snapshot_format(
+            study_uid="",
+            study_value_version="1",
+            layout=SoALayout.PROTOCOL,
+            snapshot_format=SoASnapshotFormat.HTML,
+        )
+
+
+def test_load_soa_snapshot_format_lab_table_not_saved():
+    service = MockStudyFlowchartService()
+    service._repository = MockSoASnapshotRepository(None)
+
+    # THEN a study version locked before lab table snapshots existed is built, rather than not found
+    assert (
+        service._load_soa_snapshot_format(
+            study_uid="",
+            study_value_version="1",
+            layout=SoALayout.PROTOCOL_LAB_TABLE,
+            snapshot_format=SoASnapshotFormat.HTML,
+        )
+        is None
+    )
+
+
+def test_render_protocol_lab_table_soa_snapshot(
+    mock_study_flowchart_service_lab_table,
+):
+    service = mock_study_flowchart_service_lab_table
+    table = service.get_flowchart_table_lab_table(
+        study_uid="test_study", study_value_version=None, time_unit="week"
+    )
+    original_table = deepcopy(table)
+
+    snapshot = service.render_protocol_lab_table_soa_snapshot(
+        table=table, time_unit="week"
+    )
+
+    # THEN all renderings are produced from the same table
+    assert snapshot.json == original_table.model_dump_json()
+    assert snapshot.html == tables_to_html([deepcopy(original_table)])
+    assert snapshot.docx.startswith(b"PK")
+    assert snapshot.xlsx.startswith(b"PK")
+    assert snapshot.time_unit == "week"
+
+    # THEN the input table is not modified
+    assert table.model_dump() == original_table.model_dump()
+
+
+def test_get_study_flowchart_lab_table_returns_saved_snapshot():
+    service = MockStudyFlowchartService()
+    service._repository = MockSoASnapshotRepository((b"saved", "week"))
+
+    assert (
+        service.get_study_flowchart_docx(
+            study_uid="",
+            study_value_version="1",
+            layout=SoALayout.PROTOCOL_LAB_TABLE,
+            time_unit=None,
+        ).getvalue()
+        == b"saved"
+    )
+    assert (
+        service.get_study_flowchart_xlsx(
+            study_uid="",
+            study_value_version="1",
+            layout=SoALayout.PROTOCOL_LAB_TABLE,
+            time_unit=None,
+        ).getvalue()
+        == b"saved"
+    )
+
+    service._repository = MockSoASnapshotRepository(("<p>saved</p>", "week"))
+    assert (
+        service.get_study_flowchart_html(
+            study_uid="",
+            study_value_version="1",
+            layout=SoALayout.PROTOCOL_LAB_TABLE,
+        )
+        == "<p>saved</p>"
+    )
+
+    service._repository = MockSoASnapshotRepository(
+        (TableWithFootnotes(title="saved").model_dump_json(), "week")
+    )
+    for table in (
+        service.get_flowchart_table_lab_table(
+            study_uid="", study_value_version="1", time_unit=None
+        ),
+        service.get_flowchart_table(
+            study_uid="",
+            study_value_version="1",
+            layout=SoALayout.PROTOCOL_LAB_TABLE,
+        ),
+    ):
+        assert table.title == "saved"
+
+
+def test_get_study_flowchart_lab_table_html_with_uids_is_not_loaded_from_snapshot(
+    mock_study_flowchart_service_lab_table,
+):
+    service = mock_study_flowchart_service_lab_table
+    service._repository = repository = MockSoASnapshotRepository(None)
+
+    try:
+        service.get_study_flowchart_html(
+            study_uid="test_study",
+            study_value_version="1",
+            layout=SoALayout.PROTOCOL_LAB_TABLE,
+            include_uids=True,
+        )
+    finally:
+        service._repository = None
+
+    # THEN only the table is looked up in the snapshot, not the ready-made HTML without UIDs
+    assert repository.calls == 1
+
+
+def test_convert_snapshot_time_unit_without_visit_columns():
+    service = MockStudyFlowchartService()
+    table = TableWithFootnotes(
+        rows=[TableRow(cells=[TableCell(text="a"), TableCell(text="b")])],
+        num_header_rows=1,
+        num_header_cols=2,
+    )
+    expected = table.model_dump()
+
+    service._convert_snapshot_time_unit(
+        table, study_uid="", study_value_version="1", time_unit="day"
+    )
+
+    # THEN a lab table not showing visits has no visit timing to convert
+    assert table.model_dump() == expected
+
+
+def test_save_soa_snapshot_rejects_unsupported_layout():
+    service = MockStudyFlowchartService()
+
+    with pytest.raises(ValidationException, match="only supported for layouts"):
+        service.save_soa_snapshot(study_uid="", layout=SoALayout.DETAILED)
+
+
+def test_get_study_flowchart_returns_saved_snapshot():
+    service = MockStudyFlowchartService()
+    service._repository = MockSoASnapshotRepository((b"saved", "week"))
+
+    assert (
+        service.get_study_flowchart_docx(
+            study_uid="",
+            study_value_version="1",
+            layout=SoALayout.PROTOCOL,
+            time_unit=None,
+        ).getvalue()
+        == b"saved"
+    )
+    assert (
+        service.get_study_flowchart_xlsx(
+            study_uid="",
+            study_value_version="1",
+            layout=SoALayout.PROTOCOL,
+            time_unit=None,
+        ).getvalue()
+        == b"saved"
+    )
+
+    service._repository = MockSoASnapshotRepository(("<p>saved</p>", "week"))
+    assert (
+        service.get_study_flowchart_html(
+            study_uid="", study_value_version="1", layout=SoALayout.PROTOCOL
+        )
+        == "<p>saved</p>"
+    )
+
+    service._repository = MockSoASnapshotRepository(
+        (TableWithFootnotes(title="saved").model_dump_json(), "week")
+    )
+    assert (
+        service.get_flowchart_table(
+            study_uid="", study_value_version="1", layout=SoALayout.PROTOCOL
+        ).title
+        == "saved"
+    )
 
 
 @pytest.mark.parametrize("collapse_visit_groups", [True, False])
@@ -675,7 +1032,6 @@ def test_group_visits_epoch_gap_preserves_visit_order():
             show_visit=True,
             min_visit_window_value=0,
             max_visit_window_value=0,
-            visit_number=visit_number,
             unique_visit_number=int(visit_number * 100),
             visit_short_name=short_name,
             visit_class=VisitClass.SINGLE_VISIT,
@@ -744,12 +1100,114 @@ def test_group_visits_epoch_gap_preserves_visit_order():
     assert epoch_cells[2].span == 2  # V5, V6
 
 
+@pytest.mark.parametrize(
+    ("min_window", "max_window", "unit_name", "append_unit", "expected"),
+    [
+        (0, 0, "days", False, "0"),
+        (0, 0, "days", True, "0D"),
+        (-1, 1, "days", False, "±1"),
+        (-1, 1, "days", True, "±1D"),
+        (-1, 1, "weeks", True, "±1W"),
+        (-2, 3, "days", False, "-2/+3"),
+        (-2, 3, "days", True, "-2/+3D"),
+    ],
+)
+def test_get_visit_window_append_unit(
+    min_window, max_window, unit_name, append_unit, expected
+):
+    """_get_visit_window appends the unit abbreviation only when append_unit is set."""
+    visit = StudyVisitLite(
+        uid="v1",
+        show_visit=True,
+        min_visit_window_value=min_window,
+        max_visit_window_value=max_window,
+        visit_window_unit_name=unit_name,
+        unique_visit_number=100,
+        visit_short_name="V1",
+        visit_class=VisitClass.SINGLE_VISIT,
+        is_global_anchor_visit=False,
+        is_soa_milestone=False,
+        visit_type=None,
+    )
+    assert StudyFlowchartService._get_visit_window(visit, append_unit) == expected
+
+
+def _make_windowed_visit(uid, short_name, visit_number, min_window, max_window, unit):
+    return StudyVisitLite(
+        uid=uid,
+        study_epoch_uid="epoch_treatment",
+        study_epoch=SimpleCTTermNameWithConflictFlag(
+            term_uid="CTTerm_Treatment", sponsor_preferred_name="Treatment"
+        ),
+        show_visit=True,
+        min_visit_window_value=min_window,
+        max_visit_window_value=max_window,
+        visit_window_unit_name=unit,
+        study_day_number=visit_number * 7,
+        study_week_number=visit_number,
+        unique_visit_number=int(visit_number * 100),
+        visit_short_name=short_name,
+        visit_class=VisitClass.SINGLE_VISIT,
+        is_global_anchor_visit=False,
+        is_soa_milestone=False,
+        visit_type=None,
+    )
+
+
+def test_get_header_rows_same_window_units():
+    """When all visits share a window unit, the unit stays in the row header and the
+    per-visit cells carry no unit suffix."""
+    visits = [
+        _make_windowed_visit("v1", "V1", 1, -1, 1, "days"),
+        _make_windowed_visit("v2", "V2", 2, 0, 0, "days"),
+    ]
+    grouped_visits = StudyFlowchartService._group_visits(
+        visits, collapse_visit_groups=False
+    )
+
+    header_rows = StudyFlowchartService._get_header_rows(
+        grouped_visits,
+        time_unit="week",
+        soa_preferences=StudySoaPreferencesInput(),
+        layout=SoALayout.DETAILED,
+    )
+
+    window_row = header_rows[-1]
+    assert window_row.cells[0].text == _gettext("visit_window").format(unit_name="days")
+    assert window_row.cells[1].text == "±1"
+    assert window_row.cells[2].text == "0"
+
+
+def test_get_header_rows_mixed_window_units():
+    """When visits use different window units, the header drops the unit and each
+    per-visit cell gets the unit abbreviation appended to its value."""
+    visits = [
+        _make_windowed_visit("v1", "V1", 1, -1, 1, "days"),
+        _make_windowed_visit("v2", "V2", 2, 0, 1, "weeks"),
+    ]
+    grouped_visits = StudyFlowchartService._group_visits(
+        visits, collapse_visit_groups=False
+    )
+
+    header_rows = StudyFlowchartService._get_header_rows(
+        grouped_visits,
+        time_unit="week",
+        soa_preferences=StudySoaPreferencesInput(),
+        layout=SoALayout.DETAILED,
+    )
+
+    window_row = header_rows[-1]
+    assert window_row.cells[0].text == _gettext("visit_window_mixed_units")
+    assert window_row.cells[1].text == "±1D"
+    assert window_row.cells[2].text == "0/+1W"
+
+
 def test_mk_simple_footnotes(mock_study_flowchart_service):
     footnotes: list[StudySoAFootnote] = (
         mock_study_flowchart_service._get_study_footnotes()
     )
     (
-        footnote_symbols_by_ref_uid,
+        footnote_symbols_by_ref_key,
         simple_footnotes_by_symbol,
     ) = mock_study_flowchart_service._mk_simple_footnotes(footnotes)
 
@@ -765,12 +1223,14 @@ def test_mk_simple_footnotes(mock_study_flowchart_service):
         assert soa_footnote.uid in footnotes_uid_to_symbol_mapping
         symbol = footnotes_uid_to_symbol_mapping[soa_footnote.uid]
         for ref in soa_footnote.referenced_items:
-            assert ref.item_uid in footnote_symbols_by_ref_uid
-            assert symbol in footnote_symbols_by_ref_uid[ref.item_uid]
+            # none of the fixture footnotes is attached via a propagated cell
+            ref_key = (ref.item_uid, False)
+            assert ref_key in footnote_symbols_by_ref_key
+            assert symbol in footnote_symbols_by_ref_key[ref_key]
             count_references += 1
 
     assert count_references == sum(
-        len(symbols) for symbols in footnote_symbols_by_ref_uid.values()
+        len(symbols) for symbols in footnote_symbols_by_ref_key.values()
     )
 
 
@@ -809,7 +1269,9 @@ def test_get_header_rows(
     assert len(header_rows) == 4
 
     for _r, row in enumerate(header_rows):
-        assert row.hide is False
+        # epoch row (index 0) hide reflects show_epochs; all other header rows always visible
+        expected_hide = _r == 0 and not StudySoaPreferencesInput().show_epochs
+        assert row.hide is expected_hide
 
         if _r == 0:
             assert (
@@ -870,9 +1332,7 @@ def test_propagate_hidden_rows(
     propagate_refs: bool, soa: TableWithFootnotes, expected_soa: TableWithFootnotes
 ):
     table = deepcopy(soa)
-    StudyFlowchartService.propagate_hidden_rows(
-        table.rows, propagate_refs=propagate_refs
-    )
+    StudyFlowchartService.propagate_hidden_rows(table.rows, propagate_refs)
     assert table.model_dump() == expected_soa.model_dump()
 
 
@@ -1791,3 +2251,370 @@ def test_basic_epoch_visits_excluded_from_protocol(
     assert (
         not matching_uids
     ), f"{visit_class.value} should NOT be present in {layout.value} SoA"
+
+
+def _schedule_footnote(
+    uid: str, *schedule_uids: str, via_propagated_cell: bool = False
+) -> StudySoAFootnote:
+    return StudySoAFootnote(
+        uid=uid,
+        study_uid="test_study",
+        footnote=CompactFootnote(uid=f"c_{uid}", name=uid, name_plain=uid),
+        referenced_items=[
+            ReferencedItem(
+                item_uid=schedule_uid,
+                item_type=SoAItemType.STUDY_ACTIVITY_SCHEDULE,
+                via_propagated_cell=via_propagated_cell,
+            )
+            for schedule_uid in schedule_uids
+        ],
+    )
+
+
+def _schedule_cell(*schedule_uids: str, propagated: bool | None = None) -> TableCell:
+    return TableCell(
+        "X",
+        refs=[
+            Ref(type_=SoAItemType.STUDY_ACTIVITY_SCHEDULE.value, uid=schedule_uid)
+            for schedule_uid in schedule_uids
+        ],
+        propagated=propagated,
+    )
+
+
+def _make_hidden_activities_table(with_propagated_cell: bool) -> TableWithFootnotes:
+    """Subgroup row (1) with the propagated checkmark of hidden activity rows Hb (2) and WBC (3),
+    followed by visible activity row Platelets (4)"""
+
+    def activity_row(name: str, schedule_uid: str, hide: bool) -> TableRow:
+        return TableRow(
+            cells=[
+                TableCell(
+                    name,
+                    refs=[
+                        Ref(type_=SoAItemType.STUDY_ACTIVITY.value, uid=f"act_{name}")
+                    ],
+                ),
+                _schedule_cell(schedule_uid),
+            ],
+            hide=hide,
+        )
+
+    return TableWithFootnotes(
+        rows=[
+            TableRow(cells=[TableCell("Header"), TableCell("V1")]),
+            TableRow(
+                cells=[
+                    TableCell(
+                        "Haematology",
+                        refs=[
+                            Ref(
+                                type_=SoAItemType.STUDY_ACTIVITY_SUBGROUP.value,
+                                uid="subgroup",
+                            )
+                        ],
+                    ),
+                    (
+                        _schedule_cell("hb", "wbc", propagated=True)
+                        if with_propagated_cell
+                        else TableCell()
+                    ),
+                ]
+            ),
+            activity_row("Hb", "hb", hide=True),
+            activity_row("WBC", "wbc", hide=True),
+            activity_row("Platelets", "plt", hide=False),
+        ],
+        num_header_rows=1,
+        num_header_cols=1,
+    )
+
+
+def test_add_footnotes_via_propagated_cell():
+    """Footnotes attached via a propagated cell are shown on the propagated checkmark, and in the
+    Protocol SoA also on the referenced item's own cell when that cell is visible;
+    footnotes of the hidden activities' own checkmarks stay hidden"""
+
+    footnotes = [
+        fn_visible := _schedule_footnote("fn_visible", "plt"),
+        _schedule_footnote("fn_hidden", "wbc"),
+        fn_cell := _schedule_footnote("fn_cell", "hb", "wbc", via_propagated_cell=True),
+        fn_flag_on_own_cell := _schedule_footnote(
+            "fn_flag_on_own_cell", "plt", via_propagated_cell=True
+        ),
+    ]
+    table = _make_hidden_activities_table(with_propagated_cell=True)
+
+    StudyFlowchartService().add_footnotes(table, footnotes, layout=SoALayout.PROTOCOL)
+
+    # THEN only footnotes landing on a visible cell are listed, in the order they appear in the table
+    assert {symbol: footnote.uid for symbol, footnote in table.footnotes.items()} == {
+        "a": fn_cell.uid,
+        "b": fn_visible.uid,
+        "c": fn_flag_on_own_cell.uid,
+    }
+
+    # THEN the footnote attached via propagated cell is on the propagated checkmark
+    assert table.rows[1].cells[1].footnotes == ["a"]
+
+    # THEN neither kind of footnote lands on the hidden activities' own checkmarks
+    assert table.rows[2].cells[1].footnotes is None
+    assert table.rows[3].cells[1].footnotes is None
+
+    # THEN a visible checkmark shows the footnote attached to its own cell as well as the one
+    # attached via a propagated cell that references the same (now visible) item
+    assert table.rows[4].cells[1].footnotes == ["b", "c"]
+
+
+def test_add_footnotes_via_propagated_cell_in_other_layouts():
+    """Layouts without propagated cells show footnotes attached via propagated cells on the
+    referenced items' own cells"""
+
+    footnotes = [
+        fn_visible := _schedule_footnote("fn_visible", "plt"),
+        fn_hidden := _schedule_footnote("fn_hidden", "wbc"),
+        fn_cell := _schedule_footnote("fn_cell", "hb", "wbc", via_propagated_cell=True),
+        fn_mixed := StudySoAFootnote(
+            uid="fn_mixed",
+            study_uid="test_study",
+            footnote=CompactFootnote(
+                uid="c_fn_mixed", name="mixed", name_plain="mixed"
+            ),
+            referenced_items=[
+                ReferencedItem(
+                    item_uid="plt", item_type=SoAItemType.STUDY_ACTIVITY_SCHEDULE
+                ),
+                ReferencedItem(
+                    item_uid="hb",
+                    item_type=SoAItemType.STUDY_ACTIVITY_SCHEDULE,
+                    via_propagated_cell=True,
+                ),
+            ],
+        ),
+    ]
+
+    for layout in SoALayout.DETAILED, SoALayout.OPERATIONAL:
+        table = _make_hidden_activities_table(with_propagated_cell=False)
+        StudyFlowchartService().add_footnotes(table, footnotes, layout=layout)
+
+        # THEN footnotes attached only via propagated cells are listed too
+        assert [footnote.uid for footnote in table.footnotes.values()] == [
+            fn_visible.uid,
+            fn_hidden.uid,
+            fn_cell.uid,
+            fn_mixed.uid,
+        ], layout
+
+        # THEN footnotes attached via propagated cells are shown on the items' own cells,
+        # along with footnotes attached to those cells
+        assert table.rows[2].cells[1].footnotes == ["c", "d"], layout
+        assert table.rows[3].cells[1].footnotes == ["b", "c"], layout
+        assert table.rows[4].cells[1].footnotes == ["a", "d"], layout
+
+
+def test_add_footnotes_filters_hidden_rows_in_lab_table():
+    """PROTOCOL_LAB_TABLE hides rows without checkmarks, so footnotes referencing only hidden rows
+    are dropped from the listing and not shown on the hidden rows' own cells."""
+
+    footnotes = [
+        fn_visible := _schedule_footnote("fn_visible", "plt"),
+        _schedule_footnote("fn_hidden", "wbc"),
+        _schedule_footnote("fn_cell", "hb", "wbc", via_propagated_cell=True),
+        fn_mixed := StudySoAFootnote(
+            uid="fn_mixed",
+            study_uid="test_study",
+            footnote=CompactFootnote(
+                uid="c_fn_mixed", name="mixed", name_plain="mixed"
+            ),
+            referenced_items=[
+                ReferencedItem(
+                    item_uid="plt", item_type=SoAItemType.STUDY_ACTIVITY_SCHEDULE
+                ),
+                ReferencedItem(
+                    item_uid="hb",
+                    item_type=SoAItemType.STUDY_ACTIVITY_SCHEDULE,
+                    via_propagated_cell=True,
+                ),
+            ],
+        ),
+    ]
+    table = _make_hidden_activities_table(with_propagated_cell=False)
+    StudyFlowchartService().add_footnotes(
+        table, footnotes, layout=SoALayout.PROTOCOL_LAB_TABLE
+    )
+
+    # THEN only footnotes referenced on a visible row are listed; fn_hidden and fn_cell, which
+    # reference only hidden rows, are dropped
+    assert {symbol: footnote.uid for symbol, footnote in table.footnotes.items()} == {
+        "a": fn_visible.uid,
+        "b": fn_mixed.uid,
+    }
+
+    # THEN the hidden rows' own cells carry no footnote symbols
+    assert table.rows[2].cells[1].footnotes is None
+    assert table.rows[3].cells[1].footnotes is None
+
+    # THEN the visible row shows the surviving footnotes
+    assert table.rows[4].cells[1].footnotes == ["a", "b"]
+
+
+class MockStudyFlowchartServiceWithPropagatedCellFootnotes(MockStudyFlowchartService):
+    # StudyActivitySchedule of a hidden activity, propagated to its activity group row in Protocol SoA
+    HIDDEN_SCHEDULE_UID = "StudyActivitySchedule_000217"
+
+    FOOTNOTE_VIA_PROPAGATED_CELL = _schedule_footnote(
+        "fn_via_propagated_cell", HIDDEN_SCHEDULE_UID, via_propagated_cell=True
+    )
+
+    FOOTNOTE_OF_HIDDEN_SCHEDULE = _schedule_footnote(
+        "fn_of_hidden_schedule", HIDDEN_SCHEDULE_UID
+    )
+
+    def _get_study_footnotes(self, *_args, **_kwargs):
+        return [
+            *FOOTNOTES,
+            self.FOOTNOTE_VIA_PROPAGATED_CELL,
+            self.FOOTNOTE_OF_HIDDEN_SCHEDULE,
+        ]
+
+
+def test_protocol_flowchart_footnote_via_propagated_cell():
+    """Protocol SoA propagates checkmarks before adding footnotes, so footnotes attached via propagated cells
+    land on the propagated checkmark"""
+
+    service = MockStudyFlowchartServiceWithPropagatedCellFootnotes()
+    hidden_schedule_uid = service.HIDDEN_SCHEDULE_UID
+
+    def cells_referencing(table: TableWithFootnotes, uid: str) -> list[TableCell]:
+        return [
+            cell
+            for row in table.rows
+            for cell in row.cells
+            if any(ref.uid == uid for ref in cell.refs or [])
+        ]
+
+    def symbol_of(table: TableWithFootnotes, footnote: StudySoAFootnote) -> str | None:
+        return next(
+            (sym for sym, fn in table.footnotes.items() if fn.uid == footnote.uid),
+            None,
+        )
+
+    table = service.get_flowchart_table(
+        study_uid="", study_value_version=None, layout=SoALayout.PROTOCOL
+    )
+
+    # THEN the hidden schedule is only referenced from its propagated checkmark
+    (cell,) = cells_referencing(table, hidden_schedule_uid)
+    assert cell.propagated
+
+    # THEN the footnote attached via propagated cell is shown on it
+    symbol = symbol_of(table, service.FOOTNOTE_VIA_PROPAGATED_CELL)
+    assert symbol and symbol in cell.footnotes
+
+    # THEN the footnote of the hidden schedule's own cell is still left out
+    assert symbol_of(table, service.FOOTNOTE_OF_HIDDEN_SCHEDULE) is None
+
+    check_flowchart_table_footnotes(
+        table, service._get_study_footnotes(), SoALayout.PROTOCOL
+    )
+
+    table = service.get_flowchart_table(
+        study_uid="", study_value_version=None, layout=SoALayout.DETAILED
+    )
+
+    # THEN Detailed SoA shows both the hidden schedule's own footnote and the footnote
+    # attached via propagated cell on the schedule's own cell
+    (cell,) = cells_referencing(table, hidden_schedule_uid)
+    assert not cell.propagated
+    assert symbol_of(table, service.FOOTNOTE_OF_HIDDEN_SCHEDULE) in cell.footnotes
+    assert symbol_of(table, service.FOOTNOTE_VIA_PROPAGATED_CELL) in cell.footnotes
+
+
+def _snapshot_cell_reference(
+    uid: str, is_propagated: bool, *footnote_references: tuple[int, str, bool]
+) -> SoACellReference:
+    return SoACellReference(
+        row=0,
+        column=1,
+        is_propagated=is_propagated,
+        referenced_item=ReferencedItem(
+            item_uid=uid, item_type=SoAItemType.STUDY_ACTIVITY_SCHEDULE
+        ),
+        footnote_references=[
+            SoAFootnoteReference(
+                order=order,
+                symbol=symbol,
+                referenced_item=ReferencedItem(
+                    item_uid=f"footnote_{symbol}",
+                    item_type=SoAItemType.STUDY_SOA_FOOTNOTE,
+                    via_propagated_cell=via_propagated_cell,
+                ),
+            )
+            for order, symbol, via_propagated_cell in footnote_references
+        ],
+    )
+
+
+@pytest.mark.parametrize(
+    ("refs", "expected_symbols"),
+    [
+        pytest.param(
+            [
+                _snapshot_cell_reference("s1", False, (1, "b", False)),
+                _snapshot_cell_reference("s2", False, (0, "a", False), (1, "b", False)),
+            ],
+            ["a", "b"],
+            id="merged-checkmark-collects-footnotes-of-all-schedules",
+        ),
+        pytest.param(
+            [
+                _snapshot_cell_reference("s1", True, (0, "a", False), (2, "c", True)),
+                _snapshot_cell_reference("s2", True, (1, "b", True)),
+            ],
+            ["b", "c"],
+            id="propagated-checkmark-only-shows-footnotes-via-propagated-cell",
+        ),
+        pytest.param(
+            [_snapshot_cell_reference("s1", False, (0, "a", True), (1, "b", False))],
+            ["a", "b"],
+            id="own-checkmark-shows-footnotes-via-propagated-cell-and-own-cell",
+        ),
+    ],
+)
+def test_get_snapshot_footnote_symbols(
+    refs: list[SoACellReference], expected_symbols: list[str]
+):
+    assert (
+        StudyFlowchartService._get_snapshot_footnote_symbols(refs) == expected_symbols
+    )
+
+
+def test_hide_repeated_subgroup_names_clears_refs():
+    """A repeated subgroup cell loses its name and its references, so it is not clickable"""
+
+    def subgroup_row(name: str, uid: str) -> TableRow:
+        return TableRow(
+            cells=[
+                TableCell(
+                    name,
+                    refs=[
+                        Ref(type_=SoAItemType.STUDY_ACTIVITY_SUBGROUP.value, uid=uid)
+                    ],
+                )
+            ]
+        )
+
+    rows = [
+        subgroup_row("Coagulation", "sg1"),
+        subgroup_row("Coagulation", "sg1"),
+        subgroup_row("Hematology", "sg2"),
+    ]
+
+    StudyFlowchartService._hide_repeated_subgroup_names(rows)
+
+    assert [row.cells[0].text for row in rows] == ["Coagulation", "", "Hematology"]
+    assert [row.cells[0].refs for row in rows] == [
+        [Ref(type_=SoAItemType.STUDY_ACTIVITY_SUBGROUP.value, uid="sg1")],
+        None,
+        [Ref(type_=SoAItemType.STUDY_ACTIVITY_SUBGROUP.value, uid="sg2")],
+    ]

@@ -13,13 +13,12 @@ from clinical_mdr_api.tests.unit.domain.utils import AUTHOR_ID, random_str
 
 
 def create_random_numeric_value_vo() -> NumericValueVO:
-    random_numeric_value_vo = NumericValueVO.from_input_values(
+    return NumericValueVO.from_input_values(
         value=1.23,
         definition=random_str(),
         abbreviation=random_str(),
         is_template_parameter=True,
     )
-    return random_numeric_value_vo
 
 
 def create_random_numeric_value_ar(
@@ -27,7 +26,7 @@ def create_random_numeric_value_ar(
     library: str = "Library",
     is_editable: bool = True,
 ) -> NumericValueAR:
-    random_numeric_value_ar = NumericValueAR.from_input_values(
+    return NumericValueAR.from_input_values(
         generate_uid_callback=generate_uid_callback,
         simple_concept_vo=create_random_numeric_value_vo(),
         library=LibraryVO.from_repository_values(
@@ -35,8 +34,6 @@ def create_random_numeric_value_ar(
         ),
         author_id=AUTHOR_ID,
     )
-
-    return random_numeric_value_ar
 
 
 class TestNumericValue(unittest.TestCase):

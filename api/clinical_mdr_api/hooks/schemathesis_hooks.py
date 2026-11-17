@@ -52,6 +52,19 @@ def is_desired_header(headers: dict[Any, Any]) -> bool:
     return True
 
 
+@schemathesis.serializer(
+    "application/vnd.ms-excel",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+)
+def spreadsheet_serializer(_ctx: schemathesis.SerializationContext, value: Any):
+    """The standards-import spreadsheet uploads take the raw file as the request body."""
+    if isinstance(value, bytes):
+        return value
+    if hasattr(value, "data"):
+        return value.data
+    return str(value).encode(errors="ignore")
+
+
 @schemathesis.hook
 def before_generate_headers(
     _context: schemathesis.hooks.HookContext,
@@ -149,7 +162,7 @@ def after_load_schema(
             print(f" - {path}")
 
     # Remove 'security' field from each operation, as we run tests without authentication
-    for _path, path_def in schema.raw_schema["paths"].items():
-        for _method, method_def in path_def.items():
+    for path_def in schema.raw_schema["paths"].values():
+        for method_def in path_def.values():
             if "security" in method_def:
                 del method_def["security"]

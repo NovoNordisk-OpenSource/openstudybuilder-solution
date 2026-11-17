@@ -449,6 +449,48 @@ def test_get_odm_items_list_with_activity_instance_relationship(api_client):
     )
 
 
+def _assert_selected_activity_instances(activity_instances_value):
+    assert len(activity_instances_value) == 1
+    activity_instance = activity_instances_value[0]
+    assert activity_instance["activity_instance_uid"] == activity_instances[0].uid
+    assert activity_instance["activity_instance_name"] == "name A"
+    assert activity_instance["activity_instance_adam_param_code"] == "adam_code_a"
+    assert activity_instance["activity_instance_topic_code"] == "topic code A"
+    assert activity_instance["activity_item_class_uid"] == activity_item_classes[0].uid
+    assert (
+        activity_instance["activity_item_class_name"] == activity_item_classes[0].name
+    )
+    assert activity_instance["order"] == 1
+    assert activity_instance["primary"] is True
+    assert activity_instance["preset_response_value"] == "preset_response_value1"
+    assert activity_instance["value_condition"] == "value_condition1"
+    assert activity_instance["value_dependent_map"] == "value_dependent_map1"
+
+
+def test_get_odm_items_list_with_fields_activity_instances(api_client):
+    response = api_client.get(
+        "odms/items?fields=name,activity_instances"
+        f'&filters={{"uid": {{"v": ["{items[0].uid}"]}}}}'
+    )
+    assert_response_status_code(response, 200)
+    res = response.json()
+    assert len(res["items"]) == 1
+    item = res["items"][0]
+    assert set(item.keys()) == {"uid", "name", "activity_instances"}
+    assert item["uid"] == items[0].uid
+    assert item["name"] == "name1"
+    _assert_selected_activity_instances(item["activity_instances"])
+
+
+def test_get_odm_item_with_fields_activity_instances(api_client):
+    response = api_client.get(f"odms/items/{items[0].uid}?fields=activity_instances")
+    assert_response_status_code(response, 200)
+    res = response.json()
+    assert set(res.keys()) == {"uid", "activity_instances"}
+    assert res["uid"] == items[0].uid
+    _assert_selected_activity_instances(res["activity_instances"])
+
+
 def test_activity_instance_relationship_to_odm_item(api_client):
     response = api_client.patch(
         f"odms/forms/{forms[0].uid}",

@@ -423,6 +423,18 @@ def test_fields_parameter_with_single_field(api_client):
     assert set(first_item.keys()) == {"uid", "name"}
 
 
+def test_items_fields_parameter_with_activity_instances(api_client):
+    """activity_instances is selectable on ODM items and returned as a list"""
+    response = api_client.get("/odms/items?fields=name,activity_instances")
+    assert_response_status_code(response, 200)
+
+    items = response.json()["items"]
+    assert items
+    for item in items:
+        assert set(item.keys()) == {"uid", "name", "activity_instances"}
+        assert isinstance(item["activity_instances"], list)
+
+
 def test_fields_parameter_with_whitespace(api_client):
     """Test fields parameter handles whitespace correctly"""
     response = api_client.get("/odms/forms?fields=name, oid, status")
@@ -431,6 +443,16 @@ def test_fields_parameter_with_whitespace(api_client):
     data = response.json()
     first_item = data["items"][0]
     assert set(first_item.keys()) == {"uid", "name", "oid", "status"}
+
+
+def test_fields_parameter_with_end_date(api_client):
+    """end_date is selectable; the latest version of a form is still open, so it is null"""
+    response = api_client.get("/odms/forms?fields=name,end_date")
+    assert_response_status_code(response, 200)
+
+    first_item = response.json()["items"][0]
+    assert set(first_item.keys()) == {"uid", "name", "end_date"}
+    assert first_item["end_date"] is None
 
 
 def test_fields_parameter_with_invalid_field_names(api_client):

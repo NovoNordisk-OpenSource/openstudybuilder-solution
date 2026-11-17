@@ -196,10 +196,33 @@
                 {{ $t('DataTableExportButton.export_html') }}
               </v-list-item-title>
             </v-list-item>
+            <template v-if="exportActions.length > 0">
+              <v-divider />
+              <v-list-item
+                v-for="action in exportActions"
+                :key="action.key"
+                link
+                color="nnBaseBlue"
+                @click="openExportAction(action)"
+              >
+                <v-list-item-title class="nnBaseBlue">
+                  <v-icon color="nnBaseBlue" class="mr-2">
+                    {{ action.icon }}
+                  </v-icon>
+                  {{ action.title }}
+                </v-list-item-title>
+              </v-list-item>
+            </template>
           </v-list>
         </v-menu>
       </v-col>
     </v-row>
+    <component
+      :is="activeExportAction.dialog"
+      v-if="activeExportAction"
+      :context="exportContext"
+      @close="closeExportAction"
+    />
     <div v-show="loading">
       <v-row
         class="align-center justify-center"
@@ -231,10 +254,17 @@ import { DateTime } from 'luxon'
 import { ref, onMounted, computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useShake } from '@/composables/shake'
+import { useCrfExportActions } from '@/composables/crfExportActions'
 
 const { t } = useI18n()
 
 const { isShaking, activateShake } = useShake()
+const {
+  exportActions,
+  activeExportAction,
+  openExportAction,
+  closeExportAction,
+} = useCrfExportActions()
 
 const collectionLoading = ref(false)
 
@@ -266,6 +296,13 @@ const data = ref({
 })
 const loading = ref(false)
 const exportLoading = ref(false)
+
+// Forms of the last generated preview: what every entry of the export menu exports
+const exportedTargets = ref([])
+const exportContext = computed(() => ({
+  targetType: data.value.target_type,
+  targets: exportedTargets.value,
+}))
 
 onMounted(() => {
   getCollections()
@@ -347,6 +384,7 @@ async function loadXml() {
   for (const form of selectedForms.value) {
     data.value.targets += `targets=${form}&`
   }
+  exportedTargets.value = [...selectedForms.value]
   try {
     if (data.value.selectedStylesheet === 'html') {
       const resp = await crfs.getReport(data.value)

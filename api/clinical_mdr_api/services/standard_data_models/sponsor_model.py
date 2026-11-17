@@ -27,7 +27,7 @@ from clinical_mdr_api.services.standard_data_models.sponsor_model_schema_interpr
 log = logging.getLogger(__name__)
 
 
-class SponsorModelService(NeomodelExtGenericService[SponsorModelAR]):
+class SponsorModelService(NeomodelExtGenericService[SponsorModelAR, SponsorModel]):
     repository_interface = SponsorModelRepository
     api_model_class = SponsorModel
 

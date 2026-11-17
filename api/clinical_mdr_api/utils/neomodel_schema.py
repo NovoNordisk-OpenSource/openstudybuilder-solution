@@ -3,6 +3,7 @@ JSON-serializable snapshot of neomodel StructuredNode definitions.
 Used for drift detection (nodes, properties, relationships) against a committed baseline.
 """
 
+import contextlib
 import importlib
 import json
 import pkgutil
@@ -27,10 +28,8 @@ def load_all_node_modules(*, include_extensions: bool) -> None:
     importlib.import_module("clinical_mdr_api.domain_repositories.models")
     import_submodules("clinical_mdr_api.domain_repositories.models")
     if include_extensions:
-        try:
+        with contextlib.suppress(ImportError):
             importlib.import_module("extensions.prodex.db_models")
-        except ImportError:
-            pass
 
 
 def all_structured_node_subclasses(
@@ -68,7 +67,7 @@ def serialize_relationship_minimal(
     err: str | None = None
     try:
         rel.lookup_node_class()
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001
         err = f"{type(exc).__name__}: {exc}"
 
     definition = rel.definition

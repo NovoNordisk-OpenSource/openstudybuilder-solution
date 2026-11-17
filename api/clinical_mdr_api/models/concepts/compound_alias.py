@@ -44,11 +44,7 @@ class CompoundAlias(Concept):
             compound=SimpleCompound.from_uid(
                 ar.concept_vo.compound_uid, find_by_uid=find_compound_by_uid
             ),
-            is_preferred_synonym=(
-                ar.concept_vo.is_preferred_synonym
-                if ar.concept_vo.is_preferred_synonym
-                else False
-            ),
+            is_preferred_synonym=ar.concept_vo.is_preferred_synonym or False,
             library_name=Library.from_library_vo(ar.library).name,
             start_date=ar.item_metadata.start_date,
             end_date=ar.item_metadata.end_date,

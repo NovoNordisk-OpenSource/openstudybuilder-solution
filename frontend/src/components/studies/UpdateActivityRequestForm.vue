@@ -145,7 +145,7 @@ import { computed, inject, ref } from 'vue'
 import study from '@/api/study'
 
 const studiesGeneralStore = useStudiesGeneralStore()
-const emit = defineEmits(['close'])
+const emit = defineEmits(['close', 'updated'])
 const { t } = useI18n()
 const notificationHub = inject('notificationHub')
 
@@ -189,6 +189,7 @@ function submit() {
           type: 'success',
           msg: t('StudyActivityUpdateForms.update_success'),
         })
+        emit('updated')
         close()
       })
   } else {
@@ -204,6 +205,7 @@ function submit() {
           type: 'success',
           msg: t('StudyActivityUpdateForms.update_success'),
         })
+        emit('updated')
         close()
       })
   }
@@ -230,6 +232,7 @@ async function declineAndKeep() {
         type: 'success',
         msg: t('StudyActivityUpdateForms.decline_success'),
       })
+      emit('updated')
       close()
     })
 }

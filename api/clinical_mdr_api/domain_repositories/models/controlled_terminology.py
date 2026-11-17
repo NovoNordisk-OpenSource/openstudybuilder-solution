@@ -86,7 +86,7 @@ class CTCodelistNameValue(ControlledTerminology):
     __optional_labels__: ClassVar[list[str]] = ["TemplateParameter"]
     name = StringProperty()
     is_ordinal = BooleanProperty(default=False)
-    codelist_type = StringProperty(default=DEFAULT_CODELIST_TYPE)  # type: ignore[call-arg]
+    codelist_type = StringProperty(default=DEFAULT_CODELIST_TYPE)
 
 
 class CTCodelistNameRoot(ControlledTerminology):
@@ -113,6 +113,7 @@ class CTTermAttributesValue(ControlledTerminology):
     preferred_term = StringProperty()
     definition = StringProperty()
     synonyms = ArrayProperty()
+    algorithm = StringProperty()
 
 
 class CTTermAttributesRoot(ControlledTerminology):
@@ -300,6 +301,34 @@ class CTCatalogue(ClinicalMdrNode):
     has_codelist = RelationshipTo(CTCodelistRoot, "HAS_CODELIST", model=ClinicalMdrRel)
     contains_catalogue = RelationshipFrom(
         Library, "CONTAINS_CATALOGUE", model=ClinicalMdrRel
+    )
+
+
+# The contents of a package: which codelists and terms it held, and which version of
+# each. `GET /ct/packages/changes` and every `?package=` filter traverse these, but
+# until now nothing declared them — they were written only by the out-of-band CDISC
+# import and read back with raw Cypher.
+class CTPackageCodelist(ClinicalMdrNodeWithUID):
+    contains_codelist = RelationshipFrom(
+        CTPackage, "CONTAINS_CODELIST", model=ClinicalMdrRel
+    )
+    contains_attributes = RelationshipTo(
+        CTCodelistAttributesValue, "CONTAINS_ATTRIBUTES", model=ClinicalMdrRel
+    )
+    contains_term = RelationshipTo(
+        "CTPackageTerm", "CONTAINS_TERM", model=ClinicalMdrRel
+    )
+
+
+class CTPackageTerm(ClinicalMdrNodeWithUID):
+    contains_term = RelationshipFrom(
+        CTPackageCodelist, "CONTAINS_TERM", model=ClinicalMdrRel
+    )
+    contains_attributes = RelationshipTo(
+        CTTermAttributesValue, "CONTAINS_ATTRIBUTES", model=ClinicalMdrRel
+    )
+    contains_submission_value = RelationshipTo(
+        CTCodelistTerm, "CONTAINS_SUBMISSION_VALUE", model=ClinicalMdrRel
     )
 
 

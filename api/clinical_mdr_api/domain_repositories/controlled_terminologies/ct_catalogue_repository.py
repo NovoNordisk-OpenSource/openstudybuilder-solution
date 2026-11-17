@@ -22,15 +22,13 @@ class CTCatalogueRepository:
             ]
 
         # projecting results to CTCatalogueAR instances
-        ct_catalogues = [
+        return [
             CTCatalogueAR.from_input_values(
                 name=catalogue.name,
                 library_name=catalogue.contains_catalogue.single().name,
             )
             for catalogue in ct_catalogues
         ]
-
-        return ct_catalogues
 
     def count_all(self) -> int:
         """

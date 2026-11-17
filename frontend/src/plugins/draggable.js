@@ -72,21 +72,30 @@ const createDragHandlers = (dialogContent, handle, initialRect) => {
   }
 }
 
-// Event handlers
-const onMouseDown = (e) => {
-  const handle = e.target.closest('.v-card-title')
-  if (!handle || isInteractiveElement(e.target)) return
+const resolveDraggableElement = (handle) => {
+  if (handle.matches('[data-drag-handle]')) {
+    return handle.closest('[data-draggable-card]')
+  }
 
   const dialogContent = handle.closest('.v-overlay__content')
-  if (!dialogContent || !dialogContent.contains(handle)) return
-  if (!isDraggableForm(dialogContent)) return
+  if (!dialogContent || !dialogContent.contains(handle)) return null
+  return isDraggableForm(dialogContent) ? dialogContent : null
+}
+
+// Event handlers
+const onMouseDown = (e) => {
+  const handle = e.target.closest('[data-drag-handle], .v-card-title')
+  if (!handle || isInteractiveElement(e.target)) return
+
+  const draggableElement = resolveDraggableElement(handle)
+  if (!draggableElement) return
 
   e.preventDefault()
 
   const handlers = createDragHandlers(
-    dialogContent,
+    draggableElement,
     handle,
-    dialogContent.getBoundingClientRect()
+    draggableElement.getBoundingClientRect()
   )
 
   handlers.init(e.clientX, e.clientY)
@@ -103,15 +112,14 @@ const onMouseDown = (e) => {
 }
 
 const onDoubleClick = (e) => {
-  const handle = e.target.closest('.v-card-title')
+  const handle = e.target.closest('[data-drag-handle], .v-card-title')
   if (!handle || isInteractiveElement(e.target)) return
 
-  const dialogContent = handle.closest('.v-overlay__content')
-  if (!dialogContent || !dialogContent.contains(handle)) return
-  if (!isDraggableForm(dialogContent)) return
+  const draggableElement = resolveDraggableElement(handle)
+  if (!draggableElement) return
 
-  dialogContent.style.transform = ''
-  dialogStates.delete(dialogContent)
+  draggableElement.style.transform = ''
+  dialogStates.delete(draggableElement)
 }
 
 export default {

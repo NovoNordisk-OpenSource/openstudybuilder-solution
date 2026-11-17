@@ -126,7 +126,7 @@ class StudyActivityScheduleRepository(base.StudySelectionRepository):
     def find_schedule_for_study_visit_and_study_activity(
         self, study_uid: str, study_activity_uid: str, study_visit_uid: str
     ) -> list[StudyActivitySchedule]:
-        study_activity_schedules = ListDistinct(
+        return ListDistinct(
             StudyActivitySchedule.nodes.filter(
                 study_value__latest_value__uid=study_uid,
                 study_activity__uid=study_activity_uid,
@@ -135,7 +135,6 @@ class StudyActivityScheduleRepository(base.StudySelectionRepository):
             .has(has_before=False)
             .resolve_subgraph()
         ).distinct()
-        return study_activity_schedules
 
     def _remove_old_selection_if_exists(
         self, study_uid: str, schedule: StudyActivityScheduleVO

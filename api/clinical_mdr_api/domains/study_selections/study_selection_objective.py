@@ -68,12 +68,8 @@ class StudySelectionObjectiveVO:
 
     def validate(
         self,
-        objective_exist_callback: Callable[[str | None | None], bool] = (
-            lambda _: True
-        ),
-        ct_term_level_exist_callback: Callable[[str | None | None], bool] = (
-            lambda _: True
-        ),
+        objective_exist_callback: Callable[[str | None], bool] = (lambda _: True),
+        ct_term_level_exist_callback: Callable[[str | None], bool] = (lambda _: True),
     ) -> None:
         # Checks if there exists a objective which is approved with objective_uid
         exceptions.BusinessLogicException.raise_if_not(

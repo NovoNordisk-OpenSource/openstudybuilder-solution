@@ -198,6 +198,49 @@ def test_batch_post_skip_by_name(api_client, arm_types):
     assert res[0]["content"]["name"] == "MCPBranchSkipName"
 
 
+def test_batch_post_does_not_skip_same_name_under_another_arm(api_client, arm_types):
+    """Skip detection is per Study Arm: the same name under a different arm must still be created."""
+    target_study = TestUtils.create_study()
+    arm_1 = TestUtils.create_study_arm(
+        study_uid=target_study.uid,
+        name="MCPBranchCrossArm1",
+        short_name="MCPBCA1",
+        arm_type_uid=arm_types["investigational"].term_uid,
+    )
+    arm_2 = TestUtils.create_study_arm(
+        study_uid=target_study.uid,
+        name="MCPBranchCrossArm2",
+        short_name="MCPBCA2",
+        arm_type_uid=arm_types["investigational"].term_uid,
+    )
+    TestUtils.create_study_branch_arm(
+        study_uid=target_study.uid,
+        name="MCPBranchCrossName",
+        short_name="MCPBCN1",
+        study_arm_uid=arm_1.arm_uid,
+    )
+
+    branch = {"name": "MCPBranchCrossName", "short_name": "MCPBCN1"}
+    response = _post_batch(
+        api_client,
+        target_study.uid,
+        [
+            {"method": "POST", "content": {**branch, "arm_uid": arm_2.arm_uid}},
+            {"method": "POST", "content": {**branch, "arm_uid": arm_1.arm_uid}},
+        ],
+    )
+    assert_response_status_code(response, 207)
+    res = response.json()
+
+    # different arm: created, not skipped
+    assert res[0]["response_code"] == 201
+    assert res[0]["notification"] is None
+
+    # same arm: still skipped
+    assert res[1]["response_code"] == 200
+    assert "creation skipped" in res[1]["notification"]
+
+
 def test_batch_post_skip_by_short_name(api_client, arm_types):
     target_study = TestUtils.create_study()
     study_arm = TestUtils.create_study_arm(

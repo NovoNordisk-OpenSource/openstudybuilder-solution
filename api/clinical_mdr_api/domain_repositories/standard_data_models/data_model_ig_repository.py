@@ -8,7 +8,7 @@ from clinical_mdr_api.domain_repositories.standard_data_models.standard_data_mod
 from clinical_mdr_api.models.standard_data_models.data_model_ig import DataModelIG
 
 
-class DataModelIGRepository(StandardDataModelRepository):
+class DataModelIGRepository(StandardDataModelRepository[DataModelIG]):
     root_class = DataModelIGRoot
     value_class = DataModelIGValue
     return_model = DataModelIG

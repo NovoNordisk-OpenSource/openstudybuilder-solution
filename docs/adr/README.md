@@ -10,3 +10,5 @@ Start a new record with the [ADR template](template.md).
 
 - [0001 - Replace Pipenv with uv + poethepoet for Python dependency and task management](0001-replace-pipenv-with-uv-and-poe.md)
 - [0002 - Replace Pylint with Ruff for static code analysis](0002-replace-pylint-with-ruff.md)
+- [0003 - Allow literal square brackets in syntax template names](0003-allow-literal-square-brackets-in-syntax-templates.md)
+- [0004 - Log user ID in Neo4j transaction metadata](0004-log-user-id-in-neo4j-transaction-metadata.md)

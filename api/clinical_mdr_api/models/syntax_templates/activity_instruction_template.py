@@ -15,7 +15,6 @@ from clinical_mdr_api.models.syntax_templates.template_parameter import (
 )
 from clinical_mdr_api.models.utils import (
     BaseModel,
-    InputModel,
     PatchInputModel,
     PostInputModel,
 )
@@ -213,25 +212,6 @@ class ActivityInstructionTemplateVersion(ActivityInstructionTemplate):
     """
 
     changes: list[str] = Field(description=CHANGES_FIELD_DESC, default_factory=list)
-
-
-class ActivityInstructionTemplatePreValidateInput(InputModel):
-    name: Annotated[
-        str,
-        Field(
-            description="The actual value/content. It may include parameters referenced by simple strings in square brackets [].",
-            min_length=1,
-            json_schema_extra={"format": "html"},
-        ),
-    ]
-    guidance_text: Annotated[
-        str | None,
-        Field(
-            description="Optional guidance text for using the template.",
-            min_length=1,
-            json_schema_extra={"format": "html"},
-        ),
-    ] = None
 
 
 class ActivityInstructionTemplateCreateInput(PostInputModel):

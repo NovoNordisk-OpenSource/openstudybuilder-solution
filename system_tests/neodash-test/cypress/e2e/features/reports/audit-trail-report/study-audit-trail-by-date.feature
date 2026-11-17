@@ -1,9 +1,11 @@
-@REQ_ID:1370753
+@REQ_ID:3679915
 @neodash_tests
 
 Feature: Audit Trail Report - Study Audit Trail by Date
 
-    As a user, I want to keep track of database changes made to studis in a dashboard
+         As a user,
+         I want to keep track of study definition changes made to any study by date in a searchable dashboard,
+         So that I have clear documentation on changes to study definition by date.
 
     Background: User must be logged into the dashboard
         Given The user is logged in

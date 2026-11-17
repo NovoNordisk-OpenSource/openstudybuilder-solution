@@ -23,7 +23,7 @@ from clinical_mdr_api.services.controlled_terminologies.ct_term_generic_service 
 )
 
 
-class CTTermNameService(CTTermGenericService[CTTermNameAR]):
+class CTTermNameService(CTTermGenericService[CTTermNameAR, CTTermName]):
     aggregate_class = CTTermNameAR
     repository_interface = CTTermNameRepository
     version_class = CTTermNameVersion

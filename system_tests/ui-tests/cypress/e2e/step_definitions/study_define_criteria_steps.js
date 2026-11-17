@@ -1,4 +1,5 @@
 const { When, Then } = require("@badeball/cypress-cucumber-preprocessor");
+const { getShortUniqueId } = require("../../support/helper_functions")
 
 let criteriaName
 
@@ -38,3 +39,13 @@ When('The {string} criteria is created from scratch', (value) => {
 })
 
 When('Study criteria value is set to {string}', (value) => cy.get('[data-placeholder="Criteria template"]').type(value))
+
+let enteredCriteriaId
+
+When('A unique Criteria ID is entered', () => {
+    enteredCriteriaId = `IC-${getShortUniqueId()}`
+    cy.get('[data-cy="criteria-id"]').type(enteredCriteriaId)
+})
+
+Then('The entered Criteria ID is visible in the table', () => cy.searchAndCheckPresence(enteredCriteriaId, true))
+

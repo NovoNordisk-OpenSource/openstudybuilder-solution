@@ -66,6 +66,7 @@ class Objective(BaseModel):
     @classmethod
     def from_objective_ar(cls, objective_ar: ObjectiveAR) -> Self:
         parameter_terms: list[MultiTemplateParameterTerm] = []
+        parameter_names = objective_ar.get_parameter_names()
         for position, parameter in enumerate(objective_ar.get_parameters()):
             terms: list[IndexedTemplateParameterTerm] = []
             for index, parameter_term in enumerate(parameter.parameters):
@@ -80,7 +81,10 @@ class Objective(BaseModel):
 
             parameter_terms.append(
                 MultiTemplateParameterTerm(
-                    conjunction=conjunction, position=position + 1, terms=terms
+                    conjunction=conjunction,
+                    position=position + 1,
+                    parameter_name=parameter_names[position],
+                    terms=terms,
                 )
             )
         return cls(

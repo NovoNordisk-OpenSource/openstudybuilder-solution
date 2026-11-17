@@ -13,13 +13,12 @@ from clinical_mdr_api.tests.unit.domain.utils import AUTHOR_ID, random_str
 
 
 def create_random_study_day_vo() -> StudyDayVO:
-    random_study_day_vo = StudyDayVO.from_input_values(
+    return StudyDayVO.from_input_values(
         value=1.23,
         definition=random_str(),
         abbreviation=random_str(),
         is_template_parameter=True,
     )
-    return random_study_day_vo
 
 
 def create_random_study_day_ar(
@@ -27,7 +26,7 @@ def create_random_study_day_ar(
     library: str = "Library",
     is_editable: bool = True,
 ) -> StudyDayAR:
-    random_study_day_ar = StudyDayAR.from_input_values(
+    return StudyDayAR.from_input_values(
         generate_uid_callback=generate_uid_callback,
         simple_concept_vo=create_random_study_day_vo(),
         library=LibraryVO.from_repository_values(
@@ -35,8 +34,6 @@ def create_random_study_day_ar(
         ),
         author_id=AUTHOR_ID,
     )
-
-    return random_study_day_ar
 
 
 class TestStudyDay(unittest.TestCase):

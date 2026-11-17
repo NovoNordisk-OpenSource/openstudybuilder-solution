@@ -3,6 +3,12 @@ const { getShortUniqueId } = require("../../support/helper_functions");
 
 let topicCode, activityName, instanceName, nciCode, nciName, adamParam
 let existingInstanceName, existingTopicCode, selectedActivityName, codeSubmissionValue
+let unitDimensionData = { activityItemClass: "unit_dimension", dataType: "", name: "", submissionValue: "" }
+let standardUnitData = { activityItemClass: "standard_unit", dataType: "", name: "" }
+let testNameData = { activityItemClass: "test_name", dataType: "", name: "" }
+let testCodeData = { activityItemClass: "test_code", dataType: "", name: "" }
+let categoryData = { activityItemClass: "finding_category", dataType: "", name: "" }
+let subCategoryData = { activityItemClass: "finding_subcategory", dataType: "", name: "" }
 
 const clearField = (fieldName) => cy.contains('.v-stepper-window-item .v-input', fieldName).clear()
 const fillField = (fieldName, value) => cy.contains('.v-stepper-window-item .v-input', fieldName).clear().type(value)
@@ -54,8 +60,8 @@ Given("The Activity Instance Attributes edition page is displayed", () => {
     cy.contains('.dialog-title', 'Edit activity instance attributes').should('be.visible')
 })
 
-Given("The Activity Instance Groupings edition page is displayed", () => {
-    cy.contains('.dialog-title', 'Edit activity instance groupings').should('be.visible')
+Given("The Activity Instance {string} edition page is displayed", (value) => {
+    cy.contains('.dialog-title', `Edit activity instance ${value}`).should('be.visible')
 })
 
 Given("Add activity item class button is clicked", () => cy.get('.v-window-item button').filter(':visible').contains('Add Activity Item Class').eq(0).click())
@@ -84,7 +90,7 @@ Then("The Activity Item Classes selection is not displayed", () => cy.contains('
 
 Then("Warning about already existing topic code is displayed", () => cy.checkSnackbarMessage(`Activity Instance with Topic Code '${existingTopicCode}' already exists`))
 
-Then("Warning about already existing activity name is displayed", () => cy.checkSnackbarMessage(`Activity Instance with Name '${existingInstanceName}' already exists`))
+Then("Warning about already existing activity name is displayed", () => cy.checkSnackbarMessage(`Activity Instance with Name '${existingInstanceName.trim()}' already exists`))
 
 Then("Automatically assigned activity instance name is saved", () => {
     cy.contains('.v-stepper-window-item .v-input', 'Activity instance name').find('input').invoke('val').then(text => instanceName = text)
@@ -111,6 +117,62 @@ When("For activity item class {string} value {string} is searched and selected",
 When("For activity item class {string} value {string} is selected", (name, value) => selectSpecificActivityItemClass(name, value, false))
 
 When("For activity item class {string}, codelist {string} value {string} is searched and selected", (name, codelist, submissionValue) => selectSpecificCodelistAndActivityItemClass(name, codelist, submissionValue))
+
+When("[API] User fetches type of finding_category", () => cy.getItemClassType('finding_category').then(type => categoryData.dataType = type))
+
+When("[API] User fetches type of finding_subcategory", () => cy.getItemClassType('finding_subcategory').then(type => subCategoryData.dataType = type))
+
+When("[API] User fetches type of unit_dimension", () => cy.getItemClassType('unit_dimension').then(type => unitDimensionData.dataType = type))
+
+When("[API] User fetches type of standard_unit", () => cy.getItemClassType('standard_unit').then(type => standardUnitData.dataType = type))
+
+When("[API] User fetches type of test_name", () => cy.getItemClassType('test_name').then(type => testNameData.dataType = type))
+
+When("[API] User fetches type of test_code", () => cy.getItemClassType('test_code').then(type => testCodeData.dataType = type))
+
+When("[API] User fetches instace class uid for {string}", (instanceClass) => cy.getInstanceClassUid(instanceClass))
+
+When("[API] User fetches test_name and test_code uids for {string}", (dataset) => cy.getTestNameAndCodeUids(dataset))
+
+When("[API] User fetches test_name and test_code terms uids for {string}", (dataset) => cy.getTestNameAndCodeTermUids(dataset))
+
+When("[API] User fetches name of category by its submission value {string}", (value) => {
+    cy.getCategoryName(value).then(name => categoryData.name = name)
+})
+
+When("[API] User fetches name of subcategory by its submission value {string}", (value) => {
+    cy.getSubCategoryName(value).then(name => subCategoryData.name = name)
+})
+
+When("[API] User fetches name of test_name by its submission value {string}", (value) => {
+    cy.getTermNameBySubmissionValue(value, 'test_name').then(name => testNameData.name = name)
+})
+
+When("[API] User fetches name of test_code by its submission value", () => {
+    cy.getTermNameBySubmissionValue(codeSubmissionValue, 'test_code').then(name => testCodeData.name = name)
+})
+
+When("Activity item class unit_dimension value is set with sumbission value {string}", (submissionValue) => {
+    cy.getUnitDefinitionName(submissionValue).then(name => {
+        selectSpecificActivityItemClass('Unit dimension', unitDimensionData.name = name, false)
+    })
+})
+
+When("Activity item class standard_unit value is set to {string}", (name) => {
+    selectSpecificActivityItemClass('Standardised unit', standardUnitData.name = name, false)
+})
+
+Then("Unit dimension Item Class is present in the table with selected values", () => checkDataInTable(unitDimensionData))
+
+Then("Standard Unit Item Class is present in the table with selected values", () => checkDataInTable(standardUnitData))
+
+Then("Test Name Item Class is present in the table with selected values", () => checkDataInTable(testNameData))
+
+Then("Test Code Item Class is present in the table with selected values", () => checkDataInTable(testCodeData))
+
+Then("Category is present in the table with selected values", () => checkDataInTable(categoryData))
+
+Then("Subcategory is present in the table with selected values", () => checkDataInTable(subCategoryData))
 
 When("Activity created via API is searched for", () => cy.searchForInPopUp(activityName))
 
@@ -285,4 +347,18 @@ function waitForValuesToLoadSearchAndClickByValue(value) {
     cy.wait(1000)
     cy.get('input[placeholder="Search"]').click().type(value)
     waitForValuesToLoadAndClickByValue(value)
+}
+
+function checkDataInTable(object) {
+    cy.contains('.section-header', 'Activity Items').parent().within(() => {
+        cy.contains('table tbody tr', object.activityItemClass).invoke('index').then(rowIndex => {
+            verifyTableRow('Name', rowIndex, object.name)
+            verifyTableRow('Data type', rowIndex, object.dataType)
+        })
+    })
+}
+function verifyTableRow(columnName, rowIndex, value) {
+    cy.contains('table thead th', columnName).invoke('index').then(columnIndex => {
+        cy.get('table tbody tr').eq(rowIndex).find('td').eq(columnIndex).should('contain.text', value)
+    })
 }

@@ -113,14 +113,12 @@
                 }}</v-list-item-title>
               </v-list-item>
               <v-switch
-                v-for="(column, index) in headers.filter((header) => {
+                v-for="column in headers.filter((header) => {
                   return header.title !== ''
                 })"
                 :key="column.title"
                 v-model="selectedColumns"
-                :value="
-                  headersHasAction() ? headers[index + 1] : headers[index]
-                "
+                :value="column"
                 class="ml-n3 mr-n2 scale80"
                 :label="column.title"
                 inset
@@ -222,7 +220,7 @@
               "
               :items="items"
               :search="search"
-              :headers="shownColumns"
+              :headers="tableHeaders"
               :fixed-header="fixedHeader"
               :no-data-text="noDataText"
               :hide-default-footer="hideDefaultFooter"
@@ -313,7 +311,10 @@
                       </template>
                     </v-list>
                   </v-menu>
-                  <div v-else style="width: 50px"></div>
+                  <div
+                    v-else-if="!isIconOnlyActions(header)"
+                    style="width: 50px"
+                  ></div>
                 </div>
               </template>
               <template
@@ -524,6 +525,7 @@ function removeRangesFromSharedHighlight(ranges) {
 import { computed, onMounted, onUnmounted, onUpdated, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAppStore } from '@/stores/app'
+import { mergeLayoutForSave, resolveVisibleKeys } from '@/stores/column-layout'
 import { useTablesLayoutStore } from '@/stores/tables-layout'
 import ConfirmDialog from '@/components/tools/ConfirmDialog.vue'
 import DataTableExportButton from '@/components/tools/DataTableExportButton.vue'
@@ -808,6 +810,34 @@ const computedItemsPerPageOptions = computed(() => {
     ? props.itemsPerPageOptions
     : tablesConstants.ITEMS_PER_PAGE_OPTIONS
 })
+// A header with `fixed: true` stays pinned to the left while the table scrolls
+// sideways; the `actions` column is always pinned. Vuetify offsets each pinned
+// column by the declared `width` of the ones before it, so those need a numeric
+// width. The icon-only `actions` column therefore gets a fixed, exact width.
+// Keep pinned columns adjacent, right after `actions`.
+const ACTIONS_COLUMN_WIDTH = 45
+const iconOnlyActionsProps = { class: 'nn-actions-column' }
+function isIconOnlyActions(header) {
+  return header.key === 'actions' && header.title === ''
+}
+const tableHeaders = computed(() =>
+  shownColumns.value.map((header) => {
+    if (header.key !== 'actions') {
+      return header
+    }
+    if (!isIconOnlyActions(header)) {
+      return { ...header, fixed: 'start' }
+    }
+    return {
+      ...header,
+      fixed: 'start',
+      width: ACTIONS_COLUMN_WIDTH,
+      minWidth: ACTIONS_COLUMN_WIDTH,
+      headerProps: iconOnlyActionsProps,
+      cellProps: iconOnlyActionsProps,
+    }
+  })
+)
 const historyHeaders = computed(() => {
   if (props.historyConfig?.externalHeaders) {
     return props.historyConfig.externalHeaders
@@ -851,6 +881,8 @@ watch(showSelectBoxes, (val) => {
     selected.value = []
   }
 })
+// updateColumns() reassigns selectedColumns on mount, so this also runs on
+// mount; that first save is what records `known` for legacy layouts.
 watch(selectedColumns, () => {
   let arr
   arr = props.headers.filter(function (item) {
@@ -861,12 +893,7 @@ watch(selectedColumns, () => {
   })
   shownColumns.value = arr.map((e) => ({ ...e, sortable: false }))
   if (props.modifiableTable || props.modifyOnlyColumns) {
-    const layoutMap = new Map()
-    layoutMap.set(
-      storageKey.value,
-      shownColumns.value.map((h) => h.key)
-    )
-    tablesLayoutStore.setColumns(layoutMap)
+    persistColumnLayout(shownColumns.value.map((header) => header.key))
   }
 })
 watch(
@@ -1035,6 +1062,28 @@ function highlightSearchMatches() {
   }
 }
 
+function titledColumnKeys(headers) {
+  return headers
+    .filter((header) => header.title !== '')
+    .map((header) => header.key)
+}
+
+function persistColumnLayout(visibleKeys) {
+  if (!props.headers.length) {
+    return
+  }
+  const layoutMap = new Map()
+  layoutMap.set(
+    storageKey.value,
+    mergeLayoutForSave(
+      tablesLayoutStore.columns[storageKey.value],
+      visibleKeys,
+      props.headers.map((header) => header.key)
+    )
+  )
+  tablesLayoutStore.setColumns(layoutMap)
+}
+
 function updateColumns() {
   if (!props.modifiableTable && !props.modifyOnlyColumns) {
     if (props.defaultHeaders && props.defaultHeaders.length !== 0) {
@@ -1044,52 +1093,23 @@ function updateColumns() {
     }
     return
   }
-  if (
-    !tablesLayoutStore.columns[storageKey.value] ||
-    tablesLayoutStore.columns[storageKey.value].length === 0
-  ) {
-    if (props.defaultHeaders && props.defaultHeaders.length !== 0) {
-      shownColumns.value = props.defaultHeaders
-    } else {
-      shownColumns.value = JSON.parse(JSON.stringify(props.headers))
-    }
-  } else {
-    const savedKeys = tablesLayoutStore.columns[storageKey.value]
-    const currentKeys = props.headers.map((h) => h.key)
-    const validKeys = savedKeys.filter((k) => currentKeys.includes(k))
-    // A saved layout goes stale when the header set changes (e.g. schema-driven
-    // columns whose keys were renamed): the intersection can collapse to nothing
-    // displayable, leaving only synthetic (title-less) columns like a select
-    // radio and rendering the table blank. Recover by resetting to the default
-    // columns and overwriting the stale entry so it stops overriding on reload.
-    const survivesDisplayable = props.headers.some(
-      (h) => validKeys.includes(h.key) && h.title !== ''
-    )
-    if (!survivesDisplayable) {
-      shownColumns.value =
-        props.defaultHeaders && props.defaultHeaders.length !== 0
-          ? props.defaultHeaders
-          : JSON.parse(JSON.stringify(props.headers))
-      const layoutMap = new Map()
-      layoutMap.set(
-        storageKey.value,
-        shownColumns.value.map((h) => h.key)
-      )
-      tablesLayoutStore.setColumns(layoutMap)
-    } else {
-      shownColumns.value = props.headers
-        .filter((h) => validKeys.includes(h.key) || h.title === '')
-        .map((h) => ({ ...h }))
-      // Clean up stale keys that no longer exist in current headers
-      if (validKeys.length !== savedKeys.length) {
-        const layoutMap = new Map()
-        layoutMap.set(storageKey.value, validKeys)
-        tablesLayoutStore.setColumns(layoutMap)
-      }
-    }
-  }
-  selectedColumns.value = props.headers.filter((h) =>
-    shownColumns.value.some((sc) => sc.key === h.key)
+  const defaultSource =
+    props.defaultHeaders && props.defaultHeaders.length !== 0
+      ? props.defaultHeaders
+      : props.headers
+  // Keys absent from `known` were added after the user last saw this table,
+  // so they follow the default instead of inheriting "off" from the cache.
+  const visibleKeys = resolveVisibleKeys(
+    tablesLayoutStore.columns[storageKey.value],
+    titledColumnKeys(props.headers),
+    titledColumnKeys(defaultSource)
+  )
+  const visible = new Set(visibleKeys)
+  shownColumns.value = props.headers
+    .filter((header) => header.title === '' || visible.has(header.key))
+    .map((header) => ({ ...header }))
+  selectedColumns.value = props.headers.filter((header) =>
+    shownColumns.value.some((column) => column.key === header.key)
   )
 }
 function headersHasAction() {
@@ -1171,12 +1191,7 @@ function hideColumn(header) {
     shownColumns.value.findIndex((el) => el.key === header.key),
     1
   )
-  const layoutMap = new Map()
-  layoutMap.set(
-    storageKey.value,
-    shownColumns.value.map((h) => h.key)
-  )
-  tablesLayoutStore.setColumns(layoutMap)
+  persistColumnLayout(shownColumns.value.map((column) => column.key))
 }
 function rowProps(data) {
   let result = props.subTables ? 'subRowsTable' : ''
@@ -1496,6 +1511,12 @@ defineExpose({
 
 .subRowsTable {
   background-color: #e3f2fd;
+}
+.subRowsTable > .v-data-table-column--fixed {
+  background-color: #e3f2fd;
+}
+.v-data-table .nn-actions-column {
+  padding-right: 0 !important;
 }
 
 .searchFieldLabel.v-text-field label {

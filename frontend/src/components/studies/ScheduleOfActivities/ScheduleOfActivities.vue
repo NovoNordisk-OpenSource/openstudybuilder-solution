@@ -37,6 +37,7 @@
         ['operational', 'protocol', 'protocol_lab_table'].indexOf(layout) > -1
       "
       :layout="layout"
+      :update="props.update"
       :study-visits="studyVisits"
       :style="`max-height: ${tableHeight + 150}px;`"
     />
@@ -99,13 +100,13 @@
         <template v-if="!props.readOnly">
           <v-btn
             v-show="multipleVisitsSelected()"
+            data-cy="group-visits-button"
             class="ml-2"
             icon
             size="small"
             variant="outlined"
             color="nnBaseBlue"
             :disabled="
-              footnoteMode ||
               !accessGuard.checkPermission($roles.STUDY_WRITE) ||
               studiesGeneralStore.selectedStudyVersion !== null ||
               sortMode
@@ -120,7 +121,6 @@
           </v-btn>
           <v-menu
             :disabled="
-              footnoteMode ||
               !accessGuard.checkPermission($roles.STUDY_WRITE) ||
               studiesGeneralStore.selectedStudyVersion !== null ||
               sortMode
@@ -131,7 +131,6 @@
             <template #activator="{ props }">
               <v-btn
                 :disabled="
-                  footnoteMode ||
                   !accessGuard.checkPermission($roles.STUDY_WRITE) ||
                   studiesGeneralStore.selectedStudyVersion !== null ||
                   sortMode
@@ -191,11 +190,11 @@
               </v-btn>
             </template>
             <v-list>
-              <v-list-item link @click="downloadCSV">
-                <v-list-item-title>CSV</v-list-item-title>
-              </v-list-item>
               <v-list-item link @click="downloadEXCEL">
                 <v-list-item-title>EXCEL</v-list-item-title>
+              </v-list-item>
+              <v-list-item link @click="downloadCSV">
+                <v-list-item-title>CSV</v-list-item-title>
               </v-list-item>
               <v-list-item link @click="downloadDOCX">
                 <v-list-item-title>DOCX</v-list-item-title>
@@ -250,55 +249,7 @@
                 >
                   <div style="width: max-content" class="mt-3">
                     <v-row>
-                      <v-badge
-                        color="transparent"
-                        text-color="nnWhite"
-                        floating
-                        :content="
-                          cell.refs
-                            ? scheduleMethods.getElementFootnotesLetters(
-                                cell.refs[0].uid
-                              )
-                            : ''
-                        "
-                        class="mt-3 mr-1 ml-5 mb-5"
-                      >
-                        {{ cell.text }}
-                      </v-badge>
-                      <v-btn
-                        v-if="
-                          footnoteMode &&
-                          cell.text !== '' &&
-                          !checkIfElementHasFootnote(cell.refs[0].uid)
-                        "
-                        size="x-small"
-                        icon="mdi-plus-circle-outline"
-                        :title="$t('DetailedFlowchart.add_footnote')"
-                        class="mr-1 mt-1"
-                        color="nnWhite"
-                        variant="text"
-                        @click="
-                          addElementForFootnote(
-                            cell.refs[0].uid,
-                            'StudyEpoch',
-                            cell.text
-                          )
-                        "
-                      />
-                      <v-btn
-                        v-else-if="
-                          footnoteMode &&
-                          cell.text !== '' &&
-                          checkIfElementHasFootnote(cell.refs[0].uid)
-                        "
-                        size="x-small"
-                        icon="mdi-minus-circle"
-                        color="nnWhite"
-                        class="mx-0 px-0"
-                        variant="text"
-                        :title="$t('DetailedFlowchart.remove_footnote')"
-                        @click="removeElementForFootnote(cell.refs[0].uid)"
-                      />
+                      <span class="mt-3 mr-1 ml-5 mb-5">{{ cell.text }}</span>
                     </v-row>
                   </div>
                 </th>
@@ -344,70 +295,29 @@
                   scope="col"
                 >
                   <div class="d-flex align-center mt-1">
-                    <v-badge
-                      color="transparent"
-                      text-color="secondary"
-                      floating
-                      :content="
-                        cell.refs.length
-                          ? scheduleMethods.getElementFootnoteLettersForMultipleRefs(
-                              cell.refs
-                            )
-                          : ''
-                      "
-                      class="visitFootnote ml-2"
-                    >
-                      {{ cell.text }}
-                    </v-badge>
-                    <v-btn
-                      v-if="
-                        footnoteMode &&
-                        !checkIfElementHasFootnote(cell.refs[0].uid)
-                      "
-                      size="small"
-                      icon="mdi-plus-circle-outline"
-                      :title="$t('DetailedFlowchart.add_footnote')"
-                      class="mb-1 mx-0 px-0"
-                      variant="text"
-                      @click="
-                        addVisitForFootnote(cell.refs, 'StudyVisit', cell.text)
-                      "
-                    />
-                    <v-btn
-                      v-else-if="
-                        footnoteMode &&
-                        checkIfElementHasFootnote(cell.refs[0].uid)
-                      "
-                      size="small"
-                      icon="mdi-minus-circle"
-                      color="nnBaseBlue"
-                      class="mb-1 mx-0 px-0"
-                      variant="text"
-                      :title="$t('DetailedFlowchart.remove_footnote')"
-                      @click="removeElementForFootnote(cell.refs[0].uid)"
-                    />
+                    <span class="ml-2 mb-2">{{ cell.text }}</span>
                     <v-checkbox
-                      v-if="cell.refs.length === 1 && !footnoteMode"
+                      v-if="cell.refs.length === 1"
                       v-model="selectedVisitIndexes"
+                      :data-cy="`visit-selection-${cell.refs[0].uid}`"
                       :value="index"
                       hide-details
                       class="mt-n2 scale75"
                       multiple
                       :disabled="
-                        footnoteMode ||
                         !accessGuard.checkPermission($roles.STUDY_WRITE) ||
                         studiesGeneralStore.selectedStudyVersion !== null
                       "
                     />
                     <v-btn
-                      v-else-if="!footnoteMode"
+                      v-else
+                      data-cy="delete-visit-group-button"
                       icon="mdi-delete-outline"
                       color="error"
                       size="x-small"
                       class="mb-1"
                       :title="$t('GroupStudyVisits.delete_title')"
                       :disabled="
-                        footnoteMode ||
                         !accessGuard.checkPermission($roles.STUDY_WRITE) ||
                         studiesGeneralStore.selectedStudyVersion !== null
                       "
@@ -494,8 +404,8 @@
             <template v-for="(row, index) in visibleRows">
               <tr
                 v-if="row.cells"
-                :id="`row-scroll-${row.cells[0].refs[0]?.uid}`"
-                :key="`row-${row.cells[0].refs[0]?.uid}`"
+                :id="`row-scroll-${row.displayUid}`"
+                :key="`row-${row.displayUid}`"
                 :class="scheduleMethods.getSoaRowClasses(row)"
                 style="height: 35px"
               >
@@ -506,16 +416,10 @@
                         v-if="
                           !props.readOnly && !scheduleMethods.isActivityRow(row)
                         "
-                        :icon="
-                          getDisplayButtonIcon(
-                            `row-${row.cells[0].refs[0]?.uid}`
-                          )
-                        "
+                        :icon="getDisplayButtonIcon(`row-${row.displayUid}`)"
                         variant="text"
                         size="x-small"
-                        @click="
-                          toggleRowState(`row-${row.cells[0].refs[0]?.uid}`)
-                        "
+                        @click="toggleRowState(`row-${row.displayUid}`)"
                       />
                     </div>
                     <div class="row-fixed-width">
@@ -546,7 +450,6 @@
                         !accessGuard.checkPermission($roles.STUDY_WRITE) ||
                         studiesGeneralStore.selectedStudyVersion !== null
                       "
-                      :style="footnoteMode ? 'visibility: hidden;' : ''"
                       class="flex-grow-0 ml-12 scale75"
                       @update:model-value="
                         (value) => toggleActivitySelection(row, value)
@@ -564,7 +467,6 @@
                         !accessGuard.checkPermission($roles.STUDY_WRITE) ||
                         studiesGeneralStore.selectedStudyVersion !== null
                       "
-                      :style="footnoteMode ? 'visibility: hidden;' : ''"
                       class="flex-grow-0 scale75 ml-4"
                       @update:model-value="
                         (value) => toggleSubgroupActivitiesSelection(row, value)
@@ -599,62 +501,12 @@
                           {{ row.cells[0].text }}
                         </v-tooltip>
                       </span>
-                      <span
-                        v-if="
-                          scheduleMethods.getElementFootnotesLetters(
-                            row.cells[0]?.refs[0]?.uid
-                          )
-                        "
-                        class="badgeActivities"
-                      >
-                        {{
-                          scheduleMethods.getElementFootnotesLetters(
-                            row.cells[0]?.refs[0]?.uid
-                          )
-                        }}
-                      </span>
                     </div>
-                    <v-btn
-                      v-if="
-                        footnoteMode &&
-                        row.cells[0].refs[0] &&
-                        !checkIfElementHasFootnote(row.cells[0].refs[0].uid)
-                      "
-                      icon="mdi-plus-circle-outline"
-                      :title="$t('DetailedFlowchart.add_footnote')"
-                      class="mx-0 px-0"
-                      size="x-small"
-                      variant="text"
-                      @click="
-                        addElementForFootnote(
-                          row.cells[0].refs[0].uid,
-                          row.cells[0].refs[0].type,
-                          row.cells[0].text
-                        )
-                      "
-                    />
-                    <v-btn
-                      v-else-if="
-                        footnoteMode &&
-                        row.cells[0].refs[0] &&
-                        checkIfElementHasFootnote(row.cells[0].refs[0].uid)
-                      "
-                      icon="mdi-minus-circle"
-                      size="x-small"
-                      class="mx-0 px-0"
-                      color="nnBaseBlue"
-                      variant="text"
-                      :title="$t('DetailedFlowchart.remove_footnote')"
-                      @click="
-                        removeElementForFootnote(row.cells[0].refs[0].uid)
-                      "
-                    />
                     <v-spacer />
                     <v-btn
-                      v-if="!props.readOnly"
+                      v-if="!props.readOnly && row.cells[0].refs?.length"
                       icon
                       :disabled="
-                        footnoteMode ||
                         !accessGuard.checkPermission($roles.STUDY_WRITE) ||
                         studiesGeneralStore.selectedStudyVersion !== null
                       "
@@ -701,7 +553,7 @@
                 >
                   <div
                     v-if="leftIndex <= visitIndex <= rightIndex"
-                    class="mb-n1 footnote-cell"
+                    class="mb-n1 schedule-cell"
                   >
                     <input
                       v-model="
@@ -714,7 +566,6 @@
                           row.cells[0].refs[0].uid,
                           visitCell.refs[0].uid
                         ) ||
-                        footnoteMode ||
                         !accessGuard.checkPermission($roles.STUDY_WRITE) ||
                         studiesGeneralStore.selectedStudyVersion !== null
                       "
@@ -729,96 +580,6 @@
                           )
                       "
                     />
-                    <div class="badgeSchedules">
-                      {{
-                        row?.cells[visitIndex - leftIndex + 1]?.footnotes?.join(
-                          ', '
-                        )
-                      }}
-                    </div>
-                    <div class="actionButtons">
-                      <v-btn
-                        v-if="
-                          !footnoteMode &&
-                          !props.readOnly &&
-                          row.cells[visitIndex - leftIndex + 1]?.refs &&
-                          row.cells[visitIndex - leftIndex + 1]?.refs.length &&
-                          Boolean(
-                            scheduleMethods.getElementFootnotesLetters(
-                              row.cells[visitIndex - leftIndex + 1]?.refs[0].uid
-                            )
-                          )
-                        "
-                        key="2"
-                        class="mr-n2 mb-n2 scale50"
-                        size="x-small"
-                        variant="outlined"
-                        color="nnBaseBlue"
-                        icon="mdi-minus"
-                        :title="$t('DetailedFlowchart.remove_footnote')"
-                        @click="
-                          openRemoveFootnoteForm(
-                            row.cells[visitIndex - leftIndex + 1],
-                            row.cells[0].refs[0].uid
-                          )
-                        "
-                      />
-                    </div>
-                    <v-btn
-                      v-if="
-                        footnoteMode &&
-                        currentSelectionMatrix[row.cells[0].refs[0].uid][
-                          visitCell.refs[0].uid
-                        ].uid &&
-                        !checkIfElementHasFootnote(
-                          currentSelectionMatrix[row.cells[0].refs[0].uid][
-                            visitCell.refs[0].uid
-                          ].uid
-                        )
-                      "
-                      size="x-small"
-                      icon="mdi-plus-circle-outline"
-                      :title="$t('DetailedFlowchart.add_footnote')"
-                      class="actionButtons mx-0 px-0 ml-n3 mt-2 mb-4 mr-n4"
-                      variant="text"
-                      @click="
-                        addElementForFootnote(
-                          currentSelectionMatrix[row.cells[0].refs[0].uid][
-                            visitCell.refs[0].uid
-                          ].uid,
-                          'StudyActivitySchedule',
-                          undefined,
-                          row?.cells[visitIndex - leftIndex + 1]
-                        )
-                      "
-                    />
-                    <v-btn
-                      v-else-if="
-                        footnoteMode &&
-                        currentSelectionMatrix[row.cells[0].refs[0].uid][
-                          visitCell.refs[0].uid
-                        ].uid &&
-                        checkIfElementHasFootnote(
-                          currentSelectionMatrix[row.cells[0].refs[0].uid][
-                            visitCell.refs[0].uid
-                          ].uid
-                        )
-                      "
-                      size="x-small"
-                      icon="mdi-minus-circle"
-                      class="mx-0 px-0 ml-n3 mt-2 mb-4 mr-n4"
-                      color="nnBaseBlue"
-                      variant="text"
-                      :title="$t('DetailedFlowchart.remove_footnote')"
-                      @click="
-                        removeElementForFootnote(
-                          currentSelectionMatrix[row.cells[0].refs[0].uid][
-                            visitCell.refs[0].uid
-                          ].uid,
-                          row?.cells[visitIndex - leftIndex + 1]
-                        )
-                      "
-                    />
                   </div>
                 </td>
               </tr>
@@ -828,14 +589,6 @@
             </template>
           </tbody>
         </table>
-      </div>
-      <div class="mt-8 ml-n4 mr-n4">
-        <StudyFootnoteTable
-          ref="footnoteTable"
-          @update="loadSoaContent()"
-          @enable-footnote-mode="enableFootnoteMode"
-          @remove-element-from-footnote="removeElementForFootnote"
-        />
       </div>
     </div>
     <v-card v-if="sortMode" id="bottomCard" elevation="1" class="bottomCard">
@@ -867,93 +620,26 @@
         </v-col>
       </v-row>
     </v-card>
-    <v-card
-      v-if="footnoteMode"
-      id="bottomCard"
-      elevation="1"
-      class="bottomCard"
-    >
-      <v-row>
-        <v-col cols="8">
-          <v-card
-            color="nnLightBlue200"
-            class="ml-4"
-            style="width: fit-content"
-          >
-            <v-card-text>
-              <v-icon class="pb-1 mr-2">mdi-information-outline</v-icon>
-              <div
-                v-if="activeFootnote"
-                v-html="
-                  sanitizeHTML(
-                    $t('StudyFootnoteEditForm.select_footnote_items', {
-                      footnote: escapeHTML(
-                        activeFootnote.template
-                          ? activeFootnote.template.name_plain
-                          : activeFootnote.footnote.name_plain
-                      ),
-                    })
-                  )
-                "
-              />
-              <div v-else>
-                {{
-                  $t('StudyFootnoteEditForm.select_to_create_footnote_items')
-                }}
-              </div>
-            </v-card-text>
-          </v-card>
-        </v-col>
-        <v-col cols="4" style="align-content: center; text-align-last: end">
-          <v-btn
-            color="nnBaseBlue"
-            variant="outlined"
-            size="large"
-            rounded
-            :text="$t('_global.cancel')"
-            @click="disableFootnoteMode"
-          />
-          <v-btn
-            color="nnBaseBlue"
-            class="ml-2 mr-4"
-            size="large"
-            rounded
-            :loading="footnoteUpdateLoading"
-            :text="
-              activeFootnote
-                ? $t('StudyFootnoteEditForm.save_linking')
-                : $t('_global.continue')
-            "
-            @click="saveElementsForFootnote"
-          />
-        </v-col>
-      </v-row>
-    </v-card>
     <v-dialog v-model="showActivityEditForm" max-width="600px">
       <StudyActivityEditForm
         :study-activity="selectedStudyActivity"
         @close="closeEditForm"
-        @updated="loadSoaContent(true)"
+        @updated="loadSoaContent()"
       />
     </v-dialog>
     <v-dialog v-model="showDraftedActivityEditForm" max-width="600px">
       <StudyDraftedActivityEditForm
         :study-activity="selectedStudyActivity"
         @close="closeEditForm"
-        @updated="loadSoaContent(true)"
+        @updated="loadSoaContent()"
       />
     </v-dialog>
-    <RemoveFootnoteForm
-      :open="showRemoveFootnoteForm"
-      :item-uid="removeItemUid"
-      @close="closeRemoveFootnoteForm"
-    />
     <StudyActivityScheduleBatchEditForm
       v-if="showBatchEditForm"
       :open="showBatchEditForm"
       :selection="formattedStudyActivitySelection"
       :study-visits="studyVisits"
-      @updated="() => loadSoaContent(true)"
+      @updated="() => loadSoaContent()"
       @close="showBatchEditForm = false"
       @remove="unselectItem"
     />
@@ -978,20 +664,6 @@
       @close="closeCollapsibleVisitGroupForm"
       @created="collapsibleVisitGroupCreated"
     />
-    <v-dialog
-      v-model="showFootnoteForm"
-      persistent
-      fullscreen
-      content-class="fullscreen-dialog"
-    >
-      <StudyFootnoteForm
-        :current-study-footnotes="footnotesStore.studyFootnotes"
-        :selected-elements="elementsForFootnote"
-        class="fullscreen-dialog"
-        @close="closeFootnoteForm"
-        @added="onFootnoteAdded()"
-      />
-    </v-dialog>
     <v-dialog
       v-model="showHistory"
       :fullscreen="$globals.historyDialogFullscreen"
@@ -1042,25 +714,20 @@ import {
   onMounted,
   onBeforeUnmount,
 } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import CollapsibleVisitDisplaySelectForm from '../CollapsibleVisitDisplaySelectForm.vue'
+import CollapsibleVisitDisplaySelectForm from '../visits/CollapsibleVisitDisplaySelectForm.vue'
 import ConfirmDialog from '@/components/tools/ConfirmDialog.vue'
 import HistoryTable from '@/components/tools/HistoryTable.vue'
 import study from '@/api/study'
 import StudyActivityScheduleBatchEditForm from '../StudyActivityScheduleBatchEditForm.vue'
-import StudyFootnoteTable from '../StudyFootnoteTable.vue'
 import studyEpochs from '@/api/studyEpochs'
-import StudyFootnoteForm from '@/components/studies/StudyFootnoteForm.vue'
 import _isEmpty from 'lodash/isEmpty'
 import { useAccessGuard } from '@/composables/accessGuard'
 import { useStudiesGeneralStore } from '@/stores/studies-general'
-import { useFootnotesStore } from '@/stores/studies-footnotes'
 import { useSoaContentLoadingStore } from '@/stores/soa-content-loading'
 import { useSoaExpandStateStore } from '@/stores/soa-expand-state'
 import soaDownloads from '@/utils/soaDownloads'
 import ProtocolFlowchart from '../ProtocolFlowchart.vue'
-import RemoveFootnoteForm from '../RemoveFootnoteForm.vue'
 import ActionsMenu from '@/components/tools/ActionsMenu.vue'
 import StudyActivityEditForm from '../StudyActivityEditForm.vue'
 import StudyDraftedActivityEditForm from '../StudyDraftedActivityEditForm.vue'
@@ -1068,23 +735,23 @@ import StudyActivityForm from '../StudyActivityForm.vue'
 import libraries from '@/constants/libraries.js'
 import ReorderingDetailedSoATbody from './ReorderingDetailedSoATbody.vue'
 import scheduleMethods from '@/utils/scheduleMethods'
+import {
+  applySavedExpandState,
+  assignRowDisplayUids,
+  buildRowsDisplayState,
+} from '@/utils/soaDisplayState'
 import EmptySoATbody from './EmptySoATbody.vue'
 import StudyComplexityScoreDetails from '@/components/studies/StudyComplexityScoreDetails.vue'
-import { escapeHTML, sanitizeHTML } from '@/utils/sanitize'
 import { useFeatureFlagsStore } from '@/stores/feature-flags'
-import dataFormating from '@/utils/dataFormating'
 
 const featureFlagsStore = useFeatureFlagsStore()
 const { t } = useI18n()
 const notificationHub = inject('notificationHub')
 const roles = inject('roles')
 const studiesGeneralStore = useStudiesGeneralStore()
-const footnotesStore = useFootnotesStore()
 const soaContentLoadingStore = useSoaContentLoadingStore()
 const soaExpandStateStore = useSoaExpandStateStore()
 const accessGuard = useAccessGuard()
-const router = useRouter()
-const route = useRoute()
 
 const props = defineProps({
   readOnly: {
@@ -1096,6 +763,7 @@ const props = defineProps({
     default: 0,
   },
 })
+const emit = defineEmits(['loadFailed'])
 
 const firstHeader = ref()
 const secondHeader = ref()
@@ -1103,7 +771,6 @@ const thirdHeader = ref()
 const milestoneHeader = ref()
 const firstCol = ref()
 const secondCol = ref()
-const footnoteTable = ref()
 const confirm = ref()
 const tableContainer = ref()
 const complexityScore = ref(0)
@@ -1123,17 +790,10 @@ const milestoneHeaderHeight = ref(0)
 const selectedVisitIndexes = ref([])
 const showBatchEditForm = ref(false)
 const showCollapsibleGroupForm = ref(false)
-const showFootnoteForm = ref(false)
 const studyActivitySelection = ref([])
 const tableHeight = ref(700)
-const activeFootnote = ref(null)
-const footnoteMode = ref(false)
-const elementsForFootnote = ref({
-  referenced_items: [],
-})
 const loadingSoaContent = ref(false)
 const showHistory = ref(false)
-const footnoteUpdateLoading = ref(false)
 const historyHeaders = [
   {
     title: t('DetailedFlowchart.history_object_type'),
@@ -1149,8 +809,6 @@ const layout = ref('detailed')
 const soaLayoutStorageKey = computed(
   () => `soa-layout-${studiesGeneralStore.selectedStudy.uid}`
 )
-const showRemoveFootnoteForm = ref(false)
-const removeItemUid = ref('')
 const actions = [
   {
     label: t('DetailedFlowchart.edit_activity'),
@@ -1242,8 +900,7 @@ const soaRows = computed(() => {
     .toLowerCase()
   if (searchTerm.length >= 3) {
     // We search only data rows (header rows are excluded).
-    const itemsToSearch =
-      soaContent.value?.rows.slice(soaContent.value.num_header_rows) || []
+    const itemsToSearch = getDataRows(soaContent.value)
     const result = []
     const getRowStyle = (row) => row?.cells?.[0]?.style
     const rowMatchesSearch = (row) => {
@@ -1367,12 +1024,10 @@ const soaRows = computed(() => {
     return result
   }
   const result = []
-  soaContent.value?.rows
-    .slice(soaContent.value.num_header_rows)
-    .forEach((row) => {
-      row.class = scheduleMethods.getSoaRowClasses(row)
-      result.push(row)
-    })
+  getDataRows(soaContent.value).forEach((row) => {
+    row.class = scheduleMethods.getSoaRowClasses(row)
+    result.push(row)
+  })
   return result
 })
 
@@ -1384,7 +1039,7 @@ const overscan = 10
 
 const visibleRows = computed(() => {
   const rowsToDisplay = soaRows.value
-    .filter((row) => showSoaRow(row.cells?.[0]?.refs?.[0]?.uid, row))
+    .filter((row) => showSoaRow(row.displayUid, row))
     .map((row) => {
       const cells = row.cells || []
       const first = cells[0]
@@ -1521,14 +1176,6 @@ watch(layout, (value) => {
   localStorage.setItem(soaLayoutStorageKey.value, value)
 })
 watch(
-  () => '$route.params.footnote',
-  (value) => {
-    if (value && !_isEmpty(value)) {
-      enableFootnoteMode(value)
-    }
-  }
-)
-watch(
   () => tableContainer.value,
   (value) => {
     if (!value) {
@@ -1582,19 +1229,14 @@ onUpdated(() => {
   }
 })
 
-function onFootnoteAdded() {
-  footnoteTable.value.filterTable()
-  loadSoaContent(true)
-}
-
 function initiateReorder(item) {
-  const selectedUid = item.row.cells[0].refs[0]?.uid
+  const selectedUid = item.row.displayUid
   scrollItemId.value = `row-scroll-${selectedUid}`
   selectedReorderItem.value = item.row.cells[0]
   selectedReorderItem.value.order = item.row.order
 
   const fullRowIndex = soaRows.value.findIndex(
-    (row) => row?.cells?.[0]?.refs?.[0]?.uid === selectedUid
+    (row) => row.displayUid === selectedUid
   )
   selectedReorderItem.value.tableIndex =
     fullRowIndex !== -1 ? fullRowIndex : item.index
@@ -1603,7 +1245,7 @@ function initiateReorder(item) {
 
 function finishReordering() {
   sortMode.value = false
-  loadSoaContent(true)
+  loadSoaContent()
 }
 
 let resizeObserver = null
@@ -1636,10 +1278,13 @@ onBeforeUnmount(() => {
   if (tableContainer.value) {
     tableContainer.value.removeEventListener('scroll', onScroll)
   }
-  soaExpandStateStore.save(
-    studiesGeneralStore.selectedStudy.uid,
-    snapshotExpandState()
-  )
+  // Leaving before the first load finished: an empty snapshot would overwrite the saved one and expand every row next time
+  if (Object.keys(rowsDisplayState.value).length) {
+    soaExpandStateStore.save(
+      studiesGeneralStore.selectedStudy.uid,
+      snapshotExpandState()
+    )
+  }
 })
 
 function snapshotExpandState() {
@@ -1687,7 +1332,10 @@ async function removeActivity(item) {
         type: 'success',
         msg: t('DetailedFlowchart.remove_activity_success'),
       })
-      loadSoaContent(true)
+      loadSoaContent()
+    })
+    .catch(() => {
+      loadingSoaContent.value = false
     })
 }
 
@@ -1717,13 +1365,13 @@ function closeActivityForm() {
   activityExchangeMode.value = false
   flowchartActivityOrder.value = null
   showActivityForm.value = false
-  loadSoaContent(true)
+  loadSoaContent()
 }
 
 function onActivityExchanged() {
   showActivityForm.value = false
   activityExchangeMode.value = false
-  loadSoaContent(true)
+  loadSoaContent()
 }
 
 function editStudyActivity(item) {
@@ -1755,34 +1403,25 @@ function closeEditForm() {
   showActivityEditForm.value = false
   showDraftedActivityEditForm.value = false
   selectedStudyActivity.value = null
-  loadSoaContent(true)
+  loadSoaContent()
 }
 
-function openRemoveFootnoteForm(ele, rowUid) {
-  scrollItemId.value = `row-scroll-${rowUid}`
-  removeItemUid.value = ele.refs[0].uid
-  showRemoveFootnoteForm.value = true
+function getDataRows(content) {
+  return content?.rows.slice(content.num_header_rows) ?? []
 }
 
-function closeRemoveFootnoteForm() {
-  notificationHub.clearErrors()
-  removeItemUid.value = null
-  showRemoveFootnoteForm.value = false
-  loadSoaContent(true)
-}
-
-function showSoaRow(index, row) {
+function showSoaRow(displayUid, row) {
   try {
     const searchTerm = String(search.value ?? '').trim()
     if (searchTerm.length >= 3) {
       return true
     }
 
-    let key = `row-${index}`
+    let key = `row-${displayUid}`
     let result = true
 
     // prettier-ignore
-    while (true) {  
+    while (true) {
       if (
         rowsDisplayState.value[key] &&
         rowsDisplayState.value[key].parent !== undefined &&
@@ -1817,13 +1456,13 @@ function showSoaRow(index, row) {
   }
 }
 
-function getStudyActivitiesForSubgroup(subgroupUid) {
+function getStudyActivitiesForSubgroup(subgroupDisplayUid) {
   let subgroupFound = false
   const result = []
   for (const row of soaRows.value) {
     if (
       row.cells[0].style === 'subGroup' &&
-      row.cells[0].refs?.[0]?.uid === subgroupUid
+      row.displayUid === subgroupDisplayUid
     ) {
       subgroupFound = true
     } else if (subgroupFound) {
@@ -1835,149 +1474,6 @@ function getStudyActivitiesForSubgroup(subgroupUid) {
     }
   }
   return result
-}
-
-function enableFootnoteMode(footnote) {
-  if (footnote) {
-    activeFootnote.value = footnote
-    elementsForFootnote.value.referenced_items = footnote.referenced_items
-  }
-  footnoteMode.value = true
-}
-
-function disableFootnoteMode() {
-  if (route.params.footnote) {
-    router.push({
-      name: 'StudyActivities',
-      params: { tab: 'footnotes' },
-    })
-    route.params.footnote = null
-  }
-  activeFootnote.value = null
-  elementsForFootnote.value.referenced_items = []
-  footnoteMode.value = false
-  footnoteTable.value.disableFootnoteMode()
-}
-
-function addVisitForFootnote(refs, type, name) {
-  if (!name) {
-    name = type
-  }
-  if (refs.length > 1) {
-    this.notificationHub.add({
-      msg: t('DetailedFlowchart.footnote_added_to_visit_group'),
-      type: 'warning',
-    })
-  }
-  refs.forEach((ref) => {
-    elementsForFootnote.value.referenced_items.push({
-      item_uid: ref.uid,
-      item_type: ref.type,
-      item_name: name,
-    })
-  })
-}
-
-function addElementForFootnote(uid, type, name, schedule) {
-  try {
-    if (schedule && activeFootnote.value) {
-      if (!schedule.footnotes) schedule.footnotes = []
-      schedule.footnotes.push(
-        dataFormating.footnoteSymbol(activeFootnote.value.order)
-      )
-    }
-    if (!name) {
-      name = type
-    }
-    if (typeof uid !== 'string') {
-      uid.forEach((u) => {
-        elementsForFootnote.value.referenced_items.push({
-          item_uid: u,
-          item_type: type,
-          item_name: name,
-        })
-      })
-    } else {
-      elementsForFootnote.value.referenced_items.push({
-        item_uid: uid,
-        item_type: type,
-        item_name: name,
-      })
-    }
-  } catch (error) {
-    console.error(error)
-  }
-}
-
-function removeFootnote(uid) {
-  const indexToRemove = elementsForFootnote.value.referenced_items.findIndex(
-    (item) => item.item_uid === uid
-  )
-  if (indexToRemove !== -1) {
-    elementsForFootnote.value.referenced_items.splice(indexToRemove, 1)
-  }
-}
-
-function removeElementForFootnote(uid, schedule) {
-  try {
-    if (schedule && activeFootnote.value) {
-      schedule.footnotes = schedule.footnotes?.filter(
-        (s) => s !== dataFormating.footnoteSymbol(activeFootnote.value.order)
-      )
-    }
-    if (typeof uid !== 'string') {
-      uid.forEach((u) => {
-        removeFootnote(u)
-      })
-    } else {
-      removeFootnote(uid)
-    }
-  } catch (error) {
-    console.error(error)
-  }
-}
-
-function saveElementsForFootnote() {
-  notificationHub.clearErrors()
-
-  if (activeFootnote.value) {
-    footnoteUpdateLoading.value = true
-    study
-      .updateStudyFootnote(
-        studiesGeneralStore.selectedStudy.uid,
-        activeFootnote.value.uid,
-        elementsForFootnote.value
-      )
-      .then(() => {
-        footnoteUpdateLoading.value = false
-        disableFootnoteMode()
-        loadSoaContent(true)
-        notificationHub.add({
-          msg: t('StudyFootnoteEditForm.update_success'),
-        })
-      })
-  } else {
-    showFootnoteForm.value = true
-  }
-}
-
-function closeFootnoteForm() {
-  notificationHub.clearErrors()
-  showFootnoteForm.value = false
-  disableFootnoteMode()
-  footnoteTable.value.filterTable()
-}
-
-function checkIfElementHasFootnote(elUid) {
-  if (elUid && typeof elUid === 'string') {
-    return elementsForFootnote.value.referenced_items.find(
-      (item) => item.item_uid === elUid
-    )
-  } else if (elUid) {
-    return elementsForFootnote.value.referenced_items.find(
-      (item) => item.item_uid === elUid[0]
-    )
-  }
 }
 
 function getComplexityScore() {
@@ -2039,9 +1535,9 @@ function highlightRow(row) {
   if (!scheduleMethods.isActivityRow(row)) {
     return
   }
-  const rowId = `row-scroll-${row.cells[0].refs[0]?.uid}`
-  const el = document.getElementById(rowId)
-  el.classList.toggle('bg-nnBaseHeavy')
+  document
+    .getElementById(`row-scroll-${row.displayUid}`)
+    ?.classList.toggle('bg-nnBaseHeavy')
 }
 
 function toggleRowState(rowKey) {
@@ -2066,12 +1562,7 @@ async function toggleLevelDisplay(row) {
     return
   }
 
-  const key = firstCell.refs?.[0]?.uid
-
-  const soaRow = soaRows.value.find((r) => {
-    const fc = r.cells?.[0]
-    return fc && fc.refs?.[0]?.uid === key
-  })
+  const soaRow = soaRows.value.find((r) => r.displayUid === row.displayUid)
   soaRow.hide = !soaRow.hide
 
   let action
@@ -2275,7 +1766,10 @@ async function batchRemoveStudyActivities() {
         }),
       })
       studyActivitySelection.value = []
-      loadSoaContent(true)
+      loadSoaContent()
+    })
+    .catch(() => {
+      loadingSoaContent.value = false
     })
 }
 
@@ -2296,9 +1790,7 @@ function toggleActivitySelection(row, value) {
 }
 
 function toggleSubgroupActivitiesSelection(subgroupRow, value) {
-  const activityCells = getStudyActivitiesForSubgroup(
-    subgroupRow.cells[0].refs?.[0]?.uid
-  )
+  const activityCells = getStudyActivitiesForSubgroup(subgroupRow.displayUid)
   if (value) {
     studyActivitySelection.value =
       studyActivitySelection.value.concat(activityCells)
@@ -2318,116 +1810,101 @@ function toggleSubgroupActivitiesSelection(subgroupRow, value) {
   )
 }
 
-async function loadSoaContent(keepDisplayState) {
+let latestLoadRequestId = 0
+
+async function loadSoaContent() {
+  // Several actions can trigger a reload in a row; only the latest response is applied
+  const requestId = ++latestLoadRequestId
   loadingSoaContent.value = true
-  soaContentLoadingStore.changeLoadingState()
+  soaContentLoadingStore.setLoading(true)
   studyActivitySelection.value = []
+  let dataRows
   try {
     getComplexityScore()
     const resp = await study.getStudyProtocolFlowchart(
       studiesGeneralStore.selectedStudy.uid,
       { layout: 'detailed' }
     )
+    if (requestId !== latestLoadRequestId) {
+      return
+    }
+    dataRows = getDataRows(resp.data)
+    assignRowDisplayUids(dataRows)
     soaContent.value = resp.data
   } catch {
-    loadingSoaContent.value = false
+    if (requestId === latestLoadRequestId) {
+      loadingSoaContent.value = false
+      soaContentLoadingStore.setLoading(false)
+      emit('loadFailed')
+    }
+    return
   }
-  let currentSoaGroup
-  let currentGroup
-  let currentSubGroup
 
-  let fallbackExpandState
-  if (!keepDisplayState) {
-    fallbackExpandState = Object.keys(rowsDisplayState.value).length
-      ? snapshotExpandState()
-      : soaExpandStateStore.get(studiesGeneralStore.selectedStudy.uid)
-    rowsDisplayState.value = {}
-    expandAllRows.value = false
+  // Entries and parent links are rebuilt on every load, so they follow rows that were
+  // added, removed, moved or re-keyed; expansion values of surviving rows are carried over
+  const previousExpandState = Object.keys(rowsDisplayState.value).length
+    ? snapshotExpandState()
+    : soaExpandStateStore.get(studiesGeneralStore.selectedStudy.uid)
+  const newRowsDisplayState = buildRowsDisplayState(
+    dataRows,
+    scheduleMethods.isActivityRow
+  )
+  expandAllRows.value = false
+  if (previousExpandState) {
+    applySavedExpandState(
+      newRowsDisplayState,
+      previousExpandState.rowsDisplayState
+    )
+    expandAllRows.value = previousExpandState.expandAllRows
   }
-  for (const row of soaRows.value) {
-    const rowUid = row.cells[0].refs[0]?.uid
-    const key = `row-${rowUid}`
-    if (row.cells && row.cells.length) {
-      if (row.cells[0].style === 'soaGroup') {
-        if (!keepDisplayState) {
-          rowsDisplayState.value[key] = { value: false }
-        }
-        currentGroup = null
-        currentSubGroup = null
-        currentSoaGroup = rowUid
-      } else if (row.cells[0].style === 'group') {
-        if (!keepDisplayState) {
-          rowsDisplayState.value[key] = {
-            value: false,
-            parent: currentSoaGroup,
-          }
-        }
-        currentSubGroup = null
-        currentGroup = rowUid
-      } else if (row.cells[0].style === 'subGroup') {
-        if (!keepDisplayState) {
-          rowsDisplayState.value[key] = {
-            value: false,
-            parent: currentGroup,
-          }
-        }
-        currentSubGroup = rowUid
-      } else if (scheduleMethods.isActivityRow(row)) {
-        const scheduleCells = row.cells.slice(1)
-        if (!keepDisplayState) {
-          rowsDisplayState.value[key] = {
-            value: false,
-            parent: currentSubGroup,
-          }
-        }
-        if (row.cells[0].refs && row.cells[0].refs.length) {
-          currentSelectionMatrix.value[row.cells[0].refs?.[0].uid] = {}
-          for (const [visitIndex, cell] of soaVisitRow.value.entries()) {
-            let props
-            if (
-              scheduleCells[visitIndex].refs &&
-              scheduleCells[visitIndex].refs.length
-            ) {
-              if (cell.refs && cell.refs.length === 1) {
-                props = {
-                  value: true,
-                  uid: scheduleCells[visitIndex].refs[0].uid,
-                }
-              } else {
-                props = {
-                  value: true,
-                  uid: scheduleCells[visitIndex].refs.map((ref) => ref.uid),
-                }
-              }
-            } else {
-              props = { value: false, uid: null }
-            }
-            if (cell.refs) {
-              currentSelectionMatrix.value[row.cells[0].refs[0].uid][
-                cell.refs[0].uid
-              ] = props
-            }
-          }
-        }
-      }
+  rowsDisplayState.value = newRowsDisplayState
+
+  for (const row of dataRows) {
+    if (
+      row.cells?.length &&
+      row.cells[0].refs?.length &&
+      scheduleMethods.isActivityRow(row)
+    ) {
+      updateSelectionMatrixRow(row)
     }
-  }
-  if (!keepDisplayState && fallbackExpandState) {
-    for (const key in rowsDisplayState.value) {
-      if (fallbackExpandState.rowsDisplayState[key] !== undefined) {
-        rowsDisplayState.value[key].value =
-          fallbackExpandState.rowsDisplayState[key]
-      }
-    }
-    expandAllRows.value = fallbackExpandState.expandAllRows
   }
   loadingSoaContent.value = false
-  soaContentLoadingStore.changeLoadingState()
+  soaContentLoadingStore.setLoading(false)
   if (scrollItemId.value) {
+    const targetId = scrollItemId.value
+    scrollItemId.value = ''
     setTimeout(() => {
-      const targetElement = document.getElementById(scrollItemId.value)
-      targetElement?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      document
+        .getElementById(targetId)
+        ?.scrollIntoView({ behavior: 'smooth', block: 'center' })
     }, 1000)
+  }
+}
+
+function updateSelectionMatrixRow(row) {
+  const scheduleCells = row.cells.slice(1)
+  const activityUid = row.cells[0].refs[0].uid
+  currentSelectionMatrix.value[activityUid] = {}
+  for (const [visitIndex, cell] of soaVisitRow.value.entries()) {
+    let props
+    if (
+      scheduleCells[visitIndex].refs &&
+      scheduleCells[visitIndex].refs.length
+    ) {
+      if (cell.refs && cell.refs.length === 1) {
+        props = { value: true, uid: scheduleCells[visitIndex].refs[0].uid }
+      } else {
+        props = {
+          value: true,
+          uid: scheduleCells[visitIndex].refs.map((ref) => ref.uid),
+        }
+      }
+    } else {
+      props = { value: false, uid: null }
+    }
+    if (cell.refs) {
+      currentSelectionMatrix.value[activityUid][cell.refs[0].uid] = props
+    }
   }
 }
 
@@ -2473,7 +1950,7 @@ function collapsibleVisitGroupCreated() {
   notificationHub.add({
     msg: t('CollapsibleVisitGroupForm.creation_success'),
   })
-  loadSoaContent(true)
+  loadSoaContent()
   getStudyVisits()
   selectedVisitIndexes.value = []
 }
@@ -2493,7 +1970,7 @@ async function deleteVisitGroup(cell) {
     studiesGeneralStore.selectedStudy.uid,
     group.consecutive_visit_group_uid
   )
-  loadSoaContent(true)
+  loadSoaContent()
   getStudyVisits()
 }
 
@@ -2523,29 +2000,29 @@ function closeHistory() {
 }
 
 async function downloadCSV() {
-  soaContentLoadingStore.changeLoadingState()
+  soaContentLoadingStore.setLoading(true)
   try {
     await soaDownloads.csvDownload('detailed')
   } finally {
-    soaContentLoadingStore.changeLoadingState()
+    soaContentLoadingStore.setLoading(false)
   }
 }
 
 async function downloadEXCEL() {
-  soaContentLoadingStore.changeLoadingState()
+  soaContentLoadingStore.setLoading(true)
   try {
     await soaDownloads.excelDownload('detailed')
   } finally {
-    soaContentLoadingStore.changeLoadingState()
+    soaContentLoadingStore.setLoading(false)
   }
 }
 
 async function downloadDOCX() {
-  soaContentLoadingStore.changeLoadingState()
+  soaContentLoadingStore.setLoading(true)
   try {
     await soaDownloads.docxDownload('detailed')
   } finally {
-    soaContentLoadingStore.changeLoadingState()
+    soaContentLoadingStore.setLoading(false)
   }
 }
 
@@ -2679,52 +2156,17 @@ td {
 .scale75 {
   scale: 75%;
 }
-.visitFootnote {
-  margin-bottom: 8px;
-}
 .layoutSelector {
   border-color: rgb(var(--v-theme-nnBaseBlue));
 }
 .v-card-text {
   display: inline-flex;
 }
-td .actionButtons {
-  display: none;
-}
-td:hover .actionButtons {
-  display: flex;
-}
 input[type='checkbox'] {
   cursor: pointer;
 }
 
-:deep(.v-badge__badge) {
-  font-weight: 700;
-}
-
-.badgeSchedules {
-  position: absolute;
-  top: -8px;
-  left: 32px;
-  transform: translateY(0);
-  background: transparent;
-  font-weight: 700;
-  color: rgb(var(--v-theme-nnBaseBlue));
-  padding: 2px 8px;
-  border-radius: 4px;
-  font-size: 12px;
-  pointer-events: none;
-}
-.badgeActivities {
-  flex-shrink: 0;
-  font-size: 1.1em;
-  font-weight: 700;
-  color: rgb(var(--v-theme-nnBaseBlue));
-  margin-left: 0.15em;
-  line-height: 1;
-  text-transform: lowercase;
-}
-.footnote-cell {
+.schedule-cell {
   display: inline-flex;
   height: 35px;
   align-items: center;

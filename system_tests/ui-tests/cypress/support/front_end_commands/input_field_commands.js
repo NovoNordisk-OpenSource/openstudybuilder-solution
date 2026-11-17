@@ -6,7 +6,8 @@ Cypress.Commands.add('fillInputNew', (inputField, value) => cy.get(`[data-cy="${
 
 Cypress.Commands.add('fillTextArea', (textArea, value) => {
     cy.get(`[data-cy="${textArea}"]`).within(() => {
-    cy.get('[data-cy="input-field"] > .ql-editor').clear({ force: true }).type(value)})
+        cy.get('[data-cy="input-field"] > .ql-editor').clear({ force: true }).type(value)
+    })
 })
 
 Cypress.Commands.add('fillTextBox', (textArea, value) => {
@@ -14,16 +15,23 @@ Cypress.Commands.add('fillTextBox', (textArea, value) => {
 })
 
 Cypress.Commands.add('clearField', (fieldName) => {
-    cy.get(`[data-cy="${fieldName}"] .mdi-close-circle`).click({force: true})
+    cy.get(`[data-cy="${fieldName}"] .mdi-close-circle`).click({ force: true })
 })
 
 Cypress.Commands.add('clearInput', (fieldName) => {
-    cy.get(`[data-cy="${fieldName}"] input`).clear({force: true})
+    cy.get(`[data-cy="${fieldName}"] input`).clear({ force: true })
+})
+
+Cypress.Commands.add('clearInputField', (fieldName) => {
+    const selector = `[data-cy="${fieldName}"] input:not([type="hidden"]), [data-cy="${fieldName}"] textarea`
+
+    cy.get(selector).should('have.length', 1).clear()
+    cy.get(selector).should('have.value', '')
 })
 
 Cypress.Commands.add('clearSearchField', () => {
     cy.get('[data-cy="search-field"]').within(() => {
-        cy.get('.v-field__input').clear({force: true})
+        cy.get('.v-field__input').clear({ force: true })
     })
 })
 

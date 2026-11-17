@@ -103,7 +103,7 @@ class CTTermNameVO:
         valid_null_flavor_term_uids: tuple[str, ...] | None = None,
         valid_null_flavor_term_names: tuple[str | None, ...] | None = None,
     ) -> Self:
-        ct_term_name_vo = cls(
+        return cls(
             name=name,
             name_sentence_case=name_sentence_case,
             catalogue_names=catalogue_names,
@@ -127,8 +127,6 @@ class CTTermNameVO:
             valid_null_flavor_term_names=valid_null_flavor_term_names,
         )
 
-        return ct_term_name_vo
-
     @classmethod
     def from_input_values(
         cls,
@@ -148,7 +146,7 @@ class CTTermNameVO:
         valid_null_flavor_term_uids: tuple[str, ...] | None = None,
     ) -> Self:
 
-        ct_term_name_vo = cls(
+        return cls(
             name=name,
             name_sentence_case=name_sentence_case,
             catalogue_names=catalogue_names,
@@ -166,8 +164,6 @@ class CTTermNameVO:
             response_dictionary_uids=response_dictionary_uids,
             valid_null_flavor_term_uids=valid_null_flavor_term_uids,
         )
-
-        return ct_term_name_vo
 
     def validate(
         self,
@@ -201,13 +197,12 @@ class CTTermNameAR(LibraryItemAggregateRootBase):
         library: LibraryVO,
         item_metadata: LibraryItemMetadataVO,
     ) -> Self:
-        ct_term_ar = cls(
+        return cls(
             _uid=uid,
             _ct_term_name_vo=ct_term_name_vo,
             _item_metadata=item_metadata,
             _library=library,
         )
-        return ct_term_ar
 
     @classmethod
     def from_input_values(

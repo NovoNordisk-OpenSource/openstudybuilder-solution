@@ -46,7 +46,7 @@ class RepositoryImpl:
     Results from a repository should be used to build aggregate root (AR) objects.
     """
 
-    cache_store_item_by_uid = TTLCache(
+    cache_store_item_by_uid: TTLCache = TTLCache(
         maxsize=settings.cache_max_size, ttl=settings.cache_ttl
     )
 
@@ -358,5 +358,4 @@ def _manage_versioning_with_relations(
 
     # Return the inflated StudyAction-type node (Create, Edit, Delete)
     node = result[0][0]
-    node = action_type.inflate(node)
-    return node
+    return action_type.inflate(node)

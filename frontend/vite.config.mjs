@@ -154,6 +154,28 @@ function resolveOpenApiPath(mode) {
   return resolved
 }
 
+// In dev, serve /config.json with API_BASE_URL pointed at the API_PORT set by
+// scripts/dev.mjs (--api-port), so worktrees can run side by side.
+function devApiPortPlugin(apiPort) {
+  return {
+    name: 'studybuilder:dev-api-port',
+    apply: 'serve',
+    configureServer(server) {
+      if (!apiPort) return
+      server.middlewares.use((req, res, next) => {
+        if (req.url?.split('?')[0] !== '/config.json') return next()
+        const file = resolve(server.config.publicDir, 'config.json')
+        const config = JSON.parse(readFileSync(file, 'utf-8'))
+        const base = new URL(config.API_BASE_URL || 'http://127.0.0.1')
+        base.port = apiPort
+        config.API_BASE_URL = base.origin
+        res.setHeader('Content-Type', 'application/json')
+        res.end(JSON.stringify(config))
+      })
+    },
+  }
+}
+
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
   const isDemo = mode === 'demo'
@@ -166,6 +188,13 @@ export default defineConfig(({ mode }) => {
     },
     server: {
       host: true,
+    },
+    // vite-plugin-vuetify injects component imports while compiling templates,
+    // which the startup dependency scan cannot see. Pre-bundling Vuetify then
+    // means a re-optimize and full page reload each time a page uses a new
+    // component. Vuetify ships native ESM, so serving it unbundled is fine.
+    optimizeDeps: {
+      exclude: ['vuetify'],
     },
     css: {
       preprocessorOptions: {
@@ -183,6 +212,7 @@ export default defineConfig(({ mode }) => {
       vue(),
       vuetify({ styles: { configFile: 'src/styles/settings.scss' } }),
       openApiSpecPlugin(openApiPath),
+      devApiPortPlugin(process.env.API_PORT),
       {
         name: 'spa-fallback-for-dots',
         configureServer(server) {

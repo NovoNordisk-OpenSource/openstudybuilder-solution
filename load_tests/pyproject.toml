@@ -7,6 +7,15 @@ dependencies = [
     "neomodel~=6.1.0",
 ]
 
+[tool.uv]
+# Security floors for transitive dependencies: bound the resolver to fixed
+# versions without declaring these as direct dependencies of this project.
+constraint-dependencies = [
+    "werkzeug>=3.1.9",  # CVE-2026-102598
+    "certifi>=2026.10.19",  # PYSEC-2026-4320
+    "msgpack>=1.2.3",  # CVE-2026-114613
+]
+
 [dependency-groups]
 dev = [
     "isort~=8.0.1",

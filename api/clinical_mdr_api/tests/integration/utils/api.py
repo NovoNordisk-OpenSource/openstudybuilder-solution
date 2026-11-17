@@ -131,8 +131,7 @@ class APITest(TestCase):
     def check(self, expected, actual):
         actual_dict = self.prepare(actual)
         expect_dict = self.prepare(expected)
-        diff = self._diff(expect_dict, actual_dict)
-        return diff
+        return self._diff(expect_dict, actual_dict)
 
     def _diff(self, expected, actual):
         type_of_expected = type(expected)
@@ -247,8 +246,7 @@ class APITest(TestCase):
             self._diff(i, j)
 
     def prepare(self, x):
-        x = copy.deepcopy(x)
-        return x
+        return copy.deepcopy(x)
 
     def is_check_headers_needed(self):
         return False
@@ -360,15 +358,15 @@ class APITest(TestCase):
                             ),
                         )
                     # check neo_model
-                    if resp_item.get("results") is not None:
-                        # single response
-                        if isinstance(resp_item.get("results"), dict | list):
-                            self.check_results_neomodel(
-                                response.json(),
-                                self.preprocess_expected_response(
-                                    resp_item, response.json(), url
-                                ),
-                            )
+                    if resp_item.get("results") is not None and isinstance(
+                        resp_item.get("results"), dict | list
+                    ):
+                        self.check_results_neomodel(
+                            response.json(),
+                            self.preprocess_expected_response(
+                                resp_item, response.json(), url
+                            ),
+                        )
                     if (
                         resp_item.get("headers") is not None
                         and self.is_check_headers_needed()

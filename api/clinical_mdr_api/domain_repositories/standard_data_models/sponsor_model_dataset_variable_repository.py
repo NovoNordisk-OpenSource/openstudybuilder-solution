@@ -57,7 +57,9 @@ class SponsorModelDatasetVariableRepository(  # type: ignore[misc]
         return """
         *
         OPTIONAL MATCH (standard_value)-[:REFERENCES_CODELIST]->(ref_cl_root:CTCodelistRoot)-[:HAS_ATTRIBUTES_ROOT]->(:CTCodelistAttributesRoot)-[:LATEST]->(ref_cl:CTCodelistAttributesValue)
-        OPTIONAL MATCH (standard_value)-[:REFERENCES_TERM]->(ref_t_root:CTTermRoot)-[:HAS_ATTRIBUTES_ROOT]->(:CTTermAttributesRoot)-[:LATEST]->(ref_t:CTTermAttributesValue)
+        OPTIONAL MATCH (standard_value)-[:REFERENCES_TERM]->(ref_t_context:CTTermContext)-[:HAS_SELECTED_TERM]->(ref_t_root:CTTermRoot)
+        OPTIONAL MATCH (ref_t_context)-[:HAS_SELECTED_CODELIST]->(:CTCodelistRoot)
+            -[ref_t_has_term:HAS_TERM WHERE ref_t_has_term.end_date IS NULL]->(ref_t:CTCodelistTerm)-[:HAS_TERM_ROOT]->(ref_t_root)
         OPTIONAL MATCH (standard_root)<-[key:HAS_KEY]-(dataset_instance)
         WITH
             standard_root.uid AS uid,
@@ -91,7 +93,7 @@ class SponsorModelDatasetVariableRepository(  # type: ignore[misc]
             standard_value.enrich_build_order AS enrich_build_order,
             standard_value.enrich_rule AS enrich_rule,
             collect(DISTINCT CASE WHEN ref_cl IS NOT NULL THEN {uid: ref_cl_root.uid, submission_value: ref_cl.submission_value} END) AS referenced_codelists,
-            collect(DISTINCT CASE WHEN ref_t IS NOT NULL THEN {uid: ref_t_root.uid, submission_value: ref_t.code_submission_value} END) AS referenced_terms,
+            collect(DISTINCT CASE WHEN ref_t IS NOT NULL THEN {uid: ref_t_root.uid, submission_value: ref_t.submission_value} END) AS referenced_terms,
             {
                 ordinal: has_dataset_variable_rel.ordinal, key_order: key.order,
                 version_number: has_dataset_variable_rel.version_number, uid: dataset_root.uid,
@@ -122,9 +124,7 @@ class SponsorModelDatasetVariableRepository(  # type: ignore[misc]
         extended_filter_statements = " AND ".join(filter_parameters)
         if filter_statements_from_standard != "":
             if len(extended_filter_statements) > 0:
-                filter_statements_to_return = " AND ".join(
-                    [filter_statements_from_standard, extended_filter_statements]
-                )
+                filter_statements_to_return = f"{filter_statements_from_standard} AND {extended_filter_statements}"
             else:
                 filter_statements_to_return = filter_statements_from_standard
         else:
@@ -413,7 +413,7 @@ class SponsorModelDatasetVariableRepository(  # type: ignore[misc]
                 references_codelists=None,
                 references_terms=None,
                 label=value.label,
-                extra_properties=extra_props if extra_props else None,
+                extra_properties=extra_props or None,
             ),
             library=LibraryVO.from_input_values_2(
                 library_name=library.name,

@@ -276,13 +276,15 @@
 
     <template #[`step.compound_dosing`]>
       <v-form ref="compoundDosingForm">
-        <v-row class="mb-10">
-          <v-col cols="6">
-            <v-sheet border rounded="lg" class="pa-6">
+        <v-row>
+          <v-col cols="12">
+            <v-sheet border rounded="lg" class="px-6 pt-4 pb-6">
+              <div class="text-title mb-4">
+                {{ $t('StudyCompoundDosingForm.dose_value') }}
+              </div>
               <v-radio-group
                 v-model="doseValueSource"
-                :label="$t('StudyCompoundDosingForm.dose_value_source')"
-                class="dose-source-group"
+                class="dose-source-group mb-6"
                 data-cy="dose-value-source"
                 inline
                 hide-details
@@ -291,14 +293,28 @@
                 <v-radio
                   :label="$t('StudyCompoundDosingForm.dose_value_from_library')"
                   :value="doseSources.LIBRARY"
-                  class="ml-2"
+                  class="ml-0"
                   data-cy="dose-value-from-library"
                 />
                 <v-radio
-                  :label="$t('StudyCompoundDosingForm.dose_value_free_text')"
-                  :value="doseSources.FREE_TEXT"
-                  class="ml-4"
-                  data-cy="dose-value-free-text"
+                  :label="
+                    $t(
+                      'StudyCompoundDosingForm.dose_value_study_specific_library_unit'
+                    )
+                  "
+                  :value="doseSources.STUDY_SPECIFIC_LIBRARY_UNIT"
+                  class="ml-6"
+                  data-cy="dose-value-study-specific-library-unit"
+                />
+                <v-radio
+                  :label="
+                    $t(
+                      'StudyCompoundDosingForm.dose_value_study_specific_free_text'
+                    )
+                  "
+                  :value="doseSources.STUDY_SPECIFIC_FREE_TEXT"
+                  class="ml-6"
+                  data-cy="dose-value-study-specific-free-text"
                 />
               </v-radio-group>
               <v-autocomplete
@@ -316,8 +332,39 @@
                 hide-details
                 clearable
               />
+              <div
+                v-else-if="
+                  doseValueSource === doseSources.STUDY_SPECIFIC_LIBRARY_UNIT
+                "
+                class="d-flex align-start mt-4"
+              >
+                <v-text-field
+                  v-model="libraryUnitDose.value"
+                  :label="$t('_global.value')"
+                  :rules="[requiredWith(libraryUnitDose.unit)]"
+                  data-cy="library-unit-dose-value"
+                  hide-details="auto"
+                  clearable
+                  @update:model-value="updateDefaultComposition"
+                />
+                <v-autocomplete
+                  v-model="libraryUnitDose.unit"
+                  :label="$t('_global.unit')"
+                  :items="doseUnits"
+                  :rules="[requiredWith(libraryUnitDose.value)]"
+                  item-title="name"
+                  item-value="name"
+                  data-cy="library-unit-dose-unit"
+                  class="ml-4"
+                  hide-details="auto"
+                  clearable
+                  @update:model-value="updateDefaultComposition"
+                />
+              </div>
               <v-text-field
-                v-else-if="doseValueSource === doseSources.FREE_TEXT"
+                v-else-if="
+                  doseValueSource === doseSources.STUDY_SPECIFIC_FREE_TEXT
+                "
                 v-model="form.free_text_dose_value"
                 :label="$t('StudyCompoundDosingForm.free_text_dose_value')"
                 data-cy="free-text-dose-value"
@@ -327,66 +374,29 @@
               />
             </v-sheet>
           </v-col>
-          <v-col cols="6">
-            <v-sheet border rounded="lg" class="pa-6">
-              <v-radio-group
-                v-model="doseFrequencySource"
-                :label="$t('StudyCompoundDosingForm.dose_frequency_source')"
-                class="dose-source-group"
-                data-cy="dose-frequency-source"
-                inline
-                hide-details
-              >
-                <v-radio
-                  :label="
-                    $t('StudyCompoundDosingForm.dose_frequency_from_library')
-                  "
-                  :value="doseSources.LIBRARY"
-                  class="ml-2"
-                  data-cy="dose-frequency-from-library"
-                />
-                <v-radio
-                  :label="
-                    $t('StudyCompoundDosingForm.dose_frequency_free_text')
-                  "
-                  :value="doseSources.FREE_TEXT"
-                  class="ml-4"
-                  data-cy="dose-frequency-free-text"
-                />
-              </v-radio-group>
-              <v-autocomplete
-                v-if="
-                  form.study_compound &&
-                  doseFrequencySource === doseSources.LIBRARY
-                "
-                v-model="form.dose_frequency_uid"
-                :label="$t('StudyCompoundDosingForm.dose_frequency')"
-                :items="groupedDoseFrequencies"
-                item-title="name"
-                data-cy="dose-frequency"
-                item-value="term_uid"
-                class="mt-4"
-                hide-details
-                clearable
-              />
-              <v-text-field
-                v-else-if="doseFrequencySource === doseSources.FREE_TEXT"
-                v-model="form.free_text_dose_frequency"
-                :label="$t('StudyCompoundDosingForm.free_text_dose_frequency')"
-                data-cy="free-text-dose-frequency"
-                class="mt-4"
-                hide-details
-                clearable
-              />
-            </v-sheet>
-          </v-col>
         </v-row>
         <v-row>
-          <v-col>
+          <v-col cols="12">
             <v-text-field
               v-model="form.composition"
               :label="$t('StudyCompoundDosingForm.composition')"
               data-cy="composition"
+              hide-details
+              clearable
+            />
+          </v-col>
+        </v-row>
+        <v-row>
+          <v-col cols="12">
+            <v-autocomplete
+              v-if="form.study_compound"
+              v-model="form.dose_frequency_uid"
+              :label="$t('StudyCompoundDosingForm.dose_frequency')"
+              :items="groupedDoseFrequencies"
+              item-title="name"
+              data-cy="dose-frequency"
+              item-value="term_uid"
+              hide-details
               clearable
             />
           </v-col>
@@ -404,6 +414,7 @@
               "
               data-cy="dose-collection-activity-instance"
               item-value="study_activity_instance_uid"
+              hide-details
               clearable
             />
           </v-col>
@@ -419,6 +430,7 @@ import { useI18n } from 'vue-i18n'
 import arms from '@/api/arms'
 import study from '@/api/study'
 import terms from '@/api/controlledTerminology/terms'
+import unitsApi from '@/api/units'
 import HorizontalStepperForm from '@/components/tools/HorizontalStepperForm.vue'
 import YesNoField from '@/components/tools/YesNoField.vue'
 import { useStudiesCompoundsStore } from '@/stores/studies-compounds'
@@ -430,12 +442,17 @@ import activityInstanceClasses from '@/constants/activityInstanceClasses'
 
 // A dosing's dose value is either picked from the library (at medicinal product
 // level) or given as a study level free text one — the API rejects a payload
-// carrying both — so the user picks which of the two they are filling in. The
-// dose frequency works the same way, and the two choices are independent: a
-// library dose value may be paired with a free text frequency, and the reverse.
+// carrying both — so the user picks which of the two they are filling in.
+//
+// The study level one comes in two forms. STUDY_SPECIFIC_FREE_TEXT is plain
+// free text. STUDY_SPECIFIC_LIBRARY_UNIT is a UI-only variant: a free text value
+// paired with a unit from the Dose Unit subset. The API has no such field — the
+// two parts are joined with a space and sent as the free text dose value, and
+// split back apart on load when the text ends in a known dose unit.
 const doseSources = {
   LIBRARY: 'library',
-  FREE_TEXT: 'free_text',
+  STUDY_SPECIFIC_LIBRARY_UNIT: 'study_specific_library_unit',
+  STUDY_SPECIFIC_FREE_TEXT: 'study_specific_free_text',
 }
 
 const { getIngredientName } = usePharmaceuticalProducts()
@@ -457,18 +474,19 @@ const helpItems = [
   'StudyCompoundDosingForm.element',
   'StudyCompoundDosingForm.compound',
   'StudyCompoundDosingForm.dose_value',
+  'StudyCompoundDosingForm.library_unit_dose_value',
   'StudyCompoundDosingForm.free_text_dose_value',
   'StudyCompoundDosingForm.dose_frequency',
-  'StudyCompoundDosingForm.free_text_dose_frequency',
   'StudyCompoundDosingForm.dose_collection_activity_instance',
 ]
 
 const form = ref({})
-// UI state only — which of the two dose value fields, and which of the two dose
-// frequency fields, the user is filling in. Deliberately kept out of `form`,
-// which is spread straight into the payload.
+// UI state only — which of the dose value sources the user is filling in, and
+// the two halves of a library unit one. Deliberately kept out of `form`, which
+// is spread straight into the payload.
 const doseValueSource = ref(doseSources.LIBRARY)
-const doseFrequencySource = ref(doseSources.LIBRARY)
+const libraryUnitDose = ref({ value: null, unit: null })
+const doseUnits = ref([])
 const steps = ref(getInitialSteps())
 const studyElements = ref([])
 const studyElementTypes = ref([])
@@ -539,35 +557,82 @@ const groupedDoseFrequencies = computed(() => {
   return grouped
 })
 
+// The value and unit of a library unit dose only make sense together: once
+// either is set, the other is required.
+function requiredWith(other) {
+  return (value) => !other || formRules.required(value)
+}
+
+// Splits a free text dose value into a value and a known dose unit, or returns
+// null when it does not end in one. Only an exact, lossless split counts —
+// joining the parts back with a single space must reproduce the text — so
+// saving an untouched dosing never rewrites its dose value. The longest match
+// wins, so a unit that is a suffix of another cannot shadow it.
+function parseLibraryUnitDose(text) {
+  if (!text) return null
+  let match = null
+  for (const unit of doseUnits.value) {
+    const suffix = ` ${unit.name}`
+    if (!text.endsWith(suffix)) continue
+    const value = text.slice(0, -suffix.length)
+    if (!value || value.trim() !== value) continue
+    if (!match || unit.name.length > match.unit.length) {
+      match = { value, unit: unit.name }
+    }
+  }
+  return match
+}
+
+function initDoseValueSource(dosing) {
+  const parsed = parseLibraryUnitDose(dosing.free_text_dose_value)
+  if (parsed) {
+    doseValueSource.value = doseSources.STUDY_SPECIFIC_LIBRARY_UNIT
+    libraryUnitDose.value = parsed
+  } else {
+    doseValueSource.value = dosing.free_text_dose_value
+      ? doseSources.STUDY_SPECIFIC_FREE_TEXT
+      : doseSources.LIBRARY
+    libraryUnitDose.value = { value: null, unit: null }
+  }
+}
+
+// Pre-fills the composition from the dose value and each ingredient's strength.
+// A library dose value and a library unit one are both multiplied out; a free
+// text one cannot be, so every ingredient gets a "?" placeholder.
 function updateDefaultComposition() {
   if (!form.value.study_compound || allIngredients.value.length === 0) return
-  if (doseValueSource.value !== doseSources.LIBRARY) {
-    form.value.composition = allIngredients.value
-      .map((ing) => `${getIngredientName(ing, true)} ?`)
-      .sort()
-      .join(' / ')
-    return
-  }
-  if (!form.value.dose_value_uid) return
-  const selectedDoseValue =
-    form.value.study_compound.medicinal_product.dose_values.find(
+  let dose = null
+  if (doseValueSource.value === doseSources.LIBRARY) {
+    if (!form.value.dose_value_uid) return
+    dose = form.value.study_compound.medicinal_product.dose_values.find(
       (dv) => dv.uid === form.value.dose_value_uid
     )
-  if (!selectedDoseValue) return
+    if (!dose) return
+  } else if (
+    doseValueSource.value === doseSources.STUDY_SPECIFIC_LIBRARY_UNIT
+  ) {
+    // Only a plain number can be multiplied out. Anything else — an incomplete
+    // pair, or a value such as the range "0.5-1" — gets the placeholders.
+    const { value, unit } = libraryUnitDose.value
+    const number = value?.trim() ? Number(value) : NaN
+    if (unit && Number.isFinite(number)) {
+      dose = { value: number, unit_label: unit }
+    }
+  }
   const compositions = allIngredients.value.map((ing) => {
     const ingredientName = getIngredientName(ing, true)
-    if (!ing.strength || !ing.strength.unit_label) {
+    if (!dose || !ing.strength || !ing.strength.unit_label) {
       return `${ingredientName} ?`
     }
     const parts = ing.strength.unit_label.split('/')
     const denominatorUnit =
       parts.length === 2 ? parts[1].trim() : ing.strength.unit_label
-    if (denominatorUnit !== selectedDoseValue.unit_label) {
+    if (denominatorUnit !== dose.unit_label) {
       return `${ingredientName} ?`
     }
     const resultUnit =
       parts.length === 2 ? parts[0].trim() : ing.strength.unit_label
-    const rawResultValue = selectedDoseValue.value * ing.strength.value
+    const rawResultValue = dose.value * ing.strength.value
     const resultValue =
       Math.round((rawResultValue + Number.EPSILON) * 1000) / 1000
     return `${ingredientName} ${resultValue} ${resultUnit}`
@@ -611,15 +676,9 @@ watch(
       if (value.dose_value) {
         form.value.dose_value_uid = value.dose_value.uid
       }
-      doseValueSource.value = value.free_text_dose_value
-        ? doseSources.FREE_TEXT
-        : doseSources.LIBRARY
       if (value.dose_frequency) {
         form.value.dose_frequency_uid = value.dose_frequency.term_uid
       }
-      doseFrequencySource.value = value.free_text_dose_frequency
-        ? doseSources.FREE_TEXT
-        : doseSources.LIBRARY
       if (value.study_activity_instance) {
         form.value.study_activity_instance_uid =
           value.study_activity_instance.study_activity_instance_uid
@@ -630,6 +689,18 @@ watch(
           compoundAlias.value = resp.data
         })
       getAllProductIngredients()
+    }
+  },
+  { immediate: true }
+)
+
+// Parsing needs the dose units, which may arrive after the dosing, so this
+// re-runs once they do.
+watch(
+  [studyCompoundDosing, doseUnits],
+  ([dosing]) => {
+    if (dosing) {
+      initDoseValueSource(dosing)
     }
   },
   { immediate: true }
@@ -660,6 +731,9 @@ onMounted(() => {
   // results arrive sorted by sponsor_preferred_name.
   terms.getTermsByCodelist('frequency', { all: true }).then((resp) => {
     doseFrequencyTerms.value = resp.data.items
+  })
+  unitsApi.getBySubset('Dose Unit').then((resp) => {
+    doseUnits.value = resp.data.items
   })
   study
     .getStudyActivityInstances(studiesGeneralStore.selectedStudy.uid, {
@@ -697,7 +771,7 @@ function close() {
   notificationHub.clearErrors()
   form.value = {}
   doseValueSource.value = doseSources.LIBRARY
-  doseFrequencySource.value = doseSources.LIBRARY
+  libraryUnitDose.value = { value: null, unit: null }
   stepper.value.reset()
 }
 function getInitialSteps() {
@@ -740,16 +814,22 @@ async function submit() {
   // from the body from the record's current state. JSON.stringify drops keys set
   // to `undefined`, which looks exactly like a missing field and back-fills the
   // value we are dropping — so the abandoned field is sent as an explicit null.
-  if (doseValueSource.value === doseSources.FREE_TEXT) {
+  if (doseValueSource.value === doseSources.STUDY_SPECIFIC_FREE_TEXT) {
     data.dose_value_uid = null
     data.free_text_dose_value = data.free_text_dose_value || null
+  } else if (
+    doseValueSource.value === doseSources.STUDY_SPECIFIC_LIBRARY_UNIT
+  ) {
+    const { value, unit } = libraryUnitDose.value
+    data.dose_value_uid = null
+    data.free_text_dose_value = value && unit ? `${value.trim()} ${unit}` : null
   } else {
     data.free_text_dose_value = null
   }
-  if (doseFrequencySource.value === doseSources.FREE_TEXT) {
-    data.dose_frequency_uid = null
-    data.free_text_dose_frequency = data.free_text_dose_frequency || null
-  } else {
+  // The form offers no free text frequency, but an existing dosing may still
+  // carry one. It is kept as is, and only cleared once a library frequency
+  // replaces it.
+  if (data.dose_frequency_uid) {
     data.free_text_dose_frequency = null
   }
 

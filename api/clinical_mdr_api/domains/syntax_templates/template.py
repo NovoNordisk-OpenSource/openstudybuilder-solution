@@ -1,8 +1,7 @@
-from collections.abc import Callable, Set
-from dataclasses import dataclass
+from collections.abc import Callable, Iterable, Set
+from dataclasses import dataclass, field, replace
 from typing import Self
 
-from clinical_mdr_api.domains._utils import is_syntax_of_template_name_correct
 from clinical_mdr_api.domains.versioned_object_aggregate import (
     LibraryItemAggregateRootBase,
     LibraryItemMetadataVO,
@@ -27,15 +26,9 @@ class TemplateVO:
     # template guidance text
     guidance_text: str | None = None
 
-    @staticmethod
-    def _extract_parameter_names_from_template_string(
-        template_string: str,
-    ) -> list[str]:
-        return extract_parameters(template_string)
-
-    @property
-    def parameter_names(self) -> list[str]:
-        return self._extract_parameter_names_from_template_string(self.name)
+    # names of the template parameters used as placeholders in the name, in order.
+    # Bracketed text that is not a template parameter name is literal text.
+    parameter_names: list[str] = field(default_factory=list)
 
     @classmethod
     def from_input_values_2(
@@ -44,21 +37,14 @@ class TemplateVO:
         parameter_name_exists_callback: Callable[[str], bool],
         guidance_text: str | None = None,
     ) -> Self:
-        ValidationException.raise_if_not(
-            is_syntax_of_template_name_correct(template_name),
-            msg=f"Template string syntax incorrect: {template_name}",
-        )
-        result = cls(
+        return cls(
             name=template_name,
             name_plain=strip_html(template_name),
             guidance_text=guidance_text,
+            parameter_names=extract_parameters(
+                template_name, parameter_name_exists_callback
+            ),
         )
-        for parameter_name in result.parameter_names:
-            ValidationException.raise_if_not(
-                parameter_name_exists_callback(parameter_name),
-                msg=f"Unknown parameter name in template string: {parameter_name}",
-            )
-        return result
 
     @classmethod
     def from_repository_values(
@@ -66,11 +52,37 @@ class TemplateVO:
         template_name: str,
         template_name_plain: str,
         guidance_text: str | None = None,
+        linked_parameter_names: Iterable[str] = (),
     ) -> Self:
+        """
+        Restores the template from the database. The placeholders are resolved against
+        the template parameters the template is linked to, not against all existing
+        template parameters, so creating a template parameter later on does not turn
+        literal text of a stored template into a placeholder.
+        """
         return cls(
             name=template_name,
             name_plain=template_name_plain,
             guidance_text=guidance_text,
+            parameter_names=extract_parameters(
+                template_name, set(linked_parameter_names).__contains__
+            ),
+        )
+
+    def with_literal_text(self, names: Set[str]) -> Self:
+        """
+        Returns the template with the bracketed `names` treated as literal text
+        instead of placeholders.
+        """
+        if not names.intersection(self.parameter_names):
+            return self
+        return replace(
+            self,
+            parameter_names=[
+                parameter_name
+                for parameter_name in self.parameter_names
+                if parameter_name not in names
+            ],
         )
 
 
@@ -219,10 +231,10 @@ class TemplateAggregateRootBase(LibraryItemAggregateRootBase):
         """
         Creates a new draft version for the object.
         """
-        if self.item_metadata.version >= "1.0" and extract_parameters(
-            self.name
-        ) != extract_parameters(template.name):
-            self._raise_versioning_exception()
+        if self.item_metadata.version >= "1.0":
+            template = self._keep_literal_text(template)
+            if self.template_value.parameter_names != template.parameter_names:
+                self._raise_versioning_exception()
         if self._template != template:
             super()._edit_draft(
                 change_description=change_description, author_id=author_id
@@ -234,12 +246,26 @@ class TemplateAggregateRootBase(LibraryItemAggregateRootBase):
             msg="You cannot change number or order of template parameters for a previously approved template."
         )
 
+    def _keep_literal_text(self, template: TemplateVO) -> TemplateVO:
+        """
+        Bracketed text that is literal in the current version stays literal, even when a
+        template parameter with that name has been created since. The placeholders of an
+        approved template are fixed, and its instances would silently lose that text.
+        """
+        literal_names = set(extract_parameters(self.name, lambda _: True)) - set(
+            self.template_value.parameter_names
+        )
+        return template.with_literal_text(literal_names)
+
     def create_new_version(
         self, author_id: str, change_description: str, template: TemplateVO
     ) -> None:
         """
         Puts object into DRAFT status with relevant changes to version numbers.
         """
+        template = self._keep_literal_text(template)
+        if self.template_value.parameter_names != template.parameter_names:
+            self._raise_versioning_exception()
         super()._create_new_version(
             change_description=change_description, author_id=author_id
         )

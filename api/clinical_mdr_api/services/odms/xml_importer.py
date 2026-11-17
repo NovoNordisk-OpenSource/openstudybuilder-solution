@@ -9,10 +9,7 @@ from neomodel import db
 from clinical_mdr_api.domain_repositories.odms.generic_repository import (
     OdmGenericRepository,
 )
-from clinical_mdr_api.domains._utils import get_iso_lang_data
-from clinical_mdr_api.domains.enums import OdmTranslatedTextTypeEnum
 from clinical_mdr_api.domains.odms.utils import (
-    EN_LANGUAGE,
     RelationType,
     VendorAttributeCompatibleType,
     VendorElementCompatibleType,
@@ -37,7 +34,6 @@ from clinical_mdr_api.models.odms.common_models import (
     OdmAliasModel,
     OdmFormalExpressionModel,
     OdmRefVendorPostInput,
-    OdmTranslatedTextModel,
     OdmVendorElementRelationPostInput,
     OdmVendorRelationPostInput,
 )
@@ -100,6 +96,13 @@ from clinical_mdr_api.services.odms.vendor_attributes import OdmVendorAttributeS
 from clinical_mdr_api.services.odms.vendor_elements import OdmVendorElementService
 from clinical_mdr_api.services.odms.vendor_namespaces import OdmVendorNamespaceService
 from clinical_mdr_api.services.utils.odm_xml_mapper import map_xml
+from clinical_mdr_api.services.utils.odm_xml_reader import (
+    EXCLUDED_OSB_VENDOR_ATTRIBUTES,
+    EXCLUDED_OSB_VENDOR_ELEMENTS,
+    read_codelist_description,
+    read_sdtm_domains,
+    read_translated_texts,
+)
 from clinical_mdr_api.utils import normalize_string
 from common import exceptions
 from common.auth.user import user
@@ -153,17 +156,12 @@ class OdmXmlImporterService:
     mapper_file: UploadFile | None = None
 
     OSB_PREFIX = "osb"
-    EXCLUDED_OSB_VENDOR_ATTRIBUTES: ClassVar[list[str]] = [
-        "version",
-        "lang",
-        "allowsMultiChoice",
-    ]
-    EXCLUDED_OSB_VENDOR_ELEMENTS: ClassVar[list[str]] = [
-        "DomainColor",
-        "DisplayText",
-        "DesignNotes",
-        "CompletionInstructions",
-    ]
+    EXCLUDED_OSB_VENDOR_ATTRIBUTES: ClassVar[tuple[str, ...]] = (
+        EXCLUDED_OSB_VENDOR_ATTRIBUTES
+    )
+    EXCLUDED_OSB_VENDOR_ELEMENTS: ClassVar[tuple[str, ...]] = (
+        EXCLUDED_OSB_VENDOR_ELEMENTS
+    )
 
     def __init__(
         self,
@@ -1027,31 +1025,9 @@ class OdmXmlImporterService:
             self._repos.odm_study_event_repository, self.odm_study_event_service, rs
         )
 
-    def _get_translated_text_post_input(self, elm):
-        translated_texts: list[OdmTranslatedTextModel] = []
-
-        for translated_text_type in OdmTranslatedTextTypeEnum:
-            translated_text_parent_element = elm.getElementsByTagName(
-                translated_text_type.value
-            )
-
-            if not translated_text_parent_element:
-                continue
-
-            for translated_text in translated_text_parent_element[
-                0
-            ].getElementsByTagName("TranslatedText"):
-                translated_texts.append(
-                    OdmTranslatedTextModel(
-                        text_type=translated_text_type,
-                        language=get_iso_lang_data(  # type: ignore[arg-type]
-                            translated_text.getAttribute("xml:lang") or EN_LANGUAGE
-                        ),
-                        text=str(translated_text.firstChild.nodeValue) or "TBD",
-                    )
-                )
-
-        return translated_texts
+    @staticmethod
+    def _get_translated_text_post_input(elm):
+        return read_translated_texts(elm)
 
     def _get_newly_created_vendor_namespaces(self):
         rs, _ = self._repos.odm_vendor_namespace_repository.find_all(
@@ -1284,16 +1260,7 @@ class OdmXmlImporterService:
 
     @staticmethod
     def _get_codelist_description_translatedtext_value(codelist):
-        try:
-            return (
-                codelist.getElementsByTagName("Description")[0]
-                .getElementsByTagName("TranslatedText")[0]
-                .firstChild.nodeValue
-            )
-        except Exception as exc:
-            raise exceptions.BusinessLogicException(
-                msg=f"Code Submission Value not provided for Codelist with OID '{codelist.getAttribute('OID')}'. Provide a Description with TranslatedText element for the CodeList."
-            ) from exc
+        return read_codelist_description(codelist)
 
     def _set_datatype_ct_terms(self):
         rs, _ = (
@@ -1457,8 +1424,12 @@ class OdmXmlImporterService:
             oid=item_def.getAttribute("OID"),
             name=item_def.getAttribute("Name"),
             prompt=item_def.getAttribute("Prompt"),
-            datatype_uid=self._lookup_datatype_ct_term_uid(
-                item_def.getAttribute("DataType")
+            datatype_uid=(
+                None
+                if not item_def.getAttribute("DataType")
+                else self._lookup_datatype_ct_term_uid(
+                    item_def.getAttribute("DataType")
+                )
             ),
             length=(
                 int(item_def.getAttribute("Length"))
@@ -1504,30 +1475,25 @@ class OdmXmlImporterService:
 
     def _get_odm_item_group_post_input(self, item_group_def):
         sdtm_domain_uids = []
-        for domain in item_group_def.getAttribute("Domain").split("|"):
-            if domain:
-                if ":" in domain:
-                    # domain is in the format "submission_value:name"
-                    submval, name = domain.split(":", 1)
-                else:
-                    # single value was given, this could be either name or submission value
-                    submval, name = domain, domain
-                # search for a term with a matching submission value
-                term_uid = self._repos.ct_term_attributes_repository.find_uid_by_submission_values(
+        for submval, name in read_sdtm_domains(item_group_def):
+            # search for a term with a matching submission value
+            term_uid = (
+                self._repos.ct_term_attributes_repository.find_uid_by_submission_values(
                     submval, settings.stdm_domain_cl_submval
                 )
-                if term_uid is None:
-                    # if not found, search by name
-                    term_uid = next(
-                        (
-                            term.term_uid
-                            for term in self.db_ct_term_attributes
-                            if term.nci_preferred_name == name
-                        ),
-                        None,
-                    )
-                if term_uid is not None:
-                    sdtm_domain_uids.append(term_uid)
+            )
+            if term_uid is None:
+                # if not found, search by name
+                term_uid = next(
+                    (
+                        term.term_uid
+                        for term in self.db_ct_term_attributes
+                        if term.nci_preferred_name == name
+                    ),
+                    None,
+                )
+            if term_uid is not None:
+                sdtm_domain_uids.append(term_uid)
 
         return OdmItemGroupPostInput(
             oid=item_group_def.getAttribute("OID"),

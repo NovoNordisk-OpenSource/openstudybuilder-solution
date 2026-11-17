@@ -73,13 +73,11 @@ def tst_project(request, temp_database) -> Project:
         name=TestUtils.random_str(8, "test_")
     )
 
-    project = TestUtils.create_project(
+    return TestUtils.create_project(
         name=TestUtils.random_str(8, "test_"),
         project_number=TestUtils.random_str(8),
         clinical_programme_uid=programme.uid,
     )
-
-    return project
 
 
 @pytest.fixture(scope="module")

@@ -203,8 +203,7 @@ CONDENSED_TREE = {
 
 @pytest.fixture(scope="module")
 def study_objectives_service():
-    service = StudyObjectivesService()
-    return service
+    return StudyObjectivesService()
 
 
 def test_build_standard_tree(study_objectives_service):

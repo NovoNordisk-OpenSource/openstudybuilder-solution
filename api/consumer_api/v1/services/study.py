@@ -39,6 +39,9 @@ class StudyCreateService:
                 # API exposes the same value as `project_id`.
                 project_number=study_input.project_id,
                 description=study_input.description,
+                # The main API calls this field `study_title`; the Consumer API
+                # exposes it as `title`, matching `GET /papillons/study-metadata`.
+                study_title=study_input.title,
             )
         )
 
@@ -65,6 +68,9 @@ class StudyCreateService:
         identification = (
             current_metadata.identification_metadata if current_metadata else None
         )
+        study_description = (
+            current_metadata.study_description if current_metadata else None
+        )
 
         # `identification.study_id` is not used here: the main API leaves it
         # `None` when the study has no number, whereas `GET /studies` always
@@ -79,4 +85,5 @@ class StudyCreateService:
             id=f"{project_id}-{study_number}",
             acronym=identification.study_acronym if identification else None,
             description=identification.description if identification else None,
+            title=study_description.study_title if study_description else None,
         )

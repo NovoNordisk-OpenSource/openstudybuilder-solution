@@ -35,7 +35,9 @@ from common.exceptions import BusinessLogicException, NotFoundException
 from common.utils import version_string_to_tuple
 
 
-class ActivityInstanceClassService(NeomodelExtGenericService[ActivityInstanceClassAR]):
+class ActivityInstanceClassService(
+    NeomodelExtGenericService[ActivityInstanceClassAR, ActivityInstanceClass]
+):
     repository_interface = ActivityInstanceClassRepository
     api_model_class = ActivityInstanceClass
     version_class = ActivityInstanceClassVersion
@@ -83,7 +85,7 @@ class ActivityInstanceClassService(NeomodelExtGenericService[ActivityInstanceCla
             library=library,
             generate_uid_callback=self.repository.generate_uid,
             activity_instance_class_exists_by_name_callback=self._repos.activity_instance_class_repository.check_exists_by_name,
-            dataset_class_exists_by_uid=self._repos.dataset_class_repository.find_by_uid,  # type: ignore[arg-type]
+            dataset_class_exists_by_uid=self._repos.dataset_class_repository.find_by_uid,
         )
 
     def _edit_aggregate(
@@ -106,7 +108,7 @@ class ActivityInstanceClassService(NeomodelExtGenericService[ActivityInstanceCla
                 activity_item_classes=[],
             ),
             activity_instance_class_exists_by_name_callback=self._repos.activity_instance_class_repository.check_exists_by_name,
-            dataset_class_exists_by_uid=self._repos.dataset_class_repository.find_by_uid,  # type: ignore[arg-type]
+            dataset_class_exists_by_uid=self._repos.dataset_class_repository.find_by_uid,
         )
         return item
 
@@ -136,23 +138,19 @@ class ActivityInstanceClassService(NeomodelExtGenericService[ActivityInstanceCla
         ig_uid: str | None = None,
         include_sponsor: bool = True,
     ) -> list[ActivityInstanceClassWithDataset]:
-        mapped_datasets = (
-            self._repos.activity_instance_class_repository.get_mapped_datasets(
-                activity_instance_class_uid=activity_instance_class_uid,
-                ig_uid=ig_uid,
-                include_sponsor=include_sponsor,
-            )
+        return self._repos.activity_instance_class_repository.get_mapped_datasets(
+            activity_instance_class_uid=activity_instance_class_uid,
+            ig_uid=ig_uid,
+            include_sponsor=include_sponsor,
         )
-
-        return mapped_datasets
 
     @ensure_transaction(db)
     def create(self, item_input: ActivityInstanceClassInput) -> ActivityInstanceClass:
         rs = super().create(item_input=item_input)
 
-        self.update_parent(rs.uid, item_input.parent_uid)
+        self.update_parent(rs.uid, item_input.parent_uid)  # type: ignore[arg-type]
 
-        return self.get_by_uid(rs.uid)
+        return self.get_by_uid(rs.uid)  # type: ignore[arg-type]
 
     @ensure_transaction(db)
     def edit_draft(

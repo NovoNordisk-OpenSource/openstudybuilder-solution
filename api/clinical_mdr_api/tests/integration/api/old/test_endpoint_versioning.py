@@ -95,6 +95,7 @@ def test_if_adding_endpoint_works(api_client):
         {
             "conjunction": ",",
             "position": 1,
+            "parameter_name": "Indication",
             "terms": [
                 {
                     "index": 1,
@@ -137,6 +138,7 @@ def test_if_approval_works(api_client):
         {
             "conjunction": ",",
             "position": 1,
+            "parameter_name": "Indication",
             "terms": [
                 {
                     "index": 1,

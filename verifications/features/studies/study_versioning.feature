@@ -55,6 +55,6 @@ Rule: As a database user,
         Then only one version of each StudySelection node is connected to each StudyValue node
 
     @impact:business_rules
-    Scenario: Only LOCKED or RELEASED study versions can have HAS_PROTOCOL_SOA_CELL or HAS_PROTOCOL_SOA_FOOTNOTE relationships
+    Scenario: Only LOCKED or RELEASED study versions can have a SoA snapshot
         Given there are versioned studies
-        Then only LOCKED or RELEASED study versions have HAS_PROTOCOL_SOA_CELL or HAS_PROTOCOL_SOA_FOOTNOTE relationships
+        Then only LOCKED or RELEASED study versions have a StudySoASnapshot node

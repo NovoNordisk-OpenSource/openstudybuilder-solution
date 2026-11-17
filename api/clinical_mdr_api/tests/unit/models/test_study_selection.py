@@ -95,7 +95,7 @@ def study_selection_endpoints_aggregates_with_given_study_uid_study_objective_ui
                 unit_separator=draw(non_empty_text()),
                 author_id=draw(non_empty_text()),
             )
-            for _ in range(0, count)
+            for _ in range(count)
         ]
         + [
             StudySelectionEndpointVO.from_input_values(
@@ -118,7 +118,7 @@ def study_selection_endpoints_aggregates_with_given_study_uid_study_objective_ui
                 unit_separator=draw(non_empty_text()),
                 author_id=draw(non_empty_text()),
             )
-            for _ in range(0, draw(integers(min_value=0, max_value=5)))
+            for _ in range(draw(integers(min_value=0, max_value=5)))
         ],
     )
 

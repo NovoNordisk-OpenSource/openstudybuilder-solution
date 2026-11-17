@@ -21,7 +21,7 @@ from common.exceptions import BusinessLogicException, NotFoundException
 from common.utils import strtobool
 
 
-class OdmStudyEventService(OdmGenericService[OdmStudyEventAR]):
+class OdmStudyEventService(OdmGenericService[OdmStudyEventAR, OdmStudyEvent]):
     aggregate_class = OdmStudyEventAR
     version_class = OdmStudyEventVersion
     repository_interface = StudyEventRepository

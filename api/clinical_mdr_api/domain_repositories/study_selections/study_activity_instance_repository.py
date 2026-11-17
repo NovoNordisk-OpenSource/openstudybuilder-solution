@@ -713,7 +713,7 @@ class StudySelectionActivityInstanceRepository(
                     }
                     CALL (study_activity) {
                         OPTIONAL MATCH (study_activity)-[:STUDY_ACTIVITY_HAS_STUDY_SOA_GROUP]->(study_soa_group_selection)
-                            -[:HAS_FLOWCHART_GROUP]->(ct_term_root:CTTermRoot)-[:HAS_NAME_ROOT]-(:CTTermNameRoot)-[:LATEST]->(flowchart_value:CTTermNameValue)
+                            -[:HAS_FLOWCHART_GROUP]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(ct_term_root:CTTermRoot)-[:HAS_NAME_ROOT]-(:CTTermNameRoot)-[:LATEST]->(flowchart_value:CTTermNameValue)
                         RETURN {
                             selection_uid: study_soa_group_selection.uid,
                             soa_group_uid: ct_term_root.uid,
@@ -953,7 +953,7 @@ class StudySelectionActivityInstanceRepository(
     def get_all_study_activity_instances_for_study_activity(
         self, study_uid: str, study_activity_uid
     ) -> list[StudyActivityInstance]:
-        study_activity_instances = ListDistinct(
+        return ListDistinct(
             StudyActivityInstance.nodes.filter(
                 has_study_activity_instance__latest_value__uid=study_uid,
                 study_activity_has_study_activity_instance__has_study_activity__latest_value__uid=study_uid,
@@ -962,7 +962,6 @@ class StudySelectionActivityInstanceRepository(
             .has(has_before=False)
             .resolve_subgraph()
         ).distinct()
-        return study_activity_instances
 
     def find_selection_vo_by_uid(
         self,
@@ -1010,7 +1009,7 @@ class StudySelectionActivityInstanceRepository(
     def get_all_study_activity_instances_impacted_by_schedule_deletion(
         self, study_uid: str, schedule_uid: str
     ) -> list[StudyActivityInstance]:
-        study_activity_instances = ListDistinct(
+        return ListDistinct(
             StudyActivityInstance.nodes.filter(
                 has_study_activity_instance__latest_value__uid=study_uid,  # Verify instance is currently selected by study
                 study_activity_has_study_activity_instance__study_activity_schedule__uid=schedule_uid,  # Verify instance is associated with the schedule through activity
@@ -1019,4 +1018,3 @@ class StudySelectionActivityInstanceRepository(
             .has(has_before=False)
             .resolve_subgraph()
         ).distinct()
-        return study_activity_instances

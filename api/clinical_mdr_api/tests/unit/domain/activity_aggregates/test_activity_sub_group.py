@@ -15,13 +15,12 @@ from common import exceptions
 
 def create_random_activity_subgroup_vo() -> ActivitySubGroupVO:
     name = random_str()
-    random_activity_subgroup_vo = ActivitySubGroupVO.from_repository_values(
+    return ActivitySubGroupVO.from_repository_values(
         name=name,
         name_sentence_case=name,
         definition=random_str(),
         abbreviation=random_str(),
     )
-    return random_activity_subgroup_vo
 
 
 def create_random_activity_subgroup_ar(
@@ -29,7 +28,7 @@ def create_random_activity_subgroup_ar(
     library: str = "Library",
     is_editable: bool = True,
 ) -> ActivitySubGroupAR:
-    random_activity_subgroup_ar = ActivitySubGroupAR.from_input_values(
+    return ActivitySubGroupAR.from_input_values(
         generate_uid_callback=generate_uid_callback,
         concept_vo=create_random_activity_subgroup_vo(),
         library=LibraryVO.from_repository_values(
@@ -38,8 +37,6 @@ def create_random_activity_subgroup_ar(
         author_id=AUTHOR_ID,
         concept_exists_by_library_and_name_callback=lambda x, y: False,
     )
-
-    return random_activity_subgroup_ar
 
 
 class TestActivitySubGroup(unittest.TestCase):

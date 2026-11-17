@@ -39,7 +39,7 @@ class DictionaryTermVO:
         abbreviation: str | None,
         definition: str | None,
     ) -> Self:
-        dictionary_term_vo = cls(
+        return cls(
             codelist_uid=codelist_uid,
             dictionary_id=dictionary_id,
             name=name,
@@ -47,8 +47,6 @@ class DictionaryTermVO:
             abbreviation=abbreviation,
             definition=definition,
         )
-
-        return dictionary_term_vo
 
     @classmethod
     def from_input_values(
@@ -112,13 +110,12 @@ class DictionaryTermAR(LibraryItemAggregateRootBase):
         library: LibraryVO,
         item_metadata: LibraryItemMetadataVO,
     ) -> Self:
-        dictionary_codelist_ar = cls(
+        return cls(
             _uid=uid,
             _dictionary_term_vo=dictionary_term_vo,
             _item_metadata=item_metadata,
             _library=library,
         )
-        return dictionary_codelist_ar
 
     @classmethod
     def from_input_values(

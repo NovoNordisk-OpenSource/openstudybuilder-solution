@@ -57,7 +57,7 @@ class ActivityInstructionTemplateService(
         ) = self._get_indexings(template)
 
         # Process item to save
-        item = ActivityInstructionTemplateAR.from_input_values(
+        return ActivityInstructionTemplateAR.from_input_values(
             author_id=self.author_id,
             template=template_vo,
             library=library_vo,
@@ -68,5 +68,3 @@ class ActivityInstructionTemplateService(
             activity_groups=activity_groups,
             activity_subgroups=activity_subgroups,
         )
-
-        return item

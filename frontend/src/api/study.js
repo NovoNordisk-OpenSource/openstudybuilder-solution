@@ -57,6 +57,23 @@ export default {
       params,
     })
   },
+  compareVersions(
+    studyUid,
+    versionA,
+    versionB,
+    includeUnchanged = false,
+    ignoreFields = []
+  ) {
+    return repository.get(`${resource}/${studyUid}/comparison`, {
+      params: {
+        version_a: versionA,
+        version_b: versionB,
+        include_unchanged: includeUnchanged,
+        ignore_fields: ignoreFields,
+      },
+      paramsSerializer: { indexes: null },
+    })
+  },
   getLatestProtocolVersion(studyUid) {
     return repository.get(`${resource}/${studyUid}/protocol-header-versions`)
   },
@@ -615,6 +632,26 @@ export default {
       data
     )
   },
+  updateStudyCriteriaIdentifier(studyUid, studyCriteriaUid, identifier) {
+    const data = { identifier: identifier ?? null }
+    return repository.patch(
+      `studies/${studyUid}/study-criteria/${studyCriteriaUid}/identifier`,
+      data
+    )
+  },
+  updateStudyCriteriaStudyDesignPopulation(
+    studyUid,
+    studyCriteriaUid,
+    studyDesignPopulationUids
+  ) {
+    const data = {
+      study_design_population_uids: studyDesignPopulationUids ?? [],
+    }
+    return repository.patch(
+      `studies/${studyUid}/study-criteria/${studyCriteriaUid}/study-design-populations`,
+      data
+    )
+  },
   deleteStudyCriteria(studyUid, studyCriteriaUid) {
     return repository.delete(
       `studies/${studyUid}/study-criteria/${studyCriteriaUid}`
@@ -853,6 +890,87 @@ export default {
       `${resource}/${studyUid}/study-disease-milestones/${diseaseMilestoneUid}`
     )
   },
+  getStudyAuxiliaryDevices(studyUid, params) {
+    return repository.get(`${resource}/${studyUid}/study-auxiliary-devices`, {
+      params,
+    })
+  },
+  getStudyAuxiliaryDevice(studyUid, auxiliaryDeviceUid) {
+    return repository.get(
+      `${resource}/${studyUid}/study-auxiliary-devices/${auxiliaryDeviceUid}`
+    )
+  },
+  getStudyAuxiliaryDevicesAuditTrail(studyUid) {
+    return repository.get(
+      `${resource}/${studyUid}/study-auxiliary-devices/audit-trail`
+    )
+  },
+  getStudyAuxiliaryDeviceAuditTrail(studyUid, auxiliaryDeviceUid) {
+    return repository.get(
+      `${resource}/${studyUid}/study-auxiliary-devices/${auxiliaryDeviceUid}/audit-trail`
+    )
+  },
+  createStudyAuxiliaryDevice(studyUid, data) {
+    return repository.post(
+      `${resource}/${studyUid}/study-auxiliary-devices`,
+      data
+    )
+  },
+  updateStudyAuxiliaryDeviceOrder(studyUid, auxiliaryDeviceUid, new_order) {
+    const data = { new_order: new_order }
+    return repository.patch(
+      `${resource}/${studyUid}/study-auxiliary-devices/${auxiliaryDeviceUid}/order`,
+      data
+    )
+  },
+  deleteStudyAuxiliaryDevice(studyUid, auxiliaryDeviceUid) {
+    return repository.delete(
+      `${resource}/${studyUid}/study-auxiliary-devices/${auxiliaryDeviceUid}`
+    )
+  },
+  getStudyDesignPopulations(studyUid, params) {
+    return repository.get(`${resource}/${studyUid}/study-design-populations`, {
+      params,
+    })
+  },
+  getStudyDesignPopulation(studyUid, sdpUid) {
+    return repository.get(
+      `${resource}/${studyUid}/study-design-populations/${sdpUid}`
+    )
+  },
+  createStudyDesignPopulation(studyUid, data) {
+    return repository.post(
+      `${resource}/${studyUid}/study-design-populations`,
+      data
+    )
+  },
+  updateStudyDesignPopulation(studyUid, sdpUid, data) {
+    return repository.patch(
+      `${resource}/${studyUid}/study-design-populations/${sdpUid}`,
+      data
+    )
+  },
+  updateStudyDesignPopulationOrder(studyUid, sdpUid, newOrder) {
+    return repository.patch(
+      `${resource}/${studyUid}/study-design-populations/${sdpUid}/order`,
+      { new_order: newOrder }
+    )
+  },
+  deleteStudyDesignPopulation(studyUid, sdpUid) {
+    return repository.delete(
+      `${resource}/${studyUid}/study-design-populations/${sdpUid}`
+    )
+  },
+  getStudyDesignPopulationsAuditTrail(studyUid) {
+    return repository.get(
+      `${resource}/${studyUid}/study-design-populations/audit-trail`
+    )
+  },
+  getStudyDesignPopulationAuditTrail(studyUid, sdpUid) {
+    return repository.get(
+      `${resource}/${studyUid}/study-design-populations/${sdpUid}/audit-trail`
+    )
+  },
   getCtrOdmXml(studyUid) {
     return repository.get(`${resource}/${studyUid}/ctr/odm.xml`)
   },
@@ -895,10 +1013,11 @@ export default {
       data
     )
   },
-  selectStudyFootnote(studyUid, footnoteUid, referencedItems) {
+  selectStudyFootnote(studyUid, footnoteUid, referencedItems, layout = null) {
     const data = {
       footnote_uid: footnoteUid,
       referenced_items: referencedItems,
+      ...(layout ? { layout } : {}),
     }
     return repository.post(
       `${resource}/${studyUid}/study-soa-footnotes?create_footnote=false`,

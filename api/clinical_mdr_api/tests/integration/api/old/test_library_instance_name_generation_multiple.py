@@ -84,8 +84,18 @@ def test_name_generation_of_objective_with_0_values_for_both_template_parameters
         "library_name": "Test library",
     }
     assert res["parameter_terms"] == [
-        {"position": 1, "conjunction": "and", "terms": []},
-        {"position": 2, "conjunction": "and", "terms": []},
+        {
+            "position": 1,
+            "conjunction": "and",
+            "parameter_name": "Indication",
+            "terms": [],
+        },
+        {
+            "position": 2,
+            "conjunction": "and",
+            "parameter_name": "Intervention",
+            "terms": [],
+        },
     ]
     assert res["library"] == {"name": "Test library", "is_editable": True}
 
@@ -141,6 +151,7 @@ def test_name_generation_of_objective_with_1_template_parameter_term_0_template_
         {
             "position": 1,
             "conjunction": "and",
+            "parameter_name": "Indication",
             "terms": [
                 {
                     "index": 1,
@@ -150,7 +161,12 @@ def test_name_generation_of_objective_with_1_template_parameter_term_0_template_
                 }
             ],
         },
-        {"position": 2, "conjunction": "and", "terms": []},
+        {
+            "position": 2,
+            "conjunction": "and",
+            "parameter_name": "Intervention",
+            "terms": [],
+        },
     ]
     assert res["library"] == {"name": "Test library", "is_editable": True}
 
@@ -214,6 +230,7 @@ def test_name_generation_of_objective_with_2_template_parameters_terms_0_templat
         {
             "position": 1,
             "conjunction": "and",
+            "parameter_name": "Indication",
             "terms": [
                 {
                     "index": 1,
@@ -229,7 +246,12 @@ def test_name_generation_of_objective_with_2_template_parameters_terms_0_templat
                 },
             ],
         },
-        {"position": 2, "conjunction": "and", "terms": []},
+        {
+            "position": 2,
+            "conjunction": "and",
+            "parameter_name": "Intervention",
+            "terms": [],
+        },
     ]
     assert res["library"] == {"name": "Test library", "is_editable": True}
 
@@ -303,6 +325,7 @@ def test_name_generation_of_objective_with_3_template_parameters_terms_0_templat
         {
             "position": 1,
             "conjunction": "and",
+            "parameter_name": "Indication",
             "terms": [
                 {
                     "index": 1,
@@ -324,7 +347,12 @@ def test_name_generation_of_objective_with_3_template_parameters_terms_0_templat
                 },
             ],
         },
-        {"position": 2, "conjunction": "and", "terms": []},
+        {
+            "position": 2,
+            "conjunction": "and",
+            "parameter_name": "Intervention",
+            "terms": [],
+        },
     ]
     assert res["library"] == {"name": "Test library", "is_editable": True}
 
@@ -377,10 +405,16 @@ def test_name_generation_of_objective_with_0_template_parameter_terms_1_template
         "library_name": "Test library",
     }
     assert res["parameter_terms"] == [
-        {"position": 1, "conjunction": "and", "terms": []},
+        {
+            "position": 1,
+            "conjunction": "and",
+            "parameter_name": "Indication",
+            "terms": [],
+        },
         {
             "position": 2,
             "conjunction": "and",
+            "parameter_name": "Intervention",
             "terms": [
                 {
                     "index": 1,
@@ -456,6 +490,7 @@ def test_name_generation_of_objective_with_1_template_parameter_term_1_template_
         {
             "position": 1,
             "conjunction": "and",
+            "parameter_name": "Indication",
             "terms": [
                 {
                     "index": 1,
@@ -468,6 +503,7 @@ def test_name_generation_of_objective_with_1_template_parameter_term_1_template_
         {
             "position": 2,
             "conjunction": "and",
+            "parameter_name": "Intervention",
             "terms": [
                 {
                     "index": 1,
@@ -555,6 +591,7 @@ def test_name_generation_of_objective_with_2_template_parameters_terms_1_templat
         {
             "position": 1,
             "conjunction": "and",
+            "parameter_name": "Indication",
             "terms": [
                 {
                     "index": 1,
@@ -573,6 +610,7 @@ def test_name_generation_of_objective_with_2_template_parameters_terms_1_templat
         {
             "position": 2,
             "conjunction": "and",
+            "parameter_name": "Intervention",
             "terms": [
                 {
                     "index": 1,
@@ -666,6 +704,7 @@ def test_name_generation_of_objective_with_3_template_parameters_terms_1_templat
         {
             "position": 1,
             "conjunction": "and",
+            "parameter_name": "Indication",
             "terms": [
                 {
                     "index": 1,
@@ -690,6 +729,7 @@ def test_name_generation_of_objective_with_3_template_parameters_terms_1_templat
         {
             "position": 2,
             "conjunction": "and",
+            "parameter_name": "Intervention",
             "terms": [
                 {
                     "index": 1,

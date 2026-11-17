@@ -3,6 +3,10 @@ export const generateShortUniqueName = (prefix) => {
     return `${prefix}${timestamp}`
 }
 
+export function truncateTableValue(value) {
+  return value && value.length > 60 ? `${value.substring(0, 60)}...` : value
+}
+
 export function stringToBoolean(value) {
   switch (value) {
     case true:
@@ -24,8 +28,10 @@ export function getCurrentStudyId() {
   return current_study.current_metadata.identification_metadata.study_id
 }
 
-export function getCurrentDateFormatted() {
-  const currentDate = new Date();
+export function getCurrentDateFormatted(value = new Date()) {
+  if (value === null) return '';
+  const currentDate = new Date(value);
+  if (Number.isNaN(currentDate.getTime())) throw new Error(`Invalid date: ${value}`);
 
   const options = {
     month: "short",

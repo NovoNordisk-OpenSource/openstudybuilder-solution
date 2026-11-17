@@ -69,7 +69,7 @@ class ClinicalMdrNodeWithUID(ClinicalMdrNode):
     """
 
     __abstract_node__ = True
-    uid = StringProperty(unique_index=True)  # type: ignore[call-arg]
+    uid = StringProperty(unique_index=True)
 
     def __hash__(self):
         return hash(self.uid)
@@ -82,7 +82,7 @@ class ClinicalMdrNodeWithUID(ClinicalMdrNode):
         """
         object_name = cls.__name__.removesuffix("Root")
 
-        digits = str(db.cypher_query(f"""
+        return str(db.cypher_query(f"""
         MERGE (m:Counter{{counterId:'{object_name}Counter'}})
         ON CREATE SET m:{object_name}Counter, m.count=0
         WITH m
@@ -90,7 +90,6 @@ class ClinicalMdrNodeWithUID(ClinicalMdrNode):
         WITH toInteger(newValue) as uid_number
         RETURN "{object_name}_"+apoc.text.lpad(""+(uid_number), {settings.number_of_uid_digits}, "0")
         """)[0][0][0])
-        return digits
 
     @classmethod
     def generate_node_uids_if_not_present(cls) -> None:
@@ -193,8 +192,8 @@ class VersionRelationship(ClinicalMdrRel):
     `LATEST_DRAFT` or `LATEST_FINAL`.
     """
 
-    start_date: datetime.datetime = ZonedDateTimeProperty()  # type: ignore
-    end_date: datetime.datetime | None = ZonedDateTimeProperty()  # type: ignore
+    start_date: datetime.datetime = ZonedDateTimeProperty()
+    end_date: datetime.datetime | None = ZonedDateTimeProperty()
     change_description = StringProperty()
     version = StringProperty()
     status = StringProperty()

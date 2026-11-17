@@ -1,14 +1,17 @@
+import atexit
 import contextlib
 import logging
 import math
 import os
 import re
+import ssl
 import time
 import uuid
 from typing import Any, List, Optional
 
+import httpx
+import httpx_auth
 import neo4j.exceptions
-import requests
 from neo4j import GraphDatabase
 from neomodel import config as neoconfig
 from neomodel import db
@@ -48,57 +51,123 @@ DATABASE_NAME = load_env("DATABASE_NAME")
 DATABASE_URL = load_env("DATABASE_URL")
 API_BASE_URL = load_env("API_BASE_URL", "http://localhost:8000")
 API_HEADERS = {"User-Agent": "Data-Migrator"}
-TOKEN_REFRESH_INTERVAL = 1200  # 20 minutes
-LAST_TOKEN_REFRESH = -TOKEN_REFRESH_INTERVAL  # Force refresh on first call
+
+
+# Authentication
+#
+# The auth object is built once and shared by every API call. httpx_auth caches
+# the token on it and refreshes on expiry (off the refresh token where there is
+# one). For the interactive branch it also means one browser login per run. The cache is in memory only;
+# nothing is written to disk.
+#
+# Secrets are read with os.environ.get, not load_env, because load_env logs the
+# value it fetched.
+_api_auth = None
+_api_auth_built = False
+_api_client = None
+
+
+def get_api_auth():
+    """Build the httpx auth object the environment implies, once.
+
+    Four modes, in priority order:
+
+      * STUDYBUILDER_API_TOKEN    -> that token, verbatim, as a bearer header
+      * CLIENT_ID + CLIENT_SECRET -> OAuth2 client credentials (unattended)
+      * CLIENT_ID, no secret      -> interactive auth code + PKCE, opens a
+                                     browser on the first request
+      * none of the above         -> no Authorization header at all
+    """
+    global _api_auth, _api_auth_built  # pylint: disable=global-statement
+    if _api_auth_built:
+        return _api_auth
+    _api_auth = _build_api_auth()
+    _api_auth_built = True
+    return _api_auth
+
+
+def _build_api_auth():
+    api_token = os.environ.get("STUDYBUILDER_API_TOKEN", "")
+    client_id = os.environ.get("CLIENT_ID", "")
+    client_secret = os.environ.get("CLIENT_SECRET", "")
+
+    if api_token:
+        logger.info("Using API access token from STUDYBUILDER_API_TOKEN env variable")
+        return httpx_auth.HeaderApiKey(
+            f"Bearer {api_token}", header_name="Authorization"
+        )
+
+    if not client_id:
+        logger.info(
+            "No authentication method specified, proceeding without Authorization header"
+        )
+        return None
+
+    token_endpoint = load_env("TOKEN_ENDPOINT")
+    scope = load_env("SCOPE")
+
+    if client_secret:
+        logger.info(
+            "Fetching API access token using CLIENT_SECRET, TOKEN_ENDPOINT, SCOPE env variables"
+        )
+        return httpx_auth.OAuth2ClientCredentials(
+            token_url=token_endpoint,
+            client_id=client_id,
+            client_secret=client_secret,
+            scope=scope,
+        )
+
+    logger.info(
+        "CLIENT_ID provided without CLIENT_SECRET, using interactive authentication"
+    )
+    return httpx_auth.OAuth2AuthorizationCodePKCE(
+        authorization_url=load_env("AUTH_ENDPOINT"),
+        token_url=token_endpoint,
+        client_id=client_id,
+        scope=scope,
+    )
+
+
+def get_ca_bundle_context():
+    """An SSL context for REQUESTS_CA_BUNDLE, or None.
+
+    requests read this env variable by itself and httpx does not, so without
+    this a corporate CA bundle would stop being honoured with the switch.
+    """
+    ca_bundle = os.environ.get("REQUESTS_CA_BUNDLE", "")
+    if not ca_bundle:
+        return None
+    logger.info("Using CA bundle from REQUESTS_CA_BUNDLE: %s", ca_bundle)
+    return ssl.create_default_context(cafile=ca_bundle)
+
+
+def get_api_client() -> httpx.Client:
+    """The shared API client, built on first use so that importing this module
+    never triggers a login."""
+    global _api_client  # pylint: disable=global-statement
+    if _api_client is None:
+        verify = get_ca_bundle_context()
+        _api_client = httpx.Client(
+            headers=API_HEADERS,
+            auth=get_api_auth(),
+            # requests followed redirects by default, httpx does not
+            follow_redirects=True,
+            **({"verify": verify} if verify is not None else {}),
+        )
+    return _api_client
 
 
 def get_token():
-    """Returns authentication token"""
-    client_id = os.environ.get("CLIENT_ID", "")
-    if client_id:
-        client_secret = os.environ.get("CLIENT_SECRET")
-        token_endpoint = os.environ.get("TOKEN_ENDPOINT")
-        scope = os.environ.get("SCOPE")
-        response = requests.post(
-            token_endpoint,
-            data={
-                "client_id": client_id,
-                "client_secret": client_secret,
-                "grant_type": "client_credentials",
-                "scope": scope,
-            },
-            timeout=30,
-        )
-        response.raise_for_status()
-        payload = response.json()
-        access_token = payload.get("access_token")
-        if not access_token:
-            msg = "missing access token from token payload"
-            raise RuntimeError(msg)
-        if not access_token:
-            msg = "missing token type from token payload"
-            raise RuntimeError(msg)
-        return access_token
-    return None
+    """Returns the current API access token, or None when no auth is configured.
 
-
-def make_api_header(token):
-    return {
-        "Authorization": f"Bearer {token}",
-        "User-Agent": "Data-Migrator",
-    }
-
-
-# Refresh the token if it's older than TOKEN_REFRESH_INTERVAL
-
-
-def refresh_token():
-    global LAST_TOKEN_REFRESH
-    global API_HEADERS
-    if time.time() - LAST_TOKEN_REFRESH > TOKEN_REFRESH_INTERVAL:
-        logger.info("Refreshing token")
-        API_HEADERS = make_api_header(get_token())
-        LAST_TOKEN_REFRESH = time.time()
+    Runs the configured auth flow against a request that is never sent, so it
+    goes through the same token cache as the API calls.
+    """
+    auth = get_api_auth()
+    if auth is None:
+        return None
+    request = next(auth.auth_flow(httpx.Request("GET", API_BASE_URL)))
+    return request.headers["Authorization"].removeprefix("Bearer ")
 
 
 def get_db_connection():
@@ -123,7 +192,10 @@ def get_db_connection():
         )
         if create_db == "true":
             db.cypher_query("CREATE DATABASE $db IF NOT EXISTS", {"db": db_name})
+        # set_connection replaces the driver without closing the old one
+        db.close_connection()
         db.set_connection(neoconfig.DATABASE_URL)
+    atexit.register(db.close_connection)
 
     try_cnt = 1
     db_exists = False
@@ -206,10 +278,9 @@ def api_get(
 ):
     """Issues http GET {path} request,
     asserts that http response status is 200 and returns the response."""
-    refresh_token()
     url = API_BASE_URL + path
     logger.info("GET %s %s", url, params or "")
-    res = requests.get(url, params=params, timeout=60, headers=API_HEADERS)
+    res = get_api_client().get(url, params=params, timeout=60)
     if check_ok_status:
         assert res.status_code == 200, f"Response status {res.status_code} is not 200."
     return res
@@ -252,15 +323,14 @@ def api_get_paged(
     return all_data
 
 
-def api_post(path: str, payload: dict, params: Optional[Any] = None):
+def api_post(
+    path: str, payload: dict, params: Optional[Any] = None, timeout: float = 60
+):
     """Issues http POST request with specified payload.
     Returns the response."""
-    refresh_token()
     url = API_BASE_URL + path
     logger.info("POST %s %s", url, params)
-    res = requests.post(
-        url, json=payload, params=params, timeout=60, headers=API_HEADERS
-    )
+    res = get_api_client().post(url, json=payload, params=params, timeout=timeout)
     assert res.status_code in {
         201,
         204,
@@ -271,12 +341,9 @@ def api_post(path: str, payload: dict, params: Optional[Any] = None):
 def api_patch(path: str, payload: dict, params: Optional[Any] = None):
     """Issues http PATCH request with specified payload.
     Returns the response."""
-    refresh_token()
     url = API_BASE_URL + path
     logger.info("PATCH %s", url)
-    res = requests.patch(
-        url, json=payload, params=params, timeout=30, headers=API_HEADERS
-    )
+    res = get_api_client().patch(url, json=payload, params=params, timeout=30)
     assert res.status_code in [200], f"Response status {res.status_code} is not 200."
     return res
 
@@ -284,10 +351,9 @@ def api_patch(path: str, payload: dict, params: Optional[Any] = None):
 def api_delete(path: str):
     """Issues http DELETE request with specified payload.
     Returns the response."""
-    refresh_token()
     url = API_BASE_URL + path
     logger.info("DELETE %s", url)
-    res = requests.delete(url, timeout=30, headers=API_HEADERS)
+    res = get_api_client().delete(url, timeout=30)
     assert res.status_code in [204], f"Response status {res.status_code} is not 204."
     return res
 
@@ -303,6 +369,9 @@ def get_db_driver():
     url, username, password = parse_db_url(DATABASE_URL)
     logger.info("Getting db connection to (%s)", url)
     driver = GraphDatabase.driver(url, auth=(username, password))
+    # Close before interpreter shutdown: left to the garbage collector, the
+    # driver's __del__ runs after imports are torn down and prints ImportErrors
+    atexit.register(driver.close)
     return driver
 
 

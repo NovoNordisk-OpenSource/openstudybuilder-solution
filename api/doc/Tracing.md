@@ -1,6 +1,6 @@
 # Tracing
 
-Both _clinical-mdr-api_ and _consumer-api_ applications can trace the requests, execution flow, executed Cypher queries,
+The _clinical-mdr-api_ application can trace the requests, execution flow, executed Cypher queries,
 and exceptions raised. This can be particularly useful for debugging and discovering issues in development as well as in
 live deployments.
 
@@ -82,7 +82,7 @@ TRACEBACK_MAX_ENTRIES
 
 # Logging
 
-Both _clinical-mdr-api_ and _consumer-api_ applications use Uvicorn, so logging can be configured using a YAML
+The _clinical-mdr-api_ application uses Uvicorn, so logging can be configured using a YAML
 config file set in the `UVICORN_LOG_CONFIG` environment variable.
 See [Python logging.config](https://docs.python.org/3/library/logging.config.html#logging-config-api) for more details.
 

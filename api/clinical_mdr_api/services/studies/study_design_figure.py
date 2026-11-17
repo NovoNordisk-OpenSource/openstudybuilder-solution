@@ -274,20 +274,18 @@ class StudyDesignFigureService:
         study_elements = StudyElementSelectionService().get_all_selection(
             study_uid=study_uid, study_value_version=study_value_version
         )
-        study_elements = OrderedDict(
+        return OrderedDict(
             (element.element_uid, element) for element in study_elements.items
         )
-        return study_elements
 
     @trace_calls
     def _get_study_design_cells(
         self, study_uid, study_value_version: str | None = None
     ) -> list[StudyDesignCell]:
         """Returns a list of Study Design Cells"""
-        study_design_cells = StudyDesignCellService().get_all_design_cells(
+        return StudyDesignCellService().get_all_design_cells(
             study_uid, study_value_version=study_value_version
         )
-        return study_design_cells
 
     @trace_calls
     def _get_study_visits(

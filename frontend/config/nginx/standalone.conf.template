@@ -29,6 +29,7 @@ server {
     location $API_PATH {
         proxy_pass http://$API_HOST:$API_PORT/;
         proxy_read_timeout 300s;
+        client_max_body_size 64m;
     }
 
     location $CONSUMER_API_PATH {

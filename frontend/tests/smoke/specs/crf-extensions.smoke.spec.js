@@ -21,6 +21,7 @@ for (const { label, path } of CRF_ENTITY_CASES) {
   test(`smoke: ${label} Vendor Extensions step groups attributes by namespace`, async ({
     page,
   }) => {
+    test.setTimeout(60_000)
     await page.addInitScript(seedDemoAuth)
     const spy = setupConsoleSpy(page)
 
@@ -32,11 +33,34 @@ for (const { label, path } of CRF_ENTITY_CASES) {
       .locator('[data-cy="table-item-action-button"]')
       .first()
     await expect(actionButton).toBeVisible({ timeout: 15_000 })
-    await actionButton.click()
 
-    const editAction = page.locator('[data-cy="Edit"]').first()
-    await expect(editAction).toBeVisible({ timeout: 5_000 })
-    await editAction.click()
+    // Edit only opens the dialog once its GET for the full entity resolves,
+    // and on CI the Edit click has been seen to land without the dialog ever
+    // appearing (the row menu re-rendering under the click). Retry the
+    // open-menu → Edit sequence until the dialog is up — skipping the clicks
+    // if an earlier attempt's dialog arrived late — and if it never opens,
+    // fail with whatever the browser logged rather than a bare timeout.
+    const dialog = page.locator('[data-cy="form-body"]')
+    try {
+      await expect(async () => {
+        if (!(await dialog.isVisible())) {
+          await page.keyboard.press('Escape')
+          await actionButton.click({ timeout: 5_000 })
+          await page
+            .locator('[data-cy="Edit"]')
+            .first()
+            .click({ timeout: 5_000 })
+        }
+        await expect(dialog).toBeVisible({ timeout: 5_000 })
+      }).toPass({ timeout: 30_000 })
+    } catch (err) {
+      throw new Error(
+        `The ${label} edit dialog never opened. Browser errors:\n` +
+          (spy.errors.map((e) => `  - ${e}`).join('\n') || '  (none)') +
+          `\n${err.message}`,
+        { cause: err }
+      )
+    }
 
     const extensionsStep = page
       .locator('.v-stepper-item', { hasText: 'Vendor Extensions' })

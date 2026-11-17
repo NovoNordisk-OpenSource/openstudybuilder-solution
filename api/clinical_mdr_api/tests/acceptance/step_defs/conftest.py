@@ -39,8 +39,7 @@ def pytest_bdd_after_step(request, feature, scenario, step, step_func):
     parsers.parse("a '{method}' request is sent to '{path}'"), target_fixture="response"
 )
 def request_without_body(method, path):
-    response = test_client.request(method=method, url=path)
-    return response
+    return test_client.request(method=method, url=path)
 
 
 @when(
@@ -48,8 +47,7 @@ def request_without_body(method, path):
     target_fixture="response",
 )
 def request_with_body(method, path, data):
-    response = test_client.request(method=method, url=path, data=data)
-    return response
+    return test_client.request(method=method, url=path, data=data)
 
 
 @then(parsers.parse("the response has status code '{code:d}'"))

@@ -1,5 +1,4 @@
-@REQ_ID:1070674 @pending_implementation
-
+@REQ_ID:1070674
 Feature: Feature: Library - Code Lists - Dashboard
 
 	Background: User management of Dashboard view
@@ -9,11 +8,15 @@ Feature: Feature: Library - Code Lists - Dashboard
 		Given The '/library' page is opened
 		When The 'Dashboard' submenu is clicked in the 'Code Lists' section
 		Then The current URL is 'library/ct_dashboard'
-		And The 'Code Lists and Terms Dashboard' title is visible
-		And The following column lists are visible under 'Latest added code lists' table
+
+	Scenario: [Table][Columns][Names] User must be able to see the columns list on the main page as below
+        Given The '/library/ct_dashboard' page is opened
+        And A table is visible with following headers
+            | headers                 |
 			| Library                 |
 			| Concept ID              |
 			| Sponsor preferred name  |
+			| Template parameter      |
 			| Name status             |
 			| Modified                |
 			| Code list name          |
@@ -22,73 +25,8 @@ Feature: Feature: Library - Code Lists - Dashboard
 			| Code list status        |
 			| Modified                |
 
-	Scenario: [Navigation] User must be able to navigate to the Dashboard page and see it's content
-		Given The '/library' page is opened
-		When The 'Dashboard' submenu is clicked in the 'Code Lists' section
-		Then The current URL is 'library/ct_dashboard'
-		And The 'Code Lists and Terms Dashboard' title is visible on the left top panel of the window
-		And The following titles are visible with printed values
-    """
-      # of catalogues: <>
-	  # of pacakages: <>
-
-	  # of code list in CDISC library: <>
-	  # of code list in Sponsor library: <>
-
-	  # of terms in CDISC library: <>
-	  # of terms in Sponsor library: <>
-
-	  Code list evolution/code lists: <>
-	  Mean # of evolution/terms: <>
-
-    """
-
-	Scenario: [Overview] User must be able to see the 'Evolution of code lists over time' bar chart table
-		Given The '/library' page is opened
-		When The 'Dashboard' submenu is clicked in the 'Code Lists' section
-		Then The current URL is 'library/ct_dashboard'
-		And The 'Evolution of code lists over time' bar chart dashboard view visible with Years on x-axis and visible with numbercount on y-axis
-		And The charts are colour coded with a reference as 'Added' are Dark blue in colour, 'Updated' are Green in colour and 'Deleted' are Red in colour
-
-	Scenario: [Overview] User must be able to click the 'Evolution of code lists over time' Bar chart reference 'Added'
-		Given The 'Dashboard' submenu is clicked in the 'Code Lists' section 
-		And The 'Code Lists and Terms Dashboard' page is visible
-		When The blue color coded bar reference 'Added' is clicked in the 'Evolution of code lists over time' chart table 
-		Then The blue colour coded bar charts are disappeared from the chart table
-
-	Scenario: [Overview] User must be able to click the 'Evolution of code lists over time' Bar chart reference 'Updated'
-		Given The 'Dashboard' submenu is clicked in the 'Code Lists' section 
-		And The 'Code Lists and Terms Dashboard' page is visible
-		When The green color coded bar reference 'Updated' is clicked in the 'Evolution of code lists over time' chart table
-		Then The green colour coded bar charts are disappeared from the chart table
-
-	Scenario: [Overview] User must be able to click the 'Evolution of code lists over time' Bar chart reference 'Deleted'
-		Given The 'Dashboard' submenu is clicked in the 'Code Lists' section 
-		And The 'Code Lists and Terms Dashboard' page is visible
-		When The red color coded bar reference 'Deleted' is clicked in the 'Evolution of code lists over time' chart table
-		Then The red colour coded bar charts are disappeared from the chart table
-
-	Scenario: [Overview] User must be able to see the 'Terms evolutions/terms' bar chart table
-		Given The '/library' page is opened
-		When The 'Dashboard' submenu is clicked in the 'Code Lists' section
-		Then The current URL is 'library/ct_dashboard'
-		And The 'Terms evolutions/terms' bar chart dashboard view visible with Years on x-axis and visible with numbercount on y-axis
-		And The charts are colour coded with a reference as 'Added' are Dark blue in colour, 'Updated' are Green in colour and 'Deleted' are Red in colour
-
-	Scenario: [Overview] User must be able to click the 'Terms evolutions/terms' Bar chart reference 'Added'
-		Given The 'Dashboard' submenu is clicked in the 'Code Lists' section 
-		And The 'Code Lists and Terms Dashboard' page is visible
-		When The blue color coded bar reference 'Added' is clicked in the 'Terms evolutions/terms' chart table 
-		Then The blue colour coded bar charts are disappeared from the chart table
-
-	Scenario: [Overview] User must be able to click the 'Terms evolutions/terms' Bar chart reference 'Updated'
-		Given The 'Dashboard' submenu is clicked in the 'Code Lists' section 
-		And The 'Code Lists and Terms Dashboard' page is visible
-		When The green color coded bar reference 'Updated' is clicked in the 'Terms evolutions/terms' chart table
-		Then The green colour coded bar charts are disappeared from the chart table
-
-	Scenario: [Overview] User must be able to click the 'Terms evolutions/terms' Bar chart reference 'Deleted'
-		Given The 'Dashboard' submenu is clicked in the 'Code Lists' section 
-		And The 'Code Lists and Terms Dashboard' page is visible
-		When The red color coded bar reference 'Deleted' is clicked in the 'Terms evolutions/terms' chart table
-		Then The red colour coded bar charts are disappeared from the chart table
+	Scenario: [Sections] User must be able to see following sections: Evolution of code lists over time, Term evolutions terms, Latest added code lists
+		Given The '/library/ct_dashboard' page is opened
+		Then The section with title 'Evolution of code lists over time' is visible
+		And The section with title 'Term evolutions / terms:' is visible
+		And The section with title 'Latest added code lists' is visible

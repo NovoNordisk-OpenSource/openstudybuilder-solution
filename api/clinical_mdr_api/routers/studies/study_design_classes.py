@@ -51,11 +51,10 @@ def get(
     ] = None,
 ) -> StudyDesignClass:
     study_design_class_service = StudyDesignClassService()
-    study_design_class = study_design_class_service.get_study_design_class(
+    return study_design_class_service.get_study_design_class(
         study_uid=study_uid,
         study_value_version=study_value_version,
     )
-    return study_design_class
 
 
 @router.get(

@@ -97,11 +97,11 @@ class CompactActivityItemClassForInstanceClass(BaseModel):
             }
         ),
     ] = None
-    display_name: Annotated[
+    label: Annotated[
         str | None,
         Field(
             json_schema_extra={
-                "source": "has_activity_item_class.has_latest_value.display_name",
+                "source": "has_activity_item_class.has_latest_value.label",
                 "nullable": True,
             }
         ),

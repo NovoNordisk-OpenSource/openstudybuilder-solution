@@ -292,22 +292,19 @@ def test_data():
 # ===========================================================================
 
 
-def _only_uid_and(data, field: str) -> None:
-    """Assert the dict contains only uid and the requested field."""
-    assert set(data.keys()) == {
-        "uid",
-        field,
-    }, f"Expected only {{'uid', '{field}'}}, got {set(data.keys())}"
+def _only_uid_and(data, *fields: str) -> None:
+    """Assert the dict contains only uid and the requested field(s)."""
+    expected = {"uid", *fields}
+    assert (
+        set(data.keys()) == expected
+    ), f"Expected only {expected}, got {set(data.keys())}"
 
 
-def _list_items_only_uid_and(items, field: str) -> None:
-    """Assert every item in the list contains only uid and the requested field."""
+def _list_items_only_uid_and(items, *fields: str) -> None:
+    """Assert every item in the list contains only uid and the requested field(s)."""
     assert len(items) > 0
     for item in items:
-        assert set(item.keys()) == {
-            "uid",
-            field,
-        }, f"Expected only {{'uid', '{field}'}}, got {set(item.keys())}"
+        _only_uid_and(item, *fields)
 
 
 # ===========================================================================

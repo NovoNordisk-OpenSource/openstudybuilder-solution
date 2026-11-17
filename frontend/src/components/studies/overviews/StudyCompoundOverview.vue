@@ -110,12 +110,20 @@
                   <div style="width: 40px">
                     <v-icon icon="mdi-flask" color="nnTrueBlue" />
                   </div>
-                  <div style="width: 40%">
+                  <div style="width: 30%">
                     <div class="text-body-3">
                       {{ $t('Formulation.active_substance') }}
                     </div>
                     <div class="text-body-medium font-weight-bold">
                       {{ ingredient.title }}
+                    </div>
+                  </div>
+                  <div style="width: 22%">
+                    <div class="text-body-3">
+                      {{ $t('CompoundAliasForm.pharmacological_class') }}
+                    </div>
+                    <div class="text-body-3 font-weight-bold">
+                      {{ ingredient.pclass }}
                     </div>
                   </div>
                   <div style="width: 12%">
@@ -224,6 +232,10 @@ function getPharmaProductIngredients(pharmaProduct) {
       return {
         id: `${pharmaProduct.uid}-ingredient-${ingredient.active_substance.long_number}`,
         title: getIngredientName(ingredient),
+        pclass:
+          dataFormating.pharmacologicalClasses([
+            ingredient.active_substance.unii ?? null,
+          ]) || '-',
         halfLife: ingredient.half_life
           ? `${ingredient.half_life.value} ${ingredient.half_life.unit_label}`
           : '-',

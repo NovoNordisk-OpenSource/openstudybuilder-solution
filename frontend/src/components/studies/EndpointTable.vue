@@ -55,6 +55,9 @@
             <NNParameterHighlighter
               v-else
               :name="endpoint.template.name"
+              :parameter-names="
+                endpoint.template.parameters?.map((p) => p.name)
+              "
               :show-prefix-and-postfix="false"
             />
           </td>
@@ -133,6 +136,7 @@
         <NNParameterHighlighter
           v-else
           :name="item.template.name"
+          :parameter-names="item.template.parameters?.map((p) => p.name)"
           :show-prefix-and-postfix="false"
         />
         <v-tooltip

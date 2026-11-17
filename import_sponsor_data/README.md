@@ -180,6 +180,8 @@ as well as what environment variables that determine which files are used.
 | step | environment variable(s) |
 |------|-------------------------|
 | sponsor codelist definitions. Used to create the lists, no content here. | MDR_MIGRATION_SPONSOR_CODELIST_DEFINITIONS |
+| optional additional sponsor codelist definitions, imported after the main file when it exists. | MDR_MIGRATION_SPONSOR_CODELIST_DEFINITIONS_PRIVATE |
+| optional additional ordinal codelist terms, imported after the main file when it exists. | MDR_MIGRATION_ORDINAL_CODELISTS_PRIVATE |
 | operator (equal, larger than, etc) | MDR_MIGRATION_OPERATOR |
 | epoch (collect terms from cdisc in sponsor codelist, add a few terms not in cdisc) | MDR_MIGRATION_EPOCH <br> MDR_MIGRATION_EPOCH_TYPE <br> MDR_MIGRATION_EPOCH_SUB_TYPE |
 | endpoint | MDR_MIGRATION_ENDPOINT_LEVEL |
@@ -191,6 +193,7 @@ as well as what environment variables that determine which files are used.
 | criteria type | MDR_MIGRATION_CRITERIA_CATEGORY <br> MDR_MIGRATION_CRITERIA_SUB_CATEGORY <br> MDR_MIGRATION_CRITERIA_TYPE |
 | compound dispensed in | MDR_MIGRATION_COMPOUND_DISPENSED_IN |
 | device | MDR_MIGRATION_DEVICE |
+| auxiliary device | MDR_MIGRATION_AUXILIARY_DEVICE |
 | element (sub)type | MDR_MIGRATION_ELEMENT_TYPE <br> MDR_MIGRATION_ELEMENT_SUBTYPE |
 | flowchart group | MDR_MIGRATION_FLOWCHART_GROUP |
 | objective category | MDR_MIGRATION_OBJECTIVE_CATEGORY |

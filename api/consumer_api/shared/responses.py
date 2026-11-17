@@ -139,12 +139,10 @@ class PaginatedResponseWithStudyVersion[T](PaginatedResponse[T]):
         )
 
         it.study_version = StudyVersionSimple.from_input(
-            version_status=study_version.get("version_status", None),
-            version_number=study_version.get("version_number", None),
+            version_status=study_version.get("version_status"),
+            version_number=study_version.get("version_number"),
             version_started_at=convert_to_datetime(study_version["version_started_at"]),
-            version_ended_at=convert_to_datetime(
-                study_version.get("version_ended_at", None)
-            ),
+            version_ended_at=convert_to_datetime(study_version.get("version_ended_at")),
         )
 
         return it

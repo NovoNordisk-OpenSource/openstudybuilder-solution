@@ -27,6 +27,7 @@ INDEXES = [
     ("StudyActivitySchedule", "uid"),
     ("StudyBranchArm", "uid"),
     ("StudyDiseaseMilestone", "uid"),
+    ("StudyAuxiliaryDevice", "uid"),
     ("StudyVersion", "uid"),
     ("StudyDefinitionDocument", "uid"),
     ("StudySoAFootnote", "uid"),
@@ -118,6 +119,7 @@ INDEXES = [
     ("FootnotePreInstanceValue", "name"),
     ("OdmVendorElementValue", "name"),
     ("StudySourceVariable", "uid"),
+    ("StudyDesignPopulation", "uid"),
     ("DataSupplierValue", "name"),
     ("MetaStudyField", "osb_field_name"),
 ]
@@ -253,6 +255,52 @@ CONSTRAINTS = [
     ("CTTermNameRoot", "uid", CONSTRAINT_TYPE_UNIQUE),
 ]
 
+# array of staging indexes to create [label, property]
+# CDISC staging DDL, kept apart from the MDR entries above since it applies to nodes
+# carrying the :CDISCStaging marker label rather than MDR domain data.
+STAGING_INDEXES = [
+    ("RawPackage", "effectiveDate"),
+    ("RawCatalogue", "effectiveDate"),
+    ("RawCodelist", "conceptId"),
+    ("RawTerm", "conceptId"),
+    ("GroupedCodelist", "conceptId"),
+    ("GroupedTerm", "conceptId"),
+    ("TermChange", "conceptId"),
+    ("VersionedCodelist", "conceptId"),
+    ("VersionedTerm", "conceptId"),
+    ("StagedFile", "uid"),
+    ("StagedFile", "effective_date"),
+    ("EffectiveDateImport", "effective_date"),
+    ("SemanticAnswer", "uid"),
+    ("CodelistReview", "codelist_id"),
+    ("ChangelogEntry", "catalogue"),
+    ("KnownRelease", "catalogue"),
+    ("StagingJob", "uid"),
+    ("DataModelVariable", "href"),
+]
+
+# array of staging constraints to create [label, property, type["NODE KEY", "UNIQUE", "NOT NULL"]]
+STAGING_CONSTRAINTS = [
+    ("JobRunLock", "scope", CONSTRAINT_TYPE_UNIQUE),
+    ("DataModelScenario", "href", CONSTRAINT_TYPE_NODE_KEY),
+    ("DataModelStagingVersion", "name", CONSTRAINT_TYPE_NODE_KEY),
+]
+
+# array of staging composite indexes to create [label, [properties]]
+STAGING_COMPOSITE_INDEXES = [
+    ("StagingJob", ["kind", "status"]),
+]
+
+# array of staging composite constraints to create [label, [properties], type["NODE KEY", "UNIQUE", "NOT NULL"]]
+STAGING_COMPOSITE_CONSTRAINTS = [
+    ("DataModelImport", ["catalogue", "version_number"], CONSTRAINT_TYPE_NODE_KEY),
+    (
+        "DataModelClass",
+        ["catalogue", "version_number", "name"],
+        CONSTRAINT_TYPE_NODE_KEY,
+    ),
+]
+
 
 def build_create_node_index_query(data):
     label, prop = data
@@ -310,7 +358,38 @@ def build_create_constraint_query(label: str, property: str, type: str):
     return query
 
 
-def build_schema_queries():
+def build_create_node_composite_index_query(data):
+    label, props = data
+    name = label + "_" + "_".join(props)
+    on_clause = ", ".join(f"n.{prop}" for prop in props)
+    query = f"CREATE INDEX index_{name} IF NOT EXISTS FOR (n:{label}) ON ({on_clause})"
+    return query
+
+
+def build_create_composite_constraint_query(label: str, properties: list, type: str):
+    """
+    Same as `build_create_constraint_query`, for a constraint spanning more than one
+    property (e.g. a composite `NODE KEY`).
+    input:
+        label: str
+        properties: list[str]
+        type: str ["NODE_KEY", "UNIQUE", "NOT NULL"]
+    """
+    if type not in [
+        CONSTRAINT_TYPE_NODE_KEY,
+        CONSTRAINT_TYPE_UNIQUE,
+        CONSTRAINT_TYPE_NOT_NULL,
+    ]:
+        raise TypeError(
+            f"Constraint type '{type}' for label '{label}' and properties '{properties}' must be 'NODE KEY', 'UNIQUE' or 'NOT NULL' "
+        )
+    name = label + "_" + "_".join(properties)
+    require_clause = ", ".join(f"n.{property}" for property in properties)
+    query = f"CREATE CONSTRAINT constraint_{name} IF NOT EXISTS FOR (n:{label}) REQUIRE ({require_clause}) IS {type}"
+    return query
+
+
+def build_mdr_schema_queries():
     queries = []
     for idx in INDEXES:
         query = build_create_node_index_query(idx)
@@ -334,6 +413,40 @@ def build_schema_queries():
         )
         queries.append(query)
 
+    return queries
+
+
+def build_staging_schema_queries():
+    queries = []
+    for idx in STAGING_INDEXES:
+        query = build_create_node_index_query(idx)
+        queries.append(query)
+
+    for cst in STAGING_CONSTRAINTS:
+        query = build_create_constraint_query(
+            label=cst[0], property=cst[1], type=cst[2]
+        )
+        queries.append(query)
+
+    for idx in STAGING_COMPOSITE_INDEXES:
+        query = build_create_node_composite_index_query(idx)
+        queries.append(query)
+
+    for cst in STAGING_COMPOSITE_CONSTRAINTS:
+        query = build_create_composite_constraint_query(
+            label=cst[0], properties=cst[1], type=cst[2]
+        )
+        queries.append(query)
+
+    return queries
+
+
+def build_schema_queries(mdr: bool = True, staging: bool = True):
+    queries = []
+    if mdr:
+        queries.extend(build_mdr_schema_queries())
+    if staging:
+        queries.extend(build_staging_schema_queries())
     return queries
 
 

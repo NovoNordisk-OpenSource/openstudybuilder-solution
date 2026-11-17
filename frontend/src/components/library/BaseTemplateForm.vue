@@ -6,7 +6,6 @@
     :form-observer-getter="getObserver"
     :editable="template !== undefined && template !== null"
     :help-items="helpItems"
-    :extra-step-validation="extraValidation"
     @close="close"
     @save="submit"
   >
@@ -37,23 +36,11 @@
       </v-row>
       <slot name="extraFields" :form="form" />
     </template>
-    <template #[`step.template.afterActions`]>
-      <v-btn
-        class="secondary-btn"
-        data-cy="verify-syntax-button"
-        color="white"
-        variant="outlined"
-        elevation="1"
-        rounded="xl"
-        @click="verifySyntax"
-      >
-        {{ $t('_global.verify_syntax') }}
-      </v-btn>
-    </template>
     <template #[`step.testTemplate`]>
       <ParameterValueSelector
         v-model="parameters"
         :template="form.name"
+        :parameter-names="parameterTypeNames"
         load-parameter-values-from-template
         preview-text=" "
         :edit-mode="template !== undefined && template !== null"
@@ -137,6 +124,7 @@ const form = ref({})
 const originalForm = ref({})
 const parameters = ref([])
 const parameterTypes = ref([])
+const linkedParameterNames = ref(null)
 const steps = ref([])
 const stepper = ref()
 const confirm = ref()
@@ -169,6 +157,16 @@ const title = computed(() => {
     ? t(`${translationKey.value}TemplateForm.edit_title`, context)
     : t(`${translationKey.value}TemplateForm.add_title`, context)
 })
+// A template being created has no stored parameters yet: bracket text naming
+// any known parameter type is a parameter. A template being edited already has
+// its parameters fixed at the time it was saved: only use those, so bracket
+// text that was literal back then does not turn into a parameter just
+// because a template parameter with that name was created since.
+const parameterTypeNames = computed(() =>
+  linkedParameterNames.value !== null
+    ? linkedParameterNames.value
+    : parameterTypes.value.map((type) => type.name)
+)
 const namePlainPreview = computed(() => {
   if (form.value.name) {
     const result = new DOMParser().parseFromString(form.value.name, 'text/html')
@@ -190,6 +188,11 @@ watch(
         loadFormFromTemplate(resp.data)
         steps.value = editModeSteps
       })
+      api.getParameters(value.uid).then((resp) => {
+        linkedParameterNames.value = resp.data.map(
+          (parameter) => parameter.name
+        )
+      })
     }
   },
   { immediate: true }
@@ -201,6 +204,7 @@ function close() {
   stepper.value.reset()
   steps.value = createModeSteps
   parameters.value = []
+  linkedParameterNames.value = null
   emit('close')
 }
 
@@ -300,30 +304,6 @@ async function updateTemplate() {
   emit('templateUpdated', template)
   const key = `${translationKey.value}TemplateForm.update_success`
   notificationHub.add({ msg: t(key) })
-}
-
-function verifySyntax() {
-  notificationHub.clearErrors()
-
-  if (!form.value.name) {
-    return
-  }
-  const data = { name: form.value.name }
-  api.preValidate(data).then(() => {
-    notificationHub.add({ msg: t('_global.valid_syntax') })
-  })
-}
-
-async function extraValidation(step) {
-  if (step !== 1) {
-    return true
-  }
-  try {
-    await api.preValidate({ name: form.value.name })
-  } catch {
-    return false
-  }
-  return true
 }
 
 async function submit() {

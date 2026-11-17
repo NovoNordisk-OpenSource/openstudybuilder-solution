@@ -3,8 +3,13 @@
 ## Start Development Server
 ```bash
 npm run dev
+npm run dev -- --port 5174 --api-port 8001   # e.g. in a second worktree
 ```
 Starts the Vite dev server with hot-reload at http://localhost:5173 (default).
+
+- `--port` fails if the port is busy (no silent fallback to another port).
+- `--api-port` points `API_BASE_URL` in the dev-served `/config.json` at the matching API
+  (`uv run poe dev --port 8001`). Other arguments are forwarded to Vite; `dev:demo` accepts the same flags.
 
 ## Build for Production
 ```bash

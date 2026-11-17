@@ -168,7 +168,7 @@ def test_get_aliases_in_order(
     assert data["total"] == 4
 
     for idx, item in enumerate(data["items"]):
-        for field in expected_order.keys():
+        for field in expected_order:
             assert item[field] == expected_order[field][idx]
 
 
@@ -283,7 +283,7 @@ def test_get_translated_texts_in_order(
     assert data["total"] == 7
 
     for idx, item in enumerate(data["items"]):
-        for field in expected_order.keys():
+        for field in expected_order:
             assert item[field] == expected_order[field][idx]
 
 
@@ -386,7 +386,7 @@ def test_get_formal_expressions_in_order(
     assert data["total"] == 4
 
     for idx, item in enumerate(data["items"]):
-        for field in expected_order.keys():
+        for field in expected_order:
             assert item[field] == expected_order[field][idx]
 
 

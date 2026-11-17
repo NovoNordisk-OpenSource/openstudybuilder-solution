@@ -162,5 +162,4 @@ def create_ct_term(
 
 
 def get_unit_uid_by_name(unit_name):
-    unit_uid = MetaRepository().unit_definition_repository.find_uid_by_name(unit_name)
-    return unit_uid
+    return MetaRepository().unit_definition_repository.find_uid_by_name(unit_name)

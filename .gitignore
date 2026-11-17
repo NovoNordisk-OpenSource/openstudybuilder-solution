@@ -7,3 +7,7 @@
 .claude/settings.local.json
 .claude/.cc-writes/
 **/.claude/.cc-writes/
+
+# Python bytecode
+__pycache__/
+*.pyc

@@ -155,8 +155,10 @@ export default {
     }
     return repository.get(`${resource}/terms/attributes`, { params })
   },
-  getCodelistTermAttributes(termUid) {
-    return repository.get(`${resource}/terms/${termUid}/attributes`)
+  getCodelistTermAttributes(termUid, params) {
+    return repository.get(`${resource}/terms/${termUid}/attributes`, {
+      params,
+    })
   },
   getCodelistTermAttributesVersions(termUid, params) {
     return repository.get(`${resource}/terms/${termUid}/attributes/versions`, {

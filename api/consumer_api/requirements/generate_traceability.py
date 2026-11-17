@@ -49,8 +49,7 @@ def parse_markdown_file(file_path) -> str:
     """Parse a markdown file and return its HTML content."""
     with open(file_path, encoding="utf-8") as f:
         text = f.read()
-    html = markdown.markdown(text, extensions=["fenced_code", "tables"])
-    return html
+    return markdown.markdown(text, extensions=["fenced_code", "tables"])
 
 
 def extract_section_headers_and_content(
@@ -61,7 +60,7 @@ def extract_section_headers_and_content(
     sections = []
     for html_element in soup.find_all(html_tag):
         text = html_element.get_text().strip()
-        if text.startswith("FS-") or text.startswith("URS-"):
+        if text.startswith(("FS-", "URS-")):
             # Extract all content until the next `html_tag` or end of document
             content = []
             for sibling in html_element.find_next_siblings():
@@ -131,10 +130,9 @@ def generate_html(full_traceability, warnings) -> str:
         template_str = f.read()
         template = Template(template_str, autoescape=True)
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        html = template.render(
+        return template.render(
             now=now, full_traceability=full_traceability, warnings=warnings
         )
-        return html
 
 
 def main():
@@ -162,7 +160,7 @@ def main():
     with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
         f.write(final_html)
 
-    logger.info(f"Traceability document generated at {OUTPUT_FILE}")
+    logger.info("Traceability document generated at %s", OUTPUT_FILE)
 
 
 def collect_fs_traceability(fs_files, full_traceability):
@@ -178,7 +176,7 @@ def collect_fs_traceability(fs_files, full_traceability):
                     # Extract FS and URS IDs from 'FS-... [URS-...]'
                     fs_id = fs_title[: fs_title.index("[")].strip()
                     if fs_id in all_fs_ids:
-                        logger.warning(f"Duplicate FS ID {fs_id} found in {fs_file}")
+                        logger.warning("Duplicate FS ID %s found in %s", fs_id, fs_file)
                     all_fs_ids.add(fs_id)
                     urs_id = fs_title[
                         fs_title.index("[") + 1 : fs_title.index("]")
@@ -211,9 +209,9 @@ def collect_fs_traceability(fs_files, full_traceability):
                                 }
                             )
             else:
-                logger.warning(f"No valid FS sections found in {fs_file}")
-        except Exception as e:
-            logger.error(f"Error parsing {fs_file}: {e}")
+                logger.warning("No valid FS sections found in %s", fs_file)
+        except Exception:
+            logger.exception("Error parsing %s", fs_file)
     return all_fs_ids
 
 
@@ -238,9 +236,9 @@ def collect_urs_traceability(urs_files, full_traceability):
                         }
                     )
             else:
-                logger.warning(f"No valid URS sections found in {urs_file}")
-        except Exception as e:
-            logger.error(f"Error parsing {urs_file}: {e}")
+                logger.warning("No valid URS sections found in %s", urs_file)
+        except Exception:
+            logger.exception("Error parsing %s", urs_file)
 
 
 def get_warnings_html(

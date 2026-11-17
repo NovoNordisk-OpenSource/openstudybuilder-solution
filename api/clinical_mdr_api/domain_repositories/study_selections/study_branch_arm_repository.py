@@ -361,7 +361,7 @@ class StudySelectionBranchArmRepository:
                     sba_node.order,
                 )
             )
-        return study_branch_arms if study_branch_arms else None
+        return study_branch_arms or None
 
     def _get_audit_node(
         self, study_selection: StudySelectionBranchArmAR, study_selection_uid: str
@@ -622,15 +622,18 @@ class StudySelectionBranchArmRepository:
         db_property: str, value: str, branch_arm_vo: StudySelectionBranchArmVO
     ) -> StudyBranchArm:
         kwarg_value = getattr(branch_arm_vo, value)
-        branch_arm_node = (
+        return (
             StudyBranchArm.nodes.has(study_value=True)
             .filter(
                 uid__ne=branch_arm_vo.study_selection_uid,
                 study_value__latest_value__uid=branch_arm_vo.study_uid,
+                # uniqueness is per StudyArm, not per study
+                arm_root__uid=branch_arm_vo.arm_root_uid,
+                # only the current StudyArm version, older versions keep their link
+                arm_root__study_value__latest_value__uid=branch_arm_vo.study_uid,
             )
             .get_or_none(**{db_property: kwarg_value})
         )
-        return branch_arm_node
 
     @staticmethod
     def _add_new_selection(

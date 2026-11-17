@@ -62,7 +62,7 @@ class ActivityItemClassVO:
     nci_concept_id: str | None
     nci_concept_name: str | None
     order: int
-    display_name: str | None
+    label: str | None
     activity_instance_classes: list[ActivityInstanceClassActivityItemClassRelVO]
     data_type: CTTermItem
     role: CTTermItem
@@ -82,11 +82,11 @@ class ActivityItemClassVO:
         nci_concept_id: str | None = None,
         nci_concept_name: str | None = None,
         variable_class_uids: list[str] | None = None,
-        display_name: str | None = None,
+        label: str | None = None,
         valid_codelists: list[CodelistItem] | None = None,
         non_standard_variable: NonStandardVariableVO | None = None,
     ) -> Self:
-        activity_item_class_vo = cls(
+        return cls(
             name=name,
             order=order,
             activity_instance_classes=activity_instance_classes,
@@ -96,14 +96,12 @@ class ActivityItemClassVO:
             definition=definition,
             nci_concept_id=nci_concept_id,
             nci_concept_name=nci_concept_name,
-            display_name=display_name,
+            label=label,
             valid_codelists=(
                 tuple(valid_codelists) if valid_codelists is not None else None
             ),
             non_standard_variable=non_standard_variable,
         )
-
-        return activity_item_class_vo
 
     def validate(
         self,
@@ -187,8 +185,8 @@ class ActivityItemClassAR(LibraryItemAggregateRootBase):
         return self._activity_item_class_vo.nci_concept_name
 
     @property
-    def display_name(self) -> str | None:
-        return self._activity_item_class_vo.display_name
+    def label(self) -> str | None:
+        return self._activity_item_class_vo.label
 
     @classmethod
     def from_repository_values(
@@ -198,13 +196,12 @@ class ActivityItemClassAR(LibraryItemAggregateRootBase):
         library: LibraryVO,
         item_metadata: LibraryItemMetadataVO,
     ) -> Self:
-        activity_item_class_ar = cls(
+        return cls(
             _uid=uid,
             _activity_item_class_vo=activity_item_class_vo,
             _item_metadata=item_metadata,
             _library=library,
         )
-        return activity_item_class_ar
 
     @classmethod
     def from_input_values(
@@ -234,13 +231,12 @@ class ActivityItemClassAR(LibraryItemAggregateRootBase):
             non_standard_variable_exists_by_code_callback=non_standard_variable_exists_by_code_callback,
             non_standard_variable_exists_by_name_callback=non_standard_variable_exists_by_name_callback,
         )
-        activity_item_class_ar = cls(
+        return cls(
             _uid=generate_uid_callback(),
             _item_metadata=item_metadata,
             _library=library,
             _activity_item_class_vo=activity_item_class_vo,
         )
-        return activity_item_class_ar
 
     def edit_draft(
         self,

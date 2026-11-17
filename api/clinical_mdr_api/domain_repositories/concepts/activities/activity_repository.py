@@ -1,4 +1,5 @@
 import datetime
+import logging
 from typing import Any
 
 from neomodel import db
@@ -34,6 +35,8 @@ from clinical_mdr_api.models.utils import GenericFilteringReturn
 from common.config import settings
 from common.exceptions import BusinessLogicException
 from common.utils import convert_to_datetime, version_string_to_tuple
+
+log = logging.getLogger(__name__)
 
 
 def _get_display_version(versions: list[dict[Any, Any]]) -> dict[Any, Any] | None:
@@ -125,7 +128,7 @@ class ActivityRepository(ConceptGenericRepository[ActivityAR]):
         self, input_dict: dict[str, Any]
     ) -> ActivityAR:
         major, minor = input_dict["version"].split(".")
-        activity_ar = ActivityAR.from_repository_values(
+        return ActivityAR.from_repository_values(
             uid=input_dict["uid"],
             concept_vo=ActivityVO.from_repository_values(
                 nci_concept_id=input_dict.get("nci_concept_id"),
@@ -186,7 +189,6 @@ class ActivityRepository(ConceptGenericRepository[ActivityAR]):
                 minor_version=int(minor),
             ),
         )
-        return activity_ar
 
     def _create_ar(
         self,
@@ -239,19 +241,13 @@ class ActivityRepository(ConceptGenericRepository[ActivityAR]):
                 activity_groupings=activity_groupings,
                 activity_instances=activity_root.get("activity_instances", []),
                 request_rationale=value.request_rationale,
-                is_request_final=(
-                    value.is_request_final if value.is_request_final else False
-                ),
+                is_request_final=value.is_request_final or False,
                 used_by_studies=activity_root["used_by_studies"],
                 replaced_by_activity=activity_root["replaced_activity_uid"],
                 reason_for_rejecting=value.reason_for_rejecting,
                 contact_person=value.contact_person,
-                is_request_rejected=(
-                    value.is_request_rejected if value.is_request_rejected else False
-                ),
-                is_data_collected=(
-                    value.is_data_collected if value.is_data_collected else False
-                ),
+                is_request_rejected=value.is_request_rejected or False,
+                is_data_collected=value.is_data_collected or False,
                 is_multiple_selection_allowed=(
                     value.is_multiple_selection_allowed
                     if value.is_multiple_selection_allowed is not None
@@ -381,21 +377,15 @@ class ActivityRepository(ConceptGenericRepository[ActivityAR]):
                 activity_groupings=activity_groupings,
                 activity_instances=activity_instances,
                 request_rationale=value.request_rationale,
-                is_request_final=(
-                    value.is_request_final if value.is_request_final else False
-                ),
+                is_request_final=value.is_request_final or False,
                 used_by_studies=used_by_studies,
                 replaced_by_activity=(
                     replaced_activity.uid if replaced_activity else None
                 ),
                 reason_for_rejecting=value.reason_for_rejecting,
                 contact_person=value.contact_person,
-                is_request_rejected=(
-                    value.is_request_rejected if value.is_request_rejected else False
-                ),
-                is_data_collected=(
-                    value.is_data_collected if value.is_data_collected else False
-                ),
+                is_request_rejected=value.is_request_rejected or False,
+                is_data_collected=value.is_data_collected or False,
                 is_multiple_selection_allowed=(
                     value.is_multiple_selection_allowed
                     if value.is_multiple_selection_allowed is not None
@@ -490,8 +480,8 @@ class ActivityRepository(ConceptGenericRepository[ActivityAR]):
         extended_filter_statements = " AND ".join(filter_parameters)
         if filter_statements_from_concept != "":
             if len(extended_filter_statements) > 0:
-                filter_statements_to_return = " AND ".join(
-                    [filter_statements_from_concept, extended_filter_statements]
+                filter_statements_to_return = (
+                    f"{filter_statements_from_concept} AND {extended_filter_statements}"
                 )
             else:
                 filter_statements_to_return = filter_statements_from_concept
@@ -505,7 +495,7 @@ class ActivityRepository(ConceptGenericRepository[ActivityAR]):
 
     def _create_new_value_node(self, ar: ActivityAR) -> ActivityValue:
         value_node: ActivityValue = super()._create_new_value_node(ar=ar)
-        value_node.synonyms = ar.concept_vo.synonyms  # type: ignore[assignment]
+        value_node.synonyms = ar.concept_vo.synonyms
         if ar.concept_vo.request_rationale:
             value_node.request_rationale = ar.concept_vo.request_rationale
         value_node.is_request_final = ar.concept_vo.is_request_final
@@ -956,10 +946,7 @@ class ActivityRepository(ConceptGenericRepository[ActivityAR]):
             msg=f"The overview query returned broken data: {result_array}",
         )
         overview = result_array[0]
-        overview_dict = {}
-        for overview_prop, attribute_name in zip(overview, attribute_names):
-            overview_dict[attribute_name] = overview_prop
-        return overview_dict
+        return dict(zip(attribute_names, overview))
 
     def get_cosmos_activity_overview(self, uid: str) -> dict[str, Any]:
         query = """
@@ -1101,10 +1088,7 @@ class ActivityRepository(ConceptGenericRepository[ActivityAR]):
             RETURN coalesce(activity_value.is_multiple_selection_allowed, true)
             """
         result, _ = db.cypher_query(query, {"activity_uid": activity_uid})
-        is_multiple_selection_allowed_for_activity = (
-            len(result) > 0 and len(result[0]) > 0
-        )
-        return is_multiple_selection_allowed_for_activity
+        return len(result) > 0 and len(result[0]) > 0
 
     def get_linked_upgradable_activity_instances(
         self, uid: str, version: str | None = None
@@ -1159,10 +1143,7 @@ class ActivityRepository(ConceptGenericRepository[ActivityAR]):
             msg=f"The linked instances query returned broken data: {result_array}",
         )
         instances = result_array[0]
-        instances_dict = {}
-        for instances_prop, attribute_name in zip(instances, attribute_names):
-            instances_dict[attribute_name] = instances_prop
-        return instances_dict
+        return dict(zip(attribute_names, instances))
 
     def get_activity_uids_by_synonyms(self, synonyms: list[str]):
         if not synonyms:
@@ -1533,10 +1514,9 @@ RETURN
         except IndexError:
             # Handle case where query returns empty results unexpectedly
             return [], 0
-        except Exception as e:
-            # Log error or raise a more specific exception
-            print(f"Error executing count/end_date query: {e}")
-            raise  # Re-raise for now, or handle appropriately
+        except Exception:
+            log.exception("Error executing count/end_date query")
+            raise
 
         # Query 2: Fetch details for paginated roots
 
@@ -1547,10 +1527,9 @@ RETURN
                 query=full_query, params=params, resolve_objects=False
             )
             instances = [row[0] for row in instances_results]
-        except Exception as e:
-            # Log error or raise a more specific exception
-            print(f"Error executing details query: {e}")
-            raise  # Re-raise for now, or handle appropriately
+        except Exception:
+            log.exception("Error executing details query")
+            raise
 
         return instances, total_count
 
@@ -1638,10 +1617,9 @@ RETURN
         except IndexError:
             # Handle case where query returns empty results unexpectedly
             return [], 0
-        except Exception as e:
-            # Log error or raise a more specific exception
-            print(f"Error executing count/end_date query: {e}")
-            raise  # Re-raise for now, or handle appropriately
+        except Exception:
+            log.exception("Error executing count/end_date query")
+            raise
 
         # Query 2: Fetch details for paginated roots
 
@@ -1757,10 +1735,9 @@ RETURN
                 query=details_query, params=params_details, resolve_objects=False
             )
             instances = [row[0] for row in instances_results]
-        except Exception as e:
-            # Log error or raise a more specific exception
-            print(f"Error executing details query: {e}")
-            raise  # Re-raise for now, or handle appropriately
+        except Exception:
+            log.exception("Error executing details query")
+            raise
 
         return instances, total_count
 

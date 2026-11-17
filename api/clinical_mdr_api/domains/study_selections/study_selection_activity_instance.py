@@ -298,7 +298,7 @@ class StudySelectionActivityInstanceAR(study_selection_base.StudySelectionBaseAR
                     activity_group_uid,
                 )
                 in objects,
-                msg=f"There is already a Study Activity Instance with UID '{object_uid}' linked to the Activity with UID '{activity_uid}'.",
+                msg=f"There is already a Study Activity Instance with Name '{selection.activity_instance_name}' linked to the Activity with Name '{selection.activity_name}'.",
             )
             objects.append(
                 (object_uid, activity_uid, activity_subgroup_uid, activity_group_uid)

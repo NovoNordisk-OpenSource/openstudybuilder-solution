@@ -21,7 +21,6 @@ log = logging.getLogger(__name__)
 
 class VisitClass(Enum):
     SINGLE_VISIT = "SINGLE_VISIT"
-    SPECIAL_VISIT = "SPECIAL_VISIT"
     NON_VISIT = "NON_VISIT"
     UNSCHEDULED_VISIT = "UNSCHEDULED_VISIT"
     MANUALLY_DEFINED_VISIT = "MANUALLY_DEFINED_VISIT"
@@ -82,13 +81,11 @@ class BaseTimelineAR[StudyVisit]:
         amount_of_subvisits_for_visit: dict[str, int] = {
             ref: references.count(ref) for ref in references
         }
-        special_visits_for_visit_anchor: dict[str, StudyVisit] = {}
 
         # Create Anchor lookups
         for visit in self._visits:
-            # There can be multiple Visits with same VisitType that can work as TimeRef
-            # If Study contains multiple such Visits, the first occurence of the Visit with given VisitType
-            # that works as TimeRef will be picked to be an anchor for the other visits
+            # There can be multiple Visits with same VisitType that can work as TimeRef.
+            # The first occurrence for a given VisitType becomes the anchor for others.
             anchors.setdefault(visit.visit_type_name, visit)
 
             if (
@@ -97,23 +94,6 @@ class BaseTimelineAR[StudyVisit]:
             ):
                 visit.subvisit_number = 0
                 subvisit_sets[visit.uid] = [Subvisit(visit, 0)]
-            elif visit.visit_class == VisitClass.SPECIAL_VISIT:
-                # SpecialVisits anchored to same StudyVisit have the same timing, in scope of the same anchor visit
-                # the early discontinuation visits should be ordered in the end of special visit set
-                all_special_visits_anchoring_visit = (
-                    special_visits_for_visit_anchor.get(
-                        visit.visit_sublabel_reference, []  # type: ignore[arg-type]
-                    )
-                )
-                all_special_visits_anchoring_visit.append(visit)
-                special_visits_for_visit_anchor.setdefault(
-                    visit.visit_sublabel_reference,
-                    sorted(  # type: ignore[call-overload]
-                        all_special_visits_anchoring_visit,
-                        key=lambda x: x.visit_type_name
-                        == settings.study_visit_type_early_discontinuation_visit,
-                    ),
-                )
 
         # Assign Anchors
         for order, visit in enumerate(self._visits):
@@ -129,17 +109,43 @@ class BaseTimelineAR[StudyVisit]:
             ):
                 visits = subvisit_sets[visit.visit_sublabel_reference]
                 visit.anchor_visit = visits[0].visit
-            elif visit.visit_class == VisitClass.SPECIAL_VISIT:
+            elif visit.is_early_discontinuation_visit:
+                # Early Discontinuation visits are anchored to the parent visit they reference
                 visit.anchor_visit = visits_dict.get(visit.visit_sublabel_reference)
 
-        ordered_visits = sorted(
-            self._visits,
-            key=lambda x: (
-                x.get_absolute_duration() is None,
-                x.get_absolute_duration(),
-            ),
+        ordered_visits = sorted(self._visits, key=self._timeline_sort_key)
+
+        self._assign_visit_numbers(ordered_visits)
+
+        self._assign_subvisit_numbers(
+            ordered_visits=ordered_visits,
+            subvisit_sets=subvisit_sets,
+            amount_of_subvisits_for_visit=amount_of_subvisits_for_visit,
         )
 
+        # sort visits that are returned in the end to capture all timing changes
+        return sorted(self._visits, key=self._timeline_sort_key)
+
+    @staticmethod
+    def _timeline_sort_key(visit: StudyVisit) -> tuple[bool, int | None, bool]:
+        duration = visit.get_absolute_duration()
+        # Early Discontinuation visits share the timing of their parent visit,
+        # they are placed after it so that the parent is numbered first
+        return (
+            duration is None,
+            duration,
+            BaseTimelineAR._shares_parent_visit_number(visit),
+        )
+
+    @staticmethod
+    def _shares_parent_visit_number(visit: StudyVisit) -> bool:
+        return (
+            visit.visit_class == VisitClass.SINGLE_VISIT
+            and visit.is_early_discontinuation_visit
+            and visit.anchor_visit is not None
+        )
+
+    def _assign_visit_numbers(self, ordered_visits: list[StudyVisit]) -> None:
         last_visit_num = 1
         order = 1
         for idx, visit in enumerate(ordered_visits):
@@ -150,17 +156,15 @@ class BaseTimelineAR[StudyVisit]:
                 visit.visit_order = settings.visit_0_number
                 visit.visit_number = settings.visit_0_number
                 continue
+            # Non-visits and unscheduled visits have a fixed visit number, but take their position in the order
             if visit.visit_class == VisitClass.NON_VISIT:
-                visit.visit_order = settings.non_visit_number
+                visit.visit_order = order
                 visit.visit_number = settings.non_visit_number
             elif visit.visit_class == VisitClass.UNSCHEDULED_VISIT:
-                visit.visit_order = settings.unscheduled_visit_number
+                visit.visit_order = order
                 visit.visit_number = settings.unscheduled_visit_number
             elif visit.visit_class == VisitClass.MANUALLY_DEFINED_VISIT:
                 visit.visit_order = order
-            elif visit.visit_class == VisitClass.SPECIAL_VISIT:
-                visit.visit_order = order
-                visit.visit_number = visit.anchor_visit.visit_number
             elif (
                 visit.visit_subclass
                 != VisitSubclass.ADDITIONAL_SUBVISIT_IN_A_GROUP_OF_SUBV
@@ -173,30 +177,12 @@ class BaseTimelineAR[StudyVisit]:
             ):
                 visit.visit_order = order
                 visit.visit_number = visit.anchor_visit.visit_number
-            elif visit.visit_class not in [
-                VisitClass.MANUALLY_DEFINED_VISIT,
-                VisitClass.SPECIAL_VISIT,
-            ]:
+            elif self._shares_parent_visit_number(visit):
+                # Early Discontinuation visits don't consume a visit number slot
+                visit.visit_number = visit.anchor_visit.visit_number
+            elif visit.visit_class != VisitClass.MANUALLY_DEFINED_VISIT:
                 last_visit_num += 1
             order += 1
-
-        self._assign_subvisit_numbers(
-            ordered_visits=ordered_visits,
-            subvisit_sets=subvisit_sets,
-            amount_of_subvisits_for_visit=amount_of_subvisits_for_visit,
-            special_visits_for_visit_anchor=special_visits_for_visit_anchor,
-        )
-
-        # sort visits that are returned in the end to capture all timing changes
-        ordered_visits = sorted(
-            self._visits,
-            key=lambda x: (
-                x.get_absolute_duration() is None,
-                x.get_absolute_duration(),
-            ),
-        )
-
-        return ordered_visits
 
     @trace_calls
     def _assign_subvisit_numbers(
@@ -204,10 +190,23 @@ class BaseTimelineAR[StudyVisit]:
         ordered_visits: list[StudyVisit],
         subvisit_sets: dict[str, list[Subvisit]],
         amount_of_subvisits_for_visit: dict[str, int],
-        special_visits_for_visit_anchor: dict[str, StudyVisit],
     ) -> None:
+        early_discontinuation_visits_for_parent: dict[str, int] = {}
         for visit in ordered_visits:
-            if (
+            if self._shares_parent_visit_number(visit):
+                # Early Discontinuation visits referencing the same parent visit are numbered 1, 2, 3...
+                # so that their unique visit number doesn't collide with the parent one
+                num = (
+                    early_discontinuation_visits_for_parent.get(
+                        visit.visit_sublabel_reference, 0
+                    )
+                    + 1
+                )
+                early_discontinuation_visits_for_parent[
+                    visit.visit_sublabel_reference
+                ] = num
+                visit.subvisit_number = num
+            elif (
                 visit.visit_subclass
                 == VisitSubclass.ADDITIONAL_SUBVISIT_IN_A_GROUP_OF_SUBV
             ):
@@ -240,38 +239,6 @@ class BaseTimelineAR[StudyVisit]:
                 else:
                     visit.subvisit_number = num
                     visits.append(Subvisit(visit, num))
-            elif visit.visit_class == VisitClass.SPECIAL_VISIT:
-                special_visits_for_same_anchor_list: list[StudyVisit] = (
-                    special_visits_for_visit_anchor[visit.visit_sublabel_reference]  # type: ignore[assignment]
-                )
-                # Subvisit number should be derived for special visits pointed to the same anchor visit
-                # no matter what type of special visit it is (early_discontinuation or other special visit)
-                subvisit_index = special_visits_for_same_anchor_list.index(visit)
-                if (
-                    visit.visit_type_name
-                    == settings.study_visit_type_early_discontinuation_visit
-                ):
-                    special_visits_of_same_type: list[StudyVisit] = [
-                        special_visit
-                        for special_visit in special_visits_for_same_anchor_list
-                        if special_visit.visit_type_name
-                        == settings.study_visit_type_early_discontinuation_visit
-                    ]
-                else:
-                    special_visits_of_same_type = [
-                        special_visit
-                        for special_visit in special_visits_for_same_anchor_list
-                        if special_visit.visit_type_name
-                        != settings.study_visit_type_early_discontinuation_visit
-                    ]
-
-                # Special visit number should be derived for special visits pointed to the same anchor visit
-                # but of the same special visit type, e.g. early discontinuation visits should get their own counter
-                # and other speciail visits should get the other counter
-                visit.special_visit_number = (
-                    special_visits_of_same_type.index(visit) + 1
-                )
-                visit.subvisit_number = subvisit_index + 1
 
 
 def strtobool(value: str | None) -> int:
@@ -503,10 +470,8 @@ def is_larger_than_or_equal(value_a: int | None, value_b: int | None) -> bool:
     if value_a is not None and value_b is None:
         # If value_b is None, value_a is larger than or equal to it
         return True
-    if value_a is None and value_b is not None:
-        # If value_a is None, it cannot be larger than or equal to value_b
-        return False
-    return True  # both are None, so they are equal
+    # If value_a is None, it cannot be larger than or equal to value_b
+    return not (value_a is None and value_b is not None)
 
 
 def sanitize_for_log(value: Any) -> str:
@@ -519,10 +484,7 @@ def sanitize_for_log(value: Any) -> str:
 
 
 def get_db_result_as_dict(row: list[Any], columns: list[str]) -> dict[str, Any]:
-    item = {}
-    for key, value in zip(columns, row):
-        item[key] = value
-    return item
+    return dict(zip(columns, row))
 
 
 # Filter keys used in ORDER BY and WHERE filter expressions to avoid Cypher injection

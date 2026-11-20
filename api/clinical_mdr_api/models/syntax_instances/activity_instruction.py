@@ -75,6 +75,7 @@ class ActivityInstruction(ActivityInstructionNameUid):
         cls, activity_instruction_ar: ActivityInstructionAR
     ) -> Self:
         parameter_terms: list[MultiTemplateParameterTerm] = []
+        parameter_names = activity_instruction_ar.get_parameter_names()
         for position, parameter in enumerate(activity_instruction_ar.get_parameters()):
             terms: list[IndexedTemplateParameterTerm] = []
             for index, parameter_term in enumerate(parameter.parameters):
@@ -89,7 +90,10 @@ class ActivityInstruction(ActivityInstructionNameUid):
 
             parameter_terms.append(
                 MultiTemplateParameterTerm(
-                    conjunction=conjunction, position=position + 1, terms=terms
+                    conjunction=conjunction,
+                    position=position + 1,
+                    parameter_name=parameter_names[position],
+                    terms=terms,
                 )
             )
         return cls(

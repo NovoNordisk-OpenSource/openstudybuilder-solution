@@ -220,7 +220,7 @@ study_patch = {
                 "term_uid": "string",
                 "name": "string",
             },
-            "control_type_code": {"term_uid": "string", "name": "string"},
+            "control_type_codes": [{"term_uid": "string", "name": "string"}],
             "control_type_null_value_code": {"term_uid": "string", "name": "string"},
             "intervention_model_code": {"term_uid": "string", "name": "string"},
             "intervention_model_null_value_code": {

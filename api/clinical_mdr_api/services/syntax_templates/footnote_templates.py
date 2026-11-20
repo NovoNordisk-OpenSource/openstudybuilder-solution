@@ -58,7 +58,7 @@ class FootnoteTemplateService(GenericSyntaxTemplateService[FootnoteTemplateAR]):
         ) = self._get_indexings(template)
 
         # Process item to save
-        item = FootnoteTemplateAR.from_input_values(
+        return FootnoteTemplateAR.from_input_values(
             author_id=self.author_id,
             template=template_vo,
             library=library_vo,
@@ -70,8 +70,6 @@ class FootnoteTemplateService(GenericSyntaxTemplateService[FootnoteTemplateAR]):
             activity_subgroups=activity_subgroups,
             footnote_type=footnote_type,
         )
-
-        return item
 
     @db.transaction
     def edit_draft(

@@ -27,6 +27,8 @@ class StudySelectionCriteriaVO:
     author_id: str
     accepted_version: bool = False
     author_username: str | None = None
+    study_design_population_uids: list[str] = field(default_factory=list)
+    identifier: str | None = None
 
     @classmethod
     def from_input_values(
@@ -43,6 +45,8 @@ class StudySelectionCriteriaVO:
         start_date: datetime.datetime | None = None,
         generate_uid_callback: Callable[[], str] = lambda: "",
         accepted_version: bool = False,
+        study_design_population_uids: list[str] | None = None,
+        identifier: str | None = None,
     ):
         if study_selection_uid is None:
             study_selection_uid = generate_uid_callback()
@@ -63,6 +67,12 @@ class StudySelectionCriteriaVO:
             author_id=normalize_string(author_id),
             author_username=UserInfoService.get_author_username_from_id(author_id),
             accepted_version=accepted_version,
+            study_design_population_uids=(
+                list(study_design_population_uids)
+                if study_design_population_uids
+                else []
+            ),
+            identifier=normalize_string(identifier),
         )
 
     def validate(
@@ -238,6 +248,8 @@ class StudySelectionCriteriaAR:
             syntax_object_version=selected_value.syntax_object_version,
             is_instance=selected_value.is_instance,
             key_criteria=selected_value.key_criteria,
+            study_design_population_uids=selected_value.study_design_population_uids,
+            identifier=selected_value.identifier,
         )
         # change the order
         # to do so, first filter on criteria selection with the same criteria type as the selected one

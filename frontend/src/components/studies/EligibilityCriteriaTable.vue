@@ -18,6 +18,8 @@
     :history-config="{
       dataFetcher: fetchAllCriteriaHistory,
       htmlFields: historyHtmlFields,
+      externalHeaders: historyHeaders,
+      identityKey: 'study_criteria_uid',
       title: $t('EligibilityCriteriaTable.global_history_title'),
     }"
     :export-config="{
@@ -27,6 +29,18 @@
     }"
     @filter="getStudyCriteria"
   >
+    <template #headerCenter>
+      <v-btn
+        v-if="editMode"
+        variant="outlined"
+        color="nnBaseBlue"
+        rounded
+        data-cy="close-edit-mode"
+        @click.stop="editMode = false"
+      >
+        {{ $t('_global.close_edit_mode') }}
+      </v-btn>
+    </template>
     <template #afterSwitches>
       <div :title="$t('NNTableTooltips.reorder_content')">
         <v-switch
@@ -34,7 +48,9 @@
           :label="$t('NNTable.reorder_content')"
           hide-details
           class="mr-6"
-          :disabled="!accessGuard.checkPermission($roles.STUDY_WRITE)"
+          :disabled="
+            editMode || !accessGuard.checkPermission($roles.STUDY_WRITE)
+          "
         />
       </div>
     </template>
@@ -50,17 +66,22 @@
               :name="
                 crit.template ? crit.template.name_plain : crit.criteria.name
               "
+              :parameter-names="
+                crit.template
+                  ? crit.template.parameters?.map((p) => p.name)
+                  : undefined
+              "
               :default-color="crit.template ? 'orange' : 'green'"
             />
           </td>
           <td>
-            {{
-              crit.template
-                ? crit.template.guidance_text
-                : crit.criteria.guidance_text
-            }}
+            {{ crit.guidance_text }}
           </td>
+          <td>{{ crit.identifier }}</td>
           <td>{{ $filters.yesno(crit.key_criteria) }}</td>
+          <td>
+            {{ populationLabels(crit.study_design_population_uids) }}
+          </td>
           <td>{{ $filters.date(crit.start_date) }}</td>
           <td>{{ crit.author_username }}</td>
         </tr>
@@ -83,6 +104,25 @@
         <v-icon>mdi-plus</v-icon>
         <v-tooltip activator="parent" location="top">
           {{ $t('EligibilityCriteriaTable.add_criteria') }}
+        </v-tooltip>
+      </v-btn>
+      <v-btn
+        v-if="!editMode && !sortMode"
+        data-cy="edit-study-criteria-in-table"
+        class="ml-2"
+        icon
+        size="small"
+        variant="outlined"
+        color="nnBaseBlue"
+        :disabled="
+          !accessGuard.checkPermission($roles.STUDY_WRITE) ||
+          studiesGeneralStore.selectedStudyVersion !== null
+        "
+        @click.stop="editMode = true"
+      >
+        <v-icon>mdi-pencil-outline</v-icon>
+        <v-tooltip activator="parent" location="top">
+          {{ $t('_global.edit_in_table') }}
         </v-tooltip>
       </v-btn>
     </template>
@@ -112,6 +152,7 @@
       <template v-if="item.template">
         <NNParameterHighlighter
           :name="item.template.name"
+          :parameter-names="item.template.parameters?.map((p) => p.name)"
           default-color="orange"
         />
       </template>
@@ -130,11 +171,82 @@
         <span v-html="sanitizeHTML(item.criteria.template.guidance_text)" />
       </template>
     </template>
+    <template #[`item.identifier`]="{ item }">
+      <v-text-field
+        v-if="editMode"
+        v-model="item.identifier"
+        data-cy="criteria-id"
+        hide-details
+        density="compact"
+        clearable
+        :placeholder="$t('EligibilityCriteriaTable.criteria_id_placeholder')"
+        :disabled="
+          !accessGuard.checkPermission($roles.STUDY_WRITE) ||
+          studiesGeneralStore.selectedStudyVersion !== null
+        "
+        @blur="updateIdentifier(item.identifier, item.study_criteria_uid)"
+      />
+      <span v-else>{{ item.identifier }}</span>
+    </template>
     <template #[`item.key_criteria`]="{ item }">
       <v-checkbox
+        v-if="editMode"
         v-model="item.key_criteria"
+        hide-details
+        density="compact"
         @update:model-value="updateKeyCriteria($event, item.study_criteria_uid)"
       />
+      <span v-else>{{ $filters.yesno(item.key_criteria) }}</span>
+    </template>
+    <template #[`item.study_design_population_uids`]="{ item }">
+      <v-autocomplete
+        v-if="editMode"
+        data-cy="criteria-population-select"
+        :model-value="item.study_design_population_uids ?? []"
+        :items="studyDesignPopulations"
+        item-title="group_id"
+        item-value="uid"
+        multiple
+        chips
+        closable-chips
+        density="compact"
+        hide-details
+        :placeholder="$t('EligibilityCriteriaTable.assign_population')"
+        :disabled="
+          !accessGuard.checkPermission($roles.STUDY_WRITE) ||
+          studiesGeneralStore.selectedStudyVersion !== null
+        "
+        @update:model-value="
+          updateStudyDesignPopulation($event, item.study_criteria_uid)
+        "
+      >
+        <template #item="{ props: itemProps, item: popItem }">
+          <v-list-item v-bind="itemProps">
+            <template #prepend="{ isSelected }">
+              <v-checkbox-btn :model-value="isSelected" density="compact" />
+            </template>
+            <v-list-item-subtitle>{{ popItem.raw.name }}</v-list-item-subtitle>
+          </v-list-item>
+        </template>
+      </v-autocomplete>
+      <span v-else>
+        <template
+          v-if="resolvePopulations(item.study_design_population_uids).length"
+        >
+          <template
+            v-for="(population, index) in resolvePopulations(
+              item.study_design_population_uids
+            )"
+            :key="population.uid"
+          >
+            <span v-if="index > 0">, </span>
+            <RouterLink :to="populationRoute()" :title="population.name">
+              {{ populationLabel(population) }}
+            </RouterLink>
+          </template>
+        </template>
+        <span v-else>—</span>
+      </span>
     </template>
     <template #[`item.start_date`]="{ item }">
       <v-tooltip location="top">
@@ -182,10 +294,11 @@
   >
     <HistoryTable
       :title="studyCriteriaHistoryTitle"
-      :headers="headers"
+      :headers="historyHeaders"
       :items="criteriaHistoryItems"
       :items-total="criteriaHistoryItems.length"
       :html-fields="historyHtmlFields"
+      identity-key="study_criteria_uid"
       @close="closeHistory"
     />
   </v-dialog>
@@ -204,11 +317,13 @@ import NNParameterHighlighter from '@/components/tools/NNParameterHighlighter.vu
 import NNTable from '@/components/tools/NNTable.vue'
 import study from '@/api/study'
 import filteringParameters from '@/utils/filteringParameters'
+import templateParameters from '@/utils/templateParameters'
 import statuses from '@/constants/statuses'
 import { useAccessGuard } from '@/composables/accessGuard'
 import { useStudiesGeneralStore } from '@/stores/studies-general'
 import { useDragAndDrop } from '@formkit/drag-and-drop/vue'
 import { sanitizeHTML } from '@/utils/sanitize'
+import { RouterLink } from 'vue-router'
 
 const notificationHub = inject('notificationHub')
 const roles = inject('roles')
@@ -246,7 +361,17 @@ const headers = ref([
     key: 'criteria.criteria_template.guidance_text',
     width: '20%',
   },
+  {
+    title: t('EligibilityCriteriaTable.criteria_id'),
+    key: 'identifier',
+    width: '10%',
+  },
   { title: t('EligibilityCriteriaTable.key_criteria'), key: 'key_criteria' },
+  {
+    title: t('EligibilityCriteriaTable.study_design_population'),
+    key: 'study_design_population_uids',
+    width: '15%',
+  },
   { title: t('_global.modified'), key: 'start_date' },
   { title: t('_global.modified_by'), key: 'author_username' },
 ])
@@ -296,11 +421,30 @@ const showHistory = ref(false)
 const total = ref(0)
 const confirm = ref()
 const sortMode = ref(false)
+const editMode = ref(false)
+const studyDesignPopulations = ref([])
 
-const historyHtmlFields = [
-  'criteria.name',
-  'criteria.criteria_template.guidance_text',
-]
+const historyHtmlFields = ['name', 'guidance_text']
+
+// The live headers cannot be reused for history: they carry UI only columns and
+// keys that exist on a table row but not on an audit trail record.
+const historyHeaders = computed(() => [
+  { title: t('_global.uid'), key: 'study_criteria_uid' },
+  { title: '#', key: 'order' },
+  { title: props.criteriaType.sponsor_preferred_name, key: 'name' },
+  { title: t('EligibilityCriteriaTable.guidance_text'), key: 'guidance_text' },
+  { title: t('EligibilityCriteriaTable.criteria_id'), key: 'identifier' },
+  {
+    title: t('EligibilityCriteriaTable.key_criteria'),
+    key: 'key_criteria',
+    historyFilter: (value) => (value ? t('_global.yes') : t('_global.no')),
+  },
+  {
+    title: t('EligibilityCriteriaTable.study_design_population'),
+    key: 'study_design_population_uids',
+    historyFilter: (value) => populationDescriptions(value),
+  },
+])
 
 const exportDataUrl = computed(() => {
   return `studies/${studiesGeneralStore.selectedStudy.uid}/study-criteria`
@@ -325,6 +469,13 @@ const studyCriteriaHistoryTitle = computed(() => {
 
 onMounted(() => {
   studiesGeneralStore.fetchTrialPhases()
+  study
+    .getStudyDesignPopulations(studiesGeneralStore.selectedStudy.uid, {
+      page_size: 0,
+    })
+    .then((resp) => {
+      studyDesignPopulations.value = resp.data.items ?? []
+    })
 })
 
 async function fetchAllCriteriaHistory() {
@@ -332,13 +483,7 @@ async function fetchAllCriteriaHistory() {
     studiesGeneralStore.selectedStudy.uid,
     props.criteriaType.term_uid
   )
-  const auditTrailData = transformItems(resp.data)
-  auditTrailData.forEach((item) => {
-    if (!item.criteria) {
-      item.criteria = item.template
-    }
-  })
-  return auditTrailData
+  return transformItems(resp.data)
 }
 
 function actionsMenuBadge(item) {
@@ -393,11 +538,6 @@ async function openHistory(studyCriteria) {
     studyCriteria.study_criteria_uid
   )
   criteriaHistoryItems.value = transformItems(resp.data)
-  criteriaHistoryItems.value.forEach((item) => {
-    if (!item.criteria) {
-      item.criteria = item.template
-    }
-  })
   showHistory.value = true
 }
 
@@ -408,11 +548,17 @@ function editStudyCriteria(studyCriteria) {
 
 async function deleteStudyCriteria(studyCriteria) {
   const options = { type: 'warning' }
-  let criterion = studyCriteria.template
-    ? studyCriteria.template.name
-    : studyCriteria.criteria.name
-
-  criterion = criterion.replaceAll(/\[|\]/g, '')
+  // Only strip placeholder brackets: literal ones of a template are raw text,
+  // those of an instance are HTML entities and survive the replacement
+  const criterion = studyCriteria.template
+    ? templateParameters
+        .splitTemplate(
+          studyCriteria.template.name,
+          studyCriteria.template.parameters?.map((p) => p.name)
+        )
+        .map((part) => part.value)
+        .join('')
+    : studyCriteria.criteria.name.replaceAll(/\[|\]/g, '')
   if (
     await confirm.value.open(
       t('EligibilityCriteriaTable.confirm_delete', { criterion }),
@@ -484,6 +630,92 @@ function updateKeyCriteria(value, studyCriteriaUid) {
     })
 }
 
+function updateIdentifier(identifier, studyCriteriaUid) {
+  study
+    .updateStudyCriteriaIdentifier(
+      studiesGeneralStore.selectedStudy.uid,
+      studyCriteriaUid,
+      identifier
+    )
+    .then(() => {
+      tableRef.value.filterTable()
+    })
+    .catch(() => {
+      tableRef.value.filterTable()
+    })
+}
+
+function updateStudyDesignPopulation(populationUids, studyCriteriaUid) {
+  study
+    .updateStudyCriteriaStudyDesignPopulation(
+      studiesGeneralStore.selectedStudy.uid,
+      studyCriteriaUid,
+      populationUids ?? []
+    )
+    .then(() => {
+      notificationHub.add({
+        msg: t('EligibilityCriteriaTable.population_updated'),
+      })
+      tableRef.value.filterTable()
+    })
+    .catch((error) => {
+      notificationHub.add({
+        type: 'error',
+        msg: error.response?.data?.message,
+      })
+    })
+}
+
+function populationLabels(populationUids) {
+  const populations = resolvePopulations(populationUids)
+  if (!populations.length) {
+    return '—'
+  }
+  return populations.map(populationLabel).join(', ')
+}
+
+// Rendered as text: HistoryTable sanitizes HTML with the shared profile, which
+// drops target, so a link here would reload the app out of the audit trail.
+// The group id alone was ambiguous, so the name is spelled out.
+function populationDescriptions(populationUids) {
+  const populations = resolvePopulations(populationUids)
+  if (!populations.length) {
+    return '—'
+  }
+  return populations
+    .map((population) => {
+      const label = populationLabel(population)
+      return population.name && population.name !== label
+        ? `${label} (${population.name})`
+        : label
+    })
+    .join(', ')
+}
+
+function resolvePopulations(populationUids) {
+  const uids = populationUids ?? []
+  if (!uids.length) {
+    return []
+  }
+  return studyDesignPopulations.value.filter((population) =>
+    uids.includes(population.uid)
+  )
+}
+
+function populationLabel(population) {
+  return population.group_id || population.name || population.uid
+}
+
+function populationRoute() {
+  return {
+    name: 'StudyPopulation',
+    params: {
+      study_id: studiesGeneralStore.selectedStudy.uid,
+      tab: 'study-design-population',
+    },
+  }
+}
+
 function transformItems(items) {
   const result = []
   for (const item of items) {
@@ -493,7 +725,7 @@ function transformItems(items) {
       newItem.guidance_text = item.template.guidance_text
     } else {
       newItem.name = item.criteria.name
-      newItem.guidance_text = item.criteria.guidance_text
+      newItem.guidance_text = item.criteria.template?.guidance_text
     }
     result.push(newItem)
   }

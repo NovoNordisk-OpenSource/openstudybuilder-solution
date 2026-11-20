@@ -35,7 +35,7 @@ const valueExist = () => {
   } else if (props.value === 'refAttrs') {
     return props.item.vendor.attributes.length > 0
   } else if (props.value === 'dataType') {
-    return props.item.datatype.submission_value
+    return props.item.datatype?.submission_value
   } else if (props.value === 'vendor') {
     return (
       props.item.vendor_attributes &&

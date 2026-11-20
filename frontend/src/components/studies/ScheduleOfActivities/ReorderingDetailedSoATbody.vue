@@ -18,49 +18,36 @@
               mdi-sort
             </v-icon>
             <v-btn variant="text" style="height: 32px" size="x-small" />
-            <v-badge
-              color="transparent"
-              text-color="secondary"
-              floating
-              :content="
-                row.cells[0].refs.length
-                  ? scheduleMethods.getElementFootnotesLetters(
-                      row.cells[0]?.refs[0]?.uid
-                    )
-                  : ''
-              "
-            >
-              <v-tooltip bottom>
-                <template #activator="{ props }">
-                  <div v-bind="props">
-                    <span
-                      :class="
-                        row.cells[0].style.replace(
-                          /PlaceholderSubmitted|Placeholder/g,
-                          ''
-                        ) !== 'activity'
-                          ? 'text-uppercase'
-                          : ''
-                      "
-                    >
-                      {{ row.cells[0].text.substring(0, 40) }}
-                    </span>
-                  </div>
-                </template>
-                <span
-                  :class="
-                    row.cells[0].style.replace(
-                      /PlaceholderSubmitted|Placeholder/g,
-                      ''
-                    ) !== 'activity'
-                      ? 'text-uppercase'
-                      : ''
-                  "
-                >
-                  {{ row.cells[0].text }}
-                </span>
-              </v-tooltip>
-            </v-badge>
+            <v-tooltip bottom>
+              <template #activator="{ props }">
+                <div v-bind="props">
+                  <span
+                    :class="
+                      row.cells[0].style.replace(
+                        /PlaceholderSubmitted|Placeholder/g,
+                        ''
+                      ) !== 'activity'
+                        ? 'text-uppercase'
+                        : ''
+                    "
+                  >
+                    {{ row.cells[0].text.substring(0, 40) }}
+                  </span>
+                </div>
+              </template>
+              <span
+                :class="
+                  row.cells[0].style.replace(
+                    /PlaceholderSubmitted|Placeholder/g,
+                    ''
+                  ) !== 'activity'
+                    ? 'text-uppercase'
+                    : ''
+                "
+              >
+                {{ row.cells[0].text }}
+              </span>
+            </v-tooltip>
             <v-spacer />
             <v-btn icon disabled variant="text" style="height: auto">
               <v-icon v-if="!row.hide" size="x-small" color="success">
@@ -80,37 +67,21 @@
           :key="`row-${index}-cell-${visitIndex}`"
         >
           <v-row class="mt-0">
-            <v-badge
-              color="transparent"
-              floating
-              text-color="secondary"
-              offset-x="2"
-              :content="
-                row.cells[visitIndex + 1].refs &&
-                row.cells[visitIndex + 1].refs.length
-                  ? scheduleMethods.getElementFootnotesLetters(
-                      row.cells[visitIndex + 1].refs[0].uid
-                    )
-                  : ''
+            <input
+              v-model="
+                // eslint disabled since we're not mutating this prop. Checkbox is always disabled.
+                // eslint-disable-next-line vue/no-mutating-props
+                props.currentSelectionMatrix[row.cells[0].refs[0].uid][
+                  visitCell.refs[0].uid
+                ].value
               "
-              overlap
-            >
-              <input
-                v-model="
-                  // eslint disabled since we're not mutating this prop. Checkbox is always disabled.
-                  // eslint-disable-next-line vue/no-mutating-props
-                  props.currentSelectionMatrix[row.cells[0].refs[0].uid][
-                    visitCell.refs[0].uid
-                  ].value
-                "
-                color="success"
-                disabled
-                hide-details
-                density="compact"
-                class="mx-0 ml-6 mb-3 px-0"
-                type="checkbox"
-              />
-            </v-badge>
+              color="success"
+              disabled
+              hide-details
+              density="compact"
+              class="mx-0 ml-6 mb-3 px-0"
+              type="checkbox"
+            />
           </v-row>
         </td>
       </tr>

@@ -14,7 +14,6 @@ from clinical_mdr_api.models.syntax_templates.footnote_template import (
     FootnoteTemplateCreateInput,
     FootnoteTemplateEditIndexingsInput,
     FootnoteTemplateEditInput,
-    FootnoteTemplatePreValidateInput,
     FootnoteTemplateVersion,
     FootnoteTemplateWithCount,
 )
@@ -48,6 +47,7 @@ PARAMETERS_NOTE = """**Parameters in the 'name' property**:
 The 'name' of an footnote template may contain parameters, that can - and usually will - be replaced with concrete values once an footnote is created out of the footnote template.
 
 Parameters are referenced by simple strings in square brackets [] that match existing parameters defined in the MDR repository.
+Any other text in square brackets is kept as literal text.
 
 The footnote template will be linked to those parameters defined in the 'name' property.
 
@@ -730,41 +730,6 @@ def get_parameters(
     ] = None,
 ) -> list[TemplateParameter]:
     return Service().get_parameters(uid=footnote_template_uid, study_uid=study_uid)
-
-
-@router.post(
-    "/pre-validate",
-    dependencies=[security, rbac.LIBRARY_WRITE],
-    summary="Validates the content of an footnote template without actually processing it.",
-    description="""Be aware that - even if this request is accepted - there is no guarantee that
-a following request to e.g. *[POST] /footnote-templates* or *[PATCH] /footnote-templates/{footnote_template_uid}*
-with the same content will succeed.
-
-"""
-    + PARAMETERS_NOTE,
-    status_code=204,
-    responses={
-        204: {
-            "description": "Accepted. The content is valid and may be submitted in another request."
-        },
-        400: {
-            "model": ErrorResponse,
-            "description": "Forbidden. The content is invalid - Reasons include e.g.: \n"
-            "- The syntax of the 'name' is not valid.\n"
-            "- One of the parameters wasn't found.",
-        },
-        403: _generic_descriptions.ERROR_403,
-    },
-)
-def pre_validate(
-    footnote_template: Annotated[
-        FootnoteTemplatePreValidateInput,
-        Body(
-            description="The content of the footnote template that shall be validated.",
-        ),
-    ],
-):
-    Service().validate_template_syntax(footnote_template.name)
 
 
 @router.post(

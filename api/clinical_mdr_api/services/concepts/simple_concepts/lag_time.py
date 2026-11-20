@@ -15,7 +15,7 @@ from clinical_mdr_api.services.concepts.simple_concepts.simple_concept_generic i
 )
 
 
-class LagTimeService(SimpleConceptGenericService[LagTimeAR]):
+class LagTimeService(SimpleConceptGenericService[LagTimeAR, LagTime]):
     aggregate_class = LagTimeAR
     value_object_class = LagTimeVO
     repository_interface = LagTimeRepository

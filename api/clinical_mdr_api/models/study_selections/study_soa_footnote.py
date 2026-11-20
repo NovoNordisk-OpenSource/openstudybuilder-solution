@@ -200,11 +200,7 @@ class StudySoAFootnote(BaseModel):
         return cls(
             uid=study_soa_footnote_vo.uid,
             study_uid=study_soa_footnote_vo.study_uid,
-            study_version=(
-                study_value_version
-                if study_value_version
-                else get_latest_on_datetime_str()
-            ),
+            study_version=study_value_version or get_latest_on_datetime_str(),
             order=order,
             referenced_items=[
                 ReferencedItem(
@@ -212,6 +208,7 @@ class StudySoAFootnote(BaseModel):
                     item_name=ref_item.item_name,
                     item_type=ref_item.item_type,
                     visible_in_protocol_soa=ref_item.visible_in_protocol_soa,
+                    via_propagated_cell=ref_item.via_propagated_cell,
                 )
                 for ref_item in study_soa_footnote_vo.referenced_items
             ],
@@ -261,6 +258,7 @@ class StudySoAFootnote(BaseModel):
                 ReferencedItem(
                     item_uid=ref_item.item_uid,
                     item_type=ref_item.item_type,
+                    via_propagated_cell=ref_item.via_propagated_cell,
                 )
                 for ref_item in study_soa_footnote_vo.referenced_items
             ],
@@ -352,6 +350,7 @@ class StudySoAFootnoteHistory(StudySoAFootnote):
                     item_uid=ref_item.item_uid,
                     item_name=ref_item.item_name,
                     item_type=ref_item.item_type,
+                    via_propagated_cell=ref_item.via_propagated_cell,
                 )
                 for ref_item in study_soa_footnote_vo.referenced_items
             ],

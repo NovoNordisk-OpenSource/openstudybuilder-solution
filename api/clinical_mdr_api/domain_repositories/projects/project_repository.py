@@ -23,15 +23,15 @@ from common.exceptions import (
 
 
 class ProjectRepository:
-    cache_store_item_by_uid = TTLCache(
+    cache_store_item_by_uid: TTLCache = TTLCache(
         maxsize=settings.cache_max_size, ttl=settings.cache_ttl
     )
     lock_store_item_by_uid = Lock()
-    cache_store_item_by_study_uid = TTLCache(
+    cache_store_item_by_study_uid: TTLCache = TTLCache(
         maxsize=settings.cache_max_size, ttl=settings.cache_ttl
     )
     lock_store_item_by_study_uid = Lock()
-    cache_store_item_by_project_number = TTLCache(
+    cache_store_item_by_project_number: TTLCache = TTLCache(
         maxsize=settings.cache_max_size, ttl=settings.cache_ttl
     )
     lock_store_item_by_project_number = Lock()

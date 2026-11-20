@@ -18,9 +18,6 @@ from clinical_mdr_api.domain_repositories.models.study_field import (
 from clinical_mdr_api.domain_repositories.study_definitions.study_definition_repository_impl import (
     StudyDefinitionRepositoryImpl,
 )
-from clinical_mdr_api.domain_repositories.study_selections.study_soa_repository import (
-    SoALayout,
-)
 from clinical_mdr_api.domains.clinical_programmes.clinical_programme import (
     ClinicalProgrammeAR,
 )
@@ -35,7 +32,6 @@ from clinical_mdr_api.domains.study_definition_aggregates.registry_identifiers i
     RegistryIdentifiersVO,
 )
 from clinical_mdr_api.domains.study_definition_aggregates.root import (
-    _DEF_INITIAL_STUDY_DESCRIPTION,
     StudyDefinitionAR,
 )
 from clinical_mdr_api.domains.study_definition_aggregates.study_metadata import (
@@ -104,8 +100,8 @@ from clinical_mdr_api.models.study_selections.study import (
 from clinical_mdr_api.models.utils import GenericFilteringReturn
 from clinical_mdr_api.repositories._utils import FilterOperator
 from clinical_mdr_api.services._background_job import background_job, job_log
-from clinical_mdr_api.services._meta_repository import MetaRepository  # type: ignore
-from clinical_mdr_api.services._utils import (  # type: ignore
+from clinical_mdr_api.services._meta_repository import MetaRepository
+from clinical_mdr_api.services._utils import (
     FieldsDirective,
     create_duration_object_from_api_input,
     ensure_transaction,
@@ -247,19 +243,18 @@ class StudyService:
             }
         else:
             exclude_spec_set = set()
-        result = filter_base_model_using_fields_directive(
+        return filter_base_model_using_fields_directive(
             result,
             FieldsDirective._from_include_and_exclude_spec_sets(
                 include_spec_set=include_spec_set, exclude_spec_set=exclude_spec_set
             ),
         )
-        return result
 
     @staticmethod
     @trace_calls
     def _models_study_from_study_definition_ar(
         study_definition_ar: StudyDefinitionAR,
-        find_project_by_project_number: Callable[[str], ProjectAR],
+        find_project_by_project_number: Callable[[str], ProjectAR | None],
         find_clinical_programme_by_uid: Callable[[str], ClinicalProgrammeAR],
         find_all_study_time_units: Callable[..., tuple[list[UnitDefinitionAR], int]],
         find_study_parent_part_by_uid: Callable[
@@ -306,7 +301,7 @@ class StudyService:
     @staticmethod
     def _models_compact_study_from_study_definition_ar(
         study_definition_ar: StudyDefinitionAR,
-        find_project_by_project_number: Callable[[str], ProjectAR],
+        find_project_by_project_number: Callable[[str], ProjectAR | None],
         find_clinical_programme_by_uid: Callable[[str], ClinicalProgrammeAR],
         find_study_parent_part_by_uid: Callable[
             [str], StudyDefinitionAR | None
@@ -655,7 +650,7 @@ class StudyService:
 
         parsed_items = self._group_study_structure_overview_by_data(all_items[0])
 
-        filtered_items = service_level_generic_filtering(
+        return service_level_generic_filtering(
             items=parsed_items,
             filter_by=filter_by,
             filter_operator=filter_operator,
@@ -664,8 +659,6 @@ class StudyService:
             page_number=page_number,
             page_size=page_size,
         )
-
-        return filtered_items
 
     @db.transaction
     def get_study_structure_overview_header(
@@ -940,10 +933,9 @@ class StudyService:
                 msg="StudyStandardVersion has to be selected before Study is locked",
             )
 
-            # save Protocol SoA snapshot
-            StudyFlowchartService().update_soa_snapshot(
+            # save Protocol SoA and Protocol Lab table SoA snapshots
+            StudyFlowchartService().save_all_soa_snapshots(
                 study_uid=uid,
-                layout=SoALayout.PROTOCOL,
                 study_status=study_definition.study_status,
             )
             if (
@@ -982,7 +974,7 @@ class StudyService:
             )
 
             # Update StudyDefinitionDocument
-            if (
+            if (  # noqa: SIM102
                 submission_values := self._repos.ct_term_name_repository.get_submission_values_for_term(
                     reason_for_lock_term_uid
                 )
@@ -1141,10 +1133,9 @@ class StudyService:
                 msg=f"Study Subparts cannot be released independently from its Study Parent Part with UID '{study_definition.study_parent_part_uid}'.",
             )
 
-            # save Protocol SoA snapshot
-            StudyFlowchartService().update_soa_snapshot(
+            # save Protocol SoA and Protocol Lab table SoA snapshots
+            StudyFlowchartService().save_all_soa_snapshots(
                 study_uid=uid,
-                layout=SoALayout.PROTOCOL,
                 study_status=study_definition.study_status,
             )
 
@@ -1266,9 +1257,7 @@ class StudyService:
         ]
 
         # Only return entries that have at least one audit trail action in them.
-        result = [entry for entry in result if len(entry.actions or []) > 0]
-
-        return result
+        return [entry for entry in result if len(entry.actions or []) > 0]
 
     @db.transaction
     def get_fields_audit_trail_by_uid(
@@ -1287,13 +1276,12 @@ class StudyService:
                 raise NotFoundException("Study", uid)
 
             # Filter to see only the relevant sections.
-            result = self._models_study_field_audit_trail_from_audit_trail_vo(
+            return self._models_study_field_audit_trail_from_audit_trail_vo(
                 study_audit_trail_vo_sequence=study_fields_audit_trail_vo_sequence,
                 include_sections=include_sections,
                 exclude_sections=exclude_sections,
                 find_term_by_uid=self._repos.ct_term_name_repository.find_by_uid,
             )
-            return result
         finally:
             self._close_all_repos()
 
@@ -1406,7 +1394,7 @@ class StudyService:
             ]
 
             # Do filtering, sorting, pagination and count
-            filtered_items = service_level_generic_filtering(
+            return service_level_generic_filtering(
                 items=parsed_items,
                 filter_by=filter_by,
                 filter_operator=filter_operator,
@@ -1415,8 +1403,6 @@ class StudyService:
                 page_number=page_number,
                 page_size=page_size,
             )
-
-            return filtered_items
 
         finally:
             self._close_all_repos()
@@ -1494,7 +1480,7 @@ class StudyService:
         ]
 
         # Do filtering, sorting, pagination and count
-        header_values = service_level_generic_header_filtering(
+        return service_level_generic_header_filtering(
             items=parsed_items,
             field_name=field_name,
             search_string=search_string,
@@ -1503,7 +1489,6 @@ class StudyService:
             page_size=page_size,
         )
         # Return values for field_name
-        return header_values
 
     def get_protocol_title(
         self, uid: str, study_value_version: str | None = None
@@ -1580,6 +1565,9 @@ class StudyService:
                 if not study_clone_input.description
                 else study_clone_input.description
             ),
+            migrated_study_indicator=study_clone_input.migrated_study_indicator,
+            study_title=study_clone_input.study_title,
+            migrated_study_comment=study_clone_input.migrated_study_comment,
         )
         study_created = self.create(study_create_input)
         job_log(f"Study created with UID {study_created.uid}")
@@ -1854,7 +1842,10 @@ class StudyService:
             else:
                 study_number = study_create_input.study_number
                 project_number = study_create_input.project_number
-                initial_study_description = _DEF_INITIAL_STUDY_DESCRIPTION
+                initial_study_description = StudyDescriptionVO.from_input_values(
+                    study_title=study_create_input.study_title,
+                    study_short_title=None,
+                )
                 registry_identifiers = RegistryIdentifiersVO(
                     ct_gov_id=None,
                     ct_gov_id_null_value_code=None,
@@ -1888,8 +1879,6 @@ class StudyService:
             study_definition = StudyDefinitionAR.from_initial_values(
                 generate_uid_callback=self._repos.study_definition_repository.generate_uid,
                 project_exists_callback=self._repos.project_repository.project_number_exists,
-                study_title_exists_callback=self._repos.study_title_repository.study_title_exists,
-                study_short_title_exists_callback=self._repos.study_title_repository.study_short_title_exists,
                 study_number_exists_callback=self._repos.study_definition_repository.study_number_exists,
                 study_acronym_exists_callback=self._repos.study_definition_repository.study_acronym_exists,
                 initial_id_metadata=StudyIdentificationMetadataVO.from_input_values(
@@ -1905,6 +1894,12 @@ class StudyService:
                         study_create_input, "study_subpart_acronym", None
                     ),
                     description=study_create_input.description,
+                    migrated_study_indicator=getattr(
+                        study_create_input, "migrated_study_indicator", None
+                    ),
+                    migrated_study_comment=getattr(
+                        study_create_input, "migrated_study_comment", None
+                    ),
                     registry_identifiers=registry_identifiers,
                 ),
                 initial_study_description=initial_study_description,
@@ -1956,7 +1951,7 @@ class StudyService:
             if found_study_definition is None:
                 raise NotFoundException("Study", study_definition.uid)
 
-            return_item = self._models_study_from_study_definition_ar(
+            return self._models_study_from_study_definition_ar(
                 found_study_definition,
                 find_project_by_project_number=self._repos.project_repository.find_by_project_number,
                 find_clinical_programme_by_uid=self._repos.clinical_programme_repository.find_by_uid,
@@ -1964,7 +1959,6 @@ class StudyService:
                 find_study_parent_part_by_uid=self._repos.study_definition_repository.find_by_uid,
                 find_term_by_uids=self._repos.ct_term_name_repository.find_by_uids,
             )
-            return return_item
         finally:
             self._close_all_repos()
 
@@ -1986,7 +1980,7 @@ class StudyService:
 
         # we start a try block to catch any ValueError and report as Forbidden (otherwise it would be
         # reported as Internal)
-        new_study_intervention = StudyInterventionVO.from_input_values(
+        return StudyInterventionVO.from_input_values(
             intervention_type_code=get_term_uid_or_none(
                 request_study_intervention.intervention_type_code
             ),
@@ -1997,8 +1991,13 @@ class StudyService:
             add_on_to_existing_treatments_null_value_code=get_term_uid_or_none(
                 request_study_intervention.add_on_to_existing_treatments_null_value_code
             ),
-            control_type_code=get_term_uid_or_none(
-                request_study_intervention.control_type_code
+            control_type_codes=(
+                [
+                    get_term_uid_or_none(control_type_code)
+                    for control_type_code in request_study_intervention.control_type_codes
+                ]
+                if request_study_intervention.control_type_codes
+                else []
             ),
             control_type_null_value_code=get_term_uid_or_none(
                 request_study_intervention.control_type_null_value_code
@@ -2051,8 +2050,6 @@ class StudyService:
             ),
         )
 
-        return new_study_intervention
-
     @staticmethod
     def _patch_prepare_new_study_population(
         current_study_population: StudyPopulationVO,
@@ -2073,7 +2070,7 @@ class StudyService:
         def _helper(array: list[Any] | None) -> list[Any]:
             return array if array is not None else []
 
-        new_study_population = StudyPopulationVO.from_input_values(
+        return StudyPopulationVO.from_input_values(
             therapeutic_area_codes=[
                 get_term_uid_or_none(therapeutic_area)
                 for therapeutic_area in _helper(
@@ -2182,8 +2179,6 @@ class StudyService:
             ),
         )
 
-        return new_study_population
-
     @staticmethod
     def _patch_prepare_new_high_level_study_design(
         current_high_level_study_design: HighLevelStudyDesignVO,
@@ -2209,7 +2204,7 @@ class StudyService:
         def _helper(array: list[Any] | None) -> list[Any]:
             return array if array is not None else []
 
-        new_high_level_study_design = HighLevelStudyDesignVO.from_input_values(
+        return HighLevelStudyDesignVO.from_input_values(
             study_type_code=get_term_uid_or_none(
                 request_high_level_study_design.study_type_code
             ),
@@ -2237,6 +2232,12 @@ class StudyService:
             ),
             development_stage_code=get_term_uid_or_none(
                 request_high_level_study_design.development_stage_code
+            ),
+            age_at_baseline_rule_code=get_term_uid_or_none(
+                request_high_level_study_design.age_at_baseline_rule_code
+            ),
+            age_group_rule_code=get_term_uid_or_none(
+                request_high_level_study_design.age_group_rule_code
             ),
             is_extension_trial=request_high_level_study_design.is_extension_trial,
             is_extension_trial_null_value_code=get_term_uid_or_none(
@@ -2268,37 +2269,46 @@ class StudyService:
             ),
         )
 
-        return new_high_level_study_design
-
     @staticmethod
     def _patch_prepare_new_id_metadata(
         current_id_metadata: StudyIdentificationMetadataVO,
         request_id_metadata: StudyIdentificationMetadataJsonModel,
-        find_project_by_project_number: Callable[[str], ProjectAR],
+        find_project_by_project_number: Callable[[str], ProjectAR | None],
         find_clinical_programme_by_uid: Callable[[str], ClinicalProgrammeAR],
     ) -> StudyIdentificationMetadataVO:
-        fill_missing_values_in_base_model_from_reference_base_model(
-            base_model_with_missing_values=request_id_metadata,
-            reference_base_model=StudyIdentificationMetadataJsonModel.from_study_identification_vo(
+        reference_id_metadata = (
+            StudyIdentificationMetadataJsonModel.from_study_identification_vo(
                 study_identification_o=current_id_metadata,
                 find_project_by_project_number=find_project_by_project_number,
                 find_clinical_programme_by_uid=find_clinical_programme_by_uid,
                 find_term_by_uids=lambda _: None,
-            ),
+            )
+        )
+        fill_missing_values_in_base_model_from_reference_base_model(
+            base_model_with_missing_values=request_id_metadata,
+            reference_base_model=reference_id_metadata,
         )
 
-        assert request_id_metadata.registry_identifiers is not None
+        # `registry_identifiers` is nullable in the schema, and an explicit null
+        # survives the fill above (it only fills omitted fields). Treat it like an
+        # omitted field and keep the current identifiers.
+        if request_id_metadata.registry_identifiers is None:
+            request_id_metadata.registry_identifiers = (
+                reference_id_metadata.registry_identifiers
+            )
         if request_id_metadata.project_number is None:
             raise BusinessLogicException(
                 msg="Project number is required for Study Identification Metadata."
             )
-        new_id_metadata = StudyIdentificationMetadataVO.from_input_values(
+        return StudyIdentificationMetadataVO.from_input_values(
             project_number=request_id_metadata.project_number,
             study_number=request_id_metadata.study_number,
             subpart_id=request_id_metadata.subpart_id,
             study_acronym=request_id_metadata.study_acronym,
             study_subpart_acronym=request_id_metadata.study_subpart_acronym,
             description=request_id_metadata.description,
+            migrated_study_indicator=request_id_metadata.migrated_study_indicator,
+            migrated_study_comment=request_id_metadata.migrated_study_comment,
             registry_identifiers=RegistryIdentifiersVO.from_input_values(
                 ct_gov_id=request_id_metadata.registry_identifiers.ct_gov_id,
                 ct_gov_id_null_value_code=get_term_uid_or_none(
@@ -2371,8 +2381,6 @@ class StudyService:
             ),
         )
 
-        return new_id_metadata
-
     @staticmethod
     def _patch_prepare_new_study_description_metadata(
         current_study_description_metadata: StudyDescriptionVO,
@@ -2385,12 +2393,10 @@ class StudyService:
             ),
         )
 
-        new_id_metadata = StudyDescriptionVO.from_input_values(
+        return StudyDescriptionVO.from_input_values(
             study_title=request_study_description_metadata.study_title,
             study_short_title=request_study_description_metadata.study_short_title,
         )
-
-        return new_id_metadata
 
     @ensure_transaction(db)
     def patch(
@@ -2638,6 +2644,8 @@ class StudyService:
                     study_subpart_acronym=None,
                     description=new_id_metadata.description,
                     registry_identifiers=new_id_metadata.registry_identifiers,
+                    migrated_study_indicator=new_id_metadata.migrated_study_indicator,
+                    migrated_study_comment=new_id_metadata.migrated_study_comment,
                 )
 
             study_definition_ar.edit_metadata(
@@ -2658,8 +2666,6 @@ class StudyService:
                 sex_of_participants_exists_callback=self._repos.ct_term_name_repository.term_exists,
                 new_study_intervention=new_study_intervention,
                 new_study_description=new_study_description,
-                study_title_exists_callback=self._repos.study_title_repository.study_title_exists,
-                study_short_title_exists_callback=self._repos.study_title_repository.study_short_title_exists,
                 # add here valid callbacks
                 intervention_type_exists_callback=self._repos.ct_term_name_repository.term_exists,
                 control_type_exists_callback=self._repos.ct_term_name_repository.term_exists,
@@ -2740,8 +2746,6 @@ class StudyService:
                 sex_of_participants_exists_callback=self._repos.ct_term_name_repository.term_exists,
                 new_study_intervention=subpart_ar.current_metadata.study_intervention,
                 new_study_description=study_definition_ar.current_metadata.study_description,
-                study_title_exists_callback=self._repos.study_title_repository.study_title_exists,
-                study_short_title_exists_callback=self._repos.study_title_repository.study_short_title_exists,
                 # add here valid callbacks
                 intervention_type_exists_callback=self._repos.ct_term_name_repository.term_exists,
                 control_type_exists_callback=self._repos.ct_term_name_repository.term_exists,
@@ -2785,7 +2789,7 @@ class StudyService:
                 reference_study_component,
             )
         else:
-            for name, _ in base_study_component.model_fields.items():
+            for name in base_study_component.model_fields:
                 if not getattr(base_study_component, name):
                     setattr(
                         base_study_component,
@@ -3097,7 +3101,7 @@ class StudyService:
                         response_code=error.status_code, content=None
                     )
                 )
-                raise error
+                raise
         return results
 
     def _get_study_other_attribute(
@@ -3556,7 +3560,7 @@ class StudyService:
                             error=None,
                         )
                     )
-                except Exception as e:
+                except Exception as e:  # noqa: BLE001
                     # Handle errors during check execution
                     # Catching Exception is necessary here as execute_all_checks_for_study
                     # or IntegrityCheckResult creation may raise various exception types

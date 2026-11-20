@@ -5,10 +5,13 @@ import os
 from fastapi import APIRouter, Request
 from fastapi.responses import FileResponse, HTMLResponse, PlainTextResponse
 
-from clinical_mdr_api.models.system import SystemInformation
+from clinical_mdr_api.models.system import SystemInformation, SystemSettings
+from clinical_mdr_api.routers import _generic_descriptions
 from clinical_mdr_api.services import system as service
 from clinical_mdr_api.utils.api_version import get_api_version
 from common import templating
+from common.auth import rbac
+from common.auth.dependencies import security
 from common.config import settings
 
 router = APIRouter()
@@ -44,6 +47,19 @@ def root(request: Request):
 )
 def get_system_information() -> SystemInformation:
     return service.get_system_information()
+
+
+@router.get(
+    "/system/settings",
+    dependencies=[security, rbac.ANY],
+    summary="Returns a subset of selected system settings",
+    status_code=200,
+    responses={
+        403: _generic_descriptions.ERROR_403,
+    },
+)
+def get_system_settings() -> SystemSettings:
+    return service.get_system_settings()
 
 
 @router.get(

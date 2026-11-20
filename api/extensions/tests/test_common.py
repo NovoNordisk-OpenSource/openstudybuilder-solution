@@ -42,7 +42,7 @@ def test_custom_openapi_adds_400_responses(reset_openapi_schema):
     schema = custom_openapi()
 
     # Check that all endpoints have 400 response
-    for _, path_item in schema["paths"].items():
+    for path_item in schema["paths"].values():
         for method, operation in path_item.items():
             if method in ["get", "post", "put", "patch", "delete"]:
                 assert "responses" in operation
@@ -96,7 +96,7 @@ def test_custom_openapi_without_oauth(reset_openapi_schema):
     assert "servers" in schema
 
     # Should still add 400 responses
-    for _, path_item in schema["paths"].items():
+    for path_item in schema["paths"].values():
         for method, operation in path_item.items():
             if method in ["get", "post", "put", "patch", "delete"]:
                 assert "400" in operation.get("responses", {})

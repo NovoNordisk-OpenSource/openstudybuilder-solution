@@ -238,7 +238,6 @@ class SoAService:
                 visit_subclass=visit_input.subclass,
                 visit_contact_mode=CTTermUidInput(term_uid=visit_input.contact_mode),
                 show_visit=True,
-                visit_number=visit_input.number,
                 unique_visit_number=self._effective_unique_number(visit_input),
                 visit_name=visit_input.name,
                 visit_short_name=visit_input.short_name,

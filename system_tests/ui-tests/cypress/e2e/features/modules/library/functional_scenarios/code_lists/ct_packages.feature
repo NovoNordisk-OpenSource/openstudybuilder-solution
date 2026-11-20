@@ -69,13 +69,5 @@ Feature: Library - Code Lists - CT Packages
 	Scenario: [Overview] User must be able to view the Codelist summary for given Codelist in CT Package
 		Given The '/library/ct_packages/SEND CT/SEND CT 2014-09-26/C66729/terms' page is opened
 		When The codelist summary is expanded
-		Then The codelist summary show following data
-			| name               | value                                                                                                                                |
-			| Concept ID         | C66729                                                                                                                               |
-			| Name               | Route of Administration Response                                                                                                     |
-			| Label              | Route of Administration                                                                                                              |
-			| Definition         | A terminology codelist relevant to the pathway by which a substance is administered in order to reach the site of action in the body.|
-			| Library            | CDISC                                                                                                                                |
-			| Template parameter | No                                                                                                                                   |
-			| Extensible         | Yes                                                                                                                                  |
+		And User fetches codelist data and compares it with what is displayed in the application for 'C66729'
 		And Add term button is visible in actions menu

@@ -99,16 +99,23 @@ Feature: Library - Data Collection Standards - CRF Builder - CRF Collections
         When The 'Delete' option is clicked from the three dot menu list
         Then The CRF Collection is no longer available
 
-    @manual_test   
-    Scenario: User must be able to read change history of all element
+    Scenario: [Actions][History] User must be able to read change history of selected element
         Given The '/library/crf-builder/collections' page is opened
-        When The 'Show history' option is clicked from the three dot menu list
-        Then The user is presented with history of changes for all element
-        And The history contains timestamps and usernames
-
-    @manual_test    
-    Scenario: User must be able to read change history of selected element
-        Given The '/library/crf-builder/collections' page is opened
-        When The user clicks on History for particular element
-        Then The user is presented with history of changes for that element
-        And The history contains timestamps and usernames
+        And The 'History' option is clicked from the three dot menu list
+        Then The History page is displayed
+        And The following column list with values will exist
+        | header                 |
+        | Library                |
+        | OID                    |
+        | Name                   |
+        | Effective              |
+        | Obsolete               |
+        | Version                |
+        | Status                 |
+        | Change type            |
+        | User                   |
+        | From                   |
+        | To                     |
+        And The history table is not empty
+        When The CLOSE button is clicked
+        Then The current URL is '/library/crf-builder/collections'

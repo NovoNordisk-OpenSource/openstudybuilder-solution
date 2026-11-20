@@ -30,7 +30,7 @@ from clinical_mdr_api.models.controlled_terminologies.ct_codelist import (
 )
 from clinical_mdr_api.models.utils import GenericFilteringReturn
 from clinical_mdr_api.repositories._utils import FilterOperator
-from clinical_mdr_api.services._meta_repository import MetaRepository  # type: ignore
+from clinical_mdr_api.services._meta_repository import MetaRepository
 from clinical_mdr_api.services._utils import ensure_transaction, is_library_editable
 from clinical_mdr_api.services.controlled_terminologies.ct_codelist_attributes import (
     CTCodelistAttributesService,
@@ -479,21 +479,17 @@ class CTCodelistService:
     ):
         self.enforce_catalogue_library_package(catalogue_name, library, package)
 
-        header_values = (
-            self._repos.ct_codelist_aggregated_repository.get_distinct_headers(
-                catalogue_name=catalogue_name,
-                library=library,
-                package=package,
-                is_sponsor=is_sponsor,
-                field_name=field_name,
-                search_string=search_string,
-                filter_by=filter_by,
-                filter_operator=filter_operator,
-                page_size=page_size,
-            )
+        return self._repos.ct_codelist_aggregated_repository.get_distinct_headers(
+            catalogue_name=catalogue_name,
+            library=library,
+            package=package,
+            is_sponsor=is_sponsor,
+            field_name=field_name,
+            search_string=search_string,
+            filter_by=filter_by,
+            filter_operator=filter_operator,
+            page_size=page_size,
         )
-
-        return header_values
 
     @ensure_transaction(db)
     def add_term(
@@ -532,14 +528,12 @@ class CTCodelistService:
             codelist_uid=codelist_uid
         )
 
-        if ct_codelist_name_ar is not None:
-            if (
-                ordinal is not None
-                and not ct_codelist_name_ar.ct_codelist_vo.is_ordinal
-            ):
-                raise BusinessLogicException(
-                    msg=f"Codelist identified by {codelist_uid} is not ordinal, therefore term ordinal value should be None"
-                )
+        if ct_codelist_name_ar is not None and (
+            ordinal is not None and not ct_codelist_name_ar.ct_codelist_vo.is_ordinal
+        ):
+            raise BusinessLogicException(
+                msg=f"Codelist identified by {codelist_uid} is not ordinal, therefore term ordinal value should be None"
+            )
 
         paired_codes_codelist_uid, paired_names_codelist_uid = (
             self._repos.ct_codelist_aggregated_repository.get_paired_codelist_uids(
@@ -566,7 +560,7 @@ class CTCodelistService:
                 msg=f"Term with UID '{term_uid}' belongs to a non-editable library. Cannot add a new submission value '{submission_value}'. All possible submission values are already defined.",
             )
         # Sponsor terms validation
-        elif submission_value not in existing_submission_values:
+        elif submission_value not in existing_submission_values:  # noqa: SIM102
             # New submission value:
             # Either it is a term with no pre-existing submission value
             # Or it is targeting a paired codelist
@@ -781,20 +775,17 @@ class CTCodelistService:
         filter_operator: FilterOperator = FilterOperator.AND,
         page_size: int = 10,
     ):
-        header_values = (
-            self._repos.ct_codelist_aggregated_repository.get_distinct_term_headers(
-                codelist_uid=codelist_uid,
-                package=package,
-                include_removed=include_removed,
-                include_ts_parameters=include_ts_parameters,
-                field_name=field_name,
-                search_string=search_string,
-                filter_by=filter_by,
-                filter_operator=filter_operator,
-                page_size=page_size,
-            )
+        return self._repos.ct_codelist_aggregated_repository.get_distinct_term_headers(
+            codelist_uid=codelist_uid,
+            package=package,
+            include_removed=include_removed,
+            include_ts_parameters=include_ts_parameters,
+            field_name=field_name,
+            search_string=search_string,
+            filter_by=filter_by,
+            filter_operator=filter_operator,
+            page_size=page_size,
         )
-        return header_values
 
     def get_paired_codelists(self, codelist_uid) -> CTCodelistPaired:
         ct_cl_root = CTCodelistRoot.nodes.filter(uid=codelist_uid).get_or_none()

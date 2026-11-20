@@ -62,7 +62,8 @@ consistent end-to-end, from study design through to submission.
 
 ## Page tabs
 
-The page is organised in two tabs.
+The page is organised in three tabs. The Auxiliary Devices tab is only shown
+when the `study_auxiliary_devices` feature flag is on.
 
 [![Study Data Specifications tabs](/images/user_guides/data_specifications_00.png)](/images/user_guides/data_specifications_00.png)
 
@@ -70,6 +71,7 @@ The page is organised in two tabs.
 | --- | --- |
 | **Study Activity Instances** | Review and edit which activity instance(s) each study activity is linked to, and set importance, baseline and data-supplier attributes. |
 | **Operational SoA** | See a combined, read-only view of activities, their instances, and the visits/epochs they are scheduled at — for QC of the protocol, CRF, SDTM and ADaM. |
+| **Auxiliary Devices** | Record which auxiliary devices (e.g. glucose meters, CGMs, DXA scanners) are used to collect data in the study. |
 
 ### Study Activity Instances
 
@@ -313,6 +315,56 @@ additional instance information in the library.
 
 :::
 
+### Auxiliary Devices
+
+**Purpose:** Record which auxiliary devices are used to collect data in the
+study, such as blood glucose meters (BGMs), continuous glucose monitors (CGMs)
+or DXA scanners, together with the SDTM algorithm for each device.
+
+**When to use:** When the study collects data with an auxiliary device, so the
+device and its algorithm are available downstream, e.g. to consumers of the
+study metadata.
+
+:::details Show Quick Guide
+
+Each device is a term in the sponsor codelist **Device definitions**
+(submission value `DEVICE_DEF`) in the Library. The term holds the device's
+submission value, sponsor and NCI preferred names, definition and SDTM
+algorithm. The study only selects devices; to change a device's names or
+algorithm, edit the term in the Library.
+
+[![Auxiliary Devices tab with the Add auxiliary device button highlighted](/images/user_guides/auxiliary_devices_01.png)](/images/user_guides/auxiliary_devices_01.png)
+
+The table shows one row per selected device. By default it shows the Device,
+Submission value, NCI preferred name, Definition and Algorithm columns; #,
+Modified and Modified by can be added from the column picker. The table can be
+filtered, exported and its history opened from the buttons in the upper right
+corner.
+
+[![Auxiliary Devices table with two selected devices](/images/user_guides/auxiliary_devices_04.png)](/images/user_guides/auxiliary_devices_04.png)
+
+- **Add a device:** click **+**, select the device in **Select device**, check
+  the read-only term details, then click **Add auxiliary device**. The same
+  device cannot be added twice.
+
+  [![Select device list in the Add auxiliary device form](/images/user_guides/auxiliary_devices_02.png)](/images/user_guides/auxiliary_devices_02.png)
+
+  [![Add auxiliary device form with the selected device (A), its read-only term details (B) and the Add auxiliary device button (C)](/images/user_guides/auxiliary_devices_03.png)](/images/user_guides/auxiliary_devices_03.png)
+
+- **Remove a device:** click the ellipsis (three dots) on the row, select
+  **Remove device** and confirm. The remaining devices are renumbered.
+- **History of one device:** click the ellipsis on the row and select
+  **History**.
+
+  [![Row actions Remove device and History](/images/user_guides/auxiliary_devices_05.png)](/images/user_guides/auxiliary_devices_05.png)
+
+- **Change the order:** turn on **Reorder content** and drag the rows.
+
+Locked study versions are read-only: devices cannot be added, removed or
+reordered, and the devices selected when the study was locked are kept.
+
+:::
+
 ## Common errors
 
 | Symptom | Interpretation | Likely cause | Fix |
@@ -322,6 +374,9 @@ additional instance information in the library.
 | Reviewed checkbox cannot be ticked, or reverts to "Review needed" | Expected — not a defect | Row is in "Add instance" or "Not applicable" state, where the checkbox cannot be set, or it was cleared | Resolve the underlying state first (link an instance, or leave as Not applicable) |
 | Data Supplier dropdown shows "No data available" | Expected — no suppliers exist yet at study level | No Data Supplier has been defined on the Study Data Supplier page | Define at least one supplier on the Study Data Supplier page (Manage Study), then return here |
 | "Update Instance to new version" is unavailable | Expected — nothing to update | No newer version of the linked activity instance exists in the library | No action needed until the library publishes a new version |
+| Auxiliary Devices tab is not shown | Expected — the tab is switched off | The `study_auxiliary_devices` feature flag is off | Ask your OpenStudyBuilder administrator to switch the flag on |
+| **Select device** list is empty | Expected — there are no devices to pick | The Device definitions (`DEVICE_DEF`) codelist has no terms | Add the devices as terms of the codelist in the Library |
+| **Reorder content** cannot be switched on for auxiliary devices | Expected — rows can only be reordered in their saved order | A filter or a column sort is active on the table | Clear the filters and the sorting, then switch on **Reorder content** |
 
 If this does not resolve the issue, contact your OpenStudyBuilder administrator.
 

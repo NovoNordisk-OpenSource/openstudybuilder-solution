@@ -8,6 +8,7 @@ Feature: Library - Concepts - Activities - Navigation
         Then The '/library' page is opened
 
     Scenario: [Navigation] User must be able to navigate to the Activities pages
+        When [API] The feature flag 'nsvs_library' is enabled
         When The 'Activities' submenu is clicked in the 'Concepts' section
         And The 'Activities' tab is selected
         Then The current URL is '/library/activities/activities'
@@ -23,6 +24,8 @@ Feature: Library - Concepts - Activities - Navigation
         Then The current URL is '/library/activities/activity-instance-classes'
         And The 'Activity Item Classes' tab is selected
         Then The current URL is '/library/activities/activity-item-classes'
+        And The 'Non-Standard Variables' tab is selected
+        Then The current URL is '/library/activities/non-standard-variables'
 
     Scenario: [Navigation] User must be able to navigate to the Units page
         When The 'Units' submenu is clicked in the 'Concepts' section

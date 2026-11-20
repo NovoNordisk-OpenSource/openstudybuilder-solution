@@ -23,7 +23,7 @@ from common.exceptions import BusinessLogicException, NotFoundException
 from common.utils import strtobool
 
 
-class OdmFormService(OdmGenericService[OdmFormAR]):
+class OdmFormService(OdmGenericService[OdmFormAR, OdmForm]):
     aggregate_class = OdmFormAR
     version_class = OdmFormVersion
     repository_interface = FormRepository
@@ -41,6 +41,9 @@ class OdmFormService(OdmGenericService[OdmFormAR]):
             ),
             find_odm_vendor_attribute_by_uid_with_odm_element_relation=(
                 self._repos.odm_vendor_attribute_repository.find_by_uid_with_odm_element_relation
+            ),
+            find_odm_vendor_element_attribute_by_uid_with_odm_element_relation=(
+                self._repos.odm_vendor_attribute_repository.find_element_attribute_by_uid_with_odm_element_relation
             ),
         )
 

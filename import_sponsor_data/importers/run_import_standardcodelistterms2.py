@@ -1,4 +1,5 @@
 import asyncio
+import os
 import sys
 
 import aiohttp
@@ -27,6 +28,7 @@ MDR_MIGRATION_CRITERIA_SUB_CATEGORY = load_env("MDR_MIGRATION_CRITERIA_SUB_CATEG
 MDR_MIGRATION_CRITERIA_TYPE = load_env("MDR_MIGRATION_CRITERIA_TYPE")
 MDR_MIGRATION_COMPOUND_DISPENSED_IN = load_env("MDR_MIGRATION_COMPOUND_DISPENSED_IN")
 MDR_MIGRATION_DEVICE = load_env("MDR_MIGRATION_DEVICE")
+MDR_MIGRATION_AUXILIARY_DEVICE = load_env("MDR_MIGRATION_AUXILIARY_DEVICE")
 MDR_MIGRATION_ELEMENT_TYPE = load_env("MDR_MIGRATION_ELEMENT_TYPE")
 MDR_MIGRATION_ELEMENT_SUBTYPE = load_env("MDR_MIGRATION_ELEMENT_SUBTYPE")
 MDR_MIGRATION_ENDPOINT_CATEGORY = load_env("MDR_MIGRATION_ENDPOINT_CATEGORY")
@@ -54,6 +56,8 @@ MDR_MIGRATION_SPONSOR_EPOCH = load_env("MDR_MIGRATION_SPONSOR_EPOCH")
 MDR_MIGRATION_FREQUENCY = load_env("MDR_MIGRATION_FREQUENCY")
 MDR_MIGRATION_TRIAL_TYPE = load_env("MDR_MIGRATION_TRIAL_TYPE")
 MDR_MIGRATION_DEVELOPMENT_STAGE = load_env("MDR_MIGRATION_DEVELOPMENT_STAGE")
+MDR_MIGRATION_AGE_AT_BASELINE_RULE = load_env("MDR_MIGRATION_AGE_AT_BASELINE_RULE")
+MDR_MIGRATION_AGE_GROUP_RULE = load_env("MDR_MIGRATION_AGE_GROUP_RULE")
 MDR_MIGRATION_DATA_COLLECTION_MODE = load_env("MDR_MIGRATION_DATA_COLLECTION_MODE")
 MDR_MIGRATION_CONFIRMATORY_PURPOSE = load_env("MDR_MIGRATION_CONFIRMATORY_PURPOSE")
 MDR_MIGRATION_NONCONFIRMATORY_PURPOSE = load_env(
@@ -140,6 +144,11 @@ MDR_MIGRATION_CATEGORY_FOR_SUBSTANCE_USE = load_env(
 MDR_DATA_SUPPLIER_TYPE = load_env("MDR_DATA_SUPPLIER_TYPE")
 MDR_MIGRATION_REASON_FOR_LOCK = load_env("MDR_MIGRATION_REASON_FOR_LOCK")
 MDR_MIGRATION_REASON_FOR_UNLOCK = load_env("MDR_MIGRATION_REASON_FOR_UNLOCK")
+MDR_MIGRATION_ORDINAL_CODELISTS = load_env("MDR_MIGRATION_ORDINAL_CODELISTS")
+# Optional extra ordinal terms, imported after the main file. Skipped if unset or missing.
+MDR_MIGRATION_ORDINAL_CODELISTS_PRIVATE = load_env(
+    "MDR_MIGRATION_ORDINAL_CODELISTS_PRIVATE", default=""
+)
 
 
 # Import terms to standard codelists in sponsor library
@@ -185,6 +194,7 @@ class StandardCodelistTerms2(BaseImporter):
             (MDR_MIGRATION_TYPE_OF_TREATMENT, "Type of Treatment"),
             (MDR_MIGRATION_COMPOUND_DISPENSED_IN, "Compound Dispensed In"),
             (MDR_MIGRATION_DEVICE, "Delivery Device"),
+            (MDR_MIGRATION_AUXILIARY_DEVICE, "Device definitions"),
             (MDR_MIGRATION_ELEMENT_TYPE, "Element Type"),
             # Element subtypes link to element types as parents, so they have to be imported after the types
             (MDR_MIGRATION_ELEMENT_SUBTYPE, "Element Sub Type"),
@@ -193,6 +203,8 @@ class StandardCodelistTerms2(BaseImporter):
             (MDR_MIGRATION_FREQUENCY, "Frequency"),
             (MDR_MIGRATION_TRIAL_TYPE, "Trial Type"),
             (MDR_MIGRATION_DEVELOPMENT_STAGE, "Development Stage"),
+            (MDR_MIGRATION_AGE_AT_BASELINE_RULE, "Age at Baseline Rule"),
+            (MDR_MIGRATION_AGE_GROUP_RULE, "Age Group Rule"),
             (MDR_MIGRATION_DATA_COLLECTION_MODE, "Data Collection Mode"),
             (MDR_MIGRATION_CONFIRMATORY_PURPOSE, "Confirmatory Purpose"),
             (MDR_MIGRATION_NONCONFIRMATORY_PURPOSE, "Non-confirmatory Purpose"),
@@ -275,7 +287,12 @@ class StandardCodelistTerms2(BaseImporter):
             (MDR_DATA_SUPPLIER_TYPE, "Data Supplier Type"),
             (MDR_MIGRATION_REASON_FOR_LOCK, "Reason For Lock"),
             (MDR_MIGRATION_REASON_FOR_UNLOCK, "Reason For Unlock"),
+            (MDR_MIGRATION_ORDINAL_CODELISTS, "Ordinal Codelists"),
         ]
+        if os.path.isfile(MDR_MIGRATION_ORDINAL_CODELISTS_PRIVATE):
+            codelists_to_import.append(
+                (MDR_MIGRATION_ORDINAL_CODELISTS_PRIVATE, "Ordinal Codelists")
+            )
 
         timeout = aiohttp.ClientTimeout(None)
         for file_path, codelist_name in codelists_to_import:

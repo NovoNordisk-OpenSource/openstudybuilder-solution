@@ -55,9 +55,6 @@ export default (basePath) => {
     delete(uid) {
       return repository.delete(`${basePath}/${uid}`)
     },
-    preValidate(data) {
-      return repository.post(`${basePath}/pre-validate`, data)
-    },
     updateIndexings(uid, data) {
       return repository.patch(`${basePath}/${uid}/indexings`, data)
     },

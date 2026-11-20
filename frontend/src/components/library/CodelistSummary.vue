@@ -69,6 +69,14 @@
               <v-col data-cy="Extensible" cols="6">
                 {{ $filters.yesno(codelistAttributes.extensible) }}
               </v-col>
+              <v-col cols="6">
+                <span class="v-label">{{
+                  $t('CodeListDetail.is_ordinal')
+                }}</span>
+              </v-col>
+              <v-col data-cy="Ordinal" cols="6">
+                {{ $filters.yesno(codelistNames.is_ordinal) }}
+              </v-col>
             </v-row>
           </v-col>
         </v-row>

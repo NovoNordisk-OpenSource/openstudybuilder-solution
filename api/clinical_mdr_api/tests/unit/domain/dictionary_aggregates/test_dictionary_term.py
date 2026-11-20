@@ -14,7 +14,7 @@ from clinical_mdr_api.tests.unit.domain.utils import AUTHOR_ID, random_str
 
 def create_random_dictionary_term_vo() -> DictionaryTermVO:
     name = random_str()
-    random_dictionary_term_vo = DictionaryTermVO.from_repository_values(
+    return DictionaryTermVO.from_repository_values(
         codelist_uid=random_str(),
         dictionary_id=random_str(),
         name="prefix" + name,
@@ -22,7 +22,6 @@ def create_random_dictionary_term_vo() -> DictionaryTermVO:
         abbreviation=random_str(),
         definition=random_str(),
     )
-    return random_dictionary_term_vo
 
 
 def create_random_dictionary_term_ar(
@@ -30,7 +29,7 @@ def create_random_dictionary_term_ar(
     library: str = "Library",
     is_editable: bool = True,
 ) -> DictionaryTermAR:
-    random_dictionary_term_ar = DictionaryTermAR.from_input_values(
+    return DictionaryTermAR.from_input_values(
         generate_uid_callback=generate_uid_callback,
         dictionary_term_vo=create_random_dictionary_term_vo(),
         library=LibraryVO.from_repository_values(
@@ -39,7 +38,6 @@ def create_random_dictionary_term_ar(
         author_id=AUTHOR_ID,
         term_exists_by_name_callback=lambda term_name, codelist_uid: False,
     )
-    return random_dictionary_term_ar
 
 
 class TestDictionaryTerm(unittest.TestCase):

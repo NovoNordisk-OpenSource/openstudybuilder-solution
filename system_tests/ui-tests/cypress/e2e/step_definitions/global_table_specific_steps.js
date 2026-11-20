@@ -15,6 +15,8 @@ When('User sets status filter to {string}', (filterValue) => {
     cy.longWaitForTable()
 })
 
+When('User searches for {string} without checking the result', (value) => cy.searchFor(value))
+
 When('User searches for {string}', (value) => cy.searchAndCheckPresence(value, true))
 
 When('User searches for {string} and confirms no results returned', (value) => cy.searchAndCheckPresence(value, false))

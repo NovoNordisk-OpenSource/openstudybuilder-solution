@@ -10,6 +10,7 @@ from clinical_mdr_api.domains.study_definition_aggregates.study_metadata import 
     StudyPopulationVO,
     StudyVersionMetadataVO,
 )
+from common.config import settings
 
 
 class StudyFieldType(Enum):
@@ -30,6 +31,7 @@ class StudyFieldConfigurationEntry:
     study_field_name: str
     study_field_null_value_code: str | None
     configured_codelist_uid: str | None
+    configured_codelist_submval: str | None
     configured_term_uid: str | None
     study_field_grouping: str
     study_value_object_class: type
@@ -46,6 +48,7 @@ def _e(
     *,
     null_value_code: str | None = None,
     codelist_uid: str | None = None,
+    codelist_submval: str | None = None,
     term_uid: str | None = None,
     api_name: str | None = None,
     is_dictionary_term: bool = False,
@@ -56,6 +59,7 @@ def _e(
         study_field_name=name,
         study_field_null_value_code=null_value_code,
         configured_codelist_uid=codelist_uid,
+        configured_codelist_submval=codelist_submval,
         configured_term_uid=term_uid,
         study_field_grouping=grouping,
         study_value_object_class=vo_class,
@@ -101,6 +105,9 @@ _STATIC_FIELD_CONFIG: list[StudyFieldConfigurationEntry] = [
     _e(_T,    "study_subpart_acronym",           _ID,     _IdVO),
     _e(_T,    "description",                     _ID,     _IdVO),
     _e(_PROJ, "project_number",                  _ID,     _IdVO),
+    # No null_value_code and no term_uid: CDISC has no term for it.
+    _e(_B,    "migrated_study_indicator",        _ID,     _IdVO),
+    _e(_T,    "migrated_study_comment",          _ID,     _IdVO),
 
     # ── Registry Identifiers ──
     _e(_REG,  "ct_gov_id",                                                          _REG_ID, _RegVO, null_value_code="ct_gov_id_null_value_code", ts_vcdref="ClinicalTrials.gov"),
@@ -143,7 +150,9 @@ _STATIC_FIELD_CONFIG: list[StudyFieldConfigurationEntry] = [
     _e(_T,    "study_type_null_value_code",      _HLD,    _HldVO),
     _e(_T,    "trial_phase_code",                _HLD,    _HldVO, null_value_code="trial_phase_null_value_code", codelist_uid="C66737"),
     _e(_T,    "trial_phase_null_value_code",     _HLD,    _HldVO),
-    _e(_T,    "development_stage_code",          _HLD,    _HldVO),
+    _e(_T,    "development_stage_code",          _HLD,    _HldVO, codelist_submval=settings.development_stage_cl_submval),
+    _e(_T,    "age_at_baseline_rule_code",       _HLD,    _HldVO, codelist_submval=settings.age_at_baseline_rule_cl_submval),
+    _e(_T,    "age_group_rule_code",             _HLD,    _HldVO, codelist_submval=settings.age_group_rule_cl_submval),
     _e(_MS,   "trial_type_codes",                _HLD,    _HldVO, null_value_code="trial_type_null_value_code", codelist_uid="C66739"),
     _e(_T,    "trial_type_null_value_code",      _HLD,    _HldVO),
     _e(_B,    "is_extension_trial",              _HLD,    _HldVO, null_value_code="is_extension_trial_null_value_code", term_uid="C139274"),
@@ -194,7 +203,7 @@ _STATIC_FIELD_CONFIG: list[StudyFieldConfigurationEntry] = [
     _e(_T,    "intervention_type_null_value_code", _INT,  _IntVO),
     _e(_B,    "add_on_to_existing_treatments",   _INT,    _IntVO, null_value_code="add_on_to_existing_treatments_null_value_code", term_uid="C49703"),
     _e(_T,    "add_on_to_existing_treatments_null_value_code", _INT, _IntVO),
-    _e(_T,    "control_type_code",               _INT,    _IntVO, null_value_code="control_type_null_value_code", codelist_uid="C66785"),
+    _e(_MS,   "control_type_codes",              _INT,    _IntVO, null_value_code="control_type_null_value_code", codelist_uid="C66785"),
     _e(_T,    "control_type_null_value_code",    _INT,    _IntVO),
     _e(_T,    "intervention_model_code",         _INT,    _IntVO, null_value_code="intervention_model_null_value_code", codelist_uid="C99076"),
     _e(_T,    "intervention_model_null_value_code", _INT, _IntVO),

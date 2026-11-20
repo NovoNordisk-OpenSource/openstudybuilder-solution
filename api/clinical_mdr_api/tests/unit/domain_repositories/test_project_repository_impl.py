@@ -24,14 +24,13 @@ def create_random_project_node() -> Project:
     mocked_relationship = Mock()
     mocked_clinical_programme = MockClinicalProgramme()
     mocked_relationship.single = lambda: mocked_clinical_programme
-    random_project = Project(
+    return Project(
         uid=random_str(),
         project_number=random_str(),
         name=random_str(),
         holds_project=mocked_relationship,
         description=random_opt_str(),
     )
-    return random_project
 
 
 class TestProjectRepositoryImpl(unittest.TestCase):

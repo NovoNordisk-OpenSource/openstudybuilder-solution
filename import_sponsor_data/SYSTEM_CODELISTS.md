@@ -126,7 +126,7 @@ across three places. In order of authority:
    two criteria-type concept ids. Grep for the comment rather than a line
    number — the block grows.
 2. **[`datafiles/sponsor_library/sponsor_codelist_definitions.csv`](datafiles/sponsor_library/sponsor_codelist_definitions.csv)**
-   — the 76 Sponsor-library codelists that `codelistterms1` *creates*. Anything
+   — the 78 Sponsor-library codelists that `codelistterms1` *creates*. Anything
    not in this file and not in CDISC CT will not exist.
 3. **`_STATIC_FIELD_CONFIG`** in
    `api/clinical_mdr_api/domains/study_definition_aggregates/study_configuration.py`
@@ -166,6 +166,7 @@ null-check. `Lib` is CDISC or Sponsor.
 | **Reason For Lock** | `RSNFL` | Sponsor | Required to **lock** a study. Blocks the study lifecycle |
 | **Reason For Unlock** | `RSNFUL` | Sponsor | Required to **unlock / release** a study. Blocks the study lifecycle |
 | **Null Flavor** | `NULLFLVR` | Sponsor | Must contain the term whose **submission value is `NA`**. Five components (study population, intervention type, registry identifiers, study define) resolve it via `TERM_NOT_APPLICABLE_SUBMVAL` in `constants/study.js` and dereference `.term_uid` without a null-check, so absence crashes the "Not Applicable" checkboxes. Matched on submission value, not name — **renaming the display name is safe**, removing the term is not |
+| **Device definitions** | `DEVICE_DEF` | Sponsor | Auxiliary Devices study selection. Without it the add popup dropdown is empty, and `POST /studies/{study_uid}/study-auxiliary-devices` returns **400** "The codelist identified by submission value DEVICE_DEF was not found." Imported by `run_import_standardcodelistterms2.py` from `MDR_MIGRATION_AUXILIARY_DEVICE`, which must be set — `load_env` raises if it is missing |
 
 ## Tier 2 — Referenced by a real feature, but the field is optional
 
@@ -196,6 +197,9 @@ them are still expected to exist.**
 | Role | `ROLE` | Sponsor | SDTM variable role |
 | Data Supplier Type | `DATA_SUPPLIER_TYPE` | Sponsor | Data supplier metadata |
 | Data type | `DATATYPE` | Sponsor | CRF / ODM item data types |
+| Development Stage | `DEVELOPMENT_STAGE` | Sponsor | Study type form, `development_stage_code` |
+| Age at Baseline Rule | `AGE_AT_BASELINE_RL` | Sponsor | Study Age Rules tab, `age_at_baseline_rule_code` |
+| Age Group Rule | `AGE_GRP_RL` | Sponsor | Study Age Rules tab, `age_group_rule_code` |
 | Route of Administration | `ROUTE` | CDISC | Compound administration route |
 | Dosage Form | `FRM` | CDISC | Compound dosage form (sponsor names patched on top) |
 | Frequency | `FREQ` | CDISC | Dosing frequency (sponsor terms added on top) |
@@ -206,7 +210,7 @@ them are still expected to exist.**
 
 Not system codelists. Categorisation and vocabulary; an empty one costs you a
 filter, not a feature. Listed for completeness because they make up the bulk of
-the 76.
+the 78.
 
 - Indexing on library templates: Objective Category, Endpoint Category /
   Sub Category, Criteria Category / Sub Category.
@@ -218,7 +222,7 @@ the 76.
   Medications, Healthcare Encounters), plus `Name of Treatment - EC/EX`,
   the adjudication and pharmacokinetic test name/code pairs, and the hepatic
   event response list.
-- Miscellaneous: Language, Registry Identifier, Development Stage,
+- Miscellaneous: Language, Registry Identifier,
   Confirmatory / Non-confirmatory Purpose, Data Collection Mode.
 - DDF / ODM data-type family: HL7 FHIR, CDISC ODM, ODM v1.3, ODM v2.0, Simple
   and Semantic Data Type. `CODMDT` is read (not written) when importing CRFs.
@@ -278,7 +282,7 @@ Nine study fields bind to a codelist, declared inline in
 | `trial_phase_code` | Trial Phase Response (`C66737`) |
 | `trial_type_codes` | Trial Type Response (`C66739`) |
 | `trial_intent_types_codes` | Trial Intent Type Response (`C66736`) |
-| `control_type_code` | Control Type Response (`C66785`) |
+| `control_type_codes` | Control Type Response (`C66785`) |
 | `intervention_model_code` | Intervention Model Response (`C99076`) |
 | `intervention_type_code` | Intervention Type Response (`C99078`) |
 | `trial_blinding_schema_code` | Trial Blinding Schema Response (`C66735`) |
@@ -289,6 +293,13 @@ required to lock a study, so every codelist-backed study field can remain null.
 They are Tier 2 by function. There is no configuration state to provision
 either — the bindings are compiled into the API, so the only requirement is
 that the nine CDISC codelists exist.
+
+Three more bind to **Sponsor** codelists by submission value
+(`codelist_submval=settings.*_cl_submval`), because sponsor codelist uids are
+generated at import and cannot be pinned: `development_stage_code`
+(`DEVELOPMENT_STAGE`), `age_at_baseline_rule_code` (`AGE_AT_BASELINE_RL`) and
+`age_group_rule_code` (`AGE_GRP_RL`). Setting one of them raises a 400 if the
+codelist is missing or unapproved, or if the term is not a member of it.
 
 Three further study fields (`therapeutic_area_codes`,
 `diagnosis_group_codes`, `disease_condition_or_indication_codes`) resolve

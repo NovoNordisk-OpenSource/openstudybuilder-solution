@@ -10,7 +10,7 @@ from clinical_mdr_api.repositories.ct_packages import (
     get_ct_packages_changes,
     get_ct_packages_codelist_changes,
 )
-from clinical_mdr_api.services._meta_repository import MetaRepository  # type: ignore
+from clinical_mdr_api.services._meta_repository import MetaRepository
 from clinical_mdr_api.utils import normalize_string
 from common.auth.user import user
 from common.config import settings

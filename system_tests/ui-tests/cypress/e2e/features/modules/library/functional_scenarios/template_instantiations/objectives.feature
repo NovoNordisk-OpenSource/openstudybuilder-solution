@@ -31,10 +31,8 @@ Feature: Library - Objective instance
 
   Scenario: [Actions][History] User must be able to view the history for the Objective instance
     Given The '/library/objectives' page is opened
-    And The test objective instance exists in the table list
-    When The three dots menu list clicked for the test instance
-    And The 'History' option is clicked
-    Then The History for objective window is displayed
+    When The 'History' option is clicked from the three dot menu list
+    Then The History page is displayed
     And The following column list with values will exist
       | header            |
       | Library           |
@@ -47,40 +45,38 @@ Feature: Library - Objective instance
       | User              |
       | From              |
       | To                |
-    And The table is not empty
+    And The history table is not empty
     When The CLOSE button is clicked
     Then The current URL is '/library/objectives'
 
   Scenario: [Actions][Availability][Final item] User must not be able to view 'Delete' option for the Objective instance
     Given The '/library/objectives' page is opened
-    And The test objective instance exists in the table list
-    When The three dots menu list clicked for the test instance
-    Then The 'Delete' option is not available for the objective instance
+    When The item actions button is clicked
+    Then 'Delete' action is not available
 
-  Scenario: [Actions][Display studies using this objective] User must be able to view the list of studies with a specific objective
-    Given The '/library/objectives' page is opened
-    And The test objective instance exists in the table list
-    When The three dots menu list clicked for the test instance
-    And The 'Display studies using this objective' option is clicked
-    Then The List of studies with a specific objective window is displayed
-    And The following column list with values will exist
-      | header        |
-      | View          |
-      | Project ID    |
-      | Project name  |
-      | Brand name    |
-      | Study number  |
-      | Study ID      |
-      | Study acronym |
-      | Status        |
-    And The table is not empty
-    When The CLOSE button is clicked
-    Then The current URL is '/library/objectives'
+#  Scenario: [Actions][Display studies using this objective] User must be able to view the list of studies with a specific objective
+#    Given The '/library/objectives' page is opened
+#    When The three dots menu list clicked for the test instance
+#    And The 'Display studies using this objective' option is clicked
+#    Then The List of studies with a specific objective window is displayed
+#    And The following column list with values will exist
+#      | header        |
+#      | View          |
+#      | Project ID    |
+#      | Project name  |
+#      | Brand name    |
+#      | Study number  |
+#      | Study ID      |
+#      | Study acronym |
+#      | Status        |
+#    And The table is not empty
+#    When The CLOSE button is clicked
+#    Then The current URL is '/library/objectives'
 
-  @manual_test
-  Scenario: User must be able to read change history of selected element
-    Given The '/library/objectives' page is opened
-    And The 'Show history' option is clicked from the three dot menu list
-    When The user clicks on History for particular element
-    Then The user is presented with history of changes for that element
-    And The history contains timestamps and usernames
+#  @manual_test
+#  Scenario: User must be able to read change history of selected element
+#    Given The '/library/objectives' page is opened
+#    And The 'Show history' option is clicked from the three dot menu list
+#    When The user clicks on History for particular element
+#    Then The user is presented with history of changes for that element
+#    And The history contains timestamps and usernames

@@ -132,6 +132,22 @@
           </template>
         </v-select>
       </v-col>
+      <v-col v-if="grouping.warnings.length" cols="12" class="pt-2">
+        <v-alert
+          type="warning"
+          variant="tonal"
+          density="compact"
+          data-cy="grouping-warning"
+        >
+          <div v-for="w in grouping.warnings" :key="`${w.type}-${w.activity}`">
+            {{
+              t(`DataSupplierView.RulesManager.warnings.${w.type}`, {
+                activity: w.activity,
+              })
+            }}
+          </div>
+        </v-alert>
+      </v-col>
       <v-col cols="12" md="1" class="d-flex justify-center">
         <v-btn
           icon
@@ -209,7 +225,32 @@ function newGrouping(seed = {}) {
     activity_uids: seed.activity_uids || [],
     subGroups: [],
     activities: [],
+    warnings: [],
   }
+}
+
+function warningsFromApi(g) {
+  const warnings = []
+  const activity = g.activity_name || g.activity_uid
+  if (g.grouping_exists === false) {
+    warnings.push({ type: 'grouping_missing', activity })
+  }
+  if (g.is_activity_retired) {
+    warnings.push({ type: 'activity_retired', activity })
+  }
+  if (g.is_activity_group_retired) {
+    warnings.push({ type: 'group_retired' })
+  }
+  if (g.is_activity_subgroup_retired) {
+    warnings.push({ type: 'subgroup_retired' })
+  }
+  return warnings
+}
+
+function mergeWarnings(existing, added) {
+  const keyOf = (w) => `${w.type}::${w.activity || ''}`
+  const seen = new Set(existing.map(keyOf))
+  return [...existing, ...added.filter((w) => !seen.has(keyOf(w)))]
 }
 
 function isAllActivitiesSelected(grouping) {
@@ -283,6 +324,8 @@ function groupingsFromRule(rule) {
     if (g.activity_uid) {
       byPair.get(key).activity_uids.push(g.activity_uid)
     }
+    const row = byPair.get(key)
+    row.warnings = mergeWarnings(row.warnings, warningsFromApi(g))
   }
   return Array.from(byPair.values())
 }

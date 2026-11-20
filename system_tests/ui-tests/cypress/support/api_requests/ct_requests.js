@@ -4,6 +4,10 @@ const ctPackageUrl = '/ct/packages/sponsor'
 const ctTermUrl = '/ct/terms'
 const ctCodelistUrl = '/ct/codelists'
 
+Cypress.Commands.add('getCodelistNameData', (uid) => cy.sendGetRequest(`/ct/codelists/${uid}/names`).then(response => {return response.body}))
+
+Cypress.Commands.add('getCodelistAttributesData', (uid) => cy.sendGetRequest(`/ct/codelists/${uid}/attributes`).then(response => {return response.body}))
+
 Cypress.Commands.add('createAndOpenCodelist', () => {
   cy.sendPostRequest(ctCodelistUrl, createCodeListBody()).then((response) => {
     cy.visit('/library/ct_catalogues/All/' + response.body.codelist_uid)

@@ -33,6 +33,10 @@ RUN test ! -r /app/config/nginx/default.conf || rm -f /app/config/nginx/default.
 ## Production stage
 FROM $NGINX_IMAGE as prod-stage
 
+## Upgrade the CA bundle at build time instead of trusting the base image to be current (CVE-2026-111943).
+## Name both packages: ca-certificates alone rewrites the bundle file but leaves ca-certificates-bundle at the old version.
+RUN apk upgrade --no-cache ca-certificates ca-certificates-bundle
+
 COPY --from=build-stage /app/dist /usr/share/nginx/html
 COPY --from=build-stage /app/sbom.md /usr/share/nginx/html
 COPY --from=build-stage /app/LICENSE.md /usr/share/nginx/html/license.md

@@ -51,15 +51,7 @@ Feature: Library - Code Lists - CT Catalogues
 	Scenario: [Overview] User must be able to see the Codelist Summary for Codelist
 		Given The '/library/ct_catalogues/SEND CT/C66729/terms' page is opened
 		When The codelist summary is expanded
-		Then The codelist summary show following data
-			| name               | value                                                                                                                                |
-			| Concept ID         | C66729                                                                                                                               |
-			| Name               | Route of Administration Response                                                                                                     |
-			| Label              | Route of Administration                                                                                                              |
-			| Definition	     | A terminology codelist relevant to the pathway by which a substance is administered in order to reach the site of action in the body.|
-			| Library            | CDISC                                                                                                                                |
-			| Template parameter | No                                                                                                                                   |
-			| Extensible         | Yes                                                                                                                                  |
+		Then User fetches codelist data and compares it with what is displayed in the application for 'C66729'
 		And Add term button is visible in actions menu
 
     @smoke_test
@@ -82,7 +74,6 @@ Feature: Library - Code Lists - CT Catalogues
 		But The Create new sponsor values version button is visible
 		And The version history contain the changes of edited Codelist
 
-	@unstable_disabled
 	Scenario: [Create][Existing Term] User must be able to add an existing term to the Codelist
 		Given The test term in test Codelist is opened
 		And The '/library/ct_catalogues/All/C117744/terms' page is opened

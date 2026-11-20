@@ -104,6 +104,7 @@ MAINTAIN_RELATIONSHIPS_FOR_NEW_STUDY_VALUE = {
     "has_study_activity_instance",
     "has_study_activity_instruction",
     "has_study_activity_schedule",
+    "has_study_auxiliary_device",
     "has_study_activity_subgroup",
     "has_study_arm",
     "has_study_branch_arm",
@@ -113,6 +114,7 @@ MAINTAIN_RELATIONSHIPS_FOR_NEW_STUDY_VALUE = {
     "has_study_criteria",
     "has_study_design_cell",
     "has_study_design_class",
+    "has_study_design_population",
     "has_study_disease_milestone",
     "has_study_element",
     "has_study_endpoint",
@@ -178,13 +180,10 @@ class StudyDefinitionRepositoryImpl(StudyDefinitionRepository, RepositoryImpl):
         draft_metadata_snapshot = cls._study_metadata_snapshot_from_study_value(
             latest_draft_value
         )
-        draft_metadata_snapshot = (
-            cls._assign_snapshot_ver_properties_from_ver_relationship(
-                snapshot=draft_metadata_snapshot,
-                ver_relationship=latest_draft_relationship,
-            )
+        return cls._assign_snapshot_ver_properties_from_ver_relationship(
+            snapshot=draft_metadata_snapshot,
+            ver_relationship=latest_draft_relationship,
         )
-        return draft_metadata_snapshot
 
     @classmethod
     def _retrieve_current_study_metadata_snapshot(
@@ -874,8 +873,12 @@ class StudyDefinitionRepositoryImpl(StudyDefinitionRepository, RepositoryImpl):
     ):
         # if new value node is created
         if expected_latest_value is not previous_value:
+            # the visit mode is kept on the new value node together with the SoA preferences
             nodes = previous_value.has_boolean_field.filter(
-                field_name__in=settings.study_soa_preferences_fields
+                field_name__in=(
+                    *settings.study_soa_preferences_fields,
+                    settings.study_field_manual_visit_mode,
+                )
             )
 
             for node in nodes:
@@ -1419,7 +1422,10 @@ class StudyDefinitionRepositoryImpl(StudyDefinitionRepository, RepositoryImpl):
                 ):
                     node_uid = None
                     configured_codelist_uid = None
-                    if config_item.configured_codelist_uid:
+                    if (
+                        config_item.configured_codelist_uid
+                        or config_item.configured_codelist_submval
+                    ):
                         configured_codelist_uid = config_item.configured_codelist_uid
                         node_uid = study_field_value
                     elif config_item.study_field_data_type == StudyFieldType.BOOL:
@@ -1441,6 +1447,7 @@ class StudyDefinitionRepositoryImpl(StudyDefinitionRepository, RepositoryImpl):
                             ct_term_root_node = CTCodelistAttributesRepository().get_or_create_selected_term(
                                 ct_term_root_node,
                                 codelist_uid=configured_codelist_uid,
+                                codelist_submission_value=config_item.configured_codelist_submval,
                                 catalogue_name=settings.sdtm_ct_catalogue_name,
                             )
                     else:
@@ -1676,21 +1683,22 @@ class StudyDefinitionRepositoryImpl(StudyDefinitionRepository, RepositoryImpl):
                 ):
                     ct_term_root_nodes = []
                     # we can't link CTTermRoot for these nodes as they are not valid codelists at the moment
-                    if is_c_code_field or config_item.is_dictionary_term:
-                        if study_array_field_value is not None:
-                            for study_array_value in study_array_field_value:
-                                ct_term_root_node = self._get_associated_ct_term_root_node(
-                                    term_uid=study_array_value,
-                                    study_field_name=study_array_field_name,
-                                    is_dictionary_term=config_item.is_dictionary_term,
+                    if (
+                        is_c_code_field or config_item.is_dictionary_term
+                    ) and study_array_field_value is not None:
+                        for study_array_value in study_array_field_value:
+                            ct_term_root_node = self._get_associated_ct_term_root_node(
+                                term_uid=study_array_value,
+                                study_field_name=study_array_field_name,
+                                is_dictionary_term=config_item.is_dictionary_term,
+                            )
+                            if not config_item.is_dictionary_term:
+                                ct_term_root_node = CTCodelistAttributesRepository().get_or_create_selected_term(
+                                    ct_term_root_node,
+                                    codelist_uid=config_item.configured_codelist_uid,
+                                    catalogue_name=settings.sdtm_ct_catalogue_name,
                                 )
-                                if not config_item.is_dictionary_term:
-                                    ct_term_root_node = CTCodelistAttributesRepository().get_or_create_selected_term(
-                                        ct_term_root_node,
-                                        codelist_uid=config_item.configured_codelist_uid,
-                                        catalogue_name=settings.sdtm_ct_catalogue_name,
-                                    )
-                                ct_term_root_nodes.append(ct_term_root_node)
+                            ct_term_root_nodes.append(ct_term_root_node)
                     if study_array_field_value:
                         # If the value is set, create a StudyTextField node and (optionally) link it to matching CT term.
                         study_array_field_node = (
@@ -2216,6 +2224,8 @@ class StudyDefinitionRepositoryImpl(StudyDefinitionRepository, RepositoryImpl):
             description=id_fields.get("description"),
             registry_identifiers=registry_identifiers,
             _study_id_prefix=id_fields.get("study_id_prefix"),
+            migrated_study_indicator=id_fields.get("migrated_study_indicator"),
+            migrated_study_comment=id_fields.get("migrated_study_comment"),
         )
 
         return StudyMetadataVO(
@@ -2335,7 +2345,7 @@ class StudyDefinitionRepositoryImpl(StudyDefinitionRepository, RepositoryImpl):
             else f"{id_meta.study_id_prefix}-{id_meta.study_number}"
         )
 
-        value = StudyValue(
+        return StudyValue(
             study_id=_study_id,
             study_number=id_meta.study_number,
             subpart_id=id_meta.subpart_id,
@@ -2344,8 +2354,6 @@ class StudyDefinitionRepositoryImpl(StudyDefinitionRepository, RepositoryImpl):
             description=id_meta.description,
             study_id_prefix=id_meta.study_id_prefix,
         )
-
-        return value
 
     def _create(self, snapshot: StudyDefinitionSnapshot) -> None:
         self._ensure_transaction()
@@ -2401,8 +2409,9 @@ class StudyDefinitionRepositoryImpl(StudyDefinitionRepository, RepositoryImpl):
         )
 
         # Persist study fields and registry identifiers that are inherited
-        # from a parent study (e.g. when creating a subpart).  Only call the
-        # maintain helpers when there are actual values to persist.
+        # from a parent study (e.g. when creating a subpart) or sent on create
+        # (migrated study fields).  Only call the maintain helpers when
+        # there are actual values to persist.
         metadata = snapshot.current_metadata
         has_study_description = (
             metadata.study_description.study_title is not None
@@ -2414,7 +2423,12 @@ class StudyDefinitionRepositoryImpl(StudyDefinitionRepository, RepositoryImpl):
             for cfg in FieldConfiguration.default_field_config()
             if cfg.study_field_data_type == StudyFieldType.REGISTRY
         )
-        if has_study_description or has_registry_ids:
+        has_study_fields = (
+            has_study_description
+            or metadata.id_metadata.migrated_study_indicator is not None
+            or metadata.id_metadata.migrated_study_comment is not None
+        )
+        if has_study_fields or has_registry_ids:
             empty_metadata = StudyMetadataVO(
                 id_metadata=StudyIdentificationMetadataVO(
                     project_number=metadata.id_metadata.project_number or "",
@@ -2441,7 +2455,7 @@ class StudyDefinitionRepositoryImpl(StudyDefinitionRepository, RepositoryImpl):
                 study_status=snapshot.study_status,
                 deleted=False,
             )
-            if has_study_description:
+            if has_study_fields:
                 self._maintain_study_fields_relationships(
                     study_root=root,
                     previous_snapshot=empty_snapshot,
@@ -2506,7 +2520,7 @@ class StudyDefinitionRepositoryImpl(StudyDefinitionRepository, RepositoryImpl):
                 )
             )
         )
-        data = {
+        return {
             "start_date": ver_meta.version_timestamp if ver_meta else None,
             "end_date": None,
             "status": snapshot.study_status,
@@ -2518,7 +2532,6 @@ class StudyDefinitionRepositoryImpl(StudyDefinitionRepository, RepositoryImpl):
             "change_description": ver_meta.version_description if ver_meta else None,
             "author_id": self.audit_info.author_id,
         }
-        return data
 
     def _retrieve_fields_audit_trail(
         self, uid: str
@@ -2604,7 +2617,7 @@ class StudyDefinitionRepositoryImpl(StudyDefinitionRepository, RepositoryImpl):
         # if the study is not found, return None.
         if len(result_array) == 0:
             return None
-        audit_trail = [
+        return [
             StudyFieldAuditTrailEntryAR(
                 study_uid=row[0],
                 author_id=row[2],
@@ -2619,12 +2632,11 @@ class StudyDefinitionRepositoryImpl(StudyDefinitionRepository, RepositoryImpl):
                         after_value=action["after"],
                     )
                     for action in row[3]
-                    if action["field"] not in ["study_id_prefix"]
+                    if action["field"] != "study_id_prefix"
                 ],
             )
             for row in result_array
         ]
-        return audit_trail
 
     @classmethod
     def truncate_code_or_codes_suffix(
@@ -2648,13 +2660,13 @@ class StudyDefinitionRepositoryImpl(StudyDefinitionRepository, RepositoryImpl):
         For a given field name, find what logical section of the study properties it belongs to.
         """
         if (
-            field in [field.name for field in fields(StudyIdentificationMetadataVO)]  # type: ignore[arg-type]
+            field in [field.name for field in fields(StudyIdentificationMetadataVO)]
             or field == "study_id"
         ):
             return "identification_metadata"
         if field in [field.name for field in fields(RegistryIdentifiersVO)]:
             return "registry_identifiers"
-        if field in [field.name for field in fields(StudyVersionMetadataVO)]:  # type: ignore[arg-type]
+        if field in [field.name for field in fields(StudyVersionMetadataVO)]:
             return "version_metadata"
         if field in [field.name for field in fields(HighLevelStudyDesignVO)]:
             return "high_level_study_design"
@@ -2690,7 +2702,7 @@ MATCH (sr:StudyRoot)-[:LATEST]->(sv)
         return match_clause
 
     def _build_snapshot_alias_clause(self) -> str:
-        alias_clause = """
+        return """
                     sr, sv,
                     head([(sr)-[ll:LATEST_LOCKED]->() | ll]) AS llr,
                     head([(sr)-[lr:LATEST_RELEASED]->(lrn) | {lrr:lr, svr: lrn}]) AS released,
@@ -2809,7 +2821,6 @@ MATCH (sr:StudyRoot)-[:LATEST]->(sv)
                         has_study_activity,
                         has_study_activity_instruction
                     """
-        return alias_clause
 
     def _update_snapshot_filter_by(
         self,
@@ -2914,9 +2925,7 @@ MATCH (sr:StudyRoot)-[:LATEST]->(sv)
         # returns names of the properties in the separate array
         studies = []
         for study in result_array:
-            study_dictionary = {}
-            for study_property, attribute_name in zip(study, attributes_names):
-                study_dictionary[attribute_name] = study_property
+            study_dictionary = dict(zip(attributes_names, study))
             studies.append(study_dictionary)
 
         total = calculate_total_count_from_query_result(
@@ -3116,10 +3125,7 @@ MATCH (sr:StudyRoot)-[:LATEST]->(sv)
 
         exceptions.NotFoundException.raise_if(root is None, "Study", study_uid)
 
-        is_study_locked = (
-            root.latest_locked.get_or_none() == root.latest_value.get_or_none()
-        )
-        return is_study_locked
+        return root.latest_locked.get_or_none() == root.latest_value.get_or_none()
 
     @classmethod
     def check_if_study_is_deleted(cls, study_uid: str) -> bool:
@@ -3884,9 +3890,10 @@ MATCH (sr:StudyRoot)-[:LATEST]->(sv)
         ):
             try:
                 parser(parameter_value)
-                return parameter_value
             except ValueError, TypeError:
                 continue
+            else:
+                return parameter_value
         raise exceptions.ValidationException(
             msg=(
                 f"Date/DateTime/Time Other Study Attribute requires a valid "
@@ -3954,14 +3961,13 @@ MATCH (sr:StudyRoot)-[:LATEST]->(sv)
             }
 
         filters["field_name__in"] = field_names
-        nodes = (
+        return (
             StudyBooleanField.nodes.traverse(
                 "has_after__audit_trail",
             )
             .filter(**filters)
             .resolve_subgraph()
         )
-        return nodes
 
     def post_soa_preferences(
         self, study_uid: str, soa_preferences: StudySoaPreferencesInput
@@ -4021,13 +4027,88 @@ MATCH (sr:StudyRoot)-[:LATEST]->(sv)
             self._generate_study_field_audit_node(
                 study_root_node=study_root,
                 study_field_node_after=field_sf,
-                study_field_node_before=_nodes.get(name, None),
+                study_field_node_before=_nodes.get(name),
                 change_status=None,
                 author_id=self.audit_info.author_id,
                 date=datetime.now(UTC),
             )
 
         return self.get_soa_preferences(study_uid=study_uid)
+
+    @staticmethod
+    def get_manual_visit_mode(
+        study_uid: str, study_value_version: str | None = None
+    ) -> bool:
+        """Returns True if the study (or the given study version) is in manual visit mode."""
+        nodes = StudyDefinitionRepositoryImpl.get_soa_preferences(
+            study_uid=study_uid,
+            study_value_version=study_value_version,
+            field_names=(settings.study_field_manual_visit_mode,),
+        )
+        return bool(nodes and nodes[0].value)
+
+    @staticmethod
+    def get_manual_visit_mode_enabled_date(study_uid: str) -> datetime | None:
+        """Returns when manual visit mode was enabled, or None if not in manual mode."""
+        nodes = StudyDefinitionRepositoryImpl.get_soa_preferences(
+            study_uid=study_uid,
+            field_names=(settings.study_field_manual_visit_mode,),
+        )
+        if not (nodes and nodes[0].value):
+            return None
+        action = nodes[0].has_after.single()
+        return action.date if action else None
+
+    def enable_manual_visit_mode(self, study_uid: str) -> None:
+        """Enables manual visit mode. Idempotent — no-op if already enabled."""
+        nodes = self.get_soa_preferences(
+            study_uid=study_uid,
+            field_names=(settings.study_field_manual_visit_mode,),
+        )
+        if nodes and nodes[0].value:
+            return
+        study_root = StudyRoot.nodes.get(uid=study_uid)
+        latest_study_value = study_root.latest_value.single()
+        # Replace any previous (disabled) field so only one node stays connected
+        for node in nodes:
+            latest_study_value.has_boolean_field.disconnect(node)
+        field = StudyBooleanField(
+            field_name=settings.study_field_manual_visit_mode, value=True
+        ).save()
+        latest_study_value.has_boolean_field.connect(field)
+        self._generate_study_field_audit_node(
+            study_root_node=study_root,
+            study_field_node_after=field,
+            study_field_node_before=nodes[0] if nodes else None,
+            change_status=None,
+            author_id=self.audit_info.author_id,
+            date=datetime.now(UTC),
+        )
+
+    def disable_manual_visit_mode(self, study_uid: str) -> None:
+        """Switches back to assisted visit mode. Idempotent — no-op if already assisted."""
+        nodes = self.get_soa_preferences(
+            study_uid=study_uid,
+            field_names=(settings.study_field_manual_visit_mode,),
+        )
+        if not (nodes and nodes[0].value):
+            return
+        previous_field = nodes[0]
+        study_root = StudyRoot.nodes.get(uid=study_uid)
+        latest_study_value = study_root.latest_value.single()
+        latest_study_value.has_boolean_field.disconnect(previous_field)
+        field = StudyBooleanField(
+            field_name=settings.study_field_manual_visit_mode, value=False
+        ).save()
+        latest_study_value.has_boolean_field.connect(field)
+        self._generate_study_field_audit_node(
+            study_root_node=study_root,
+            study_field_node_after=field,
+            study_field_node_before=previous_field,
+            change_status=None,
+            author_id=self.audit_info.author_id,
+            date=datetime.now(UTC),
+        )
 
     @staticmethod
     def get_soa_split_uids(
@@ -4083,7 +4164,7 @@ MATCH (sr:StudyRoot)-[:LATEST]->(sv)
 
         # Check if uid is already in the array
         exceptions.AlreadyExistsException.raise_if(
-            previous_study_array_field and uid in previous_study_array_field.value,  # type: ignore[operator]
+            previous_study_array_field and uid in previous_study_array_field.value,
             msg=f"StudyVisit '{uid}' is already present in SoA split UIDs for Study '{study_uid}'.",
         )
 
@@ -4132,7 +4213,7 @@ MATCH (sr:StudyRoot)-[:LATEST]->(sv)
         # Create new StudyArrayField with the uid added
         uids: set[str] = set()
         if previous_study_array_field:
-            uids = set(previous_study_array_field.value)  # type: ignore[call-overload]
+            uids = set(previous_study_array_field.value)
         uids |= {uid}
         new_study_array_field = StudyArrayField(
             field_name=_field_name, value=list(uids)
@@ -4173,7 +4254,7 @@ MATCH (sr:StudyRoot)-[:LATEST]->(sv)
         # Check if uid is in the array
         exceptions.NotFoundException.raise_if_not(
             previous_study_array_field is not None
-            and uid in previous_study_array_field.value,  # type: ignore[operator]
+            and uid in previous_study_array_field.value,
             msg=f"StudyVisit '{uid}' is not in SoA split UIDs for Study '{study_uid}'.",
         )
 
@@ -4184,7 +4265,7 @@ MATCH (sr:StudyRoot)-[:LATEST]->(sv)
         latest_study_value.has_array_field.disconnect(previous_study_array_field)
 
         # Create new StudyArrayField if uids remain after removal
-        if new_uids := list(set(previous_study_array_field.value) - {uid}):  # type: ignore[arg-type]
+        if new_uids := list(set(previous_study_array_field.value) - {uid}):
             new_study_array_field = StudyArrayField(
                 field_name=_field_name, value=new_uids
             ).save()

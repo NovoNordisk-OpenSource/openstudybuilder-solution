@@ -33,7 +33,7 @@ from clinical_mdr_api.services.concepts.concept_generic_service import (
 from common.exceptions import NotFoundException
 
 
-class ActivityGroupService(ConceptGenericService[ActivityGroupAR]):
+class ActivityGroupService(ConceptGenericService[ActivityGroupAR, ActivityGroup]):
     aggregate_class = ActivityGroupAR
     repository_interface = ActivityGroupRepository
     version_class = ActivityGroupVersion
@@ -106,18 +106,18 @@ class ActivityGroupService(ConceptGenericService[ActivityGroupAR]):
                 all_versions.append(version_item.version)
 
         return ActivityGroupDetail(
-            name=group.name,
+            name=group.name,  # type: ignore[arg-type]
             name_sentence_case=group.name_sentence_case,
             nci_concept_id=group.nci_concept_id,
             nci_concept_name=group.nci_concept_name,
             library_name=group.library_name,
             start_date=start_date,
             end_date=end_date,
-            status=group.status,
-            version=group.version,
-            possible_actions=group.possible_actions,
-            change_description=group.change_description,
-            author_username=group.author_username,
+            status=group.status,  # type: ignore[arg-type]
+            version=group.version,  # type: ignore[arg-type]
+            possible_actions=group.possible_actions,  # type: ignore[arg-type]
+            change_description=group.change_description,  # type: ignore[arg-type]
+            author_username=group.author_username,  # type: ignore[arg-type]
             definition=group.definition,
             abbreviation=group.abbreviation,
             all_versions=all_versions,
@@ -160,7 +160,7 @@ class ActivityGroupService(ConceptGenericService[ActivityGroupAR]):
         result = (
             self._repos.activity_group_repository.get_linked_activity_subgroup_uids(
                 group_uid=group_uid,
-                version=version_to_use,
+                version=version_to_use,  # type: ignore[arg-type]
                 skip=skip,
                 limit=limit,
                 count_total=total_count,

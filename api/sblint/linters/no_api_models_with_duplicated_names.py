@@ -65,9 +65,8 @@ class NoDuplicatedApiModelNames(SBLinter):
         """Finds a class definition by its name across all files."""
         # first try to find it using the module
         file_path = f"{module.replace('.', '/')}.py"
-        if file_path in cls.all_class_defs:
-            if name in cls.all_class_defs[file_path]:
-                return cls.all_class_defs[file_path][name]
+        if file_path in cls.all_class_defs and name in cls.all_class_defs[file_path]:
+            return cls.all_class_defs[file_path][name]
         for file_class_defs in cls.all_class_defs.values():
             if name in file_class_defs:
                 return file_class_defs[name]
@@ -101,12 +100,11 @@ class NoDuplicatedApiModelNames(SBLinter):
             imported_class_def = cls._find_class_def_by_name_and_path(
                 imported_name, imported_module
             )
-            if imported_class_def is not None:
-                if cls._check_class_inherits_base_model(
-                    imported_class_def.name, imported_class_def.file_path
-                ):
-                    imported_class_def.inherits_from_base_model = True
-                    return True
+            if imported_class_def is not None and cls._check_class_inherits_base_model(
+                imported_class_def.name, imported_class_def.file_path
+            ):
+                imported_class_def.inherits_from_base_model = True
+                return True
         return False
 
     @classmethod
@@ -154,7 +152,7 @@ class NoDuplicatedApiModelNames(SBLinter):
                         node.name, node.lineno, parent_names, file_path
                     )
             elif isinstance(node, ast.ImportFrom):
-                module = node.module if node.module else ""
+                module = node.module or ""
                 alias = node.names[0]
                 all_imports[alias.name] = Imported(alias.name, module)
 

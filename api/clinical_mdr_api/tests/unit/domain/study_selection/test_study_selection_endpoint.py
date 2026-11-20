@@ -22,9 +22,7 @@ level = [None, "", "Primary", "Secondary"]
 
 # Simple callback to see if string exist in list(mock DB)
 def _check_uid_exists_callback(uid: str) -> bool:
-    if uid in uid_list:
-        return True
-    return False
+    return uid in uid_list
 
 
 def create_random_valid_vo(

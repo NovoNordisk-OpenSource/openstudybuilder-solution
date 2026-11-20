@@ -75,6 +75,7 @@
           </div>
           <NNParameterHighlighter
             :name="templateForm.name"
+            :parameter-names="parameterTypeNames"
             default-color="orange"
             :tooltip="false"
           />
@@ -212,6 +213,11 @@ export default {
     }
   },
   computed: {
+    // The template shown here does not carry its parameters: bracket text
+    // naming a known parameter type is a parameter, any other is literal
+    parameterTypeNames() {
+      return this.parameterTypes.map((type) => type.name)
+    },
     templateName() {
       return this.newTemplate
         ? this.newTemplate.name
@@ -274,10 +280,14 @@ export default {
       this.$emit('close')
     },
     compareParameters(oldTemplate, newTemplate) {
-      const oldParams =
-        templateParameters.getTemplateParametersFromTemplate(oldTemplate)
-      const newParams =
-        templateParameters.getTemplateParametersFromTemplate(newTemplate)
+      const oldParams = templateParameters.getTemplateParametersFromTemplate(
+        oldTemplate,
+        this.parameterTypeNames
+      )
+      const newParams = templateParameters.getTemplateParametersFromTemplate(
+        newTemplate,
+        this.parameterTypeNames
+      )
       if (oldParams.length === newParams.length) {
         let differ = false
         for (let index = 0; index < oldParams.length; index++) {

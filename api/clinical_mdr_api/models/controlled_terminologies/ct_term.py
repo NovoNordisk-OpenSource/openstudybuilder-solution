@@ -52,6 +52,11 @@ class CTTerm(BaseModel):
 
     definition: Annotated[str, Field(json_schema_extra={"remove_from_wildcard": True})]
 
+    algorithm: Annotated[
+        str | None,
+        Field(json_schema_extra={"nullable": True, "remove_from_wildcard": True}),
+    ] = None
+
     sponsor_preferred_name: Annotated[str, Field()]
 
     sponsor_preferred_name_sentence_case: Annotated[str, Field()]
@@ -74,11 +79,7 @@ class CTTerm(BaseModel):
     ) -> Self:
         return cls(
             term_uid=ct_term_attributes_ar.uid,
-            catalogue_names=(
-                ct_term_attributes_ar.ct_term_vo.catalogue_names
-                if ct_term_attributes_ar.ct_term_vo.catalogue_names
-                else []
-            ),
+            catalogue_names=ct_term_attributes_ar.ct_term_vo.catalogue_names or [],
             codelists=[
                 CTTermCodelist(
                     codelist_uid=x.codelist_uid,
@@ -95,6 +96,7 @@ class CTTerm(BaseModel):
             concept_id=ct_term_attributes_ar.ct_term_vo.concept_id,
             nci_preferred_name=ct_term_attributes_ar.ct_term_vo.preferred_term,
             definition=ct_term_attributes_ar.ct_term_vo.definition,
+            algorithm=ct_term_attributes_ar.ct_term_vo.algorithm,
             library_name=Library.from_library_vo(ct_term_attributes_ar.library).name,
             sponsor_preferred_name=ct_term_name_ar.ct_term_vo.name,
             sponsor_preferred_name_sentence_case=ct_term_name_ar.ct_term_vo.name_sentence_case,
@@ -114,6 +116,7 @@ class CTTerm(BaseModel):
             concept_id=ct_term_name_and_attributes.attributes.concept_id,
             nci_preferred_name=ct_term_name_and_attributes.attributes.nci_preferred_name,
             definition=ct_term_name_and_attributes.attributes.definition,
+            algorithm=ct_term_name_and_attributes.attributes.algorithm,
             library_name=ct_term_name_and_attributes.library_name,
             sponsor_preferred_name=ct_term_name_and_attributes.name.sponsor_preferred_name,
             sponsor_preferred_name_sentence_case=ct_term_name_and_attributes.name.sponsor_preferred_name_sentence_case,
@@ -136,6 +139,8 @@ class CTTermCreateInput(PostInputModel):
     nci_preferred_name: Annotated[str | None, Field(min_length=1)] = None
 
     definition: Annotated[str, Field(min_length=1)]
+
+    algorithm: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
 
     sponsor_preferred_name: Annotated[str, Field(min_length=1)]
 
@@ -618,7 +623,7 @@ class CTTermCodelists(BaseModel):
         term_library_name: str | None,
         ct_term_codelists: list[CTTermCodelist],
     ) -> Self:
-        term_codelists = cls(
+        return cls(
             term_uid=term_uid,
             term_library_name=term_library_name,
             codelists=[
@@ -635,8 +640,6 @@ class CTTermCodelists(BaseModel):
                 for x in ct_term_codelists
             ],
         )
-
-        return term_codelists
 
     term_uid: Annotated[str, Field()]
     term_library_name: Annotated[
@@ -661,10 +664,9 @@ class CTTermRelatives(BaseModel):
         ct_term_parents: list[CTTermRelative],
         ct_term_children: list[CTTermRelative],
     ) -> Self:
-        related = cls(
+        return cls(
             term_uid=term_uid, parents=ct_term_parents, children=ct_term_children
         )
-        return related
 
     term_uid: Annotated[str, Field()]
     parents: Annotated[list[CTTermRelative], Field()]

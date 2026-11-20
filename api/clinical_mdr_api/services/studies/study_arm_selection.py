@@ -152,11 +152,10 @@ class StudyArmSelectionService(StudySelectionMixin):
         selections = []
         for selection_ar in arm_selection_ars:
             parsed_selections = self._transform_all_to_response_model(selection_ar)
-            for selection in parsed_selections:
-                selections.append(selection)
+            selections.extend(parsed_selections)
 
         # Do filtering, sorting, pagination and count
-        filtered_items = service_level_generic_filtering(
+        return service_level_generic_filtering(
             items=selections,
             filter_by=filter_by,
             filter_operator=filter_operator,
@@ -165,7 +164,6 @@ class StudyArmSelectionService(StudySelectionMixin):
             page_number=page_number,
             page_size=page_size,
         )
-        return filtered_items
 
     def get_distinct_values_for_header(
         self,
@@ -183,7 +181,7 @@ class StudyArmSelectionService(StudySelectionMixin):
         if study_uid:
             arm_selection_ar = repos.study_arm_repository.find_by_study(study_uid)
 
-            header_values = service_level_generic_header_filtering(
+            return service_level_generic_header_filtering(
                 items=self._transform_all_to_response_model(arm_selection_ar),
                 field_name=field_name,
                 search_string=search_string,
@@ -191,8 +189,6 @@ class StudyArmSelectionService(StudySelectionMixin):
                 filter_operator=filter_operator,
                 page_size=page_size,
             )
-
-            return header_values
 
         arm_selection_ars = repos.study_arm_repository.find_all(
             project_name=project_name,
@@ -204,11 +200,10 @@ class StudyArmSelectionService(StudySelectionMixin):
         selections = []
         for selection_ar in arm_selection_ars:
             parsed_selections = self._transform_all_to_response_model(selection_ar)
-            for selection in parsed_selections:
-                selections.append(selection)
+            selections.extend(parsed_selections)
 
         # Do filtering, sorting, pagination and count
-        header_values = service_level_generic_header_filtering(
+        return service_level_generic_header_filtering(
             items=selections,
             field_name=field_name,
             search_string=search_string,
@@ -217,7 +212,6 @@ class StudyArmSelectionService(StudySelectionMixin):
             page_size=page_size,
         )
         # Return values for field_name
-        return header_values
 
     @trace_calls
     def get_all_selection(
@@ -237,7 +231,7 @@ class StudyArmSelectionService(StudySelectionMixin):
                 study_uid, study_value_version=study_value_version
             )
 
-            filtered_items = service_level_generic_filtering(
+            return service_level_generic_filtering(
                 items=self._transform_all_to_response_model(
                     arm_selection_ar, study_value_version=study_value_version
                 ),
@@ -249,7 +243,6 @@ class StudyArmSelectionService(StudySelectionMixin):
                 page_size=page_size,
             )
 
-            return filtered_items
         finally:
             repos.close()
 
@@ -524,8 +517,7 @@ class StudyArmSelectionService(StudySelectionMixin):
                 ).model_dump()
                 for history, effective_date in zip(selection_history, effective_dates)
             ]
-            data = calculate_diffs(versions, StudySelectionArmVersion)
-            return data
+            return calculate_diffs(versions, StudySelectionArmVersion)
         finally:
             repos.close()
 
@@ -1070,63 +1062,56 @@ class StudyArmSelectionService(StudySelectionMixin):
     ) -> list[StudySelectionArmBatchOutput]:
         results: list[StudySelectionArmBatchOutput | None] = [None] * len(operations)
         patched_arm_uids: set[str] = set()
-        try:
-            index = 0
-            while index < len(operations):
-                operation = operations[index]
-                if operation.method == "PATCH":
-                    if isinstance(operation.content, StudySelectionArmBatchUpdateInput):
-                        item = self.patch_selection(
-                            study_uid=study_uid,
-                            study_selection_uid=operation.content.arm_uid,
-                            selection_update_input=operation.content,
-                            validate=False,
-                        )
-                        patched_arm_uids.add(operation.content.arm_uid)
-                        results[index] = StudySelectionArmBatchOutput(
-                            response_code=status.HTTP_200_OK,
-                            content=item,
-                        )
-                    else:
-                        raise exceptions.ValidationException(
-                            msg="PATCH operation requires StudySelectionArmBatchUpdateInput as request payload."
-                        )
-                    index += 1
-                elif operation.method == "POST":
-                    post_specs: list[StudySelectionArmCreateInput] = []
-                    post_indices: list[int] = []
-                    while (
-                        index < len(operations) and operations[index].method == "POST"
-                    ):
-                        content = operations[index].content
-                        if not isinstance(content, StudySelectionArmCreateInput):
-                            raise exceptions.ValidationException(
-                                msg="POST operation requires StudySelectionArmCreateInput as request payload."
-                            )
-                        post_specs.append(content)
-                        post_indices.append(index)
-                        index += 1
-                    create_results = self._create_arms_with_conflict_resolution(
+        index = 0
+        while index < len(operations):
+            operation = operations[index]
+            if operation.method == "PATCH":
+                if isinstance(operation.content, StudySelectionArmBatchUpdateInput):
+                    item = self.patch_selection(
                         study_uid=study_uid,
-                        specs=post_specs,
+                        study_selection_uid=operation.content.arm_uid,
+                        selection_update_input=operation.content,
+                        validate=False,
                     )
-                    for result_index, create_result in zip(
-                        post_indices, create_results
-                    ):
-                        results[result_index] = create_result
+                    patched_arm_uids.add(operation.content.arm_uid)
+                    results[index] = StudySelectionArmBatchOutput(
+                        response_code=status.HTTP_200_OK,
+                        content=item,
+                    )
                 else:
-                    raise exceptions.MethodNotAllowedException(method=operation.method)
-
-            if patched_arm_uids:
-                study_arm_ar: StudySelectionArmAR = (
-                    self._repos.study_arm_repository.find_by_study(study_uid=study_uid)
-                )
-                for study_arm_vo in study_arm_ar.study_arms_selection:
-                    if study_arm_vo.study_selection_uid in patched_arm_uids:
-                        study_arm_vo.validate(
-                            self._repos.ct_term_name_repository.term_specific_exists_by_uid,
-                            arm_exists_callback_by=self._repos.study_arm_repository.arm_exists_by,
+                    raise exceptions.ValidationException(
+                        msg="PATCH operation requires StudySelectionArmBatchUpdateInput as request payload."
+                    )
+                index += 1
+            elif operation.method == "POST":
+                post_specs: list[StudySelectionArmCreateInput] = []
+                post_indices: list[int] = []
+                while index < len(operations) and operations[index].method == "POST":
+                    content = operations[index].content
+                    if not isinstance(content, StudySelectionArmCreateInput):
+                        raise exceptions.ValidationException(
+                            msg="POST operation requires StudySelectionArmCreateInput as request payload."
                         )
-        except exceptions.MDRApiBaseException as error:
-            raise error
+                    post_specs.append(content)
+                    post_indices.append(index)
+                    index += 1
+                create_results = self._create_arms_with_conflict_resolution(
+                    study_uid=study_uid,
+                    specs=post_specs,
+                )
+                for result_index, create_result in zip(post_indices, create_results):
+                    results[result_index] = create_result
+            else:
+                raise exceptions.MethodNotAllowedException(method=operation.method)
+
+        if patched_arm_uids:
+            study_arm_ar: StudySelectionArmAR = (
+                self._repos.study_arm_repository.find_by_study(study_uid=study_uid)
+            )
+            for study_arm_vo in study_arm_ar.study_arms_selection:
+                if study_arm_vo.study_selection_uid in patched_arm_uids:
+                    study_arm_vo.validate(
+                        self._repos.ct_term_name_repository.term_specific_exists_by_uid,
+                        arm_exists_callback_by=self._repos.study_arm_repository.arm_exists_by,
+                    )
         return [result for result in results if result is not None]

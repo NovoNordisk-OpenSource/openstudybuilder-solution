@@ -126,14 +126,14 @@ class TracingMiddleware:
 
             message = await receive()
 
-            if message.get("type") == "http.request":
-                if (body := message.get("body")) is not None:
-                    request_body_size += len(body)
+            if (
+                message.get("type") == "http.request"
+                and (body := message.get("body")) is not None
+            ):
+                request_body_size += len(body)
 
-                    if not request_body and settings.trace_request_body:
-                        request_body = body[
-                            : settings.trace_request_body_truncate_bytes
-                        ]
+                if not request_body and settings.trace_request_body:
+                    request_body = body[: settings.trace_request_body_truncate_bytes]
 
             return message
 
@@ -317,7 +317,7 @@ class TracingMiddleware:
         response: Response | Message,
         expose_header: bool = False,
         span: Span | None = None,
-        flags: int | float | None = None,
+        flags: float | None = None,
     ) -> None:
         """Add trace id either from trace context or `traceparent` request header to `traceresponse` response header.
 

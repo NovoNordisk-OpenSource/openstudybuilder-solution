@@ -1,3 +1,141 @@
+## V 2.12
+
+## Highlights
+
+- **Study Visits gained visit order, suffixes and expected time.** Visits can carry an A/B/C suffix and an expected time, the Schedule of Activities header can be shown, there is a visit catalogue, and duplicated visits get a unique number.
+- **Migrated studies are supported end to end.** A study can be flagged as migrated and carry a migration comment, shown on the Study Type in Study Properties. The epoch lag time UI is available for migrated studies, and a feature flag can show it on all studies. The indicator and comment can also be set through the study API.
+- **Age rules were added to Study Properties.** The Age at Baseline Rule and Age Group Rule are managed at *Studies › Define Study › Study Properties › Age Rules*, and the consumer API exposes them.
+- **Study Auxiliary Devices were added.** Devices can be selected per study, are exposed in the consumer API, and the feature sits behind a feature flag that is off by default.
+- **Study design population is available.** Subgroups and strata can be defined under Study Design.
+- **Studies can now be compared.** A Study Comparison page appears in the Studies sidebar, backed by `GET /studies/{study_uid}/comparison`.
+- **CRFs can now be compared.** A Compare tab in the CRF Builder compares CRF definitions, and `POST /odms/metadata/xmls/parse` parses ODM XML for comparison.
+- **Footnotes in the Protocol are easier to manage.** A "Manage footnotes" menu is available in the Protocol and Protocol Lab Schedule of Activities layouts, and footnotes on checkmarks now carry over from hidden rows.
+- **Controlled terminology can be updated from within the application.** A new Standards Import in the Library downloads CDISC controlled terminology packages, compares them with what is loaded, and lets you review codelist and term changes, resolve inconsistencies and assess the impact on sponsor content before applying them. See **Running the application**.
+- **Feature flags now keep a history.** Changes are recorded at feature and table level, and `GET /feature-flags` now requires the ANY role.
+- **A sample extension shows how to read library data from outside the application.** `GET /consumer-sample/ct-terms` on the Extensions API returns controlled terminology read-only, and the documentation no longer presents the Consumer API as a public component.
+- **Breaking changes in the API.** Activity Item Class `display_name` is now `label`, Control Type is multi-select and its field is renamed, and the topic code reference table moved from the main API to the consumer API. Clients reading those fields need updating.
+- **Docker Compose deployments need new settings.** The `api` service gains Standards Import settings, the gateway accepts larger uploads on `/api/`, and compose now requires `NEO4J_MDR_AUTH_PASSWORD`. See **Running the application**.
+- **User guides were extended.** New or restructured guides cover NeoDash reports, Study Properties, study population, study structure, Activity Instance export, epoch lag time, auxiliary devices, age rules and the Activity Concepts Quick Guides.
+
+## New features
+
+- **api:** Added Age at Baseline Rule and Age Group Rule as study fields, with two new sponsor code lists. The consumer API exposes them as `age_bl_rule` and `age_grp_rule`.
+- **api:** Added Study Auxiliary Devices, available under `/studies/{study_uid}/study-auxiliary-devices`, with `auxiliary_devices` in the consumer API and an algorithm attribute on controlled terminology terms.
+- **api:** Added Study Comparison — `GET /studies/{study_uid}/comparison`.
+- **api:** Added `GET /system/settings`, which reports instance settings, and the `STUDIES_STUDY_NUMBER_REGEX` environment variable to configure the study number pattern.
+- **api:** Added free-text dose values on study compounds, and `GET /concepts/medicinal-products` can now be filtered by dose. The pharmacological class is shown in the study compound overview.
+- **api:** Added optional comments on migrated studies to `POST /studies`, the clone endpoint and study updates.
+- **api:** Added support for comment items in ODM, with a CRF item form switch.
+- **api:** Added ODM XML parsing — `POST /odms/metadata/xmls/parse`.
+- **api:** Added the `consumer_sample` extension to the Extensions API, with `GET /consumer-sample/ct-terms`. It is read-only and needs Library read access.
+- **api:** Added feature flag history at feature and table level.
+- **api:** Added a Standards Import service to the main API, with a configuration page under Administration.
+- **frontend:** Added a Standards Import area in the Library for downloading CDISC controlled terminology packages, reviewing the differences against loaded content, working through review items and sponsor impact, and following the findings on a dashboard. The key for the CDISC service is entered on its configuration page.
+- **frontend:** Added a Study Comparison page in the Studies sidebar.
+- **frontend:** Added the Age Rules tab — *Studies › Define Study › Study Properties › Age Rules*.
+- **frontend:** Added study design population, with subgroups and strata, under Study Design.
+- **frontend:** Added a "Manage footnotes" menu to the Protocol and Protocol Lab Schedule of Activities layouts, and carried footnotes on checkmarks over from hidden rows. Footnotes that only point to hidden rows are no longer returned.
+- **frontend:** Added visit order, an A/B/C suffix, expected time and a Schedule of Activities header to Study Visits, together with a visit catalogue and a unique number when a visit is duplicated.
+- **frontend:** Added a Compare tab to the CRF Builder.
+- **frontend:** Added feature flag history in Administration › Feature Flags.
+- **frontend:** Added the migrated-study indicator and comment to the Study Type shown in Study Properties.
+
+## Improvements
+
+- **api:** Renamed the Activity Item Class `display_name` to `label`. `GET /v1/library/activity-item-classes` in the consumer API now returns `label`. **Breaking.**
+- **api:** Made Control Type a multi-select, with the field renamed to `control_type_codes`. **Breaking.**
+- **api:** Moved the topic code reference table from the main API to the consumer API and added the missing variables to it. **Breaking.**
+- **api:** Made `title` optional on `POST /studies` and the clone endpoint.
+- **api:** Allowed square brackets in syntax templates.
+- **api:** Required the ANY role for `GET /feature-flags`.
+- **api:** Added `activity_instances` and `end_date` to the ODM `fields` parameter.
+- **api:** Added compound information to the Trial Summary query.
+- **api:** Allowed `migrated_study_indicator` to be set through the study API.
+- **api:** Added a feature flag for the epoch lag time, `study_epoch_ae_lag_time`, which is on by default.
+- **api:** Added warnings on data supplier rules whose activity mapping is retired.
+- **api:** Added an Algorithm column on codelist terms.
+- **api:** Started storing the frozen Schedule of Activities in a new way, with a data migration for existing snapshots.
+- **api:** Recorded the user in database transaction metadata.
+- **api:** Resolved age rule term names at the study controlled terminology package date.
+- **db:** Added the logical data model documentation, including the migrated-study indicator and auxiliary devices.
+- **documentation_portal:** Added NeoDash user guides, a Study Properties guide, a Study Population guide, a Study Structure guide with a Quick Guide for study design, an Activity Instance Export guide, user guides for epoch lag time, auxiliary devices and age rules, and per-procedure Quick Guides for Activity Concepts. Updated the system component overview.
+- **frontend:** Showed the epoch lag time UI for migrated studies, and for every study when the lag time feature flag is on.
+- **frontend:** Changed the application logo.
+- **frontend:** Showed the Activity Item Class label on the Activity Item Class screens and Non-Standard Variables.
+- **frontend:** Reworked the unit form to show the dimension's master unit and moved Name before Dimension.
+- **frontend:** Added a warning when a term submission value is already used by another term.
+- **frontend:** Showed term definitions for the Age at Baseline Rule and Age Group Rule.
+- **frontend:** Made transition rules editable inline.
+- **frontend:** Switched new table columns on by default when there is no cached selection.
+- **frontend:** Added a loading state and pagination to the CRF Tree, with a warning when a new version is created.
+- **frontend:** Opened sidebar menu items in a new tab on Cmd/Ctrl+click.
+- **frontend:** Added an extension point to the ODM Viewer export dropdown.
+- **import_sponsor_data:** Updated the activity item class CSV, including SI and US conventional units.
+- **import_sponsor_data:** Switched the Auxiliary Devices feature flag off by default. The tab is hidden until it is enabled, and running the import in update mode switches it off in existing environments.
+- **import_sponsor_data:** Replaced the auxiliary device seed data with generic examples.
+- **import_sponsor_data:** Added support for importing ordinal codelists, shown in Codelists.
+- **api:** Updated the protocol docx template styling.
+- **db_schema_migration:** Allowed migration scripts to sign in with SSO or a bearer token.
+
+## Bug fixes
+
+- **api:** Fixed branch arm names being unique across the study. They are now unique per Study Arm.
+- **api:** Fixed filtering of activity groups and sub groups.
+- **api:** Fixed age rule term names so they are resolved at the study controlled terminology package date.
+- **api:** Added validation of the development stage code.
+- **api:** Fixed item version retrieval so a specific version can be requested.
+- **api:** Fixed the visit preview when editing a visit.
+- **api:** Fixed topic codes not being shown in the consumer API when a study has no schedule.
+- **api:** Fixed the Activity Item Class header clause after the `label` rename.
+- **api:** Improved study load performance.
+- **api:** Sped up the Activity Item Class overview and showed a loading state.
+- **api:** Removed an unused optimized unit definition query.
+- **db_schema_migration:** Made migration 024 stop with an error when a required code list is missing.
+- **frontend:** Fixed the template selection.
+- **frontend:** Allowed logout for users who have no read roles.
+- **frontend:** Fixed scrolling in filter autocomplete lists.
+- **frontend:** Fixed several issues on the Activities screens.
+- **frontend:** Fixed the SoA milestone being missing in edit mode.
+- **import_sponsor_data:** Made activity item classes case-insensitive.
+- **import_sponsor_data:** Fixed a mismatch between Activity Items and Activity Item Classes.
+
+## Running the application
+
+The gateway routes, ports and `GATEWAY_PORT` / `BIND_ADDRESS` settings are as described for Release 2.11. The Consumer API container and its `/consumer-api/` gateway route are still present.
+
+What did change:
+
+- **Standards Import settings.** The `api` service now sets `NEO4J_STANDARDS_IMPORT_ENABLED`, `NEO4J_MAX_PACKAGE_FILE_BYTES`, `NEO4J_STAGING_BATCH_SIZE`, `NEO4J_JOB_STALE_AFTER_SECONDS`, `NEO4J_STANDARDS_IMPORT_CDISC_API_BASE_URL`, `NEO4J_STANDARDS_IMPORT_STAGING_DSN` and the `NEO4J_NEO4J_MDR_ROLE_USER` / `NEO4J_NEO4J_STAGING_ROLE_USER` settings with their passwords. If you keep your own compose file, add them.
+- **Database password.** The role passwords are taken from `NEO4J_MDR_AUTH_PASSWORD`. Compose stops early with a message when that variable is not set.
+- **Upload size.** The gateway's `/api/` location now accepts request bodies of up to 64 MB, so large package files can be uploaded.
+- **Production API image.** The production image now removes test directories when it is built.
+- **Extensions API.** The README lists the `extensions` app on port 8009 and no longer lists the Consumer API (port 8008) as a component. External read access is documented through the `consumer_sample` extension.
+- **Feature flags.** Auxiliary Devices is off by default, and the epoch lag time flag is on by default. Review both in Administration › Feature Flags.
+- **Database migration.** Migration 024 was corrected for CRF item value data types and now stops with an error when a required code list is missing.
+
+## Internal / Infrastructure
+
+- **.claude:** Tightened the shared developer assistant skills to best practices and renamed `CLAUDE.md` to `AGENTS.md` so the instructions work with other coding assistants.
+- **.github:** Enabled the authentication tests in the CI pipeline.
+- **.github:** Added merge queue support to the required PR checks and secret scan workflows.
+- **.github:** Split the schemathesis tests into six parallel shards and sped up CI.
+- **api:** Added ruff lint rules and tightened mypy, with more ruff rules enabled.
+- **api:** Added port configuration for the development commands and scripts.
+- **db_schema_migration:** Added a test that checks the feature flag structure after migrating a real database.
+- **db_schema_migration:** Updated how migration 024 handles ODM item value data types.
+- **frontend:** Refactored the study visits edit state and the table edit updates.
+- **frontend:** Excluded Vuetify from Vite dependency pre-bundling.
+- **system_tests:** Added or maintained end-to-end tests for Study Visits, Footnotes, Study Age Rules, Design Matrix transition rules, Study Auxiliary Devices, non-standard variables, activity instance interventions, epoch lag time and Process scenarios, and stabilised and fixed failing tests across the suite.
+- **system_tests:** Drafted sample functional specifications in Gherkin and updated the Gherkin files to support them.
+- **system_tests:** Updated test dependencies and enabled tests that had been tagged as manual or pending.
+- **api:** Extended tests so the sponsor standard is optional.
+- **api, frontend, load_tests, system_tests, db_schema_migration:** Updated dependencies to clear reported audit findings, including `authlib`, `joserfc`, `pyasn1`, `filelock`, `brotli` and `setuptools`, and sorted the SBOM output so it is reproducible.
+
+## Other
+
+- **api:** Updated dependencies and fixed vulnerabilities reported by dependency audits.
+- **documentation_portal:** The documentation no longer describes the Consumer API as a public component. External read access is documented through the `consumer_sample` extension
+
 ## V 2.11
 
 ## Highlights
@@ -2825,5 +2963,3 @@ Upgrade to Python version 3.11.
 ## V 0.1 (24-OCT-2022)
 
 Initial commit to Public Gitlab.
-
-

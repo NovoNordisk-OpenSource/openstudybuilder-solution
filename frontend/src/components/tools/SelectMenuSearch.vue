@@ -4,6 +4,7 @@
       :model-value="modelValue"
       :placeholder="placeholder"
       :loading="loading"
+      :autofocus="autofocus"
       prepend-inner-icon="mdi-magnify"
       hide-details
       clearable
@@ -24,6 +25,10 @@ defineProps({
     default: '',
   },
   loading: {
+    type: Boolean,
+    default: false,
+  },
+  autofocus: {
     type: Boolean,
     default: false,
   },

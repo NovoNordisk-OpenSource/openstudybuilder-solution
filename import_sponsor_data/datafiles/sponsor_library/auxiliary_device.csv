@@ -1,0 +1,3 @@
+CODELIST_SUBMVAL,TERM_SUBMVAL,SPONSOR_NAME,SPONSOR_NAME_SENTENCE_CASE,NCI_NAME,ORDER,CONCEPT_ID,CATALOGUES,DEFINITION,ALGORITHM
+DEVICE_DEF,EXAMPLE BGM,Example Blood Glucose Meter,example blood glucose meter,Blood Glucose Meter,1,,,Blood glucose meter used by the subject to measure glucose,"[diparmcd:src=lb(where=(spdevid))|DEVTYPE='BGM']"
+DEVICE_DEF,EXAMPLE CGM,Example Continuous Glucose Monitor,example continuous glucose monitor,Continuous Glucose Monitor,2,,,Continuous glucose monitor worn by the subject,"[diparmcd:src=dx(where=(dxcat eq 'CGM' and spdevid))|DEVTYPE='CGM']"

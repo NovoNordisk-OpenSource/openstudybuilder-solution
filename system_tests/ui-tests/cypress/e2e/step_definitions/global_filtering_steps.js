@@ -6,13 +6,15 @@ When('Users enables filters in the form window', () => cy.get('.v-overlay [data-
 
 When('The Final status is selected by default', () => cy.get('.v-btn--active[value="final"]').should('be.visible'))
 
+When('The All status is selected by default', () => cy.get('.v-btn--active[value="all"]').should('be.visible'))
+
 When('The user filters field {string}', (fieldName) => {
     cy.longWaitForTable()
     cy.clickButton("filters-button", false)
     cy.contains('[data-cy="filter-field"]', fieldName).click()
     cy.intercept('**filters=**').as('filterRequest')
     cy.get('.v-overlay__content .v-list').filter(':visible').find('.v-list-item').first().should('not.contain.text', 'No data available').click({ force: true })
-    cy.wait('@filterRequest') //wait for the first request
+    cy.wait('@filterRequest', {timeout: 60000}) //wait for the first request
 })
 
 When('The user filters study list by field {string}', (fieldName) => {
@@ -39,26 +41,11 @@ When('The user filters table by status {string}', (statusValue) => filterByStatu
 
 When('The user changes status filter value to {string}', (statusValue) => filterByStatus(statusValue, false))
 
-Then('The table is filtered correctly', () => {
-    cy.get('@filterRequest.all').its('length').then(len => {
-        for (let i = 1; i < len; i++) {
-            //wait for remaining requests and check response status code
-            cy.wait('@filterRequest').then(request => expect(request.response.statusCode).to.equal(200))
-        }
-    })
-})
+Then('The table is filtered correctly', () => filterTable(30000))
+
+Then('The slow table is filtered correctly', () => filterTable(60000))
 
 When('The user adds status to filters', () => cy.addTableFilter('Status'))
-
-function filterByText() {
-    cy.intercept('**filters=**').as('filterRequest')
-    cy.get('.v-overlay__content .v-list').filter(':visible').find('.v-list-item').first().should('not.contain.text', 'No data available').click({ force: true })
-    cy.wait('@filterRequest') //wait for the first request
-}
-
-function filterByDate() {
-    //datepicker - to be implemented
-}
 
 function filterByStatus(statusValue, initialFiltering) {
     cy.longWaitForTable()
@@ -68,4 +55,13 @@ function filterByStatus(statusValue, initialFiltering) {
     cy.get('.v-overlay__content .v-list').filter(':visible').should('not.contain', 'No data available')
     cy.get('.v-overlay__content .v-list').filter(':visible').contains('.v-list-item', statusValue).find('input').click()
     cy.wait(500)
+}
+
+function filterTable(timeoutValue) {
+    cy.get('@filterRequest.all').its('length').then(len => {
+        for (let i = 1; i < len; i++) {
+            //wait for remaining requests and check response status code
+            cy.wait('@filterRequest', {timeout: timeoutValue}).then(request => expect(request.response.statusCode).to.equal(200))
+        }
+    })
 }

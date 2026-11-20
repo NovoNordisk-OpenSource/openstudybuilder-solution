@@ -70,6 +70,7 @@ Feature: Studies - Study List - Study List - Study Template
         And The page 'activities/list' is opened for current study
         And Activity is searched for and found
         And The page 'study_structure/visits' is opened for current study
+        And The 'visit-view-type-table' button is clicked
         And User search for visit with name 'Visit 1'
         And User search for visit with name 'Visit 2'
         And User search for visit with name 'Visit 3'

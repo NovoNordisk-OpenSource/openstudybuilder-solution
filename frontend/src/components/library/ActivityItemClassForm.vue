@@ -23,8 +23,8 @@
         <v-row>
           <v-col>
             <v-text-field
-              v-model="form.display_name"
-              :label="$t('ActivityItemClassForm.display_name')"
+              v-model="form.label"
+              :label="$t('ActivityItemClassForm.label')"
               data-cy="activity-item-class-display-name"
               clearable
             />
@@ -140,7 +140,7 @@ const roles = ref([])
 
 const helpItems = [
   'ActivityItemClassForm.name',
-  'ActivityItemClassForm.display_name',
+  'ActivityItemClassForm.label',
   'ActivityItemClassForm.order',
   'ActivityItemClassForm.role',
   'ActivityItemClassForm.data_type',
@@ -172,7 +172,7 @@ watch(
 function initForm(value) {
   form.value = {
     name: value.name,
-    display_name: value.display_name,
+    label: value.label,
     order: value.order,
     role_uid: value.role?.uid ?? value.role?.term_uid ?? null,
     data_type_uid: value.semtcdt?.uid ?? value.semtcdt?.term_uid ?? null,

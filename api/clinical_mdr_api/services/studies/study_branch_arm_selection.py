@@ -52,8 +52,9 @@ class _BranchArmConflictIndexEntry:
 
 @dataclass
 class _BranchArmConflictIndexes:
-    by_name: dict[str, _BranchArmConflictIndexEntry]
-    by_short_name: dict[str, _BranchArmConflictIndexEntry]
+    # keyed on (arm uid, name): uniqueness is per StudyArm, not per study
+    by_name: dict[tuple[str, str], _BranchArmConflictIndexEntry]
+    by_short_name: dict[tuple[str, str], _BranchArmConflictIndexEntry]
 
     @classmethod
     def from_aggregate(
@@ -67,9 +68,9 @@ class _BranchArmConflictIndexes:
     def register_vo(self, vo: StudySelectionBranchArmVO) -> None:
         entry = _BranchArmConflictIndexEntry(vo=vo)
         if vo.name:
-            self.by_name[vo.name] = entry
+            self.by_name[(vo.arm_root_uid, vo.name)] = entry
         if vo.short_name:
-            self.by_short_name[vo.short_name] = entry
+            self.by_short_name[(vo.arm_root_uid, vo.short_name)] = entry
 
 
 @dataclass(frozen=True)
@@ -173,7 +174,7 @@ class StudyBranchArmSelectionService(StudySelectionMixin):
                 branch_arm_selection_ar, study_value_version=study_value_version
             )
             # Do filtering, sorting, pagination and count
-            filtered_items = service_level_generic_filtering(
+            return service_level_generic_filtering(
                 items=selections,
                 filter_by=filter_by,
                 filter_operator=filter_operator,
@@ -182,7 +183,6 @@ class StudyBranchArmSelectionService(StudySelectionMixin):
                 page_number=page_number,
                 page_size=page_size,
             )
-            return filtered_items
 
         finally:
             repos.close()
@@ -374,8 +374,7 @@ class StudyBranchArmSelectionService(StudySelectionMixin):
                 ).model_dump()
                 for _ in selection_history
             ]
-            data = calculate_diffs(versions, StudySelectionBranchArmVersion)
-            return data
+            return calculate_diffs(versions, StudySelectionBranchArmVersion)
         finally:
             repos.close()
 
@@ -697,10 +696,10 @@ class StudyBranchArmSelectionService(StudySelectionMixin):
         spec: StudySelectionBranchArmCreateInput,
         indexes: _BranchArmConflictIndexes,
     ) -> StudySelectionBranchArmVO | None:
-        if spec.name and spec.name in indexes.by_name:
-            return indexes.by_name[spec.name].vo
-        if spec.short_name and spec.short_name in indexes.by_short_name:
-            return indexes.by_short_name[spec.short_name].vo
+        if spec.name and (spec.arm_uid, spec.name) in indexes.by_name:
+            return indexes.by_name[(spec.arm_uid, spec.name)].vo
+        if spec.short_name and (spec.arm_uid, spec.short_name) in indexes.by_short_name:
+            return indexes.by_short_name[(spec.arm_uid, spec.short_name)].vo
         return None
 
     def _create_vo_from_create_input(
@@ -866,9 +865,12 @@ class StudyBranchArmSelectionService(StudySelectionMixin):
                         skip_vo.study_selection_uid
                     )
                     notification = None
-                    if spec.name and spec.name in indexes.by_name:
+                    if spec.name and (spec.arm_uid, spec.name) in indexes.by_name:
                         notification = f"Branch arm '{spec.name}' already exists; creation skipped."
-                    elif spec.short_name and spec.short_name in indexes.by_short_name:
+                    elif (
+                        spec.short_name
+                        and (spec.arm_uid, spec.short_name) in indexes.by_short_name
+                    ):
                         notification = (
                             f"Branch arm short name '{spec.short_name}' already exists; "
                             "creation skipped."
@@ -959,89 +961,77 @@ class StudyBranchArmSelectionService(StudySelectionMixin):
             operations
         )
         patched_branch_arm_uids: set[str] = set()
-        try:
-            index = 0
-            while index < len(operations):
-                operation = operations[index]
-                if operation.method == "PATCH":
-                    if isinstance(
-                        operation.content, StudySelectionBranchArmBatchUpdateInput
-                    ):
-                        item = self.patch_selection(
-                            study_uid=study_uid,
-                            study_selection_uid=operation.content.branch_arm_uid,
-                            selection_update_input=operation.content,
-                            validate=False,
-                        )
-                        patched_branch_arm_uids.add(operation.content.branch_arm_uid)
-                        results[index] = StudySelectionBranchArmBatchOutput(
-                            response_code=status.HTTP_200_OK,
-                            content=item,
-                        )
-                    else:
-                        raise exceptions.ValidationException(
-                            msg="PATCH operation requires StudySelectionBranchArmBatchUpdateInput as request payload."
-                        )
-                    index += 1
-                elif operation.method == "POST":
-                    post_items: list[_BranchArmCreateOrSkip] = []
-                    post_indices: list[int] = []
-                    while (
-                        index < len(operations) and operations[index].method == "POST"
-                    ):
-                        content = operations[index].content
-                        if not isinstance(content, StudySelectionBranchArmCreateInput):
-                            raise exceptions.ValidationException(
-                                msg="POST operation requires StudySelectionBranchArmCreateInput as request payload."
-                            )
-                        post_items.append(_BranchArmCreateOrSkip(spec=content))
-                        post_indices.append(index)
-                        index += 1
-                    create_results = self._create_branch_arms_with_conflict_resolution(
+        index = 0
+        while index < len(operations):
+            operation = operations[index]
+            if operation.method == "PATCH":
+                if isinstance(
+                    operation.content, StudySelectionBranchArmBatchUpdateInput
+                ):
+                    item = self.patch_selection(
                         study_uid=study_uid,
-                        items=post_items,
+                        study_selection_uid=operation.content.branch_arm_uid,
+                        selection_update_input=operation.content,
+                        validate=False,
                     )
-                    for result_index, create_result in zip(
-                        post_indices, create_results
-                    ):
-                        results[result_index] = create_result
-                elif operation.method == "DELETE":
-                    branch_arm_uid = getattr(operation.content, "branch_arm_uid", None)
-                    if branch_arm_uid:
-                        self.delete_selection(
-                            study_uid=study_uid,
-                            study_selection_uid=branch_arm_uid,
-                        )
-                        results[index] = StudySelectionBranchArmBatchOutput(
-                            response_code=status.HTTP_204_NO_CONTENT,
-                            content=None,
-                        )
-                    else:
-                        raise exceptions.ValidationException(
-                            msg="DELETE operation requires a branch_arm_uid in the request payload."
-                        )
-                    index += 1
+                    patched_branch_arm_uids.add(operation.content.branch_arm_uid)
+                    results[index] = StudySelectionBranchArmBatchOutput(
+                        response_code=status.HTTP_200_OK,
+                        content=item,
+                    )
                 else:
-                    raise exceptions.MethodNotAllowedException(method=operation.method)
-
-            if patched_branch_arm_uids:
-                study_branch_arm_ar: StudySelectionBranchArmAR = (
-                    self._repos.study_branch_arm_repository.find_by_study(
-                        study_uid=study_uid
+                    raise exceptions.ValidationException(
+                        msg="PATCH operation requires StudySelectionBranchArmBatchUpdateInput as request payload."
                     )
-                )
-                for (
-                    study_branch_arm_vo
-                ) in study_branch_arm_ar.study_branch_arms_selection:
-                    if (
-                        study_branch_arm_vo.study_selection_uid
-                        in patched_branch_arm_uids
-                    ):
-                        study_branch_arm_vo.validate(
-                            study_branch_arm_study_arm_update_conflict_callback=self._repos.study_branch_arm_repository.branch_arm_arm_update_conflict,
-                            study_arm_exists_callback=self._repos.study_arm_repository.arm_specific_exists_by_uid,
-                            branch_arm_exists_callback_by=self._repos.study_branch_arm_repository.branch_arm_exists_by,
+                index += 1
+            elif operation.method == "POST":
+                post_items: list[_BranchArmCreateOrSkip] = []
+                post_indices: list[int] = []
+                while index < len(operations) and operations[index].method == "POST":
+                    content = operations[index].content
+                    if not isinstance(content, StudySelectionBranchArmCreateInput):
+                        raise exceptions.ValidationException(
+                            msg="POST operation requires StudySelectionBranchArmCreateInput as request payload."
                         )
-        except exceptions.MDRApiBaseException as error:
-            raise error
+                    post_items.append(_BranchArmCreateOrSkip(spec=content))
+                    post_indices.append(index)
+                    index += 1
+                create_results = self._create_branch_arms_with_conflict_resolution(
+                    study_uid=study_uid,
+                    items=post_items,
+                )
+                for result_index, create_result in zip(post_indices, create_results):
+                    results[result_index] = create_result
+            elif operation.method == "DELETE":
+                branch_arm_uid = getattr(operation.content, "branch_arm_uid", None)
+                if branch_arm_uid:
+                    self.delete_selection(
+                        study_uid=study_uid,
+                        study_selection_uid=branch_arm_uid,
+                    )
+                    results[index] = StudySelectionBranchArmBatchOutput(
+                        response_code=status.HTTP_204_NO_CONTENT,
+                        content=None,
+                    )
+                else:
+                    raise exceptions.ValidationException(
+                        msg="DELETE operation requires a branch_arm_uid in the request payload."
+                    )
+                index += 1
+            else:
+                raise exceptions.MethodNotAllowedException(method=operation.method)
+
+        if patched_branch_arm_uids:
+            study_branch_arm_ar: StudySelectionBranchArmAR = (
+                self._repos.study_branch_arm_repository.find_by_study(
+                    study_uid=study_uid
+                )
+            )
+            for study_branch_arm_vo in study_branch_arm_ar.study_branch_arms_selection:
+                if study_branch_arm_vo.study_selection_uid in patched_branch_arm_uids:
+                    study_branch_arm_vo.validate(
+                        study_branch_arm_study_arm_update_conflict_callback=self._repos.study_branch_arm_repository.branch_arm_arm_update_conflict,
+                        study_arm_exists_callback=self._repos.study_arm_repository.arm_specific_exists_by_uid,
+                        branch_arm_exists_callback_by=self._repos.study_branch_arm_repository.branch_arm_exists_by,
+                    )
         return [result for result in results if result is not None]

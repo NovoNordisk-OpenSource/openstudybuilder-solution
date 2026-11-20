@@ -98,28 +98,22 @@ Feature: Library - Data Collection Standards - CRF Builder - Forms
         When The 'Delete' option is clicked from the three dot menu list 
         Then The CRF Form is no longer available
 
-    @manual_test  
-    Scenario: User must be able to read change history for all element
+    Scenario: [Actions][History] User must be able to read change history of selected element
         Given The '/library/crf-builder/forms' page is opened
-        When The 'Show history' option is clicked from the three dot menu list
-        Then The user is presented with history of changes for all elements
-        And The history contains timestamps and usernames
-
-    @manual_test    
-    Scenario: User must be able to read change history of selected element
-        Given The '/library/crf-builder/forms' page is opened
-        When The user clicks on History for particular element
-        Then The user is presented with history of changes for that element
-        And The history contains timestamps and usernames
-
-
-### Next scenarios support the linking to and from a CRF Form
-
-    @pending_development
-    Scenario: [Actions][Browse] User must be able to browse CRF Forms and see related CRF Collections, CRF Item Groups, CRF Items and studies using the CRF Form
-        Given The '/library/crf-builder/forms' page is opened
-        ### We have multiple options here for how the UI could work, so two options below - to be clarified during UI/UX design
-        When The 'Links' option is clicked from the three dot menu list
-        When The linked item is clicked in the 'Links' column
-        ### We have multiple ways of displaying the related items - to be clarified during UI/UX design
-        Then The user is presented with overview of related CRF Collections, CRF Item Groups, CRF Items and studies using the CRF Form
+        And The 'History' option is clicked from the three dot menu list
+        Then The History page is displayed
+        And The following column list with values will exist
+        | header                 |
+        | Library                |
+        | OID                    |
+        | Name                   |
+        | Repeating              |
+        | Version                |
+        | Status                 |
+        | Change type            |
+        | User                   |
+        | From                   |
+        | To                     |
+        And The history table is not empty
+        When The CLOSE button is clicked
+        Then The current URL is '/library/crf-builder/forms'

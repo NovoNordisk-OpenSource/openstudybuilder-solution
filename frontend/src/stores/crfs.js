@@ -50,7 +50,7 @@ export const useCrfsStore = defineStore('crfs', {
     fetchItems(params) {
       if (!params.fields) {
         params.fields =
-          'uid,oid,name,library_name,datatype,length,sds_var_name,start_date,author_username,version,status,possible_actions,terms'
+          'uid,oid,name,library_name,datatype,length,sds_var_name,start_date,author_username,version,status,possible_actions,terms,vendor_attributes'
       }
       return crfs.get('items', { params }).then((resp) => {
         this.items = resp.data.items

@@ -123,6 +123,8 @@ watch(
 )
 
 function onMenuItemClick(event, item, subitem) {
+  // Let the browser handle modified clicks (open in new tab/window)
+  if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
   // Here we only update target, the actual redirection will be
   // done by the RedirectHandler component
   event.preventDefault()

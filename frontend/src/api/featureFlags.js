@@ -12,8 +12,11 @@ export default {
   update(featureFlagId, payload) {
     return repository.patch(`${resource}/${featureFlagId}`, payload)
   },
-  getVersions(uid) {
-    return repository.get(`${resource}/${uid}/versions`)
+  getVersions(uid, config) {
+    return repository.get(`${resource}/${uid}/versions`, config)
+  },
+  getAllVersions(params) {
+    return repository.get(`${resource}/audit-trail`, { params })
   },
   inactivate(uid) {
     return repository.delete(`${resource}/${uid}/activations`)

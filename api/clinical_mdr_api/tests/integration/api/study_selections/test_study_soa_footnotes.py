@@ -559,8 +559,8 @@ def test_get_study_soa_footnotes(
     assert list(res.keys()) == ["items", "total", "page", "size"]
     assert len(res["items"]) == expected_result_len
     assert res["total"] == (len(soa_footnotes) if total_count else 0)
-    assert res["page"] == (page_number if page_number else 1)
-    assert res["size"] == (page_size if page_size else 10)
+    assert res["page"] == (page_number or 1)
+    assert res["size"] == (page_size or 10)
 
     for item in res["items"]:
         assert set(list(item.keys())) == set(STUDY_FOOTNOTE_FIELDS_ALL)
@@ -1135,21 +1135,22 @@ def test_add_footnotes_to_subgroup_and_group(api_client):
     )
     assert_response_status_code(response, 200)
     res = response.json()
+    # in SoA order: the group row comes before the subgroup row
     assert (
         res["referenced_items"][0]["item_uid"]
-        == sa_weight.study_activity_subgroup.study_activity_subgroup_uid
-    )
-    assert (
-        res["referenced_items"][0]["item_type"]
-        == SoAItemType.STUDY_ACTIVITY_SUBGROUP.value
-    )
-    assert (
-        res["referenced_items"][1]["item_uid"]
         == sa_weight.study_activity_group.study_activity_group_uid
     )
     assert (
-        res["referenced_items"][1]["item_type"]
+        res["referenced_items"][0]["item_type"]
         == SoAItemType.STUDY_ACTIVITY_GROUP.value
+    )
+    assert (
+        res["referenced_items"][1]["item_uid"]
+        == sa_weight.study_activity_subgroup.study_activity_subgroup_uid
+    )
+    assert (
+        res["referenced_items"][1]["item_type"]
+        == SoAItemType.STUDY_ACTIVITY_SUBGROUP.value
     )
 
     response = api_client.get(
@@ -1160,7 +1161,7 @@ def test_add_footnotes_to_subgroup_and_group(api_client):
 
 def test_modify_actions_on_locked_study(api_client):
     _study_epoch = create_study_epoch("EpochSubType_0002", study_uid=study.uid)
-    text_value_2_name = "test-2ndname"
+    text_value_2_name = "Default name with [TextValue]"
     # change footnote name and approve the version
     response = api_client.post(
         f"/footnote-templates/{footnote_templates[0].uid}/versions",
@@ -1209,24 +1210,28 @@ def test_modify_actions_on_locked_study(api_client):
             "item_type": "StudyVisit",
             "item_uid": first_visit.uid,
             "visible_in_protocol_soa": None,
+            "via_propagated_cell": False,
         },
         {
             "item_name": None,
             "item_type": "StudyEpoch",
             "item_uid": _study_epoch.uid,
             "visible_in_protocol_soa": None,
+            "via_propagated_cell": False,
         },
         {
             "item_name": None,
             "item_type": "StudyActivity",
             "item_uid": sa_randomized.study_activity_uid,
             "visible_in_protocol_soa": None,
+            "via_propagated_cell": False,
         },
         {
             "item_name": None,
             "item_type": "StudyActivitySchedule",
             "item_uid": weight_sas.study_activity_schedule_uid,
             "visible_in_protocol_soa": None,
+            "via_propagated_cell": False,
         },
     ]
 
@@ -1236,30 +1241,35 @@ def test_modify_actions_on_locked_study(api_client):
     res = response.json()
     assert_response_status_code(response, 200)
     before_unlock = res
+    # in SoA order: epoch row, visit row, then activity rows
     assert res["referenced_items"] == [
         {
             "item_name": "Epoch Subtype1",
             "item_type": "StudyEpoch",
             "item_uid": _study_epoch.uid,
             "visible_in_protocol_soa": True,
-        },
-        {
-            "item_name": "Randomized",
-            "item_type": "StudyActivity",
-            "item_uid": sa_randomized.study_activity_uid,
-            "visible_in_protocol_soa": False,
+            "via_propagated_cell": False,
         },
         {
             "item_name": "V1",
             "item_type": "StudyVisit",
             "item_uid": first_visit.uid,
             "visible_in_protocol_soa": True,
+            "via_propagated_cell": False,
+        },
+        {
+            "item_name": "Randomized",
+            "item_type": "StudyActivity",
+            "item_uid": sa_randomized.study_activity_uid,
+            "visible_in_protocol_soa": False,
+            "via_propagated_cell": False,
         },
         {
             "item_name": "Weight V2",
             "item_type": "StudyActivitySchedule",
             "item_uid": weight_sas.study_activity_schedule_uid,
             "visible_in_protocol_soa": False,
+            "via_propagated_cell": False,
         },
     ]
 
@@ -1349,6 +1359,7 @@ def test_modify_actions_on_locked_study(api_client):
             "item_type": "StudyVisit",
             "item_uid": second_visit.uid,
             "visible_in_protocol_soa": mock.ANY,
+            "via_propagated_cell": False,
         },
     ]
 
@@ -1462,6 +1473,7 @@ def test_modify_actions_on_locked_study(api_client):
             "item_type": "StudyVisit",
             "item_uid": second_visit.uid,
             "visible_in_protocol_soa": mock.ANY,
+            "via_propagated_cell": False,
         },
     ]
 
@@ -1477,6 +1489,7 @@ def test_modify_actions_on_locked_study(api_client):
             "item_type": "StudyVisit",
             "item_uid": second_visit.uid,
             "visible_in_protocol_soa": mock.ANY,
+            "via_propagated_cell": False,
         },
     ]
 
@@ -1486,7 +1499,7 @@ def test_modify_actions_on_locked_study(api_client):
     )
     res = response.json()
     assert_response_status_code(response, 200)
-    assert res == ["Epoch Subtype", "V1", "Body Measurements", "General"]
+    assert res == ["Epoch Subtype", "V1", "General", "Body Measurements"]
 
 
 def test_update_footnote_library_items_of_relationship_to_value_nodes(api_client):
@@ -1506,7 +1519,7 @@ def test_update_footnote_library_items_of_relationship_to_value_nodes(api_client
     library_template_footnote_uid = res["footnote"]["template_uid"]
     initial_footnote_name = res["footnote"]["name"]
 
-    text_value_2_name = "3rdname"
+    text_value_2_name = "Default name with [TextValue] UPDATED"
     # change footnote name and approve the version
     response = api_client.post(
         f"/footnote-templates/{library_template_footnote_uid}/versions",
@@ -1865,6 +1878,79 @@ def test_edit_footnote_layout(api_client):
     assert response.json()["layout"] == "protocol_lab_table"
 
 
+def _select_library_footnote(api_client, study_uid, layout=None):
+    """Select the same approved library Footnote, optionally connected to a layout."""
+    body: dict[str, Any] = {"footnote_uid": footnotes[0].uid, "referenced_items": []}
+    if layout is not None:
+        body["layout"] = layout
+    return api_client.post(
+        f"/studies/{study_uid}/study-soa-footnotes",
+        params={"create_footnote": False},
+        json=body,
+    )
+
+
+def test_same_footnote_can_be_selected_once_per_layout(api_client):
+    """The same Footnote may be selected in a study once for each layout."""
+    layout_study = TestUtils.create_study()
+    TestUtils.set_study_standard_version(study_uid=layout_study.uid)
+
+    for layout in ["protocol", "detailed", "protocol_lab_table"]:
+        response = _select_library_footnote(api_client, layout_study.uid, layout)
+        assert_response_status_code(response, 201)
+        assert response.json()["layout"] == layout
+
+    response = _select_library_footnote(api_client, layout_study.uid, "protocol")
+    assert_response_status_code(response, 409)
+    assert "in layout 'protocol'" in response.json()["message"]
+
+
+@pytest.mark.parametrize(
+    "existing_layout, new_layout",
+    [(None, "protocol"), ("protocol", None), (None, None)],
+)
+def test_footnote_without_layout_clashes_with_every_layout(
+    api_client, existing_layout, new_layout
+):
+    """A footnote without a layout applies to all layouts, so it cannot coexist
+    with another selection of the same Footnote."""
+    layout_study = TestUtils.create_study()
+    TestUtils.set_study_standard_version(study_uid=layout_study.uid)
+
+    response = _select_library_footnote(api_client, layout_study.uid, existing_layout)
+    assert_response_status_code(response, 201)
+
+    response = _select_library_footnote(api_client, layout_study.uid, new_layout)
+    assert_response_status_code(response, 409)
+
+
+def test_edit_footnote_layout_into_clashing_layout_is_rejected(api_client):
+    """Moving a footnote into a layout where the same Footnote is already selected fails,
+    moving it into a free layout succeeds."""
+    layout_study = TestUtils.create_study()
+    TestUtils.set_study_standard_version(study_uid=layout_study.uid)
+
+    assert_response_status_code(
+        _select_library_footnote(api_client, layout_study.uid, "protocol"), 201
+    )
+    response = _select_library_footnote(api_client, layout_study.uid, "detailed")
+    assert_response_status_code(response, 201)
+    detailed_uid = response.json()["uid"]
+
+    response = api_client.patch(
+        f"/studies/{layout_study.uid}/study-soa-footnotes/{detailed_uid}",
+        json={"layout": "protocol"},
+    )
+    assert_response_status_code(response, 409)
+
+    response = api_client.patch(
+        f"/studies/{layout_study.uid}/study-soa-footnotes/{detailed_uid}",
+        json={"layout": "operational"},
+    )
+    assert_response_status_code(response, 200)
+    assert response.json()["layout"] == "operational"
+
+
 def test_create_footnote_with_underlying_footnote_and_layout(api_client):
     """The create_footnote=True path also persists the layout."""
     layout_study = TestUtils.create_study()
@@ -2190,3 +2276,104 @@ def test_delete_footnote_on_template_with_retirement_history(api_client):
         f"/studies/{del_study.uid}/study-soa-footnotes/{footnote_uid}"
     )
     assert_response_status_code(response, 204)
+
+
+def test_referencing_schedule_via_own_and_propagated_cell_keeps_one_reference(
+    api_client,
+):
+    # the module's schedules are deleted by earlier tests
+    sas = TestUtils.create_study_activity_schedule(
+        study_uid=study.uid,
+        study_activity_uid=sa_weight.study_activity_uid,
+        study_visit_uid=second_visit.uid,
+    )
+    response = api_client.post(
+        f"/studies/{study.uid}/study-soa-footnotes",
+        params={"create_footnote": False},
+        json={
+            "footnote_template_uid": footnote_templates[1].uid,
+            "referenced_items": [
+                {
+                    "item_uid": sas.study_activity_schedule_uid,
+                    "item_type": SoAItemType.STUDY_ACTIVITY_SCHEDULE.value,
+                    "via_propagated_cell": via_propagated_cell,
+                }
+                for via_propagated_cell in (False, True)
+            ],
+        },
+    )
+    assert_response_status_code(response, 201)
+    (item,) = response.json()["referenced_items"]
+    assert item["item_uid"] == sas.study_activity_schedule_uid
+    assert item["via_propagated_cell"] is True
+
+
+def test_footnotes_without_referenced_items_are_ordered_by_creation(api_client):
+    """Footnotes without referenced items tie on SoA order, so they keep their creation order,
+    also after one of them is edited."""
+    order_study = TestUtils.create_study()
+    TestUtils.set_study_standard_version(study_uid=order_study.uid)
+
+    created_uids = [
+        _create_layout_footnote(api_client, order_study.uid)["uid"] for _ in range(5)
+    ]
+
+    # an edit creates a new version, which must not move the footnote to the end
+    response = api_client.patch(
+        f"/studies/{order_study.uid}/study-soa-footnotes/{created_uids[0]}",
+        json={"layout": "protocol"},
+    )
+    assert_response_status_code(response, 200)
+
+    response = api_client.get(f"/studies/{order_study.uid}/study-soa-footnotes")
+    assert_response_status_code(response, 200)
+    items = response.json()["items"]
+
+    assert [item["uid"] for item in items] == created_uids
+    assert [item["order"] for item in items] == list(range(1, 6))
+
+
+def test_footnotes_referencing_same_item_are_ordered_by_assignment(api_client):
+    """Footnotes tied on their first referenced item are ordered by when they were assigned to it,
+    a footnote reassigned after being removed from the item moves behind the others."""
+    first, second, third = (
+        _create_layout_footnote(api_client, study.uid)["uid"] for _ in range(3)
+    )
+    item = {
+        "item_uid": sa_weight.study_activity_uid,
+        "item_type": SoAItemType.STUDY_ACTIVITY.value,
+    }
+
+    def set_referenced_items(footnote_uid: str, referenced_items: list[dict[str, str]]):
+        response = api_client.patch(
+            f"/studies/{study.uid}/study-soa-footnotes/{footnote_uid}",
+            json={"referenced_items": referenced_items},
+        )
+        assert_response_status_code(response, 200)
+
+    def get_order() -> list[str]:
+        response = api_client.get(f"/studies/{study.uid}/study-soa-footnotes")
+        assert_response_status_code(response, 200)
+        return [
+            footnote["uid"]
+            for footnote in response.json()["items"]
+            if footnote["uid"] in (first, second, third)
+        ]
+
+    # assigned in a different order than created
+    for footnote_uid in (third, first, second):
+        set_referenced_items(footnote_uid, [item])
+    assert get_order() == [third, first, second]
+
+    # an unrelated edit keeps the assignment
+    response = api_client.patch(
+        f"/studies/{study.uid}/study-soa-footnotes/{third}",
+        json={"footnote_template_uid": footnote_templates[1].uid},
+    )
+    assert_response_status_code(response, 200)
+    assert get_order() == [third, first, second]
+
+    # removed and assigned again
+    set_referenced_items(third, [])
+    set_referenced_items(third, [item])
+    assert get_order() == [first, second, third]

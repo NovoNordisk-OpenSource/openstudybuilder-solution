@@ -18,5 +18,9 @@ library,Dictionaries,meddra_dictionary,0,This flag toggles on/off the MedDRA dic
 library,Dictionaries,loinc_dictionary,0,This flag toggles on/off the LOINC dictionary page found at Library/Dictionaries/LOINC
 studies,Protocol – Lab,soa_protocol_lab_table,0,Show/hide 'Protocol - Lab Table' tab on 'Studies > Study Activities'
 studies,Placeholder Activities,streamline_placeholder_activities,1,When enabled uses the streamlined placeholder activity workflow and hides the Requested Activities tab
+library,Standards Import,standards_import,1,This flag toggles on/off the whole subpage found at Library/Code Lists/Import
 studies,Study Epoch Lag Time,study_epoch_lag_time,0,Show/hide the legacy lag time fields on Study Epochs - only relevant for studies migrated from MMA
+studies,Study Epoch AE Lag Time,study_epoch_ae_lag_time,1,Show/hide the adverse event lag time field on Study Epochs for all studies - not only studies migrated from MMA
+studies,Study Migration Details,study_migration_details,0,Show/hide the Migrated from MMA and Migration comment rows on Study Properties/Study Type
 library,CT Terms,ct_term_short_code,0,This flag toggles on/off the short_code trial summary parameter field on CT terms
+studies,Study Auxiliary Devices,study_auxiliary_devices,0,This flag toggles on/off the Auxiliary Devices tab found at Studies/Data Specifications

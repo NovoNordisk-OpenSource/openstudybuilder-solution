@@ -29,7 +29,7 @@ log = logging.getLogger(__name__)
 
 
 class SponsorModelDatasetVariableService(
-    StandardDataModelService,
+    StandardDataModelService[SponsorModelDatasetVariable],
 ):
     repository_interface = SponsorModelDatasetVariableRepository
     api_model_class = SponsorModelDatasetVariable

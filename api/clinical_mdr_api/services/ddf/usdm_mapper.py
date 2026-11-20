@@ -295,7 +295,7 @@ class USDMMapper:
             return self.get_void_usdm_code()
         library = result[0][0]
         ct_term_name_value = result[0][1]
-        code = USDMCode(
+        return USDMCode(
             id=self._id_manager.get_id(USDMCode.__name__, concept_id),
             code=concept_id,
             codeSystem=library["name"],
@@ -303,7 +303,6 @@ class USDMMapper:
             decode=ct_term_name_value["name"],
             instanceType="Code",
         )
-        return code
 
     def _get_ct_term_uid_for_unit_definition(
         self, unit_definition_uid: str | None
@@ -571,14 +570,12 @@ class USDMMapper:
         # Set DDF study versions
         usdm_study.versions = [usdm_version]
 
-        wrapped_study = {
+        return {
             "study": usdm_study,
             "usdmVersion": usdm_package_version,
             "systemName": "OpenStudyBuilder",
             "systemVersion": self._get_system_version(),
         }
-
-        return wrapped_study
 
     @trace_calls
     def _get_intervention_model(self, study: OSBStudy):
@@ -800,7 +797,8 @@ class USDMMapper:
                      data_type: head([(item_class_value)-[:HAS_DATA_TYPE]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(:CTTermRoot)-[:HAS_NAME_ROOT]->(:CTTermNameRoot)
                          -[:LATEST]->(dtv:CTTermNameValue) | dtv.name]),
                      mandatory: item_class_rel.mandatory,
-                     response_codes: [(activity_item)-[:HAS_CT_TERM]->(tr:CTTermRoot)-[:HAS_NAME_ROOT]->(:CTTermNameRoot)-[ver:HAS_VERSION]->(tnv:CTTermNameValue)
+                     response_codes: [(activity_item)-[:HAS_CT_TERM]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(tr:CTTermRoot)
+                         -[:HAS_NAME_ROOT]->(:CTTermNameRoot)-[ver:HAS_VERSION]->(tnv:CTTermNameValue)
                          WHERE ver.status IN ['Final', 'Retired'] AND ($ct_terms_datetime IS NULL OR (ver.start_date <= $ct_terms_datetime
                          AND (ver.end_date IS NULL OR ver.end_date > $ct_terms_datetime))) | {code: tr.uid, decode: tnv.name}]
                          + [(activity_item)-[:HAS_UNIT_DEFINITION]->(:UnitDefinitionRoot)-[:LATEST]->(udv:UnitDefinitionValue)-[:HAS_CT_UNIT]->(:CTTermContext)
@@ -1066,7 +1064,7 @@ class USDMMapper:
             )
             ddf_se = USDMStudyElement(
                 id=ddf_se_id,
-                name=osb_se.name if osb_se.name else " ",
+                name=osb_se.name or " ",
                 description=osb_se.description,
                 label=osb_se.name,
                 transitionStartRule=transition_start_rule,
@@ -1090,7 +1088,7 @@ class USDMMapper:
             add_next_and_previous_ids = True
             osb_study_epochs.sort(key=lambda e: e.order, reverse=False)
 
-        ddf_study_epochs = [
+        return [
             USDMStudyEpoch(
                 id=self._id_manager.get_id(USDMStudyEpoch.__name__, se.uid),
                 name=se.epoch_name if se.epoch_name is not None else " ",
@@ -1118,15 +1116,13 @@ class USDMMapper:
             )
             for i, se in enumerate(osb_study_epochs)
         ]
-        return ddf_study_epochs
 
     @trace_calls
     def _get_study_name(self, study: OSBStudy):
         osb_identification_metadata = getattr(
             getattr(study, "current_metadata", None), "identification_metadata", None
         )
-        osb_study_id = getattr(osb_identification_metadata, "study_id", "")
-        return osb_study_id
+        return getattr(osb_identification_metadata, "study_id", "")
 
     # Registry identifier field names mapped to organization metadata.
     # Organization type codes (from DDF CT codelist C188724): C93453 = Study Registry, C188863 = Regulatory Agency
@@ -1346,11 +1342,10 @@ class USDMMapper:
                 )
                 usdm_study_intervention_codes.append(intervention_model_code)
 
-            if osb_study_intervention.control_type_code is not None:
-                intervention_control_type_code = self.get_ct_package_term_as_usdm_code(
-                    osb_study_intervention.control_type_code.term_uid
+            for control_type_code in osb_study_intervention.control_type_codes or []:
+                usdm_study_intervention_codes.append(
+                    self.get_ct_package_term_as_usdm_code(control_type_code.term_uid)
                 )
-                usdm_study_intervention_codes.append(intervention_control_type_code)
 
             if osb_study_intervention.trial_blinding_schema_code is not None:
                 intervention_trial_blinding_schema_code = (
@@ -1528,17 +1523,21 @@ class USDMMapper:
 
     @trace_calls
     def _get_study_label(self, study: OSBStudy):
-        if study.current_metadata is not None:
-            if study.current_metadata.study_description is not None:
-                return study.current_metadata.study_description.study_short_title
+        if (
+            study.current_metadata is not None
+            and study.current_metadata.study_description is not None
+        ):
+            return study.current_metadata.study_description.study_short_title
         return None
 
     @trace_calls
     def _get_study_acronym(self, study: OSBStudy):
         """Return the study acronym from identification metadata, or None if unset."""
-        if study.current_metadata is not None:
-            if study.current_metadata.identification_metadata is not None:
-                return study.current_metadata.identification_metadata.study_acronym
+        if (
+            study.current_metadata is not None
+            and study.current_metadata.identification_metadata is not None
+        ):
+            return study.current_metadata.identification_metadata.study_acronym
         return None
 
     @trace_calls
@@ -1620,12 +1619,11 @@ class USDMMapper:
             )
         else:
             study_phase_code = self.get_void_usdm_code()
-        study_phase = USDMAliasCode(
+        return USDMAliasCode(
             id=self._id_manager.get_id(USDMAliasCode.__name__),
             standardCode=study_phase_code,
             instanceType="AliasCode",
         )
-        return study_phase
 
     @trace_calls
     def _get_eligibility_criteria(
@@ -1736,52 +1734,51 @@ class USDMMapper:
         if (
             osb_study_population.planned_minimum_age_of_subjects is not None
             and osb_study_population.planned_maximum_age_of_subjects is not None
+        ) and (
+            osb_study_population.planned_minimum_age_of_subjects.duration_value
+            is not None
+            and osb_study_population.planned_maximum_age_of_subjects.duration_value
+            is not None
         ):
-            if (
-                osb_study_population.planned_minimum_age_of_subjects.duration_value
-                is not None
-                and osb_study_population.planned_maximum_age_of_subjects.duration_value
-                is not None
-            ):
-                planned_age = USDMRange(
-                    id=self._id_manager.get_id(USDMRange.__name__),
-                    minValue=USDMQuantity(
-                        id=self._id_manager.get_id(USDMQuantity.__name__),
-                        value=osb_study_population.planned_minimum_age_of_subjects.duration_value,
-                        unit=USDMAliasCode(
-                            id=self._id_manager.get_id(USDMAliasCode.__name__),
-                            standardCode=(
-                                self.get_ddf_study_population_duration_unit_from_name_as_code(
-                                    osb_study_population.planned_minimum_age_of_subjects.duration_unit_code.name
-                                )
-                                if osb_study_population.planned_minimum_age_of_subjects.duration_unit_code.name
-                                is not None
-                                else self.get_void_usdm_code()
-                            ),
-                            instanceType="AliasCode",
+            planned_age = USDMRange(
+                id=self._id_manager.get_id(USDMRange.__name__),
+                minValue=USDMQuantity(
+                    id=self._id_manager.get_id(USDMQuantity.__name__),
+                    value=osb_study_population.planned_minimum_age_of_subjects.duration_value,
+                    unit=USDMAliasCode(
+                        id=self._id_manager.get_id(USDMAliasCode.__name__),
+                        standardCode=(
+                            self.get_ddf_study_population_duration_unit_from_name_as_code(
+                                osb_study_population.planned_minimum_age_of_subjects.duration_unit_code.name
+                            )
+                            if osb_study_population.planned_minimum_age_of_subjects.duration_unit_code.name
+                            is not None
+                            else self.get_void_usdm_code()
                         ),
-                        instanceType="Quantity",
+                        instanceType="AliasCode",
                     ),
-                    maxValue=USDMQuantity(
-                        id=self._id_manager.get_id(USDMQuantity.__name__),
-                        value=osb_study_population.planned_maximum_age_of_subjects.duration_value,
-                        unit=USDMAliasCode(
-                            id=self._id_manager.get_id(USDMAliasCode.__name__),
-                            standardCode=(
-                                self.get_ddf_study_population_duration_unit_from_name_as_code(
-                                    osb_study_population.planned_maximum_age_of_subjects.duration_unit_code.name
-                                )
-                                if osb_study_population.planned_maximum_age_of_subjects.duration_unit_code.name
-                                is not None
-                                else self.get_void_usdm_code()
-                            ),
-                            instanceType="AliasCode",
+                    instanceType="Quantity",
+                ),
+                maxValue=USDMQuantity(
+                    id=self._id_manager.get_id(USDMQuantity.__name__),
+                    value=osb_study_population.planned_maximum_age_of_subjects.duration_value,
+                    unit=USDMAliasCode(
+                        id=self._id_manager.get_id(USDMAliasCode.__name__),
+                        standardCode=(
+                            self.get_ddf_study_population_duration_unit_from_name_as_code(
+                                osb_study_population.planned_maximum_age_of_subjects.duration_unit_code.name
+                            )
+                            if osb_study_population.planned_maximum_age_of_subjects.duration_unit_code.name
+                            is not None
+                            else self.get_void_usdm_code()
                         ),
-                        instanceType="Quantity",
+                        instanceType="AliasCode",
                     ),
-                    isApproximate=False,
-                    instanceType="Range",
-                )
+                    instanceType="Quantity",
+                ),
+                isApproximate=False,
+                instanceType="Range",
+            )
         planned_enrollment_number = None
         if osb_study_population.number_of_expected_subjects is not None:
             planned_enrollment_number = USDMQuantity(
@@ -2115,9 +2112,9 @@ class USDMMapper:
     def _get_study_encounters(self, study: OSBStudy):
         osb_study_visits = self._get_osb_study_visits(study.uid).items
         ordered_osb_study_visits = sorted(
-            osb_study_visits, key=lambda sv: sv.visit_number, reverse=False
+            osb_study_visits, key=lambda sv: sv.unique_visit_number or 0, reverse=False
         )
-        ddf_encounters = [
+        return [
             USDMEncounter(
                 id=self._id_manager.get_id(USDMEncounter.__name__, sv.uid),
                 name=sv.visit_short_name,
@@ -2160,8 +2157,6 @@ class USDMMapper:
             )
             for i, sv in enumerate(ordered_osb_study_visits)
         ]
-
-        return ddf_encounters
 
     @trace_calls
     def _get_therapeutic_areas(self, study):

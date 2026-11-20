@@ -47,10 +47,9 @@ def get_all_design_cells(
     ] = None,
 ) -> list[StudyDesignCell]:
     service = StudyDesignCellService()
-    cells = service.get_all_design_cells(
+    return service.get_all_design_cells(
         study_uid=study_uid, study_value_version=study_value_version
     )
-    return cells
 
 
 @router.get(

@@ -78,7 +78,7 @@ class ActivityVO(ConceptVO):
     ) -> Self:
         if used_by_studies is None:
             used_by_studies = []
-        activity_vo = cls(
+        return cls(
             nci_concept_id=nci_concept_id,
             nci_concept_name=nci_concept_name,
             name=name,
@@ -101,8 +101,6 @@ class ActivityVO(ConceptVO):
             is_finalized=is_finalized,
             is_used_by_legacy_instances=is_used_by_legacy_instances,
         )
-
-        return activity_vo
 
     def validate(
         self,
@@ -212,13 +210,12 @@ class ActivityAR(ConceptARBase):
             library_name=library.name,
         )
 
-        activity_ar = cls(
+        return cls(
             _uid=generate_uid_callback(),
             _item_metadata=item_metadata,
             _library=library,
             _concept_vo=concept_vo,
         )
-        return activity_ar
 
     def edit_draft(
         self,

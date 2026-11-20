@@ -742,8 +742,8 @@ def test_get_activity_instances(
     assert list(res.keys()) == ["items", "total", "page", "size"]
     assert len(res["items"]) == expected_result_len
     assert res["total"] == (len(activity_instances_all) if total_count else 0)
-    assert res["page"] == (page_number if page_number else 1)
-    assert res["size"] == (page_size if page_size else 10)
+    assert res["page"] == (page_number or 1)
+    assert res["size"] == (page_size or 10)
 
     for item in res["items"]:
         assert set(list(item.keys())) == set(ACTIVITY_INSTANCES_FIELDS_ALL)
@@ -3987,3 +3987,88 @@ def test_unlink_archived_groupings_from_activity_instance(api_client):
         res["activity_groupings"][0]["activity_subgroup"]["uid"]
         == activity_subgroup.uid
     )
+
+
+def test_activity_instance_listings_resolve_unit_dimensions_and_ct_terms(api_client):
+    # The listing and COSMoS queries reach units' dimensions and items' CT terms
+    # through the CTTermContext node, and a unit without a dimension stays listed
+    unit_without_dimension = TestUtils.create_unit_definition(
+        name="unit without dimension"
+    )
+    activity_instance = TestUtils.create_activity_instance(
+        name="name units and terms",
+        activity_instance_class_uid=activity_instance_classes[0].uid,
+        name_sentence_case="name units and terms",
+        topic_code="topic code units and terms",
+        is_required_for_activity=True,
+        activities=[activities[0].uid],
+        activity_subgroups=[activity_subgroup.uid],
+        activity_groups=[activity_group.uid],
+        activity_items=[
+            {
+                "activity_item_class_uid": activity_item_classes[0].uid,
+                "ct_terms": [],
+                "unit_definition_uids": [
+                    base_test_data["day_unit"].uid,
+                    unit_without_dimension.uid,
+                ],
+                "is_adam_param_specific": False,
+                "is_activity_instance_id_specific": False,
+            },
+            {
+                "activity_item_class_uid": activity_item_classes[1].uid,
+                "ct_terms": [
+                    {
+                        "term_uid": ct_terms[0].term_uid,
+                        "codelist_uid": codelist.codelist_uid,
+                    }
+                ],
+                "unit_definition_uids": [],
+                "is_adam_param_specific": False,
+                "is_activity_instance_id_specific": False,
+            },
+        ],
+    )
+    expected_units = [
+        {
+            "uid": base_test_data["day_unit"].uid,
+            "name": base_test_data["day_unit"].name,
+            "dimension_name": base_test_data["unit_dimension_terms"][
+                0
+            ].sponsor_preferred_name,
+        },
+        {
+            "uid": unit_without_dimension.uid,
+            "name": unit_without_dimension.name,
+            "dimension_name": None,
+        },
+    ]
+    uid_filter = json.dumps({"uid": {"v": [activity_instance.uid]}})
+
+    for url in (
+        f"/concepts/activities/activity-instances?filters={uid_filter}",
+        f"/concepts/activities/activity-instances/attributes/versions?filters={uid_filter}",
+    ):
+        res = parse_json_response(api_client.get(url), assert_status=200)
+        assert res["items"], url
+        for row in res["items"]:
+            items_by_class = {
+                item["activity_item_class"]["uid"]: item
+                for item in row["activity_items"]
+            }
+            assert sorted(
+                items_by_class[activity_item_classes[0].uid]["unit_definitions"],
+                key=itemgetter("uid"),
+            ) == sorted(expected_units, key=itemgetter("uid")), url
+
+    response = api_client.get(
+        f"/concepts/activities/activity-instances/{activity_instance.uid}/overview.cosmos"
+    )
+    assert_response_status_code(response, 200)
+    res = yaml.load(response.text, Loader=yaml.SafeLoader)
+    example_set_uids = {
+        example["uid"]
+        for concept in res["dataElementConcepts"]
+        for example in concept["exampleSet"]
+    }
+    assert ct_terms[0].term_uid in example_set_uids

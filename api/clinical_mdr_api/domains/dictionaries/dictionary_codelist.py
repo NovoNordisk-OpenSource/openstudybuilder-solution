@@ -44,14 +44,12 @@ class DictionaryCodelistVO:
         current_terms: list[tuple[str, str]],
         previous_terms: list[tuple[str, str]],
     ) -> Self:
-        dictionary_codelist_vo = cls(
+        return cls(
             name=name,
             is_template_parameter=is_template_parameter,
             current_terms=current_terms,
             previous_terms=previous_terms,
         )
-
-        return dictionary_codelist_vo
 
     @classmethod
     def from_input_values(
@@ -66,14 +64,12 @@ class DictionaryCodelistVO:
             codelist_exists_by_name_callback(name), "Dictionary Codelist", name, "Name"
         )
 
-        dictionary_codelist_vo = cls(
+        return cls(
             name=name,
             is_template_parameter=is_template_parameter,
             current_terms=current_terms,
             previous_terms=previous_terms,
         )
-
-        return dictionary_codelist_vo
 
 
 @dataclass
@@ -103,13 +99,12 @@ class DictionaryCodelistAR(LibraryItemAggregateRootBase):
         library: LibraryVO,
         item_metadata: LibraryItemMetadataVO,
     ) -> Self:
-        dictionary_codelist_ar = cls(
+        return cls(
             _uid=uid,
             _dictionary_codelist_vo=dictionary_codelist_vo,
             _item_metadata=item_metadata,
             _library=library,
         )
-        return dictionary_codelist_ar
 
     @classmethod
     def from_input_values(
@@ -178,16 +173,16 @@ class DictionaryCodelistAR(LibraryItemAggregateRootBase):
         """
         Inactivates latest version.
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def reactivate(self, author_id: str, change_description: str | None = None):
         """
         Reactivates latest retired version and sets the version to draft.
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def soft_delete(self):
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def add_term(self, codelist_uid: str, term_uid: str, author_id: str) -> None:
         AlreadyExistsException.raise_if(

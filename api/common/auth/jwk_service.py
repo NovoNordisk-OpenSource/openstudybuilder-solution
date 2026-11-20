@@ -23,7 +23,7 @@ class JWKService(KeySet):
         self,
         oauth_client: OAuth2Mixin,
         audience: str | list[str],
-        leeway_seconds: int | float = 15,
+        leeway_seconds: float = 15,
     ):
         self.oauth_client = oauth_client
         self.audience = audience
@@ -89,9 +89,7 @@ class JWKService(KeySet):
             raise RuntimeError(f"JWKS data is not dict, but {type(payload)}")
 
         keys = payload.get("keys", {})
-        keys_dict = self.update_keys(keys)
-
-        return keys_dict
+        return self.update_keys(keys)
 
     def update_keys(self, keys: list[Mapping[str, Any]]) -> dict[str, Key]:
         keys_dict = {}

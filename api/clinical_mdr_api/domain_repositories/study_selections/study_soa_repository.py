@@ -1,16 +1,16 @@
 import datetime
 import logging
-from collections.abc import Iterable
+from dataclasses import dataclass
 from enum import Enum
 from textwrap import dedent
+from typing import Any
 
-from neomodel import DoesNotExist, RelationshipManager, db
+from neomodel import DoesNotExist, db
 
-from clinical_mdr_api.domain_repositories.models.study import StudyRoot, StudyValue
+from clinical_mdr_api.domain_repositories.models.study import StudyRoot
 from clinical_mdr_api.domain_repositories.models.study_audit_trail import (
     UpdateSoASnapshot,
 )
-from clinical_mdr_api.domain_repositories.models.study_selections import StudySelection
 from clinical_mdr_api.domains.study_definition_aggregates.study_metadata import (
     StudyStatus,
 )
@@ -30,18 +30,6 @@ from common.config import settings
 from common.exceptions import NotFoundException
 from common.telemetry import trace_calls
 
-SOA_ITEM_TYPE_TO_RELATIONSHIP_MODEL_MAME_MAP = {
-    SoAItemType.STUDY_EPOCH: "has_study_epoch",
-    SoAItemType.STUDY_VISIT: "has_study_visit",
-    SoAItemType.STUDY_SOA_GROUP: "has_study_soa_group",
-    SoAItemType.STUDY_ACTIVITY_GROUP: "has_study_activity_group",
-    SoAItemType.STUDY_ACTIVITY_SUBGROUP: "has_study_activity_subgroup",
-    SoAItemType.STUDY_ACTIVITY: "has_study_activity",
-    SoAItemType.STUDY_ACTIVITY_INSTANCE: "has_study_activity_instance",
-    SoAItemType.STUDY_ACTIVITY_SCHEDULE: "has_study_activity_schedule",
-    SoAItemType.STUDY_SOA_FOOTNOTE: "has_study_footnote",
-}
-
 log = logging.getLogger(__name__)
 
 
@@ -52,7 +40,35 @@ class SoALayout(Enum):
     OPERATIONAL = "operational"
 
 
+SNAPSHOT_LAYOUTS = (SoALayout.PROTOCOL, SoALayout.PROTOCOL_LAB_TABLE)
+
+
+class SoASnapshotFormat(Enum):
+    """Renderings stored on a StudySoASnapshot node, values are the node property names"""
+
+    HTML = "html"
+    DOCX = "docx"
+    XLSX = "xlsx"
+    JSON = "json"
+
+
+@dataclass(frozen=True)
+class SoASnapshot:
+    """All renderings of a SoA, as stored on a StudySoASnapshot node"""
+
+    html: str
+    docx: bytes
+    xlsx: bytes
+    json: str
+    time_unit: str | None
+
+
 class StudySoARepository:
+    ONLY_PROTOCOL_SNAPSHOT_MSG = "Only protocol SoA snapshot is implemented"
+    SNAPSHOT_LAYOUTS_MSG = "SoA snapshot is implemented only for layouts: " + ", ".join(
+        f"'{layout.value}'" for layout in SNAPSHOT_LAYOUTS
+    )
+
     @staticmethod
     def _study_value_query(
         study_uid: str, study_value_version: str | None
@@ -83,35 +99,149 @@ class StudySoARepository:
         return query, params
 
     @classmethod
-    @trace_calls(args=[1, 2, 3], kwargs=["study_uid", "study_value_version", "layout"])
-    def _disconnect_soa_rows(
-        cls, study_uid: str, study_value_version: str, layout: SoALayout
+    @trace_calls(
+        args=[1, 3, 4, 5],
+        kwargs=["study_uid", "study_value_version", "layout", "study_status"],
+    )
+    @ensure_transaction(db)
+    def save_snapshot(
+        cls,
+        study_uid: str,
+        snapshot: SoASnapshot,
+        study_value_version: str | None = None,
+        layout: SoALayout = SoALayout.PROTOCOL,
+        study_status: StudyStatus | None = None,
     ):
-        """Removes relationships HAS_PROTOCOL_SOA_CELL & HAS_PROTOCOL_SOA_FOOTNOTE of a given study version"""
+        """Saves the rendered SoA onto a StudySoASnapshot node of a given study version,
+        replacing any previous snapshot of the same layout"""
 
-        if layout != SoALayout.PROTOCOL:
-            raise NotImplementedError("Only protocol SoA snapshot is implemented")
+        if layout not in SNAPSHOT_LAYOUTS:
+            raise NotImplementedError(cls.SNAPSHOT_LAYOUTS_MSG)
+
+        try:
+            study_root: StudyRoot = StudyRoot.nodes.get(uid=study_uid)
+        except DoesNotExist as e:
+            raise NotFoundException("Study", study_uid) from e
+
+        if study_status is None:
+            study_status = (
+                StudyStatus.RELEASED if study_value_version else StudyStatus.DRAFT
+            )
+
+        sv_query, sv_params = cls._study_value_query(study_uid, study_value_version)
+        params: dict[str, Any] = {
+            **sv_params,
+            "layout": layout.value,
+            "html": snapshot.html,
+            "docx": snapshot.docx,
+            "xlsx": snapshot.xlsx,
+            "json": snapshot.json,
+            "time_unit": snapshot.time_unit,
+            "created_at": datetime.datetime.now(datetime.UTC),
+        }
+
+        query = list(sv_query)
+        query.append(dedent("""
+            OPTIONAL MATCH (study_value)-[:HAS_SOA_SNAPSHOT]->(previous:StudySoASnapshot {layout: $layout})
+            DETACH DELETE previous
+            WITH DISTINCT study_value
+            CREATE (study_value)-[:HAS_SOA_SNAPSHOT]->(:StudySoASnapshot {
+                layout: $layout,
+                html: $html,
+                docx: $docx,
+                xlsx: $xlsx,
+                json: $json,
+                time_unit: $time_unit,
+                created_at: $created_at
+            })
+            RETURN count(study_value) AS snapshots_created
+        """).strip())
+
+        results, _ = db.cypher_query("\n".join(query), params)
+
+        if not results or not results[0][0]:
+            raise NotFoundException(
+                msg=f"Study with specified uid '{study_uid}' and version '{study_value_version}' was not found."
+            )
+
+        cls.manage_versioning_create(
+            study_root=study_root,
+            layout=layout,
+            study_status=study_status,
+        )
+
+    @classmethod
+    @trace_calls(
+        args=[1, 2, 3, 4],
+        kwargs=["study_uid", "study_value_version", "snapshot_format", "layout"],
+    )
+    def load_snapshot(
+        cls,
+        study_uid: str,
+        study_value_version: str | None,
+        snapshot_format: SoASnapshotFormat,
+        layout: SoALayout = SoALayout.PROTOCOL,
+        time_unit: str | None = None,
+    ) -> tuple[str | bytes | None, str | None] | None:
+        """Returns a single rendering and its time unit from the StudySoASnapshot node of a given study version,
+        or None if the study version has no SoA snapshot.
+
+        When `time_unit` is given and differs from the one the snapshot was rendered with, the rendering is not
+        read from the db: None is returned in its place, along with the time unit of the snapshot.
+        """
+
+        if layout not in SNAPSHOT_LAYOUTS:
+            raise NotImplementedError(cls.SNAPSHOT_LAYOUTS_MSG)
+
+        sv_query, sv_params = cls._study_value_query(study_uid, study_value_version)
+        params: dict[str, Any] = {
+            **sv_params,
+            "layout": layout.value,
+            "format": snapshot_format.value,
+            "time_unit": time_unit,
+        }
+
+        query = list(sv_query)
+        query.append(dedent("""
+            MATCH (study_value)-[:HAS_SOA_SNAPSHOT]->(snapshot:StudySoASnapshot {layout: $layout})
+            RETURN
+                CASE WHEN $time_unit IS NULL OR snapshot.time_unit = $time_unit
+                    THEN snapshot[$format]
+                END AS content,
+                snapshot.time_unit AS time_unit
+            LIMIT 1
+        """).strip())
+
+        results, _ = db.cypher_query("\n".join(query), params)
+
+        if not results:
+            return None
+
+        content, snapshot_time_unit = results[0]
+        if content is None and (time_unit is None or time_unit == snapshot_time_unit):
+            return None
+
+        return content, snapshot_time_unit
+
+    # LEGACY-SOA-SNAPSHOT (242942): only used by migration 024 to render pre-existing
+    # locked/released versions from HAS_PROTOCOL_SOA_CELL refs. Remove in the next release.
+    @classmethod
+    @trace_calls(args=[1, 2], kwargs=["study_uid", "study_value_version"])
+    def has_legacy_snapshot(cls, study_uid: str, study_value_version: str) -> bool:
+        """Checks whether a study version has HAS_PROTOCOL_SOA_CELL relationships"""
 
         sv_query, params = cls._study_value_query(study_uid, study_value_version)
 
-        query = "\n".join(
-            [
-                *sv_query,
-                "MATCH (study_value)-[cell:HAS_PROTOCOL_SOA_CELL]->()",
-                "DELETE cell",
-            ]
+        query = list(sv_query)
+        query.append(
+            "RETURN EXISTS { (study_value)-[:HAS_PROTOCOL_SOA_CELL]->() } AS has_legacy_snapshot"
         )
-        db.cypher_query(query, params)
 
-        query = "\n".join(
-            [
-                *sv_query,
-                "MATCH (study_value)-[fn:HAS_PROTOCOL_SOA_FOOTNOTE]->()",
-                "DELETE fn",
-            ]
-        )
-        db.cypher_query(query, params)
+        results, _ = db.cypher_query("\n".join(query), params)
+        return bool(results and results[0][0])
 
+    # LEGACY-SOA-SNAPSHOT (242942): only used by migration 024 to render pre-existing
+    # locked/released versions from HAS_PROTOCOL_SOA_CELL refs. Remove in the next release.
     @trace_calls(args=[1, 2, 3], kwargs=["study_uid", "study_value_version", "layout"])
     def load(
         self,
@@ -122,7 +252,7 @@ class StudySoARepository:
         """Loads SoA snapshot HAS_PROTOCOL_SOA_CELL & HAS_PROTOCOL_SOA_FOOTNOTE relationships of a given study version"""
 
         if layout != SoALayout.PROTOCOL:
-            raise NotImplementedError("Only protocol SoA snapshot is implemented")
+            raise NotImplementedError(self.ONLY_PROTOCOL_SNAPSHOT_MSG)
 
         sv_query, params = self._study_value_query(study_uid, study_value_version)
 
@@ -131,7 +261,10 @@ class StudySoARepository:
             MATCH (study_value)-[cell:HAS_PROTOCOL_SOA_CELL]->(ss:StudySelection)
             RETURN cell, ss, 
                apoc.coll.sortMaps(
-                   [(study_value)-[fn:HAS_PROTOCOL_SOA_FOOTNOTE]->(sfn:StudySoAFootnote)-->(ss) | {order: fn.order, symbol: fn.symbol, uid: sfn.uid}], 
+                   [(study_value)-[fn:HAS_PROTOCOL_SOA_FOOTNOTE]->(sfn:StudySoAFootnote)-[references]->(ss) | {
+                       order: fn.order, symbol: fn.symbol, uid: sfn.uid,
+                       via_propagated_cell: coalesce(references.via_propagated_cell, false)
+                   }],
                    '^order'
                ) AS sfns
             ORDER BY cell.row, cell.column, cell.order
@@ -156,6 +289,7 @@ class StudySoARepository:
 
         return cell_references, footnote_references
 
+    # LEGACY-SOA-SNAPSHOT (242942): see load(). Remove in the next release.
     @classmethod
     def _to_soa_cell_reference(cls, relationship, study_selection, footnotes):
         known_labels = study_selection.labels & SOA_ITEM_TYPES
@@ -176,15 +310,25 @@ class StudySoARepository:
                 item_uid=study_selection["uid"],
             ),
             footnote_references=[
-                cls._to_soa_footnote_reference(footnote, footnote)
+                cls._to_soa_footnote_reference(
+                    footnote,
+                    footnote,
+                    via_propagated_cell=footnote["via_propagated_cell"],
+                )
                 for footnote in footnotes
                 if footnote["uid"]
             ],
         )
 
+    # LEGACY-SOA-SNAPSHOT (242942): see load(). Remove in the next release.
     @staticmethod
-    def _to_soa_footnote_reference(relationship, soa_footnote):
-        """Returns SoAFootnoteReference obj. from "HAS_PROTOCOL_SOA_FOOTNOTE" relation and StudySoAFootnote node"""
+    def _to_soa_footnote_reference(
+        relationship, soa_footnote, via_propagated_cell: bool = False
+    ):
+        """Returns SoAFootnoteReference obj. from "HAS_PROTOCOL_SOA_FOOTNOTE" relation and StudySoAFootnote node
+
+        `via_propagated_cell` tells whether the footnote references the cell's item through a propagated checkmark.
+        """
 
         return SoAFootnoteReference(
             order=relationship["order"],
@@ -192,121 +336,9 @@ class StudySoARepository:
             referenced_item=ReferencedItem(
                 item_type=SoAItemType.STUDY_SOA_FOOTNOTE,
                 item_uid=soa_footnote["uid"],
+                via_propagated_cell=via_propagated_cell,
             ),
         )
-
-    @classmethod
-    @trace_calls(
-        args=[1, 4, 5, 6],
-        kwargs=["study_uid", "study_value_version", "layout", "study_status"],
-    )
-    @ensure_transaction(db)
-    def save(
-        cls,
-        study_uid: str,
-        cell_references: list[SoACellReference],
-        footnote_references: list[SoAFootnoteReference],
-        study_value_version: str | None = None,
-        layout: SoALayout = SoALayout.PROTOCOL,
-        study_status: StudyStatus | None = None,
-    ):
-        """Saves SoA snapshot HAS_PROTOCOL_SOA_CELL & HAS_PROTOCOL_SOA_FOOTNOTE relationships of a given study version"""
-
-        if layout != SoALayout.PROTOCOL:
-            raise NotImplementedError("Only protocol SoA snapshot is implemented")
-
-        try:
-            study_root: StudyRoot = StudyRoot.nodes.get(uid=study_uid)
-        except DoesNotExist as e:
-            raise NotFoundException("Study", study_uid) from e
-
-        study_value: StudyValue
-        if study_value_version:
-            if study_status is None:
-                study_status = StudyStatus.RELEASED
-
-            try:
-                study_value = study_root.has_version.match(
-                    status=study_status.value, version=study_value_version
-                )[0]
-            except IndexError as e:
-                raise NotFoundException(
-                    msg=f"Study with specified uid '{study_uid}' and version '{study_value_version}' was not found."
-                ) from e
-
-        else:
-            if study_status is None:
-                study_status = StudyStatus.DRAFT
-
-            study_value = study_root.latest_value.get()
-
-        # delete previous SoA snapshot
-        cls._disconnect_soa_rows(
-            study_uid=study_uid, study_value_version=study_value_version, layout=layout
-        )
-
-        # save cells
-        cls._save_relationship(
-            relationship=study_value.has_protocol_soa_cell,
-            references=cell_references,
-            study_value=study_value,
-        )
-
-        # save footnotes
-        cls._save_relationship(
-            relationship=study_value.has_protocol_soa_footnote,
-            references=footnote_references,
-            study_value=study_value,
-        )
-
-        cls.manage_versioning_create(
-            study_root=study_root,
-            layout=layout,
-            study_status=study_status,
-        )
-
-    @classmethod
-    @trace_calls
-    def _save_relationship(
-        cls,
-        relationship: RelationshipManager,
-        references: Iterable[SoACellReference],
-        study_value: StudyValue,
-    ):
-        for soa_cell_reference in references:
-            referenced_item: ReferencedItem = soa_cell_reference.referenced_item
-
-            try:
-                relationship_property_name = (
-                    SOA_ITEM_TYPE_TO_RELATIONSHIP_MODEL_MAME_MAP[
-                        referenced_item.item_type
-                    ]
-                )
-            except KeyError as exc:
-                raise RuntimeError(
-                    f"No domain model mapped for ReferencedItem type '{referenced_item.item_type}'"
-                ) from exc
-
-            try:
-                ref_model: StudySelection = getattr(
-                    study_value, relationship_property_name
-                )
-            except AttributeError as exc:
-                raise RuntimeError(
-                    f"Incorrect domain model mapped for ReferencedItem type '{referenced_item.item_type}', "
-                    f"StudyValue has no '{relationship_property_name}'"
-                ) from exc
-
-            ref_node = ref_model.filter(uid=referenced_item.item_uid).first()
-
-            ref_properties = {
-                k: v
-                for k, v in soa_cell_reference.model_dump().items()
-                if k in {"row", "column", "span", "is_propagated", "order", "symbol"}
-                and v is not None
-            }
-
-            relationship.connect(ref_node, ref_properties)
 
     @staticmethod
     def manage_versioning_create(

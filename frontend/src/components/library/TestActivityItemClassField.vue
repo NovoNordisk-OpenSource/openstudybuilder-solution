@@ -9,7 +9,7 @@
               :label="$t('ActivityInstanceForm.activity_item_class')"
               :items="[props.testNameAic]"
               bg-color="white"
-              item-title="display_name"
+              item-title="label"
               item-value="uid"
               disabled
               class="w-50"
@@ -36,7 +36,7 @@
               :label="$t('ActivityInstanceForm.activity_item_class')"
               :items="[props.testCodeAic]"
               bg-color="white"
-              item-title="display_name"
+              item-title="label"
               item-value="uid"
               disabled
               class="w-50"

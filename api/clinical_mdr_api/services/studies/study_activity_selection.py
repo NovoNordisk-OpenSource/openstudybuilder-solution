@@ -360,9 +360,7 @@ class StudyActivitySelectionService(
             # Grab the VO with the correct order written back by save()
             updated_vo = new_selection_aggregate.get_specific_object_selection(
                 updated_selection.study_selection_uid
-            )[
-                0
-            ]  # type: ignore[assignment]
+            )[0]
             # Keep closure current so the next batch-mode PATCH with the same destination scope
             # sees the already-saved state and only diffs its own new selection.
             if self._batch_cache is not None:
@@ -773,7 +771,7 @@ class StudyActivitySelectionService(
             msg=f"The specified Group with UID '{selection_create_input.activity_group_uid}' is not linked with Activity with Name '{activity_ar.name}'.",
         )
         # create new VO to add
-        new_selection = StudySelectionActivityVO.from_input_values(
+        return StudySelectionActivityVO.from_input_values(
             study_uid=study_uid,
             author_id=self.author,
             activity_uid=activity_ar.uid,
@@ -798,7 +796,6 @@ class StudyActivitySelectionService(
             activity_group_uid=selection_create_input.activity_group_uid,
             show_activity_in_protocol_flowchart=selection_create_input.show_activity_in_protocol_flowchart,
         )
-        return new_selection
 
     def _transform_all_to_response_model(
         self,
@@ -928,7 +925,7 @@ class StudyActivitySelectionService(
         )
 
         # create new VO to add
-        new_selection = StudySelectionActivitySubGroupVO.from_input_values(
+        return StudySelectionActivitySubGroupVO.from_input_values(
             study_uid=study_uid,
             author_id=self.author,
             activity_subgroup_uid=activity_subgroup_uid,
@@ -941,7 +938,6 @@ class StudyActivitySelectionService(
                 else True
             ),
         )
-        return new_selection
 
     @classmethod
     def _validate_activity_subgroup(
@@ -1014,7 +1010,7 @@ class StudyActivitySelectionService(
             activity_group_version=activity_group_version,
         )
         # create new VO to add
-        new_selection = StudySelectionActivityGroupVO.from_input_values(
+        return StudySelectionActivityGroupVO.from_input_values(
             study_uid=study_uid,
             author_id=self.author,
             activity_group_uid=activity_group_uid,
@@ -1027,7 +1023,6 @@ class StudyActivitySelectionService(
                 else True
             ),
         )
-        return new_selection
 
     def _patch_selected_activity(
         self,
@@ -1068,15 +1063,9 @@ class StudyActivitySelectionService(
                 activity_subgroup_uid = activity_grouping.activity_subgroup_uid
                 activity_group_uid = activity_grouping.activity_group_uid
             activity_subgroup_uid = (
-                request_object.activity_subgroup_uid
-                if request_object.activity_subgroup_uid
-                else activity_subgroup_uid
+                request_object.activity_subgroup_uid or activity_subgroup_uid
             )
-            activity_group_uid = (
-                request_object.activity_group_uid
-                if request_object.activity_group_uid
-                else activity_group_uid
-            )
+            activity_group_uid = request_object.activity_group_uid or activity_group_uid
             activity_grouping = ActivityGroupingVO(
                 activity_subgroup_uid=activity_subgroup_uid or "",
                 activity_group_uid=activity_group_uid or "",
@@ -1181,13 +1170,12 @@ class StudyActivitySelectionService(
         )
 
         # create new VO to add
-        new_selection = StudySoAGroupVO.from_input_values(
+        return StudySoAGroupVO.from_input_values(
             study_uid=study_uid,
             author_id=self.author,
             soa_group_term_uid=soa_group_term_uid,
             generate_uid_callback=self._repos.study_soa_group_repository.generate_uid,
         )
-        return new_selection
 
     def _get_or_create_study_soa_group(
         self, study_uid: str, soa_group_term_uid: str
@@ -1688,7 +1676,7 @@ class StudyActivitySelectionService(
             # add the activity and return
             return self._transform_from_vo_to_response_model(
                 study_uid=study_activity_aggregate.study_uid,
-                specific_selection=new_selection,  # type: ignore[arg-type]
+                specific_selection=new_selection,
                 terms_at_specific_datetime=terms_at_specific_datetime,
             )
         finally:
@@ -2153,7 +2141,7 @@ class StudyActivitySelectionService(
             previous_soa_group_uid=current_object.study_soa_group_uid,
             updated_soa_group_uid=updated_soa_selection.study_selection_uid,
         )
-        updated_study_activity_vo = StudySelectionActivityVO.from_input_values(
+        return StudySelectionActivityVO.from_input_values(
             study_uid=current_object.study_uid,
             activity_uid=(
                 activity_ar.uid if activity_ar else current_object.activity_uid
@@ -2189,8 +2177,6 @@ class StudyActivitySelectionService(
             author_username=user().username,
             activity_library_name=current_object.activity_library_name,
         )
-
-        return updated_study_activity_vo
 
     @ensure_transaction(db)
     def handle_batch_operations(
@@ -2281,7 +2267,7 @@ class StudyActivitySelectionService(
                             content=BatchErrorResponse(message=str(error)),
                         )
                     )
-                    raise error
+                    raise
 
         finally:
             # Save any pending batch instance AR before clearing caches
@@ -2347,7 +2333,7 @@ class StudyActivitySelectionService(
                             content=BatchErrorResponse(message=str(error)),
                         )
                     )
-                    raise error
+                    raise
         finally:
             # Save any pending batch instance AR before clearing caches
             if self._batch_instance_ar is not None:
@@ -2457,7 +2443,7 @@ class StudyActivitySelectionService(
                             content=BatchErrorResponse(message=str(error)),
                         )
                     )
-                    raise error
+                    raise
         finally:
             # Save any pending batch instance AR before clearing caches
             if self._batch_instance_ar is not None:

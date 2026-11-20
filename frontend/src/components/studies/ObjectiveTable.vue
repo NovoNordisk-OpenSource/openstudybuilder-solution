@@ -50,6 +50,9 @@
             <NNParameterHighlighter
               v-if="objective.template"
               :name="objective.template.name"
+              :parameter-names="
+                objective.template.parameters?.map((p) => p.name)
+              "
               default-color="orange"
             />
             <NNParameterHighlighter
@@ -88,6 +91,7 @@
       <NNParameterHighlighter
         v-if="item.template"
         :name="item.template.name"
+        :parameter-names="item.template.parameters?.map((p) => p.name)"
         default-color="orange"
       />
       <NNParameterHighlighter

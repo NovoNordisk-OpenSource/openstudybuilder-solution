@@ -383,9 +383,11 @@ class StudySelectionActivityRepository(
         # Build a single Cypher statement that MATCHes all dependency nodes, CREATEs the
         # StudyActivity node, and CREATEs all its relationships in one round-trip.
         match_lines = [
-            "MATCH (activity_root:ActivityRoot {uid: $activity_uid})"
-            "-[:HAS_VERSION {version: $activity_version}]->(latest_activity_value:ActivityValue)"
-            " WITH * LIMIT 1",
+            (
+                "MATCH (activity_root:ActivityRoot {uid: $activity_uid})"
+                "-[:HAS_VERSION {version: $activity_version}]->(latest_activity_value:ActivityValue)"
+                " WITH * LIMIT 1"
+            ),
             "MATCH (study_value:StudyValue) WHERE elementId(study_value) = $study_value_eid",
             "MATCH (study_soa_group:StudySoAGroup {uid:$study_soa_group_uid}) WHERE NOT (study_soa_group)-[:BEFORE]-()",
         ]

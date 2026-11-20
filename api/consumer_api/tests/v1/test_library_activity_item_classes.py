@@ -29,7 +29,7 @@ EXPECTED_ITEM_FIELDS = {
     "definition",
     "nci_concept_id",
     "nci_concept_name",
-    "display_name",
+    "label",
     "order",
     "status",
     "version",

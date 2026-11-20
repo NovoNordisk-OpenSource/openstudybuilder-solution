@@ -29,15 +29,13 @@ class SimpleConceptVO(ConceptVO):
         abbreviation: str | None,
         is_template_parameter: bool,
     ) -> Self:
-        simple_concept_vo = cls(
+        return cls(
             name=name,
             name_sentence_case=name_sentence_case,
             definition=definition,
             abbreviation=abbreviation,
             is_template_parameter=is_template_parameter,
         )
-
-        return simple_concept_vo
 
 
 @dataclass
@@ -60,13 +58,12 @@ class SimpleConceptAR(LibraryItemAggregateRootBase):
         library: LibraryVO,
         item_metadata: LibraryItemMetadataVO,
     ) -> Self:
-        activity_ar = cls(
+        return cls(
             _uid=uid,
             _concept_vo=simple_concept_vo,
             _item_metadata=item_metadata,
             _library=library,
         )
-        return activity_ar
 
     @classmethod
     def from_input_values(
@@ -100,7 +97,7 @@ class SimpleConceptAR(LibraryItemAggregateRootBase):
             )
         simple_concept_uid = find_uid_by_name_callback(simple_concept_vo.name)
 
-        simple_concept_ar = cls(
+        return cls(
             _uid=(
                 generate_uid_callback()
                 if simple_concept_uid is None
@@ -110,7 +107,6 @@ class SimpleConceptAR(LibraryItemAggregateRootBase):
             _library=library,
             _concept_vo=simple_concept_vo,
         )
-        return simple_concept_ar
 
     def approve(self, **kwargs) -> None:
         raise AttributeError(

@@ -26,7 +26,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
         with:
-          node-version: "20"
+          node-version: "24"
           cache: "npm"
           cache-dependency-path: frontend/package-lock.json
 
@@ -163,7 +163,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
         with:
-          node-version: "20"
+          node-version: "24"
           cache: "npm"
           cache-dependency-path: frontend/package-lock.json
 
@@ -211,7 +211,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
         with:
-          node-version: "20"
+          node-version: "24"
           cache: "npm"
           cache-dependency-path: frontend/package-lock.json
 
@@ -233,6 +233,7 @@ jobs:
         # Once existing vulnerabilities are fixed, add `audit` to branch
         # protection's required checks so this gate actually blocks merges.
         run: npm audit --audit-level=high
+
       # TODO: WhiteSource (Mend) scan — was `WhiteSource@21` in ADO.
       # TODO: SonarQube prepare/analyze/publish — needs SONAR_TOKEN +
       #       SONAR_HOST_URL secrets configured at the repo/org level.

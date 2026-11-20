@@ -260,11 +260,11 @@ class ActivityItemClass(VersionProperties):
             }
         ),
     ] = None
-    display_name: Annotated[
+    label: Annotated[
         str | None,
         Field(
             json_schema_extra={
-                "source": "has_latest_value.display_name",
+                "source": "has_latest_value.label",
                 "nullable": True,
             }
         ),
@@ -384,7 +384,7 @@ class ActivityItemClass(VersionProperties):
             definition=activity_item_class_ar.definition,
             nci_concept_id=activity_item_class_ar.nci_concept_id,
             nci_concept_name=activity_item_class_ar.nci_concept_name,
-            display_name=activity_item_class_ar.display_name,
+            label=activity_item_class_ar.label,
             order=activity_item_class_ar.activity_item_class_vo.order,
             activity_instance_classes=activity_instance_classes,
             semtcdt=SimpleDataTypeTerm(
@@ -446,11 +446,11 @@ class CompactActivityItemClass(BaseModel):
             }
         ),
     ] = None
-    display_name: Annotated[
+    label: Annotated[
         str | None,
         Field(
             json_schema_extra={
-                "source": "has_latest_value.display_name",
+                "source": "has_latest_value.label",
                 "nullable": True,
             }
         ),
@@ -538,7 +538,7 @@ class ActivityItemClassCreateInput(PostInputModel):
     definition: Annotated[str | None, Field(min_length=1)] = None
     nci_concept_id: Annotated[str | None, Field(min_length=1)] = None
     nci_concept_name: Annotated[str | None, Field(min_length=1)] = None
-    display_name: Annotated[str | None, Field(min_length=1)] = None
+    label: Annotated[str | None, Field(min_length=1)] = None
     order: Annotated[int, Field(gt=0, lt=settings.max_int_neo4j)]
     activity_instance_classes: Annotated[list[ActivityInstanceClassRelInput], Field()]
     role_uid: Annotated[str, Field(min_length=1)]
@@ -564,7 +564,7 @@ class ActivityItemClassEditInput(PatchInputModel):
     definition: Annotated[str | None, Field(min_length=1)] = None
     nci_concept_id: Annotated[str | None, Field(min_length=1)] = None
     nci_concept_name: Annotated[str | None, Field(min_length=1)] = None
-    display_name: Annotated[str | None, Field(min_length=1)] = None
+    label: Annotated[str | None, Field(min_length=1)] = None
     order: Annotated[int | None, Field(gt=0, lt=settings.max_int_neo4j)] = None
     activity_instance_classes: list[ActivityInstanceClassRelInput] = Field(
         default_factory=list
@@ -627,7 +627,7 @@ class ActivityItemClassDetail(BaseModel):
     uid: Annotated[str, Field()]
     name: Annotated[str, Field()]
     definition: Annotated[str | None, Field()] = None
-    display_name: Annotated[str | None, Field()] = None
+    label: Annotated[str | None, Field()] = None
     nci_code: Annotated[str | None, Field()] = None
     nci_concept_name: Annotated[str | None, Field()] = None
     library_name: Annotated[str | None, Field()] = None

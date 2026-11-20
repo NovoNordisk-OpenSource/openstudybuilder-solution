@@ -53,11 +53,10 @@ def get(
     ] = None,
 ) -> StudySourceVariable | None:
     study_source_variable_service = StudySourceVariableService()
-    study_source_variable = study_source_variable_service.get_study_source_variable(
+    return study_source_variable_service.get_study_source_variable(
         study_uid=study_uid,
         study_value_version=study_value_version,
     )
-    return study_source_variable
 
 
 @router.post(

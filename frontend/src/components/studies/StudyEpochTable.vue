@@ -21,7 +21,9 @@
       :export-config="{
         objectLabel: 'StudyEpochs',
         dataUrl: exportDataUrl,
-        dataUrlParams: showLagTime ? { with_lag_time: true } : undefined,
+        dataUrlParams: epochsStore.visibleLagTimeFields.length
+          ? { with_lag_time: true }
+          : undefined,
       }"
       @filter="fetchEpochs"
     >
@@ -50,11 +52,9 @@
             <td>{{ epoch.end_rule }}</td>
             <td>{{ epoch.description }}</td>
             <td>{{ epoch.study_visit_count }}</td>
-            <template v-if="showLagTime">
-              <td v-for="field in lagTimeFields" :key="field">
-                {{ formatLagTime(epoch, field) }}
-              </td>
-            </template>
+            <td v-for="field in epochsStore.visibleLagTimeFields" :key="field">
+              {{ formatLagTime(epoch, field) }}
+            </td>
             <td>
               <v-chip :color="epoch.color_hash" size="small" variant="flat">
                 <span>&nbsp;</span>
@@ -97,7 +97,7 @@
         <CTTermDisplay :term="item.epoch_subtype_ctterm" />
       </template>
       <template
-        v-for="field in lagTimeFields"
+        v-for="field in epochsStore.visibleLagTimeFields"
         #[`item.${field}`]="{ item }"
         :key="field"
       >
@@ -164,7 +164,6 @@ import { useAccessGuard } from '@/composables/accessGuard'
 import { useStudiesGeneralStore } from '@/stores/studies-general'
 import { useEpochsStore } from '@/stores/studies-epochs'
 import { useUnitsStore } from '@/stores/units'
-import { useFeatureFlagsStore } from '@/stores/feature-flags'
 import { computed, onMounted, inject, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useDragAndDrop } from '@formkit/drag-and-drop/vue'
@@ -177,7 +176,6 @@ const accessGuard = useAccessGuard()
 const table = ref()
 const epochsStore = useEpochsStore()
 const unitsStore = useUnitsStore()
-const featureFlagsStore = useFeatureFlagsStore()
 
 const [parent, studyEpochs] = useDragAndDrop([], {
   onDragend: (event) => {
@@ -215,18 +213,20 @@ const actions = [
     click: openEpochHistory,
   },
 ]
-// Lag time only carries data migrated from MMA.
-const lagTimeFields = ['ae_lag_time', 'hypo_lag_time', 'ce_lag_time']
-const showLagTime = computed(() =>
-  featureFlagsStore.getFeatureFlag('study_epoch_lag_time')
-)
-
-// Own layout key per flag state: NNTable hides headers missing from the saved
-// column layout, so a layout stored while the flag was off would keep the lag
-// columns hidden after switching it on.
-const tableId = computed(() =>
-  showLagTime.value ? 'studies-epochs-table-lag' : 'studies-epochs-table'
-)
+// Own layout key per lag column set (none, AE only, all three): NNTable hides
+// headers missing from the saved column layout, so a layout stored with fewer
+// lag columns would keep the extra ones hidden. The all-three key predates the
+// AE-only one and stays as it was, so layouts users already saved still apply.
+const tableId = computed(() => {
+  const fields = epochsStore.visibleLagTimeFields
+  if (fields.includes('hypo_lag_time')) {
+    return 'studies-epochs-table-lag'
+  }
+  if (fields.includes('ae_lag_time')) {
+    return 'studies-epochs-table-ae-lag'
+  }
+  return 'studies-epochs-table'
+})
 
 function formatLagTime(item, field) {
   if (item[field] === null || item[field] === undefined) {
@@ -261,17 +261,15 @@ const headers = computed(() => [
     title: t('StudyEpochTable.visit_count'),
     key: 'study_visit_count',
   },
-  ...(showLagTime.value
-    ? lagTimeFields.map((field) => ({
-        title: t(`StudyEpochForm.${field}`),
-        key: field,
-        historyFilter: (_value, item) => formatLagTime(item, field),
-        // The audit trail reports a unit change as ae_lag_time_unit_name, so
-        // this cell must watch that field too or a days -> weeks edit looks
-        // unchanged.
-        changeKeys: [`${field}_unit_name`],
-      }))
-    : []),
+  ...epochsStore.visibleLagTimeFields.map((field) => ({
+    title: t(`StudyEpochForm.${field}`),
+    key: field,
+    historyFilter: (_value, item) => formatLagTime(item, field),
+    // The audit trail reports a unit change as ae_lag_time_unit_name, so
+    // this cell must watch that field too or a days -> weeks edit looks
+    // unchanged.
+    changeKeys: [`${field}_unit_name`],
+  })),
   { title: t('StudyEpochTable.colour'), key: 'color_hash' },
 ])
 const selectedStudyEpoch = ref(null)

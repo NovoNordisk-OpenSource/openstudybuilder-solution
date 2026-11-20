@@ -120,12 +120,12 @@ class OdmItemVO:
         odm_uid: str | None = None,
         library_name: str | None = None,
     ) -> None:
-        if uids := odm_object_exists_callback(library_name=library_name, oid=self.oid):
-
-            if uids[0] != odm_uid:
-                raise AlreadyExistsException(
-                    msg=f"ODM Item with OID '{self.oid}' already exists in library '{library_name}' with UID ({uids[0]})"
-                )
+        if (
+            uids := odm_object_exists_callback(library_name=library_name, oid=self.oid)
+        ) and uids[0] != odm_uid:
+            raise AlreadyExistsException(
+                msg=f"ODM Item with OID '{self.oid}' already exists in library '{library_name}' with UID ({uids[0]})"
+            )
 
         if self.external_question is not None:
             BusinessLogicException.raise_if_not(

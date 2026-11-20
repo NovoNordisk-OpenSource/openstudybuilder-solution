@@ -1,7 +1,9 @@
 @REQ_ID:1070683
 
 Feature: Library - Concepts - Activities - Activities - Basic Scope
-    As a user, I want to manage every Activities in the Concepts Library
+    As a user,
+    I must be able to manage activity concepts in the library,
+    So that activity concepts can be used for down stream automations, submission deliverables and study specification documents.
 
     Background: User must be logged in
         Given The user is logged in
@@ -88,13 +90,26 @@ Feature: Library - Concepts - Activities - Activities - Basic Scope
         And User sets status filter to 'final'
         Then The item has status 'Final' and version '1.0'
 
-    Scenario: [Actions][Delete] User must be able to Delete the intial created version of the activity
-        And [API] Activity in status Draft exists
+    Scenario: [Actions][Delete] User must be able to delete the intial created version of an activity in draft when it has never been approved
+    # i.e. in status draft with version < 1.0
+        And [API] Activity in status Draft in version < 1.0 exists
         And The '/library/activities/activities' page is opened
         And User sets status filter to 'draft'
         And Activity is searched for and found
+        And Activity has never previously been approved
         When The 'Delete' option is clicked from the three dot menu list
         Then Activity is searched for and not found
+
+    @pending_implementation
+    Scenario: [Actions][Delete] User must not be able to delete an activity in draft when the activity previously has been approved
+    # i.e. in status draft with version > 1.0
+        And [API] Activity in status Draft in version >= 1.0 exists
+        And The '/library/activities/activities' page is opened
+        And User sets status filter to 'draft'
+        And Activity is searched for and found
+        And Activity has previously been approved
+        When The the three dot menu list i opened
+        Then the 'Delete' option is not available
 
     Scenario: [Actions][New version] User must be able to add a new version for the approved activity
         And [API] Activity in status Draft exists

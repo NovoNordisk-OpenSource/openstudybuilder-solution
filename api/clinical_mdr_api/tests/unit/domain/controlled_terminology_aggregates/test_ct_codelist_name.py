@@ -13,10 +13,9 @@ from clinical_mdr_api.tests.unit.domain.utils import AUTHOR_ID, random_str
 
 
 def create_random_ct_codelist_name_vo(catalogue: str = "Catalogue") -> CTCodelistNameVO:
-    random_ct_codelist_name_vo = CTCodelistNameVO.from_repository_values(
+    return CTCodelistNameVO.from_repository_values(
         catalogue_names=[catalogue], name=random_str(), is_template_parameter=False
     )
-    return random_ct_codelist_name_vo
 
 
 def create_random_ct_codelist_name_ar(
@@ -25,7 +24,7 @@ def create_random_ct_codelist_name_ar(
     is_editable: bool = True,
     catalogue: str = "Catalogue",
 ) -> CTCodelistNameAR:
-    random_ct_codelist_name_ar = CTCodelistNameAR.from_input_values(
+    return CTCodelistNameAR.from_input_values(
         generate_uid_callback=generate_uid_callback,
         ct_codelist_name_vo=create_random_ct_codelist_name_vo(catalogue=catalogue),
         library=LibraryVO.from_repository_values(
@@ -33,7 +32,6 @@ def create_random_ct_codelist_name_ar(
         ),
         author_id=AUTHOR_ID,
     )
-    return random_ct_codelist_name_ar
 
 
 class TestCTCodelistNameAR(unittest.TestCase):

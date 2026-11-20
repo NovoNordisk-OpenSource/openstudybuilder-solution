@@ -30,16 +30,4 @@ Feature: Library - Data Collection Standards - CRF Builder - CRF Viewer
     And User intercepts ODM XMLS document generation request
     And User clicks the GENERATE button
     Then User waits for ODM XMLS document generation request
-
-@manual_test
-  Scenario: Verify all highlighted text options/buttons in the CRF Viewer display page can be clicked and become un-highlighted
-    Given The '/library/crf-builder/odm-viewer' page is opened
-    When User selects first value from the Form Name dropdown
-    And User intercepts ODM document generation request
-    And User clicks the GENERATE button
-    Then User waits for ODM document generation request
-    Then The iframe containing generated data is displayed
-    And all text options/buttons like 'Implementation Guidelines', 'Completion Guidelines', 'CDASH', 'SDTM', 'Topic Code', 'ADaM Code', and 'Keys' are highlighted
-    When I click each text option/button one by one
-    Then Each clicked text option/button should become un-highlighted
   

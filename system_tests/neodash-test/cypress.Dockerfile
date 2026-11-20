@@ -1,4 +1,4 @@
-ARG CYPRESS_IMAGE=cypress/browsers:node-20.18.0-chrome-130.0.6723.69-1-ff-131.0.3-edge-130.0.2849.52-1
+ARG CYPRESS_IMAGE=cypress/browsers:node-24.22.1-chrome-156.0.8078.47-1-ff-158.0.1-edge-155.0.4283.62-1
 
 FROM $CYPRESS_IMAGE
 

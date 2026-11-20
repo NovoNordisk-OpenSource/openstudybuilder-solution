@@ -99,16 +99,14 @@ def test_get_soa_preferences(
     unlink_study_soa_properties(study.uid)
 
     # WHEN existing Study has no Study SoA Preferences StudyFields
-    # THEN Study SoA preferences show_epochs is on
-    # THEN Study SoA preferences show_milestones is off
-    # THEN Study SoA preferences baseline_as_time_zero is off
+    # THEN Study SoA preferences fall back to model defaults
     response = api_client.get(f"/studies/{study.uid}/soa-preferences")
     assert_response_status_code(response, 200)
     assert_json_response(response)
     data = response.json()
     assert data, "empty JSON data"
     assert data["study_uid"] == study.uid
-    assert data["show_epochs"] is True
+    assert data["show_epochs"] is False
     assert data["show_milestones"] is False
     assert data["baseline_as_time_zero"] is False
 
@@ -143,9 +141,9 @@ def test_get_soa_preferences(
         (  # 0
             {},
             {
-                "show_epochs": True,
+                "show_epochs": False,
                 "show_milestones": False,
-                "baseline_as_time_zero": True,
+                "baseline_as_time_zero": False,
             },
         ),
         (  # 1
@@ -153,13 +151,13 @@ def test_get_soa_preferences(
             {
                 "show_epochs": True,
                 "show_milestones": False,
-                "baseline_as_time_zero": True,
+                "baseline_as_time_zero": False,
             },
         ),
         (  # 2
             {"baseline_as_time_zero": True},
             {
-                "show_epochs": True,
+                "show_epochs": False,
                 "show_milestones": False,
                 "baseline_as_time_zero": True,
             },
@@ -167,9 +165,9 @@ def test_get_soa_preferences(
         (  # 3
             {"show_milestones": True},
             {
-                "show_epochs": True,
+                "show_epochs": False,
                 "show_milestones": True,
-                "baseline_as_time_zero": True,
+                "baseline_as_time_zero": False,
             },
         ),
         (  # 4
@@ -177,13 +175,13 @@ def test_get_soa_preferences(
             {
                 "show_epochs": False,
                 "show_milestones": False,
-                "baseline_as_time_zero": True,
+                "baseline_as_time_zero": False,
             },
         ),
         (  # 5
             {"baseline_as_time_zero": False},
             {
-                "show_epochs": True,
+                "show_epochs": False,
                 "show_milestones": False,
                 "baseline_as_time_zero": False,
             },
@@ -215,7 +213,7 @@ def test_get_soa_preferences(
         (  # 9
             {"show_milestones": True, "baseline_as_time_zero": False},
             {
-                "show_epochs": True,
+                "show_epochs": False,
                 "show_milestones": True,
                 "baseline_as_time_zero": False,
             },

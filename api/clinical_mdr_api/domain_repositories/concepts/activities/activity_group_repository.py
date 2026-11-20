@@ -2,6 +2,9 @@ from typing import Any
 
 from neomodel import db
 
+from clinical_mdr_api.domain_repositories.concepts.activities.linked_activity_filters import (
+    linked_activity_filters,
+)
 from clinical_mdr_api.domain_repositories.concepts.concept_generic_repository import (
     ConceptGenericRepository,
 )
@@ -118,18 +121,16 @@ class ActivityGroupRepository(ConceptGenericRepository[ActivityGroupAR]):
             WHERE v.name IN $activity_subgroup_names | v.name]) > 0"""
             filter_parameters.append(filter_by_activity_subgroup_names)
             filter_query_parameters["activity_subgroup_names"] = activity_subgroup_names
-        if kwargs.get("activity_names") is not None:
-            activity_names = kwargs.get("activity_names")
-            filter_by_activity_names = """
-            size([(concept_value)<-[:HAS_SELECTED_GROUP]-(:ActivityGrouping)<-[:HAS_GROUPING]-(v:ActivityValue) 
-            WHERE v.name IN $activity_names | v.name]) > 0"""
-            filter_parameters.append(filter_by_activity_names)
-            filter_query_parameters["activity_names"] = activity_names
+        linked_statements, linked_parameters = linked_activity_filters(
+            "HAS_SELECTED_GROUP", **kwargs
+        )
+        filter_parameters.extend(linked_statements)
+        filter_query_parameters.update(linked_parameters)
         extended_filter_statements = " AND ".join(filter_parameters)
         if filter_statements_from_concept != "":
             if len(extended_filter_statements) > 0:
-                filter_statements_to_return = " AND ".join(
-                    [filter_statements_from_concept, extended_filter_statements]
+                filter_statements_to_return = (
+                    f"{filter_statements_from_concept} AND {extended_filter_statements}"
                 )
             else:
                 filter_statements_to_return = filter_statements_from_concept
@@ -232,11 +233,7 @@ class ActivityGroupRepository(ConceptGenericRepository[ActivityGroupAR]):
         )
 
         overview = result_array[0]
-        overview_dict = {}
-        for overview_prop, attribute_name in zip(overview, attribute_names):
-            overview_dict[attribute_name] = overview_prop
-
-        return overview_dict
+        return dict(zip(attribute_names, overview))
 
     def get_linked_activity_subgroup_uids(
         self,
@@ -435,7 +432,4 @@ class ActivityGroupRepository(ConceptGenericRepository[ActivityGroupAR]):
             msg=f"The linked activities query returned broken data: {result_array}",
         )
         instances = result_array[0]
-        instances_dict = {}
-        for instances_prop, attribute_name in zip(instances, attribute_names):
-            instances_dict[attribute_name] = instances_prop
-        return instances_dict
+        return dict(zip(attribute_names, instances))

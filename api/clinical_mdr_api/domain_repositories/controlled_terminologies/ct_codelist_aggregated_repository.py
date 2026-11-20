@@ -251,6 +251,10 @@ class CTCodelistAggregatedRepository:
         :param total_count:
         :return GenericFilteringReturn[tuple[CTCodelistNameAR, CTCodelistAttributesAR]]:
         """
+        ValidationException.raise_if(
+            term_filter is not None and not isinstance(term_filter, dict),
+            msg=f"Invalid term_filter object provided: '{term_filter}', it must be a dict",
+        )
         # If library is not explicitly passed but is in filter_by, extract it
         # so it can be used in the optimized MATCH clause path
         if not library and filter_by and "library_name" in filter_by:
@@ -311,9 +315,7 @@ class CTCodelistAggregatedRepository:
 
         codelists_ars = []
         for codelist in result_array:
-            codelist_dictionary = {}
-            for codelist_property, attribute_name in zip(codelist, attributes_names):
-                codelist_dictionary[attribute_name] = codelist_property
+            codelist_dictionary = dict(zip(attributes_names, codelist))
             codelists_ars.append(
                 self._create_codelist_aggregate_instances_from_cypher_result(
                     codelist_dictionary
@@ -851,6 +853,7 @@ class CTCodelistAggregatedRepository:
             ht.start_date AS start_date,
             ht.end_date AS end_date,
             tav.definition AS definition,
+            tav.algorithm AS algorithm,
             tav.concept_id AS concept_id,
             tav.preferred_term AS nci_preferred_name,
             rel_data_attributes.start_date AS attributes_date,
@@ -926,9 +929,7 @@ class CTCodelistAggregatedRepository:
 
         codelist_term_ars = []
         for term in result_array:
-            term_dictionary = {}
-            for term_property, attribute_name in zip(term, attributes_names):
-                term_dictionary[attribute_name] = term_property
+            term_dictionary = dict(zip(attributes_names, term))
             codelist_term_ars.append(CTCodelistTermAR.from_result_dict(term_dictionary))
 
         total = calculate_total_count_from_query_result(
@@ -1080,6 +1081,7 @@ class CTCodelistAggregatedRepository:
             ht.start_date AS start_date,
             ht.end_date AS end_date,
             tav.definition AS definition,
+            tav.algorithm AS algorithm,
             tav.concept_id AS concept_id,
             tav.preferred_term AS nci_preferred_name,
             rel_data_attributes.start_date AS attributes_date,
@@ -1308,9 +1310,7 @@ class CTCodelistAggregatedRepository:
 
         paired_term_ars = []
         for term in result_array:
-            term_dictionary = {}
-            for term_property, attribute_name in zip(term, attributes_names):
-                term_dictionary[attribute_name] = term_property
+            term_dictionary = dict(zip(attributes_names, term))
             paired_term_ars.append(
                 CTPairedCodelistTermAR.from_result_dict(term_dictionary)
             )

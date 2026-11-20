@@ -8,7 +8,7 @@
           :label="$t('ActivityInstanceForm.activity_item_class')"
           :items="compatibleActivityItemClasses"
           bg-color="white"
-          item-title="display_name"
+          item-title="label"
           item-value="uid"
           return-object
           :disabled="selectValueOnly || props.disabled"

@@ -20,7 +20,7 @@ from common.utils import sanitize_for_log
 log = logging.getLogger(__name__)
 
 
-class OdmConditionService(OdmGenericService[OdmConditionAR]):
+class OdmConditionService(OdmGenericService[OdmConditionAR, OdmCondition]):
     aggregate_class = OdmConditionAR
     version_class = OdmConditionVersion
     repository_interface = ConditionRepository

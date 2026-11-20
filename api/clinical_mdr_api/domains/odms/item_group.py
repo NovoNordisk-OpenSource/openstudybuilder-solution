@@ -80,11 +80,12 @@ class OdmItemGroupVO:
         odm_uid: str | None = None,
         library_name: str | None = None,
     ) -> None:
-        if uids := odm_object_exists_callback(library_name=library_name, oid=self.oid):
-            if uids[0] != odm_uid:
-                raise AlreadyExistsException(
-                    msg=f"ODM Item Group with OID '{self.oid}' already exists in library '{library_name}' with UID ({uids[0]})"
-                )
+        if (
+            uids := odm_object_exists_callback(library_name=library_name, oid=self.oid)
+        ) and uids[0] != odm_uid:
+            raise AlreadyExistsException(
+                msg=f"ODM Item Group with OID '{self.oid}' already exists in library '{library_name}' with UID ({uids[0]})"
+            )
 
         for sdtm_domain_uid in self.sdtm_domain_uids:
             BusinessLogicException.raise_if_not(

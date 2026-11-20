@@ -3,6 +3,7 @@
 import json
 import os
 
+import httpx
 from import_sponsor_data.importers.utils.sponsor_model_schema import SponsorModelSchema
 
 from migrations.common import migrate_indexes_and_constraints
@@ -23,6 +24,10 @@ DB_CONNECTION = get_db_connection()
 MIGRATION_DESC = "schema-migration-release-2.10"
 
 SPONSOR_LIBRARY_NAME = "Sponsor"
+
+# Rendering HTML, DOCX, XLSX and JSON of the Protocol SoA of a large study takes longer than the default timeout
+SOA_SNAPSHOT_TIMEOUT_SECONDS = 600
+SOA_SNAPSHOT_LAYOUTS = ("protocol", "protocol_lab_table")
 
 # Map study field data types (taken from CTConfigValue.study_field_data_type)
 # to the submission_value of the matching CTTerm in the SEMTCDT codelist
@@ -56,6 +61,29 @@ SPONSOR_MODEL_DATAFILES_DIR = os.path.join(
 # Submission value of the DATATYPE codelist in
 # DDF CT (matches settings.ddf_odm_data_type_cl_submval)
 DATATYPE_CODELIST_SUBMVAL = "CODMDT"
+
+# Submission value of the Semantic Data Type codelist that MetaStudyField
+# nodes are linked to
+SEMANTIC_DATA_TYPE_CODELIST_SUBMVAL = "SEMTCDT"
+
+# Every SEMTCDT term migrate_meta_study_fields may link to: the mapped data
+# types plus 'ctTerm', used for text fields that point to a CT term
+REQUIRED_SEMANTIC_DATA_TYPE_SUBMVALS = frozenset(
+    STUDY_FIELD_DATA_TYPE_TO_SEMANTIC_DATA_TYPE.values()
+) | {"ctTerm"}
+
+# Both codelists are sponsor codelists loaded by the import_sponsor_data
+# 'codelistterms2' step (sponsor_codelist_definitions.csv, datatype.csv)
+DATATYPE_CODELISTS_IMPORT_HINT = (
+    "load them first with the import_sponsor_data 'codelistterms2' step"
+    " (sponsor_codelist_definitions.csv and datatype.csv)"
+)
+
+# Control Type study field changes from single-select (StudyTextField) to
+# multi-select (StudyArrayField); the field name follows the plural `_codes`
+# convention used by every other multi-select study field.
+CONTROL_TYPE_OLD_FIELD_NAME = "control_type_code"
+CONTROL_TYPE_NEW_FIELD_NAME = "control_type_codes"
 
 
 def uppercase_project_numbers(db_driver, log) -> bool:
@@ -418,6 +446,89 @@ def link_dataset_variable_to_data_model_catalogue(db_driver, log) -> bool:
     return summary.counters.contains_updates
 
 
+def _get_codelist_term_submission_values(db_driver, codelist_submval: str) -> set:
+    """Submission values of the terms of the codelist with the given submission value."""
+    records, _ = run_cypher_query(
+        db_driver,
+        """
+        MATCH (:CTCodelistAttributesValue {submission_value: $codelist_submval})
+              <-[:LATEST]-(:CTCodelistAttributesRoot)
+              <-[:HAS_ATTRIBUTES_ROOT]-(:CTCodelistRoot)
+              -[:HAS_TERM]->(clt:CTCodelistTerm)
+              -[:HAS_TERM_ROOT]->(:CTTermRoot)
+        RETURN collect(DISTINCT clt.submission_value) AS submission_values
+        """,
+        params={"codelist_submval": codelist_submval},
+    )
+    return set(records[0]["submission_values"]) if records else set()
+
+
+def check_datatype_codelists(db_driver, log) -> None:
+    """Fail before any data is changed when a data type codelist the migration needs is missing.
+
+    - `migrate_meta_study_fields` links MetaStudyField nodes to SEMTCDT terms. Without them
+      no MetaStudyField is created, and `remove_ct_config_nodes` then deletes the CTConfig
+      nodes it reads from, so the step cannot be repeated.
+    - `migrate_odm_item_datatype_to_ct_term` links OdmItemValue nodes to CODMDT terms.
+
+    Each codelist is only required while there is still data to migrate with it, so a repeated
+    run on an already migrated database passes.
+    """
+    log.info(
+        "Checking that the %s and %s codelists are present",
+        SEMANTIC_DATA_TYPE_CODELIST_SUBMVAL,
+        DATATYPE_CODELIST_SUBMVAL,
+    )
+    records, _ = run_cypher_query(
+        db_driver,
+        """
+        RETURN
+            EXISTS {
+                MATCH (cv:CTConfigValue)
+                WHERE cv.study_field_name IS NOT NULL
+                  AND NOT cv.study_field_name ENDS WITH '_null_value_code'
+            } AS has_study_fields,
+            EXISTS {
+                MATCH (oiv:OdmItemValue)
+                WHERE oiv.datatype IS NOT NULL
+                  AND toLower(oiv.datatype) <> 'comment'
+                  AND NOT (oiv)-[:HAS_DATA_TYPE]->(:CTTermContext)
+            } AS has_odm_item_datatypes
+        """,
+    )
+    has_study_fields = records[0]["has_study_fields"]
+    has_odm_item_datatypes = records[0]["has_odm_item_datatypes"]
+    problems = []
+
+    if has_study_fields:
+        missing = REQUIRED_SEMANTIC_DATA_TYPE_SUBMVALS - (
+            _get_codelist_term_submission_values(
+                db_driver, SEMANTIC_DATA_TYPE_CODELIST_SUBMVAL
+            )
+        )
+        if missing:
+            problems.append(
+                f"{SEMANTIC_DATA_TYPE_CODELIST_SUBMVAL} codelist is missing terms"
+                f" {sorted(missing)}, needed to create MetaStudyField nodes from the"
+                " CTConfigValue nodes"
+            )
+
+    if has_odm_item_datatypes and not _get_codelist_term_submission_values(
+        db_driver, DATATYPE_CODELIST_SUBMVAL
+    ):
+        problems.append(
+            f"{DATATYPE_CODELIST_SUBMVAL} codelist (or all of its terms) is missing,"
+            " needed to link OdmItemValue nodes to their data type"
+        )
+
+    if problems:
+        raise RuntimeError(
+            "Migration prerequisites not met, no data was changed: "
+            + "; ".join(problems)
+            + f"; {DATATYPE_CODELISTS_IMPORT_HINT}"
+        )
+
+
 def migrate_meta_study_fields(db_driver, log) -> bool:
     """Pre-create MetaStudyField nodes and link them to the matching
     Semantic Data Type CTTermRoot (SEMTCDT codelist).
@@ -569,16 +680,138 @@ def migrate_meta_study_fields(db_driver, log) -> bool:
             sorted(skipped_data_types),
         )
     if missing_semtcdt_terms:
-        log.warning(
-            "SEMTCDT submission_values not found in DB: %s",
-            sorted(missing_semtcdt_terms),
+        # Fail here, before remove_ct_config_nodes deletes the CTConfigValue nodes read above
+        raise RuntimeError(
+            f"SEMTCDT submission_values not found in DB: {sorted(missing_semtcdt_terms)};"
+            f" {DATATYPE_CODELISTS_IMPORT_HINT}"
         )
 
     return contains_updates
 
 
+def migrate_control_type_to_array_field(db_driver, log) -> bool:
+    """Convert the Control Type study field from single-select to multi-select.
+
+    Every `StudyTextField {field_name: 'control_type_code'}` node is converted
+    in place into a `StudyArrayField {field_name: 'control_type_codes'}`:
+    - `value` becomes a list holding the selected CT term uid(s), taken from the
+      `HAS_TYPE` term when present, or `[]` when the field only carries a null
+      flavor.
+    - incoming `HAS_TEXT_FIELD` relationships from `StudyValue` nodes are
+      replaced with `HAS_ARRAY_FIELD`.
+    Converting in place keeps the `HAS_TYPE`, `HAS_REASON_FOR_NULL_VALUE` and
+    audit trail `BEFORE`/`AFTER` relationships attached, so study history is
+    preserved.
+
+    The matching `MetaStudyField.osb_field_name` is renamed as well, and the
+    linked Trial Summary parameter (TCNTRL) cardinality is set to 'Many'.
+
+    Must run AFTER `migrate_meta_study_fields`, which resolves the semantic data
+    type of `control_type_code` from the not-yet-converted StudyTextField nodes.
+    """
+    log.info(
+        "Converting '%s' StudyTextField nodes to '%s' StudyArrayField nodes",
+        CONTROL_TYPE_OLD_FIELD_NAME,
+        CONTROL_TYPE_NEW_FIELD_NAME,
+    )
+    params = {
+        "old_field_name": CONTROL_TYPE_OLD_FIELD_NAME,
+        "new_field_name": CONTROL_TYPE_NEW_FIELD_NAME,
+    }
+
+    _, summary_nodes = run_cypher_query(
+        db_driver,
+        """
+        MATCH (sf:StudyTextField {field_name: $old_field_name})
+        OPTIONAL MATCH (sf)-[:HAS_TYPE]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(term:CTTermRoot)
+        WITH sf, collect(DISTINCT term.uid) AS term_uids
+        REMOVE sf:StudyTextField
+        SET sf:StudyArrayField,
+            sf.field_name = $new_field_name,
+            sf.value = CASE
+                WHEN size(term_uids) > 0 THEN term_uids
+                WHEN sf.value IS NULL OR sf.value = '' THEN []
+                ELSE [sf.value]
+            END
+        """,
+        params,
+    )
+    print_counters_table(summary_nodes.counters)
+
+    log.info("Replacing HAS_TEXT_FIELD with HAS_ARRAY_FIELD for converted nodes")
+    _, summary_rels = run_cypher_query(
+        db_driver,
+        """
+        MATCH (sv:StudyValue)-[old:HAS_TEXT_FIELD]->(sf:StudyArrayField {field_name: $new_field_name})
+        MERGE (sv)-[new:HAS_ARRAY_FIELD]->(sf)
+        SET new += properties(old)
+        DELETE old
+        """,
+        params,
+    )
+    print_counters_table(summary_rels.counters)
+
+    log.info("Renaming MetaStudyField '%s'", CONTROL_TYPE_OLD_FIELD_NAME)
+    _, summary_msf = run_cypher_query(
+        db_driver,
+        """
+        MATCH (msf:MetaStudyField {osb_field_name: $old_field_name})
+        SET msf.osb_field_name = $new_field_name
+        """,
+        params,
+    )
+    print_counters_table(summary_msf.counters)
+
+    log.info("Setting cardinality 'Many' on the Control Type TS parameter")
+    _, summary_card = run_cypher_query(
+        db_driver,
+        """
+        MATCH (tsp:CTTermNameValue)-[:RELATED_STUDY_FIELD_SELECTION]->
+              (:MetaStudyField {osb_field_name: $new_field_name})
+        WHERE tsp.cardinality IS NOT NULL AND tsp.cardinality <> 'Many'
+        SET tsp.cardinality = 'Many'
+        """,
+        params,
+    )
+    print_counters_table(summary_card.counters)
+
+    return (
+        summary_nodes.counters.contains_updates
+        or summary_rels.counters.contains_updates
+        or summary_msf.counters.contains_updates
+        or summary_card.counters.contains_updates
+    )
+
+
 def remove_ct_config_nodes(db_driver, log) -> bool:
-    """Remove all CTConfigRoot and CTConfigValue nodes."""
+    """Remove all CTConfigRoot and CTConfigValue nodes.
+
+    Refuses to delete while a study field that `migrate_meta_study_fields` should have
+    pre-created has no MetaStudyField with a semantic data type, since the CTConfigValue
+    nodes are the only source for that step.
+    """
+    records, _ = run_cypher_query(
+        db_driver,
+        """
+        MATCH (cv:CTConfigValue)
+        WHERE cv.study_field_name IS NOT NULL
+          AND NOT cv.study_field_name ENDS WITH '_null_value_code'
+          AND cv.study_field_data_type IN $mapped_data_types
+          AND NOT EXISTS {
+              (:MetaStudyField {osb_field_name: cv.study_field_name})
+                  -[:HAS_SEMANTIC_DATA_TYPE]->(:CTTermContext)
+                  -[:HAS_SELECTED_TERM]->(:CTTermRoot)
+          }
+        RETURN collect(DISTINCT cv.study_field_name) AS field_names
+        """,
+        params={"mapped_data_types": list(STUDY_FIELD_DATA_TYPE_TO_SEMANTIC_DATA_TYPE)},
+    )
+    if records and records[0]["field_names"]:
+        raise RuntimeError(
+            "Not removing CTConfig nodes, study fields without a MetaStudyField"
+            f" semantic data type: {sorted(records[0]['field_names'])}"
+        )
+
     log.info("Removing CTConfigRoot/CTConfigValue nodes from database")
 
     _, summary = run_cypher_query(
@@ -797,6 +1030,100 @@ def set_ordinal_for_stresc_codelists(db_driver, log) -> bool:
     )
 
 
+def collect_suffix_groups(db_driver, log) -> list[dict]:
+    """Collect one entry per anchor_uid group from SPECIAL_VISIT nodes.
+
+    Each entry has:
+      - study_uid: the study of the visits
+      - anchor_uid: the visit this group references
+      - ordered_uids: visit uids sorted by visit_number (latest version, deduped by uid)
+      - anchor_unit_name: unit of the anchor visit's timepoint (defaults to 'days')
+
+    Visits still marked with _migrating=true are collected too, so that a re-run
+    after a failure completes the visits already changed to SINGLE_VISIT.
+
+    Visits without a current node in the latest study version (deleted since a locked or released
+    study version or from the draft, or belonging to a deleted study) are collected in one extra group
+    without a study_uid: they get the suffix and the 0 days timepoint, but no expected_time_value.
+    """
+    log.info("Collecting suffix groups from SPECIAL_VISIT nodes")
+    records, _ = run_cypher_query(
+        db_driver,
+        """
+        MATCH (study_root:StudyRoot)-[:LATEST]->(study_val:StudyValue)-[:HAS_STUDY_VISIT]->(sv:StudyVisit)
+        WHERE (sv.visit_class = 'SPECIAL_VISIT' OR sv._migrating = true)
+          AND NOT (study_val)<-[:BEFORE]-(:Delete)
+          AND NOT (sv)<-[:BEFORE]-(:StudyAction)
+        WITH study_root.uid AS study_uid,
+             sv.uid AS visit_uid,
+             sv.visit_sublabel_reference AS anchor_uid,
+             min(sv.visit_number) AS visit_number
+        ORDER BY visit_number
+        WITH study_uid, anchor_uid, collect(visit_uid) AS ordered_uids
+        OPTIONAL MATCH (:StudyRoot {uid: study_uid})-[:LATEST]->(:StudyValue)-[:HAS_STUDY_VISIT]->(anchor:StudyVisit {uid: anchor_uid})
+                       -[:HAS_TIMEPOINT]->(:TimePointRoot)-[:LATEST]->(:TimePointValue)
+                       -[:HAS_UNIT_DEFINITION]->(:UnitDefinitionRoot)-[:LATEST]->(udv:UnitDefinitionValue)
+        RETURN study_uid, anchor_uid, ordered_uids, coalesce(udv.name, 'days') AS anchor_unit_name
+        """,
+    )
+    groups = [
+        {
+            "study_uid": r["study_uid"],
+            "anchor_uid": r["anchor_uid"],
+            "ordered_uids": r["ordered_uids"],
+            "anchor_unit_name": r["anchor_unit_name"],
+        }
+        for r in records
+    ]
+
+    records, _ = run_cypher_query(
+        db_driver,
+        """
+        MATCH (sv:StudyVisit)
+        WHERE (sv.visit_class = 'SPECIAL_VISIT' OR sv._migrating = true)
+          AND NOT sv.uid IN $grouped_uids
+        RETURN collect(DISTINCT sv.uid) AS uids
+        """,
+        {"grouped_uids": [uid for g in groups for uid in g["ordered_uids"]]},
+    )
+    if records[0]["uids"]:
+        log.info(
+            "Found %d visits not in the latest study version",
+            len(records[0]["uids"]),
+        )
+        groups.append(
+            {
+                "study_uid": None,
+                "anchor_uid": None,
+                "ordered_uids": records[0]["uids"],
+                "anchor_unit_name": "days",
+            }
+        )
+
+    log.info(
+        "Found %d suffix groups (%d unique anchors)",
+        len(groups),
+        len({g["anchor_uid"] for g in groups}),
+    )
+    return groups
+
+
+def mark_special_visits(db_driver, log) -> bool:
+    """Set _migrating=true on all SPECIAL_VISIT nodes before the class change.
+
+    This marker survives the class flip and lets subsequent steps distinguish
+    nodes that were genuinely SPECIAL_VISIT from old SINGLE_VISIT versions of the
+    same logical visit that share the same uid but must not be stamped.
+    """
+    log.info("Marking SPECIAL_VISIT nodes with _migrating=true")
+    _, summary = run_cypher_query(
+        db_driver,
+        "MATCH (sv:StudyVisit {visit_class: 'SPECIAL_VISIT'}) SET sv._migrating = true",
+    )
+    print_counters_table(summary.counters)
+    return summary.counters.contains_updates
+
+
 def migrate_odm_item_datatype_to_ct_term(db_driver, log) -> bool:
     """
     For each OdmItemValue node that still carries the legacy `datatype` string property
@@ -808,10 +1135,34 @@ def migrate_odm_item_datatype_to_ct_term(db_driver, log) -> bool:
     matched correctly against CTCodelistTerm.submission_value.
 
     Nodes/relationships that already have HAS_DATA_TYPE are left untouched.
+
+    Items with datatype "comment" (case-insensitive) get no data type: the legacy
+    `datatype` property is removed and no HAS_DATA_TYPE relationship is created.
+    Items with datatype "text" (case-insensitive) are changed to "STRING" before the lookup.
     """
-    log.info(
-        "Migrating OdmItemValue.datatype string property to HAS_DATA_TYPE relationship"
+    log.info("Removing datatype from OdmItemValue nodes with datatype 'comment'")
+    _, comment_summary = run_cypher_query(
+        db_driver,
+        """
+        MATCH (oiv:OdmItemValue)
+        WHERE toLower(oiv.datatype) = 'comment'
+        REMOVE oiv.datatype
+        """,
     )
+    print_counters_table(comment_summary.counters)
+
+    log.info("Changing OdmItemValue datatype 'text' to 'STRING'")
+    _, text_summary = run_cypher_query(
+        db_driver,
+        """
+        MATCH (oiv:OdmItemValue)
+        WHERE toLower(oiv.datatype) = 'text'
+        SET oiv.datatype = 'STRING'
+        """,
+    )
+    print_counters_table(text_summary.counters)
+
+    log.info("Migrating OdmItemValue.datatype property to HAS_DATA_TYPE relationship")
     records, summary = run_cypher_query(
         db_driver,
         """
@@ -840,27 +1191,322 @@ def migrate_odm_item_datatype_to_ct_term(db_driver, log) -> bool:
         "Migrated HAS_DATA_TYPE relationship for %d OdmItemValue node(s)", migrated
     )
     print_counters_table(summary.counters)
+
+    return (
+        comment_summary.counters.contains_updates
+        or text_summary.counters.contains_updates
+        or summary.counters.contains_updates
+    )
+
+
+def change_visit_class_to_single(db_driver, log) -> bool:
+    """Change visit_class SPECIAL_VISIT → SINGLE_VISIT for all special visits."""
+    log.info("Changing visit_class SPECIAL_VISIT -> SINGLE_VISIT")
+    _, summary = run_cypher_query(
+        db_driver,
+        "MATCH (sv:StudyVisit {visit_class: 'SPECIAL_VISIT'}) SET sv.visit_class = 'SINGLE_VISIT'",
+    )
+    print_counters_table(summary.counters)
     return summary.counters.contains_updates
 
 
 def remove_odm_item_datatype_string_property(db_driver, log) -> bool:
     """
-    Remove the legacy `datatype` string property from all OdmItemValue nodes.
+    Remove the legacy `datatype` string property from OdmItemValue nodes that have
+    been migrated to a HAS_DATA_TYPE relationship.
 
-    This must run after migrate_odm_item_datatype_to_ct_term so that no data is
-    lost before the CT term relationships are in place.
+    This must run after migrate_odm_item_datatype_to_ct_term. Nodes without a
+    HAS_DATA_TYPE relationship (e.g. no CT term matches their datatype string) keep the
+    property, so that the original value is not lost; a warning lists them.
     """
     log.info("Removing legacy `datatype` string property from OdmItemValue nodes")
     _, summary = run_cypher_query(
         db_driver,
         """
-        MATCH (oiv:OdmItemValue)
+        MATCH (oiv:OdmItemValue)-[:HAS_DATA_TYPE]->(:CTTermContext)
         WHERE oiv.datatype IS NOT NULL
         REMOVE oiv.datatype
         """,
     )
     print_counters_table(summary.counters)
+
+    records, _ = run_cypher_query(
+        db_driver,
+        """
+        MATCH (oiv:OdmItemValue)
+        WHERE oiv.datatype IS NOT NULL
+          AND NOT (oiv)-[:HAS_DATA_TYPE]->(:CTTermContext)
+        RETURN oiv.datatype AS datatype, count(oiv) AS count
+        ORDER BY datatype
+        """,
+    )
+    if records:
+        log.warning(
+            "Kept `datatype` on OdmItemValue nodes without a HAS_DATA_TYPE relationship "
+            "(no matching term in the %s codelist): %s",
+            DATATYPE_CODELIST_SUBMVAL,
+            {record["datatype"]: record["count"] for record in records},
+        )
     return summary.counters.contains_updates
+
+
+def clear_migrating_marker(db_driver, log) -> None:
+    """Remove the temporary _migrating marker from all converted visits."""
+    log.info("Removing _migrating marker from converted visits")
+    run_cypher_query(
+        db_driver,
+        "MATCH (sv:StudyVisit) WHERE sv._migrating IS NOT NULL REMOVE sv._migrating",
+    )
+
+
+def _stamp_visit_uid(
+    db_driver,
+    visit_uid: str,
+    timepoint_root_uid: str,
+    anchor_study_duration_days: int | None,
+    log,
+) -> bool:
+    """SET visit_suffix and expected_time_value, and attach the global anchor timepoint in one query.
+
+    Filters on _migrating=true so only nodes that were SPECIAL_VISIT at migration time
+    are touched — old SINGLE_VISIT versions of the same logical visit are left alone.
+
+    expected_time_value keeps the visit at the timing of its anchor visit, in the unit of the timepoint.
+    Early discontinuation visits don't get it, they follow their parent visit.
+    """
+    _, summary = run_cypher_query(
+        db_driver,
+        """
+        MATCH (sv:StudyVisit {uid: $uid, _migrating: true})
+        MATCH (tp:TimePointRoot {uid: $tp_uid})-[:LATEST]->(:TimePointValue)
+              -[:HAS_UNIT_DEFINITION]->(:UnitDefinitionRoot)-[:LATEST]->(unit:UnitDefinitionValue)
+        SET sv.visit_suffix = right(sv.short_visit_label, 1),
+            sv.expected_time_value = CASE
+                WHEN $days IS NULL OR EXISTS {
+                    MATCH (sv)-[:HAS_VISIT_TYPE]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(:CTTermRoot)
+                          -[:HAS_NAME_ROOT]->(:CTTermNameRoot)-[:LATEST_FINAL]->(:CTTermNameValue {name: 'Early discontinuation'})
+                } THEN sv.expected_time_value
+                // conversion factors are to seconds
+                ELSE toInteger(round($days * 86400 / unit.conversion_factor_to_master))
+            END
+        MERGE (sv)-[:HAS_TIMEPOINT]->(tp)
+        """,
+        {
+            "uid": visit_uid,
+            "tp_uid": timepoint_root_uid,
+            "days": anchor_study_duration_days,
+        },
+    )
+    if summary.counters.contains_updates:
+        log.info("uid '%s': visit_suffix extracted from short_visit_label", visit_uid)
+    return summary.counters.contains_updates
+
+
+def fetch_anchor_study_duration_days(group: dict, log) -> int | None:
+    """Return the timing of the anchor visit in days, resolved by the API through its time references."""
+    response = api_get(
+        f"/studies/{group['study_uid']}/study-visits/{group['anchor_uid']}",
+        check_ok_status=False,
+    )
+    days = (
+        response.json().get("study_duration_days")
+        if response.status_code == 200
+        else None
+    )
+    if days is None:
+        log.warning("No timing for anchor visit '%s'", group["anchor_uid"])
+    return days
+
+
+def _stamp_suffix_group(db_driver, group: dict, log) -> int:
+    """Stamp visit_suffix + expected_time_value + timepoint for all uids in one group.
+
+    The timepoint is resolved up front by migrate_special_visits_to_single_visit.
+    """
+    days = fetch_anchor_study_duration_days(group, log) if group["study_uid"] else None
+    updated = 0
+    for visit_uid in group["ordered_uids"]:
+        if _stamp_visit_uid(
+            db_driver, visit_uid, group["timepoint_root_uid"], days, log
+        ):
+            updated += 1
+    return updated
+
+
+def assign_suffixes_and_timepoints(db_driver, suffix_groups: list[dict], log) -> bool:
+    """For each anchor group: stamp visit_suffix and HAS_TIMEPOINT on every version node."""
+    total = sum(_stamp_suffix_group(db_driver, group, log) for group in suffix_groups)
+    log.info("Assigned suffix+timepoint to %d visit uids", total)
+    return total > 0
+
+
+def fetch_global_anchor_timepoint_uid(db_driver, unit_name: str) -> str | None:
+    """Return the uid of an existing TimePointRoot for '0 {unit_name} after Global anchor visit'."""
+    records, _ = run_cypher_query(
+        db_driver,
+        """
+        MATCH (tp_root:TimePointRoot)-[:LATEST]->(tp_val:TimePointValue)
+        MATCH (tp_val)-[:HAS_VALUE]->(:NumericValueRoot)-[:LATEST]->(nv:NumericValue)
+        WHERE nv.value = 0.0
+        MATCH (tp_val)-[:HAS_TIME_REFERENCE]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(ref_root:CTTermRoot)
+        MATCH (ref_root)-[:HAS_NAME_ROOT]->(:CTTermNameRoot)-[:LATEST]->(ref_name:CTTermNameValue)
+        WHERE ref_name.name = 'Global anchor visit'
+        MATCH (tp_val)-[:HAS_UNIT_DEFINITION]->(:UnitDefinitionRoot)-[:LATEST]->(unit_val:UnitDefinitionValue)
+        WHERE unit_val.name = $unit_name
+        RETURN tp_root.uid AS uid
+        LIMIT 1
+        """,
+        {"unit_name": unit_name},
+    )
+    return records[0]["uid"] if records else None
+
+
+def migrate_special_visits_to_single_visit(db_driver, log) -> bool:
+    """Migrate all SPECIAL_VISIT nodes to SINGLE_VISIT.
+
+    Every converted visit receives:
+    - visit_suffix (A/B/C… for non-ED, X/Y/Z for ED) per anchor group
+    - HAS_TIMEPOINT → 0 <unit> / Global anchor visit (unit matches the anchor visit)
+    - expected_time_value set to the timing of the anchor visit (not for Early discontinuation visits)
+
+    The visit type and visit_sublabel_reference (the old anchor visit) of converted visits are left untouched.
+    """
+    log.info("=== Migrating all SPECIAL_VISIT nodes to SINGLE_VISIT ===")
+    had_updates = False
+
+    suffix_groups = collect_suffix_groups(db_driver, log)
+    if suffix_groups:
+        # Resolve every required timepoint before any write
+        for group in suffix_groups:
+            group["timepoint_root_uid"] = fetch_global_anchor_timepoint_uid(
+                db_driver, group["anchor_unit_name"]
+            )
+        missing_units = sorted(
+            {
+                g["anchor_unit_name"]
+                for g in suffix_groups
+                if not g["timepoint_root_uid"]
+            }
+        )
+        if missing_units:
+            raise RuntimeError(
+                "Could not find a TimePointRoot for '0 <unit> / Global anchor visit' "
+                f"for units {missing_units}; aborting before any SPECIAL_VISIT is changed."
+            )
+
+        # Mark before the class change so _migrating=true survives the flip and
+        # identifies exactly which version nodes to stamp — old SINGLE_VISIT versions
+        # of the same logical visit are not marked and will be left alone.
+        # The marker also lets a re-run find the visits once the class has changed.
+        mark_special_visits(db_driver, log)
+
+        # Before stamping: the anchor timings are read from the API, which no longer knows SPECIAL_VISIT
+        change_visit_class_to_single(db_driver, log)
+
+        had_updates = assign_suffixes_and_timepoints(db_driver, suffix_groups, log)
+        clear_migrating_marker(db_driver, log)
+    else:
+        log.info(
+            "No SPECIAL_VISIT nodes found; skipping class change and suffix assignment"
+        )
+
+    log.info("=== SPECIAL_VISIT migration complete ===")
+    return had_updates
+
+
+def _get_study_uids_with_visits(db_driver) -> list[str]:
+    """Return UIDs of all studies that have at least one current StudyVisit."""
+    records, _ = run_cypher_query(
+        db_driver,
+        """
+        MATCH (sr:StudyRoot)-[:LATEST]->(study_val:StudyValue)-[:HAS_STUDY_VISIT]->(sv:StudyVisit)
+        WHERE NOT (study_val)<-[:BEFORE]-(:Delete)
+          AND NOT (sv)<-[:BEFORE]-(:StudyAction)
+        RETURN DISTINCT sr.uid AS study_uid
+        """,
+    )
+    return [r["study_uid"] for r in records]
+
+
+def _assign_visit_order_for_study(db_driver, study_uid: str, log) -> int | None:
+    """Call the API to get the ordered visit list for one study and write its `order` to each node.
+
+    Returns the number of nodes updated, or None if the API call failed.
+    """
+    response = api_get(
+        f"/studies/{study_uid}/study-visits",
+        params={"page_size": 0, "total_count": False},
+        check_ok_status=False,
+    )
+    if response.status_code != 200:
+        log.error(
+            "GET /studies/%s/study-visits returned %d",
+            study_uid,
+            response.status_code,
+        )
+        return None
+
+    visits = response.json().get("items", [])
+    if not visits:
+        return 0
+
+    updated = 0
+    for visit in visits:
+        uid = visit.get("uid")
+        order = visit.get("order")
+        if uid is None or order is None:
+            log.warning(
+                "Visit entry missing uid or order in study %s — skipping: %s",
+                study_uid,
+                visit,
+            )
+            continue
+        # Only the current visit node, not its superseded or locked/released versions
+        _, summary = run_cypher_query(
+            db_driver,
+            """
+            MATCH (:StudyRoot {uid: $study_uid})-[:LATEST]->(:StudyValue)-[:HAS_STUDY_VISIT]->(sv:StudyVisit {uid: $uid})
+            WHERE NOT (sv)<-[:BEFORE]-(:StudyAction)
+            SET sv.order = $order
+            """,
+            {"study_uid": study_uid, "uid": uid, "order": order},
+        )
+        if summary.counters.contains_updates:
+            updated += 1
+
+    return updated
+
+
+def assign_visit_order(db_driver, log) -> bool:
+    """Assign `order` to all current (latest) StudyVisit nodes.
+
+    For each study calls GET /studies/{uid}/study-visits and uses the API-computed
+    ``order`` field (derived from TimelineAR) as the authoritative chronological
+    position. This is idempotent: re-running overwrites existing values with the
+    same result.
+
+    Requires the API to be running and reachable. Raises after processing all studies
+    if the API failed for any of them, so that the migration doesn't record success.
+    """
+    study_uids = _get_study_uids_with_visits(db_driver)
+    log.info("Assigning order for %d studies via API", len(study_uids))
+
+    total_updated = 0
+    failed_study_uids = []
+    for study_uid in study_uids:
+        n = _assign_visit_order_for_study(db_driver, study_uid, log)
+        if n is None:
+            failed_study_uids.append(study_uid)
+            continue
+        total_updated += n
+        log.debug("Study %s: updated %d visit nodes", study_uid, n)
+
+    log.info("order assigned to %d visit nodes in total", total_updated)
+    if failed_study_uids:
+        raise RuntimeError(
+            f"Could not assign visit order for {len(failed_study_uids)} studies: {failed_study_uids}"
+        )
+    return total_updated > 0
 
 
 def remove_unit_definition_deprecated_properties(db_driver, log) -> bool:
@@ -903,10 +1549,164 @@ def reset_conversion_factor_for_non_convertible_units(db_driver, log) -> bool:
     return summary.counters.contains_updates
 
 
+def rename_activity_item_class_display_name_to_label(db_driver, log) -> bool:
+    """
+    Rename the `display_name` property of ActivityItemClassValue nodes to `label`.
+
+    Covers every version node, not only the LATEST one, so that the version history
+    keeps its values. NonStandardVariableValue nodes carry the ActivityItemClassValue
+    label too, so they are renamed by the same query.
+
+    An existing `label` value is never overwritten.
+    """
+    log.info("Renaming ActivityItemClassValue.display_name to label")
+
+    _, summary = run_cypher_query(
+        db_driver,
+        """
+        MATCH (v:ActivityItemClassValue)
+        WHERE v.display_name IS NOT NULL
+        SET v.label = coalesce(v.label, v.display_name)
+        REMOVE v.display_name
+        """,
+    )
+    print_counters_table(summary.counters)
+
+    return summary.counters.contains_updates
+
+
+def convert_non_string_short_visit_labels(db_driver, log) -> bool:
+    """
+    Convert non-string `short_visit_label` values of Non and Unscheduled StudyVisit nodes to "V"-prefixed strings.
+
+    Migration 008 set the label of Non and Unscheduled visits to the visit number as an integer.
+    Correction 020 missed those that already had `show_visit = false`, as `STARTS WITH` on an integer is null.
+    The labels are prefixed with "V", as correction 020 intended.
+    """
+    log.info(
+        "Converting non-string short_visit_label values of Non and Unscheduled visits to strings"
+    )
+
+    _, summary = run_cypher_query(
+        db_driver,
+        """
+        MATCH (visit:StudyVisit)
+        WHERE visit.visit_class IN ['NON_VISIT', 'UNSCHEDULED_VISIT']
+            AND visit.short_visit_label IS NOT NULL
+            AND NOT visit.short_visit_label IS :: STRING
+        SET visit.short_visit_label = 'V' + toString(visit.short_visit_label)
+        """,
+    )
+    print_counters_table(summary.counters)
+
+    return summary.counters.contains_updates
+
+
+def save_soa_snapshots_of_locked_and_released_study_versions(db_driver, log) -> bool:
+    """
+    Render and save the Protocol SoA and Protocol Lab table SoA snapshots of each LOCKED or RELEASED study version
+    that has no StudySoASnapshot of the layout yet.
+
+    The snapshot is a StudySoASnapshot node holding the HTML, DOCX, XLSX and JSON renderings of the SoA.
+    The API renders it with POST /studies/{study_uid}/flowchart/snapshot. A Protocol SoA is rendered from the legacy
+    HAS_PROTOCOL_SOA_CELL and HAS_PROTOCOL_SOA_FOOTNOTE relationships when the study version has them, so the frozen
+    SoA stays as it is. Otherwise, and for the Protocol Lab table SoA, which was never frozen, it is built from the
+    study selections of the study version.
+
+    Every LOCKED study version also has a RELEASED HAS_VERSION relationship, and the API looks study versions up by
+    the RELEASED ones. A study version that fails to render is logged and skipped, keeping its legacy relationships.
+    """
+    saved = 0
+    for layout in SOA_SNAPSHOT_LAYOUTS:
+        saved += _save_soa_snapshots_of_layout(db_driver, log, layout)
+    return saved > 0
+
+
+def _save_soa_snapshots_of_layout(db_driver, log, layout: str) -> int:
+    """Saves the SoA snapshot of the layout for each LOCKED or RELEASED study version without it,
+    and returns the number of saved snapshots"""
+    log.info("Saving %s SoA snapshots of LOCKED and RELEASED study versions", layout)
+
+    records, _ = run_cypher_query(
+        db_driver,
+        """
+        MATCH (study_root:StudyRoot)-[has_version:HAS_VERSION {status: 'RELEASED'}]->(study_value:StudyValue)
+        WHERE NOT (study_value)-[:HAS_SOA_SNAPSHOT]->(:StudySoASnapshot {layout: $layout})
+        WITH study_root, study_value, has_version
+        ORDER BY has_version.start_date
+        WITH study_root.uid AS study_uid, study_value, head(collect(has_version.version)) AS version
+        RETURN study_uid, version
+        ORDER BY study_uid, version
+        """,
+        {"layout": layout},
+    )
+
+    failed = []
+    for record in records:
+        study_uid, version = record["study_uid"], record["version"]
+        try:
+            api_post(
+                f"/studies/{study_uid}/flowchart/snapshot",
+                {},
+                params={"study_value_version": version, "layout": layout},
+                timeout=SOA_SNAPSHOT_TIMEOUT_SECONDS,
+            )
+        except (AssertionError, httpx.HTTPError) as exc:
+            log.error(
+                "Failed to save %s SoA snapshot of study %s version %s: %s",
+                layout,
+                study_uid,
+                version,
+                exc,
+            )
+            failed.append((study_uid, version))
+
+    log.info(
+        "Saved %d %s SoA snapshots, %d failed: %s",
+        len(records) - len(failed),
+        layout,
+        len(failed),
+        failed,
+    )
+
+    return len(records) - len(failed)
+
+
+def remove_legacy_protocol_soa_cell_relationships(db_driver, log) -> bool:
+    """
+    Remove the HAS_PROTOCOL_SOA_CELL and HAS_PROTOCOL_SOA_FOOTNOTE relationships that the StudySoASnapshot nodes replace.
+
+    Relationships are only removed from StudyValue nodes that have a Protocol SoA snapshot already,
+    and from StudyValue nodes not belonging to any LOCKED or RELEASED study version, where they were left over.
+    """
+    log.info(
+        "Removing legacy HAS_PROTOCOL_SOA_CELL and HAS_PROTOCOL_SOA_FOOTNOTE relationships"
+    )
+
+    _, summary = run_cypher_query(
+        db_driver,
+        """
+        MATCH (study_value:StudyValue)-[legacy:HAS_PROTOCOL_SOA_CELL|HAS_PROTOCOL_SOA_FOOTNOTE]->()
+        WHERE (study_value)-[:HAS_SOA_SNAPSHOT]->(:StudySoASnapshot {layout: 'protocol'})
+            OR NOT (:StudyRoot)-[:HAS_VERSION {status: 'RELEASED'}]->(study_value)
+        CALL {
+            WITH legacy
+            DELETE legacy
+        } IN TRANSACTIONS OF 10000 ROWS
+        """,
+    )
+    print_counters_table(summary.counters)
+
+    return summary.counters.contains_updates
+
+
 def main():
     logger.info("Running migration on DB '%s'", os.environ["DATABASE_NAME"])
 
     with SchemaMigrationNode(filename=__file__, driver=DB_DRIVER):
+        ### Fail before changing anything when the SEMTCDT or CODMDT codelist is missing
+        check_datatype_codelists(DB_DRIVER, logger)
+
         ### Common migrations
         migrate_indexes_and_constraints(DB_CONNECTION, logger)
 
@@ -938,6 +1738,9 @@ def main():
         ### Remove CT config nodes (MUST run AFTER migrate_meta_study_fields)
         remove_ct_config_nodes(DB_DRIVER, logger)
 
+        ### Control Type single-select -> multi-select (MUST run AFTER migrate_meta_study_fields)
+        migrate_control_type_to_array_field(DB_DRIVER, logger)
+
         ### ODM Item data type from str to rel
         migrate_odm_item_datatype_to_ct_term(DB_DRIVER, logger)
         remove_odm_item_datatype_string_property(DB_DRIVER, logger)
@@ -945,6 +1748,28 @@ def main():
         ### Remove deprecated properties and reset conversion factors for UnitDefinitionValue nodes
         remove_unit_definition_deprecated_properties(DB_DRIVER, logger)
         reset_conversion_factor_for_non_convertible_units(DB_DRIVER, logger)
+
+        ### Rename ActivityItemClassValue.display_name to label
+        rename_activity_item_class_display_name_to_label(DB_DRIVER, logger)
+
+        ### Convert non-string short_visit_label values of Non and Unscheduled visits to strings
+        ### (MUST run BEFORE save_soa_snapshots_of_locked_and_released_study_versions)
+        convert_non_string_short_visit_labels(DB_DRIVER, logger)
+
+        ### Migrate all SPECIAL_VISIT nodes to SINGLE_VISIT
+        ### (MUST run BEFORE save_soa_snapshots_of_locked_and_released_study_versions, the rendered SoA contains visits)
+        migrate_special_visits_to_single_visit(DB_DRIVER, logger)
+
+        ### Assign order to all current StudyVisit nodes
+        ### (MUST run AFTER migrate_special_visits_to_single_visit and BEFORE the SoA snapshots)
+        assign_visit_order(DB_DRIVER, logger)
+
+        ### Store rendered Protocol and Protocol Lab table SoA of LOCKED and RELEASED study versions on StudySoASnapshot nodes (flowchart API)
+        save_soa_snapshots_of_locked_and_released_study_versions(DB_DRIVER, logger)
+
+        ### Remove legacy SoA snapshot relationships
+        ### (MUST run AFTER save_soa_snapshots_of_locked_and_released_study_versions)
+        remove_legacy_protocol_soa_cell_relationships(DB_DRIVER, logger)
 
 
 if __name__ == "__main__":

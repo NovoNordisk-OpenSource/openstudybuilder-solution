@@ -1,79 +1,31 @@
 <template>
   <div class="">
-    <v-select
-      v-if="editMode"
-      v-model="element"
-      :items="studyElements"
-      :label="$t('ElementDropdownList.element')"
-      item-title="name"
-      item-value="element_uid"
-      clearable
-      class="mt-6 cellWidth"
-      @update:model-value="updateElement"
-      @click:clear="deleteElement"
-    >
-      <template v-if="props.transitionRulesMode && element" #append-inner>
-        <v-menu
-          v-model="showTransitionRuleMenu"
-          open-on-hover
-          :close-on-content-click="false"
-          location="bottom end"
-        >
-          <template #activator="{ props: menuProps }">
-            <v-badge
-              :model-value="hasTransitionRule"
-              dot
-              color="primary"
-              location="top end"
-            >
-              <v-btn
-                v-bind="menuProps"
-                :icon="
-                  hasTransitionRule ? 'mdi-note-text' : 'mdi-note-text-outline'
-                "
-                :color="hasTransitionRule ? 'primary' : undefined"
-                variant="text"
-                size="x-small"
-                :aria-label="
-                  hasTransitionRule
-                    ? $t('ElementDropdownList.edit_transition_rule')
-                    : $t('ElementDropdownList.add_transition_rule')
-                "
-                @mousedown.stop
-                @click.stop
-              />
-            </v-badge>
-          </template>
-          <v-card max-width="260">
-            <v-card-text class="pb-2">
-              <div class="text-caption text-medium-emphasis mb-1">
-                {{ $t('ElementDropdownList.transition_rule_form_title') }}
-              </div>
-              <p
-                v-if="hasTransitionRule"
-                class="text-body-2 mb-0 transitionRuleText"
-              >
-                {{ transitionRule }}
-              </p>
-              <p v-else class="text-body-2 text-medium-emphasis mb-0">
-                {{ $t('ElementDropdownList.no_transition_rule') }}
-              </p>
-            </v-card-text>
-            <v-card-actions class="pt-0 justify-end">
-              <v-btn
-                size="small"
-                variant="text"
-                color="primary"
-                @click="openTransitionRuleFromMenu"
-              >
-                {{ hasTransitionRule ? $t('_global.edit') : $t('_global.add') }}
-              </v-btn>
-            </v-card-actions>
-          </v-card>
-        </v-menu>
-      </template>
-    </v-select>
-    <div v-else class="d-flex justify-space-between align-center">
+    <template v-if="editMode">
+      <v-select
+        v-model="element"
+        :items="studyElements"
+        :label="$t('ElementDropdownList.element')"
+        item-title="name"
+        item-value="element_uid"
+        clearable
+        class="mt-6 cellWidth"
+        @update:model-value="updateElement"
+        @click:clear="deleteElement"
+      />
+      <v-textarea
+        v-if="props.transitionRulesMode && element"
+        v-model="transitionRule"
+        :label="$t('ElementDropdownList.transition_rule')"
+        maxlength="200"
+        counter="200"
+        rows="1"
+        auto-grow
+        hide-details="auto"
+        class="mb-4 cellWidth"
+        @update:model-value="updateElement"
+      />
+    </template>
+    <div v-else class="d-flex flex-column align-start">
       <v-tooltip bottom>
         <template #activator="{ props }">
           <span v-bind="props">
@@ -95,41 +47,23 @@
         bottom
       >
         <template #activator="{ props: tooltipProps }">
-          <v-icon
+          <span
             v-bind="tooltipProps"
-            icon="mdi-note-text"
-            color="primary"
-            size="small"
-            class="ml-1"
-          />
+            tabindex="0"
+            class="text-body-small text-primary transitionRuleLabel"
+          >
+            {{ $t('ElementDropdownList.transition_rule') }}
+          </span>
         </template>
         <span class="transitionRuleText">{{ cell?.transition_rule }}</span>
       </v-tooltip>
     </div>
-    <SimpleFormDialog
-      :title="$t('ElementDropdownList.transition_rule_form_title')"
-      :open="showTransitionRuleForm"
-      :action-label="$t('_global.accept')"
-      @close="closeTransitionRuleForm"
-      @submit="setTransitionRule"
-    >
-      <template #body>
-        <v-form ref="observer">
-          <v-textarea
-            v-model="transitionRule"
-            :rules="[(value) => formRules.max(value, 200)]"
-            hide-details="auto"
-          />
-        </v-form>
-      </template>
-    </SimpleFormDialog>
   </div>
 </template>
 
 <script setup>
-import { computed, inject, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useStudiesGeneralStore } from '@/stores/studies-general'
-import SimpleFormDialog from '@/components/tools/SimpleFormDialog.vue'
 
 const props = defineProps({
   epoch: {
@@ -160,20 +94,14 @@ const props = defineProps({
   },
 })
 const emit = defineEmits(['addToObject'])
-const formRules = inject('formRules')
 
 const studiesGeneralStore = useStudiesGeneralStore()
 
 const selectedStudy = computed(() => studiesGeneralStore.selectedStudy)
-const hasTransitionRule = computed(() =>
-  Boolean(transitionRule.value && transitionRule.value.trim().length > 0)
-)
 
 const element = ref(null)
 const cell = ref({})
 const data = ref({})
-const showTransitionRuleForm = ref(false)
-const showTransitionRuleMenu = ref(false)
 const transitionRule = ref('')
 
 watch(
@@ -189,9 +117,7 @@ watch(
   () => props.cells,
   (value) => {
     cell.value = value.data.find(findCell)
-    if (cell.value) {
-      element.value = cell.value.study_element_uid
-    }
+    element.value = cell.value?.study_element_uid ?? null
   }
 )
 
@@ -199,9 +125,7 @@ watch(
   () => props.editMode,
   (value) => {
     if (value) {
-      if (cell.value) {
-        transitionRule.value = cell.value.transition_rule
-      }
+      transitionRule.value = cell.value?.transition_rule ?? ''
     }
   }
 )
@@ -212,6 +136,9 @@ onMounted(() => {
   }
   if (cell.value) {
     element.value = cell.value.study_element_uid
+    // The editMode watcher is not immediate, so a cell mounted while already
+    // in edit mode must pick up its stored rule here.
+    transitionRule.value = cell.value.transition_rule ?? ''
   }
 })
 
@@ -244,14 +171,20 @@ function updateElement() {
 
 function deleteElement() {
   if (cell.value) {
+    // cell stays set: picking another element must PATCH this cell, not POST
+    // over (and thereby lose) the pending DELETE.
     data.value = {
       method: 'DELETE',
       content: {
         uid: cell.value.design_cell_uid,
       },
     }
-    cell.value = undefined
+  } else {
+    // Nothing persisted to delete: drop any pending POST for the cleared element.
+    data.value = {}
   }
+  // Do not carry this rule over to a later POST for a different element.
+  transitionRule.value = ''
 }
 function findCell(cell) {
   return (
@@ -273,27 +206,6 @@ function getElementName(elementUid) {
   )
   return element ? element.name : ''
 }
-
-function openTransitionRuleForm() {
-  showTransitionRuleForm.value = true
-}
-
-function openTransitionRuleFromMenu() {
-  showTransitionRuleMenu.value = false
-  openTransitionRuleForm()
-}
-
-function closeTransitionRuleForm() {
-  showTransitionRuleForm.value = false
-}
-
-function setTransitionRule() {
-  if (cell.value) {
-    cell.value.transition_rule = transitionRule.value
-  }
-  updateElement()
-  closeTransitionRuleForm()
-}
 </script>
 
 <style scoped>
@@ -305,5 +217,11 @@ function setTransitionRule() {
 .transitionRuleText {
   white-space: pre-wrap;
   word-break: break-word;
+}
+
+.transitionRuleLabel {
+  cursor: help;
+  text-decoration: underline dotted;
+  text-underline-offset: 2px;
 }
 </style>

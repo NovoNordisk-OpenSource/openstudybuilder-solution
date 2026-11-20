@@ -20,7 +20,7 @@ from common.config import settings
 from common.exceptions import BusinessLogicException
 
 
-class CompoundService(ConceptGenericService[CompoundAR]):
+class CompoundService(ConceptGenericService[CompoundAR, Compound]):
     aggregate_class = CompoundAR
     version_class = CompoundVersion
     repository_interface = CompoundRepository

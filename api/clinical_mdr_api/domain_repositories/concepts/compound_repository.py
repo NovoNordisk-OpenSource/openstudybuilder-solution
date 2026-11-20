@@ -36,9 +36,7 @@ class CompoundRepository(ConceptGenericRepository):
         return value_node
 
     def _has_data_changed(self, ar: _AggregateRootType, value: VersionValue) -> bool:
-        was_parent_data_modified = super()._has_data_changed(ar=ar, value=value)
-
-        return was_parent_data_modified
+        return super()._has_data_changed(ar=ar, value=value)
 
     def _create_aggregate_root_instance_from_cypher_result(
         self, input_dict: dict[str, Any]

@@ -59,11 +59,10 @@ class OdmStudyEventVO:
             "description": self.description,
             "display_in_tree": self.display_in_tree,
         }
-        if uids := odm_object_exists_callback(**data):
-            if uids[0] != odm_uid:
-                raise AlreadyExistsException(
-                    msg=f"ODM Study Event already exists with UID ({uids[0]}) and data {data}"
-                )
+        if (uids := odm_object_exists_callback(**data)) and uids[0] != odm_uid:
+            raise AlreadyExistsException(
+                msg=f"ODM Study Event already exists with UID ({uids[0]}) and data {data}"
+            )
 
 
 @dataclass

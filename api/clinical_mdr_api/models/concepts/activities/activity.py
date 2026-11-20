@@ -86,7 +86,7 @@ class ActivityGroupingHierarchySimpleModel(BaseModel):
         str,
         Field(
             json_schema_extra={
-                "source": "has_latest_value.has_grouping.in_subgroup.in_group.has_version.uid"
+                "source": "has_latest_value.has_grouping.has_selected_group.has_version.uid"
             }
         ),
     ]
@@ -94,7 +94,7 @@ class ActivityGroupingHierarchySimpleModel(BaseModel):
         str,
         Field(
             json_schema_extra={
-                "source": "has_latest_value.has_grouping.in_subgroup.in_group.name"
+                "source": "has_latest_value.has_grouping.has_selected_group.name"
             }
         ),
     ]
@@ -106,7 +106,7 @@ class ActivityGroupingHierarchySimpleModel(BaseModel):
         str,
         Field(
             json_schema_extra={
-                "source": "has_latest_value.has_grouping.in_subgroup.has_group.has_version.uid"
+                "source": "has_latest_value.has_grouping.has_selected_subgroup.has_version.uid"
             }
         ),
     ]
@@ -114,7 +114,7 @@ class ActivityGroupingHierarchySimpleModel(BaseModel):
         str,
         Field(
             json_schema_extra={
-                "source": "has_latest_value.has_grouping.in_subgroup.has_group.name"
+                "source": "has_latest_value.has_grouping.has_selected_subgroup.name"
             }
         ),
     ]
@@ -301,11 +301,7 @@ class Activity(ActivityBase):
             contact_person=activity_ar.concept_vo.contact_person,
             used_by_studies=activity_ar.concept_vo.used_by_studies,
             replaced_by_activity=activity_ar.concept_vo.replaced_by_activity,
-            is_data_collected=(
-                activity_ar.concept_vo.is_data_collected
-                if activity_ar.concept_vo.is_data_collected
-                else False
-            ),
+            is_data_collected=activity_ar.concept_vo.is_data_collected or False,
             is_multiple_selection_allowed=(
                 activity_ar.concept_vo.is_multiple_selection_allowed
                 if activity_ar.concept_vo.is_multiple_selection_allowed is not None
@@ -369,11 +365,7 @@ class Activity(ActivityBase):
             contact_person=activity_ar.concept_vo.contact_person,
             used_by_studies=activity_ar.concept_vo.used_by_studies,
             replaced_by_activity=activity_ar.concept_vo.replaced_by_activity,
-            is_data_collected=(
-                activity_ar.concept_vo.is_data_collected
-                if activity_ar.concept_vo.is_data_collected
-                else False
-            ),
+            is_data_collected=activity_ar.concept_vo.is_data_collected or False,
             is_multiple_selection_allowed=(
                 activity_ar.concept_vo.is_multiple_selection_allowed
                 if activity_ar.concept_vo.is_multiple_selection_allowed is not None

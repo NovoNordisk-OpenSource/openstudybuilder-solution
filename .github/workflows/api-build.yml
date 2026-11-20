@@ -151,6 +151,12 @@ jobs:
       - name: Install dev dependencies
         run: uv sync --group dev
 
+      - name: Validate integration tests shard partition
+        working-directory: .
+        run: |
+          uv run --project api python -m unittest discover -s _tools/tests -p 'test_validate_integration_tests_shards.py'
+          uv run --project api python _tools/validate_integration_tests_shards.py
+
       - name: Verify uv.lock is up to date
         run: |
           if ! uv lock --check; then
@@ -167,12 +173,14 @@ jobs:
       - name: SBLint
         run: uv run poe sblint
 
+      - name: Import linter
+        run: uv run poe lint-imports
+
       - name: mypy type checking
         run: uv run poe mypy
 
-      # Relaxed for release 2.11.0 due to CVE fix.
-      #- name: Ruff
-      #  run: uv run poe lint
+      - name: Ruff
+        run: uv run poe lint
 
       # -----------------------------------------------------------------
       # TODO: Snyk security scanning
@@ -281,7 +289,7 @@ jobs:
   test-unit:
     needs: build-dev-image
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
     env:
       NEO4J_IMAGE: "neo4j:enterprise"
       BUILD_TARGET: dev
@@ -304,19 +312,10 @@ jobs:
           echo "NEO4J_MDR_AUTH_PASSWORD=$pw" >> "$GITHUB_ENV"
 
       - name: Free up runner disk space
-        # Remove pre-installed toolchains we don't use. The runner ships with
-        # ~10 GB of Android SDK, .NET, Haskell, Swift, etc.; docker save/load
-        # plus Neo4j data quickly fill the remaining ~14 GB free.
-        run: |
-          df -h /
-          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc \
-                      /usr/local/share/boost /usr/local/lib/heroku \
-                      /usr/local/share/powershell /usr/local/share/chromium \
-                      "$AGENT_TOOLSDIRECTORY" || true
-          df -h /
+        uses: ./.github/actions/free-runner-disk-space
 
       - name: Create report directories
-        run: mkdir -p reports consumer_api/reports extensions/reports
+        run: mkdir -p reports consumer_api/reports extensions/reports standards_import/reports
 
       - name: Tune Neo4j memory for GitHub runner
         run: |
@@ -355,6 +354,19 @@ jobs:
       - name: Run extensions tests
         run: docker compose run --rm dev uv run poe extensions-test
 
+      - name: Run standards import tests
+        run: docker compose run --rm dev uv run poe standards-import-test
+
+      # Creates and drops its own throwaway databases against the service started
+      # above, so it needs no fixture data and leaves nothing behind.
+      - name: Run standards import integration tests
+        run: docker compose run --rm dev uv run poe standards-import-testint
+
+      # Unlike the other apps' auth suites, this one needs no OAuth secrets: it reads
+      # the roles off the routes and exercises the role check directly, so it runs here.
+      - name: Run standards import auth tests
+        run: docker compose run --rm dev uv run poe standards-import-testauth
+
       - name: Run telemetry tests
         run: >-
           docker compose run --rm
@@ -363,18 +375,13 @@ jobs:
           -e UVICORN_LOG_CONFIG=logging-azure.yaml
           dev uv run poe test-telemetry
 
-      # -----------------------------------------------------------------
-      # TODO: Auth tests
-      # Requires OAUTH secrets configured as GitHub repository secrets.
-      # - name: Run auth tests
-      #   env:
-      #     OAUTH_ENABLED: "y"
-      #     OAUTH_RBAC_ENABLED: "y"
-      #     OAUTH_METADATA_URL: ${{ secrets.OAUTH_METADATA_URL }}
-      #     OAUTH_API_APP_ID: ${{ secrets.OAUTH_API_APP_ID }}
-      #     EXPIRED_ACCESS_TOKEN: ${{ secrets.EXPIRED_ACCESS_TOKEN }}
-      #   run: uv run poe testauth
-      # -----------------------------------------------------------------
+      # Auth tests are self-contained: no identity provider is configured here
+      # (OAUTH_METADATA_URL and OAUTH_API_APP_ID stay empty). Every test must
+      # monkeypatch `common.auth.dependencies.jwks_service` with the self-signed
+      # mock from `common.tests.auth.endpoints_rbac.mk_mock_jwks_service()`.
+      # A test that reaches the real OIDC discovery or JWKS endpoint will fail.
+      - name: Run auth tests
+        run: docker compose run --rm dev uv run poe testauth
 
       - name: Upload unit test reports
         if: always()
@@ -410,48 +417,148 @@ jobs:
     needs: build-dev-image
     runs-on: ubuntu-latest
     timeout-minutes: 90
-    # Sharded by directory; `api-misc` and `non-api` are catch-all shards using
-    # pytest --ignore= so anything new (new dir or new file) is picked up
-    # automatically. File counts shown for reference — rebalance from real
-    # durations once we have data.
+    # Whole-file shards balanced from recorded durations. Catch-all shards use
+    # pytest --ignore= to retain coverage for future files and directories.
+    # The validate job checks that every integration test file is assigned once.
     strategy:
       fail-fast: false
       matrix:
         include:
           - shard: api-old
-            # 107 files
             paths: clinical_mdr_api/tests/integration/api/old
-          - shard: api-study
-            # ~36 files
+          - shard: api-study-1
             paths: >-
+              clinical_mdr_api/tests/integration/api/study/test_study_soa_preferences.py
+              clinical_mdr_api/tests/integration/api/study_selections/test_study_activities.py
+              clinical_mdr_api/tests/integration/api/study_selections/test_study_activity_groups.py
+              clinical_mdr_api/tests/integration/api/study_selections/test_study_activity_instances.py
+              clinical_mdr_api/tests/integration/api/study_selections/test_study_activity_subgroups.py
+              clinical_mdr_api/tests/integration/api/study_selections/test_study_cohort.py
+              clinical_mdr_api/tests/integration/api/study_selections/test_study_cohorts.py
+              clinical_mdr_api/tests/integration/api/study_selections/test_study_criteria.py
+              clinical_mdr_api/tests/integration/api/study_selections/test_study_data_supplier.py
+              clinical_mdr_api/tests/integration/api/study_selections/test_study_disease_milestone.py
+              clinical_mdr_api/tests/integration/api/study_selections/test_study_source_variables.py
+          - shard: api-study-2
+            paths: >-
+              --ignore=clinical_mdr_api/tests/integration/api/study/test_study_soa_preferences.py
+              --ignore=clinical_mdr_api/tests/integration/api/study/test_study_soa_split.py
+              --ignore=clinical_mdr_api/tests/integration/api/study_selections/test_study_activities.py
+              --ignore=clinical_mdr_api/tests/integration/api/study_selections/test_study_activity_groups.py
+              --ignore=clinical_mdr_api/tests/integration/api/study_selections/test_study_activity_instances.py
+              --ignore=clinical_mdr_api/tests/integration/api/study_selections/test_study_activity_subgroups.py
+              --ignore=clinical_mdr_api/tests/integration/api/study_selections/test_study_auxiliary_device.py
+              --ignore=clinical_mdr_api/tests/integration/api/study_selections/test_study_branch_arms_batch_conflict.py
+              --ignore=clinical_mdr_api/tests/integration/api/study_selections/test_study_cohort.py
+              --ignore=clinical_mdr_api/tests/integration/api/study_selections/test_study_cohorts.py
+              --ignore=clinical_mdr_api/tests/integration/api/study_selections/test_study_compound_dosings.py
+              --ignore=clinical_mdr_api/tests/integration/api/study_selections/test_study_compounds.py
+              --ignore=clinical_mdr_api/tests/integration/api/study_selections/test_study_criteria.py
+              --ignore=clinical_mdr_api/tests/integration/api/study_selections/test_study_data_supplier.py
+              --ignore=clinical_mdr_api/tests/integration/api/study_selections/test_study_design_cells.py
+              --ignore=clinical_mdr_api/tests/integration/api/study_selections/test_study_disease_milestone.py
+              --ignore=clinical_mdr_api/tests/integration/api/study_selections/test_study_elements.py
+              --ignore=clinical_mdr_api/tests/integration/api/study_selections/test_study_elements_batch_conflict.py
+              --ignore=clinical_mdr_api/tests/integration/api/study_selections/test_study_epochs.py
+              --ignore=clinical_mdr_api/tests/integration/api/study_selections/test_study_epochs_batch.py
+              --ignore=clinical_mdr_api/tests/integration/api/study_selections/test_study_objectives.py
+              --ignore=clinical_mdr_api/tests/integration/api/study_selections/test_study_source_variables.py
+              --ignore=clinical_mdr_api/tests/integration/api/study_selections/test_study_visits.py
               clinical_mdr_api/tests/integration/api/study
               clinical_mdr_api/tests/integration/api/study_selections
+          - shard: api-study-3
+            paths: >-
+              clinical_mdr_api/tests/integration/api/study/test_study_soa_split.py
+              clinical_mdr_api/tests/integration/api/study_selections/test_study_auxiliary_device.py
+              clinical_mdr_api/tests/integration/api/study_selections/test_study_branch_arms_batch_conflict.py
+              clinical_mdr_api/tests/integration/api/study_selections/test_study_compound_dosings.py
+              clinical_mdr_api/tests/integration/api/study_selections/test_study_compounds.py
+              clinical_mdr_api/tests/integration/api/study_selections/test_study_design_cells.py
+              clinical_mdr_api/tests/integration/api/study_selections/test_study_elements.py
+              clinical_mdr_api/tests/integration/api/study_selections/test_study_elements_batch_conflict.py
+              clinical_mdr_api/tests/integration/api/study_selections/test_study_epochs.py
+              clinical_mdr_api/tests/integration/api/study_selections/test_study_epochs_batch.py
+              clinical_mdr_api/tests/integration/api/study_selections/test_study_objectives.py
+              clinical_mdr_api/tests/integration/api/study_selections/test_study_visits.py
+          - shard: api-study-listings
+            paths: >-
               clinical_mdr_api/tests/integration/api/study_design_listings
           - shard: api-syntax
-            # ~17 files
             paths: >-
-              clinical_mdr_api/tests/integration/api/syntax_templates
               clinical_mdr_api/tests/integration/api/syntax_instances
               clinical_mdr_api/tests/integration/api/syntax_pre_instances
-          - shard: api-misc
-            # Catch-all for clinical_mdr_api/tests/integration/api/ — runs everything
-            # under api/ EXCEPT the dirs already covered by api-old/api-study/api-syntax.
-            # New api/* subdirs or root test files automatically land here.
+              clinical_mdr_api/tests/integration/api/syntax_templates
+          - shard: api-concepts
             paths: >-
+              clinical_mdr_api/tests/integration/api/biomedical_concepts
+              clinical_mdr_api/tests/integration/api/concepts
+          - shard: api-ct-odms-ddf
+            paths: >-
+              clinical_mdr_api/tests/integration/api/controlled_terminologies
+              clinical_mdr_api/tests/integration/api/ddf
+              clinical_mdr_api/tests/integration/api/odms
+          - shard: api-misc-rest
+            paths: >-
+              --ignore=clinical_mdr_api/tests/integration/api/biomedical_concepts
+              --ignore=clinical_mdr_api/tests/integration/api/concepts
+              --ignore=clinical_mdr_api/tests/integration/api/controlled_terminologies
+              --ignore=clinical_mdr_api/tests/integration/api/ddf
+              --ignore=clinical_mdr_api/tests/integration/api/odms
               --ignore=clinical_mdr_api/tests/integration/api/old
               --ignore=clinical_mdr_api/tests/integration/api/study
-              --ignore=clinical_mdr_api/tests/integration/api/study_selections
               --ignore=clinical_mdr_api/tests/integration/api/study_design_listings
-              --ignore=clinical_mdr_api/tests/integration/api/syntax_templates
+              --ignore=clinical_mdr_api/tests/integration/api/study_selections
               --ignore=clinical_mdr_api/tests/integration/api/syntax_instances
               --ignore=clinical_mdr_api/tests/integration/api/syntax_pre_instances
+              --ignore=clinical_mdr_api/tests/integration/api/syntax_templates
               clinical_mdr_api/tests/integration/api
-          - shard: non-api
-            # Catch-all for everything under clinical_mdr_api/tests/integration/
-            # EXCEPT the api/ tree (handled by the api-* shards above).
-            # New top-level dirs or root test files automatically land here.
+          - shard: services-1
+            paths: >-
+              clinical_mdr_api/tests/integration/services/test_studies.py
+              clinical_mdr_api/tests/integration/services/test_study_branch_arm_selection.py
+              clinical_mdr_api/tests/integration/services/test_study_design_figure.py
+              clinical_mdr_api/tests/integration/services/test_study_objectives.py
+              clinical_mdr_api/tests/integration/services/test_study_visits.py
+          - shard: services-2
+            paths: >-
+              clinical_mdr_api/tests/integration/services/test_compounds.py
+              clinical_mdr_api/tests/integration/services/test_ct_versioning.py
+              clinical_mdr_api/tests/integration/services/test_retire_template.py
+              clinical_mdr_api/tests/integration/services/test_service_utils.py
+              clinical_mdr_api/tests/integration/services/test_study_activity_instruction.py
+              clinical_mdr_api/tests/integration/services/test_study_compounds.py
+              clinical_mdr_api/tests/integration/services/test_study_design_cell.py
+              clinical_mdr_api/tests/integration/services/test_study_disease_milestone.py
+              clinical_mdr_api/tests/integration/services/test_study_endpoint_cascade.py
+              clinical_mdr_api/tests/integration/services/test_study_endpoint_objective_accept_version.py
+              clinical_mdr_api/tests/integration/services/test_study_epochs.py
+              clinical_mdr_api/tests/integration/services/test_study_soa_preferences.py
+              clinical_mdr_api/tests/integration/services/test_versioning_sequence_timeframe_templates.py
+          - shard: services-3
+            paths: >-
+              --ignore=clinical_mdr_api/tests/integration/services/test_compounds.py
+              --ignore=clinical_mdr_api/tests/integration/services/test_ct_versioning.py
+              --ignore=clinical_mdr_api/tests/integration/services/test_retire_template.py
+              --ignore=clinical_mdr_api/tests/integration/services/test_service_utils.py
+              --ignore=clinical_mdr_api/tests/integration/services/test_studies.py
+              --ignore=clinical_mdr_api/tests/integration/services/test_study_activity_instruction.py
+              --ignore=clinical_mdr_api/tests/integration/services/test_study_branch_arm_selection.py
+              --ignore=clinical_mdr_api/tests/integration/services/test_study_compounds.py
+              --ignore=clinical_mdr_api/tests/integration/services/test_study_design_cell.py
+              --ignore=clinical_mdr_api/tests/integration/services/test_study_design_figure.py
+              --ignore=clinical_mdr_api/tests/integration/services/test_study_disease_milestone.py
+              --ignore=clinical_mdr_api/tests/integration/services/test_study_endpoint_cascade.py
+              --ignore=clinical_mdr_api/tests/integration/services/test_study_endpoint_objective_accept_version.py
+              --ignore=clinical_mdr_api/tests/integration/services/test_study_epochs.py
+              --ignore=clinical_mdr_api/tests/integration/services/test_study_objectives.py
+              --ignore=clinical_mdr_api/tests/integration/services/test_study_soa_preferences.py
+              --ignore=clinical_mdr_api/tests/integration/services/test_study_visits.py
+              --ignore=clinical_mdr_api/tests/integration/services/test_versioning_sequence_timeframe_templates.py
+              clinical_mdr_api/tests/integration/services
+          - shard: non-api-rest
             paths: >-
               --ignore=clinical_mdr_api/tests/integration/api
+              --ignore=clinical_mdr_api/tests/integration/services
               clinical_mdr_api/tests/integration
     env:
       NEO4J_IMAGE: "neo4j:enterprise"
@@ -475,19 +582,10 @@ jobs:
           echo "NEO4J_MDR_AUTH_PASSWORD=$pw" >> "$GITHUB_ENV"
 
       - name: Free up runner disk space
-        # Remove pre-installed toolchains we don't use. The runner ships with
-        # ~10 GB of Android SDK, .NET, Haskell, Swift, etc.; docker save/load
-        # plus Neo4j data quickly fill the remaining ~14 GB free.
-        run: |
-          df -h /
-          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc \
-                      /usr/local/share/boost /usr/local/lib/heroku \
-                      /usr/local/share/powershell /usr/local/share/chromium \
-                      "$AGENT_TOOLSDIRECTORY" || true
-          df -h /
+        uses: ./.github/actions/free-runner-disk-space
 
       - name: Create report directories
-        run: mkdir -p reports consumer_api/reports extensions/reports
+        run: mkdir -p reports consumer_api/reports extensions/reports standards_import/reports
 
       - name: Tune Neo4j memory for GitHub runner
         run: |
@@ -583,19 +681,10 @@ jobs:
           echo "NEO4J_MDR_AUTH_PASSWORD=$pw" >> "$GITHUB_ENV"
 
       - name: Free up runner disk space
-        # Remove pre-installed toolchains we don't use. The runner ships with
-        # ~10 GB of Android SDK, .NET, Haskell, Swift, etc.; docker save/load
-        # plus Neo4j data quickly fill the remaining ~14 GB free.
-        run: |
-          df -h /
-          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc \
-                      /usr/local/share/boost /usr/local/lib/heroku \
-                      /usr/local/share/powershell /usr/local/share/chromium \
-                      "$AGENT_TOOLSDIRECTORY" || true
-          df -h /
+        uses: ./.github/actions/free-runner-disk-space
 
       - name: Create report directories
-        run: mkdir -p reports consumer_api/reports extensions/reports
+        run: mkdir -p reports consumer_api/reports extensions/reports standards_import/reports
 
       - name: Tune Neo4j memory for GitHub runner
         run: |
@@ -631,18 +720,9 @@ jobs:
       - name: Run Consumer API tests
         run: docker compose run --rm dev uv run poe consumer-api-test
 
-      # -----------------------------------------------------------------
-      # TODO: Consumer API auth tests
-      # Requires OAUTH secrets configured as GitHub repository secrets.
-      # - name: Run Consumer API auth tests
-      #   run: docker compose run --rm dev uv run poe consumer-api-testauth
-      #   env:
-      #     OAUTH_ENABLED: "y"
-      #     OAUTH_RBAC_ENABLED: "y"
-      #     OAUTH_METADATA_URL: ${{ secrets.OAUTH_METADATA_URL }}
-      #     OAUTH_API_APP_ID: ${{ secrets.OAUTH_API_APP_ID }}
-      #     EXPIRED_ACCESS_TOKEN: ${{ secrets.EXPIRED_ACCESS_TOKEN }}
-      # -----------------------------------------------------------------
+      # Self-contained, no identity provider — see "Run auth tests" in the unit test job.
+      - name: Run Consumer API auth tests
+        run: docker compose run --rm dev uv run poe consumer-api-testauth
 
       - name: Upload Consumer API test reports
         if: always()
@@ -670,28 +750,18 @@ jobs:
         if: always()
         run: docker compose down -v
 
-  # Contract tests. Seeds a minimal database rather than restoring a full one:
-  # running the import stack inline would add far too much to every PR check.
-  # Restoring a pre-built dump would give better coverage and remains the
-  # intended end state.
-  schemathesis:
+  prepare-schemathesis-data:
     needs: build-dev-image
     runs-on: ubuntu-latest
-    timeout-minutes: 90
-    # Gating: a new contract violation fails the build. The operations that
-    # only 404 because the seed is thin are reported as warnings rather than
-    # failures, so they do not gate. Genuinely known failures are suppressed
-    # per operation in api/schemathesis.toml, each with its justification.
+    timeout-minutes: 30
+    outputs:
+      neo4j-image: ${{ steps.neo4j-image.outputs.image }}
     env:
       NEO4J_IMAGE: "neo4j:enterprise"
       BUILD_TARGET: dev
       COMPOSE_PROFILES: dev
+      COMPOSE_PROJECT_NAME: schemathesis-${{ github.run_id }}-${{ github.run_attempt }}-baseline
       OAUTH_ENABLED: "False"
-      # Raises the API log level to DEBUG, which adds the traceback and a
-      # reproducing curl to every unhandled exception. The reproduction command
-      # in the Schemathesis report is truncated for larger request bodies, so
-      # the server-side one is what makes a failure diagnosable.
-      APP_DEBUG: "True"
     defaults:
       run:
         working-directory: api
@@ -710,19 +780,19 @@ jobs:
           echo "NEO4J_MDR_AUTH_PASSWORD=$pw" >> "$GITHUB_ENV"
 
       - name: Free up runner disk space
-        # Remove pre-installed toolchains we don't use. The runner ships with
-        # ~10 GB of Android SDK, .NET, Haskell, Swift, etc.; docker save/load
-        # plus Neo4j data quickly fill the remaining ~14 GB free.
-        run: |
-          df -h /
-          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc \
-                      /usr/local/share/boost /usr/local/lib/heroku \
-                      /usr/local/share/powershell /usr/local/share/chromium \
-                      "$AGENT_TOOLSDIRECTORY" || true
-          df -h /
+        uses: ./.github/actions/free-runner-disk-space
 
       - name: Create report directories
-        run: mkdir -p reports consumer_api/reports extensions/reports
+        run: mkdir -p reports/schemathesis-baseline consumer_api/reports extensions/reports standards_import/reports
+
+      - name: Resolve Neo4j image digest
+        id: neo4j-image
+        run: |
+          docker pull "$NEO4J_IMAGE"
+          image=$(docker image inspect "$NEO4J_IMAGE" --format '{{index .RepoDigests 0}}')
+          echo "NEO4J_IMAGE=$image" >> "$GITHUB_ENV"
+          echo "image=$image" >> "$GITHUB_OUTPUT"
+          printf '%s\n' "$image" > reports/schemathesis-baseline/neo4j-image.txt
 
       - name: Tune Neo4j memory for GitHub runner
         run: |
@@ -730,9 +800,13 @@ jobs:
           services:
             database:
               environment:
-                NEO4J_server_memory_heap_initial__size: "2G"
-                NEO4J_server_memory_heap_max__size: "2G"
-                NEO4J_server_memory_pagecache_size: "1G"
+                NEO4J_server_memory_heap_initial__size: "4G"
+                NEO4J_server_memory_heap_max__size: "4G"
+                NEO4J_server_memory_pagecache_size: "2G"
+              volumes:
+                - schemathesis-data:/data
+          volumes:
+            schemathesis-data:
           YAML
           echo "COMPOSE_FILE=compose.yaml:compose.ci.yaml" >> "$GITHUB_ENV"
 
@@ -753,6 +827,45 @@ jobs:
         # exist on this runner, so `docker compose up` would build it from
         # scratch. The dev image just loaded runs the same application.
         run: echo "API_IMAGE=$DEV_IMAGE" >> "$GITHUB_ENV"
+
+      - name: Validate main API shard partition
+        run: |
+          docker compose run --rm -T --no-deps dev uv run python - <<'PY'
+          import json
+          import re
+          import shlex
+          import tomllib
+          from collections import Counter
+          from pathlib import Path
+
+          from clinical_mdr_api.hooks.schemathesis_hooks import EXCLUDED_PATHS
+
+          tasks = tomllib.loads(Path("pyproject.toml").read_text())["tool"]["poe"]["tasks"]
+          shards = ("studies", "concepts", "ct-odm", "other")
+          filters = {}
+          for shard in shards:
+            arguments = shlex.split(tasks[f"schemathesis-{shard}"]["ref"])
+            filters[shard] = {
+              key: argument.split("=", 1)[1]
+              for key in ("include", "exclude")
+              for argument in arguments
+              if argument.startswith(f"--{key}-path-regex=")
+            }
+          counts = Counter()
+          methods = {"get", "put", "post", "delete", "patch", "head", "options", "trace"}
+          for path, definition in json.loads(Path("openapi.json").read_text())["paths"].items():
+            if path in EXCLUDED_PATHS:
+              continue
+            matches = [
+              shard for shard, rules in filters.items()
+              if ("include" not in rules or re.search(rules["include"], path))
+              and ("exclude" not in rules or not re.search(rules["exclude"], path))
+            ]
+            assert len(matches) == 1, (path, matches)
+            counts[matches[0]] += sum(method in methods for method in definition)
+          assert all(counts[shard] for shard in shards), counts
+          print("Main API shard operation counts:", dict(counts))
+          PY
 
       - name: Start database service
         run: docker compose up -d --renew-anon-volumes --wait database
@@ -778,69 +891,234 @@ jobs:
           esac
           echo "study_uid=$uid" >> "$GITHUB_OUTPUT"
 
-      - name: Start API services
-        # Run them from the dev image loaded above. Left unset, the services
-        # fall back to the compose default (`clinical-mdr-api`), which is not
-        # on the runner and would be built from scratch. The Azure pipeline
-        # pulled prebuilt images for the same reason.
+      - name: Export seeded application database
         env:
-          API_IMAGE: ${{ env.DEV_IMAGE }}
-        run: docker compose up -d api consumer-api extensions-api
-
-      - name: Wait for services
-        # compose.yaml declares no healthcheck for the API services, so poll
-        # each one rather than relying on `--wait`.
+          STUDY_UID: ${{ steps.seed.outputs.study_uid }}
         run: |
-          for port in 8000 8008 8009; do
-            timeout 180 bash -c \
-              "until curl -sf http://localhost:$port/docs >/dev/null; do sleep 5; done" \
-              || { echo "API on port $port never became ready" >&2; exit 1; }
-          done
+          printf '%s\n' "$STUDY_UID" > reports/schemathesis-baseline/study_uid.txt
+          count=$(docker compose exec -T -e NEO4J_PASSWORD="$NEO4J_MDR_AUTH_PASSWORD" \
+            database cypher-shell -u neo4j -d neo4j --format plain \
+            'MATCH (n) RETURN count(n) AS node_count;' | tail -n 1)
+          [[ "$count" =~ ^[0-9]+$ ]]
+          printf '%s\n' "$count" > reports/schemathesis-baseline/node-count.txt
+          docker compose exec -T -e NEO4J_PASSWORD="$NEO4J_MDR_AUTH_PASSWORD" \
+            database cypher-shell -u neo4j -d system 'STOP DATABASE neo4j WAIT 60 SECONDS;'
+          docker compose exec -T --user neo4j database mkdir -p /tmp/schemathesis-baseline
+          docker compose exec -T --user neo4j database neo4j-admin database dump neo4j \
+            --to-path=/tmp/schemathesis-baseline
+          docker compose cp database:/tmp/schemathesis-baseline/neo4j.dump reports/schemathesis-baseline/
+          cd reports/schemathesis-baseline
+          sha256sum neo4j.dump study_uid.txt node-count.txt neo4j-image.txt > SHA256SUMS
 
-      # The hooks module excludes known-unstable paths and substitutes the
-      # seeded study UID into study-scoped path parameters. Both variables have
-      # to be passed per run: compose does not forward arbitrary variables from
-      # the runner, and the `dev` service does not declare them.
-      - name: Run Schemathesis (main API)
-        run: >-
-          docker compose run --rm -T
-          -e "SCHEMATHESIS_HOOKS=clinical_mdr_api.hooks.schemathesis_hooks"
-          -e "SCHEMATHESIS_STUDY_UID=${{ steps.seed.outputs.study_uid }}"
-          dev uv run poe schemathesis --url=http://api:8000
+      - name: Upload seeded database snapshot
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: api-schemathesis-baseline
+          path: api/reports/schemathesis-baseline
+          retention-days: 1
+          if-no-files-found: error
 
-      - name: Run Schemathesis (consumer API)
+      - name: Save Neo4j logs
         if: always()
-        run: >-
-          docker compose run --rm -T
-          -e "SCHEMATHESIS_HOOKS=clinical_mdr_api.hooks.schemathesis_hooks"
-          -e "SCHEMATHESIS_STUDY_UID=${{ steps.seed.outputs.study_uid }}"
-          dev uv run poe consumer-api-schemathesis --url=http://consumer-api:8000
+        run: docker compose logs --no-color --no-log-prefix database > reports/neo4j.log
 
-      - name: Run Schemathesis (extensions API)
+      - name: Upload Neo4j logs
         if: always()
-        run: >-
-          docker compose run --rm -T
-          -e "SCHEMATHESIS_HOOKS=clinical_mdr_api.hooks.schemathesis_hooks"
-          -e "SCHEMATHESIS_STUDY_UID=${{ steps.seed.outputs.study_uid }}"
-          dev uv run poe extensions-schemathesis --url=http://extensions-api:8000
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: api-neo4j-logs-schemathesis-baseline
+          path: api/reports/neo4j.log
+          if-no-files-found: warn
+
+      - name: Shut down services
+        if: always()
+        run: docker compose down -v
+
+  schemathesis:
+    name: schemathesis (${{ matrix.shard }})
+    needs: [build-dev-image, prepare-schemathesis-data]
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - shard: main-studies
+            service: api
+            task: schemathesis-studies
+          - shard: main-concepts
+            service: api
+            task: schemathesis-concepts
+          - shard: main-ct-odm
+            service: api
+            task: schemathesis-ct-odm
+          - shard: main-other
+            service: api
+            task: schemathesis-other
+          - shard: consumer
+            service: consumer-api
+            task: consumer-api-schemathesis
+          - shard: extensions
+            service: extensions-api
+            task: extensions-schemathesis
+    env:
+      NEO4J_IMAGE: ${{ needs.prepare-schemathesis-data.outputs.neo4j-image }}
+      BUILD_TARGET: dev
+      COMPOSE_PROFILES: dev
+      COMPOSE_PROJECT_NAME: schemathesis-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.shard }}
+      OAUTH_ENABLED: "False"
+      API_SERVICE: ${{ matrix.service }}
+      SCHEMATHESIS_TASK: ${{ matrix.task }}
+      SHARD: ${{ matrix.shard }}
+    defaults:
+      run:
+        working-directory: api
+    steps:
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+
+      - name: Set UID to runner user
+        run: echo "UID=$(id -u)" >> "$GITHUB_ENV"
+
+      - name: Generate ephemeral Neo4j password for CI
+        run: |
+          pw=$(openssl rand -hex 16)
+          echo "::add-mask::$pw"
+          echo "NEO4J_MDR_AUTH_PASSWORD=$pw" >> "$GITHUB_ENV"
+
+      - name: Free up runner disk space
+        uses: ./.github/actions/free-runner-disk-space
+
+      - name: Create report directories
+        run: mkdir -p reports/service-logs consumer_api/reports extensions/reports
+
+      - name: Configure isolated database and API diagnostics
+        run: |
+          cat > compose.ci.yaml <<'YAML'
+          services:
+            database:
+              environment:
+                NEO4J_server_memory_heap_initial__size: "4G"
+                NEO4J_server_memory_heap_max__size: "4G"
+                NEO4J_server_memory_pagecache_size: "2G"
+              volumes:
+                - schemathesis-data:/data
+            api:
+              environment:
+                APP_DEBUG: "True"
+            consumer-api:
+              environment:
+                APP_DEBUG: "True"
+            extensions-api:
+              environment:
+                APP_DEBUG: "True"
+          volumes:
+            schemathesis-data:
+          YAML
+          echo "COMPOSE_FILE=compose.yaml:compose.ci.yaml" >> "$GITHUB_ENV"
+          echo "API_IMAGE=$DEV_IMAGE" >> "$GITHUB_ENV"
+
+      - name: Download dev image artifact
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: api-dev-image
+          path: /tmp
+
+      - name: Load dev image
+        run: |
+          docker load -i /tmp/dev-image.tar
+          rm -f /tmp/dev-image.tar
+
+      - name: Download seeded database snapshot
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: api-schemathesis-baseline
+          path: api/reports/schemathesis-baseline
+
+      - name: Verify database snapshot
+        run: |
+          cd reports/schemathesis-baseline
+          sha256sum --check SHA256SUMS
+          [[ "$(cat neo4j-image.txt)" = "$NEO4J_IMAGE" ]]
+          uid=$(cat study_uid.txt)
+          [[ "$uid" =~ ^Study_[A-Za-z0-9_-]+$ ]]
+          echo "STUDY_UID=$uid" >> "$GITHUB_ENV"
+
+      - name: Restore isolated database
+        run: |
+          docker pull "$NEO4J_IMAGE"
+          docker compose run --rm -T --no-deps database neo4j-admin database load neo4j \
+            --from-path=/db_backup/reports/schemathesis-baseline --overwrite-destination=true
+          docker compose up -d --no-build --wait --wait-timeout 180 database
+
+      - name: Verify restored baseline
+        run: |
+          docker compose exec -T -e NEO4J_PASSWORD="$NEO4J_MDR_AUTH_PASSWORD" \
+            database cypher-shell -u neo4j -d neo4j 'CALL db.awaitIndexes(300);'
+          count=$(docker compose exec -T -e NEO4J_PASSWORD="$NEO4J_MDR_AUTH_PASSWORD" \
+            database cypher-shell -u neo4j -d neo4j --format plain \
+            'MATCH (n) RETURN count(n) AS node_count;' | tail -n 1)
+          [[ "$count" = "$(cat reports/schemathesis-baseline/node-count.txt)" ]]
+          study_count=$(docker compose exec -T -e NEO4J_PASSWORD="$NEO4J_MDR_AUTH_PASSWORD" \
+            database cypher-shell -u neo4j -d neo4j --format plain \
+            "MATCH (s:StudyRoot {uid: '$STUDY_UID'}) RETURN count(s);" | tail -n 1)
+          [[ "$study_count" = 1 ]]
+
+      - name: Start selected API service
+        run: docker compose up -d --no-build --wait --wait-timeout 180 "$API_SERVICE"
+
+      - name: Run Schemathesis shard
+        id: run-shard
+        run: |
+          set -o pipefail
+          docker compose run --rm -T --no-deps \
+            -e SCHEMATHESIS_HOOKS=clinical_mdr_api.hooks.schemathesis_hooks \
+            -e "SCHEMATHESIS_STUDY_UID=$STUDY_UID" \
+            dev uv run poe "$SCHEMATHESIS_TASK" --url="http://$API_SERVICE:8000" \
+            2>&1 | tee "reports/schemathesis-$SHARD.log"
+
+      - name: Restore baseline for full-schema Stateful tests
+        id: stateful-baseline
+        if: ${{ !cancelled() && matrix.shard == 'main-ct-odm' && steps.run-shard.outcome != 'skipped' }}
+        run: |
+          docker compose stop "$API_SERVICE" database
+          docker compose run --rm -T --no-deps database neo4j-admin database load neo4j \
+            --from-path=/db_backup/reports/schemathesis-baseline --overwrite-destination=true
+          docker compose up -d --no-build --wait --wait-timeout 180 database
+          docker compose exec -T -e NEO4J_PASSWORD="$NEO4J_MDR_AUTH_PASSWORD" \
+            database cypher-shell -u neo4j -d neo4j 'CALL db.awaitIndexes(300);'
+          count=$(docker compose exec -T -e NEO4J_PASSWORD="$NEO4J_MDR_AUTH_PASSWORD" \
+            database cypher-shell -u neo4j -d neo4j --format plain \
+            'MATCH (n) RETURN count(n) AS node_count;' | tail -n 1)
+          [[ "$count" = "$(cat reports/schemathesis-baseline/node-count.txt)" ]]
+          docker compose up -d --no-build --wait --wait-timeout 180 "$API_SERVICE"
+
+      - name: Run full-schema Stateful tests
+        if: ${{ !cancelled() && matrix.shard == 'main-ct-odm' && steps.stateful-baseline.outcome == 'success' }}
+        run: |
+          set -o pipefail
+          docker compose run --rm -T --no-deps \
+            -e SCHEMATHESIS_HOOKS=clinical_mdr_api.hooks.schemathesis_hooks \
+            -e "SCHEMATHESIS_STUDY_UID=$STUDY_UID" \
+            dev uv run poe schemathesis-stateful --url="http://$API_SERVICE:8000" \
+            2>&1 | tee reports/schemathesis-stateful.log
 
       - name: Collect Schemathesis reports
-        # Uploading the three report paths directly nests them at their source
-        # depth (`reports/`, `consumer_api/reports/`, `extensions/reports/`).
-        # Copy them into one directory first so the artifact holds three
-        # siblings named after the API each report belongs to.
         if: always()
         run: |
-          mkdir -p schemathesis-reports/{main_api,consumer_api,extensions}
-          cp reports/schemathesis_report.xml schemathesis-reports/main_api/ || true
-          cp consumer_api/reports/schemathesis_report.xml schemathesis-reports/consumer_api/ || true
-          cp extensions/reports/schemathesis_report.xml schemathesis-reports/extensions/ || true
+          target="schemathesis-reports/$SHARD"
+          mkdir -p "$target"
+          for report in reports/schemathesis-*.xml reports/schemathesis-*.log \
+                        consumer_api/reports/schemathesis_report.xml extensions/reports/schemathesis_report.xml; do
+            if [ -f "$report" ]; then
+              cp "$report" "$target/"
+            fi
+          done
 
       - name: Upload Schemathesis reports
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
-          name: api-schemathesis-reports
+          name: api-schemathesis-reports-${{ matrix.shard }}
           path: api/schemathesis-reports
           if-no-files-found: warn
 
@@ -852,7 +1130,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
-          name: api-neo4j-logs-schemathesis
+          name: api-neo4j-logs-schemathesis-${{ matrix.shard }}
           path: api/reports/neo4j.log
           if-no-files-found: warn
 
@@ -862,16 +1140,14 @@ jobs:
         if: always()
         run: |
           mkdir -p reports/service-logs
-          for service in api consumer-api extensions-api; do
-            docker compose logs --no-color --no-log-prefix "$service" \
-              > "reports/service-logs/$service.log" || true
-          done
+          docker compose logs --no-color --no-log-prefix "$API_SERVICE" \
+            > "reports/service-logs/$API_SERVICE.log" || true
 
       - name: Upload API service logs
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
-          name: api-service-logs-schemathesis
+          name: api-service-logs-schemathesis-${{ matrix.shard }}
           path: api/reports/service-logs
           if-no-files-found: warn
 

@@ -263,8 +263,8 @@ def test_get_data_supplier_rules(
     assert list(res.keys()) == ["items", "total", "page", "size"]
     assert len(res["items"]) == expected_result_len
     assert res["total"] == (len(data_supplier_rules_all) if total_count else 0)
-    assert res["page"] == (page_number if page_number else 1)
-    assert res["size"] == (page_size if page_size else 10)
+    assert res["page"] == (page_number or 1)
+    assert res["size"] == (page_size or 10)
 
     for item in res["items"]:
         assert set(item.keys()) == set(RULE_FIELDS_ALL)
@@ -849,3 +849,99 @@ def test_post_data_supplier_rule_rejects_multiple_data_supplier_types(api_client
         },
     )
     assert_response_status_code(response, 400)
+
+
+def test_data_supplier_rule_follows_latest_grouping_on_group_rename(api_client):
+    group = TestUtils.create_activity_group(name="DSR cascade group")
+    subgroup = TestUtils.create_activity_subgroup(name="DSR cascade subgroup")
+    activity = TestUtils.create_activity(
+        name="DSR cascade activity",
+        activity_subgroups=[subgroup.uid],
+        activity_groups=[group.uid],
+    )
+    grouping = {
+        "activity_uid": activity.uid,
+        "activity_group_uid": group.uid,
+        "activity_subgroup_uid": subgroup.uid,
+    }
+    rule = TestUtils.create_data_supplier_rule(
+        name=unique_rule_name(), activity_groupings=[grouping]
+    )
+    assert rule.version == "1.0"
+
+    new_version = api_client.post(
+        f"/concepts/activities/activity-groups/{group.uid}/versions"
+    )
+    assert_response_status_code(new_version, 201)
+    patch = api_client.put(
+        f"/concepts/activities/activity-groups/{group.uid}",
+        json={
+            "name": "DSR cascade group renamed",
+            "name_sentence_case": "dsr cascade group renamed",
+            "change_description": "rename",
+        },
+    )
+    assert_response_status_code(patch, 200)
+    approve = api_client.post(
+        f"/concepts/activities/activity-groups/{group.uid}/approvals?cascade_edit_and_approve=true"
+    )
+    assert_response_status_code(approve, 201)
+
+    res = api_client.get(f"/data-suppliers/rules/{rule.uid}").json()
+    assert res["version"] == "2.0"
+    assert res["status"] == "Final"
+    assert res["activity_groupings"][0]["activity_group_name"] == (
+        "DSR cascade group renamed"
+    )
+    assert res["activity_groupings"][0]["grouping_exists"] is True
+    assert res["activity_groupings"][0]["is_activity_group_retired"] is False
+
+    warned = api_client.get("/data-suppliers/rules?has_warnings=true").json()
+    assert rule.uid not in [r["uid"] for r in warned["items"]]
+
+
+def test_data_supplier_rule_retired_group_warns_and_blocks_saves(api_client):
+    group = TestUtils.create_activity_group(name="DSR retire group")
+    subgroup = TestUtils.create_activity_subgroup(name="DSR retire subgroup")
+    activity = TestUtils.create_activity(
+        name="DSR retire activity",
+        activity_subgroups=[subgroup.uid],
+        activity_groups=[group.uid],
+    )
+    grouping = {
+        "activity_uid": activity.uid,
+        "activity_group_uid": group.uid,
+        "activity_subgroup_uid": subgroup.uid,
+    }
+    rule = TestUtils.create_data_supplier_rule(
+        name=unique_rule_name(),
+        activity_groupings=[grouping],
+        data_supplier_type_uid=data_supplier_type_term_1.term_uid,
+    )
+
+    retire = api_client.delete(
+        f"/concepts/activities/activity-groups/{group.uid}/activations"
+    )
+    assert_response_status_code(retire, 200)
+
+    res = api_client.get(f"/data-suppliers/rules/{rule.uid}").json()
+    assert res["version"] == "1.0"
+    assert res["activity_groupings"][0]["is_activity_group_retired"] is True
+
+    warned = api_client.get("/data-suppliers/rules?has_warnings=true").json()
+    assert rule.uid in [r["uid"] for r in warned["items"]]
+
+    blocked = api_client.patch(
+        f"/data-suppliers/rules/{rule.uid}",
+        json={"description": "changed", "change_description": "edit"},
+    )
+    assert_response_status_code(blocked, 400)
+
+    removed = api_client.patch(
+        f"/data-suppliers/rules/{rule.uid}",
+        json={
+            "activity_groupings": [activity_grouping_data],
+            "change_description": "replace mapping",
+        },
+    )
+    assert_response_status_code(removed, 200)

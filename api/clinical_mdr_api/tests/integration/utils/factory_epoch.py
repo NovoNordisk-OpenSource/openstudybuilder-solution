@@ -373,10 +373,9 @@ def create_study_epoch(epoch_subtype_uid, study_uid="study_root"):
         duration=0,
         color_hash="#1100FF",
     )
-    item = StudyEpochService().create(
+    return StudyEpochService().create(
         study_uid, study_epoch_input=study_epoch_create_input
     )
-    return item
 
 
 def edit_study_epoch(epoch_uid, study_uid="study_root"):
@@ -385,9 +384,8 @@ def edit_study_epoch(epoch_uid, study_uid="study_root"):
         change_description="edit to test",
         start_rule="second_new_start_rule",
     )
-    item = StudyEpochService().edit(
+    return StudyEpochService().edit(
         study_uid=study_uid,
         study_epoch_uid=epoch_uid,
         study_epoch_input=study_epoch_edit_input,
     )
-    return item

@@ -107,7 +107,7 @@
             "intervention_type_null_value_code": null,
             "add_on_to_existing_treatments": null,
             "add_on_to_existing_treatments_null_value_code": null,
-            "control_type_code": null,
+            "control_type_codes": [],
             "control_type_null_value_code": null,
             "intervention_model_code": null,
             "intervention_model_null_value_code": null,

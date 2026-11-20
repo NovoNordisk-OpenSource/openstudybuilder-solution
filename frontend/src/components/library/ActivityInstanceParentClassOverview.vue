@@ -493,7 +493,7 @@ watch(
 }
 
 .activity-instance-parent-class-overview-container :deep(.v-data-table__th) {
-  background-color: #272e41 !important;
+  background-color: rgb(var(--v-theme-nnTableHeaderDark)) !important;
 }
 
 .activity-instance-parent-class-overview-container
@@ -512,7 +512,7 @@ watch(
 :deep(.activity-item-classes-styled) {
   /* Table header styling */
   thead tr {
-    background: #272e41 !important;
+    background: rgb(var(--v-theme-nnTableHeaderDark)) !important;
   }
 
   thead th {

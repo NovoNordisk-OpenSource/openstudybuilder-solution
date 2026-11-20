@@ -146,7 +146,7 @@ In CI, this schema functionality follows the OpenAPI-style behavior: when drift 
   SCHEMATHESIS_HOOKS=clinical_mdr_api.hooks.schemathesis_hooks
   ```
 
-- Run `uv run poe schemathesis` (to test the main API) or `uv run poe consumer-api-schemathesis` (to test the Consumer API). 
+- Run `uv run poe schemathesis` (to test the main API). 
 
 - To run schemathesis checks on a subset of endpoints and/or http methods, 
 you can specify parameters for the desired http methods (`--include-method`) and/or endpoint paths (`--include-path-regex`).

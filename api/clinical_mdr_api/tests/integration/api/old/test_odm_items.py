@@ -989,7 +989,7 @@ def test_getting_a_specific_odm_item_in_specific_version(api_client):
             "mandatory": True,
             "order": 1,
             "submission_value": "submission_value_1",
-            "display_text": "display text",
+            "display_text": None,
             "version": "1.0",
         }
     ]

@@ -485,7 +485,7 @@ class StudyAttributesListingModel(BaseModel):
     add_on: Annotated[str, Field()]
     add_on_nf: Annotated[str, Field()]
 
-    control_type: Annotated[str, Field()]
+    control_type: Annotated[list[SimpleListingCTModel], Field()]
     control_type_nf: Annotated[str, Field()]
 
     intv_model: Annotated[str, Field()]
@@ -530,10 +530,12 @@ class StudyAttributesListingModel(BaseModel):
                 ct_uid=study_intervention_vo.add_on_to_existing_treatments_null_value_code,
                 find_term_by_uid=find_term_by_uid,
             ),
-            control_type=ct_term_uid_to_str(
-                ct_uid=study_intervention_vo.control_type_code,
-                find_term_by_uid=find_term_by_uid,
-            ),
+            control_type=[
+                SimpleListingCTModel.from_ct_code(
+                    ct_uid=control_type_code, find_term_by_uid=find_term_by_uid
+                )
+                for control_type_code in study_intervention_vo.control_type_codes
+            ],
             control_type_nf=ct_term_uid_to_str(
                 ct_uid=study_intervention_vo.control_type_null_value_code,
                 find_term_by_uid=find_term_by_uid,
@@ -712,16 +714,8 @@ class StudyCohortListingModel(StudySelctionListingModel):
             code=none_to_empty_str(study_selection_cohort_vo.code),
             no_subject=study_selection_cohort_vo.number_of_subjects,
             desc=none_to_empty_str(study_selection_cohort_vo.description),
-            arm_uid=(
-                study_selection_cohort_vo.arm_root_uids
-                if study_selection_cohort_vo.arm_root_uids
-                else []
-            ),
-            branch_uid=(
-                study_selection_cohort_vo.branch_arm_root_uids
-                if study_selection_cohort_vo.branch_arm_root_uids
-                else []
-            ),
+            arm_uid=study_selection_cohort_vo.arm_root_uids or [],
+            branch_uid=study_selection_cohort_vo.branch_arm_root_uids or [],
         )
 
     @staticmethod

@@ -31,7 +31,7 @@ class IngredientVO:
         half_life_uid: str | None = None,
         lag_time_uids: list[str] | None = None,
     ) -> Self:
-        ingredient_vo = cls(
+        return cls(
             external_id=external_id,
             active_substance_uid=active_substance_uid,
             formulation_name=formulation_name,
@@ -39,8 +39,6 @@ class IngredientVO:
             half_life_uid=half_life_uid,
             lag_time_uids=lag_time_uids,
         )
-
-        return ingredient_vo
 
     def validate(
         self,
@@ -81,12 +79,10 @@ class FormulationVO:
     def from_repository_values(
         cls, external_id: str | None, ingredients: list[IngredientVO] | None = None
     ) -> Self:
-        formulation_vo = cls(
+        return cls(
             external_id=external_id,
-            ingredients=ingredients if ingredients else [],
+            ingredients=ingredients or [],
         )
-
-        return formulation_vo
 
     def validate(
         self,
@@ -121,7 +117,7 @@ class PharmaceuticalProductVO(ConceptVO):
         route_of_administration_uids: list[str] | None,
         formulations: list[FormulationVO] | None,
     ) -> Self:
-        pharmaceutical_product_vo = cls(
+        return cls(
             external_id=external_id,
             dosage_form_uids=dosage_form_uids,
             route_of_administration_uids=route_of_administration_uids,
@@ -132,8 +128,6 @@ class PharmaceuticalProductVO(ConceptVO):
             abbreviation=None,
             is_template_parameter=False,
         )
-
-        return pharmaceutical_product_vo
 
     def validate(
         self,
@@ -224,13 +218,12 @@ class PharmaceuticalProductAR(ConceptARBase):
             active_substance_exists_callback=active_substance_exists_callback,
         )
 
-        pharmaceutical_product_ar = cls(
+        return cls(
             _uid=uid,
             _item_metadata=item_metadata,
             _library=library,
             _concept_vo=concept_vo,
         )
-        return pharmaceutical_product_ar
 
     def edit_draft(
         self,

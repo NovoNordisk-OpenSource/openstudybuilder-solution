@@ -139,14 +139,14 @@ class StudySelectionBranchArmVO:
         # check if the specified name is already used with the callback
         exceptions.ValidationException.raise_if(
             self.name and branch_arm_exists_callback_by("name", "name", self),
-            msg=f"Value '{self.name}' in field Branch Arm Name is not unique for the study.",
+            msg=f"Value '{self.name}' in field Branch Arm Name is not unique for the Study Arm.",
         )
 
         # check if the specified Short name is already used with the callback
         exceptions.ValidationException.raise_if(
             self.short_name
             and branch_arm_exists_callback_by("short_name", "short_name", self),
-            msg=f"Value '{self.short_name}' in field Branch Arm Short Name is not unique for the study.",
+            msg=f"Value '{self.short_name}' in field Branch Arm Short Name is not unique for the Study Arm.",
         )
 
 

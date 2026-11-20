@@ -83,7 +83,7 @@ class ActivityInstanceAttributesVO(ConceptVO):
         activity_instance_class_name: str | None,
         activity_items: list[ActivityItemVO],
     ) -> Self:
-        activity_instance_vo = cls(
+        return cls(
             nci_concept_id=nci_concept_id,
             nci_concept_name=nci_concept_name,
             name=name,
@@ -105,8 +105,6 @@ class ActivityInstanceAttributesVO(ConceptVO):
             legacy_description=legacy_description,
             activity_items=activity_items if activity_items is not None else [],
         )
-
-        return activity_instance_vo
 
     def validate(
         self,
@@ -390,14 +388,12 @@ class ActivityInstanceGroupingsVO:
         activity_groupings: list[ActivityInstanceGroupingVO],
         activity_name: str | None = None,
     ) -> Self:
-        activity_instance_vo = cls(
+        return cls(
             activity_groupings=(
                 activity_groupings if activity_groupings is not None else []
             ),
             activity_name=activity_name,
         )
-
-        return activity_instance_vo
 
     def validate(
         self,
@@ -543,7 +539,7 @@ class ActivityInstanceVO(ConceptVO):
             activity_items=activity_items if activity_items is not None else [],
         )
 
-        activity_instance_vo = cls(
+        return cls(
             name=name,
             name_sentence_case=name_sentence_case,
             definition=definition,
@@ -555,8 +551,6 @@ class ActivityInstanceVO(ConceptVO):
             ),
             activity_name=activity_name,
         )
-
-        return activity_instance_vo
 
     def validate(
         self,
@@ -702,14 +696,13 @@ class ActivityInstanceAR(ConceptARBase):
         item_metadata: LibraryItemMetadataVO,
         groupings_item_metadata: LibraryItemMetadataVO,
     ) -> Self:
-        activity_ar = cls(
+        return cls(
             _uid=uid,
             _concept_vo=concept_vo,
             _item_metadata=item_metadata,
             _groupings_item_metadata=groupings_item_metadata,
             _library=library,
         )
-        return activity_ar
 
     @classmethod
     def from_input_values(
@@ -774,14 +767,13 @@ class ActivityInstanceAR(ConceptARBase):
             activity_instance_exists_by_property_value=concept_exists_by_library_and_property_value_callback,
         )
 
-        activity_ar = cls(
+        return cls(
             _uid=generate_uid_callback(),
             _item_metadata=item_metadata,
             _groupings_item_metadata=item_metadata,
             _library=library,
             _concept_vo=concept_vo,
         )
-        return activity_ar
 
     def edit_draft(
         self,
@@ -895,13 +887,12 @@ class ActivityInstanceAttributesAR(ConceptARBase):
         library: LibraryVO,
         item_metadata: LibraryItemMetadataVO,
     ) -> Self:
-        activity_ar = cls(
+        return cls(
             _uid=uid,
             _concept_vo=concept_vo,
             _item_metadata=item_metadata,
             _library=library,
         )
-        return activity_ar
 
     @classmethod
     def from_input_values(
@@ -952,13 +943,12 @@ class ActivityInstanceAttributesAR(ConceptARBase):
             activity_instance_exists_by_property_value=concept_exists_by_library_and_property_value_callback,
         )
 
-        activity_ar = cls(
+        return cls(
             _uid=generate_uid_callback(),
             _item_metadata=item_metadata,
             _library=library,
             _concept_vo=concept_vo,
         )
-        return activity_ar
 
     def edit_draft(
         self,
@@ -1069,13 +1059,12 @@ class ActivityInstanceGroupingsAR(VersioningActionMixin):
         library: LibraryVO,
         item_metadata: LibraryItemMetadataVO,
     ) -> Self:
-        activity_ar = cls(
+        return cls(
             _uid=uid,
             _library=library,
             _concept_vo=concept_vo,
             _item_metadata=item_metadata,
         )
-        return activity_ar
 
     def create_new_version(self, author_id: str) -> None:
         """

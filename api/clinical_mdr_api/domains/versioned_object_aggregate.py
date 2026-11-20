@@ -71,9 +71,7 @@ class LibraryItemMetadataVO:
             _status=LibraryItemStatus.DRAFT,
             _author_id=author_id,
             _author_username=UserInfoService.get_author_username_from_id(author_id),
-            _start_date=(
-                start_date if start_date else datetime.datetime.now(datetime.UTC)
-            ),
+            _start_date=(start_date or datetime.datetime.now(datetime.UTC)),
             _end_date=None,
             _major_version=0,
             _minor_version=1,
@@ -168,9 +166,7 @@ class LibraryItemMetadataVO:
         elif (
             self._status == LibraryItemStatus.RETIRED
             and new_status == LibraryItemStatus.RETIRED
-        ):
-            v_major += 1
-        elif (
+        ) or (
             self._status == LibraryItemStatus.FINAL
             and new_status == LibraryItemStatus.FINAL
         ):
@@ -219,7 +215,7 @@ class LibraryItemMetadataVO:
         """
         Creates new object in retired version updating properly all values
         """
-        if self._status in [LibraryItemStatus.FINAL]:
+        if self._status == LibraryItemStatus.FINAL:
             major, minor = self._get_new_version(LibraryItemStatus.RETIRED)
             return replace(
                 self,

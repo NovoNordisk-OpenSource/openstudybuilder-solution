@@ -34,10 +34,8 @@ It is possible to modify the behavior by specifying non-default values for the f
 
 ```
 API_BASE_URL=http://127.0.0.1:8000                 # Base URL of the target API
-CONSUMER_API_BASE_URL=http://127.0.0.1:8008        # Base URL of the target Consumer API
 DATABASE_URL=bolt://neo4j:<your-neo4j-password>@localhost:7687  # Target database URL (required — no default)
 DATABASE_NAME=neo4j                                # Target database name
-TARGET_CONSUMER_API=False                          # Set this to True if the target should be the Consumer API
 API_AUTH_TOKEN=                                    # Bearer token (JWT) used to authenticate requests to the target API
 STUDY_ID=Study_000039                              # Study UID used to test various endpoints
 STUDY_NUMBER=3003                                  # Study Number used to test various endpoints
@@ -47,6 +45,7 @@ CT_TERM_UID=CTTerm_000001                          # CT Term UID used to test va
 PERFORMANCE_THRESHOLD=2000                         # Endpoints whose median response time is bigger than the specified value (in ms) will be marked as test failures
 PREFETCH_ENDPOINTS=false                           # If true, the script will prefetch all the endpoints before running the tests
 AUTO_DETECT_BIG_STUDY=true                         # If true, the script will target the study with the highest number of activities * visits
+REQUESTS_CA_BUNDLE=                                # Path to a PEM CA bundle, only needed if the target or token endpoint uses a private CA (TLS is always verified)
 ```
 
 ## Endpoints Under Test

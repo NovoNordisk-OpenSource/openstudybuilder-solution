@@ -13,6 +13,12 @@ from fastapi.testclient import TestClient
 from neomodel import db
 
 from clinical_mdr_api import main
+from clinical_mdr_api.domain_repositories.study_definitions.study_definition_repository_impl import (
+    StudyDefinitionRepositoryImpl,
+)
+from clinical_mdr_api.domain_repositories.study_selections.study_visit_repository import (
+    StudyVisitRepository,
+)
 from clinical_mdr_api.domains.enums import ValidationMode
 from clinical_mdr_api.models.clinical_programmes.clinical_programme import (
     ClinicalProgramme,
@@ -157,6 +163,19 @@ def test_integrity_checks_for_all_studies(api_client):
     TestUtils.run_integrity_checks_for_all_studies(
         api_client, mode=ValidationMode.STRICT
     )  # needs to be warning for now as it's leaving broken data
+
+
+def test_day_week_conversion_factors(api_client):
+    expected_factors = []
+    for unit_uid in (DAYUID, WEEKUID):
+        response = api_client.get(f"/concepts/unit-definitions/{unit_uid}")
+        assert_response_status_code(response, 200)
+        expected_factors.append(response.json()["conversion_factor_to_master"])
+
+    assert all(factor is not None for factor in expected_factors)
+    assert StudyVisitRepository.get_day_week_conversion_factors() == tuple(
+        expected_factors
+    )
 
 
 def test_visit_modify_actions_on_locked_study(api_client):
@@ -427,36 +446,10 @@ def test_manually_defined_visit(api_client):
         res = response.json()
         assert res["time_value"] == visit_timing
 
-    # create SpecialVisit after ScheduledVisits
-    response = api_client.get(
-        f"/studies/{study_for_i_visit.uid}/study-visits",
-    )
-    assert_response_status_code(response, 200)
-    res = response.json()
-    last_scheduled_visit_uid = res["items"][5]["uid"]
-    special_visit_input = {
-        "visit_sublabel_reference": last_scheduled_visit_uid,
-        "study_epoch_uid": study_epoch.uid,
-        "visit_type": {"term_uid": "VisitType_0002"},
-        "time_reference": {"term_uid": "VisitSubType_0005"},
-        "time_unit_uid": DAYUID,
-        "visit_class": "SPECIAL_VISIT",
-        "visit_subclass": "SINGLE_VISIT",
-        "is_global_anchor_visit": False,
-    }
-    datadict = visits_basic_data.copy()
-    datadict.update(special_visit_input)
-    response = api_client.post(
-        f"/studies/{study_for_i_visit.uid}/study-visits",
-        json=datadict,
-    )
-    assert_response_status_code(response, 201)
-
     # Given Study Visits is defined as a "Manually defined visit"
     # Create Manually defined Visit
     manually_defined_name = "Visit 5"
     manually_defined_short_name = "Manually defined visit short name"
-    manually_defined_number = 777
     manually_defined_unique_number = 7777
 
     inputs = {
@@ -470,7 +463,6 @@ def test_manually_defined_visit(api_client):
         "is_global_anchor_visit": False,
         "visit_name": manually_defined_name,
         "visit_short_name": manually_defined_short_name,
-        "visit_number": manually_defined_number,
         "unique_visit_number": manually_defined_unique_number,
     }
     datadict = visits_basic_data.copy()
@@ -485,17 +477,15 @@ def test_manually_defined_visit(api_client):
     assert_response_status_code(response, 400)
     assert (
         res["message"]
-        == "Values 777.0 in field visit number and 7777 in field unique visit number are not defined in chronological order by study visit timing"
+        == "Value 7777 in field unique visit number is not defined in chronological order by study visit timing"
     )
 
     # failed post on the uniqueness check
-    manually_defined_number = 11
     manually_defined_unique_number = 1100
     visit_timing = 110
     datadict.update(
         {
             "time_value": visit_timing,
-            "visit_number": manually_defined_number,
             "unique_visit_number": manually_defined_unique_number,
         }
     )
@@ -507,7 +497,7 @@ def test_manually_defined_visit(api_client):
     assert_response_status_code(response, 400)
     assert res["message"] == "Field visit name - Visit 5 is not unique for the Study"
 
-    # successful post on the uniqueness check for visit name, visit short name, visit number and unique visit number
+    # successful post on the uniqueness check for visit name, visit short name and unique visit number
     # When The visit is created or updated
     manually_defined_name = "Manually defined visit name"
     datadict.update({"visit_name": manually_defined_name})
@@ -516,8 +506,7 @@ def test_manually_defined_visit(api_client):
         json=datadict,
     )
 
-    # Then The visit number must be assigned manually by user input
-    # And The unique visit number must be assigned manually by user input
+    # Then The unique visit number must be assigned manually by user input
     # And The visit name must be assigned manually by user input
     # And The SDTM visit name as the upper case version of visit name
     assert_response_status_code(response, 201)
@@ -525,7 +514,6 @@ def test_manually_defined_visit(api_client):
     assert res["time_value"] == visit_timing
     assert res["visit_name"] == manually_defined_name
     assert res["visit_short_name"] == manually_defined_short_name
-    assert res["visit_number"] == manually_defined_number
     assert res["unique_visit_number"] == manually_defined_unique_number
     manual_visit_uid = res["uid"]
 
@@ -535,7 +523,6 @@ def test_manually_defined_visit(api_client):
         {
             "visit_name": "Manually defined visit name",
             "visit_short_name": "Manually defined visit short name",
-            "visit_number": "11",
             "unique_visit_number": "1100",
             "time_value": 105,
         }
@@ -547,7 +534,9 @@ def test_manually_defined_visit(api_client):
     # Then The system displays the message "Value \"test value\" in field "<study visit field>" is not unique for the study"
     res = response.json()
     assert_response_status_code(response, 400)
-    error_msg = "Fields visit number - 11.0 and unique visit number - 1100 and visit name - Manually defined visit name"
+    error_msg = (
+        "Fields unique visit number - 1100 and visit name - Manually defined visit name"
+    )
     error_msg += " and visit short name - Manually defined visit short name are not unique for the Study"
     assert res["message"] == error_msg
 
@@ -557,10 +546,10 @@ def test_manually_defined_visit(api_client):
     # And The <study visit field> is defined with a test value that already exist for the study
     datadict.update(
         {
+            "uid": manual_visit_uid,
             "time_value": 15,
             "visit_name": "Visit 2",
             "visit_short_name": "V2",
-            "visit_number": "2",
             "unique_visit_number": "200",
         }
     )
@@ -574,16 +563,16 @@ def test_manually_defined_visit(api_client):
     assert_response_status_code(response, 400)
     assert (
         res["message"]
-        == "Fields visit number - 2.0 and unique visit number - 200 and visit name - Visit 2 and visit short name - V2 are not unique for the Study"
+        == "Fields unique visit number - 200 and visit name - Visit 2 and visit short name - V2 are not unique for the Study"
     )
 
-    # successful edit on uniqueness check for visit name, visit short name, visit number and unique visit number
+    # successful edit on uniqueness check for visit name, visit short name and unique visit number
     datadict.update(
         {
+            "uid": manual_visit_uid,
             "time_value": 55,
             "visit_name": "Manually defined visit name",
             "visit_short_name": "Manually defined visit short name",
-            "visit_number": 6.5,
             "unique_visit_number": 650,
         }
     )
@@ -594,20 +583,27 @@ def test_manually_defined_visit(api_client):
     res = response.json()
     assert_response_status_code(response, 200)
 
-    # Support Decimal number as Manually defined visit_number
+    # Previewing the stored values of an existing visit conflicts with the visit itself,
+    # unless the visit being edited is passed to the preview
+    preview_url = f"/studies/{study_for_i_visit.uid}/study-visits/preview"
+    response = api_client.post(preview_url, json={**datadict, "uid": None})
+    assert_response_status_code(response, 400)
+    assert "are not unique for the Study" in response.json()["message"]
+    response = api_client.post(preview_url, json={**datadict, "uid": manual_visit_uid})
+    assert_response_status_code(response, 200)
+
+    # Support integer unique_visit_number as Manually defined visit
     # Given Study Visits is defined as a "Manually defined visit"
     # When The visit number is defined or updated
     # When The unique visit number is defined or updated
     decimal_manually_defined_name = "Decimal manually defined visit name"
     decimal_manually_defined_short_name = "Decimal manually defined visit short name"
-    decimal_manually_defined_number = 6.8
     decimal_manually_defined_unique_number = 680
     datadict.update(
         {
             "time_value": 57,
             "visit_name": decimal_manually_defined_name,
             "visit_short_name": decimal_manually_defined_short_name,
-            "visit_number": decimal_manually_defined_number,
             "unique_visit_number": decimal_manually_defined_unique_number,
         }
     )
@@ -617,14 +613,12 @@ def test_manually_defined_visit(api_client):
         json=datadict,
     )
 
-    # Then The visit number must support a decimal number "float" data type
     # Then the unique visit number must support an integer data type
     assert_response_status_code(response, 201)
     res = response.json()
     assert res["time_value"] == 57
     assert res["visit_name"] == decimal_manually_defined_name
     assert res["visit_short_name"] == decimal_manually_defined_short_name
-    assert res["visit_number"] == decimal_manually_defined_number
     assert res["unique_visit_number"] == decimal_manually_defined_unique_number
 
     response = api_client.get(f"/studies/{study_for_i_visit.uid}/study-visits")
@@ -635,14 +629,12 @@ def test_manually_defined_visit(api_client):
             study_visit["visit_class"],
             study_visits[idx - 1]["visit_class"],
         ]
-        # SpecialVisit doesn't contain timing
-        if VisitClass.SPECIAL_VISIT.name not in two_consecutive_visit_classes:
-            assert study_visit["time_value"] > study_visits[idx - 1]["time_value"]
-        if (
-            VisitClass.MANUALLY_DEFINED_VISIT.name not in two_consecutive_visit_classes
-            and VisitClass.SPECIAL_VISIT.name not in two_consecutive_visit_classes
-        ):
-            assert study_visit["visit_number"] > study_visits[idx - 1]["visit_number"]
+        assert study_visit["time_value"] > study_visits[idx - 1]["time_value"]
+        if VisitClass.MANUALLY_DEFINED_VISIT.name not in two_consecutive_visit_classes:
+            assert (
+                study_visit["unique_visit_number"]
+                > study_visits[idx - 1]["unique_visit_number"]
+            )
 
 
 def test_non_manually_defined_visit(api_client):
@@ -674,7 +666,6 @@ def test_non_manually_defined_visit(api_client):
     # Create Manually defined Visit
     manually_defined_name = "Visit 2"
     manually_defined_short_name = "V2"
-    manually_defined_number = 2
     manually_defined_unique_number = 200
     vis_input = {
         "study_epoch_uid": study_epoch.uid,
@@ -687,7 +678,6 @@ def test_non_manually_defined_visit(api_client):
         "is_global_anchor_visit": False,
         "visit_name": manually_defined_name,
         "visit_short_name": manually_defined_short_name,
-        "visit_number": manually_defined_number,
         "unique_visit_number": manually_defined_unique_number,
     }
     datadict = visits_basic_data.copy()
@@ -701,7 +691,6 @@ def test_non_manually_defined_visit(api_client):
     assert res["time_value"] == 25
     assert res["visit_name"] == manually_defined_name
     assert res["visit_short_name"] == manually_defined_short_name
-    assert res["visit_number"] == manually_defined_number
     assert res["unique_visit_number"] == manually_defined_unique_number
     manual_visit_uid = res["uid"]
 
@@ -740,11 +729,13 @@ def test_non_manually_defined_visit(api_client):
     # as a manually defined value exist. Change the manually defined value before this visit can be defined."
     assert_response_status_code(response, 400)
     res = response.json()
-    error_msg = "Fields visit number - 2 and unique visit number - 200 and visit name - Visit 2 are not unique"
+    error_msg = (
+        "Fields unique visit number - 200 and visit name - Visit 2 are not unique"
+    )
     error_msg += " for the Study as a manually defined value exists. Change the manually defined value before this visit can be defined."
     assert res["message"] == error_msg
 
-    # Create a non_manually defined study visit with existed visit number, unique visit number, visit name and visit short name
+    # Create a non_manually defined study visit with existed unique visit number, visit name and visit short name
     # When A study visit is created or updated
     # And The study visit is not defined as a "Manually defined visit"
     # And The <study visit field> is defined with a derived or preset test value that already exist for a manually defined study visit
@@ -770,7 +761,7 @@ def test_non_manually_defined_visit(api_client):
     # as a manually defined value exist. Change the manually defined value before this visit can be defined."
     assert_response_status_code(response, 400)
     res = response.json()
-    error_msg = "Fields visit number - 2 and unique visit number - 200 and visit name - Visit 2 and visit short name - V2 are not unique"
+    error_msg = "Fields unique visit number - 200 and visit name - Visit 2 and visit short name - V2 are not unique"
     error_msg += " for the Study as a manually defined value exists. Change the manually defined value before this visit can be defined."
     assert res["message"] == error_msg
 
@@ -778,14 +769,12 @@ def test_non_manually_defined_visit(api_client):
     # Update manually defined study visit
     manually_defined_name = "Manually defined visit name test"
     manually_defined_short_name = "Manually defined visit short name test"
-    manually_defined_number = 88
     manually_defined_unique_number = 888
     datadict.update(
         {
             "time_value": 58,
             "visit_name": manually_defined_name,
             "visit_short_name": manually_defined_short_name,
-            "visit_number": manually_defined_number,
             "unique_visit_number": manually_defined_unique_number,
             "visit_class": "MANUALLY_DEFINED_VISIT",
             "uid": manual_visit_uid,
@@ -851,77 +840,15 @@ def test_manually_defined_visit_in_chronological_order_by_visit_timing(api_clien
         res = response.json()
         assert res["time_value"] == visit_timing
         assert res["time_value"] == time
-        assert res["visit_number"] == number
         assert res["unique_visit_number"] == unique_number
         time = time + 20
         number = number + 1
         unique_number = unique_number + 100
 
     assert visit_timing == 80
-    assert res["visit_number"] == 5
     assert res["unique_visit_number"] == 500
 
-    # When A study visit is created and defined as a "Manually defined visit"
-    # And The test visit number is not defined in chronological order by study visit timing
-    input1 = {
-        "study_epoch_uid": study_epoch.uid,
-        "visit_type": {"term_uid": "VisitType_0002"},
-        "time_reference": {"term_uid": "VisitSubType_0005"},
-        "time_value": 30,
-        "time_unit_uid": DAYUID,
-        "visit_class": "MANUALLY_DEFINED_VISIT",
-        "visit_subclass": "SINGLE_VISIT",
-        "is_global_anchor_visit": False,
-        "visit_name": "Manually defined visit name6",
-        "visit_short_name": "Manually defined visit short name6",
-        "visit_number": 11,
-        "unique_visit_number": 250,
-    }
-    datadict = visits_basic_data.copy()
-    datadict.update(input1)
-    response = api_client.post(
-        f"/studies/{study_for_i_visit.uid}/study-visits",
-        json=datadict,
-    )
-    # Then The system displays the message "Value \"test visit number\" in field visit number
-    #  is not defined in chronological order by study visit timing"
-    res = response.json()
-    assert_response_status_code(response, 400)
-    assert (
-        res["message"]
-        == "Value 11.0 in field visit number is not defined in chronological order by study visit timing"
-    )
-
-    input2 = {
-        "study_epoch_uid": study_epoch.uid,
-        "visit_type": {"term_uid": "VisitType_0002"},
-        "time_reference": {"term_uid": "VisitSubType_0005"},
-        "time_value": 30,
-        "time_unit_uid": DAYUID,
-        "visit_class": "MANUALLY_DEFINED_VISIT",
-        "visit_subclass": "SINGLE_VISIT",
-        "is_global_anchor_visit": False,
-        "visit_name": "Manually defined visit name6",
-        "visit_short_name": "Manually defined visit short name6",
-        "visit_number": 1.5,
-        "unique_visit_number": 250,
-    }
-    datadict = visits_basic_data.copy()
-    datadict.update(input2)
-    response = api_client.post(
-        f"/studies/{study_for_i_visit.uid}/study-visits",
-        json=datadict,
-    )
-    # Then The system displays the message "Value \"test visit number\" in field visit number
-    #  is not defined in chronological order by study visit timing"
-    res = response.json()
-    assert_response_status_code(response, 400)
-    assert (
-        res["message"]
-        == "Value 1.5 in field visit number is not defined in chronological order by study visit timing"
-    )
-
-    # Successfully post a manually defined visit with correct visit number and unique visit number in chronological order by visit timing
+    # Successfully post a manually defined visit with correct unique visit number in chronological order by visit timing
     input3 = {
         "study_epoch_uid": study_epoch.uid,
         "visit_type": {"term_uid": "VisitType_0002"},
@@ -933,7 +860,6 @@ def test_manually_defined_visit_in_chronological_order_by_visit_timing(api_clien
         "is_global_anchor_visit": False,
         "visit_name": "Manually defined visit name6",
         "visit_short_name": "Manually defined visit short name6",
-        "visit_number": 2.5,
         "unique_visit_number": 250,
     }
     datadict = visits_basic_data.copy()
@@ -958,7 +884,6 @@ def test_manually_defined_visit_in_chronological_order_by_visit_timing(api_clien
         "is_global_anchor_visit": False,
         "visit_name": "Manually defined visit name6",
         "visit_short_name": "Manually defined visit short name6",
-        "visit_number": 2.5,
         "unique_visit_number": 600,
     }
     datadict = visits_basic_data.copy()
@@ -987,7 +912,6 @@ def test_manually_defined_visit_in_chronological_order_by_visit_timing(api_clien
         "is_global_anchor_visit": False,
         "visit_name": "Manually defined visit name6",
         "visit_short_name": "Manually defined visit short name6",
-        "visit_number": 2.5,
         "unique_visit_number": 150,
     }
     datadict = visits_basic_data.copy()
@@ -1102,6 +1026,448 @@ def test_study_visit_timings(api_client):
     assert visits[4]["week_in_study_label"] == "Week 2"
 
 
+def test_visit_suffix(api_client):
+    _study = TestUtils.create_study(project_number=project.project_number)
+    _epoch = create_study_epoch("EpochSubType_0001", study_uid=_study.uid)
+
+    base_input = {
+        "study_epoch_uid": _epoch.uid,
+        "visit_type": {"term_uid": "VisitType_0001"},
+        "time_reference": {"term_uid": "VisitSubType_0005"},
+        "time_unit_uid": DAYUID,
+        "visit_class": "SINGLE_VISIT",
+        "visit_subclass": "SINGLE_VISIT",
+        "is_global_anchor_visit": True,
+        "show_visit": True,
+        "visit_contact_mode": {"term_uid": "VisitContactMode_0001"},
+    }
+
+    # 1. Create first visit with suffix "-PK"
+    datadict = visits_basic_data.copy()
+    datadict.update({**base_input, "time_value": 0, "visit_suffix": "-PK"})
+    response = api_client.post(f"/studies/{_study.uid}/study-visits", json=datadict)
+    assert_response_status_code(response, 201)
+    res = response.json()
+    visit1_uid = res["uid"]
+    assert res["visit_suffix"] == "-PK"
+    assert res["visit_name"] == "Visit 1-PK"
+    assert res["visit_short_name"] == "V1-PK"
+
+    # 2. Create second visit without suffix — names should be plain
+    datadict2 = visits_basic_data.copy()
+    datadict2.update({**base_input, "time_value": 10, "is_global_anchor_visit": False})
+    response = api_client.post(f"/studies/{_study.uid}/study-visits", json=datadict2)
+    assert_response_status_code(response, 201)
+    res2 = response.json()
+    assert res2["visit_suffix"] is None
+    assert res2["visit_name"] == "Visit 2"
+    assert res2["visit_short_name"] == "V2"
+
+    # 3. PATCH the first visit to change suffix to "-FU"
+    patch_input = {
+        **base_input,
+        "time_value": 0,
+        "visit_suffix": "-FU",
+        "uid": visit1_uid,
+    }
+    response = api_client.patch(
+        f"/studies/{_study.uid}/study-visits/{visit1_uid}", json=patch_input
+    )
+    assert_response_status_code(response, 200)
+    res = response.json()
+    assert res["visit_suffix"] == "-FU"
+    assert res["visit_name"] == "Visit 1-FU"
+    assert res["visit_short_name"] == "V1-FU"
+
+    # 4. PATCH to clear suffix (set to null)
+    patch_input2 = {
+        **base_input,
+        "time_value": 0,
+        "visit_suffix": None,
+        "uid": visit1_uid,
+    }
+    response = api_client.patch(
+        f"/studies/{_study.uid}/study-visits/{visit1_uid}", json=patch_input2
+    )
+    assert_response_status_code(response, 200)
+    res = response.json()
+    assert res["visit_suffix"] is None
+    assert res["visit_name"] == "Visit 1"
+    assert res["visit_short_name"] == "V1"
+
+    # 5. Invalid suffix — special characters
+    datadict3 = visits_basic_data.copy()
+    datadict3.update(
+        {
+            **base_input,
+            "time_value": 20,
+            "is_global_anchor_visit": False,
+            "visit_suffix": "!!!",
+        }
+    )
+    response = api_client.post(f"/studies/{_study.uid}/study-visits", json=datadict3)
+    assert response.status_code in (400, 422)
+
+    # 6. Invalid suffix — too long (21 chars)
+    datadict4 = visits_basic_data.copy()
+    datadict4.update(
+        {
+            **base_input,
+            "time_value": 20,
+            "is_global_anchor_visit": False,
+            "visit_suffix": "A" * 21,
+        }
+    )
+    response = api_client.post(f"/studies/{_study.uid}/study-visits", json=datadict4)
+    assert response.status_code in (400, 422)
+
+    # 7. Suffix collision — MANUALLY_DEFINED_VISIT using same short name as a suffixed SINGLE_VISIT
+    # Study already has visit 1 with no suffix ("V1") after the clear in step 4.
+    # Re-apply a suffix to V1 so it becomes "V1-COLL".
+    patch_coll = {
+        **base_input,
+        "time_value": 0,
+        "visit_suffix": "-COLL",
+        "uid": visit1_uid,
+    }
+    response = api_client.patch(
+        f"/studies/{_study.uid}/study-visits/{visit1_uid}", json=patch_coll
+    )
+    assert_response_status_code(response, 200)
+    assert response.json()["visit_short_name"] == "V1-COLL"
+
+    # Now attempt to create a MANUALLY_DEFINED_VISIT whose visit_short_name is "V1-COLL".
+    manual_collision = visits_basic_data.copy()
+    manual_collision.update(
+        {
+            "study_epoch_uid": _epoch.uid,
+            "visit_type": {"term_uid": "VisitType_0002"},
+            "time_reference": {"term_uid": "VisitSubType_0005"},
+            "time_value": 40,
+            "time_unit_uid": DAYUID,
+            "visit_class": "MANUALLY_DEFINED_VISIT",
+            "visit_subclass": "SINGLE_VISIT",
+            "is_global_anchor_visit": False,
+            "show_visit": True,
+            "visit_name": "V1-COLL",
+            "visit_short_name": "V1-COLL",
+            "unique_visit_number": 9999,
+        }
+    )
+    response = api_client.post(
+        f"/studies/{_study.uid}/study-visits", json=manual_collision
+    )
+    assert_response_status_code(response, 400)
+    assert "visit short name" in response.json()["message"]
+
+    # 9. Two different visits can share the same suffix string without collision
+    # because they have different visit_numbers (V11 vs V21 when suffix="1").
+    patch_v1_clear = {
+        **base_input,
+        "time_value": 0,
+        "visit_suffix": None,
+        "uid": visit1_uid,
+    }
+    response = api_client.patch(
+        f"/studies/{_study.uid}/study-visits/{visit1_uid}", json=patch_v1_clear
+    )
+    assert_response_status_code(response, 200)
+
+    patch_v2_suffix = {
+        "study_epoch_uid": _epoch.uid,
+        "visit_type": {"term_uid": "VisitType_0001"},
+        "time_reference": {"term_uid": "VisitSubType_0005"},
+        "time_unit_uid": DAYUID,
+        "visit_class": "SINGLE_VISIT",
+        "visit_subclass": "SINGLE_VISIT",
+        "is_global_anchor_visit": False,
+        "show_visit": True,
+        "visit_contact_mode": {"term_uid": "VisitContactMode_0001"},
+        "time_value": 10,
+        "visit_suffix": "1",
+        "uid": res2["uid"],
+    }
+    response = api_client.patch(
+        f"/studies/{_study.uid}/study-visits/{res2['uid']}", json=patch_v2_suffix
+    )
+    assert_response_status_code(response, 200)
+    assert response.json()["visit_name"] == "Visit 21"
+    assert response.json()["visit_short_name"] == "V21"
+
+    # Visit 1 suffix "1" → "Visit 11" / "V11" — distinct from "Visit 21"
+    patch_v1_suffix1 = {
+        **base_input,
+        "time_value": 0,
+        "visit_suffix": "1",
+        "uid": visit1_uid,
+    }
+    response = api_client.patch(
+        f"/studies/{_study.uid}/study-visits/{visit1_uid}", json=patch_v1_suffix1
+    )
+    assert_response_status_code(response, 200)
+    assert response.json()["visit_name"] == "Visit 11"
+    assert response.json()["visit_short_name"] == "V11"
+
+    # 10. Suffix collision between two SINGLE_VISITs with digit suffix:
+    # visit 2 currently has suffix "1" → "Visit 21". If we patch visit 1 suffix to
+    # "21" → "Visit 121" / "V121" — distinct from "Visit 21", so it succeeds.
+    # The actual numeric collision: visit 1 no suffix = "Visit 1",
+    # but visit 2 suffix "1" = "Visit 21" — confirm GET returns both without conflict.
+    response = api_client.get(f"/studies/{_study.uid}/study-visits")
+    assert_response_status_code(response, 200)
+    visits_list = response.json()["items"]
+    suffixed = [v for v in visits_list if v["visit_suffix"] == "1"]
+    assert len(suffixed) == 2
+    short_names = {v["visit_short_name"] for v in suffixed}
+    assert "V11" in short_names
+    assert "V21" in short_names
+
+
+def test_visit_suffix_with_subgroups(api_client):
+    """
+    Visits in a group of subvisits get a default suffix (D1 for the anchor, D<relative day> for subvisits)
+    that is stored as their visit_suffix and can be changed, e.g. to name them V1A and V1B.
+    """
+    _study = TestUtils.create_study(project_number=project.project_number)
+    _epoch = create_study_epoch("EpochSubType_0001", study_uid=_study.uid)
+
+    anchor_input = {
+        **visits_basic_data,
+        "study_epoch_uid": _epoch.uid,
+        "visit_type": {"term_uid": "VisitType_0001"},
+        "time_reference": {"term_uid": "VisitSubType_0005"},
+        "time_value": 0,
+        "time_unit_uid": DAYUID,
+        "visit_class": "SINGLE_VISIT",
+        "visit_subclass": "ANCHOR_VISIT_IN_GROUP_OF_SUBV",
+        "visit_sublabel_reference": None,
+        "is_global_anchor_visit": True,
+        "show_visit": True,
+        "visit_contact_mode": {"term_uid": "VisitContactMode_0001"},
+        "visit_suffix": None,
+    }
+    # Preview fills in the default suffix of the anchor visit
+    response = api_client.post(
+        f"/studies/{_study.uid}/study-visits/preview", json=anchor_input
+    )
+    assert_response_status_code(response, 200)
+    assert response.json()["visit_suffix"] == "D1"
+    assert response.json()["visit_short_name"] == "V1D1"
+
+    response = api_client.post(f"/studies/{_study.uid}/study-visits", json=anchor_input)
+    assert_response_status_code(response, 201)
+    anchor = response.json()
+    anchor_uid = anchor["uid"]
+    assert anchor["visit_suffix"] == "D1"
+    assert anchor["visit_short_name"] == "V1D1"
+    # The suffix of visits in a group only goes into the short name
+    assert anchor["visit_name"] == "Visit 1"
+
+    subvisit_input = {
+        **visits_basic_data,
+        "study_epoch_uid": _epoch.uid,
+        "visit_type": {"term_uid": "VisitType_0003"},
+        "time_reference": {"term_uid": "VisitSubType_0001"},
+        "time_value": -10,
+        "time_unit_uid": DAYUID,
+        "visit_class": "SINGLE_VISIT",
+        "visit_subclass": "ADDITIONAL_SUBVISIT_IN_A_GROUP_OF_SUBV",
+        "visit_sublabel_reference": anchor_uid,
+        "is_global_anchor_visit": False,
+        "show_visit": True,
+        "visit_contact_mode": {"term_uid": "VisitContactMode_0001"},
+        "visit_suffix": "",
+    }
+    # Preview fills in the default suffix of the subvisit, derived from its timing
+    response = api_client.post(
+        f"/studies/{_study.uid}/study-visits/preview", json=subvisit_input
+    )
+    assert_response_status_code(response, 200)
+    assert response.json()["visit_suffix"] == "D-10"
+
+    response = api_client.post(
+        f"/studies/{_study.uid}/study-visits", json=subvisit_input
+    )
+    assert_response_status_code(response, 201)
+    subvisit = response.json()
+    subvisit_uid = subvisit["uid"]
+    assert subvisit["visit_suffix"] == "D-10"
+    assert subvisit["visit_short_name"] == "V1D-10"
+    assert subvisit["visit_name"] == "Visit 1"
+
+    # An untouched default suffix follows the timing of the subvisit
+    subvisit_input = {
+        **subvisit_input,
+        "time_value": -5,
+        "visit_suffix": "D-10",
+        "uid": subvisit_uid,
+    }
+    response = api_client.patch(
+        f"/studies/{_study.uid}/study-visits/{subvisit_uid}", json=subvisit_input
+    )
+    assert_response_status_code(response, 200)
+    assert response.json()["visit_suffix"] == "D-5"
+    assert response.json()["visit_short_name"] == "V1D-5"
+
+    # The default suffixes can be replaced, e.g. to name the visits V1A and V1B
+    anchor_input = {**anchor_input, "visit_suffix": "B", "uid": anchor_uid}
+    response = api_client.patch(
+        f"/studies/{_study.uid}/study-visits/{anchor_uid}", json=anchor_input
+    )
+    assert_response_status_code(response, 200)
+    assert response.json()["visit_suffix"] == "B"
+    assert response.json()["visit_short_name"] == "V1B"
+    assert response.json()["visit_name"] == "Visit 1"
+
+    subvisit_input = {**subvisit_input, "visit_suffix": "A"}
+    response = api_client.patch(
+        f"/studies/{_study.uid}/study-visits/{subvisit_uid}", json=subvisit_input
+    )
+    assert_response_status_code(response, 200)
+    assert response.json()["visit_suffix"] == "A"
+    assert response.json()["visit_short_name"] == "V1A"
+
+    # A customized suffix is kept when the timing changes
+    subvisit_input = {**subvisit_input, "time_value": -3}
+    response = api_client.patch(
+        f"/studies/{_study.uid}/study-visits/{subvisit_uid}", json=subvisit_input
+    )
+    assert_response_status_code(response, 200)
+    assert response.json()["visit_suffix"] == "A"
+    assert response.json()["visit_short_name"] == "V1A"
+
+    # Clearing the suffix brings the default back
+    anchor_input = {**anchor_input, "visit_suffix": None}
+    response = api_client.patch(
+        f"/studies/{_study.uid}/study-visits/{anchor_uid}", json=anchor_input
+    )
+    assert_response_status_code(response, 200)
+    assert response.json()["visit_suffix"] == "D1"
+    assert response.json()["visit_short_name"] == "V1D1"
+
+
+def test_subvisit_with_same_timing_in_visit_group(api_client):
+    """Two visits of a group taking place at the same time get the same default short name,
+    the error message points to the timing, not to a manually defined value."""
+    _study = TestUtils.create_study(project_number=project.project_number)
+    _epoch = create_study_epoch("EpochSubType_0001", study_uid=_study.uid)
+
+    anchor_input = {
+        **visits_basic_data,
+        "study_epoch_uid": _epoch.uid,
+        "visit_type": {"term_uid": "VisitType_0001"},
+        "time_reference": {"term_uid": "VisitSubType_0005"},
+        "time_value": 0,
+        "time_unit_uid": DAYUID,
+        "visit_class": "SINGLE_VISIT",
+        "visit_subclass": "ANCHOR_VISIT_IN_GROUP_OF_SUBV",
+        "visit_sublabel_reference": None,
+        "is_global_anchor_visit": True,
+        "visit_suffix": None,
+    }
+    response = api_client.post(f"/studies/{_study.uid}/study-visits", json=anchor_input)
+    assert_response_status_code(response, 201)
+    anchor_uid = response.json()["uid"]
+    subvisit_input = {
+        **anchor_input,
+        "visit_type": {"term_uid": "VisitType_0003"},
+        "time_reference": {"term_uid": "VisitSubType_0001"},
+        "time_value": 1,
+        "visit_subclass": "ADDITIONAL_SUBVISIT_IN_A_GROUP_OF_SUBV",
+        "visit_sublabel_reference": anchor_uid,
+        "is_global_anchor_visit": False,
+    }
+    response = api_client.post(
+        f"/studies/{_study.uid}/study-visits", json=subvisit_input
+    )
+    assert_response_status_code(response, 201)
+    assert response.json()["visit_short_name"] == "V1D2"
+
+    response = api_client.post(
+        f"/studies/{_study.uid}/study-visits", json=subvisit_input
+    )
+    assert_response_status_code(response, 400)
+    assert response.json()["message"] == (
+        "The visit V1D2 of visit group 'Visit 1' already takes place at the same time. "
+        "Change the timing of the visit or give it a different visit suffix."
+    )
+
+    # A different suffix tells the two visits apart
+    response = api_client.post(
+        f"/studies/{_study.uid}/study-visits",
+        json={**subvisit_input, "visit_suffix": "D2B"},
+    )
+    assert_response_status_code(response, 201)
+    assert response.json()["visit_short_name"] == "V1D2B"
+
+
+def test_group_visits_without_stored_suffix_use_default_suffix(api_client):
+    """Visits in a group of subvisits created before their D<day> part became the visit_suffix have no
+    visit_suffix stored, they keep using the default one."""
+    _study = TestUtils.create_study(project_number=project.project_number)
+    _epoch = create_study_epoch("EpochSubType_0001", study_uid=_study.uid)
+
+    anchor_input = {
+        **visits_basic_data,
+        "study_epoch_uid": _epoch.uid,
+        "visit_type": {"term_uid": "VisitType_0001"},
+        "time_reference": {"term_uid": "VisitSubType_0005"},
+        "time_value": 0,
+        "time_unit_uid": DAYUID,
+        "visit_class": "SINGLE_VISIT",
+        "visit_subclass": "ANCHOR_VISIT_IN_GROUP_OF_SUBV",
+        "visit_sublabel_reference": None,
+        "is_global_anchor_visit": True,
+        "visit_suffix": None,
+    }
+    response = api_client.post(f"/studies/{_study.uid}/study-visits", json=anchor_input)
+    assert_response_status_code(response, 201)
+    anchor_uid = response.json()["uid"]
+    subvisit_input = {
+        **anchor_input,
+        "visit_type": {"term_uid": "VisitType_0003"},
+        "time_reference": {"term_uid": "VisitSubType_0001"},
+        "time_value": 4,
+        "visit_subclass": "ADDITIONAL_SUBVISIT_IN_A_GROUP_OF_SUBV",
+        "visit_sublabel_reference": anchor_uid,
+        "is_global_anchor_visit": False,
+    }
+    response = api_client.post(
+        f"/studies/{_study.uid}/study-visits", json=subvisit_input
+    )
+    assert_response_status_code(response, 201)
+    subvisit_uid = response.json()["uid"]
+
+    # Mimic visits stored before the suffix was assigned
+    db.cypher_query(
+        "MATCH (sv:StudyVisit) WHERE sv.uid IN $uids REMOVE sv.visit_suffix",
+        {"uids": [anchor_uid, subvisit_uid]},
+    )
+
+    response = api_client.get(f"/studies/{_study.uid}/study-visits/{anchor_uid}")
+    assert_response_status_code(response, 200)
+    assert response.json()["visit_short_name"] == "V1D1"
+    assert response.json()["visit_suffix"] == "D1"
+    response = api_client.get(f"/studies/{_study.uid}/study-visits/{subvisit_uid}")
+    assert_response_status_code(response, 200)
+    assert response.json()["visit_short_name"] == "V1D5"
+    assert response.json()["visit_suffix"] == "D5"
+
+    # The default suffix still follows the timing of the subvisit
+    response = api_client.patch(
+        f"/studies/{_study.uid}/study-visits/{subvisit_uid}",
+        json={
+            **subvisit_input,
+            "time_value": 6,
+            "visit_suffix": "D5",
+            "uid": subvisit_uid,
+        },
+    )
+    assert_response_status_code(response, 200)
+    assert response.json()["visit_suffix"] == "D7"
+    assert response.json()["visit_short_name"] == "V1D7"
+
+
 def test_create_repeating_visit(api_client):
     _term = TestUtils.create_ct_term(
         codelist_uid="CTCodelist_Repeating_Visit_Frequency"
@@ -1120,8 +1486,11 @@ def test_create_repeating_visit(api_client):
         "visit_subclass": "REPEATING_VISIT",
         "is_global_anchor_visit": True,
         "repeating_frequency_uid": _term.term_uid,
+        # a visit_suffix goes before the .n of the repeating visit's derived
+        # names, e.g. V1-PK.n
+        "visit_suffix": "-PK",
     }
-    datadict = visits_basic_data
+    datadict = visits_basic_data.copy()
     datadict.update(inputs)
     response = api_client.post(
         f"/studies/{_study.uid}/study-visits",
@@ -1134,9 +1503,10 @@ def test_create_repeating_visit(api_client):
         res["repeating_frequency"]["sponsor_preferred_name"]
         == _term.sponsor_preferred_name
     )
-    assert res["visit_name"] == "Visit 1.n"
-    assert res["visit_subname"] == "Visit 1.n"
-    assert res["visit_short_name"] == "V1.n"
+    assert res["visit_suffix"] == "-PK"
+    assert res["visit_name"] == "Visit 1-PK.n"
+    assert res["visit_subname"] == "Visit 1-PK.n"
+    assert res["visit_short_name"] == "V1-PK.n"
     assert res["visit_subclass"] == "REPEATING_VISIT"
 
     response = api_client.get(f"/studies/{_study.uid}/study-visits/{res['uid']}")
@@ -1147,9 +1517,10 @@ def test_create_repeating_visit(api_client):
         res["repeating_frequency"]["sponsor_preferred_name"]
         == _term.sponsor_preferred_name
     )
-    assert res["visit_name"] == "Visit 1.n"
-    assert res["visit_subname"] == "Visit 1.n"
-    assert res["visit_short_name"] == "V1.n"
+    assert res["visit_suffix"] == "-PK"
+    assert res["visit_name"] == "Visit 1-PK.n"
+    assert res["visit_subname"] == "Visit 1-PK.n"
+    assert res["visit_short_name"] == "V1-PK.n"
     assert res["visit_subclass"] == "REPEATING_VISIT"
 
     # When A new repeating visit is created
@@ -1179,7 +1550,6 @@ def test_create_repeating_visit(api_client):
         == _term.sponsor_preferred_name
     )
     assert res["visit_name"] == "Visit 1.n"
-    assert res["visit_number"] == 1.0
     assert res["visit_short_name"] == "V1.n"
     assert res["visit_subclass"] == "REPEATING_VISIT"
 
@@ -1194,9 +1564,120 @@ def test_create_repeating_visit(api_client):
         == _term.sponsor_preferred_name
     )
     assert res["visit_name"] == "Visit 1.n"
-    assert res["visit_number"] == 1.0
     assert res["visit_short_name"] == "V1.n"
     assert res["visit_subclass"] == "REPEATING_VISIT"
+
+    # expected_time_value without time_value — should succeed for REPEATING_VISIT
+    # The study already has two REPEATING visits: time=-2 (pos 1) and time=0 (pos 2).
+    # expected_time_value=5 days places the new visit at position 3 → "Visit 3.n".
+    inputs_expected = {
+        "study_epoch_uid": _study_epoch.uid,
+        "visit_type": {"term_uid": "VisitType_0001"},
+        "show_visit": True,
+        "time_reference": {"term_uid": "VisitSubType_0005"},
+        "time_value": None,
+        "time_unit_uid": DAYUID,
+        "visit_class": "SINGLE_VISIT",
+        "visit_subclass": "REPEATING_VISIT",
+        "is_global_anchor_visit": False,
+        "repeating_frequency_uid": _term.term_uid,
+        "expected_time_value": 5,
+    }
+    datadict = visits_basic_data.copy()
+    datadict.update(inputs_expected)
+    response = api_client.post(f"/studies/{_study.uid}/study-visits", json=datadict)
+    assert_response_status_code(response, 201)
+    res = response.json()
+    expected_visit_uid = res["uid"]
+    assert res["expected_time_value"] == 5
+    assert res["visit_subclass"] == "REPEATING_VISIT"
+    assert res["time_value"] is None
+    # expected_time_value drives chronological ordering just like time_value
+    assert res["visit_name"] == "Visit 3.n"
+    assert res["visit_short_name"] == "V3.n"
+
+    # GET (i.e. read back from the DB, not the just-created in-memory object)
+    # must also report time_value=None, not the 0 placeholder stored for the
+    # non-nullable NumericValue node.
+    response = api_client.get(
+        f"/studies/{_study.uid}/study-visits/{expected_visit_uid}"
+    )
+    assert_response_status_code(response, 200)
+    assert response.json()["time_value"] is None
+    assert response.json()["expected_time_value"] == 5
+
+    # A subsequent visit with time_value=10 should land at position 4, after expected=5
+    inputs_after = {
+        "study_epoch_uid": _study_epoch.uid,
+        "visit_type": {"term_uid": "VisitType_0001"},
+        "show_visit": True,
+        "time_reference": {"term_uid": "VisitSubType_0005"},
+        "time_value": 10,
+        "time_unit_uid": DAYUID,
+        "visit_class": "SINGLE_VISIT",
+        "visit_subclass": "SINGLE_VISIT",
+        "is_global_anchor_visit": False,
+    }
+    datadict = visits_basic_data.copy()
+    datadict.update(inputs_after)
+    response = api_client.post(f"/studies/{_study.uid}/study-visits", json=datadict)
+    assert_response_status_code(response, 201)
+    after_visit_uid = response.json()["uid"]
+
+    # GET all visits and confirm expected_time_value=5 visit precedes time_value=10 visit
+    response = api_client.get(f"/studies/{_study.uid}/study-visits")
+    assert_response_status_code(response, 200)
+    all_visits = response.json()["items"]
+    order_by_uid = {v["uid"]: v["unique_visit_number"] for v in all_visits}
+    assert order_by_uid[expected_visit_uid] < order_by_uid[after_visit_uid]
+
+    # Both time_value and expected_time_value set — should fail
+    inputs_both = {**inputs_expected, "time_value": 10}
+    datadict = visits_basic_data.copy()
+    datadict.update(inputs_both)
+    response = api_client.post(f"/studies/{_study.uid}/study-visits", json=datadict)
+    assert response.status_code == 400
+    assert "only one" in response.json()["message"].lower()
+
+    # Neither time_value nor expected_time_value set — should fail
+    inputs_neither = {
+        **inputs_expected,
+        "time_value": None,
+        "expected_time_value": None,
+    }
+    datadict = visits_basic_data.copy()
+    datadict.update(inputs_neither)
+    response = api_client.post(f"/studies/{_study.uid}/study-visits", json=datadict)
+    assert response.status_code == 400
+    assert "either" in response.json()["message"].lower()
+
+    # Change expected_time_value to -3 so the visit becomes the first in the schedule.
+    # Before: [time=-2 (pos1), time=0 (pos2), expected=5 (pos3), time=10 (pos4)]
+    # After:  [expected=-3 (pos1), time=-2 (pos2), time=0 (pos3), time=10 (pos4)]
+    patch_to_first = {
+        **inputs_expected,
+        "uid": expected_visit_uid,
+        "expected_time_value": -3,
+    }
+    datadict = visits_basic_data.copy()
+    datadict.update(patch_to_first)
+    response = api_client.patch(
+        f"/studies/{_study.uid}/study-visits/{expected_visit_uid}", json=datadict
+    )
+    assert_response_status_code(response, 200)
+    res = response.json()
+    assert res["expected_time_value"] == -3
+    assert res["visit_name"] == "Visit 1.n"
+    assert res["visit_short_name"] == "V1.n"
+
+    # Verify the whole schedule has reordered
+    response = api_client.get(f"/studies/{_study.uid}/study-visits")
+    assert_response_status_code(response, 200)
+    all_visits = response.json()["items"]
+    order_by_uid = {v["uid"]: v["unique_visit_number"] for v in all_visits}
+    assert order_by_uid[expected_visit_uid] < order_by_uid[after_visit_uid]
+    # expected visit is now the absolute first — no other visit precedes it
+    assert order_by_uid[expected_visit_uid] == min(order_by_uid.values())
 
 
 def test_create_visit_0(api_client):
@@ -1276,7 +1757,6 @@ def test_create_visit_0(api_client):
     res = response.json()
     assert_response_status_code(response, 200)
     assert res["visit_name"] == "Visit 1"
-    assert res["visit_number"] == 1.0
     assert res["visit_short_name"] == "V1"
 
 
@@ -1308,7 +1788,6 @@ def test_visit_0_created_chronologically(api_client):
     res = response.json()
     assert_response_status_code(response, 201)
     assert res["visit_name"] == "Visit 1"
-    assert res["visit_number"] == 1.0
     assert res["visit_short_name"] == "V1"
 
     input2 = {
@@ -1331,7 +1810,6 @@ def test_visit_0_created_chronologically(api_client):
     res = response.json()
     assert_response_status_code(response, 201)
     assert res["visit_name"] == "Visit 2"
-    assert res["visit_number"] == 2.0
     assert res["visit_short_name"] == "V2"
 
     study_visit2_uid = res["uid"]
@@ -1360,7 +1838,6 @@ def test_visit_0_created_chronologically(api_client):
 
     # The name and number of the newly created information visit should follow the regular naming and numbering rules
     assert res["visit_name"] == "Visit 2"
-    assert res["visit_number"] == 2.0
     assert res["visit_short_name"] == "V2"
 
     study_visit0_uid = res["uid"]
@@ -1370,7 +1847,6 @@ def test_visit_0_created_chronologically(api_client):
     res = response.json()
     assert_response_status_code(response, 200)
     assert res["visit_name"] == "Visit 3"
-    assert res["visit_number"] == 3.0
     assert res["visit_short_name"] == "V3"
 
     # Scenario: User must be able to delete the study information visit without visit 0
@@ -1385,7 +1861,6 @@ def test_visit_0_created_chronologically(api_client):
     res = response.json()
     assert_response_status_code(response, 200)
     assert res["visit_name"] == "Visit 2"
-    assert res["visit_number"] == 2.0
     assert res["visit_short_name"] == "V2"
 
     # Scenario: User must be able to create an information visit with visit 0 if the time value is the lowest
@@ -1411,7 +1886,6 @@ def test_visit_0_created_chronologically(api_client):
     assert_response_status_code(response, 201)
     # Verify that newly created information visit should be Visit 0
     assert res["visit_name"] == "Visit 0"
-    assert res["visit_number"] == 0.0
     assert res["visit_short_name"] == "V0"
 
     study_visit0_uid = res["uid"]
@@ -1421,7 +1895,6 @@ def test_visit_0_created_chronologically(api_client):
     res = response.json()
     assert_response_status_code(response, 200)
     assert res["visit_name"] == "Visit 2"
-    assert res["visit_number"] == 2.0
     assert res["visit_short_name"] == "V2"
 
     # Scenario: User must be able to indirectly edit the existing information visit 0 when a new visit is added with a lower time value
@@ -1446,7 +1919,6 @@ def test_visit_0_created_chronologically(api_client):
     res = response.json()
     assert_response_status_code(response, 201)
     assert res["visit_name"] == "Visit 1"
-    assert res["visit_number"] == 1.0
     assert res["visit_short_name"] == "V1"
 
     # The existing visit 0 was re-named and re-numbered
@@ -1454,7 +1926,6 @@ def test_visit_0_created_chronologically(api_client):
     res = response.json()
     assert_response_status_code(response, 200)
     assert res["visit_name"] == "Visit 2"
-    assert res["visit_number"] == 2.0
     assert res["visit_short_name"] == "V2"
 
     # The previous Visit 3 should be changed as well
@@ -1462,7 +1933,6 @@ def test_visit_0_created_chronologically(api_client):
     res = response.json()
     assert_response_status_code(response, 200)
     assert res["visit_name"] == "Visit 4"
-    assert res["visit_number"] == 4.0
     assert res["visit_short_name"] == "V4"
 
 
@@ -1494,7 +1964,6 @@ def test_visit_0_edited_chronologically(api_client):
     res = response.json()
     assert_response_status_code(response, 201)
     assert res["visit_name"] == "Visit 1"
-    assert res["visit_number"] == 1.0
     assert res["visit_short_name"] == "V1"
     study_visit1_uid = res["uid"]
 
@@ -1522,7 +1991,6 @@ def test_visit_0_edited_chronologically(api_client):
     assert_response_status_code(response, 201)
     # Verify that newly created information visit should be Visit 0
     assert res["visit_name"] == "Visit 0"
-    assert res["visit_number"] == 0.0
     assert res["visit_short_name"] == "V0"
     study_visit0_uid = res["uid"]
 
@@ -1551,7 +2019,6 @@ def test_visit_0_edited_chronologically(api_client):
     res = response.json()
     assert_response_status_code(response, 200)
     assert res["visit_name"] == "Visit 0"
-    assert res["visit_number"] == 0.0
     assert res["visit_short_name"] == "V0"
 
     # When This visit is edited to higher visit timing compare to the Global Anchor time reference
@@ -1578,7 +2045,6 @@ def test_visit_0_edited_chronologically(api_client):
     res = response.json()
     assert_response_status_code(response, 200)
     assert res["visit_name"] == "Visit 2"
-    assert res["visit_number"] == 2.0
     assert res["visit_short_name"] == "V2"
 
     # Scenario: User must be able to edit the study information visit with visit 0 to other visit type
@@ -1604,7 +2070,6 @@ def test_visit_0_edited_chronologically(api_client):
     assert_response_status_code(response, 201)
     # Verify that newly created information visit should be Visit 0
     assert res["visit_name"] == "Visit 0"
-    assert res["visit_number"] == 0.0
     assert res["visit_short_name"] == "V0"
     study_visit0_uid = res["uid"]
 
@@ -1632,7 +2097,6 @@ def test_visit_0_edited_chronologically(api_client):
     res = response.json()
     assert_response_status_code(response, 200)
     assert res["visit_name"] == "Visit 1"
-    assert res["visit_number"] == 1.0
     assert res["visit_short_name"] == "V1"
 
     # And Reordering of other visits will occur
@@ -1640,7 +2104,6 @@ def test_visit_0_edited_chronologically(api_client):
     res = response.json()
     assert_response_status_code(response, 200)
     assert res["visit_name"] == "Visit 2"
-    assert res["visit_number"] == 2.0
     assert res["visit_short_name"] == "V2"
 
 
@@ -1855,10 +2318,9 @@ def test_study_visit_circular_time_reference_cant_be_created(api_client):
     )
     assert_response_status_code(response, 400)
     res = response.json()
-    assert (
-        res["message"]
-        == f"""Circular Visit time reference detected: The visit which is being created, refers to ({baseline2_visit_type_time_reference})
-                    Visit which refers by time reference to Visit Type ({baseline_visit_type_time_reference}) of the Visit which is being created"""
+    assert res["message"] == (
+        f"Circular Visit time reference detected: The visit which is being created, refers to ({baseline2_visit_type_time_reference})"
+        f" Visit which refers by time reference to Visit Type ({baseline_visit_type_time_reference}) of the Visit which is being created"
     )
 
     datadict = visits_basic_data
@@ -1884,10 +2346,9 @@ def test_study_visit_circular_time_reference_cant_be_created(api_client):
     )
     assert_response_status_code(response, 400)
     res = response.json()
-    assert (
-        res["message"]
-        == f"""Circular Visit time reference detected: The visit which is being created, refers to ({baseline2_visit_type_time_reference})
-                    Visit which refers by time reference to Visit Type ({baseline_visit_type_time_reference}) of the Visit which is being created"""
+    assert res["message"] == (
+        f"Circular Visit time reference detected: The visit which is being created, refers to ({baseline2_visit_type_time_reference})"
+        f" Visit which refers by time reference to Visit Type ({baseline_visit_type_time_reference}) of the Visit which is being created"
     )
 
 
@@ -1964,6 +2425,161 @@ def test_global_anchor_visit_not_allowed_for_unscheduled_visit(api_client):
     assert "UNSCHEDULED_VISIT" in message
 
 
+def _technical_visit_input(study_epoch_uid: str, visit_class: str) -> dict[str, Any]:
+    """Input of a visit of the Unscheduled/Non-visit class, without timing"""
+    visit_input = {
+        key: value
+        for key, value in visits_basic_data.items()
+        if key
+        not in (
+            "time_value",
+            "time_unit_uid",
+            "min_visit_window_value",
+            "max_visit_window_value",
+            "visit_suffix",
+            "expected_time_value",
+            "uid",
+            "study_uid",
+        )
+    }
+    visit_input.update(
+        {
+            "study_epoch_uid": study_epoch_uid,
+            "visit_type": {"term_uid": "VisitType_0006"},
+            "time_reference": None,
+            "visit_class": visit_class,
+            "visit_subclass": None,
+            "visit_sublabel_reference": None,
+            "is_global_anchor_visit": False,
+        }
+    )
+    return visit_input
+
+
+@pytest.mark.parametrize(
+    ("visit_class", "expected_unique_visit_number"),
+    [("UNSCHEDULED_VISIT", 29500), ("NON_VISIT", 29999)],
+)
+def test_technical_visit_class_with_unscheduled_visit_type_needs_no_timing(
+    api_client, visit_class: str, expected_unique_visit_number: int
+):
+    """Visits of the Unscheduled/Non-visit class follow the rules of their class whatever their visit type,
+    e.g. the Unscheduled visit type doesn't make their timing required."""
+    _study = TestUtils.create_study()
+    study_epoch = create_study_epoch("EpochSubType_0001", study_uid=_study.uid)
+    visit_input = _technical_visit_input(study_epoch.uid, visit_class)
+    response = api_client.post(f"/studies/{_study.uid}/study-visits", json=visit_input)
+    assert_response_status_code(response, 201)
+    res = response.json()
+    assert res["visit_class"] == visit_class
+    assert res["unique_visit_number"] == expected_unique_visit_number
+    assert res["visit_name"] == f"Visit {expected_unique_visit_number}"
+    assert res["visit_short_name"] == f"V{expected_unique_visit_number}"
+    assert res["time_value"] is None
+    # The technical classes carry a fixed, persisted visit window and unit.
+    assert res["min_visit_window_value"] == -9999
+    assert res["max_visit_window_value"] == 9999
+    assert res["visit_window_unit_uid"] == visit_input["visit_window_unit_uid"]
+
+    # There can be only one visit of the class in a study
+    response = api_client.post(f"/studies/{_study.uid}/study-visits", json=visit_input)
+    assert_response_status_code(response, 400)
+
+
+@pytest.mark.parametrize("visit_class", ["UNSCHEDULED_VISIT", "NON_VISIT"])
+def test_technical_visit_class_takes_position_in_visit_order(
+    api_client, visit_class: str
+):
+    """Visits of the Unscheduled/Non-visit class keep their fixed visit number, but take their position in the order."""
+    _study = TestUtils.create_study()
+    study_epoch = create_study_epoch("EpochSubType_0001", study_uid=_study.uid)
+    anchor_input = visits_basic_data.copy()
+    anchor_input.update(
+        {
+            "study_epoch_uid": study_epoch.uid,
+            "visit_type": {"term_uid": "VisitType_0001"},
+            "time_reference": {"term_uid": "VisitSubType_0005"},
+            "time_value": 0,
+            "time_unit_uid": DAYUID,
+            "visit_class": "SINGLE_VISIT",
+            "visit_subclass": "SINGLE_VISIT",
+            "is_global_anchor_visit": True,
+        }
+    )
+    response = api_client.post(f"/studies/{_study.uid}/study-visits", json=anchor_input)
+    assert_response_status_code(response, 201)
+    anchor_uid = response.json()["uid"]
+    response = api_client.post(
+        f"/studies/{_study.uid}/study-visits",
+        json=_technical_visit_input(study_epoch.uid, visit_class),
+    )
+    assert_response_status_code(response, 201)
+    technical_visit = response.json()
+
+    response = api_client.get(f"/studies/{_study.uid}/study-visits")
+    assert_response_status_code(response, 200)
+    assert {item["uid"]: item["order"] for item in response.json()["items"]} == {
+        anchor_uid: 1,
+        technical_visit["uid"]: 2,
+    }
+    assert technical_visit["unique_visit_number"] in (29500, 29999)
+
+
+def test_stored_visit_order_follows_inserted_visits(api_client):
+    """The stored order is kept up to date when visits are inserted before a visit,
+    also when its visit number doesn't change, like for an unscheduled visit."""
+    _study = TestUtils.create_study()
+    study_epoch = create_study_epoch("EpochSubType_0001", study_uid=_study.uid)
+    visit_input = visits_basic_data.copy()
+    visit_input.update(
+        {
+            "study_epoch_uid": study_epoch.uid,
+            "visit_type": {"term_uid": "VisitType_0001"},
+            "time_reference": {"term_uid": "VisitSubType_0005"},
+            "time_value": 0,
+            "time_unit_uid": DAYUID,
+            "visit_class": "SINGLE_VISIT",
+            "visit_subclass": "SINGLE_VISIT",
+            "is_global_anchor_visit": True,
+        }
+    )
+    response = api_client.post(f"/studies/{_study.uid}/study-visits", json=visit_input)
+    assert_response_status_code(response, 201)
+    visit_uids = [response.json()["uid"]]
+
+    response = api_client.post(
+        f"/studies/{_study.uid}/study-visits",
+        json=_technical_visit_input(study_epoch.uid, "UNSCHEDULED_VISIT"),
+    )
+    assert_response_status_code(response, 201)
+    unscheduled_visit_uid = response.json()["uid"]
+
+    for time_value in (7, 14):
+        visit_input.update(
+            {
+                "visit_type": {"term_uid": "VisitType_0003"},
+                "time_value": time_value,
+                "is_global_anchor_visit": False,
+            }
+        )
+        response = api_client.post(
+            f"/studies/{_study.uid}/study-visits", json=visit_input
+        )
+        assert_response_status_code(response, 201)
+        visit_uids.append(response.json()["uid"])
+
+    stored_orders = {
+        visit.uid: visit.stored_visit_order
+        for visit in StudyVisitRepository.find_all_visits_by_study_uid(_study.uid)
+    }
+    assert stored_orders == {
+        visit_uids[0]: 1,
+        visit_uids[1]: 2,
+        visit_uids[2]: 3,
+        unscheduled_visit_uid: 4,
+    }
+
+
 def test_study_visit_editing_study_epoch(api_client):
     _study = TestUtils.create_study()
     study_epoch_1 = create_study_epoch("EpochSubType_0001", study_uid=_study.uid)
@@ -2035,160 +2651,68 @@ def test_study_visit_editing_study_epoch(api_client):
     assert res["study_epoch_uid"] == study_epoch_2.uid
 
 
-def test_creating_special_visit(api_client):
-    study = TestUtils.create_study(project_number=project.project_number)
-    study_epoch = create_study_epoch("EpochSubType_0001", study_uid=study.uid)
-
-    # Global Anchor Visit
-    inputs = {
-        "study_epoch_uid": study_epoch.uid,
-        "visit_type": {"term_uid": "VisitType_0002"},
-        "time_reference": {"term_uid": "VisitSubType_0005"},
-        "time_value": 0,
-        "time_unit_uid": DAYUID,
-        "visit_class": "SINGLE_VISIT",
-        "visit_subclass": "SINGLE_VISIT",
-        "is_global_anchor_visit": True,
+def _visit_payload(visit_input: dict[str, Any]) -> dict[str, Any]:
+    # visits_basic_data is mutated by other tests, reset the fields relevant for ED visits
+    return {
+        **visits_basic_data,
+        "visit_sublabel_reference": None,
+        "visit_suffix": None,
+        "expected_time_value": None,
+        **visit_input,
     }
-    global_anchor_datadict = visits_basic_data.copy()
-    global_anchor_datadict.update(inputs)
-    response = api_client.post(
-        f"/studies/{study.uid}/study-visits",
-        json=global_anchor_datadict,
-    )
-    assert_response_status_code(response, 201)
-    global_anchor_visit_before_update = response.json()
-    global_anchor_visit = global_anchor_visit_before_update["uid"]
-    assert global_anchor_visit_before_update["is_soa_milestone"] is False
 
-    # Special Visit
-    special_visit_input = {
-        "visit_sublabel_reference": global_anchor_visit,
-        "study_epoch_uid": study_epoch.uid,
-        "visit_type": {"term_uid": "VisitType_0002"},
-        "time_reference": {"term_uid": "VisitSubType_0005"},
-        "time_unit_uid": DAYUID,
-        "visit_class": "SPECIAL_VISIT",
-        "visit_subclass": "SINGLE_VISIT",
-        "is_global_anchor_visit": False,
-    }
-    datadict = visits_basic_data
-    datadict.update(special_visit_input)
-    response = api_client.post(
-        f"/studies/{study.uid}/study-visits",
-        json=datadict,
-    )
-    assert_response_status_code(response, 201)
-    special_visit_v2a = response.json()
-    assert special_visit_v2a["visit_short_name"] == "V1A"
 
-    # edit global anchor visit
-    global_anchor_edit_datadict = {"uid": global_anchor_visit, "is_soa_milestone": True}
-    global_anchor_datadict.update(global_anchor_edit_datadict)
-    response = api_client.patch(
-        f"/studies/{study.uid}/study-visits/{global_anchor_visit}",
-        json=global_anchor_datadict,
+def _create_visit(api_client, study_uid: str, visit_input: dict[str, Any]):
+    return api_client.post(
+        f"/studies/{study_uid}/study-visits", json=_visit_payload(visit_input)
     )
-    assert_response_status_code(response, 200)
-    global_anchor_visit_after_update = response.json()
-    assert global_anchor_visit_after_update["is_soa_milestone"] is True
 
-    # Try to create another SpecialVisit which is not Discontinuation Visit
-    response = api_client.post(
-        f"/studies/{study.uid}/study-visits",
-        json=datadict,
-    )
-    assert_response_status_code(response, 201)
-    special_visit_v2b = response.json()
-    assert special_visit_v2b["visit_short_name"] == "V1B"
 
-    # Create early discontinuation special visit anchored to a visit that already has other special visits
-    # assert that ordering for early discontinuation will start from 'X'
-    datadict.update({"visit_type": {"term_uid": "VisitType_0005"}})
-    response = api_client.post(
-        f"/studies/{study.uid}/study-visits",
-        json=datadict,
-    )
-    assert_response_status_code(response, 201)
-    res = response.json()
-    assert res["visit_short_name"] == "V1X"
-
-    second_study_epoch = create_study_epoch("EpochSubType_0002", study_uid=study.uid)
-    # Visit Day 10
-    inputs = {
-        "study_epoch_uid": second_study_epoch.uid,
-        "visit_type": {"term_uid": "VisitType_0002"},
-        "time_reference": {"term_uid": "VisitSubType_0005"},
-        "time_value": 10,
-        "time_unit_uid": DAYUID,
-        "visit_class": "SINGLE_VISIT",
-        "visit_subclass": "SINGLE_VISIT",
-        "is_global_anchor_visit": False,
-    }
-    datadict = visits_basic_data
-    datadict.update(inputs)
-    response = api_client.post(
-        f"/studies/{study.uid}/study-visits",
-        json=datadict,
-    )
-    assert_response_status_code(response, 201)
-    visit_day_10 = response.json()["uid"]
-
-    # Special Visit
-    special_visit_input = {
-        "visit_sublabel_reference": visit_day_10,
-        "study_epoch_uid": second_study_epoch.uid,
+def _ed_visit_input(study_epoch_uid: str, **kwargs) -> dict[str, Any]:
+    ed_input = {
+        "study_epoch_uid": study_epoch_uid,
         "visit_type": {"term_uid": "VisitType_0005"},
-        "time_reference": {"term_uid": "VisitSubType_0005"},
-        "time_unit_uid": DAYUID,
-        "visit_class": "SPECIAL_VISIT",
-        "visit_subclass": "SINGLE_VISIT",
-        "is_global_anchor_visit": False,
-    }
-    datadict = visits_basic_data
-    datadict.update(special_visit_input)
-    response = api_client.post(
-        f"/studies/{study.uid}/study-visits",
-        json=datadict,
-    )
-    assert_response_status_code(response, 201)
-    res = response.json()
-    assert res["visit_short_name"] == "V2X"
-
-    response = api_client.post(
-        f"/studies/{study.uid}/study-visits",
-        json=datadict,
-    )
-    assert_response_status_code(response, 201)
-    res = response.json()
-    assert res["visit_short_name"] == "V2Y"
-
-
-def test_editing_special_visit(api_client):
-    study = TestUtils.create_study(project_number=project.project_number)
-    study_epoch = create_study_epoch("EpochSubType_0001", study_uid=study.uid)
-
-    # Global Anchor Visit
-    inputs = {
-        "study_epoch_uid": study_epoch.uid,
-        "visit_type": {"term_uid": "VisitType_0002"},
+        "visit_contact_mode": {"term_uid": "VisitContactMode_0001"},
         "time_reference": {"term_uid": "VisitSubType_0005"},
         "time_value": 0,
         "time_unit_uid": DAYUID,
         "visit_class": "SINGLE_VISIT",
         "visit_subclass": "SINGLE_VISIT",
-        "is_global_anchor_visit": True,
+        "is_global_anchor_visit": False,
+        "show_visit": True,
     }
-    datadict = visits_basic_data
-    datadict.update(inputs)
-    response = api_client.post(
-        f"/studies/{study.uid}/study-visits",
-        json=datadict,
+    ed_input.update(kwargs)
+    return ed_input
+
+
+def test_early_discontinuation_visit(api_client):
+    """
+    ED visits reference their parent visit via visit_sublabel_reference,
+    take place at the parent timing and share the parent visit number.
+    """
+    study = TestUtils.create_study(project_number=project.project_number)
+    study_epoch = create_study_epoch("EpochSubType_0001", study_uid=study.uid)
+
+    # V1 - global anchor visit, day 0
+    response = _create_visit(
+        api_client,
+        study.uid,
+        {
+            "study_epoch_uid": study_epoch.uid,
+            "visit_type": {"term_uid": "VisitType_0001"},
+            "time_reference": {"term_uid": "VisitSubType_0005"},
+            "time_value": 0,
+            "time_unit_uid": DAYUID,
+            "visit_class": "SINGLE_VISIT",
+            "visit_subclass": "SINGLE_VISIT",
+            "is_global_anchor_visit": True,
+        },
     )
     assert_response_status_code(response, 201)
+    v1_uid = response.json()["uid"]
 
-    # Visit Day 10
-    inputs = {
+    # V2 - day 10
+    v2_input = {
         "study_epoch_uid": study_epoch.uid,
         "visit_type": {"term_uid": "VisitType_0002"},
         "time_reference": {"term_uid": "VisitSubType_0005"},
@@ -2198,57 +2722,220 @@ def test_editing_special_visit(api_client):
         "visit_subclass": "SINGLE_VISIT",
         "is_global_anchor_visit": False,
     }
-    datadict = visits_basic_data
-    datadict.update(inputs)
-    response = api_client.post(
-        f"/studies/{study.uid}/study-visits",
-        json=datadict,
+    response = _create_visit(api_client, study.uid, v2_input)
+    assert_response_status_code(response, 201)
+    v2_uid = response.json()["uid"]
+
+    # V3 - day 20
+    response = _create_visit(
+        api_client,
+        study.uid,
+        {
+            "study_epoch_uid": study_epoch.uid,
+            "visit_type": {"term_uid": "VisitType_0003"},
+            "time_reference": {"term_uid": "VisitSubType_0005"},
+            "time_value": 20,
+            "time_unit_uid": DAYUID,
+            "visit_class": "SINGLE_VISIT",
+            "visit_subclass": "SINGLE_VISIT",
+            "is_global_anchor_visit": False,
+        },
     )
     assert_response_status_code(response, 201)
-    visit_day_10 = response.json()["uid"]
+    v3_uid = response.json()["uid"]
 
-    # Special Visit
-    special_visit_input = {
-        "visit_sublabel_reference": visit_day_10,
-        "study_epoch_uid": study_epoch.uid,
-        "visit_type": {"term_uid": "VisitType_0002"},
-        "time_reference": {"term_uid": "VisitSubType_0005"},
-        "time_unit_uid": DAYUID,
-        "visit_class": "SPECIAL_VISIT",
-        "visit_subclass": "SINGLE_VISIT",
-        "is_global_anchor_visit": False,
-    }
-    datadict = visits_basic_data
-    datadict.update(special_visit_input)
-    response = api_client.post(
-        f"/studies/{study.uid}/study-visits",
-        json=datadict,
+    # ED visit referencing V2
+    ed_input = _ed_visit_input(
+        study_epoch.uid, visit_sublabel_reference=v2_uid, visit_suffix="-ED"
     )
+    response = _create_visit(api_client, study.uid, ed_input)
     assert_response_status_code(response, 201)
-    special_visit_uid = response.json()["uid"]
+    ed_res = response.json()
+    ed_uid = ed_res["uid"]
 
-    # edit SpecialVisit
-    special_visit_input = {
-        "uid": special_visit_uid,
-        "visit_sublabel_reference": visit_day_10,
-        "study_epoch_uid": study_epoch.uid,
-        "visit_type": {"term_uid": "VisitType_0002"},
-        "time_reference": {"term_uid": "VisitSubType_0005"},
-        "time_unit_uid": DAYUID,
-        "visit_class": "SPECIAL_VISIT",
-        "visit_subclass": "SINGLE_VISIT",
-        "is_global_anchor_visit": False,
-        "show_visit": False,
-    }
-    datadict = visits_basic_data
-    datadict.update(special_visit_input)
+    # ED visit shares the visit number of its parent and is distinguished by the suffix
+    assert ed_res["visit_sublabel_reference"] == v2_uid
+    assert ed_res["visit_name"] == "Visit 2-ED"
+    assert ed_res["visit_short_name"] == "V2-ED"
+    assert ed_res["visit_suffix"] == "-ED"
+    assert ed_res["unique_visit_number"] == 201
+    assert ed_res["expected_time_value"] is None
+    assert ed_res["time_value"] == 0
+    assert ed_res["min_visit_window_value"] == -9999
+    assert ed_res["max_visit_window_value"] == 9999
+    # Early Discontinuation visits have no scheduled position, so no study day/week is derived
+    assert ed_res["study_day_number"] is None
+    assert ed_res["study_week_number"] is None
+
+    # ED visit is placed right after its parent
+    uids = _visit_uids_in_order(api_client, study.uid)
+    assert uids == [v1_uid, v2_uid, ed_uid, v3_uid]
+
+    # ED visit doesn't occupy a new visit number
+    response = api_client.get(f"/studies/{study.uid}/study-visits/{v3_uid}")
+    assert_response_status_code(response, 200)
+    v3_res = response.json()
+    assert v3_res["visit_short_name"] == "V3"
+    assert v3_res["unique_visit_number"] == 300
+
+    # GET single visit - verify persisted state
+    response = api_client.get(f"/studies/{study.uid}/study-visits/{ed_uid}")
+    assert_response_status_code(response, 200)
+    persisted = response.json()
+    assert persisted["visit_sublabel_reference"] == v2_uid
+    assert persisted["visit_short_name"] == "V2-ED"
+    assert persisted["unique_visit_number"] == 201
+
+    # PATCH to change suffix - short name updates accordingly
     response = api_client.patch(
-        f"/studies/{study.uid}/study-visits/{special_visit_uid}",
-        json=datadict,
+        f"/studies/{study.uid}/study-visits/{ed_uid}",
+        json=_visit_payload({**ed_input, "visit_suffix": "-EOS", "uid": ed_uid}),
     )
     assert_response_status_code(response, 200)
-    special_visit_after_update = response.json()
-    assert special_visit_after_update["show_visit"] is False
+    patched = response.json()
+    assert patched["visit_short_name"] == "V2-EOS"
+    assert patched["visit_suffix"] == "-EOS"
+    ed_input["visit_suffix"] = "-EOS"
+
+    # Second ED visit referencing the same parent
+    response = _create_visit(
+        api_client,
+        study.uid,
+        _ed_visit_input(
+            study_epoch.uid, visit_sublabel_reference=v2_uid, visit_suffix="-ED2"
+        ),
+    )
+    assert_response_status_code(response, 201)
+    ed2_res = response.json()
+    ed2_uid = ed2_res["uid"]
+    assert ed2_res["visit_short_name"] == "V2-ED2"
+    assert ed2_res["unique_visit_number"] == 202
+    uids = _visit_uids_in_order(api_client, study.uid)
+    assert uids.index(v2_uid) < uids.index(ed_uid) < uids.index(v3_uid)
+    assert uids.index(v2_uid) < uids.index(ed2_uid) < uids.index(v3_uid)
+
+    # ED visits follow their parent when the parent timing changes
+    response = api_client.patch(
+        f"/studies/{study.uid}/study-visits/{v2_uid}",
+        json=_visit_payload({**v2_input, "time_value": 30, "uid": v2_uid}),
+    )
+    assert_response_status_code(response, 200)
+    assert response.json()["visit_short_name"] == "V3"
+    response = api_client.get(f"/studies/{study.uid}/study-visits/{ed_uid}")
+    assert_response_status_code(response, 200)
+    assert response.json()["visit_short_name"] == "V3-EOS"
+    assert response.json()["unique_visit_number"] in (301, 302)
+    response = api_client.get(f"/studies/{study.uid}/study-visits/{v3_uid}")
+    assert_response_status_code(response, 200)
+    assert response.json()["visit_short_name"] == "V2"
+    uids = _visit_uids_in_order(api_client, study.uid)
+    assert uids.index(v3_uid) < uids.index(v2_uid) < uids.index(ed_uid)
+
+    # The parent visit can't become an ineligible parent while ED visits reference it
+    response = api_client.patch(
+        f"/studies/{study.uid}/study-visits/{v2_uid}",
+        json=_visit_payload(
+            {
+                **v2_input,
+                "time_value": 30,
+                "visit_type": {"term_uid": "VisitType_0005"},
+                "uid": v2_uid,
+            }
+        ),
+    )
+    assert_response_status_code(response, 400)
+    assert (
+        "it is the parent of Early Discontinuation visits" in response.json()["message"]
+    )
+
+    # The parent visit can't be deleted while ED visits reference it
+    response = api_client.delete(f"/studies/{study.uid}/study-visits/{v2_uid}")
+    assert_response_status_code(response, 400)
+
+
+@pytest.mark.parametrize(
+    ("ed_input_overrides", "expected_msg"),
+    [
+        pytest.param(
+            {"visit_sublabel_reference": None},
+            "Early Discontinuation visits must reference their parent visit via 'visit_sublabel_reference'.",
+            id="missing-parent",
+        ),
+        pytest.param(
+            {"visit_suffix": None},
+            "Early Discontinuation visits require 'visit_suffix' as they share the visit number of their parent visit.",
+            id="missing-suffix",
+        ),
+        pytest.param(
+            {"expected_time_value": 5},
+            "Early Discontinuation visits take place at the timing of their parent visit, 'expected_time_value' is not allowed.",
+            id="expected-time-value",
+        ),
+        pytest.param(
+            {"visit_sublabel_reference": "StudyVisit_non_existent"},
+            "visit_sublabel_reference 'StudyVisit_non_existent' does not match any visit in this study.",
+            id="non-existent-parent",
+        ),
+        pytest.param(
+            {"visit_suffix": "-ED"},
+            "Visit suffix '-ED' is already used by another visit sharing the visit number of 'Visit 1'.",
+            id="duplicated-suffix",
+        ),
+    ],
+)
+def test_early_discontinuation_visit_validation(
+    api_client, ed_input_overrides: dict[str, Any], expected_msg: str
+):
+    study = TestUtils.create_study(project_number=project.project_number)
+    study_epoch = create_study_epoch("EpochSubType_0001", study_uid=study.uid)
+
+    response = _create_visit(
+        api_client,
+        study.uid,
+        {
+            "study_epoch_uid": study_epoch.uid,
+            "visit_type": {"term_uid": "VisitType_0001"},
+            "time_reference": {"term_uid": "VisitSubType_0005"},
+            "time_value": 0,
+            "time_unit_uid": DAYUID,
+            "visit_class": "SINGLE_VISIT",
+            "visit_subclass": "SINGLE_VISIT",
+            "is_global_anchor_visit": True,
+        },
+    )
+    assert_response_status_code(response, 201)
+    v1_uid = response.json()["uid"]
+
+    response = _create_visit(
+        api_client,
+        study.uid,
+        _ed_visit_input(
+            study_epoch.uid, visit_sublabel_reference=v1_uid, visit_suffix="-ED"
+        ),
+    )
+    assert_response_status_code(response, 201)
+    ed_uid = response.json()["uid"]
+
+    ed_input = _ed_visit_input(
+        study_epoch.uid, visit_sublabel_reference=v1_uid, visit_suffix="-ED2"
+    )
+    ed_input.update(ed_input_overrides)
+    response = _create_visit(api_client, study.uid, ed_input)
+    assert_response_status_code(response, 400)
+    assert response.json()["message"] == expected_msg
+
+    # An ED visit can't be the parent of another ED visit
+    response = _create_visit(
+        api_client,
+        study.uid,
+        _ed_visit_input(
+            study_epoch.uid, visit_sublabel_reference=ed_uid, visit_suffix="-ED3"
+        ),
+    )
+    assert_response_status_code(response, 400)
+    assert "can't be the parent of an Early Discontinuation visit" in (
+        response.json()["message"]
+    )
 
 
 @pytest.mark.parametrize(
@@ -2400,7 +3087,7 @@ def test_assert_uvn_is_changed_when_group_of_visits_is_modified(api_client):
 
     assert_get_all_visits_lite_compares(study_visits, api_client, study.uid)
 
-    # Call for StudyVisits but derive properties based on visit_number instead of returning them straight from DB
+    # Call for StudyVisits but derive properties based on timeline instead of returning them straight from DB
     response = api_client.get(
         f"/studies/{study.uid}/study-visits",
         params={"derive_props_based_on_timeline": True},
@@ -2438,7 +3125,7 @@ def test_assert_uvn_is_changed_when_group_of_visits_is_modified(api_client):
     assert study_visit["visit_name"] == "Visit 1"
     assert study_visit["unique_visit_number"] == 110
 
-    # Call for StudyVisits but derive properties based on visit_number instead of returning them straight from DB
+    # Call for StudyVisits but derive properties based on timeline instead of returning them straight from DB
     response = api_client.get(
         f"/studies/{study.uid}/study-visits/{anchor_visit_uid}",
         params={"derive_props_based_on_timeline": True},
@@ -2614,7 +3301,6 @@ def test_it_is_possible_create_many_study_visits_with_the_same_timing(api_client
         assert_response_status_code(response, 201)
         res = response.json()
         assert res["time_value"] == 10
-        assert res["visit_number"] == idx_number
         assert res["visit_short_name"] == f"V{idx_number}"
         assert res["unique_visit_number"] == idx_number * 100
         study_visits_dict[res["uid"]] = res
@@ -2638,7 +3324,6 @@ def test_it_is_possible_create_many_study_visits_with_the_same_timing(api_client
     assert_response_status_code(response, 200)
     edited_study_visit = response.json()
     assert edited_study_visit["time_value"] == 10
-    assert edited_study_visit["visit_number"] == 1
     assert edited_study_visit["visit_short_name"] == "V1"
     assert edited_study_visit["unique_visit_number"] == 100
     assert edited_study_visit["description"] == new_description
@@ -2652,7 +3337,6 @@ def test_it_is_possible_create_many_study_visits_with_the_same_timing(api_client
     for study_visit in study_visits:
         assert study_visit["uid"] in study_visits_dict
         created_study_visit = study_visits_dict[study_visit["uid"]]
-        assert study_visit["visit_number"] == created_study_visit["visit_number"]
         assert (
             study_visit["visit_short_name"] == created_study_visit["visit_short_name"]
         )
@@ -2717,12 +3401,7 @@ def assert_get_all_visits_lite_compares(
     expected_visits = []
     for item in expected_items:
         item_dict = {k: v.value if isinstance(v, Enum) else v for k, v in item.items()}
-        expected_visits.append(visit := StudyVisitLite(**item_dict))
-
-        # Lite endpoint returns None for study_day/week_numbers for special visits
-        if visit.visit_class == VisitClass.SPECIAL_VISIT:
-            visit.study_day_number = None
-            visit.study_week_number = None
+        expected_visits.append(StudyVisitLite(**item_dict))
 
     # get all visits lite version
     params = {"lite": "true"}
@@ -3134,3 +3813,963 @@ def _extract_visit_uids_from_soa(soa_json: dict[str, Any]) -> set[str]:
                 if ref.get("type") == "StudyVisit":
                     uids.add(ref["uid"])
     return uids
+
+
+def test_unscheduled_visit_type_timing_masking(api_client):
+    """
+    Visits with visit_type='Unscheduled' store the user-supplied timing internally
+    for ordering.  The API masks time_value to 0 and returns window=-9999/9999,
+    while time_reference and time_unit_uid are returned as stored.
+    study_day/study_week are not derived for Unscheduled visit types.
+    """
+    _study = TestUtils.create_study(project_number=project.project_number)
+    _epoch = create_study_epoch("EpochSubType_0001", study_uid=_study.uid)
+
+    anchor_input = visits_basic_data.copy()
+    anchor_input.update(
+        {
+            "study_epoch_uid": _epoch.uid,
+            "visit_type": {"term_uid": "VisitType_0001"},
+            "time_reference": {"term_uid": "VisitSubType_0005"},
+            "time_value": 0,
+            "time_unit_uid": DAYUID,
+            "visit_class": "SINGLE_VISIT",
+            "visit_subclass": "SINGLE_VISIT",
+            "is_global_anchor_visit": True,
+        }
+    )
+    response = api_client.post(f"/studies/{_study.uid}/study-visits", json=anchor_input)
+    assert_response_status_code(response, 201)
+
+    unscheduled_input = visits_basic_data.copy()
+    unscheduled_input.update(
+        {
+            "study_epoch_uid": _epoch.uid,
+            "visit_type": {"term_uid": "VisitType_0006"},
+            "time_reference": {"term_uid": "VisitSubType_0005"},
+            "time_value": 0,
+            "time_unit_uid": DAYUID,
+            "expected_time_value": 21,
+            "visit_class": "SINGLE_VISIT",
+            "visit_subclass": "SINGLE_VISIT",
+            "is_global_anchor_visit": False,
+            "show_visit": True,
+        }
+    )
+    response = api_client.post(
+        f"/studies/{_study.uid}/study-visits", json=unscheduled_input
+    )
+    assert_response_status_code(response, 201)
+    res = response.json()
+
+    # Unscheduled visit slots after the anchor (etv=21) → visit_short_name="V2"
+    assert res["visit_short_name"] == "V2"
+
+    assert res["time_value"] == 0
+    assert res["time_reference"]["term_uid"] == "VisitSubType_0005"
+    assert res["time_unit_uid"] == DAYUID
+    assert res["expected_time_value"] == 21
+    assert res["min_visit_window_value"] == -9999
+    assert res["max_visit_window_value"] == 9999
+    # Unscheduled visit types have no scheduled position, so no study day/week is derived
+    assert res["study_day_number"] is None
+    assert res["study_week_number"] is None
+
+
+def _visit_uids_in_order(api_client, study_uid: str) -> list[str]:
+    """Return visit UIDs from GET /study-visits in the order the API returns them."""
+    response = api_client.get(f"/studies/{study_uid}/study-visits")
+    assert_response_status_code(response, 200)
+    return [v["uid"] for v in response.json()["items"]]
+
+
+def test_unscheduled_visit_type_placed_by_expected_timing(api_client):
+    """
+    An Unscheduled visit type with expected_time_value=21 must appear between
+    visits at day 14 and day 28 in the timeline.
+    """
+    _study = TestUtils.create_study(project_number=project.project_number)
+    _epoch = create_study_epoch("EpochSubType_0001", study_uid=_study.uid)
+
+    def _post(extra: dict[str, Any]) -> dict[str, Any]:
+        data = visits_basic_data.copy()
+        data.update({"study_epoch_uid": _epoch.uid, "show_visit": True, **extra})
+        resp = api_client.post(f"/studies/{_study.uid}/study-visits", json=data)
+        assert_response_status_code(resp, 201)
+        return resp.json()
+
+    # V1 (anchor, day 0)
+    _post(
+        {
+            "visit_type": {"term_uid": "VisitType_0001"},
+            "time_reference": {"term_uid": "VisitSubType_0005"},
+            "time_value": 0,
+            "time_unit_uid": DAYUID,
+            "visit_class": "SINGLE_VISIT",
+            "visit_subclass": "SINGLE_VISIT",
+            "is_global_anchor_visit": True,
+        }
+    )
+    # V2 (day 14)
+    v2 = _post(
+        {
+            "visit_type": {"term_uid": "VisitType_0002"},
+            "time_reference": {"term_uid": "VisitSubType_0005"},
+            "time_value": 14,
+            "time_unit_uid": DAYUID,
+            "visit_class": "SINGLE_VISIT",
+            "visit_subclass": "SINGLE_VISIT",
+            "is_global_anchor_visit": False,
+        }
+    )
+    # V3 (day 28)
+    v3 = _post(
+        {
+            "visit_type": {"term_uid": "VisitType_0003"},
+            "time_reference": {"term_uid": "VisitSubType_0005"},
+            "time_value": 28,
+            "time_unit_uid": DAYUID,
+            "visit_class": "SINGLE_VISIT",
+            "visit_subclass": "SINGLE_VISIT",
+            "is_global_anchor_visit": False,
+        }
+    )
+    # Unscheduled visit type with expected_time_value=21 — should slot between V2 and V3
+    unscheduled = _post(
+        {
+            "visit_type": {"term_uid": "VisitType_0006"},
+            "time_reference": {"term_uid": "VisitSubType_0005"},
+            "time_value": 0,
+            "time_unit_uid": DAYUID,
+            "expected_time_value": 21,
+            "visit_class": "SINGLE_VISIT",
+            "visit_subclass": "SINGLE_VISIT",
+            "is_global_anchor_visit": False,
+        }
+    )
+
+    uids = _visit_uids_in_order(api_client, _study.uid)
+    v2_pos = uids.index(v2["uid"])
+    unscheduled_pos = uids.index(unscheduled["uid"])
+    v3_pos = uids.index(v3["uid"])
+
+    assert (
+        v2_pos < unscheduled_pos < v3_pos
+    ), f"Unscheduled visit should appear between V2 and V3 but order was {uids}"
+
+    # Unscheduled visit slots between V2 and V3 → visit_short_name="V3"
+    assert unscheduled["visit_short_name"] == "V3"
+
+    # V3 is pushed one slot forward after the Unscheduled visit was inserted
+    response = api_client.get(f"/studies/{_study.uid}/study-visits/{v3['uid']}")
+    assert_response_status_code(response, 200)
+    assert response.json()["visit_short_name"] == "V4"
+
+
+def test_unscheduled_visit_type_allowed_at_day_zero(api_client):
+    """An Unscheduled visit type may share day 0 with the global anchor visit, like ED."""
+    _study = TestUtils.create_study(project_number=project.project_number)
+    _epoch = create_study_epoch("EpochSubType_0001", study_uid=_study.uid)
+
+    anchor_input = visits_basic_data.copy()
+    anchor_input.update(
+        {
+            "study_epoch_uid": _epoch.uid,
+            "visit_type": {"term_uid": "VisitType_0001"},
+            "time_reference": {"term_uid": "VisitSubType_0005"},
+            "time_value": 0,
+            "time_unit_uid": DAYUID,
+            "visit_class": "SINGLE_VISIT",
+            "visit_subclass": "SINGLE_VISIT",
+            "is_global_anchor_visit": True,
+        }
+    )
+    response = api_client.post(f"/studies/{_study.uid}/study-visits", json=anchor_input)
+    assert_response_status_code(response, 201)
+
+    # Unscheduled visit at day 0 (expected_time_value=0) must not collide with the anchor.
+    unscheduled_input = visits_basic_data.copy()
+    unscheduled_input.update(
+        {
+            "study_epoch_uid": _epoch.uid,
+            "visit_type": {"term_uid": "VisitType_0006"},
+            "time_reference": {"term_uid": "VisitSubType_0005"},
+            "time_value": 0,
+            "time_unit_uid": DAYUID,
+            "expected_time_value": 0,
+            "visit_class": "SINGLE_VISIT",
+            "visit_subclass": "SINGLE_VISIT",
+            "is_global_anchor_visit": False,
+            "show_visit": True,
+        }
+    )
+    response = api_client.post(
+        f"/studies/{_study.uid}/study-visits", json=unscheduled_input
+    )
+    assert_response_status_code(response, 201)
+
+
+# ---- Manual Visit Mode ---- #
+
+
+def _manual_visit_data(
+    epoch_uid: str,
+    visit_name: str,
+    short_name: str,
+    unique_number: int,
+    visit_class: str = "SINGLE_VISIT",
+) -> dict[str, Any]:
+    return {
+        "study_epoch_uid": epoch_uid,
+        "visit_type": {"term_uid": "VisitType_0003"},
+        "visit_contact_mode": {"term_uid": "VisitContactMode_0001"},
+        "is_global_anchor_visit": False,
+        "visit_class": visit_class,
+        "visit_subclass": "SINGLE_VISIT",
+        "show_visit": True,
+        "visit_name": visit_name,
+        "visit_short_name": short_name,
+        "unique_visit_number": unique_number,
+    }
+
+
+def _enable_manual_mode(api_client: TestClient, study_uid: str) -> None:
+    response = api_client.patch(
+        f"/studies/{study_uid}/study-visits/mode",
+        json={"manual_visit_mode": True},
+    )
+    assert_response_status_code(response, 200)
+    assert response.json()["manual_visit_mode"] is True
+
+
+def test_manual_visit_mode__default_is_assisted(api_client):
+    _study = TestUtils.create_study(project_number=project.project_number)
+    response = api_client.get(f"/studies/{_study.uid}/study-visits/mode")
+    assert_response_status_code(response, 200)
+    assert response.json()["manual_visit_mode"] is False
+
+
+def test_manual_visit_mode__enable_and_verify(api_client):
+    _study = TestUtils.create_study(project_number=project.project_number)
+    response = api_client.patch(
+        f"/studies/{_study.uid}/study-visits/mode",
+        json={"manual_visit_mode": True},
+    )
+    assert_response_status_code(response, 200)
+    assert response.json()["manual_visit_mode"] is True
+
+    response = api_client.get(f"/studies/{_study.uid}/study-visits/mode")
+    assert_response_status_code(response, 200)
+    assert response.json()["manual_visit_mode"] is True
+
+
+def test_manual_visit_mode__enable_is_idempotent(api_client):
+    _study = TestUtils.create_study(project_number=project.project_number)
+    api_client.patch(
+        f"/studies/{_study.uid}/study-visits/mode",
+        json={"manual_visit_mode": True},
+    )
+    response = api_client.patch(
+        f"/studies/{_study.uid}/study-visits/mode",
+        json={"manual_visit_mode": True},
+    )
+    assert_response_status_code(response, 200)
+    assert response.json()["manual_visit_mode"] is True
+
+
+def test_manual_visit_mode__locked_version_keeps_assisted_mode(api_client):
+    # GIVEN a study version locked in assisted mode, and the study switched to manual mode afterwards
+    _study = TestUtils.create_study(project_number=project.project_number)
+    _epoch = create_study_epoch("EpochSubType_0001", study_uid=_study.uid)
+    datadict = visits_basic_data.copy()
+    datadict.update(
+        {
+            "study_epoch_uid": _epoch.uid,
+            "visit_type": {"term_uid": "VisitType_0001"},
+            "show_visit": True,
+            "time_reference": {"term_uid": "VisitSubType_0005"},
+            "time_value": 0,
+            "time_unit_uid": DAYUID,
+            "visit_class": "SINGLE_VISIT",
+            "visit_subclass": "SINGLE_VISIT",
+            "is_global_anchor_visit": True,
+        }
+    )
+    response = api_client.post(f"/studies/{_study.uid}/study-visits", json=datadict)
+    assert_response_status_code(response, 201)
+    visit_uid = response.json()["uid"]
+
+    locked_version = TestUtils.lock_and_unlock_study(
+        study_uid=_study.uid,
+        reason_for_lock_term_uid=test_data_dict["reason_for_lock_terms"][0].term_uid,
+        reason_for_unlock_term_uid=test_data_dict["reason_for_unlock_terms"][
+            0
+        ].term_uid,
+    )
+    _enable_manual_mode(api_client, _study.uid)
+
+    # THEN the visit mode is read for the requested study version
+    assert StudyDefinitionRepositoryImpl.get_manual_visit_mode(_study.uid) is True
+    assert (
+        StudyDefinitionRepositoryImpl.get_manual_visit_mode(
+            _study.uid, study_value_version=locked_version
+        )
+        is False
+    )
+
+    # THEN the visits of the locked study version are still returned
+    for params in ({}, {"lite": True}):
+        response = api_client.get(
+            f"/studies/{_study.uid}/study-visits",
+            params={"study_value_version": locked_version, **params},
+        )
+        assert_response_status_code(response, 200)
+        assert [visit["uid"] for visit in response.json()["items"]] == [visit_uid]
+
+    response = api_client.get(
+        f"/studies/{_study.uid}/study-visits/{visit_uid}",
+        params={"study_value_version": locked_version},
+    )
+    assert_response_status_code(response, 200)
+
+
+def test_manual_visit_mode__kept_after_lock_and_unlock(api_client):
+    _study = TestUtils.create_study(project_number=project.project_number)
+    _enable_manual_mode(api_client, _study.uid)
+
+    locked_version = TestUtils.lock_and_unlock_study(
+        study_uid=_study.uid,
+        reason_for_lock_term_uid=test_data_dict["reason_for_lock_terms"][0].term_uid,
+        reason_for_unlock_term_uid=test_data_dict["reason_for_unlock_terms"][
+            0
+        ].term_uid,
+    )
+
+    # THEN both the locked study version and the new draft are in manual mode
+    assert (
+        StudyDefinitionRepositoryImpl.get_manual_visit_mode(
+            _study.uid, study_value_version=locked_version
+        )
+        is True
+    )
+    response = api_client.get(f"/studies/{_study.uid}/study-visits/mode")
+    assert_response_status_code(response, 200)
+    assert response.json()["manual_visit_mode"] is True
+
+
+def test_manual_visit_mode__create_names_stored_from_input(api_client):
+    _study = TestUtils.create_study(project_number=project.project_number)
+    _epoch = create_study_epoch("EpochSubType_0001", study_uid=_study.uid)
+    _enable_manual_mode(api_client, _study.uid)
+
+    data = _manual_visit_data(_epoch.uid, "Visit Alpha", "VA", 101)
+    response = api_client.post(f"/studies/{_study.uid}/study-visits", json=data)
+    assert_response_status_code(response, 201)
+    visit = response.json()
+
+    assert visit["visit_name"] == "Visit Alpha"
+    assert visit["visit_short_name"] == "VA"
+    assert visit["unique_visit_number"] == 101
+
+    response = api_client.get(f"/studies/{_study.uid}/study-visits/{visit['uid']}")
+    assert_response_status_code(response, 200)
+    fetched = response.json()
+    assert fetched["visit_name"] == "Visit Alpha"
+    assert fetched["visit_short_name"] == "VA"
+    assert fetched["unique_visit_number"] == 101
+
+
+def test_manual_visit_mode__timing_not_required(api_client):
+    _study = TestUtils.create_study(project_number=project.project_number)
+    _epoch = create_study_epoch("EpochSubType_0001", study_uid=_study.uid)
+    _enable_manual_mode(api_client, _study.uid)
+
+    data = _manual_visit_data(_epoch.uid, "Visit Beta", "VB", 200)
+    response = api_client.post(f"/studies/{_study.uid}/study-visits", json=data)
+    assert_response_status_code(response, 201)
+    visit = response.json()
+
+    assert visit["time_value"] is None
+    assert visit["time_reference"] is None
+
+
+@pytest.mark.parametrize(
+    "missing_field", ["visit_name", "visit_short_name", "unique_visit_number"]
+)
+def test_manual_visit_mode__names_and_unique_number_required(api_client, missing_field):
+    _study = TestUtils.create_study(project_number=project.project_number)
+    _epoch = create_study_epoch("EpochSubType_0001", study_uid=_study.uid)
+    _enable_manual_mode(api_client, _study.uid)
+
+    data = _manual_visit_data(_epoch.uid, "Visit Gamma", "VG", 300)
+    del data[missing_field]
+    response = api_client.post(f"/studies/{_study.uid}/study-visits", json=data)
+    assert_response_status_code(response, 400)
+    assert (
+        response.json()["message"]
+        == f"The following fields are required for a manually defined visit: '{missing_field}'."
+    )
+
+
+def test_manual_visit_mode__visit_order_is_creation_sequence(api_client):
+    _study = TestUtils.create_study(project_number=project.project_number)
+    _epoch = create_study_epoch("EpochSubType_0001", study_uid=_study.uid)
+    _enable_manual_mode(api_client, _study.uid)
+
+    def _create(name: str, short: str, num: int) -> dict[str, Any]:
+        resp = api_client.post(
+            f"/studies/{_study.uid}/study-visits",
+            json=_manual_visit_data(_epoch.uid, name, short, num),
+        )
+        assert_response_status_code(resp, 201)
+        return resp.json()
+
+    # Deliberately out-of-order unique numbers to confirm ordering is by creation, not unique_visit_number.
+    v1 = _create("Visit 1", "V1", 300)
+    v2 = _create("Visit 2", "V2", 100)
+    v3 = _create("Visit 3", "V3", 200)
+
+    assert v1["order"] == 1
+    assert v2["order"] == 2
+    assert v3["order"] == 3
+
+
+def test_manual_visit_mode__non_visit_class_stores_user_names(api_client):
+    _study = TestUtils.create_study(project_number=project.project_number)
+    _epoch = create_study_epoch("EpochSubType_0001", study_uid=_study.uid)
+    _enable_manual_mode(api_client, _study.uid)
+
+    data = _manual_visit_data(
+        _epoch.uid, "Non Visit X", "NVX", 29999, visit_class="NON_VISIT"
+    )
+    response = api_client.post(f"/studies/{_study.uid}/study-visits", json=data)
+    assert_response_status_code(response, 201)
+    visit = response.json()
+
+    assert visit["visit_name"] == "Non Visit X"
+    assert visit["visit_short_name"] == "NVX"
+    assert visit["unique_visit_number"] == 29999
+
+
+def test_manual_visit_mode__edit_preserves_visit_order(api_client):
+    _study = TestUtils.create_study(project_number=project.project_number)
+    _epoch = create_study_epoch("EpochSubType_0001", study_uid=_study.uid)
+    _enable_manual_mode(api_client, _study.uid)
+
+    def _create(name: str, short: str, num: int) -> dict[str, Any]:
+        resp = api_client.post(
+            f"/studies/{_study.uid}/study-visits",
+            json=_manual_visit_data(_epoch.uid, name, short, num),
+        )
+        assert_response_status_code(resp, 201)
+        return resp.json()
+
+    v1 = _create("Visit 1", "V1", 100)
+    v2 = _create("Visit 2", "V2", 200)
+    assert v2["order"] == 2
+
+    edit_data = _manual_visit_data(_epoch.uid, "Visit 2 Renamed", "V2R", 200)
+    edit_data["uid"] = v2["uid"]
+    edit_data["description"] = "updated description"
+    response = api_client.patch(
+        f"/studies/{_study.uid}/study-visits/{v2['uid']}", json=edit_data
+    )
+    assert_response_status_code(response, 200)
+    updated = response.json()
+
+    assert updated["order"] == 2
+    assert updated["visit_name"] == "Visit 2 Renamed"
+    assert updated["visit_short_name"] == "V2R"
+
+    response = api_client.get(f"/studies/{_study.uid}/study-visits/{v1['uid']}")
+    assert_response_status_code(response, 200)
+    assert response.json()["order"] == 1
+
+
+def test_manual_visit_mode__delete_no_renumbering(api_client):
+    _study = TestUtils.create_study(project_number=project.project_number)
+    _epoch = create_study_epoch("EpochSubType_0001", study_uid=_study.uid)
+    _enable_manual_mode(api_client, _study.uid)
+
+    def _create(name: str, short: str, num: int) -> dict[str, Any]:
+        resp = api_client.post(
+            f"/studies/{_study.uid}/study-visits",
+            json=_manual_visit_data(_epoch.uid, name, short, num),
+        )
+        assert_response_status_code(resp, 201)
+        return resp.json()
+
+    v1 = _create("Visit 1", "V1", 100)
+    v2 = _create("Visit 2", "V2", 200)
+    v3 = _create("Visit 3", "V3", 300)
+
+    response = api_client.delete(f"/studies/{_study.uid}/study-visits/{v2['uid']}")
+    assert_response_status_code(response, 204)
+
+    response = api_client.get(f"/studies/{_study.uid}/study-visits/{v1['uid']}")
+    assert_response_status_code(response, 200)
+    assert response.json()["order"] == 1
+
+    response = api_client.get(f"/studies/{_study.uid}/study-visits/{v3['uid']}")
+    assert_response_status_code(response, 200)
+    assert response.json()["order"] == 2
+
+
+def test_manual_visit_mode__reorder_visits(api_client):
+    _study = TestUtils.create_study(project_number=project.project_number)
+    _epoch = create_study_epoch("EpochSubType_0001", study_uid=_study.uid)
+    _enable_manual_mode(api_client, _study.uid)
+
+    def _create(name: str, short: str, num: int) -> dict[str, Any]:
+        resp = api_client.post(
+            f"/studies/{_study.uid}/study-visits",
+            json=_manual_visit_data(_epoch.uid, name, short, num),
+        )
+        assert_response_status_code(resp, 201)
+        return resp.json()
+
+    v1 = _create("Visit 1", "V1", 100)
+    v2 = _create("Visit 2", "V2", 200)
+    v3 = _create("Visit 3", "V3", 300)
+
+    response = api_client.patch(
+        f"/studies/{_study.uid}/study-visits/reorder",
+        json={"visit_uids": [v3["uid"], v1["uid"], v2["uid"]]},
+    )
+    assert_response_status_code(response, 200)
+
+    response = api_client.get(f"/studies/{_study.uid}/study-visits/{v3['uid']}")
+    assert response.json()["order"] == 1
+    response = api_client.get(f"/studies/{_study.uid}/study-visits/{v1['uid']}")
+    assert response.json()["order"] == 2
+    response = api_client.get(f"/studies/{_study.uid}/study-visits/{v2['uid']}")
+    assert response.json()["order"] == 3
+
+
+@pytest.mark.parametrize("layout", ["detailed", "protocol", "operational"])
+def test_manual_visit_mode__soa_follows_reordered_visits(api_client, layout):
+    _study = TestUtils.create_study(project_number=project.project_number)
+    _epoch = create_study_epoch("EpochSubType_0001", study_uid=_study.uid)
+    _enable_manual_mode(api_client, _study.uid)
+
+    visit_uids = []
+    for idx in (1, 2, 3):
+        response = api_client.post(
+            f"/studies/{_study.uid}/study-visits",
+            json=_manual_visit_data(_epoch.uid, f"Visit {idx}", f"V{idx}", idx * 100),
+        )
+        assert_response_status_code(response, 201)
+        visit_uids.append(response.json()["uid"])
+
+    # Reordered against unique_visit_number, which is the assisted-mode sort key
+    reordered_uids = [visit_uids[2], visit_uids[0], visit_uids[1]]
+    response = api_client.patch(
+        f"/studies/{_study.uid}/study-visits/reorder",
+        json={"visit_uids": reordered_uids},
+    )
+    assert_response_status_code(response, 200)
+
+    response = api_client.get(
+        f"/studies/{_study.uid}/study-visits", params={"lite": True}
+    )
+    assert_response_status_code(response, 200)
+    assert [visit["uid"] for visit in response.json()["items"]] == reordered_uids
+
+    response = api_client.get(
+        f"/studies/{_study.uid}/flowchart", params={"layout": layout}
+    )
+    assert_response_status_code(response, 200)
+    assert _extract_ordered_visit_uids_from_soa_header(response.json()) == (
+        reordered_uids
+    )
+
+
+def _extract_ordered_visit_uids_from_soa_header(soa_json: dict[str, Any]) -> list[str]:
+    uids: list[str] = []
+    for row in soa_json["rows"][: soa_json["num_header_rows"]]:
+        for cell in row["cells"]:
+            for ref in cell.get("refs") or []:
+                if ref.get("type") == "StudyVisit" and ref["uid"] not in uids:
+                    uids.append(ref["uid"])
+    return uids
+
+
+def test_manual_visit_mode__reorder_rejected_in_assisted_mode(api_client):
+    _study = TestUtils.create_study(project_number=project.project_number)
+    response = api_client.patch(
+        f"/studies/{_study.uid}/study-visits/reorder",
+        json={"visit_uids": ["some-uid"]},
+    )
+    assert_response_status_code(response, 400)
+
+
+def test_manual_visit_mode__reorder_rejects_uid_mismatch(api_client):
+    _study = TestUtils.create_study(project_number=project.project_number)
+    _epoch = create_study_epoch("EpochSubType_0001", study_uid=_study.uid)
+    _enable_manual_mode(api_client, _study.uid)
+
+    v1_resp = api_client.post(
+        f"/studies/{_study.uid}/study-visits",
+        json=_manual_visit_data(_epoch.uid, "Visit 1", "V1", 100),
+    )
+    assert_response_status_code(v1_resp, 201)
+    v1 = v1_resp.json()
+
+    response = api_client.patch(
+        f"/studies/{_study.uid}/study-visits/reorder",
+        json={"visit_uids": [v1["uid"], "nonexistent-uid"]},
+    )
+    assert_response_status_code(response, 400)
+
+
+def test_manual_visit_mode__reorder_rejects_duplicate_uids(api_client):
+    _study = TestUtils.create_study(project_number=project.project_number)
+    _epoch = create_study_epoch("EpochSubType_0001", study_uid=_study.uid)
+    _enable_manual_mode(api_client, _study.uid)
+
+    visits = []
+    for idx in (1, 2):
+        response = api_client.post(
+            f"/studies/{_study.uid}/study-visits",
+            json=_manual_visit_data(_epoch.uid, f"Visit {idx}", f"V{idx}", idx * 100),
+        )
+        assert_response_status_code(response, 201)
+        visits.append(response.json())
+
+    response = api_client.patch(
+        f"/studies/{_study.uid}/study-visits/reorder",
+        json={"visit_uids": [visits[0]["uid"], visits[0]["uid"], visits[1]["uid"]]},
+    )
+    assert_response_status_code(response, 400)
+
+
+def _create_reordered_timed_manual_visits(
+    api_client: TestClient, study_uid: str
+) -> list[dict[str, Any]]:
+    """Creates three timed visits in manual mode and reorders them against their timing.
+
+    Returns the visits in their manual order: day 30, day 10, day 20.
+    """
+    epoch = create_study_epoch("EpochSubType_0001", study_uid=study_uid)
+    _enable_manual_mode(api_client, study_uid)
+
+    visits = []
+    for idx, day in ((1, 10), (2, 20), (3, 30)):
+        data = _manual_visit_data(epoch.uid, f"Visit {idx}", f"V{idx}", idx * 100)
+        data.update(
+            {
+                "time_reference": {"term_uid": "VisitSubType_0005"},
+                "time_value": day,
+                "time_unit_uid": DAYUID,
+            }
+        )
+        response = api_client.post(f"/studies/{study_uid}/study-visits", json=data)
+        assert_response_status_code(response, 201)
+        visits.append(response.json())
+
+    manual_order = [visits[2], visits[0], visits[1]]
+    response = api_client.patch(
+        f"/studies/{study_uid}/study-visits/reorder",
+        json={"visit_uids": [visit["uid"] for visit in manual_order]},
+    )
+    assert_response_status_code(response, 200)
+    return manual_order
+
+
+def test_manual_visit_mode__edit_keeps_manual_order_against_timing(api_client):
+    _study = TestUtils.create_study(project_number=project.project_number)
+    v_day30, v_day10, v_day20 = _create_reordered_timed_manual_visits(
+        api_client, _study.uid
+    )
+
+    edit_data = _manual_visit_data(
+        v_day10["study_epoch_uid"], "Visit 1 Renamed", "V1R", 100
+    )
+    edit_data.update(
+        {
+            "uid": v_day10["uid"],
+            "time_reference": {"term_uid": "VisitSubType_0005"},
+            "time_value": 10,
+            "time_unit_uid": DAYUID,
+        }
+    )
+    response = api_client.patch(
+        f"/studies/{_study.uid}/study-visits/{v_day10['uid']}", json=edit_data
+    )
+    assert_response_status_code(response, 200)
+    assert response.json()["order"] == 2
+
+    for visit, expected_order in ((v_day30, 1), (v_day10, 2), (v_day20, 3)):
+        response = api_client.get(f"/studies/{_study.uid}/study-visits/{visit['uid']}")
+        assert_response_status_code(response, 200)
+        assert response.json()["order"] == expected_order
+
+
+def test_manual_visit_mode__delete_keeps_manual_order_against_timing(api_client):
+    _study = TestUtils.create_study(project_number=project.project_number)
+    v_day30, v_day10, v_day20 = _create_reordered_timed_manual_visits(
+        api_client, _study.uid
+    )
+
+    response = api_client.delete(f"/studies/{_study.uid}/study-visits/{v_day20['uid']}")
+    assert_response_status_code(response, 204)
+
+    for visit, expected_order in ((v_day30, 1), (v_day10, 2)):
+        response = api_client.get(f"/studies/{_study.uid}/study-visits/{visit['uid']}")
+        assert_response_status_code(response, 200)
+        assert response.json()["order"] == expected_order
+
+    response = api_client.delete(f"/studies/{_study.uid}/study-visits/{v_day30['uid']}")
+    assert_response_status_code(response, 204)
+    response = api_client.get(f"/studies/{_study.uid}/study-visits/{v_day10['uid']}")
+    assert_response_status_code(response, 200)
+    assert response.json()["order"] == 1
+
+
+def test_manual_visit_mode__re_enable_keeps_single_mode_field(api_client):
+    _study = TestUtils.create_study(project_number=project.project_number)
+
+    for manual_visit_mode in (True, False, True):
+        response = api_client.patch(
+            f"/studies/{_study.uid}/study-visits/mode",
+            json={"manual_visit_mode": manual_visit_mode},
+        )
+        assert_response_status_code(response, 200)
+        assert response.json()["manual_visit_mode"] is manual_visit_mode
+
+    mode_fields = StudyDefinitionRepositoryImpl.get_soa_preferences(
+        study_uid=_study.uid,
+        field_names=(settings.study_field_manual_visit_mode,),
+    )
+    assert len(mode_fields) == 1
+    assert mode_fields[0].value is True
+
+
+def test_manual_visit_mode__assisted_rejects_user_provided_names(api_client):
+    _study = TestUtils.create_study(project_number=project.project_number)
+    _epoch = create_study_epoch("EpochSubType_0001", study_uid=_study.uid)
+
+    data = {
+        "study_epoch_uid": _epoch.uid,
+        "visit_type": {"term_uid": "VisitType_0001"},
+        "time_reference": {"term_uid": "VisitSubType_0005"},
+        "time_value": 0,
+        "time_unit_uid": DAYUID,
+        "is_global_anchor_visit": True,
+        "visit_class": "SINGLE_VISIT",
+        "visit_subclass": "SINGLE_VISIT",
+        "show_visit": True,
+        "visit_name": "Should Not Be Allowed",
+        "visit_short_name": "SNBA",
+        "unique_visit_number": 999,
+    }
+    response = api_client.post(f"/studies/{_study.uid}/study-visits", json=data)
+    assert_response_status_code(response, 400)
+
+
+def test_manual_visit_mode__without_timing_day_week_are_none(api_client):
+    _study = TestUtils.create_study(project_number=project.project_number)
+    _epoch = create_study_epoch("EpochSubType_0001", study_uid=_study.uid)
+    _enable_manual_mode(api_client, _study.uid)
+
+    data = _manual_visit_data(_epoch.uid, "Visit Alpha", "VA", 101)
+    response = api_client.post(f"/studies/{_study.uid}/study-visits", json=data)
+    assert_response_status_code(response, 201)
+    visit = response.json()
+
+    assert visit["time_value"] is None
+    assert visit["time_reference"] is None
+    assert visit["study_day_number"] is None
+    assert visit["study_duration_days"] is None
+    assert visit["study_week_number"] is None
+    assert visit["study_duration_weeks"] is None
+
+    fetched = api_client.get(
+        f"/studies/{_study.uid}/study-visits/{visit['uid']}"
+    ).json()
+    assert fetched["study_day_number"] is None
+    assert fetched["study_week_number"] is None
+
+
+def test_manual_visit_mode__timing_derives_study_day_and_week(api_client):
+    _study = TestUtils.create_study(project_number=project.project_number)
+    _epoch = create_study_epoch("EpochSubType_0001", study_uid=_study.uid)
+    _enable_manual_mode(api_client, _study.uid)
+
+    data = _manual_visit_data(_epoch.uid, "Visit Alpha", "VA", 101)
+    data["time_value"] = 14
+    data["time_unit_uid"] = DAYUID
+    data["time_reference"] = {"term_uid": "VisitSubType_0005"}
+
+    response = api_client.post(f"/studies/{_study.uid}/study-visits", json=data)
+    assert_response_status_code(response, 201)
+    visit = response.json()
+
+    assert visit["time_value"] == 14
+    assert visit["study_day_number"] == 15
+    assert visit["study_duration_days"] == 14
+    assert visit["study_week_number"] == 3
+    assert visit["study_duration_weeks"] == 2
+
+    fetched = api_client.get(
+        f"/studies/{_study.uid}/study-visits/{visit['uid']}"
+    ).json()
+    assert fetched["study_day_number"] == 15
+    assert fetched["study_duration_days"] == 14
+    assert fetched["study_week_number"] == 3
+    assert fetched["study_duration_weeks"] == 2
+
+    # Edit: change timing → derived props update accordingly.
+    edit_data = _manual_visit_data(_epoch.uid, "Visit Alpha", "VA", 101)
+    edit_data["uid"] = visit["uid"]
+    edit_data["time_value"] = 7
+    edit_data["time_unit_uid"] = DAYUID
+    edit_data["time_reference"] = {"term_uid": "VisitSubType_0005"}
+
+    response = api_client.patch(
+        f"/studies/{_study.uid}/study-visits/{visit['uid']}", json=edit_data
+    )
+    assert_response_status_code(response, 200)
+    updated = response.json()
+
+    assert updated["time_value"] == 7
+    assert updated["study_day_number"] == 8
+    assert updated["study_duration_days"] == 7
+    assert updated["study_week_number"] == 2
+    assert updated["study_duration_weeks"] == 1
+
+    fetched = api_client.get(
+        f"/studies/{_study.uid}/study-visits/{visit['uid']}"
+    ).json()
+    assert fetched["study_day_number"] == 8
+    assert fetched["study_duration_days"] == 7
+
+
+def _assisted_visit_data(
+    epoch_uid: str, time_value: int, is_global_anchor: bool = False
+) -> dict[str, Any]:
+    return {
+        "study_epoch_uid": epoch_uid,
+        "visit_type": {"term_uid": "VisitType_0001"},
+        "visit_contact_mode": {"term_uid": "VisitContactMode_0001"},
+        "time_reference": {"term_uid": "VisitSubType_0005"},
+        "time_value": time_value,
+        "time_unit_uid": DAYUID,
+        "is_global_anchor_visit": is_global_anchor,
+        "visit_class": "SINGLE_VISIT",
+        "visit_subclass": "SINGLE_VISIT",
+        "show_visit": True,
+    }
+
+
+def test_manual_visit_mode__switch_back_when_no_visits(api_client):
+    _study = TestUtils.create_study(project_number=project.project_number)
+    _enable_manual_mode(api_client, _study.uid)
+
+    response = api_client.patch(
+        f"/studies/{_study.uid}/study-visits/mode",
+        json={"manual_visit_mode": False},
+    )
+    assert_response_status_code(response, 200)
+    assert response.json()["manual_visit_mode"] is False
+
+    response = api_client.get(f"/studies/{_study.uid}/study-visits/mode")
+    assert_response_status_code(response, 200)
+    assert response.json()["manual_visit_mode"] is False
+
+
+def test_manual_visit_mode__switch_back_is_idempotent(api_client):
+    _study = TestUtils.create_study(project_number=project.project_number)
+    response = api_client.patch(
+        f"/studies/{_study.uid}/study-visits/mode",
+        json={"manual_visit_mode": False},
+    )
+    assert_response_status_code(response, 200)
+    assert response.json()["manual_visit_mode"] is False
+
+
+def test_manual_visit_mode__switch_back_when_unchanged(api_client):
+    _study = TestUtils.create_study(project_number=project.project_number)
+    _epoch = create_study_epoch("EpochSubType_0001", study_uid=_study.uid)
+
+    for value, is_anchor in ((0, True), (7, False), (14, False)):
+        resp = api_client.post(
+            f"/studies/{_study.uid}/study-visits",
+            json=_assisted_visit_data(_epoch.uid, value, is_anchor),
+        )
+        assert_response_status_code(resp, 201)
+
+    _enable_manual_mode(api_client, _study.uid)
+
+    # No visit modified since the switch → assisted mode can be restored.
+    response = api_client.patch(
+        f"/studies/{_study.uid}/study-visits/mode",
+        json={"manual_visit_mode": False},
+    )
+    assert_response_status_code(response, 200)
+    assert response.json()["manual_visit_mode"] is False
+
+    response = api_client.get(f"/studies/{_study.uid}/study-visits/mode")
+    assert_response_status_code(response, 200)
+    assert response.json()["manual_visit_mode"] is False
+
+
+def test_manual_visit_mode__switch_back_blocked_after_reorder(api_client):
+    _study = TestUtils.create_study(project_number=project.project_number)
+    _epoch = create_study_epoch("EpochSubType_0001", study_uid=_study.uid)
+
+    uids = []
+    for value, is_anchor in ((0, True), (7, False), (14, False)):
+        resp = api_client.post(
+            f"/studies/{_study.uid}/study-visits",
+            json=_assisted_visit_data(_epoch.uid, value, is_anchor),
+        )
+        assert_response_status_code(resp, 201)
+        uids.append(resp.json()["uid"])
+
+    _enable_manual_mode(api_client, _study.uid)
+
+    response = api_client.patch(
+        f"/studies/{_study.uid}/study-visits/reorder",
+        json={"visit_uids": [uids[2], uids[0], uids[1]]},
+    )
+    assert_response_status_code(response, 200)
+
+    # A visit was modified after the switch → switching back is blocked.
+    response = api_client.patch(
+        f"/studies/{_study.uid}/study-visits/mode",
+        json={"manual_visit_mode": False},
+    )
+    assert_response_status_code(response, 400)
+
+    response = api_client.get(f"/studies/{_study.uid}/study-visits/mode")
+    assert_response_status_code(response, 200)
+    assert response.json()["manual_visit_mode"] is True
+
+
+def test_manual_visit_mode__switch_back_blocked_after_edit(api_client):
+    _study = TestUtils.create_study(project_number=project.project_number)
+    _epoch = create_study_epoch("EpochSubType_0001", study_uid=_study.uid)
+    _enable_manual_mode(api_client, _study.uid)
+
+    resp = api_client.post(
+        f"/studies/{_study.uid}/study-visits",
+        json=_manual_visit_data(_epoch.uid, "Visit Alpha", "VA", 101),
+    )
+    assert_response_status_code(resp, 201)
+    visit = resp.json()
+
+    # Edit only the description (order/timing untouched) - still a modification.
+    edit_data = _manual_visit_data(_epoch.uid, "Visit Alpha", "VA", 101)
+    edit_data["uid"] = visit["uid"]
+    edit_data["description"] = "updated description"
+    response = api_client.patch(
+        f"/studies/{_study.uid}/study-visits/{visit['uid']}", json=edit_data
+    )
+    assert_response_status_code(response, 200)
+
+    response = api_client.patch(
+        f"/studies/{_study.uid}/study-visits/mode",
+        json={"manual_visit_mode": False},
+    )
+    assert_response_status_code(response, 400)

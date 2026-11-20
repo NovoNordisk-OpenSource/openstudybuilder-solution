@@ -1,8 +1,3 @@
-import { useFootnotesStore } from '@/stores/studies-footnotes'
-import dataFormating from '@/utils/dataFormating'
-
-const footnotesStore = useFootnotesStore()
-
 function getSoaRowClasses(row) {
   if (row.cells && row.cells.length) {
     if (row.cells[0].style === 'soaGroup') {
@@ -38,32 +33,6 @@ function getSoaFirstCellClasses(cell) {
   return result
 }
 
-function getElementFootnotesLetters(uid) {
-  let footnotesLetters = ''
-  footnotesStore.studyFootnotes.forEach((footnote) => {
-    footnote.referenced_items.forEach((item) => {
-      if (item.item_uid === uid) {
-        footnotesLetters += dataFormating.footnoteSymbol(footnote.order)
-      } else if (
-        uid &&
-        typeof uid !== 'string' &&
-        uid.includes(item.item_uid)
-      ) {
-        footnotesLetters += dataFormating.footnoteSymbol(footnote.order)
-      }
-    })
-  })
-  return Array.from(new Set(footnotesLetters.split(''))).join(', ')
-}
-
-function getElementFootnoteLettersForMultipleRefs(refs) {
-  let footnotesLetters = ''
-  refs.forEach((ref) => {
-    footnotesLetters += getElementFootnotesLetters(ref.uid)
-  })
-  return Array.from(new Set(footnotesLetters.split(''))).join(' ')
-}
-
 function isActivityRow(row) {
   return [
     'activity',
@@ -76,7 +45,5 @@ export default {
   getSoaRowClasses,
   getSoaRowType,
   getSoaFirstCellClasses,
-  getElementFootnotesLetters,
-  getElementFootnoteLettersForMultipleRefs,
   isActivityRow,
 }

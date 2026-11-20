@@ -2,6 +2,7 @@
 Tests for /standards/sponsor-models endpoints
 """
 
+import json
 import logging
 
 import pytest
@@ -190,31 +191,90 @@ def test_post_dataset(api_client):
     assert_response_status_code(response, 201)
     assert res["uid"] == params3["dataset_uid"]
 
-    # POST request to create a dataset implementing a dataset class which doesn't
-    # exist in CDISC: this is tolerated. The dataset is created without a
-    # dataset-class link (a warning is logged instead of raising).
-    params4 = common_params.copy()
-    params4["dataset_uid"] = "DatasetWithNonexistentClass"
-    params4["implemented_dataset_class"] = "NonexistentDatasetClass"
+
+def test_post_sponsor_dataset_with_unknown_class_is_created_without_class_link(
+    api_client,
+):
+    """DC-SEM-011: a sponsor dataset whose implemented dataset class is not found
+    for its sponsor model (the class does not exist, or is not part of that
+    sponsor model's IG) is still created (201) with no IMPLEMENTS_DATASET_CLASS
+    link. The API logs a warning instead of refusing (not asserted here).
+    This test covers the class-does-not-exist case."""
+    url = "/standards/sponsor-models/datasets"
+    sponsor_model = TestUtils.create_sponsor_model(
+        ig_uid=data_model_ig.uid,
+        ig_version_number=data_model_ig.version_number,
+        version_number="1",
+    )
+    params = {
+        "target_data_model_catalogue": data_model_catalogue_name,
+        "dataset_uid": "DatasetWithNonexistentClass",
+        "sponsor_model_name": sponsor_model.name,
+        "sponsor_model_version_number": sponsor_model.version,
+        "implemented_dataset_class": "NonexistentDatasetClass",
+        "is_basic_std": True,
+        "is_cdisc_std": True,
+        "enrich_build_order": 10,
+    }
     response = api_client.post(
         url,
-        json=params4,
+        json=params,
     )
 
     assert_response_status_code(response, 201)
     res = response.json()
-    assert res["uid"] == params4["dataset_uid"]
+    assert res["uid"] == params["dataset_uid"]
 
-    # The dataset was created but not linked to any dataset class.
     no_class_link_count = db.cypher_query(
         """
         MATCH (root:Dataset {uid: $uid})-[:HAS_INSTANCE]->(value:SponsorModelDatasetInstance)
         WHERE NOT (value)-[:IMPLEMENTS_DATASET_CLASS]->()
         RETURN count(value)
         """,
-        {"uid": params4["dataset_uid"]},
+        {"uid": params["dataset_uid"]},
     )[0][0][0]
     assert no_class_link_count >= 1
+
+
+def test_post_sponsor_dataset_without_class_is_created_without_class_link(
+    api_client,
+):
+    """DC-SEM-002: a sponsor dataset may have no dataset class. When no
+    implemented dataset class is given, the dataset is created (201) with no
+    IMPLEMENTS_DATASET_CLASS link."""
+    url = "/standards/sponsor-models/datasets"
+    sponsor_model = TestUtils.create_sponsor_model(
+        ig_uid=data_model_ig.uid,
+        ig_version_number=data_model_ig.version_number,
+        version_number="1",
+    )
+    params = {
+        "target_data_model_catalogue": data_model_catalogue_name,
+        "dataset_uid": "DatasetWithoutClass",
+        "sponsor_model_name": sponsor_model.name,
+        "sponsor_model_version_number": sponsor_model.version,
+        "is_basic_std": True,
+        "is_cdisc_std": True,
+        "enrich_build_order": 10,
+    }
+    response = api_client.post(
+        url,
+        json=params,
+    )
+
+    assert_response_status_code(response, 201)
+    res = response.json()
+    assert res["uid"] == params["dataset_uid"]
+
+    no_class_link_count = db.cypher_query(
+        """
+        MATCH (root:Dataset {uid: $uid})-[:HAS_INSTANCE]->(value:SponsorModelDatasetInstance)
+        WHERE NOT (value)-[:IMPLEMENTS_DATASET_CLASS]->()
+        RETURN count(value)
+        """,
+        {"uid": params["dataset_uid"]},
+    )[0][0][0]
+    assert no_class_link_count == 1
 
 
 def test_post_dataset_variable(api_client):
@@ -260,6 +320,19 @@ def test_post_dataset_variable(api_client):
     assert res["uid"] == common_params["dataset_variable_uid"]
     # `order` is structural but exposed via the parent dataset's ordinal.
     assert res["dataset"]["ordinal"] == common_params["order"]
+
+    # The listing reaches referenced terms through the CTTermContext node
+    uid_filter = json.dumps({"uid": {"v": [common_params["dataset_variable_uid"]]}})
+    response = api_client.get(
+        f"{url}?sponsor_model_name={sponsor_model.name}"
+        f"&sponsor_model_version={sponsor_model.version}&filters={uid_filter}"
+    )
+    assert_response_status_code(response, 200)
+    items = response.json()["items"]
+    assert len(items) == 1
+    assert items[0]["referenced_terms"] == [
+        {"uid": term.term_uid, "submission_value": term.codelists[0].submission_value}
+    ]
 
     # POST request to create a dataset variable with a non-existent sponsor model
     params2 = common_params.copy()

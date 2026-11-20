@@ -16,7 +16,7 @@ from clinical_mdr_api.services.concepts.concept_generic_service import (
 )
 
 
-class ActiveSubstanceService(ConceptGenericService[ActiveSubstanceAR]):
+class ActiveSubstanceService(ConceptGenericService[ActiveSubstanceAR, ActiveSubstance]):
     aggregate_class = ActiveSubstanceAR
     version_class = ActiveSubstanceVersion
     repository_interface = ActiveSubstanceRepository

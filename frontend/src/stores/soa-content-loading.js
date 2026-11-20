@@ -6,13 +6,13 @@ export const useSoaContentLoadingStore = defineStore(
   () => {
     const loading = ref(false)
 
-    function changeLoadingState() {
-      loading.value = !loading.value
+    function setLoading(value) {
+      loading.value = value
     }
 
     return {
       loading,
-      changeLoadingState,
+      setLoading,
     }
   }
 )

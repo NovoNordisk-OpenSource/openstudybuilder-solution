@@ -14,8 +14,7 @@ def create_unicode_test_string():
     chars = list(f"helloツ {SYMBOLS} {GREEKS}")
     random.shuffle(chars)
     test_string = "".join(chars).strip()
-    test_string = f"testing {test_string}"
-    return test_string
+    return f"testing {test_string}"
 
 
 def json_dumps(obj: Any, **kwds: Any):
@@ -36,8 +35,7 @@ def create_unicode_brand_name_for_testing(api_client, test_string):
         api_client, "POST", "/brands", {"name": test_string}
     )
     response.raise_for_status()
-    payload = response.json()
-    return payload
+    return response.json()
 
 
 def test_unicode_input(api_client):

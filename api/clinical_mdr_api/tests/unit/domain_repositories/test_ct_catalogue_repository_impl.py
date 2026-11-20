@@ -25,8 +25,7 @@ def create_random_ct_catalogue_node(library_name: str | None) -> CTCatalogue:
     mock = Mock()
     mocked_library_node = MockLibrary(library_name)
     mock.single = lambda: mocked_library_node
-    random_ct_catalogue = CTCatalogue(name=random_str(), contains_catalogue=mock)
-    return random_ct_catalogue
+    return CTCatalogue(name=random_str(), contains_catalogue=mock)
 
 
 class TestCTCatalogueRepositoryImpl(unittest.TestCase):

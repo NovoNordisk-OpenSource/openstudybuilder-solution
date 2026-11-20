@@ -61,13 +61,12 @@ class StudyDesignCellService(StudySelectionMixin):
                 study_uid=study_uid, study_value_version=study_value_version
             )
         )
-        design_cells = [
+        return [
             StudyDesignCell.from_vo(
                 i_design_cell, study_value_version=study_value_version
             )
             for i_design_cell in design_cell_ar
         ]
-        return design_cells
 
     @db.transaction
     def get_all_selection_within_arm(
@@ -396,8 +395,7 @@ class StudyDesignCellService(StudySelectionMixin):
                 ).model_dump()
                 for _ in selection_history
             ]
-            data = calculate_diffs(versions, StudyDesignCellVersion)
-            return data
+            return calculate_diffs(versions, StudyDesignCellVersion)
         finally:
             repos.close()
 
@@ -448,5 +446,5 @@ class StudyDesignCellService(StudySelectionMixin):
                         content=BatchErrorResponse(message=str(error)),
                     )
                 )
-                raise error
+                raise
         return results

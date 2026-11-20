@@ -24,19 +24,91 @@ const DEMO_FEATURE_FLAGS = [
   'study_data_suppliers',
   'nsvs_library',
   'study_epoch_lag_time',
+  'study_epoch_ae_lag_time',
+  'study_auxiliary_devices',
+  'study_migration_details',
 ].map((name, idx) => ({
   uid: `FeatureFlag_${String(idx + 1).padStart(6, '0')}`,
-  section: 'studies',
+  section: name.endsWith('_library') ? 'library' : 'studies',
   feature: name,
   name,
   enabled: true,
   status: 'Final',
-  version: '1.0',
+  // Every third flag was switched on after being created switched off.
+  version: idx % 3 === 0 ? '1.1' : '1.0',
 }))
 
 function findDemoFeatureFlag(uid) {
   return DEMO_FEATURE_FLAGS.find((flag) => flag.uid === uid)
 }
+
+// Version history per flag uid, newest first. PATCH appends here; the
+// activate/inactivate endpoints leave the version untouched, as in the API.
+const DEMO_FEATURE_FLAG_HISTORY = new Map()
+
+// Lifecycle changes do not create versions, so only the open version follows
+// the flag's current status.
+function getDemoFeatureFlagVersions(flag) {
+  return (DEMO_FEATURE_FLAG_HISTORY.get(flag.uid) ?? []).map(
+    (version, index) => ({
+      ...version,
+      status: index === 0 ? flag.status : 'Final',
+    })
+  )
+}
+
+function snapshotDemoFeatureFlag(flag, fields) {
+  return {
+    uid: flag.uid,
+    section: flag.section,
+    feature: flag.feature,
+    name: flag.name,
+    enabled: flag.enabled,
+    description: flag.description ?? null,
+    version: flag.version,
+    end_date: null,
+    author_username: 'demo-user',
+    changes: [],
+    ...fields,
+  }
+}
+
+function recordDemoFeatureFlagVersion(flag, fields) {
+  const history = DEMO_FEATURE_FLAG_HISTORY.get(flag.uid) ?? []
+  const startDate = fields.start_date ?? new Date().toISOString()
+  if (history.length > 0) {
+    history[0].end_date = startDate
+  }
+  history.unshift(
+    snapshotDemoFeatureFlag(flag, { ...fields, start_date: startDate })
+  )
+  DEMO_FEATURE_FLAG_HISTORY.set(flag.uid, history)
+}
+
+DEMO_FEATURE_FLAGS.forEach((flag, idx) => {
+  const createdAt = Date.UTC(2025, 0, 15, 9, idx)
+  const createdVersion = flag.version
+  if (createdVersion === '1.1') {
+    flag.version = '1.0'
+    flag.enabled = false
+    recordDemoFeatureFlagVersion(flag, {
+      start_date: new Date(createdAt).toISOString(),
+      change_description: 'Initial version',
+    })
+    flag.version = createdVersion
+    flag.enabled = true
+    recordDemoFeatureFlagVersion(flag, {
+      start_date: new Date(createdAt + 86_400_000).toISOString(),
+      change_description: 'Enabled feature flag',
+      changes: ['enabled'],
+    })
+  } else {
+    recordDemoFeatureFlagVersion(flag, {
+      start_date: new Date(createdAt).toISOString(),
+      change_description: 'Initial version',
+    })
+  }
+})
 
 function bumpMinorVersion(version) {
   const [majorRaw, minorRaw] = String(version || '1.0').split('.')
@@ -229,6 +301,46 @@ function parseFilters(params) {
   }
 }
 
+const DEMO_CODELIST_TERMS = {
+  SEMTCDT: [
+    {
+      term_uid: 'CTTerm_DT_CTTERM',
+      sponsor_preferred_name: 'CT Term',
+      name: 'CT Term',
+      submission_value: 'ctTerm',
+    },
+    {
+      term_uid: 'CTTerm_DT_TEXT',
+      sponsor_preferred_name: 'Text',
+      name: 'Text',
+      submission_value: 'text',
+    },
+  ],
+  // Same terms as import_sponsor_data/datafiles/sponsor_library/age_*_rule.csv
+  AGE_AT_BASELINE_RL: [
+    {
+      term_uid: 'CTTerm_AGE_BL_1',
+      sponsor_preferred_name: 'Age at Baseline Rule 1',
+      order: 1,
+      definition: 'Age based on BirthDate and Baseline Visit Date',
+    },
+    {
+      term_uid: 'CTTerm_AGE_BL_2',
+      sponsor_preferred_name: 'Age at Baseline Rule 2',
+      order: 2,
+      definition: 'Age based on BirthDate and Date of Randomisation Visit',
+    },
+  ],
+  AGE_GRP_RL: [
+    {
+      term_uid: 'CTTerm_AGE_GRP_DECIMAL',
+      sponsor_preferred_name: 'Age with 1 decimal digit',
+      order: 1,
+      definition: 'Age with 1 decimal digit',
+    },
+  ],
+}
+
 export const libraryHandlers = [
   {
     method: 'GET',
@@ -275,6 +387,48 @@ export const libraryHandlers = [
     },
   },
   {
+    method: 'GET',
+    regex: /^\/feature-flags\/audit-trail$/,
+    respond: ({ clone, params }) => {
+      const pageNumber = Math.max(Number(params?.page_number) || 1, 1)
+      const pageSize = Math.max(Number(params?.page_size ?? 10) || 0, 0)
+      const versions = DEMO_FEATURE_FLAGS.filter(
+        (flag) => !params?.section || flag.section === params.section
+      )
+        .flatMap((flag) => getDemoFeatureFlagVersions(flag))
+        .sort((a, b) => {
+          const byDate = String(b.start_date).localeCompare(
+            String(a.start_date)
+          )
+          return byDate || a.uid.localeCompare(b.uid)
+        })
+      const items = pageSize
+        ? versions.slice((pageNumber - 1) * pageSize, pageNumber * pageSize)
+        : versions
+      const withTotal =
+        params?.total_count === true || params?.total_count === 'true'
+      return {
+        data: clone({
+          items,
+          total: withTotal ? versions.length : 0,
+          page: pageNumber,
+          size: pageSize,
+        }),
+      }
+    },
+  },
+  {
+    method: 'GET',
+    regex: /^\/feature-flags\/(?<uid>[^/]+)\/versions$/,
+    respond: ({ routeParams, clone }) => {
+      const flag = findDemoFeatureFlag(routeParams.uid)
+      if (!flag) {
+        return { status: 404, data: { message: 'Feature flag not found' } }
+      }
+      return { data: clone(getDemoFeatureFlagVersions(flag)) }
+    },
+  },
+  {
     method: 'PATCH',
     regex: /^\/feature-flags\/(?<uid>[^/]+)$/,
     respond: ({ routeParams, data, clone }) => {
@@ -288,33 +442,38 @@ export const libraryHandlers = [
           data: { message: 'Only Final feature flags can be updated.' },
         }
       }
-      let changed = false
+      const changes = []
       if (
         data &&
         typeof data.enabled === 'boolean' &&
         data.enabled !== flag.enabled
       ) {
         flag.enabled = data.enabled
-        changed = true
+        changes.push('enabled')
       }
       if (data?.section && data.section !== flag.section) {
         flag.section = data.section
-        changed = true
+        changes.push('section')
       }
       if (data?.feature && data.feature !== flag.feature) {
         flag.feature = data.feature
-        changed = true
+        changes.push('feature')
       }
       if (data && Object.prototype.hasOwnProperty.call(data, 'description')) {
         const nextDescription = data.description ?? null
         const currentDescription = flag.description ?? null
         if (nextDescription !== currentDescription) {
           flag.description = nextDescription
-          changed = true
+          changes.push('description')
         }
       }
-      if (changed) {
+      if (changes.length > 0) {
         flag.version = bumpMinorVersion(flag.version)
+        recordDemoFeatureFlagVersion(flag, {
+          change_description:
+            data?.change_description ?? `Updated ${changes.join(', ')}`,
+          changes,
+        })
       }
       return { data: clone(flag) }
     },
@@ -450,26 +609,14 @@ export const libraryHandlers = [
     }),
   },
   {
-    // NSV form needs a SEMTCDT option named "CT Term". Other term queries
-    // (criteria/footnote breadcrumbs, sponsor tables) stay on the walker.
+    // NSV form needs a SEMTCDT option named "CT Term", and the Age Rules tab
+    // needs rules with definitions. Other term queries (criteria/footnote
+    // breadcrumbs, sponsor tables) stay on the walker.
     method: 'GET',
     regex: /^\/ct\/codelists\/terms$/,
     respond: ({ params }) => {
-      if (params?.codelist_submission_value !== 'SEMTCDT') return undefined
-      const items = [
-        {
-          term_uid: 'CTTerm_DT_CTTERM',
-          sponsor_preferred_name: 'CT Term',
-          name: 'CT Term',
-          submission_value: 'ctTerm',
-        },
-        {
-          term_uid: 'CTTerm_DT_TEXT',
-          sponsor_preferred_name: 'Text',
-          name: 'Text',
-          submission_value: 'text',
-        },
-      ]
+      const items = DEMO_CODELIST_TERMS[params?.codelist_submission_value]
+      if (!items) return undefined
       return { data: { items, total: items.length } }
     },
   },

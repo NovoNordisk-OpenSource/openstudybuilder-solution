@@ -3,6 +3,20 @@ const { getShortUniqueId } = require("../../support/helper_functions");
 
 let codelistName, termId, termSponsorName, termSentanceName, termName, termSubmissionValue, termNciValue, termDefinition, conceptId
 
+When('User fetches codelist data and compares it with what is displayed in the application for {string}', (codelistUid) => {
+    cy.getCodelistNameData(codelistUid).then(response => {
+        cy.get(`[data-cy="Template parameter"]`).should('contain', response.template_parameter ? 'Yes' : 'No')
+    })
+    cy.getCodelistAttributesData(codelistUid).then(response => {
+        cy.get(`[data-cy="Extensible"]`).should('contain', response.extensible? 'Yes' : 'No')
+        cy.get(`[data-cy="Library"]`).should('contain', response.library_name)
+        cy.get(`[data-cy="Definition"]`).should('contain', response.definition)
+        cy.get(`[data-cy="Label"]`).should('contain', response.name)
+        cy.get(`[data-cy="Name"]`).should('contain', response.name)
+        cy.get(`[data-cy="Concept ID"]`).should('contain', codelistUid)
+    })
+})
+
 When('The id of the first term on the list is saved', () => cy.getCellValue(0, 'Concept ID').then(id => termId = id))
 
 When('The term is search for and found', () => cy.searchAndCheckPresence(conceptId, true))
@@ -70,10 +84,6 @@ Then('The Edit sponsor values button is not visible', () => cy.get('[data-cy="ed
 Then('The Create new sponsor values version button is visible', () => cy.get('[data-cy="create-new-sponsor-values"]').should('be.visible'))
 
 When('The codelist summary is expanded', () => cy.clickButton('cl-summary-title'))
-
-Then('The codelist summary show following data', (dataTable) => {
-    dataTable.hashes().forEach(element => cy.get(`[data-cy="${element.name}"]`).should('contain', element.value))
-})
 
 Then('The sponsor preferred name is updated', () => {
     cy.contains('[aria-label="For the code list sponsor values"] tr td', 'Sponsor preferred name').next().should('contain.text', termSponsorName)

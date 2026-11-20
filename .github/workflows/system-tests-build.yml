@@ -41,7 +41,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@0a44ba7841725637a19e28fa30b79a866c81b0a6 # v4.0.4
         with:
-          node-version: '20'
+          node-version: '24'
           cache: npm
           cache-dependency-path: system_tests/ui-tests/package-lock.json
 
@@ -85,7 +85,7 @@ jobs:
     # Opt-out per repository: runs by default; skipped only where the
     # Actions variable HALT_ON_CVE_FINDINGS is set to 'false'.
     if: vars.HALT_ON_CVE_FINDINGS != 'false'
-    name: npm audit (advisory)
+    name: npm audit (ui-tests)
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -96,7 +96,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
         with:
-          node-version: "20"
+          node-version: "24"
           cache: "npm"
           cache-dependency-path: system_tests/ui-tests/package-lock.json
 
@@ -115,8 +115,6 @@ jobs:
           if-no-files-found: warn
 
       - name: Fail on high/critical findings
-        # Once existing vulnerabilities are fixed, add `audit` to branch
-        # protection's required checks so this gate actually blocks merges.
         run: npm audit --audit-level=high
         
   neodash-tests-validation:
@@ -141,7 +139,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@0a44ba7841725637a19e28fa30b79a866c81b0a6 # v4.0.4
         with:
-          node-version: '20'
+          node-version: '24'
           cache: npm
           cache-dependency-path: system_tests/neodash-test/package-lock.json
 
@@ -185,7 +183,7 @@ jobs:
     # Opt-out per repository: runs by default; skipped only where the
     # Actions variable HALT_ON_CVE_FINDINGS is set to 'false'.
     if: vars.HALT_ON_CVE_FINDINGS != 'false'
-    name: npm audit (advisory)
+    name: npm audit (neodash-test)
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -196,7 +194,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
         with:
-          node-version: "20"
+          node-version: "24"
           cache: "npm"
           cache-dependency-path: system_tests/neodash-test/package-lock.json
 
@@ -215,6 +213,4 @@ jobs:
           if-no-files-found: warn
 
       - name: Fail on high/critical findings
-        # Once existing vulnerabilities are fixed, add `audit` to branch
-        # protection's required checks so this gate actually blocks merges.
         run: npm audit --audit-level=high

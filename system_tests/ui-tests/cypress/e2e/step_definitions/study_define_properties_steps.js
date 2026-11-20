@@ -8,11 +8,11 @@ let intervetionType = 'Gene Therapy', studyIntentType = 'Cure', controlType = 'A
 let isRandomised = 'Yes', addOnExistingTreatments = 'Yes', stratificationFactor = 'Test stratification factor', studyBindingSchema = 'Open Label'
 
 When('The study intervention type is edited', () => {
-    cy.wait(1000)
+    cy.wait(2000)
     cy.selectAutoComplete('Intervention type', intervetionType)
-    cy.wait(1000)
+    cy.wait(2000)
     cy.selectMultipleSelect('Study intent type', studyIntentType)
-    cy.selectAutoComplete('Control type', controlType)
+    cy.selectMultipleSelect('Control type', controlType)
     cy.selectAutoComplete('Intervention model', intervetionModel)
     cy.selectRadioButton('Study is randomised', isRandomised)
     cy.selectRadioButton('Add-on to existing treatments', addOnExistingTreatments)

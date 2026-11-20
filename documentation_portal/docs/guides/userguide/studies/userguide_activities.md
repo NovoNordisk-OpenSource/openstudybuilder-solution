@@ -11,7 +11,7 @@ The Study Activities menu consists of:
 - **Study Activities** Select the activities to be used in the study (to be further reused in data specifications, data collection specifications, data processing and data analysis). The activities can be selected from the library, from other studies or activity placeholders can be created for requesting new activities.
 - **Schedule of Activities:** 
 1. **Detailed SoA** Define scheduling of activities by visits, control the level of details to be displayed in the protocol SoA overview table and add footnotes to activities, epochs, visits and collection schedules (the X’s). You also have the option to expand and collapse the view to support navigation as well as downloads in various file formats.
-1. **Protocol SoA** Here you can preview the Protocol SoA that can be later exported to protocol template (section 1.2) using OpenStudyBuilder Word ribbon. 
+1. **Protocol SoA** Here you can preview the Protocol SoA that can be later exported to protocol template (ICH M11 section 1.3) using OpenStudyBuilder Word ribbon. 
 1. **Operational SoA** It summarizes all study activities and activity instances and their linkage with visits, displaying corresponding Topic Codes and ADaM Param Codes.
 
 ## SoA Settings
@@ -148,12 +148,15 @@ The footnotes will automatically be assigned a letter from a-z depending on the 
 
 ## Protocol SoA
 
-On the Protocol SoA page you can preview the SoA at multiple levels, the high-level overview for protocol section 1.2, the detailed view corresponding to definitions in section 8 and appendixes as well as the operational data specification view corresponding to the expected data in SDTM and ADaM.
+On the Protocol SoA page you can preview the SoA at multiple levels, the high-level overview for protocol section 1.3, the detailed view corresponding to definitions in section 8 and appendixes as well as the operational data specification view corresponding to the expected data in SDTM and ADaM.
+
+> [!NOTE]
+> Protocol section numbers on this page refer to the [ICH M11 Clinical electronic Structured Harmonised Protocol (CeSHarP) template](https://www.ema.europa.eu/en/documents/template-form/ich-m11-clinical-electronic-structured-harmonised-protocol-cesharp-template-step-5_en.pdf), Step 5, 11 December 2025 (EMA/CHMP/ICH/778801/2022). The Schedule of Activities is section 1.3 and Trial Assessments and Procedures is section 8 of that template.
 
 [![SoA levels](/images/user_guides/soa_levels.png)](/images/user_guides/soa_levels.png)
 
 **Protocol SoA**
-- For the high level SoA in protocol section 1.2.
+- For the high level SoA in protocol section 1.3.
 - Main purpose is for the investigator and site staff to get an overview of the operational schedule.
 
 **Detailed SoA**

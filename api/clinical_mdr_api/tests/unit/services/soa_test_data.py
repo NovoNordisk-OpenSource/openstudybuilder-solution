@@ -51,7 +51,6 @@ STUDY_VISITS = [
         study_duration_days=-15,
         study_week_number=-2,
         study_duration_weeks=-3,
-        visit_number=1.0,
         unique_visit_number=100,
         visit_short_name="V1",
         visit_window_unit_name="days",
@@ -81,7 +80,6 @@ STUDY_VISITS = [
         study_duration_days=-4,
         study_week_number=1,
         study_duration_weeks=0,
-        visit_number=2.0,
         unique_visit_number=200,
         visit_short_name="V2",
         visit_window_unit_name="days",
@@ -111,7 +109,6 @@ STUDY_VISITS = [
         study_duration_days=-3,
         study_week_number=1,
         study_duration_weeks=0,
-        visit_number=3.0,
         unique_visit_number=300,
         visit_short_name="V3",
         visit_window_unit_name="days",
@@ -141,7 +138,6 @@ STUDY_VISITS = [
         study_duration_days=-2,
         study_week_number=1,
         study_duration_weeks=0,
-        visit_number=4.0,
         unique_visit_number=400,
         visit_short_name="V4",
         visit_window_unit_name="days",
@@ -171,7 +167,6 @@ STUDY_VISITS = [
         study_duration_days=0,
         study_week_number=1,
         study_duration_weeks=0,
-        visit_number=5.0,
         unique_visit_number=500,
         visit_short_name="V5",
         visit_window_unit_name="days",
@@ -201,7 +196,6 @@ STUDY_VISITS = [
         study_duration_days=2,
         study_week_number=1,
         study_duration_weeks=0,
-        visit_number=6.0,
         unique_visit_number=600,
         visit_short_name="V6",
         visit_window_unit_name="days",
@@ -231,7 +225,6 @@ STUDY_VISITS = [
         study_duration_days=4,
         study_week_number=1,
         study_duration_weeks=0,
-        visit_number=7.0,
         unique_visit_number=700,
         visit_short_name="V7",
         visit_window_unit_name="days",
@@ -261,7 +254,6 @@ STUDY_VISITS = [
         study_duration_days=14,
         study_week_number=3,
         study_duration_weeks=2,
-        visit_number=8.0,
         unique_visit_number=800,
         visit_short_name="V8",
         visit_window_unit_name="days",
@@ -291,7 +283,6 @@ STUDY_VISITS = [
         study_duration_days=16,
         study_week_number=3,
         study_duration_weeks=2,
-        visit_number=9.0,
         unique_visit_number=900,
         visit_short_name="V9",
         visit_window_unit_name="days",
@@ -321,7 +312,6 @@ STUDY_VISITS = [
         study_duration_days=18,
         study_week_number=3,
         study_duration_weeks=2,
-        visit_number=10.0,
         unique_visit_number=1000,
         visit_short_name="V10",
         visit_window_unit_name="days",
@@ -351,7 +341,6 @@ STUDY_VISITS = [
         study_duration_days=21,
         study_week_number=4,
         study_duration_weeks=3,
-        visit_number=11.0,
         unique_visit_number=1100,
         visit_short_name="V11",
         visit_window_unit_name="days",
@@ -381,7 +370,6 @@ STUDY_VISITS = [
         study_duration_days=None,
         study_week_number=None,
         study_duration_weeks=None,
-        visit_number=settings.unscheduled_visit_number,
         unique_visit_number=settings.unscheduled_visit_number,
         visit_short_name=f"V{settings.unscheduled_visit_number}",
         visit_window_unit_name="days",
@@ -411,7 +399,6 @@ STUDY_VISITS = [
         study_duration_days=None,
         study_week_number=None,
         study_duration_weeks=None,
-        visit_number=settings.non_visit_number,
         unique_visit_number=settings.non_visit_number,
         visit_short_name=f"V{settings.non_visit_number}",
         visit_window_unit_name="days",
@@ -4294,6 +4281,7 @@ PROTOCOL_SOA_TABLE_WITH_REF_PROPAGATION = TableWithFootnotes(
                 ),
                 TableCell(
                     text="X",
+                    propagated=True,
                     refs=[
                         Ref(
                             type="StudyActivitySchedule",
@@ -4303,6 +4291,7 @@ PROTOCOL_SOA_TABLE_WITH_REF_PROPAGATION = TableWithFootnotes(
                 ),
                 TableCell(
                     text="X",
+                    propagated=True,
                     refs=[
                         Ref(
                             type="StudyActivitySchedule",
@@ -4317,6 +4306,7 @@ PROTOCOL_SOA_TABLE_WITH_REF_PROPAGATION = TableWithFootnotes(
                 TableCell(),
                 TableCell(
                     text="X",
+                    propagated=True,
                     refs=[
                         Ref(
                             type="StudyActivitySchedule",
@@ -4456,6 +4446,7 @@ PROTOCOL_SOA_TABLE_WITH_REF_PROPAGATION = TableWithFootnotes(
                 ),
                 TableCell(
                     text="X",
+                    propagated=True,
                     refs=[
                         Ref(
                             type="StudyActivitySchedule",
@@ -4469,6 +4460,7 @@ PROTOCOL_SOA_TABLE_WITH_REF_PROPAGATION = TableWithFootnotes(
                 TableCell(),
                 TableCell(
                     text="X",
+                    propagated=True,
                     refs=[
                         Ref(
                             type="StudyActivitySchedule",
@@ -4623,6 +4615,7 @@ PROTOCOL_SOA_TABLE_WITH_REF_PROPAGATION = TableWithFootnotes(
                 ),
                 TableCell(
                     text="X",
+                    propagated=True,
                     refs=[
                         Ref(
                             type="StudyActivitySchedule",
@@ -4633,6 +4626,7 @@ PROTOCOL_SOA_TABLE_WITH_REF_PROPAGATION = TableWithFootnotes(
                 TableCell(),
                 TableCell(
                     text="X",
+                    propagated=True,
                     refs=[
                         Ref(
                             type="StudyActivitySchedule",
@@ -4646,6 +4640,7 @@ PROTOCOL_SOA_TABLE_WITH_REF_PROPAGATION = TableWithFootnotes(
                 TableCell(),
                 TableCell(
                     text="X",
+                    propagated=True,
                     refs=[
                         Ref(
                             type="StudyActivitySchedule",
@@ -4786,6 +4781,7 @@ PROTOCOL_SOA_TABLE_WITH_REF_PROPAGATION = TableWithFootnotes(
                 ),
                 TableCell(
                     text="X",
+                    propagated=True,
                     refs=[
                         Ref(
                             type="StudyActivitySchedule",
@@ -4799,6 +4795,7 @@ PROTOCOL_SOA_TABLE_WITH_REF_PROPAGATION = TableWithFootnotes(
                 ),
                 TableCell(
                     text="X",
+                    propagated=True,
                     refs=[
                         Ref(
                             type="StudyActivitySchedule",
@@ -4808,6 +4805,7 @@ PROTOCOL_SOA_TABLE_WITH_REF_PROPAGATION = TableWithFootnotes(
                 ),
                 TableCell(
                     text="X",
+                    propagated=True,
                     refs=[
                         Ref(
                             type="StudyActivitySchedule",
@@ -4817,6 +4815,7 @@ PROTOCOL_SOA_TABLE_WITH_REF_PROPAGATION = TableWithFootnotes(
                 ),
                 TableCell(
                     text="X",
+                    propagated=True,
                     refs=[
                         Ref(
                             type="StudyActivitySchedule",
@@ -4846,6 +4845,7 @@ PROTOCOL_SOA_TABLE_WITH_REF_PROPAGATION = TableWithFootnotes(
                 ),
                 TableCell(
                     text="X",
+                    propagated=True,
                     refs=[
                         Ref(
                             type="StudyActivitySchedule",
@@ -4856,6 +4856,7 @@ PROTOCOL_SOA_TABLE_WITH_REF_PROPAGATION = TableWithFootnotes(
                 TableCell(),
                 TableCell(
                     text="X",
+                    propagated=True,
                     refs=[
                         Ref(
                             type="StudyActivitySchedule",
@@ -4865,6 +4866,7 @@ PROTOCOL_SOA_TABLE_WITH_REF_PROPAGATION = TableWithFootnotes(
                 ),
                 TableCell(
                     text="X",
+                    propagated=True,
                     refs=[
                         Ref(
                             type="StudyActivitySchedule",
@@ -5044,6 +5046,7 @@ PROTOCOL_SOA_TABLE_WITH_REF_PROPAGATION = TableWithFootnotes(
                 ),
                 TableCell(
                     text="X",
+                    propagated=True,
                     refs=[
                         Ref(
                             type="StudyActivitySchedule",
@@ -5053,6 +5056,7 @@ PROTOCOL_SOA_TABLE_WITH_REF_PROPAGATION = TableWithFootnotes(
                 ),
                 TableCell(
                     text="X",
+                    propagated=True,
                     refs=[
                         Ref(
                             type="StudyActivitySchedule",
@@ -5062,6 +5066,7 @@ PROTOCOL_SOA_TABLE_WITH_REF_PROPAGATION = TableWithFootnotes(
                 ),
                 TableCell(
                     text="X",
+                    propagated=True,
                     refs=[
                         Ref(
                             type="StudyActivitySchedule",
@@ -5071,6 +5076,7 @@ PROTOCOL_SOA_TABLE_WITH_REF_PROPAGATION = TableWithFootnotes(
                 ),
                 TableCell(
                     text="X",
+                    propagated=True,
                     refs=[
                         Ref(
                             type="StudyActivitySchedule",

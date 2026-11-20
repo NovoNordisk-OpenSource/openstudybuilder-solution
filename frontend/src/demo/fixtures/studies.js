@@ -25,6 +25,8 @@ const DEMO_STUDIES = [
         clinical_programme_name: 'Demo Programme',
         study_id: 'P-001-001',
         registry_identifiers: {},
+        // Opens the epoch lag time gate for the lag history smoke test.
+        migrated_study_indicator: true,
       },
       version_metadata: {
         study_status: 'DRAFT',
@@ -39,7 +41,19 @@ const DEMO_STUDIES = [
         study_short_title: 'DEMO-001',
       },
       study_population: {},
-      high_level_study_design: {},
+      // Stored terms carry no definition, like the real API
+      high_level_study_design: {
+        age_at_baseline_rule_code: {
+          term_uid: 'CTTerm_AGE_BL_1',
+          sponsor_preferred_name: 'Age at Baseline Rule 1',
+          date_conflict: false,
+        },
+        age_group_rule_code: {
+          term_uid: 'CTTerm_AGE_GRP_DECIMAL',
+          sponsor_preferred_name: 'Age with 1 decimal digit',
+          date_conflict: false,
+        },
+      },
       study_intervention: {},
     },
     study_number: '001',
@@ -383,12 +397,7 @@ export const studyHandlers = [
     respond: () => ({ data: buildDemoFlowchart() }),
   },
   {
-    // Hand-crafted visit list. StudyVisitForm.callbacks() looks up a unit by
-    // `studyVisits[i].visit_window_unit_name` (StudyVisitForm.vue:1156); if
-    // the name doesn't match anything in the Study Time subset the form
-    // throws on `lockedUnit.uid`. Anchoring the seed visit's window unit to
-    // the mocked 'days' entry keeps the form safe while letting the visits
-    // table render real-looking rows.
+    // Hand-crafted visits anchored to the mocked 'days' Study Time unit
     method: 'GET',
     regex: /^\/studies\/(?<uid>[^/]+)\/study-visits$/,
     respond: ({ routeParams }) => {

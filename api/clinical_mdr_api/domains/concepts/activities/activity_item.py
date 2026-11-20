@@ -48,7 +48,7 @@ class ActivityItemVO:
         text_value: str | None = None,
         is_activity_instance_id_specific: bool | None = None,
     ) -> Self:
-        activity_item_vo = cls(
+        return cls(
             is_adam_param_specific=is_adam_param_specific,
             is_activity_instance_id_specific=is_activity_instance_id_specific,
             activity_item_class_uid=activity_item_class_uid,
@@ -58,5 +58,3 @@ class ActivityItemVO:
             unit_definitions=unit_definitions,
             text_value=text_value,
         )
-
-        return activity_item_vo

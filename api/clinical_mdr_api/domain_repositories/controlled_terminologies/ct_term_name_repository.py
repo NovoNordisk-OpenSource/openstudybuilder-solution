@@ -439,11 +439,9 @@ class CTTermNameRepository(  # type: ignore[misc]
             existing["response_dictionary_uids"] or ()
         ):
             return True
-        if frozenset(vo.valid_null_flavor_term_uids or ()) != frozenset(
+        return frozenset(vo.valid_null_flavor_term_uids or ()) != frozenset(
             existing["valid_null_flavor_term_uids"] or ()
-        ):
-            return True
-        return False
+        )
 
     def _create(self, item: CTTermNameAR) -> CTTermNameAR:
         """

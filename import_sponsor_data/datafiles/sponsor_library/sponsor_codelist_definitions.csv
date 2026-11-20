@@ -75,3 +75,8 @@ Sponsor,DDF CT,,,CDISC ODM v2.0 Data Type,N,CODMDT20,,CDISC ODM v2.0 Data Type,S
 Sponsor,DDF CT,,,Simple Data Type,N,SMIPLEDT,,Simple Data Type,Subset of overall data types supported by CDISC simple data types applied in data exchange standrds like SDTM,Y,N,,
 Sponsor,DDF CT,,,Semantic Data Type,N,SEMTCDT,,Semantic Data Type,"Subset of overall data types used in semantic concept definitions in OSB, like for activity item class definitions",Y,N,,
 Sponsor,DDF CT,,,NSV XML Data Type,N,NSVXMLDT,,NSV XML Data Type,"Subset of overall data types applicable for Non-Standard Variables (NSVs), used for documentation of NSVs in Define.xml files",Y,N,,
+Sponsor,SDTM CT,,,Age at Baseline Rule,N,AGE_AT_BASELINE_RL,,Age at Baseline Rule,Sponsor defined rules for deriving age at baseline,Y,N,,
+Sponsor,SDTM CT,,,Age Group Rule,N,AGE_GRP_RL,,Age Group Rule,Sponsor defined rules for age grouping,Y,N,,
+Sponsor,SDTM CT,,,ADAQ_01,N,ADAQ_01,,ADAQ_01,,Y,Y,,
+Sponsor,SDTM CT,,,ADAQ_02,N,ADAQ_02,,ADAQ_02,,Y,Y,,
+Sponsor,SDTM CT,DEVICE_DEF,Device Definition,Device definitions,N,DEVICE_DEF,,Device definitions,Device definitions,Y,N,,

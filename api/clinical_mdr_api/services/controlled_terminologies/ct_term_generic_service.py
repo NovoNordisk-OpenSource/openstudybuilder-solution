@@ -11,14 +11,14 @@ from clinical_mdr_api.domain_repositories.controlled_terminologies.ct_term_gener
 from clinical_mdr_api.domains.versioned_object_aggregate import LibraryItemStatus
 from clinical_mdr_api.models.utils import GenericFilteringReturn
 from clinical_mdr_api.repositories._utils import FilterOperator
-from clinical_mdr_api.services._meta_repository import MetaRepository  # type: ignore
+from clinical_mdr_api.services._meta_repository import MetaRepository
 from clinical_mdr_api.services._utils import calculate_diffs, ensure_transaction
 from clinical_mdr_api.utils import normalize_string
 from common.auth.user import user
 from common.exceptions import NotFoundException
 
 
-class CTTermGenericService[AggregateRootType](abc.ABC):
+class CTTermGenericService[AggregateRootType, ModelT: BaseModel = BaseModel](abc.ABC):
     @abc.abstractmethod
     def _transform_aggregate_root_to_pydantic_model(
         self, item_ar: AggregateRootType, include_ts_parameters: bool = True
@@ -108,7 +108,7 @@ class CTTermGenericService[AggregateRootType](abc.ABC):
             codelist_uid, codelist_name, library, package
         )
 
-        header_values = self.repository.get_distinct_headers(
+        return self.repository.get_distinct_headers(
             codelist_uid=codelist_uid,
             codelist_name=codelist_name,
             library=library,
@@ -119,8 +119,6 @@ class CTTermGenericService[AggregateRootType](abc.ABC):
             filter_operator=filter_operator,
             page_size=page_size,
         )
-
-        return header_values
 
     @db.transaction
     def get_term_name_and_attributes_by_codelist_uids(
@@ -141,7 +139,7 @@ class CTTermGenericService[AggregateRootType](abc.ABC):
         at_specific_date: datetime | None = None,
         status: LibraryItemStatus | None = None,
         include_ts_parameters: bool = True,
-    ) -> BaseModel:
+    ) -> ModelT:
         item = self._find_by_uid_or_raise_not_found(
             term_uid=term_uid,
             version=version,
@@ -189,7 +187,7 @@ class CTTermGenericService[AggregateRootType](abc.ABC):
     @db.transaction
     def get_version_history(
         self, term_uid, include_ts_parameters: bool = True
-    ) -> list[BaseModel]:
+    ) -> list[ModelT]:
         if self.version_class is not None:
             repository = self.repository
             if hasattr(repository, "_include_ts_parameters"):
@@ -214,25 +212,25 @@ class CTTermGenericService[AggregateRootType](abc.ABC):
         return []
 
     @db.transaction
-    def create_new_version(self, term_uid: str) -> BaseModel:
+    def create_new_version(self, term_uid: str) -> ModelT:
         item = self._find_by_uid_or_raise_not_found(term_uid, for_update=True)
         item.create_new_version(author_id=self.author_id)
         self.repository.save(item)
         return self._transform_aggregate_root_to_pydantic_model(item)
 
     @db.transaction
-    def edit_draft(self, term_uid: str, term_input: BaseModel) -> BaseModel:
-        raise NotImplementedError()
+    def edit_draft(self, term_uid: str, term_input: BaseModel) -> ModelT:
+        raise NotImplementedError
 
     @ensure_transaction(db)
-    def approve(self, term_uid: str) -> BaseModel:
+    def approve(self, term_uid: str) -> ModelT:
         item = self._find_by_uid_or_raise_not_found(term_uid=term_uid, for_update=True)
         item.approve(author_id=self.author_id)
         self.repository.save(item)
         return self._transform_aggregate_root_to_pydantic_model(item)
 
     @db.transaction
-    def inactivate_final(self, term_uid: str) -> BaseModel:
+    def inactivate_final(self, term_uid: str) -> ModelT:
         item = self._find_by_uid_or_raise_not_found(term_uid, for_update=True)
 
         item.inactivate(author_id=self.author_id)
@@ -241,7 +239,7 @@ class CTTermGenericService[AggregateRootType](abc.ABC):
         return self._transform_aggregate_root_to_pydantic_model(item)
 
     @db.transaction
-    def reactivate_retired(self, term_uid: str) -> BaseModel:
+    def reactivate_retired(self, term_uid: str) -> ModelT:
         item = self._find_by_uid_or_raise_not_found(term_uid, for_update=True)
 
         item.reactivate(author_id=self.author_id)

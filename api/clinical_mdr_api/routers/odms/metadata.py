@@ -7,6 +7,7 @@ from fastapi.responses import StreamingResponse
 from pydantic import StringConstraints
 
 from clinical_mdr_api.domains.odms.utils import ExporterType, TargetType
+from clinical_mdr_api.models.odms.xml_parse import OdmXmlParseResponse
 from clinical_mdr_api.models.utils import CustomPage
 from clinical_mdr_api.routers import _generic_descriptions
 from clinical_mdr_api.services.odms.clinspark_import import (
@@ -21,6 +22,7 @@ from clinical_mdr_api.services.odms.metadata import (
 )
 from clinical_mdr_api.services.odms.xml_exporter import OdmXmlExporterService
 from clinical_mdr_api.services.odms.xml_importer import OdmXmlImporterService
+from clinical_mdr_api.services.odms.xml_parser import OdmXmlParserService
 from clinical_mdr_api.services.odms.xml_stylesheets import (
     STYLESHEET_NAME_PATTERN,
     OdmXmlStylesheetService,
@@ -354,6 +356,39 @@ def store_odm_xml(
         )
 
     return odm_xml_importer_service.store_odm_xml()
+
+
+@router.post(
+    "/xmls/parse",
+    dependencies=[security, rbac.LIBRARY_READ],
+    summary="Parse ODM XML without storing it",
+    description="""Parses an uploaded ODM XML file and returns its forms, item groups and items
+in the same shape as the `GET` endpoints of forms, item groups and items.
+Nothing is written to the database: no codelists, terms, vendor namespaces, versions or approvals are created.
+
+All values are read from the file only. Elements are identified by their ODM `OID` (`uid` equals `oid`),
+`version` is always `file` and `status` is always `File`.
+Both the `osb` and `clinspark` exporters are supported.""",
+    status_code=200,
+    responses={
+        403: _generic_descriptions.ERROR_403,
+    },
+)
+def parse_odm_xml(
+    xml_file: Annotated[
+        UploadFile, File(description="The ODM XML file to parse. Supports ODM V1.")
+    ],
+    exporter: Annotated[
+        ExporterType,
+        Query(
+            description="The system that exported this ODM XML file.",
+        ),
+    ] = ExporterType.OSB,
+    mapper_file: Annotated[
+        UploadFile | None, File(description=MAPPER_DESCRIPTION)
+    ] = None,
+) -> OdmXmlParseResponse:
+    return OdmXmlParserService(xml_file, mapper_file, exporter).parse()
 
 
 @router.get(

@@ -135,6 +135,7 @@ def test_previewing_timeframe_single_parameter(api_client):
         {
             "conjunction": ",",
             "position": 1,
+            "parameter_name": "Indication",
             "terms": [
                 {
                     "index": 1,
@@ -209,6 +210,7 @@ def test_adding_timeframe_single_parameter(api_client):
         {
             "conjunction": ",",
             "position": 1,
+            "parameter_name": "Indication",
             "terms": [
                 {
                     "index": 1,
@@ -305,6 +307,7 @@ def test_adding_timeframe_multiple_parameters(api_client):
         {
             "conjunction": ",",
             "position": 1,
+            "parameter_name": "Indication",
             "terms": [
                 {
                     "index": 1,
@@ -323,6 +326,7 @@ def test_adding_timeframe_multiple_parameters(api_client):
         {
             "conjunction": "and",
             "position": 2,
+            "parameter_name": "Intervention",
             "terms": [
                 {
                     "index": 1,

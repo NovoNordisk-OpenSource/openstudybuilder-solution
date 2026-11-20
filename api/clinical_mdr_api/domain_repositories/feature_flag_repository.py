@@ -10,20 +10,30 @@ from clinical_mdr_api.services.user_info import UserInfoService
 from common.exceptions import NotFoundException
 from common.utils import convert_to_datetime
 
-_RETURN_PROJECTION = """
-                root.uid AS uid,
-                value.section AS section,
-                value.feature AS feature,
-                value.name AS name,
-                value.enabled AS enabled,
-                value.description AS description,
-                hv.start_date AS start_date,
-                hv.end_date AS end_date,
-                hv.status AS status,
-                hv.version AS version,
-                hv.change_description AS change_description,
-                hv.author_id AS author_id
-"""
+_VALUE_FIELDS = ("section", "feature", "name", "enabled", "description")
+_VERSION_FIELDS = (
+    "start_date",
+    "end_date",
+    "status",
+    "version",
+    "change_description",
+    "author_id",
+)
+
+
+def _project(value: str, version_rel: str, prefix: str = "") -> str:
+    """Build the RETURN projection of one version, aliased with an optional prefix."""
+    columns = [f"{value}.{field} AS {prefix}{field}" for field in _VALUE_FIELDS]
+    columns += [
+        f"{version_rel}.{field} AS {prefix}{field}" for field in _VERSION_FIELDS
+    ]
+    return ",\n".join(columns)
+
+
+_RETURN_PROJECTION = "root.uid AS uid,\n" + _project("value", "hv")
+_PREVIOUS_PROJECTION = "prev_hv IS NOT NULL AS has_previous,\n" + _project(
+    "prev_value", "prev_hv", prefix="prev_"
+)
 
 
 class FeatureFlagRepository:
@@ -184,9 +194,7 @@ class FeatureFlagRepository:
         feature = updates.get("feature", current.feature)
         enabled = updates.get("enabled", current.enabled)
         name = current.name
-        description = (
-            updates["description"] if "description" in updates else current.description
-        )
+        description = updates.get("description", current.description)
         new_version = self._bump_version(current.version or "1.0")
 
         rs = db.cypher_query(
@@ -320,3 +328,81 @@ class FeatureFlagRepository:
         )
         NotFoundException.raise_if_not(rs[0], "Feature Flag", uid)
         return self._rows_to_models(rs)
+
+    def get_audit_trail(
+        self,
+        page_number: int = 1,
+        page_size: int = 0,
+        total_count: bool = False,
+        section: str | None = None,
+    ) -> tuple[list[tuple[FeatureFlag, FeatureFlag | None]], int]:
+        """Return one page of the version history of all feature flags.
+
+        Versions of every flag are merged and listed newest first. Each version
+        is paired with the version of the same flag that preceded it (None for the
+        first one), also when that one falls on another page, so the caller can
+        diff them. A page_size of 0 returns all versions. When a section is given,
+        only the flags currently in that section are included, with all of their
+        versions.
+        """
+        paging = "SKIP $skip LIMIT $limit" if page_size > 0 else ""
+        section_filter = (
+            "WHERE EXISTS { (root)-[:LATEST]->(:FeatureFlagValue {section: $section}) }"
+            if section
+            else ""
+        )
+        rs = db.cypher_query(
+            f"""
+            MATCH (root:FeatureFlagRoot)-[hv:HAS_VERSION]->(value:FeatureFlagValue)
+            {section_filter}
+            WITH root, hv, value
+            ORDER BY hv.start_date DESC, root.uid ASC
+            {paging}
+            CALL (root, hv) {{
+                OPTIONAL MATCH (root)-[prev_hv:HAS_VERSION]->(prev_value:FeatureFlagValue)
+                WHERE prev_hv.start_date < hv.start_date
+                RETURN prev_hv, prev_value
+                ORDER BY prev_hv.start_date DESC
+                LIMIT 1
+            }}
+            RETURN
+            {_RETURN_PROJECTION},
+            {_PREVIOUS_PROJECTION}
+            // the subquery does not guarantee the order of its output rows
+            ORDER BY start_date DESC, uid ASC
+            """,
+            params={
+                "skip": (page_number - 1) * page_size,
+                "limit": page_size,
+                "section": section,
+            },
+            resolve_objects=False,
+        )
+        columns = rs[1]
+        items: list[tuple[FeatureFlag, FeatureFlag | None]] = []
+        for record in rs[0]:
+            row = dict(zip(columns, record))
+            previous = None
+            if row["has_previous"]:
+                previous = self._row_to_model(
+                    {
+                        "uid": row["uid"],
+                        **{
+                            field: row[f"prev_{field}"]
+                            for field in _VALUE_FIELDS + _VERSION_FIELDS
+                        },
+                    }
+                )
+            items.append((self._row_to_model(row), previous))
+
+        total = 0
+        if total_count:
+            total = db.cypher_query(
+                f"""
+                MATCH (root:FeatureFlagRoot)-[hv:HAS_VERSION]->(:FeatureFlagValue)
+                {section_filter}
+                RETURN count(hv)
+                """,
+                params={"section": section},
+            )[0][0][0]
+        return items, total

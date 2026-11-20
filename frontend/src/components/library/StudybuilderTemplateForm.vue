@@ -84,15 +84,6 @@
         {{ $t('_global.cancel') }}
       </v-btn>
       <v-btn
-        class="secondary-btn"
-        color="white"
-        data-cy="verify-syntax-button"
-        variant="elevated"
-        @click="verifySyntax"
-      >
-        {{ $t('_global.verify_syntax') }}
-      </v-btn>
-      <v-btn
         color="secondary"
         data-cy="save-button"
         variant="elevated"
@@ -368,17 +359,6 @@ export default {
       this.formStore.reset()
       this.$refs.observer.reset()
       this.$emit('close')
-    },
-    verifySyntax() {
-      if (!this.form.name) {
-        return
-      }
-      const data = { name: this.form.name }
-      this.api.preValidate(data).then(() => {
-        this.notificationHub.add({
-          msg: this.$t('_global.valid_syntax'),
-        })
-      })
     },
     /**
      * Do a step by step loading of the form using the given template because we don't want to include every fields.

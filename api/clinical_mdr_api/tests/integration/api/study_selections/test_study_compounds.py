@@ -251,7 +251,7 @@ def test_data():
     )
 
     medicinal_products_all = []
-    for idx in range(0, 5):
+    for idx in range(5):
         pharmaceutical_product = TestUtils.create_pharmaceutical_product(
             external_id=f"external_id_{rand}_{idx}",
             dosage_form_uids=[ct_term_dosage.term_uid],
@@ -273,7 +273,7 @@ def test_data():
         medicinal_products_all.append(medicinal_product)
 
     study_compounds_all = []
-    for idx in range(0, 5):
+    for idx in range(5):
         study_compound = TestUtils.create_study_compound(
             study_uid=study.uid,
             compound_alias_uid=compound_alias.uid,

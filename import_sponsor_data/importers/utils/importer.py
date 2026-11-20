@@ -219,6 +219,8 @@ class BaseImporter:
             "library_name": data["library_name"],
             "concept_id": None,
         }
+        if data.get("algorithm"):
+            post_data["algorithm"] = data["algorithm"]
         term_name = post_data["sponsor_preferred_name"]
         term_definition = post_data["definition"]
         # Post the new term
@@ -268,17 +270,51 @@ class BaseImporter:
     async def patch_term_if_required(
         self, existing_data: dict, new_data: dict, session: aiohttp.ClientSession
     ):
+        term_uid = existing_data["term_uid"]
         existing_name = existing_data.get("name", {}).get("sponsor_preferred_name")
         new_name = new_data["sponsor_preferred_name"]
-        if existing_name == new_name:
+        if existing_name != new_name:
+            self.log.info(
+                f"Sponsor name for term '{term_uid}' changed from '{existing_name}' to "
+                f"'{new_name}', creating new version"
+            )
+            await self.update_term_version(
+                term_uid,
+                "names",
+                {
+                    "sponsor_preferred_name": new_name,
+                    "sponsor_preferred_name_sentence_case": new_data[
+                        "sponsor_preferred_name_sentence_case"
+                    ],
+                    "change_description": "Sponsor name updated during term import",
+                },
+                session,
+            )
+        # only the device codelist has an ALGORITHM column, and the codelist
+        # term listing does not return it, so read the attributes for those only
+        new_algorithm = new_data.get("algorithm")
+        if not new_algorithm:
             return
-        term_uid = existing_data["term_uid"]
-        self.log.info(
-            f"Sponsor name for term '{term_uid}' changed from '{existing_name}' to "
-            f"'{new_name}', creating new version"
+        attributes = self.api.get_all_from_api(f"/ct/terms/{term_uid}/attributes")
+        if attributes is None or attributes.get("algorithm") == new_algorithm:
+            return
+        self.log.info(f"Algorithm for term '{term_uid}' changed, creating new version")
+        await self.update_term_version(
+            term_uid,
+            "attributes",
+            {
+                "algorithm": new_algorithm,
+                "change_description": "Algorithm updated during term import",
+            },
+            session,
         )
+
+    async def update_term_version(
+        self, term_uid: str, part: str, body: dict, session: aiohttp.ClientSession
+    ):
+        """Create a new version of the term names or attributes, patch it and approve it"""
         version_status, version_result = await self.api.new_version_to_api_async(
-            f"/ct/terms/{term_uid}/names/versions", session
+            f"/ct/terms/{term_uid}/{part}/versions", session
         )
         if not status_ok(version_status):
             error_msg = get_error_message(version_result)
@@ -287,37 +323,29 @@ class BaseImporter:
                 not in error_msg
             ):
                 self.log.error(
-                    f"Failed to create new version for term '{term_uid}' name: {error_msg}"
+                    f"Failed to create new version for term '{term_uid}' {part}: {error_msg}"
                 )
                 return
             self.log.info(
-                f"Term '{term_uid}' name is already in DRAFT, continuing with patch"
+                f"Term '{term_uid}' {part} is already in DRAFT, continuing with patch"
             )
         patch_status, patch_result = await self.api.patch_to_api_async(
-            f"/ct/terms/{term_uid}/names",
-            {
-                "sponsor_preferred_name": new_name,
-                "sponsor_preferred_name_sentence_case": new_data[
-                    "sponsor_preferred_name_sentence_case"
-                ],
-                "change_description": "Sponsor name updated during term import",
-            },
-            session,
+            f"/ct/terms/{term_uid}/{part}", body, session
         )
         if not status_ok(patch_status):
             self.log.error(
-                f"Failed to patch name for term '{term_uid}': "
+                f"Failed to patch {part} for term '{term_uid}': "
                 f"{get_error_message(patch_result)}"
             )
             return
         await asyncio.sleep(0.1)
         approve_status, _ = await self.api.approve_async(
-            f"/ct/terms/{term_uid}/names/approvals", session
+            f"/ct/terms/{term_uid}/{part}/approvals", session
         )
         if not status_ok(approve_status):
-            self.log.error(f"Failed to approve updated name for term '{term_uid}'")
+            self.log.error(f"Failed to approve updated {part} for term '{term_uid}'")
         else:
-            self.log.info(f"Updated sponsor name for term '{term_uid}' to '{new_name}'")
+            self.log.info(f"Updated {part} for term '{term_uid}'")
 
     def find_term_in_codelists(self, codelists, term_name=None):
         codelist_uids = [cl["codelist_uid"] for cl in codelists]
@@ -479,6 +507,7 @@ class BaseImporter:
                 body={
                     "term_uid": term_uid,
                     "order": order,
+                    "ordinal": codelist.get("ordinal"),
                     "submission_value": codelist["submission_value"],
                 },
                 session=session,
@@ -878,8 +907,20 @@ class BaseImporter:
         parent_codelist_uid = None
         for row in readCSV:
             term_codelists = []
+            term_ordinals = []
             parents = []
-            for codelist_submval in row["CODELIST_SUBMVAL"].split("|"):
+            codelist_submvals = row["CODELIST_SUBMVAL"].split("|")
+            # Optional ORDINAL: one value for all codelists, or one per codelist
+            # (pipe-separated, in the same order as CODELIST_SUBMVAL).
+            ordinal_values = [
+                value.strip() for value in (row.get("ORDINAL") or "").split("|")
+            ]
+            if len(ordinal_values) not in (1, len(codelist_submvals)):
+                self.log.error(
+                    f"ORDINAL must have one value or one per codelist, skipping: {row}"
+                )
+                continue
+            for index, codelist_submval in enumerate(codelist_submvals):
                 if codelist_submval not in codelist_uid_by_submval:
                     codelist_uid = self.api.get_codelist_uid(codelist_submval)
                 else:
@@ -897,6 +938,8 @@ class BaseImporter:
 
                 codelist_uid_by_submval[codelist_submval] = codelist_uid
                 term_codelists.append(codelist_uid)
+                ordinal_value = ordinal_values[index if len(ordinal_values) > 1 else 0]
+                term_ordinals.append(float(ordinal_value) if ordinal_value else None)
 
             parent_terms = row.get(
                 "PARENT_CODELIST_SUBMVAL__TERM_SUBMVAL__TYPE", ""
@@ -959,8 +1002,9 @@ class BaseImporter:
                     "codelist_uid": codelist_uid,
                     "submission_value": row.get("TERM_SUBMVAL"),
                     "order": row.get("ORDER"),
+                    "ordinal": ordinal,
                 }
-                for codelist_uid in term_codelists
+                for codelist_uid, ordinal in zip(term_codelists, term_ordinals)
             ]
             use_existing_cl_term = row.get("USE_EXISTING_CL_TERM", None)
             if use_existing_cl_term:
@@ -984,6 +1028,7 @@ class BaseImporter:
                     "library_name": library_name,
                     "existing_cl_submval": existing_cl_submval,
                     "existing_term_submval": existing_term_submval,
+                    "algorithm": row.get("ALGORITHM") or None,
                 },
             }
 

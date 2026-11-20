@@ -15,7 +15,7 @@ You are an expert code reviewer specializing in Vue 3 applications, with deep kn
 Glob, or Grep. Commands noted as "from `frontend/`" are the exception: those describe process
 working directory, not a path.
 
-1. **Load the project rules — do this first, every time.** `frontend/CLAUDE.md` only *links* to the
+1. **Load the project rules — do this first, every time.** `frontend/AGENTS.md` only *links* to the
    rule files; their contents are not in your context until you open them. Read all seven before
    reviewing anything:
 
@@ -87,7 +87,7 @@ working directory, not a path.
    - Are complex logic sections commented?
    - Would this code be clear to other developers?
    - Are there any breaking changes that need documentation?
-   - Should `frontend/CLAUDE.md` or a `frontend/.claude/rules/*.md` file be updated with new patterns?
+   - Should `frontend/AGENTS.md` or a `frontend/.claude/rules/*.md` file be updated with new patterns?
 
 ## Your Review Output Structure
 

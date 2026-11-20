@@ -9,12 +9,28 @@ from fastapi.testclient import TestClient
 from neomodel import db
 
 from clinical_mdr_api.main import app
+from clinical_mdr_api.models.concepts.active_substance import (
+    ActiveSubstanceCreateInput,
+)
+from clinical_mdr_api.models.concepts.pharmaceutical_product import (
+    FormulationCreateInput,
+    IngredientCreateInput,
+)
 from clinical_mdr_api.models.controlled_terminologies.ct_term_name import (
     CTTermNameTSParameterInput,
 )
+from clinical_mdr_api.models.dictionaries.dictionary_term import (
+    DictionaryTermSubstanceCreateInput,
+)
 from clinical_mdr_api.models.listings.listings_sdtm import StudySummaryListing
+from clinical_mdr_api.services.concepts.active_substances_service import (
+    ActiveSubstanceService,
+)
 from clinical_mdr_api.services.controlled_terminologies.ct_term_name import (
     CTTermNameService,
+)
+from clinical_mdr_api.services.dictionaries.dictionary_term_substance_service import (
+    DictionaryTermSubstanceService,
 )
 from clinical_mdr_api.tests.integration.utils.api import inject_and_clear_db
 from clinical_mdr_api.tests.integration.utils.data_library import (
@@ -761,6 +777,251 @@ def test_data():
     )
     assert_response_status_code(response, 200)
 
+    _create_study_compounds(
+        study_uid=study.uid,
+        catalogue_name=catalogue_name,
+        library_name=library_name,
+        code_codelist_uid=code_codelist.codelist_uid,
+        name_codelist_uid=name_codelist.codelist_uid,
+    )
+
+
+def _create_study_compounds(
+    study_uid: str,
+    catalogue_name: str,
+    library_name: str,
+    code_codelist_uid: str,
+    name_codelist_uid: str,
+):
+    """Create the compound graph driving the TRT, COMPTRT and PCLAS rows.
+
+    - IP 1: combination product of Substance A + Substance B (one row per ingredient)
+    - IP 2: Substance A alone (must not duplicate the Substance A rows)
+    - IP 3: an ingredient with no INN or UNII (TSVAL falls back to the short number)
+    - Comparator: Comparator Substance (COMPTRT row, but no PCLAS row)
+    - Placebo: no TS row at all
+    """
+    # TS parameter terms
+    for term_uid, parmcd, parm in [
+        ("C41161", "TRT", "Investigational Therapy or Treatment"),
+        ("C68612", "COMPTRT", "Comparative Treatment Name"),
+        ("C98768", "PCLAS", "Pharmacologic Class"),
+    ]:
+        create_ct_term(
+            name=parm,
+            uid=term_uid,
+            preferred_term=parm,
+            catalogue_name=catalogue_name,
+            library_name=library_name,
+            codelists=[
+                {"uid": code_codelist_uid, "order": 1, "submission_value": parmcd},
+                {"uid": name_codelist_uid, "order": 1, "submission_value": parm},
+            ],
+        )
+    # CDISC renamed the PCLAS TSPARM in 2016; the superseded name stays linked to
+    # the term with an end_date and must not produce duplicate PCLAS rows.
+    db.cypher_query(
+        """
+        MATCH (cl:CTCodelistRoot {uid: $codelist_uid}), (tr:CTTermRoot {uid: 'C98768'})
+        CREATE (cl)-[:HAS_TERM {
+            start_date: datetime('2014-09-26T00:00:00Z'),
+            end_date: datetime('2016-03-25T00:00:00Z'),
+            order: 1
+        }]->(:CTCodelistTerm {submission_value: 'Pharmacological Class of Invest. Therapy'})
+        -[:HAS_TERM_ROOT]->(tr)
+        """,
+        {"codelist_uid": name_codelist_uid},
+    )
+
+    # Type of Treatment terms
+    type_of_treatment_codelist = create_codelist(
+        name="Type of Treatment",
+        uid="CTCodelist_TypeOfTreatment",
+        catalogue=catalogue_name,
+        library=library_name,
+        submission_value=settings.type_of_treatment_cl_submval,
+    )
+    type_of_treatment_uids = {}
+    for order, (term_uid, submission_value) in enumerate(
+        [
+            ("TypeOfTreatment_IP", "INVESTIGATIONAL PRODUCT TYPE OF TREATMENT"),
+            ("TypeOfTreatment_Comp", "COMPARATIVE TREATMENT TYPE OF TREATMENT"),
+            ("TypeOfTreatment_Placebo", "PLACEBO TYPE OF TREATMENT"),
+        ],
+        start=1,
+    ):
+        type_of_treatment_uids[term_uid] = create_ct_term(
+            name=submission_value,
+            uid=term_uid,
+            catalogue_name=catalogue_name,
+            library_name=library_name,
+            codelists=[
+                {
+                    "uid": type_of_treatment_codelist.codelist_uid,
+                    "order": order,
+                    "submission_value": submission_value,
+                },
+            ],
+        ).uid
+
+    # Superseded (end-dated) links must be ignored by every join, whatever branch of
+    # the TS query it is in: give every TS parameter term a stale code and name, and
+    # swap the submission values of the investigational and comparative Type of
+    # Treatment terms. A join that misses the end_date filter would then yield
+    # duplicate rows, or TRT/COMPTRT/PCLAS rows for the wrong compounds.
+    db.cypher_query(
+        """
+        UNWIND $codelist_uids AS codelist_uid
+        MATCH (cl:CTCodelistRoot {uid: codelist_uid})-[:HAS_TERM]->(clt:CTCodelistTerm)
+            -[:HAS_TERM_ROOT]->(tr:CTTermRoot)
+        WITH DISTINCT cl, tr, clt.submission_value + ' (superseded)' AS stale_value
+        CREATE (cl)-[:HAS_TERM {
+            start_date: datetime('2014-09-26T00:00:00Z'),
+            end_date: datetime('2016-03-25T00:00:00Z'),
+            order: 1
+        }]->(:CTCodelistTerm {submission_value: stale_value})-[:HAS_TERM_ROOT]->(tr)
+        """,
+        {"codelist_uids": [code_codelist_uid, name_codelist_uid]},
+    )
+    for term_uid, stale_value in [
+        ("TypeOfTreatment_IP", "COMPARATIVE TREATMENT TYPE OF TREATMENT"),
+        ("TypeOfTreatment_Comp", "INVESTIGATIONAL PRODUCT TYPE OF TREATMENT"),
+    ]:
+        db.cypher_query(
+            """
+            MATCH (cl:CTCodelistRoot {uid: $codelist_uid}), (tr:CTTermRoot {uid: $term_uid})
+            CREATE (cl)-[:HAS_TERM {
+                start_date: datetime('2014-09-26T00:00:00Z'),
+                end_date: datetime('2016-03-25T00:00:00Z'),
+                order: 1
+            }]->(:CTCodelistTerm {submission_value: $stale_value})-[:HAS_TERM_ROOT]->(tr)
+            """,
+            {
+                "codelist_uid": type_of_treatment_codelist.codelist_uid,
+                "term_uid": term_uid,
+                "stale_value": stale_value,
+            },
+        )
+
+    # MED-RT pharmacologic classes and UNII substances
+    TestUtils.create_library(name="MED-RT", is_editable=True)
+    TestUtils.create_library(name="UNII", is_editable=True)
+    medrt_codelist = TestUtils.create_dictionary_codelist(
+        name="MED-RT", library_name="MED-RT"
+    )
+    unii_codelist = TestUtils.create_dictionary_codelist(
+        name="UNII", library_name="UNII"
+    )
+    pclass_uids = {
+        name: TestUtils.create_dictionary_term(
+            codelist_uid=medrt_codelist.codelist_uid,
+            dictionary_id=medrt_id,
+            name=name,
+            library_name="MED-RT",
+        ).term_uid
+        for medrt_id, name in [
+            ("MEDRT-TEST-A", "Pharmacologic Class A"),
+            ("MEDRT-TEST-B", "Pharmacologic Class B"),
+            ("MEDRT-TEST-C", "Pharmacologic Class C"),
+        ]
+    }
+    unii_service = DictionaryTermSubstanceService()
+    unii_uids = {}
+    for unii, name, pclass_name in [
+        ("UNII-TEST-A", "SUBSTANCE A", "Pharmacologic Class A"),
+        ("UNII-TEST-B", "SUBSTANCE B", "Pharmacologic Class B"),
+        ("UNII-TEST-C", "COMPARATOR SUBSTANCE", "Pharmacologic Class C"),
+        ("UNII-TEST-D", "UNII ONLY SUBSTANCE", "Pharmacologic Class A"),
+    ]:
+        unii_term = unii_service.create(
+            DictionaryTermSubstanceCreateInput(
+                codelist_uid=unii_codelist.codelist_uid,
+                dictionary_id=unii,
+                name=name,
+                name_sentence_case=name.lower(),
+                library_name="UNII",
+                pclass_uid=pclass_uids[pclass_name],
+            )
+        )
+        unii_service.approve(unii_term.term_uid)
+        unii_uids[name] = unii_term.term_uid
+
+    # Active substances
+    substance_uids = {
+        inn: TestUtils.create_active_substance(
+            inn=inn, unii_term_uid=unii_uids[inn], approve=True
+        ).uid
+        for inn in ["SUBSTANCE A", "SUBSTANCE B", "COMPARATOR SUBSTANCE"]
+    }
+    substance_service = ActiveSubstanceService()
+    # Substances without an INN, to exercise the TSVAL fallback order
+    # (inn, short_number, long_number, analyte_number)
+    for key, numbers in {
+        "SN-0001": {"short_number": "SN-0001"},
+        "LN-0001": {"long_number": "LN-0001"},
+        "AN-0001": {"analyte_number": "AN-0001"},
+        "ALL-NUMBERS": {
+            "short_number": "SN-0002",
+            "long_number": "LN-0002",
+            "analyte_number": "AN-0002",
+        },
+        "LONG-AND-ANALYTE": {"long_number": "LN-0003", "analyte_number": "AN-0003"},
+        "UNII-ONLY": {"unii_term_uid": unii_uids["UNII ONLY SUBSTANCE"]},
+    }.items():
+        numbered_substance = substance_service.create(
+            ActiveSubstanceCreateInput(
+                library_name=settings.sponsor_library_name, **numbers
+            )
+        )
+        substance_service.approve(numbered_substance.uid)
+        substance_uids[key] = numbered_substance.uid
+    substance_uids["PLACEBO"] = TestUtils.create_active_substance(
+        inn="PLACEBO", approve=True
+    ).uid
+
+    # One compound + medicinal product + study compound per product
+    for name, ingredients, type_of_treatment_uid in [
+        ("Combination", ["SUBSTANCE A", "SUBSTANCE B"], "TypeOfTreatment_IP"),
+        ("Single", ["SUBSTANCE A"], "TypeOfTreatment_IP"),
+        ("Short number only", ["SN-0001"], "TypeOfTreatment_IP"),
+        ("Long number only", ["LN-0001"], "TypeOfTreatment_IP"),
+        ("Analyte number only", ["AN-0001"], "TypeOfTreatment_IP"),
+        ("All numbers", ["ALL-NUMBERS"], "TypeOfTreatment_IP"),
+        ("Long and analyte number", ["LONG-AND-ANALYTE"], "TypeOfTreatment_IP"),
+        ("UNII only", ["UNII-ONLY"], "TypeOfTreatment_IP"),
+        ("Comparator", ["COMPARATOR SUBSTANCE"], "TypeOfTreatment_Comp"),
+        ("Placebo", ["PLACEBO"], "TypeOfTreatment_Placebo"),
+    ]:
+        pharmaceutical_product = TestUtils.create_pharmaceutical_product(
+            formulations=[
+                FormulationCreateInput(
+                    ingredients=[
+                        IngredientCreateInput(
+                            active_substance_uid=substance_uids[ingredient]
+                        )
+                        for ingredient in ingredients
+                    ]
+                )
+            ],
+            approve=True,
+        )
+        compound = TestUtils.create_compound(name=name, approve=True)
+        compound_alias = TestUtils.create_compound_alias(
+            name=f"{name} alias", compound_uid=compound.uid, approve=True
+        )
+        medicinal_product = TestUtils.create_medicinal_product(
+            name=f"{name} product",
+            pharmaceutical_product_uids=[pharmaceutical_product.uid],
+            compound_uid=compound.uid,
+            approve=True,
+        )
+        TestUtils.create_study_compound(
+            study_uid=study_uid,
+            medicinal_product_uid=medicinal_product.uid,
+            compound_alias_uid=compound_alias.uid,
+            type_of_treatment_uid=type_of_treatment_uids[type_of_treatment_uid],
+        )
+
 
 def test_ts_listing(api_client: TestClient):
     response = api_client.get(
@@ -921,6 +1182,96 @@ def test_ts_listing(api_client: TestClient):
             TSVCDREF="CDISC",
             TSVCDVER="",
         ).model_dump(),
+        # Investigational treatment - one row per distinct ingredient across all
+        # investigational products (INN → TSVAL, UNII → TSVALCD, library → TSVCDREF).
+        # Substance A is in two products but yields a single row.
+        StudySummaryListing(
+            DOMAIN="TS",
+            STUDYID=study_id,
+            TSPARM="Investigational Therapy or Treatment",
+            TSPARMCD="TRT",
+            TSVAL="SUBSTANCE A",
+            TSVALCD="UNII-TEST-A",
+            TSVALNF="",
+            TSVCDREF="UNII",
+            TSVCDVER="",
+        ).model_dump(),
+        StudySummaryListing(
+            DOMAIN="TS",
+            STUDYID=study_id,
+            TSPARM="Investigational Therapy or Treatment",
+            TSPARMCD="TRT",
+            TSVAL="SUBSTANCE B",
+            TSVALCD="UNII-TEST-B",
+            TSVALNF="",
+            TSVCDREF="UNII",
+            TSVCDVER="",
+        ).model_dump(),
+        # No INN and no UNII - TSVAL falls back through short, long, then analyte
+        # number. "All numbers" shows short number wins over long and analyte;
+        # "Long and analyte number" shows long number wins over analyte.
+        *[
+            StudySummaryListing(
+                DOMAIN="TS",
+                STUDYID=study_id,
+                TSPARM="Investigational Therapy or Treatment",
+                TSPARMCD="TRT",
+                TSVAL=tsval,
+                TSVALCD="",
+                TSVALNF="",
+                TSVCDREF="",
+                TSVCDVER="",
+            ).model_dump()
+            for tsval in ["SN-0001", "LN-0001", "AN-0001", "SN-0002", "LN-0003"]
+        ],
+        # No INN or numbers, only a UNII - TSVAL falls back to the UNII name
+        StudySummaryListing(
+            DOMAIN="TS",
+            STUDYID=study_id,
+            TSPARM="Investigational Therapy or Treatment",
+            TSPARMCD="TRT",
+            TSVAL="UNII ONLY SUBSTANCE",
+            TSVALCD="UNII-TEST-D",
+            TSVALNF="",
+            TSVCDREF="UNII",
+            TSVCDVER="",
+        ).model_dump(),
+        # Comparative treatment
+        StudySummaryListing(
+            DOMAIN="TS",
+            STUDYID=study_id,
+            TSPARM="Comparative Treatment Name",
+            TSPARMCD="COMPTRT",
+            TSVAL="COMPARATOR SUBSTANCE",
+            TSVALCD="UNII-TEST-C",
+            TSVALNF="",
+            TSVCDREF="UNII",
+            TSVCDVER="",
+        ).model_dump(),
+        # Pharmacologic class - investigational products only, so no Pharmacologic Class C row
+        # for the comparator. Placebo yields no TS rows at all.
+        StudySummaryListing(
+            DOMAIN="TS",
+            STUDYID=study_id,
+            TSPARM="Pharmacologic Class",
+            TSPARMCD="PCLAS",
+            TSVAL="Pharmacologic Class A",
+            TSVALCD="MEDRT-TEST-A",
+            TSVALNF="",
+            TSVCDREF="MED-RT",
+            TSVCDVER="",
+        ).model_dump(),
+        StudySummaryListing(
+            DOMAIN="TS",
+            STUDYID=study_id,
+            TSPARM="Pharmacologic Class",
+            TSPARMCD="PCLAS",
+            TSVAL="Pharmacologic Class B",
+            TSVALCD="MEDRT-TEST-B",
+            TSVALNF="",
+            TSVCDREF="MED-RT",
+            TSVCDVER="",
+        ).model_dump(),
     ]
 
     # Compare as a sorted set using a composite key so that:
@@ -930,6 +1281,27 @@ def test_ts_listing(api_client: TestClient):
         return (r["TSPARMCD"] or "", str(r["TSVAL"] or ""), r["TSVCDREF"] or "")
 
     assert sorted(res, key=_row_key) == sorted(expected_output, key=_row_key)
+
+    # Rows sharing a TSPARMCD must come back in a deterministic order, because the
+    # service paginates in Python and ties would otherwise straddle page boundaries.
+    parmcds = [r["TSPARMCD"] for r in res]
+    assert parmcds == sorted(parmcds)
+
+    def _tsvals(parmcd: str) -> list[str]:
+        return [r["TSVAL"] for r in res if r["TSPARMCD"] == parmcd]
+
+    assert _tsvals("REGID") == ["2021-000001-12", "2021-000001-12-00", "NCT12345678"]
+    assert _tsvals("TRT") == [
+        "AN-0001",
+        "LN-0001",
+        "LN-0003",
+        "SN-0001",
+        "SN-0002",
+        "SUBSTANCE A",
+        "SUBSTANCE B",
+        "UNII ONLY SUBSTANCE",
+    ]
+    assert _tsvals("PCLAS") == ["Pharmacologic Class A", "Pharmacologic Class B"]
 
 
 def test_ts_listing_versioning(api_client: TestClient):
@@ -952,6 +1324,7 @@ def test_ts_listing_versioning(api_client: TestClient):
 
     response = api_client.get(
         "/listings/studies/study_root/sdtm/ts",
+        params={"page_size": 100},
     )
     assert_response_status_code(response, 200)
     res = response.json()["items"]
@@ -984,7 +1357,8 @@ def test_ts_listing_versioning(api_client: TestClient):
 
     # get all study visits of a specific study version
     response = api_client.get(
-        f"/listings/studies/{study_uid}/sdtm/ts?study_value_version=1",
+        f"/listings/studies/{study_uid}/sdtm/ts",
+        params={"study_value_version": "1", "page_size": 100},
     )
     res = response.json()
     assert_response_status_code(response, 200)
@@ -992,10 +1366,12 @@ def test_ts_listing_versioning(api_client: TestClient):
 
     response = api_client.get(
         "/listings/studies/study_root/sdtm/ts",
+        params={"page_size": 100},
     )
     assert_response_status_code(response, 200)
     res = response.json()["items"]
-    assert res[1]["TSVAL"] == "2"
+    narms_row = next(row for row in res if row["TSPARMCD"] == "NARMS")
+    assert narms_row["TSVAL"] == "2"
 
 
 def test_ts_listing_null_flavor(api_client: TestClient):

@@ -2,7 +2,16 @@
 
 import re
 
-from db.db_schema import CONSTRAINTS, INDEXES, REL_INDEXES, TEXT_INDEXES
+from db.db_schema import (
+    CONSTRAINTS,
+    INDEXES,
+    REL_INDEXES,
+    STAGING_COMPOSITE_CONSTRAINTS,
+    STAGING_COMPOSITE_INDEXES,
+    STAGING_CONSTRAINTS,
+    STAGING_INDEXES,
+    TEXT_INDEXES,
+)
 
 from migrations.utils.utils import (
     REGEX_SNAKE_CASE_WITH_DOT,
@@ -86,6 +95,70 @@ def test_indexes_and_constraints(db, logger):
             )
             is not None
         ), f"Constraint {constraint_name} does not exist"
+
+    for item in STAGING_INDEXES:
+        index_name = f"index_{item[0]}_{item[1]}"
+        assert (
+            next(
+                (
+                    x
+                    for x in all_db_indexes_and_constraints
+                    if x["name"] == index_name
+                    and x["type"] == "RANGE"
+                    and x["entityType"] == "NODE"
+                ),
+                None,
+            )
+            is not None
+        ), f"Staging index {index_name} does not exist"
+
+    for item in STAGING_CONSTRAINTS:
+        constraint_name = f"constraint_{item[0]}_{item[1]}"
+        assert (
+            next(
+                (
+                    x
+                    for x in all_db_indexes_and_constraints
+                    if x["name"] == constraint_name
+                    and x["type"] == "RANGE"
+                    and x["entityType"] == "NODE"
+                ),
+                None,
+            )
+            is not None
+        ), f"Staging constraint {constraint_name} does not exist"
+
+    for label, props in STAGING_COMPOSITE_INDEXES:
+        index_name = f"index_{label}_{'_'.join(props)}"
+        assert (
+            next(
+                (
+                    x
+                    for x in all_db_indexes_and_constraints
+                    if x["name"] == index_name
+                    and x["type"] == "RANGE"
+                    and x["entityType"] == "NODE"
+                ),
+                None,
+            )
+            is not None
+        ), f"Staging composite index {index_name} does not exist"
+
+    for label, props, _type in STAGING_COMPOSITE_CONSTRAINTS:
+        constraint_name = f"constraint_{label}_{'_'.join(props)}"
+        assert (
+            next(
+                (
+                    x
+                    for x in all_db_indexes_and_constraints
+                    if x["name"] == constraint_name
+                    and x["type"] == "RANGE"
+                    and x["entityType"] == "NODE"
+                ),
+                None,
+            )
+            is not None
+        ), f"Staging composite constraint {constraint_name} does not exist"
 
 
 def test_ct_config_values(db, logger):

@@ -1,5 +1,8 @@
+import json
+
 import pytest
 from fastapi.testclient import TestClient
+from neomodel import db
 
 from clinical_mdr_api.main import app
 from clinical_mdr_api.tests.integration.utils.api import drop_db, inject_and_clear_db
@@ -2664,6 +2667,14 @@ def test_copy_study_high_level_design(api_client):
         is None
     )
     assert (
+        res["current_metadata"]["high_level_study_design"]["age_at_baseline_rule_code"]
+        is None
+    )
+    assert (
+        res["current_metadata"]["high_level_study_design"]["age_group_rule_code"]
+        is None
+    )
+    assert (
         res["current_metadata"]["high_level_study_design"][
             "trial_phase_null_value_code"
         ]["sponsor_preferred_name"]
@@ -2737,6 +2748,98 @@ def test_copy_study_high_level_design(api_client):
         "study_short_title": None,
         "study_title": None,
     }
+
+
+def _get_study_uid_by_study_number(api_client, study_number: str) -> str:
+    filters = json.dumps(
+        {
+            "current_metadata.identification_metadata.study_number": {
+                "v": [study_number],
+                "op": "eq",
+            }
+        }
+    )
+    response = api_client.get("/studies", params={"filters": filters})
+    assert_response_status_code(response, 200)
+    items = response.json()["items"]
+    assert (
+        len(items) == 1
+    ), f"Expected exactly one study with study_number '{study_number}'"
+    return items[0]["uid"]
+
+
+def _selected_term_uids(study_uid: str, field_name: str) -> list[str]:
+    result, _ = db.cypher_query(
+        """
+        MATCH (:StudyRoot {uid: $study_uid})-[:LATEST]->(:StudyValue)
+            -[:HAS_TEXT_FIELD]->(:StudyTextField {field_name: $field_name})
+            -[:HAS_TYPE]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(term:CTTermRoot)
+        RETURN term.uid
+        """,
+        {"study_uid": study_uid, "field_name": field_name},
+    )
+    return [row[0] for row in result]
+
+
+@pytest.mark.parametrize(
+    "field_name, valid_terms, invalid_term_uids",
+    [
+        pytest.param(
+            "age_at_baseline_rule_code",
+            [
+                ("AgeBlRule_1", "Age at Baseline Rule 1"),
+                ("AgeBlRule_2", "Age at Baseline Rule 2"),
+            ],
+            # Unknown term, term from the age group rule codelist, term from another codelist
+            ["CTTerm_NonExistent", "AgeGrpRule_1", "na_term_001"],
+            id="age_at_baseline_rule_code",
+        ),
+        pytest.param(
+            "development_stage_code",
+            [
+                ("DevStage_1", "Pilot Stage"),
+                ("DevStage_2", "Pivotal Stage"),
+            ],
+            # Unknown term, term from the age at baseline rule codelist, term from another codelist
+            ["CTTerm_NonExistent", "AgeBlRule_1", "na_term_001"],
+            id="development_stage_code",
+        ),
+    ],
+)
+def test_patch_study_sponsor_codelist_field(
+    api_client, field_name, valid_terms, invalid_term_uids
+):
+    # Study created by test_adding_study
+    study_uid = _get_study_uid_by_study_number(api_client, "007")
+
+    def _patch(term_uid):
+        return api_client.patch(
+            f"/studies/{study_uid}",
+            json={
+                "current_metadata": {
+                    "high_level_study_design": {field_name: {"term_uid": term_uid}}
+                }
+            },
+        )
+
+    # Terms seeded by create_study_ct_data_map in the module fixture
+    for term_uid, term_name in valid_terms:
+        assert_response_status_code(_patch(term_uid), 200)
+        response = api_client.get(
+            f"/studies/{study_uid}?include_sections=high_level_study_design"
+        )
+        assert (
+            response.json()["current_metadata"]["high_level_study_design"][field_name][
+                "sponsor_preferred_name"
+            ]
+            == term_name
+        )
+        assert _selected_term_uids(study_uid, field_name) == [term_uid]
+
+    last_valid_term_uid = valid_terms[-1][0]
+    for term_uid in invalid_term_uids:
+        assert_response_status_code(_patch(term_uid), 400)
+    assert _selected_term_uids(study_uid, field_name) == [last_valid_term_uid]
 
 
 def test_copy_study_intervention(api_client):
@@ -2975,7 +3078,7 @@ def test_copy_study_intervention(api_client):
         ]
         is None
     )
-    assert res["current_metadata"]["study_intervention"]["control_type_code"] is None
+    assert res["current_metadata"]["study_intervention"]["control_type_codes"] == []
     assert (
         res["current_metadata"]["study_intervention"]["control_type_null_value_code"]
         is None
@@ -3458,3 +3561,64 @@ def test_copy_study_population(api_client):
         "study_short_title": None,
         "study_title": None,
     }
+
+
+def get_control_types(api_client):
+    response = api_client.get(
+        "/studies/Study_000002?include_sections=study_intervention"
+    )
+    assert_response_status_code(response, 200)
+    return response.json()["current_metadata"]["study_intervention"][
+        "control_type_codes"
+    ]
+
+
+def test_patch_study_multiple_control_types(api_client):
+    response = api_client.patch(
+        "/studies/Study_000002",
+        json={
+            "current_metadata": {
+                "study_intervention": {
+                    "control_type_codes": [
+                        {"term_uid": "C49649"},
+                        {"term_uid": "C49648"},
+                    ],
+                    "control_type_null_value_code": None,
+                }
+            }
+        },
+    )
+    assert_response_status_code(response, 200)
+    control_types = get_control_types(api_client)
+    assert [
+        (term["term_uid"], term["sponsor_preferred_name"]) for term in control_types
+    ] == [("C49648", "Placebo Control"), ("C49649", "Active Control")]
+
+    response = api_client.patch(
+        "/studies/Study_000002",
+        json={
+            "current_metadata": {
+                "study_intervention": {"control_type_codes": [{"term_uid": "C49649"}]}
+            }
+        },
+    )
+    assert_response_status_code(response, 200)
+    control_types = get_control_types(api_client)
+    assert [term["term_uid"] for term in control_types] == ["C49649"]
+
+    response = api_client.get("/studies/Study_000002/fields-audit-trail")
+    assert_response_status_code(response, 200)
+    control_type_actions = [
+        action
+        for entry in response.json()
+        for action in entry["actions"]
+        if action["field"] == "control_type"
+    ]
+    latest_action = control_type_actions[0]
+    assert latest_action["section"] == "study_intervention"
+    assert latest_action["action"] == "Edit"
+    assert sorted(latest_action["before_value"]["term_uid"].split(", ")) == [
+        "C49648",
+        "C49649",
+    ]
+    assert latest_action["after_value"]["term_uid"] == "C49649"

@@ -225,8 +225,6 @@ class TestStudyDefinitionRepository(unittest.TestCase):
             repository2 = StudyDefinitionRepositoryImpl(current_function_name())
             study_to_lock = repository2.find_by_uid(created_study.uid, for_update=True)
             study_to_lock.edit_metadata(
-                study_title_exists_callback=lambda _, study_number: False,
-                study_short_title_exists_callback=lambda _, study_number: False,
                 new_study_description=StudyDescriptionVO.from_input_values(
                     study_title="new_study_title", study_short_title="study_short_title"
                 ),
@@ -361,8 +359,6 @@ class TestStudyDefinitionRepository(unittest.TestCase):
                 author_id=current_function_name(),
             )
             amended_study.edit_metadata(
-                study_title_exists_callback=lambda _, study_number: False,
-                study_short_title_exists_callback=lambda _, study_number: False,
                 new_study_description=StudyDescriptionVO.from_input_values(
                     study_title="new_study_title", study_short_title="study_short_title"
                 ),
@@ -565,8 +561,6 @@ class TestStudyDefinitionRepository(unittest.TestCase):
                 author_id=current_function_name(),
             )
             amended_study.edit_metadata(
-                study_title_exists_callback=lambda _, study_number: False,
-                study_short_title_exists_callback=lambda _, study_number: False,
                 new_study_description=StudyDescriptionVO.from_input_values(
                     study_title="new_study_title", study_short_title="study_short_title"
                 ),
@@ -658,8 +652,6 @@ class TestStudyDefinitionRepository(unittest.TestCase):
                 author_id=current_function_name(),
             )
             amended_study.edit_metadata(
-                study_title_exists_callback=lambda _, study_number: False,
-                study_short_title_exists_callback=lambda _, study_number: False,
                 new_study_description=StudyDescriptionVO.from_input_values(
                     study_title="new_study_title", study_short_title="study_short_title"
                 ),
@@ -779,7 +771,7 @@ class TestStudyDefinitionRepository(unittest.TestCase):
                     is_study_after_create=True,
                     author_id="test__find_all__results",
                 )
-                for _ in range(0, 10)
+                for _ in range(10)
             ]
             for study in test_studies:
                 repo.save(study)
@@ -818,7 +810,7 @@ class TestStudyDefinitionRepository(unittest.TestCase):
                     is_study_after_create=True,
                     author_id="test__find_all__with_custom_sort_order__success",
                 )
-                for _ in range(0, 10)
+                for _ in range(10)
             ]
             for study in test_studies:
                 repo.save(study)
@@ -936,8 +928,6 @@ class TestStudyDefinitionRepository(unittest.TestCase):
             # Create a locked version
             study_to_lock = repo.find_by_uid(created_study.uid, for_update=True)
             study_to_lock.edit_metadata(
-                study_title_exists_callback=lambda _, study_number: False,
-                study_short_title_exists_callback=lambda _, study_number: False,
                 new_study_description=StudyDescriptionVO.from_input_values(
                     study_title="new_study_title", study_short_title="study_short_title"
                 ),
@@ -1151,8 +1141,6 @@ class TestStudyDefinitionRepository(unittest.TestCase):
             # Edit to give it a title (required for lock)
             study = repo.find_by_uid(created_study.uid, for_update=True)
             study.edit_metadata(
-                study_title_exists_callback=lambda _, study_number: False,
-                study_short_title_exists_callback=lambda _, study_number: False,
                 new_study_description=StudyDescriptionVO.from_input_values(
                     study_title="Version Test Title", study_short_title="VTT"
                 ),
@@ -1301,8 +1289,6 @@ class TestStudyDefinitionRepository(unittest.TestCase):
 
             study = repo.find_by_uid(created_study.uid, for_update=True)
             study.edit_metadata(
-                study_title_exists_callback=lambda _, study_number: False,
-                study_short_title_exists_callback=lambda _, study_number: False,
                 new_study_description=StudyDescriptionVO.from_input_values(
                     study_title="Locked Field Data Test", study_short_title="LFDT"
                 ),
@@ -1346,7 +1332,7 @@ class TestStudyDefinitionRepository(unittest.TestCase):
         (  # 0
             StudySoaPreferencesInput(),
             {
-                "soa_show_epochs": True,
+                "soa_show_epochs": False,
                 "soa_show_milestones": False,
                 "baseline_as_time_zero": False,
                 "soa_show_all_visits_lab_table": False,
@@ -1355,7 +1341,7 @@ class TestStudyDefinitionRepository(unittest.TestCase):
         (  # 1
             StudySoaPreferencesInput(show_milestones=True),
             {
-                "soa_show_epochs": True,
+                "soa_show_epochs": False,
                 "soa_show_milestones": True,
                 "baseline_as_time_zero": False,
                 "soa_show_all_visits_lab_table": False,
@@ -1424,7 +1410,7 @@ class TestStudyDefinitionRepository(unittest.TestCase):
         (  # 8
             StudySoaPreferencesInput(baseline_as_time_zero=True),
             {
-                "soa_show_epochs": True,
+                "soa_show_epochs": False,
                 "soa_show_milestones": False,
                 "baseline_as_time_zero": True,
                 "soa_show_all_visits_lab_table": False,
@@ -1520,7 +1506,7 @@ def test_post_soa_preferences(
             StudySoaPreferencesInput(),
             StudySoaPreferencesInput(),
             {
-                "soa_show_epochs": True,
+                "soa_show_epochs": False,
                 "soa_show_milestones": False,
                 "baseline_as_time_zero": False,
                 "soa_show_all_visits_lab_table": False,
@@ -1531,7 +1517,7 @@ def test_post_soa_preferences(
             StudySoaPreferencesInput(show_milestones=False),
             StudySoaPreferencesInput(show_milestones=False),
             {
-                "soa_show_epochs": True,
+                "soa_show_epochs": False,
                 "soa_show_milestones": False,
                 "baseline_as_time_zero": False,
                 "soa_show_all_visits_lab_table": False,
@@ -1675,14 +1661,12 @@ def _get_study_soa_preferences_audit_trail_actions(
     trails = repo.get_audit_trail_by_uid(study_uid)
     trails.sort(key=lambda x: x.date)
 
-    actions = [
+    return [
         action
         for trail in trails
         for action in trail.actions
         if action.field_name in settings.study_soa_preferences_fields
     ]
-
-    return actions
 
 
 def unlink_study_soa_properties(

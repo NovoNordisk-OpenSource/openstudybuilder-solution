@@ -82,7 +82,7 @@ If the protocol's inventory is non-empty but NO file survives the area filter, o
 Once the filtered inventory is settled, follow your standard review methodology, touching EVERY file on the filtered inventory and only files on it:
 
 1. **Analyze changes systematically**: Review each file for Vue 3 Composition API correctness, component and composable design, Pinia store usage, reactivity pitfalls, Vuetify 4 usage, accessibility, security, performance, and test coverage.
-2. **Validate against project standards**: Check against the rules in `frontend/CLAUDE.md` and `frontend/.claude/rules/` — `architecture-core.md`, `components.md`, `patterns.md`, `routing-auth.md`, and `conventions-gotchas.md`.
+2. **Validate against project standards**: Check against the rules in `frontend/AGENTS.md` and `frontend/.claude/rules/` — `architecture-core.md`, `components.md`, `patterns.md`, `routing-auth.md`, and `conventions-gotchas.md`.
 3. **Watch for frontend-specific traps**: hardcoded strings that belong in `src/locales/` i18n files; API base URLs hardcoded rather than read from the runtime `public/config.json`; unguarded routes; direct mutation of store state outside actions.
 4. **Provide structured feedback**: Use your standard format with critical issues, important issues, suggestions, positive observations, and detailed file-by-file review.
 

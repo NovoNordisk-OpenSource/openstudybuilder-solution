@@ -8,8 +8,6 @@ from src.scripts.entities.cdisc_data_models.version import Version
 
 
 from src.scripts.repositories.repository import (
-    await_indexes,
-    create_indexes_if_not_existent,
     create_data_model_import_node,
     create_data_model_import,
 )
@@ -173,9 +171,6 @@ def import_data_model_csv_data_into_cdisc_db(
         with cdisc_import_neo4j_driver.session(
             database=cdisc_import_db_name
         ) as session:
-            session.write_transaction(create_indexes_if_not_existent)
-            session.write_transaction(await_indexes)
-
             dm_import = DataModelImport(
                 library=library,
                 catalogue=catalogue,

@@ -63,8 +63,22 @@ test('smoke: edit sponsor values form opens from term detail and cancels cleanly
     .locator('.v-main .v-data-table [data-cy="table-item-action-button"]')
     .first()
   await expect(termActionButton).toBeVisible({ timeout: 15_000 })
-  await termActionButton.click()
-  await page.locator('[data-cy="View or edit details"]').first().click()
+
+  // On a slow runner the click can land before the menu item reacts: the menu
+  // stays open and nothing navigates. Reopen the menu and click again until
+  // the term detail page shows up.
+  const viewDetails = page.locator('[data-cy="View or edit details"]').first()
+  const termDetail = page.locator('[data-cy="names-status"]').first()
+  await expect(async () => {
+    if (await termDetail.isVisible()) {
+      return
+    }
+    if (!(await viewDetails.isVisible())) {
+      await termActionButton.click({ timeout: 2_000 })
+    }
+    await viewDetails.click({ timeout: 2_000 })
+    await expect(termDetail).toBeVisible({ timeout: 3_000 })
+  }).toPass({ timeout: 20_000 })
 
   const editPencil = page.locator('[data-cy="edit-sponsor-values"]').first()
   await expect(editPencil).toBeVisible({ timeout: 15_000 })

@@ -3,7 +3,7 @@ ARG NODE_IMAGE=node:lts-alpine
 # build stage
 FROM $NODE_IMAGE AS build-stage
 
-RUN yarn global add typescript jest
+RUN npm install -g yarn && yarn global add typescript jest
 
 # Run update
 RUN apk add --no-cache git

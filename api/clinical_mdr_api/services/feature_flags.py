@@ -12,7 +12,8 @@ from clinical_mdr_api.models.feature_flag import (
     FeatureFlagPatchInput,
     FeatureFlagVersion,
 )
-from clinical_mdr_api.services._utils import calculate_diffs
+from clinical_mdr_api.models.utils import CustomPage
+from clinical_mdr_api.services._utils import calculate_diffs, get_otv
 from common.auth.user import user
 from common.exceptions import AlreadyExistsException
 
@@ -90,3 +91,33 @@ class FeatureFlagService:
         """Return feature flag version history augmented with diff information."""
         versions = [item.model_dump() for item in self.repo.get_all_versions(uid=uid)]
         return calculate_diffs(versions, FeatureFlagVersion)
+
+    def get_audit_trail(
+        self,
+        page_number: int = 1,
+        page_size: int = 10,
+        total_count: bool = False,
+        section: str | None = None,
+    ) -> CustomPage[FeatureFlagVersion]:
+        """Return one page of the version history of all feature flags.
+
+        Every version is diffed against the previous version of the same flag.
+        When a section is given, only flags currently in that section are listed.
+        """
+        items, total = self.repo.get_audit_trail(
+            page_number=page_number,
+            page_size=page_size,
+            total_count=total_count,
+            section=section,
+        )
+        versions = [
+            get_otv(
+                FeatureFlagVersion,
+                version.model_dump(),
+                previous.model_dump() if previous else None,
+            )
+            for version, previous in items
+        ]
+        return CustomPage.create(
+            items=versions, total=total, page=page_number, size=page_size
+        )

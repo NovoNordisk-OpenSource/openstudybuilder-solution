@@ -29,7 +29,7 @@ from clinical_mdr_api.services.odms.generic_service import OdmGenericService
 from common.exceptions import NotFoundException
 
 
-class OdmItemService(OdmGenericService[OdmItemAR]):
+class OdmItemService(OdmGenericService[OdmItemAR, OdmItem]):
     aggregate_class = OdmItemAR
     version_class = OdmItemVersion
     repository_interface = ItemRepository
@@ -51,6 +51,9 @@ class OdmItemService(OdmGenericService[OdmItemAR]):
             ),
             find_odm_vendor_attribute_by_uid_with_odm_element_relation=(
                 self._repos.odm_vendor_attribute_repository.find_by_uid_with_odm_element_relation
+            ),
+            find_odm_vendor_element_attribute_by_uid_with_odm_element_relation=(
+                self._repos.odm_vendor_attribute_repository.find_element_attribute_by_uid_with_odm_element_relation
             ),
         )
 

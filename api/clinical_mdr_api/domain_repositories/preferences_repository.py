@@ -110,7 +110,7 @@ class PreferencesRepository:
 
         if not set_clauses:
             current = self.get_user_preferences(user_id)
-            return current if current else {}
+            return current or {}
 
         set_clause = ", ".join(set_clauses)
         rs = db.cypher_query(

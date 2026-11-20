@@ -105,8 +105,8 @@
       >
         <CopyFromStudyForm
           :component="component"
-          :params="params"
-          :metadata="metadata"
+          :params="copyParams"
+          :metadata="copyMetadata"
           @close="closeCopyForm"
           @applied="onCopyApplied"
         />
@@ -180,6 +180,10 @@ const props = defineProps({
     type: Boolean,
     default: true,
   },
+  withDefinition: {
+    type: Boolean,
+    default: false,
+  },
   disableEdit: {
     type: Boolean,
     default: false,
@@ -208,6 +212,13 @@ const headers = computed(() => {
     { title: props.firstColLabel, key: 'name', width: '30%' },
     { title: t('StudyMetadataSummary.selected_values'), key: 'values' },
   ]
+  if (props.withDefinition) {
+    result.push({
+      title: t('_global.definition'),
+      key: 'definition',
+      width: '45%',
+    })
+  }
   if (props.withReasonForMissing) {
     result.push({
       title: t('StudyMetadataSummary.reason_for_missing'),
@@ -219,8 +230,8 @@ const headers = computed(() => {
 
 const historyHeaders = [
   { title: t('HistoryTable.field'), key: 'field' },
-  { title: t('HistoryTable.value_before'), key: 'before_value.term_uid' },
-  { title: t('HistoryTable.value_after'), key: 'after_value.term_uid' },
+  { title: t('HistoryTable.value_before'), key: 'before_value' },
+  { title: t('HistoryTable.value_after'), key: 'after_value' },
   { title: t('_global.user'), key: 'author_username' },
 ]
 
@@ -233,6 +244,13 @@ const displayFunctions = {
 }
 
 const computedParams = computed(() => buildTableParams(props.params))
+// Read-only rows are shown but come from another section, so they are not copied
+const copyParams = computed(() => props.params.filter((p) => !p.readOnly))
+const copyMetadata = computed(() => {
+  const metadata = { ...props.metadata }
+  props.params.filter((p) => p.readOnly).forEach((p) => delete metadata[p.name])
+  return metadata
+})
 const historyTitle = computed(
   () =>
     `${props.component} ${t('HistoryTable.fields')} ${t('HistoryTable.history')} (${studiesGeneralStore.selectedStudy.uid})`
@@ -274,8 +292,11 @@ async function openHistory() {
         date: group.date,
         field: groupItem.field,
         action: groupItem.action,
-        before_value: groupItem.before_value,
-        after_value: groupItem.after_value,
+        // Term fields carry a name, plain fields only the raw value in term_uid
+        before_value:
+          groupItem.before_value?.name ?? groupItem.before_value?.term_uid,
+        after_value:
+          groupItem.after_value?.name ?? groupItem.after_value?.term_uid,
       })
     }
   }
@@ -329,6 +350,7 @@ function buildTableParams(fields) {
           ? displayFunctions[field.valuesDisplay](values)
           : values,
       null_value_key: nullValueName,
+      definition: field.definition,
     })
   })
   return result

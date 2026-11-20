@@ -32,7 +32,7 @@ from clinical_mdr_api.models.controlled_terminologies.ct_term import (
 )
 from clinical_mdr_api.models.utils import GenericFilteringReturn
 from clinical_mdr_api.repositories._utils import FilterOperator
-from clinical_mdr_api.services._meta_repository import MetaRepository  # type: ignore
+from clinical_mdr_api.services._meta_repository import MetaRepository
 from clinical_mdr_api.services._utils import ensure_transaction, is_library_editable
 from clinical_mdr_api.services.controlled_terminologies.ct_term_attributes import (
     CTTermAttributesService,
@@ -160,6 +160,7 @@ class CTTermService:
                 catalogue_exists_callback=self._repos.ct_catalogue_repository.catalogue_exists,
                 term_uid=None,
                 concept_id_exists_callback=self._repos.ct_term_attributes_repository.entity_exists_by_concept_id,
+                algorithm=term_input.algorithm,
             ),
             library=library_vo,
             start_date=start_date,

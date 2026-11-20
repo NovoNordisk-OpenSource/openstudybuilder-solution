@@ -13,7 +13,9 @@
       "neodash_subval_display": [],
       "neodash_": [],
       "neodash_cl_id": "",
-      "neodash_pck_date": ""
+      "neodash_pck_date": "",
+      "neodash_ctcatalogue_name": "",
+      "neodash_ctcatalogue_name_display": ""
     },
     "theme": "light",
     "disableRowLimiting": true
@@ -25,9 +27,9 @@
         {
           "id": "705f65b8-21d4-47db-a71a-7867c32cb06b",
           "title": "Guide",
-          "query": "This NeoDash report allow you to browse the **Controlled Terminology** with both the CDISC and the Sponsor Codelists / Terms: here we display the evolution of each Codelist from Package to Package.\n\n",
+          "query": "This NeoDash report lets you browse the **Controlled Terminology** - both CDISC and Sponsor Codelists / Terms - and see how each Codelist and its Terms have evolved from Package to Package, and where a Term is used.\n\nThe tab **Codelist and Terms** uses a drill-down approach:\n- optionally choose a **CT Type** to narrow the list of Codelists: a CT catalogue, or **Sponsor** for the Codelists owned by the Sponsor library (typically not part of a CT Package); leave it empty to search all\n- search for and select a Codelist by name in **Pick a Codelist** - the other cards stay empty until you do\n- **Codelist ID** shows the Codelist's C-code (CDISC) - or its name for a Sponsor Codelist, which has no C-code\n- **Select CT Package** lists the versions of the Codelist with its **CT Type** (the catalogue, whether CDISC or Sponsor owned), **Owner** (the owning library, e.g. CDISC or Sponsor) and **Package**; if you set the **CT Type** filter, only the versions matching it are listed. Click a row to choose a CT Package and Version\n- **Overview at Date** shows the Codelist's Terms as a graph. For a Codelist in a CT Package it shows the Terms as they stood in the selected Package; for a Codelist without a Package (Package shows '(none)') it shows the Terms currently in the Codelist\n- **Terms in Codelist** lists the same Terms as a table, with C-code, Preferred Term, Synonyms, Definition, Term Version, Status and Start Date. For a Codelist that is not part of a CT Package (Package shows '(none)'), it lists the Terms currently in the Codelist - these two cards are the only ones that depend on the selected Package; the cards below work for every Codelist and look across all Packages\n- **Terms History for Codelist** lists every Term recorded for the Codelist across all Packages, with **#Changes**, **Creation Date**, **Date of Change(s)**, **Retire Date** and **Status** (active / retired / replaced / removed). When a Term's Submission Value was changed, the old and the new Submission Value are listed as two rows: **Replaced by** on the old one and **Replaces** on the new one name the other value and the date of the change, and **In Codelist** shows the period each value was in the Codelist\n- **History of terms in Codelist** plots every version of every Term in the Codelist, across all Packages, on a timeline; tick one or more Terms' **Submission Value** in the table above to show only those (ticking one Term also selects any other Term row sharing the same Submission Value). A Term whose Submission Value was changed is plotted as one chain of bars: each Submission Value's bars are limited to the period it was in the Codelist, labelled with that value and the Term's C-code, and an arrow leads from the old to the new one\n- **Details for Term(s)** shows the attributes of the ticked Term(s), one row per version across all Packages. If a ticked Term had its Submission Value changed, the rows for the earlier and the later Submission Value are both shown, with **In Codelist** giving the period, and the changed Submission Value is highlighted in red\n- **Term(s) used in** shows where the ticked Term(s) are used in this Codelist, regardless of Package, for example in Activity Items or in ODM Items on Forms and Item Groups. Usage belongs to the Term, not to a Term version, so the same usage is listed under every version; a Term that is not used shows 'Not used'\n\n",
           "width": 24,
-          "height": 4,
+          "height": 5,
           "x": 0,
           "y": 0,
           "type": "text",
@@ -43,35 +45,50 @@
         {
           "id": "1009ff47-1b86-4141-be6d-be5e794bdb83",
           "title": "Overview at Date : $neodash_pck_date",
-          "query": "MATCH\n  (n1:CTCodelistAttributesValue)<-[:HAS_VERSION]-\n  (n2:CTCodelistAttributesRoot)<-[r2]-\n  (n3:CTCodelistRoot),\n  (n3)<-[r11:HAS_CODELIST]-\n  (catalogue:CTCatalogue)\nMATCH\n  (n3:CTCodelistRoot)<-[r5:HAS_SELECTED_CODELIST]-\n  (ct_context:CTTermContext)-[r5_1:HAS_SELECTED_TERM]->\n  (n6:CTTermRoot)-[r6:HAS_ATTRIBUTES_ROOT]->\n  (n7:CTTermAttributesRoot)-[r7:HAS_VERSION]->\n  (n8:CTTermAttributesValue)\nWHERE\n  n1.name = $neodash_ctcodelistattributesvalue_name   \nMATCH (n1)<-[r1:HAS_VERSION]-\n  (n2:CTCodelistAttributesRoot)<-[r2]-(n3:CTCodelistRoot)<-[r5:HAS_SELECTED_CODELIST]-\n  (ct_context:CTTermContext)-[r5_1:HAS_SELECTED_TERM]->\n  (n6:CTTermRoot)-[r6:HAS_ATTRIBUTES_ROOT]->\n  (n7:CTTermAttributesRoot)-[r7:HAS_VERSION]->\n  (n8:CTTermAttributesValue)\nMATCH q=(n6)<-[r8:HAS_TERM_ROOT]-(subm_val:CTCodelistTerm)\nWITH DISTINCT n1,n2,n3,ct_context,n6,n7,n8,subm_val,r1,r2,r5,r5_1,r6,r7,r8 where r1.version=$neodash_cl_id\nreturn *",
+          "query": "MATCH (ct_package:CTPackage) WHERE ct_package.name = $neodash_pck_date\nMATCH\n  (n1:CTCodelistAttributesValue)<-[r1:HAS_VERSION]-\n  (n2:CTCodelistAttributesRoot)<-[r2]-\n  (n3:CTCodelistRoot),\n  (n3)<-[r3:HAS_CODELIST]-\n  (catalogue:CTCatalogue)-[r4:CONTAINS_PACKAGE]->\n  (ct_package)-[r5:CONTAINS_CODELIST]->\n  (ct_pack_cl:CTPackageCodelist)-[r6:CONTAINS_TERM]->\n  (ct_pack_term:CTPackageTerm)-[r7:CONTAINS_ATTRIBUTES]->\n  (n8:CTTermAttributesValue),\n  (ct_pack_cl)-[r8:CONTAINS_ATTRIBUTES]->(n1),\n  (n3)<-[r9:CONTAINS_CODELIST]-(lib_cl:Library)\nWHERE n1.name = $neodash_ctcodelistattributesvalue_name AND r1.version = $neodash_cl_id\nMATCH\n  (n3)-[r10:HAS_TERM]->\n  (subm_val:CTCodelistTerm)<-[r11:CONTAINS_SUBMISSION_VALUE]-(ct_pack_term),\n  (subm_val)-[r12:HAS_TERM_ROOT]->(n6:CTTermRoot)-[r13:HAS_ATTRIBUTES_ROOT]->\n  (n7:CTTermAttributesRoot)-[r14:HAS_VERSION]->(n8)\nMATCH (n6)<-[r16:CONTAINS_TERM]-(lib_term:Library)\nRETURN DISTINCT\n  n1, n2, n3, n6, n7, n8, subm_val, catalogue, ct_package, ct_pack_cl, ct_pack_term, lib_cl, lib_term,\n  r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12, r13, r14, r16\n\nUNION\n\nMATCH\n  (n1:CTCodelistAttributesValue)<-[r1:HAS_VERSION]-\n  (n2:CTCodelistAttributesRoot)<-[r2]-\n  (n3:CTCodelistRoot)\nWHERE $neodash_pck_date = '(none)'\n  AND n1.name = $neodash_ctcodelistattributesvalue_name AND r1.version = $neodash_cl_id\n  AND NOT EXISTS { MATCH (:CTPackageCodelist)-[:CONTAINS_ATTRIBUTES]->(n1) }\nMATCH (n3)<-[r9:CONTAINS_CODELIST]-(lib_cl:Library)\nMATCH\n  (n3)-[r10:HAS_TERM]->(subm_val:CTCodelistTerm)-[r12:HAS_TERM_ROOT]->\n  (n6:CTTermRoot)-[r13:HAS_ATTRIBUTES_ROOT]->\n  (n7:CTTermAttributesRoot)-[r14:HAS_VERSION]->(n8:CTTermAttributesValue)\nWHERE r10.end_date IS NULL AND r14.end_date IS NULL\nMATCH (n6)<-[r16:CONTAINS_TERM]-(lib_term:Library)\nRETURN DISTINCT\n  n1, n2, n3, n6, n7, n8, subm_val,\n  n1 AS catalogue, n1 AS ct_package, n1 AS ct_pack_cl, n1 AS ct_pack_term, lib_cl, lib_term,\n  r1, r2, r1 AS r3, r1 AS r4, r1 AS r5, r1 AS r6, r1 AS r7, r1 AS r8, r9, r10, r1 AS r11, r12, r13, r14, r16",
           "width": 11,
-          "height": 4,
+          "height": 6,
           "x": 5,
           "y": 0,
           "type": "graph",
           "selection": {
-            "CTTermContext": "(label)",
-            "CTCodelistAttributesValue": "name",
-            "CTCodelistAttributesRoot": "(label)",
+            "CTCodelistAttributesValue": "preferred_term",
+            "CTCodelistAttributesRoot": "(no label)",
             "CTCodelistRoot": "uid",
             "CTTermRoot": "uid",
-            "CTTermAttributesRoot": "(label)",
+            "CTTermAttributesRoot": "(no label)",
             "CTTermAttributesValue": "preferred_term",
-            "CTCodelistTerm": "submission_value"
+            "CTCodelistTerm": "submission_value",
+            "CTCatalogue": "name",
+            "CTPackage": "name",
+            "CTPackageCodelist": "uid",
+            "CTPackageTerm": "uid",
+            "Library": "name",
+            "HAS_VERSION": "(label)",
+            "HAS_ATTRIBUTES_ROOT": "(label)",
+            "HAS_CODELIST": "(label)",
+            "CONTAINS_PACKAGE": "(label)",
+            "CONTAINS_CODELIST": "(label)",
+            "CONTAINS_TERM": "(label)",
+            "CONTAINS_ATTRIBUTES": "(label)",
+            "HAS_TERM": "(label)",
+            "CONTAINS_SUBMISSION_VALUE": "(label)",
+            "HAS_TERM_ROOT": "(label)"
           },
           "settings": {
             "layout": "force-directed",
             "fullscreenEnabled": true,
-            "refreshButtonEnabled": true
+            "refreshButtonEnabled": true,
+            "defaultNodeSize": 3,
+            "hideSelections": true,
+            "noDataMessage": "Select a Codelist and then a CT Package (or a version) above."
           },
           "schema": [
-            [
-              "CTTermContext"
-            ],
             [
               "CTCodelistAttributesValue",
               "preferred_term",
               "concept_id",
+              "codelist_type",
               "synonyms",
               "name",
               "definition",
@@ -100,39 +117,80 @@
               "definition"
             ],
             [
+              "CTCodelistTerm",
+              "submission_value"
+            ],
+            [
+              "CTCatalogue",
+              "name"
+            ],
+            [
+              "CTPackage",
+              "uid",
+              "name",
+              "effective_date",
+              "author_id",
+              "import_date"
+            ],
+            [
+              "CTPackageCodelist",
+              "uid"
+            ],
+            [
+              "CTPackageTerm",
+              "uid"
+            ],
+            [
+              "Library",
+              "name",
+              "is_editable"
+            ],
+            [
               "HAS_VERSION",
+              "author_id",
               "version",
-              "start_date",
-              "user_initials",
               "status",
-              "end_date"
+              "start_date"
             ],
             [
               "HAS_ATTRIBUTES_ROOT"
             ],
             [
-              "HAS_SELECTED_CODELIST"
+              "HAS_CODELIST"
             ],
             [
-              "HAS_SELECTED_TERM"
+              "CONTAINS_PACKAGE"
+            ],
+            [
+              "CONTAINS_CODELIST"
+            ],
+            [
+              "CONTAINS_TERM"
+            ],
+            [
+              "CONTAINS_ATTRIBUTES"
+            ],
+            [
+              "HAS_TERM",
+              "author_id",
+              "start_date"
+            ],
+            [
+              "CONTAINS_SUBMISSION_VALUE"
             ],
             [
               "HAS_TERM_ROOT"
-            ],
-            [
-              "CTCodelistTerm",
-              "submission_value"
             ]
           ]
         },
         {
           "id": "e1eaf548-16e4-4f77-a358-9bc7ea61e0b8",
           "title": "History of terms in Codelist",
-          "query": "CALL\n  apoc.when(\n    size($neodash_subval) > 0,\n    \"MATCH\n  (n1:CTCodelistAttributesValue)<-[r1:HAS_VERSION]-\n  (n2:CTCodelistAttributesRoot)<-[r2]-\n  (n3:CTCodelistRoot)<-[r5:HAS_SELECTED_CODELIST]-\n  (ct_context:CTTermContext)-[r5_1:HAS_SELECTED_TERM]->\n  (n6:CTTermRoot)-[r6:HAS_ATTRIBUTES_ROOT]->\n  (n7:CTTermAttributesRoot)-[r7:HAS_VERSION]->(n8:CTTermAttributesValue),\n  (n6)<-[:HAS_TERM_ROOT]-(subm_val:CTCodelistTerm)\nWITH DISTINCT n1,r1,n2,r2,n3,r5,n6,r6,n7,r7,n8,subm_val\nWHERE n1.name=$neodash_ctcodelistattributesvalue_name and subm_val.submission_value in $neodash_subval\nwith subm_val.submission_value as term, n6.concept_id as ccode, r7.version as version, properties(n8) as map1,apoc.map.fromValues(['submission_value',subm_val.submission_value,'version',r7.version,'start_date',r7.start_date,'retire_date',r5.end_date,'end_date',r7.end_date]) as map2 order by n8.submission_value,n8.concept_id, r7.version\nwith term, ccode, CASE WHEN 'synonyms' in keys(map1) THEN apoc.map.setValues(map1,['synonyms',apoc.text.join(map1['synonyms'],';')]) ELSE map1 END as map1, map2\nwith term, ccode, collect(apoc.map.merge(map1, map2)) as terms \n with term, ccode, size(terms) as n, terms\n with term, ccode, CASE WHEN n>1 THEN apoc.coll.pairs(terms)  ELSE [[null,terms[0]]] end as terms\n with term, ccode, CASE when size(terms)>1 THEN  apoc.coll.insert(terms[0..size(terms)-1], 0, [null,terms[0][0]]) ELSe terms END as terms\nWITH term,  ccode, terms, [t in terms | CASE WHEN t[0] is not null and not t[0]['definition']=t[1]['definition'] THEN \n    \\\"<p style=\\'color:green;\\'>V\\\" +t[0]['version']+ \\\": \\\" + t[0]['definition'] + \\\"</p><p style=\\'color:red;\\'>V\\\"+t[1]['version']+\\\": \\\" + t[1]['definition'] +\\\"</p>\\\" ELSE\n    t[1]['definition'] end] as definition,\n    [t in terms | t[1]['start_date']] as start_date,\n    [t in terms | coalesce(t[1]['end_date'],date())] as end_date,\n    [t in terms | CASE WHEN t[0] is not null and not t[0]['concept_id']=t[1]['concept_id'] THEN \n    \\\"<p style=\\'color:green;\\'>V\\\"+t[0]['version']+\\\":\\\" + t[0]['concept_id'] + \\\"</p><p style=\\'color:red;\\'>V\\\"+t[1]['version']+\\\":  \\\" + t[1]['concept_id'] +\\\"</p>\\\" ELSE\n    t[1]['concept_id'] end] as concept_id,\n    [t in terms | CASE WHEN t[0] is not null and not t[0]['retire_date']=t[1]['retire_date'] THEN \n    \\\"<p style=\\'color:green;\\'>V\\\"+t[0]['version']+\\\": \\\" + apoc.temporal.format(t[0]['retire_date'],'YYYY-MM-dd') + \\\"</p><p style=\\'color:red;\\'>V\\\"+t[1]['version']+\\\": \\\" + apoc.temporal.format(t[1]['retire_date'],'YYYY-MM-dd') +\\\"</p>\\\" ELSE CASE WHEN t[1]['retire_date'] is not null THEN \n    apoc.temporal.format(t[1]['retire_date'],'YYYY-MM-dd') ELSE t[1]['retire_date'] END end] as retire_date,\n        [t in terms | CASE WHEN t[0] is not null and not t[0]['preferred_term']=t[1]['preferred_term'] THEN \n    \\\"<p style=\\'color:green;\\'>V\\\"+t[0]['version']+\\\": \\\" + t[0]['preferred_term'] + \\\"</p><p style=\\'color:red;\\'>V\\\"+t[1]['version']+\\\": \\\" + t[1]['preferred_term'] +\\\"</p>\\\" ELSE\n    t[1]['preferred_term'] end] as preferred_term,\n        [t in terms | CASE WHEN t[0] is not null and not t[0]['submission_value']=t[1]['submission_value'] THEN \n    \\\"<p style=\\'color:green;\\'>V\\\"+t[0]['version']+\\\": \\\" + t[0]['submission_value'] + \\\"</p><p style=\\'color:red;\\'>V\\\"+t[1]['version']+\\\": \\\" + t[1]['submission_value'] +\\\"</p>\\\" ELSE\n    t[1]['submission_value'] end] as submission_value,\n\n    [t in terms | CASE WHEN t[0] is not null and 'synonyms' in keys(t[0]) and 'synonyms' in keys(t[1]) and not t[0]['synonyms']=t[1]['synonyms']  \n    THEN  \\\"<p style=\\'color:green;\\'>V\\\"+t[0]['version']+\\\": \\\" + t[0]['synonyms'] + \\\"</p><p style=\\'color:red;\\'>V\\\"+t[1]['version']+\\\": \\\"+ t[1]['synonyms'] + \\\"</p>\\\" \n    ELSE \n      CASE WHEN t[0] is not null and not 'synonyms' in keys(t[0]) and 'synonyms' in keys(t[1]) THEN  \\\"<p style=\\'color:green;\\'>V\\\"+t[0]['version']+\\\": </p><p style=\\'color:red;\\'>V\\\"+t[1]['version']+\\\": \\\" + t[1]['synonyms'] +\\\"</p>\\\" \n          ELSE \n          CASE WHEN t[0] is not null and not 'synonyms' in keys(t[1]) and 'synonyms' in keys(t[0]) THEN\n     \\\"<p style=\\'color:green;\\'>V\\\"+t[0]['version']+\\\": \\\" + t[0]['synonyms'] + \\\"</p><p style=\\'color:red;\\'>V\\\"+t[1]['version']+\\\": </p>\\\" ELSE\n    t[1]['synonyms'] end end end] as synonyms,\n\n    [t in terms | t[1]['version'] ] as version\n\nwith term, ccode, concept_id,definition, submission_value, preferred_term, synonyms, start_date, end_date, retire_date, version, range(0,size(terms)-1,1) AS coll_size\nunwind coll_size as idx\nwith distinct term, ccode,definition[idx] as definition,\nconcept_id[idx] as concept_id,\nsubmission_value[idx] as submission_value,\npreferred_term[idx] as preferred_term,\nsynonyms[idx] as synonyms, \nstart_date[idx] as start_date, \nend_date[idx] as end_date, \nretire_date[idx] as retire_date, \nversion[idx] as version\nWITH term, ccode, definition,concept_id,submission_value,preferred_term, synonyms,start_date, end_date, retire_date,version\nCALL apoc.create.vNode(['Term'],\n  {start_date:apoc.temporal.format(start_date,'YYYY-MM-dd'),\n  end_date:apoc.temporal.format(end_date,'YYYY-MM-dd'),\n  retire_date:retire_date,\n  concept_id: concept_id,\n  submission_value:submission_value,\n  definition:definition,\n  preferred_term:preferred_term,\n  synonyms:synonyms,\n  version:version }) YIELD node as node\n  WITH term, ccode, collect(node) as nodes\n  WITH term, ccode, CASE WHEN size(nodes)>1 THEN apoc.coll.pairs(nodes) ELSE [nodes,null] END as nodes\n  UNWIND nodes as node_pair\n  with term,ccode,node_pair[0] as prev_node, node_pair[1] as next_node\n  WITH term,ccode,prev_node, next_node,\n  CASE WHEN next_node is not null THEN apoc.create.vRelationship(prev_node, 'NEXT', {}, next_node) END as rel \n  return term,ccode,prev_node as terms,rel\",\n   \" MATCH\n  (n1:CTCodelistAttributesValue)<-[r1:HAS_VERSION]-\n  (n2:CTCodelistAttributesRoot)<-[r2]-\n  (n3:CTCodelistRoot)<-[r5:HAS_SELECTED_CODELIST]-\n  (ct_context:CTTermContext)-[r5_1:HAS_SELECTED_TERM]->\n  (n6:CTTermRoot)-[r6:HAS_ATTRIBUTES_ROOT]->\n  (n7:CTTermAttributesRoot)-[r7:HAS_VERSION]->(n8:CTTermAttributesValue),\n  (n6)<-[:HAS_TERM_ROOT]-(subm_val:CTCodelistTerm)\nWITH DISTINCT n1,r1,n2,r2,n3,r5,n6,r6,n7,r7,n8,subm_val\nWHERE n1.name=$neodash_ctcodelistattributesvalue_name \nwith subm_val.submission_value as term, n6.concept_id as ccode, r7.version as version, properties(n8) as map1,apoc.map.fromValues(['submission_value',subm_val.submission_value,'version',r7.version,'start_date',r7.start_date,'retire_date',r5.end_date,'end_date',r7.end_date]) as map2 order by n8.submission_value,n8.concept_id, r7.version\nwith term, ccode, CASE WHEN 'synonyms' in keys(map1) THEN apoc.map.setValues(map1,['synonyms',apoc.text.join(map1['synonyms'],';')]) ELSE map1 END as map1, map2\nwith term, ccode, collect(apoc.map.merge(map1, map2)) as terms \n with term, ccode, size(terms) as n, terms\n with term, ccode, CASE WHEN n>1 THEN apoc.coll.pairs(terms)  ELSE [[null,terms[0]]] end as terms\n with term, ccode, CASE when size(terms)>1 THEN  apoc.coll.insert(terms[0..size(terms)-1], 0, [null,terms[0][0]]) ELSe terms END as terms\nWITH term,  ccode, terms, [t in terms | CASE WHEN t[0] is not null and not t[0]['definition']=t[1]['definition'] THEN \n    \\\"<p style=\\'color:green;\\'>V\\\" +t[0]['version']+ \\\": \\\" + t[0]['definition'] + \\\"</p><p style=\\'color:red;\\'>V\\\"+t[1]['version']+\\\": \\\" + t[1]['definition'] +\\\"</p>\\\" ELSE\n    t[1]['definition'] end] as definition,\n    [t in terms | t[1]['start_date']] as start_date,\n    [t in terms | coalesce(t[1]['end_date'],date())] as end_date,\n    [t in terms | CASE WHEN t[0] is not null and not t[0]['concept_id']=t[1]['concept_id'] THEN \n    \\\"<p style=\\'color:green;\\'>V\\\"+t[0]['version']+\\\":\\\" + t[0]['concept_id'] + \\\"</p><p style=\\'color:red;\\'>V\\\"+t[1]['version']+\\\":  \\\" + t[1]['concept_id'] +\\\"</p>\\\" ELSE\n    t[1]['concept_id'] end] as concept_id,\n    [t in terms | CASE WHEN t[0] is not null and not t[0]['retire_date']=t[1]['retire_date'] THEN \n    \\\"<p style=\\'color:green;\\'>V\\\"+t[0]['version']+\\\": \\\" + apoc.temporal.format(t[0]['retire_date'],'YYYY-MM-dd') + \\\"</p><p style=\\'color:red;\\'>V\\\"+t[1]['version']+\\\": \\\" + apoc.temporal.format(t[1]['retire_date'],'YYYY-MM-dd') +\\\"</p>\\\" ELSE CASE WHEN t[1]['retire_date'] is not null THEN \n    apoc.temporal.format(t[1]['retire_date'],'YYYY-MM-dd') ELSE t[1]['retire_date'] END end] as retire_date,\n        [t in terms | CASE WHEN t[0] is not null and not t[0]['preferred_term']=t[1]['preferred_term'] THEN \n    \\\"<p style=\\'color:green;\\'>V\\\"+t[0]['version']+\\\": \\\" + t[0]['preferred_term'] + \\\"</p><p style=\\'color:red;\\'>V\\\"+t[1]['version']+\\\": \\\" + t[1]['preferred_term'] +\\\"</p>\\\" ELSE\n    t[1]['preferred_term'] end] as preferred_term,\n        [t in terms | CASE WHEN t[0] is not null and not t[0]['submission_value']=t[1]['submission_value'] THEN \n    \\\"<p style=\\'color:green;\\'>V\\\"+t[0]['version']+\\\": \\\" + t[0]['submission_value'] + \\\"</p><p style=\\'color:red;\\'>V\\\"+t[1]['version']+\\\": \\\" + t[1]['submission_value'] +\\\"</p>\\\" ELSE\n    t[1]['submission_value'] end] as submission_value,\n\n    [t in terms | CASE WHEN t[0] is not null and 'synonyms' in keys(t[0]) and 'synonyms' in keys(t[1]) and not t[0]['synonyms']=t[1]['synonyms']  \n    THEN  \\\"<p style=\\'color:green;\\'>V\\\"+t[0]['version']+\\\": \\\" + t[0]['synonyms'] + \\\"</p><p style=\\'color:red;\\'>V\\\"+t[1]['version']+\\\": \\\"+ t[1]['synonyms'] + \\\"</p>\\\" \n    ELSE \n      CASE WHEN t[0] is not null and not 'synonyms' in keys(t[0]) and 'synonyms' in keys(t[1]) THEN  \\\"<p style=\\'color:green;\\'>V\\\"+t[0]['version']+\\\": </p><p style=\\'color:red;\\'>V\\\"+t[1]['version']+\\\": \\\" + t[1]['synonyms'] +\\\"</p>\\\" \n          ELSE \n          CASE WHEN t[0] is not null and not 'synonyms' in keys(t[1]) and 'synonyms' in keys(t[0]) THEN\n     \\\"<p style=\\'color:green;\\'>V\\\"+t[0]['version']+\\\": \\\" + t[0]['synonyms'] + \\\"</p><p style=\\'color:red;\\'>V\\\"+t[1]['version']+\\\": </p>\\\" ELSE\n    t[1]['synonyms'] end end end] as synonyms,\n\n    [t in terms | t[1]['version'] ] as version\n\nwith term, ccode, concept_id,definition, submission_value, preferred_term, synonyms, start_date, end_date, retire_date, version, range(0,size(terms)-1,1) AS coll_size\nunwind coll_size as idx\nwith distinct term, ccode,definition[idx] as definition,\nconcept_id[idx] as concept_id,\nsubmission_value[idx] as submission_value,\npreferred_term[idx] as preferred_term,\nsynonyms[idx] as synonyms, \nstart_date[idx] as start_date, \nend_date[idx] as end_date, \nretire_date[idx] as retire_date, \nversion[idx] as version\nWITH term, ccode, definition,concept_id,submission_value,preferred_term, synonyms,start_date, end_date, retire_date,version\nCALL apoc.create.vNode(['Term'],\n  {start_date:apoc.temporal.format(start_date,'YYYY-MM-dd'),\n  end_date:apoc.temporal.format(end_date,'YYYY-MM-dd'),\n  retire_date:retire_date,\n  concept_id: concept_id,\n  submission_value:submission_value,\n  definition:definition,\n  preferred_term:preferred_term,\n  synonyms:synonyms,\n  version:version }) YIELD node as node\n  WITH term, ccode, collect(node) as nodes\n  WITH term, ccode, CASE WHEN size(nodes)>1 THEN apoc.coll.pairs(nodes) ELSE [nodes,null] END as nodes\n  UNWIND nodes as node_pair\n  with term,ccode,node_pair[0] as prev_node, node_pair[1] as next_node\n  WITH term,ccode,prev_node, next_node,\n  CASE WHEN next_node is not null THEN apoc.create.vRelationship(prev_node, 'NEXT', {}, next_node) END as rel \n  return term,ccode,prev_node as terms,rel\",\n    {\n      neodash_ctcodelistattributesvalue_name:\n        $neodash_ctcodelistattributesvalue_name,\n      neodash_subval: $neodash_subval\n    }\n  )\n  YIELD value\nRETURN value.term AS term, value.terms AS terms, value.rel AS rel",
-          "width": 23,
+          "query": "CALL\n  apoc.when(\n    size($neodash_subval) > 0,\n    \"MATCH (n1:CTCodelistAttributesValue)<-[:HAS_VERSION]-(:CTCodelistAttributesRoot)<-[]-(n3:CTCodelistRoot)-[r10:HAS_TERM]->(subm_val:CTCodelistTerm)-[:HAS_TERM_ROOT]->(n6:CTTermRoot)\nWHERE n1.name=$neodash_ctcodelistattributesvalue_name\n  AND EXISTS { MATCH (n3)-[:HAS_TERM]->(sel:CTCodelistTerm)-[:HAS_TERM_ROOT]->(n6) WHERE sel.submission_value IN $neodash_subval }\nWITH n3, n6, subm_val, r10 ORDER BY r10.start_date\nWITH n3, n6, subm_val, collect({s: r10.start_date, e: r10.end_date}) AS ivs\nWITH n6, subm_val, reduce(acc = [], iv IN ivs | CASE WHEN size(acc) > 0 AND (acc[-1].e IS NULL OR iv.s <= acc[-1].e) THEN acc[0..size(acc)-1] + [{s: acc[-1].s, e: CASE WHEN acc[-1].e IS NULL OR iv.e IS NULL THEN null WHEN iv.e > acc[-1].e THEN iv.e ELSE acc[-1].e END}] ELSE acc + [iv] END) AS periods\nUNWIND periods AS m\nWITH n6, subm_val, m.s AS sv_start, m.e AS sv_end\nMATCH (n6)-[:HAS_ATTRIBUTES_ROOT]->(:CTTermAttributesRoot)-[r7:HAS_VERSION]->(n8:CTTermAttributesValue)\nWHERE coalesce(r7.end_date, datetime('9999-12-31T00:00:00Z')) > sv_start\n  AND r7.start_date < coalesce(sv_end, datetime('9999-12-31T00:00:00Z'))\nwith DISTINCT elementId(n6) as term, n6.concept_id as ccode, r7.version as version, properties(n8) as map1,apoc.map.fromValues(['submission_value',subm_val.submission_value,'version',r7.version,'start_date',CASE WHEN sv_start > r7.start_date THEN sv_start ELSE r7.start_date END,'retire_date',r7.end_date,'end_date',CASE WHEN sv_end IS NOT NULL AND (r7.end_date IS NULL OR sv_end < r7.end_date) THEN sv_end ELSE r7.end_date END]) as map2 order by map2.start_date, version\nwith term, ccode, CASE WHEN 'synonyms' in keys(map1) THEN apoc.map.setValues(map1,['synonyms',apoc.text.join(map1['synonyms'],';')]) ELSE map1 END as map1, map2\nwith term, ccode, collect(apoc.map.merge(map1, map2)) as terms \n with term, ccode, size(terms) as n, terms\n with term, ccode, CASE WHEN n>1 THEN apoc.coll.pairs(terms)  ELSE [[null,terms[0]]] end as terms\n with term, ccode, CASE when size(terms)>1 THEN  apoc.coll.insert(terms[0..size(terms)-1], 0, [null,terms[0][0]]) ELSe terms END as terms\nWITH term,  ccode, terms, [t in terms | CASE WHEN t[0] is not null and not t[0]['definition']=t[1]['definition'] THEN \n    \\\"<p style=\\'color:green;\\'>V\\\" +t[0]['version']+ \\\": \\\" + t[0]['definition'] + \\\"</p><p style=\\'color:red;\\'>V\\\"+t[1]['version']+\\\": \\\" + t[1]['definition'] +\\\"</p>\\\" ELSE\n    t[1]['definition'] end] as definition,\n    [t in terms | t[1]['start_date']] as start_date,\n    [t in terms | coalesce(t[1]['end_date'],date())] as end_date,\n    [t in terms | CASE WHEN t[0] is not null and not t[0]['concept_id']=t[1]['concept_id'] THEN \n    \\\"<p style=\\'color:green;\\'>V\\\"+t[0]['version']+\\\":\\\" + t[0]['concept_id'] + \\\"</p><p style=\\'color:red;\\'>V\\\"+t[1]['version']+\\\":  \\\" + t[1]['concept_id'] +\\\"</p>\\\" ELSE\n    t[1]['concept_id'] end] as concept_id,\n    [t in terms | CASE WHEN t[0] is not null and not t[0]['retire_date']=t[1]['retire_date'] THEN \n    \\\"<p style=\\'color:green;\\'>V\\\"+t[0]['version']+\\\": \\\" + apoc.temporal.format(t[0]['retire_date'],'yyyy-MM-dd') + \\\"</p><p style=\\'color:red;\\'>V\\\"+t[1]['version']+\\\": \\\" + apoc.temporal.format(t[1]['retire_date'],'yyyy-MM-dd') +\\\"</p>\\\" ELSE CASE WHEN t[1]['retire_date'] is not null THEN \n    apoc.temporal.format(t[1]['retire_date'],'yyyy-MM-dd') ELSE t[1]['retire_date'] END end] as retire_date,\n        [t in terms | CASE WHEN t[0] is not null and not t[0]['preferred_term']=t[1]['preferred_term'] THEN \n    \\\"<p style=\\'color:green;\\'>V\\\"+t[0]['version']+\\\": \\\" + t[0]['preferred_term'] + \\\"</p><p style=\\'color:red;\\'>V\\\"+t[1]['version']+\\\": \\\" + t[1]['preferred_term'] +\\\"</p>\\\" ELSE\n    t[1]['preferred_term'] end] as preferred_term,\n        [t in terms | t[1]['submission_value'] + CASE WHEN t[1]['concept_id'] IS NOT NULL THEN ' (' + t[1]['concept_id'] + ')' ELSE '' END] as submission_value,\n\n    [t in terms | CASE WHEN t[0] is not null and 'synonyms' in keys(t[0]) and 'synonyms' in keys(t[1]) and not t[0]['synonyms']=t[1]['synonyms']  \n    THEN  \\\"<p style=\\'color:green;\\'>V\\\"+t[0]['version']+\\\": \\\" + t[0]['synonyms'] + \\\"</p><p style=\\'color:red;\\'>V\\\"+t[1]['version']+\\\": \\\"+ t[1]['synonyms'] + \\\"</p>\\\" \n    ELSE \n      CASE WHEN t[0] is not null and not 'synonyms' in keys(t[0]) and 'synonyms' in keys(t[1]) THEN  \\\"<p style=\\'color:green;\\'>V\\\"+t[0]['version']+\\\": </p><p style=\\'color:red;\\'>V\\\"+t[1]['version']+\\\": \\\" + t[1]['synonyms'] +\\\"</p>\\\" \n          ELSE \n          CASE WHEN t[0] is not null and not 'synonyms' in keys(t[1]) and 'synonyms' in keys(t[0]) THEN\n     \\\"<p style=\\'color:green;\\'>V\\\"+t[0]['version']+\\\": \\\" + t[0]['synonyms'] + \\\"</p><p style=\\'color:red;\\'>V\\\"+t[1]['version']+\\\": </p>\\\" ELSE\n    t[1]['synonyms'] end end end] as synonyms,\n\n    [t in terms | t[1]['version'] ] as version\n\nwith term, ccode, concept_id,definition, submission_value, preferred_term, synonyms, start_date, end_date, retire_date, version, range(0,size(terms)-1,1) AS coll_size\nunwind coll_size as idx\nwith distinct term, ccode,definition[idx] as definition,\nconcept_id[idx] as concept_id,\nsubmission_value[idx] as submission_value,\npreferred_term[idx] as preferred_term,\nsynonyms[idx] as synonyms, \nstart_date[idx] as start_date, \nend_date[idx] as end_date, \nretire_date[idx] as retire_date, \nversion[idx] as version\nWITH term, ccode, definition,concept_id,submission_value,preferred_term, synonyms,start_date, end_date, retire_date,version\nCALL apoc.create.vNode(['Term'],\n  {start_date:apoc.temporal.format(start_date,'yyyy-MM-dd'),\n  end_date:apoc.temporal.format(end_date,'yyyy-MM-dd'),\n  retire_date:retire_date,\n  concept_id: concept_id,\n  submission_value:submission_value,\n  definition:definition,\n  preferred_term:preferred_term,\n  synonyms:synonyms,\n  version:version }) YIELD node as node\n  WITH term, ccode, collect(node) as nodes\n  WITH term, ccode, CASE WHEN size(nodes)>1 THEN apoc.coll.pairs(nodes) ELSE [nodes,null] END as nodes\n  UNWIND nodes as node_pair\n  with term,ccode,node_pair[0] as prev_node, node_pair[1] as next_node\n  WITH term,ccode,prev_node, next_node,\n  CASE WHEN next_node is not null THEN apoc.create.vRelationship(prev_node, 'NEXT', {}, next_node) END as rel \n  return term,ccode,prev_node as terms,rel\",\n   \"  MATCH (n1:CTCodelistAttributesValue)<-[:HAS_VERSION]-(:CTCodelistAttributesRoot)<-[]-(n3:CTCodelistRoot)-[r10:HAS_TERM]->(subm_val:CTCodelistTerm)-[:HAS_TERM_ROOT]->(n6:CTTermRoot)\nWHERE n1.name=$neodash_ctcodelistattributesvalue_name\nWITH n3, n6, subm_val, r10 ORDER BY r10.start_date\nWITH n3, n6, subm_val, collect({s: r10.start_date, e: r10.end_date}) AS ivs\nWITH n6, subm_val, reduce(acc = [], iv IN ivs | CASE WHEN size(acc) > 0 AND (acc[-1].e IS NULL OR iv.s <= acc[-1].e) THEN acc[0..size(acc)-1] + [{s: acc[-1].s, e: CASE WHEN acc[-1].e IS NULL OR iv.e IS NULL THEN null WHEN iv.e > acc[-1].e THEN iv.e ELSE acc[-1].e END}] ELSE acc + [iv] END) AS periods\nUNWIND periods AS m\nWITH n6, subm_val, m.s AS sv_start, m.e AS sv_end\nMATCH (n6)-[:HAS_ATTRIBUTES_ROOT]->(:CTTermAttributesRoot)-[r7:HAS_VERSION]->(n8:CTTermAttributesValue)\nWHERE coalesce(r7.end_date, datetime('9999-12-31T00:00:00Z')) > sv_start\n  AND r7.start_date < coalesce(sv_end, datetime('9999-12-31T00:00:00Z'))\nwith DISTINCT elementId(n6) as term, n6.concept_id as ccode, r7.version as version, properties(n8) as map1,apoc.map.fromValues(['submission_value',subm_val.submission_value,'version',r7.version,'start_date',CASE WHEN sv_start > r7.start_date THEN sv_start ELSE r7.start_date END,'retire_date',r7.end_date,'end_date',CASE WHEN sv_end IS NOT NULL AND (r7.end_date IS NULL OR sv_end < r7.end_date) THEN sv_end ELSE r7.end_date END]) as map2 order by map2.start_date, version\nwith term, ccode, CASE WHEN 'synonyms' in keys(map1) THEN apoc.map.setValues(map1,['synonyms',apoc.text.join(map1['synonyms'],';')]) ELSE map1 END as map1, map2\nwith term, ccode, collect(apoc.map.merge(map1, map2)) as terms \n with term, ccode, size(terms) as n, terms\n with term, ccode, CASE WHEN n>1 THEN apoc.coll.pairs(terms)  ELSE [[null,terms[0]]] end as terms\n with term, ccode, CASE when size(terms)>1 THEN  apoc.coll.insert(terms[0..size(terms)-1], 0, [null,terms[0][0]]) ELSe terms END as terms\nWITH term,  ccode, terms, [t in terms | CASE WHEN t[0] is not null and not t[0]['definition']=t[1]['definition'] THEN \n    \\\"<p style=\\'color:green;\\'>V\\\" +t[0]['version']+ \\\": \\\" + t[0]['definition'] + \\\"</p><p style=\\'color:red;\\'>V\\\"+t[1]['version']+\\\": \\\" + t[1]['definition'] +\\\"</p>\\\" ELSE\n    t[1]['definition'] end] as definition,\n    [t in terms | t[1]['start_date']] as start_date,\n    [t in terms | coalesce(t[1]['end_date'],date())] as end_date,\n    [t in terms | CASE WHEN t[0] is not null and not t[0]['concept_id']=t[1]['concept_id'] THEN \n    \\\"<p style=\\'color:green;\\'>V\\\"+t[0]['version']+\\\":\\\" + t[0]['concept_id'] + \\\"</p><p style=\\'color:red;\\'>V\\\"+t[1]['version']+\\\":  \\\" + t[1]['concept_id'] +\\\"</p>\\\" ELSE\n    t[1]['concept_id'] end] as concept_id,\n    [t in terms | CASE WHEN t[0] is not null and not t[0]['retire_date']=t[1]['retire_date'] THEN \n    \\\"<p style=\\'color:green;\\'>V\\\"+t[0]['version']+\\\": \\\" + apoc.temporal.format(t[0]['retire_date'],'yyyy-MM-dd') + \\\"</p><p style=\\'color:red;\\'>V\\\"+t[1]['version']+\\\": \\\" + apoc.temporal.format(t[1]['retire_date'],'yyyy-MM-dd') +\\\"</p>\\\" ELSE CASE WHEN t[1]['retire_date'] is not null THEN \n    apoc.temporal.format(t[1]['retire_date'],'yyyy-MM-dd') ELSE t[1]['retire_date'] END end] as retire_date,\n        [t in terms | CASE WHEN t[0] is not null and not t[0]['preferred_term']=t[1]['preferred_term'] THEN \n    \\\"<p style=\\'color:green;\\'>V\\\"+t[0]['version']+\\\": \\\" + t[0]['preferred_term'] + \\\"</p><p style=\\'color:red;\\'>V\\\"+t[1]['version']+\\\": \\\" + t[1]['preferred_term'] +\\\"</p>\\\" ELSE\n    t[1]['preferred_term'] end] as preferred_term,\n        [t in terms | t[1]['submission_value'] + CASE WHEN t[1]['concept_id'] IS NOT NULL THEN ' (' + t[1]['concept_id'] + ')' ELSE '' END] as submission_value,\n\n    [t in terms | CASE WHEN t[0] is not null and 'synonyms' in keys(t[0]) and 'synonyms' in keys(t[1]) and not t[0]['synonyms']=t[1]['synonyms']  \n    THEN  \\\"<p style=\\'color:green;\\'>V\\\"+t[0]['version']+\\\": \\\" + t[0]['synonyms'] + \\\"</p><p style=\\'color:red;\\'>V\\\"+t[1]['version']+\\\": \\\"+ t[1]['synonyms'] + \\\"</p>\\\" \n    ELSE \n      CASE WHEN t[0] is not null and not 'synonyms' in keys(t[0]) and 'synonyms' in keys(t[1]) THEN  \\\"<p style=\\'color:green;\\'>V\\\"+t[0]['version']+\\\": </p><p style=\\'color:red;\\'>V\\\"+t[1]['version']+\\\": \\\" + t[1]['synonyms'] +\\\"</p>\\\" \n          ELSE \n          CASE WHEN t[0] is not null and not 'synonyms' in keys(t[1]) and 'synonyms' in keys(t[0]) THEN\n     \\\"<p style=\\'color:green;\\'>V\\\"+t[0]['version']+\\\": \\\" + t[0]['synonyms'] + \\\"</p><p style=\\'color:red;\\'>V\\\"+t[1]['version']+\\\": </p>\\\" ELSE\n    t[1]['synonyms'] end end end] as synonyms,\n\n    [t in terms | t[1]['version'] ] as version\n\nwith term, ccode, concept_id,definition, submission_value, preferred_term, synonyms, start_date, end_date, retire_date, version, range(0,size(terms)-1,1) AS coll_size\nunwind coll_size as idx\nwith distinct term, ccode,definition[idx] as definition,\nconcept_id[idx] as concept_id,\nsubmission_value[idx] as submission_value,\npreferred_term[idx] as preferred_term,\nsynonyms[idx] as synonyms, \nstart_date[idx] as start_date, \nend_date[idx] as end_date, \nretire_date[idx] as retire_date, \nversion[idx] as version\nWITH term, ccode, definition,concept_id,submission_value,preferred_term, synonyms,start_date, end_date, retire_date,version\nCALL apoc.create.vNode(['Term'],\n  {start_date:apoc.temporal.format(start_date,'yyyy-MM-dd'),\n  end_date:apoc.temporal.format(end_date,'yyyy-MM-dd'),\n  retire_date:retire_date,\n  concept_id: concept_id,\n  submission_value:submission_value,\n  definition:definition,\n  preferred_term:preferred_term,\n  synonyms:synonyms,\n  version:version }) YIELD node as node\n  WITH term, ccode, collect(node) as nodes\n  WITH term, ccode, CASE WHEN size(nodes)>1 THEN apoc.coll.pairs(nodes) ELSE [nodes,null] END as nodes\n  UNWIND nodes as node_pair\n  with term,ccode,node_pair[0] as prev_node, node_pair[1] as next_node\n  WITH term,ccode,prev_node, next_node,\n  CASE WHEN next_node is not null THEN apoc.create.vRelationship(prev_node, 'NEXT', {}, next_node) END as rel \n  return term,ccode,prev_node as terms,rel\",\n    {\n      neodash_ctcodelistattributesvalue_name:\n        $neodash_ctcodelistattributesvalue_name,\n      neodash_subval: $neodash_subval\n    }\n  )\n  YIELD value\nRETURN value.term AS term, value.terms AS terms, value.rel AS rel",
+          "width": 24,
           "height": 4,
           "x": 0,
-          "y": 10,
+          "y": 14,
           "type": "gantt",
           "selection": {
             "Term": "(label)"
@@ -166,17 +224,17 @@
         {
           "id": "9175edb5-b4f8-4ed7-b325-e62dbeddb8c7",
           "title": "Terms History for Codelist - $neodash_ctcodelistattributesvalue_name",
-          "query": "MATCH\n  (n1:CTCodelistAttributesValue)<-[r1:HAS_VERSION]-\n  (n2:CTCodelistAttributesRoot)<-[r2]-\n  (n3:CTCodelistRoot)<-[r5:HAS_SELECTED_CODELIST]-\n  (ct_context:CTTermContext)-[r5_1:HAS_SELECTED_TERM]->\n  (n6:CTTermRoot)-[r6:HAS_ATTRIBUTES_ROOT]->\n  (n7:CTTermAttributesRoot)-[r7:HAS_VERSION]->\n  (n8:CTTermAttributesValue),\n  (n6)<-[:CONTAINS_TERM]-(lib_term:Library),\n  (n3)<-[:CONTAINS_CODELIST]-(lib_cl:Library),\n  (n6)<-[:HAS_TERM_ROOT]-(subm_val:CTCodelistTerm)\nWITH DISTINCT n1,r1,n2,r2,n3,r5,n6,r6,n7,r7,n8,lib_term,lib_cl,subm_val\nWHERE n1.name=$neodash_ctcodelistattributesvalue_name \nWITH DISTINCT n1.name AS CodelistName, \nlib_cl.name as CodelistOwner,\nn3.uid AS Codelist, \nsubm_val.submission_value AS SubVal,\nn8.concept_id as `Term C-code`,\nlib_term.name as TermOwner,\ncase when r7.start_date is not null then apoc.temporal.format(r7.start_date,\"YYYY-MM-dd\")  else '' end as start_date,\ncase when r5.end_date is not null then apoc.temporal.format(r5.end_date,\"YYYY-MM-dd\")  else '' end as retire_date\nWITH CodelistName, CodelistOwner, Codelist, SubVal,  TermOwner,`Term C-code`,\nsize(apoc.coll.toSet(collect(start_date)))-1 as numChange, \napoc.coll.sort(apoc.coll.toSet(collect(start_date))) as startDate,\nretire_date\nwith distinct Codelist, \nCodelistName, \nCodelistOwner,\n`Term C-code`,\nSubVal,\nTermOwner,\nnumChange, \nstartDate, \nretire_date order by Codelist, CodelistName, SubVal\nwith Codelist,\nCodelistOwner,\nCodelistName as`Codelist Name`,\n`Term C-code`,\nSubVal as `Submission Value`,\nTermOwner,\nnumChange as `#Changes`,\nstartDate[0] as `Creation Date`,\ncase when size(startDate) >1 then apoc.text.join(startDate[1..(size(startDate))],', ') else '' end as `Date of Change(s)`,\nretire_date as `Retire Date`,\ncase when not retire_date='' then 'retired' else 'active' end as Status\nreturn\nCodelist,\nCodelistOwner,\n`Codelist Name`,\n`Term C-code`,\n`Submission Value`,\nTermOwner,\n`#Changes`,\n`Creation Date`,\n`Date of Change(s)`,\n`Retire Date`,\nStatus ",
+          "query": "MATCH\n  (n1:CTCodelistAttributesValue)<-[r1:HAS_VERSION]-\n  (n2:CTCodelistAttributesRoot)<-[r2]-\n  (n3:CTCodelistRoot)\nWHERE n1.name = $neodash_ctcodelistattributesvalue_name\nMATCH (n3)<-[r9:CONTAINS_CODELIST]-(lib_cl:Library)\nMATCH\n  (n3)-[r10:HAS_TERM]->(subm_val:CTCodelistTerm)-[r12:HAS_TERM_ROOT]->\n  (n6:CTTermRoot)-[r13:HAS_ATTRIBUTES_ROOT]->\n  (n7:CTTermAttributesRoot)-[r14:HAS_VERSION]->(n8:CTTermAttributesValue)\nMATCH (n6)<-[r16:CONTAINS_TERM]-(lib_term:Library)\nWITH DISTINCT\n  n1.name AS CodelistName,\n  lib_cl.name AS CodelistOwner,\n  n3.uid AS Codelist,\n  subm_val.submission_value AS SubVal,\n  elementId(n6) AS TermKey,\n  n8.concept_id AS `Term C-code`,\n  lib_term.name AS TermOwner,\n  r10.start_date AS sv_start,\n  r10.end_date AS sv_end,\n  CASE\n    WHEN r14.start_date IS NOT NULL THEN format(r14.start_date, \"yyyy-MM-dd\")\n    ELSE ''\n  END AS start_date,\n  r14.status AS v_status,\n  r14.end_date IS NULL AS v_open\nWITH\n  CodelistName,\n  CodelistOwner,\n  Codelist,\n  SubVal,\n  TermKey,\n  TermOwner,\n  `Term C-code`,\n  collect(DISTINCT start_date) AS startDates,\n  collect(DISTINCT {d: start_date, st: v_status, o: v_open}) AS versions,\n  collect(DISTINCT {s: sv_start, e: sv_end}) AS ivsRaw\nWITH DISTINCT\n  Codelist,\n  CodelistName,\n  CodelistOwner,\n  `Term C-code`,\n  SubVal,\n  TermKey,\n  TermOwner,\n  size(startDates) - 1 AS numChange,\n  coll.sort(startDates) AS startDate,\n  reduce(\n    best = null, v IN versions\n    | CASE\n        WHEN best IS NULL OR v.d > best.d OR (v.d = best.d AND v.o AND NOT best.o)\n          THEN v\n        ELSE best\n      END\n  ) AS latest,\n  ivsRaw\nUNWIND ivsRaw AS iv\nWITH\n  Codelist,\n  CodelistName,\n  CodelistOwner,\n  `Term C-code`,\n  SubVal,\n  TermKey,\n  TermOwner,\n  numChange,\n  startDate,\n  latest,\n  iv\nORDER BY iv.s\nWITH\n  Codelist,\n  CodelistName,\n  CodelistOwner,\n  `Term C-code`,\n  SubVal,\n  TermKey,\n  TermOwner,\n  numChange,\n  startDate,\n  latest,\n  collect(iv) AS ivs\nUNWIND reduce(acc = [], iv IN ivs | CASE WHEN size(acc) > 0 AND (acc[-1].e IS NULL OR iv.s <= acc[-1].e) THEN acc[0..size(acc)-1] + [{s: acc[-1].s, e: CASE WHEN acc[-1].e IS NULL OR iv.e IS NULL THEN null WHEN iv.e > acc[-1].e THEN iv.e ELSE acc[-1].e END}] ELSE acc + [iv] END) AS p\nWITH\n  Codelist,\n  CodelistName,\n  CodelistOwner,\n  `Term C-code`,\n  SubVal,\n  TermKey,\n  TermOwner,\n  numChange,\n  startDate,\n  latest,\n  p.s AS svStart,\n  p.e AS svEnd\nWITH collect({\n  cl: Codelist,\n  name: CodelistName,\n  owner: CodelistOwner,\n  cc: `Term C-code`,\n  sv: SubVal,\n  key: TermKey,\n  towner: TermOwner,\n  n: numChange,\n  sd: startDate,\n  lat: latest,\n  s: svStart,\n  e: svEnd\n}) AS allRows\nUNWIND allRows AS a\nWITH\n  a,\n  [\n    b IN allRows\n    WHERE b.cl = a.cl AND b.key = a.key AND b.sv <> a.sv AND a.e IS NOT NULL AND\n      b.s >= a.e\n  ] AS successors,\n  [\n    b IN allRows\n    WHERE b.cl = a.cl AND b.key = a.key AND b.sv <> a.sv AND b.e IS NOT NULL AND\n      b.e <= a.s\n  ] AS predecessors\nWITH\n  a,\n  reduce(\n    best = null, b IN successors\n    | CASE WHEN best IS NULL OR b.s < best.s THEN b ELSE best END\n  ) AS nxt,\n  reduce(\n    best = null, b IN predecessors\n    | CASE WHEN best IS NULL OR b.e > best.e THEN b ELSE best END\n  ) AS prv\nRETURN\n  a.cl AS Codelist,\n  a.owner AS CodelistOwner,\n  a.name AS `Codelist Name`,\n  a.cc AS `Term C-code`,\n  a.sv AS `Submission Value`,\n  CASE\n    WHEN prv IS NOT NULL\n      THEN prv.sv + ' (' + apoc.temporal.format(a.s, 'yyyy-MM-dd') + ')'\n    ELSE ''\n  END AS Replaces,\n  CASE\n    WHEN nxt IS NOT NULL\n      THEN nxt.sv + ' (' + apoc.temporal.format(a.e, 'yyyy-MM-dd') + ')'\n    ELSE ''\n  END AS `Replaced by`,\n  CASE\n    WHEN a.s IS NULL THEN ''\n    WHEN a.e IS NULL THEN 'from ' + apoc.temporal.format(a.s, 'yyyy-MM-dd')\n    ELSE\n      apoc.temporal.format(a.s, 'yyyy-MM-dd') + ' to ' +\n      apoc.temporal.format(a.e, 'yyyy-MM-dd')\n  END AS `In Codelist`,\n  a.towner AS TermOwner,\n  a.n AS `#Changes`,\n  a.sd[0] AS `Creation Date`,\n  CASE\n    WHEN size(a.sd) > 1 THEN string.join(a.sd[1..(size(a.sd))], ', ')\n    ELSE ''\n  END AS `Date of Change(s)`,\n  CASE WHEN toLower(toString(a.lat.st)) = 'retired' THEN a.lat.d ELSE '' END\n    AS `Retire Date`,\n  CASE\n    WHEN toLower(toString(a.lat.st)) = 'retired' THEN 'retired'\n    WHEN a.e IS NOT NULL THEN\n      CASE WHEN nxt IS NOT NULL THEN 'replaced' ELSE 'removed' END\n    ELSE 'active'\n  END AS Status\nORDER BY Codelist, `Codelist Name`, `Submission Value`, a.s",
           "width": 24,
-          "height": 6,
+          "height": 4,
           "x": 0,
-          "y": 4,
+          "y": 10,
           "type": "table",
           "selection": {},
           "settings": {
             "compact": true,
             "wrapContent": true,
-            "columnWidths": "[1,1,1,1,1.5,0.8,1,0.8,2,0.8,0.5]",
+            "columnWidths": "[1,1,1,1,1.5,1.3,1.3,1.5,0.8,0.8,1,2,0.8,0.7]",
             "allowDownload": true,
             "refreshButtonEnabled": true,
             "actionsRules": [
@@ -187,13 +245,15 @@
                 "customization": "set variable",
                 "customizationValue": "subval"
               }
-            ]
+            ],
+            "fullscreenEnabled": true,
+            "downloadImageEnabled": false
           }
         },
         {
-          "id": "7869fc52-b2a1-4d35-b47c-89b48e964866",
-          "title": "Pick a Codelist",
-          "query": "MATCH (n:`CTCodelistAttributesValue`) \nWHERE toLower(toString(n.`name`)) CONTAINS toLower($input) \nRETURN DISTINCT n.`name` as value,  n.`name` as display ORDER BY size(toString(value)) ASC LIMIT 20",
+          "id": "384ec258-e9ae-4d56-b6fc-0b84641f6d0e",
+          "title": "CT Type (optional filter)",
+          "query": "CALL {\n  MATCH (c:`CTCatalogue`) RETURN c.`name` AS value\n  UNION\n  RETURN 'Sponsor' AS value\n}\nWITH value WHERE toLower(toString(value)) CONTAINS toLower($input)\nRETURN DISTINCT value, value AS display ORDER BY value ASC LIMIT 20",
           "width": 5,
           "height": 2,
           "x": 0,
@@ -201,43 +261,69 @@
           "type": "select",
           "selection": {},
           "settings": {
-            "type": "Node Property",
-            "entityType": "CTCodelistAttributesValue",
-            "propertyType": "name",
-            "propertyTypeDisplay": "name",
+            "type": "Custom Query",
+            "entityType": "ctcatalogue_name",
+            "parameterName": "neodash_ctcatalogue_name",
+            "suggestionLimit": 20,
+            "refreshButtonEnabled": true,
+            "helperText": "Optional: CT catalogue or Sponsor"
+          },
+          "schema": []
+        },
+        {
+          "id": "7869fc52-b2a1-4d35-b47c-89b48e964866",
+          "title": "Pick a Codelist",
+          "query": "MATCH (n:`CTCodelistAttributesValue`)\nWHERE toLower(toString(n.`name`)) CONTAINS toLower($input)\nAND (coalesce($neodash_ctcatalogue_name, '') = '' OR EXISTS {\n  MATCH (n)<-[:HAS_VERSION]-(:CTCodelistAttributesRoot)<-[]-(cl:CTCodelistRoot)\n  WHERE ($neodash_ctcatalogue_name = 'Sponsor' AND EXISTS { (cl)<-[:CONTAINS_CODELIST]-(:Library {name: 'Sponsor'}) })\n    OR ($neodash_ctcatalogue_name <> 'Sponsor' AND EXISTS { (cl)<-[:HAS_CODELIST]-(:CTCatalogue {name: $neodash_ctcatalogue_name}) })\n})\nRETURN DISTINCT n.`name` as value,  n.`name` as display ORDER BY size(toString(value)) ASC LIMIT 20",
+          "width": 5,
+          "height": 2,
+          "x": 0,
+          "y": 2,
+          "type": "select",
+          "selection": {},
+          "settings": {
+            "type": "Custom Query",
+            "entityType": "ctcodelistattributesvalue_name",
             "parameterName": "neodash_ctcodelistattributesvalue_name",
-            "suggestionLimit": 20
+            "suggestionLimit": 20,
+            "refreshButtonEnabled": true,
+            "helperText": "Codelist name"
           },
           "schema": []
         },
         {
           "id": "4f6dde88-b8e2-401d-b046-bbf293f3467a",
-          "title": "Codelist Concept ID",
-          "query": "MATCH (n1:CTCodelistAttributesValue)<-[r1:HAS_VERSION]-(n2:CTCodelistAttributesRoot)<-[r2]-(n3:CTCodelistRoot)\nWHERE n1.name=$neodash_ctcodelistattributesvalue_name\nRETURN n3.uid\n",
+          "title": "Codelist ID",
+          "query": "MATCH (n1:CTCodelistAttributesValue)<-[r1:HAS_VERSION]-(n2:CTCodelistAttributesRoot)<-[r2]-(n3:CTCodelistRoot)\nWHERE n1.name = $neodash_ctcodelistattributesvalue_name\nRETURN DISTINCT\n  CASE\n    WHEN n3.uid =~ 'C[0-9]+' THEN n3.uid\n    ELSE n1.name\n  END AS `Codelist ID`\nLIMIT 1",
           "width": 5,
           "height": 2,
           "x": 0,
-          "y": 2,
+          "y": 4,
           "type": "value",
           "selection": {},
-          "settings": {},
+          "settings": {
+            "fontSize": 24,
+            "marginLeft": 10,
+            "marginTop": 10,
+            "refreshButtonEnabled": true,
+            "noDataMessage": "Select a Codelist above."
+          },
           "schema": []
         },
         {
           "id": "bf3d7781-3d3d-4be6-b6c4-5736a0b5a427",
           "title": "Details for Term(s): $neodash_subval",
-          "query": "//codelist_term_history\nMATCH\n  (n1:CTCodelistAttributesValue)<-[r1:HAS_VERSION]-\n  (n2:CTCodelistAttributesRoot)<-[r2]-\n  (n3:CTCodelistRoot)<-[r5:HAS_SELECTED_CODELIST]-\n  (ct_context:CTTermContext)-[r5_1:HAS_SELECTED_TERM]->\n  (n6:CTTermRoot)-[r6:HAS_ATTRIBUTES_ROOT]->\n  (n7:CTTermAttributesRoot)-[r7:HAS_VERSION]->\n  (n8:CTTermAttributesValue),\n  (n6)<-[:HAS_TERM_ROOT]-(subm_val:CTCodelistTerm)\nWITH DISTINCT n1, r1, n2, r2, n3, r5, n6, r6, n7, r7, n8,subm_val\nWHERE n1.name = $neodash_ctcodelistattributesvalue_name\nAND subm_val.submission_value IN $neodash_subval\nWITH\n  CASE\n    WHEN n8.concept_id IS NULL THEN toString(elementId(n8))\n    ELSE n8.concept_id\n  END AS concept_id,\n  apoc.map.merge(\n    properties(n8),\n    apoc.map.fromValues([\n      'submission_value',\n       subm_val.submission_value,\n      'version',\n      r7.version,\n      'start_date',\n      r7.start_date,\n      'retire_date',\n      r5.end_date,\n      'end_date',\n      r7.end_date\n    ])\n  ) AS term\nORDER BY r7.version\nWITH concept_id, collect(term) AS terms\nWITH\n  concept_id,\n  CASE\n    WHEN size(terms) = 1 THEN [[null, terms[0]]]\n    ELSE apoc.coll.pairs(terms)\n  END AS terms\nWITH\n  concept_id,\n  CASE\n    WHEN size(terms) = 1 THEN terms\n    ELSE apoc.coll.insert(terms[0..size(terms) - 1], 0, [null, terms[0][0]])\n  END AS terms\nWITH\n  concept_id,\n  terms,\n  [\n    p IN terms\n    | CASE\n      WHEN\n        (p[0]['definition'] = p[1]['definition']) OR p[0]['definition'] IS NULL\n        THEN 'no'\n      ELSE 'yes'\n    END\n  ] AS def_diff,\n  [\n    p IN terms\n    | CASE\n      WHEN\n        (p[0]['submission_value'] = p[1]['submission_value']) OR\n        p[0]['submission_value'] IS NULL\n        THEN 'no'\n      ELSE 'yes'\n    END\n  ] AS subval_diff,\n  [\n    p IN terms\n    | CASE\n      WHEN\n        (p[0]['preferred_term'] = p[1]['preferred_term']) OR\n        p[0]['preferred_term'] IS NULL\n        THEN 'no'\n      ELSE 'yes'\n    END\n  ] AS pref_term_diff,\n  [\n    p IN terms\n    | CASE\n      WHEN\n        (p[0]['concept_id'] = p[1]['concept_id']) OR p[0]['concept_id'] IS NULL\n        THEN 'no'\n      ELSE 'yes'\n    END\n  ] AS concept_diff,\n  [\n    p IN terms\n    | CASE\n      WHEN\n        (p[0]['synonyms'] = p[1]['synonyms']) OR p[0]['synonyms'] IS NULL\n        THEN 'no'\n      ELSE 'yes'\n    END\n  ] AS sym_diff\nWITH\n  concept_id,\n  terms,\n  def_diff,\n  subval_diff,\n  pref_term_diff,\n  concept_diff,\n  sym_diff,\n  range(0, size(terms) - 1, 1) AS coll_size\nUNWIND coll_size AS idx\nWITH\n  concept_id,\n  terms[idx][1] AS term,\n  def_diff[idx] AS def_diff,\n  subval_diff[idx] AS subval_diff,\n  pref_term_diff[idx] AS pref_term_diff,\n  concept_diff[idx] AS concept_diff,\n  sym_diff[idx] AS sym_diff\nWITH\n  concept_id,\n  CASE\n    WHEN \"submission_value\" IN keys(term) THEN term.submission_value\n    ELSE null\n  END AS `Submission Value`,\n  CASE\n    WHEN 'concept_id' IN keys(term) THEN term.concept_id\n    ELSE null\n  END AS `C-code`,\n  CASE\n    WHEN \"preferred_term\" IN keys(term) THEN term.preferred_term\n    ELSE null\n  END AS `Preferred Term`,\n  CASE\n    WHEN \"synonyms\" IN keys(term) THEN term.synonyms\n    ELSE null\n  END AS Synonyms,\n  CASE\n    WHEN \"definition\" IN keys(term) THEN term.definition\n    ELSE null\n  END AS Definition,\n  CASE\n    WHEN\n      term.start_date IS NOT NULL\n      THEN apoc.temporal.format(term.start_date, \"YYYY-MM-dd\")\n    ELSE null\n  END AS `Start Date`,\n  CASE\n    WHEN\n      term.end_date IS NOT NULL\n      THEN apoc.temporal.format(term.end_date, \"YYYY-MM-dd\")\n    ELSE null\n  END AS end_date,\n  CASE\n    WHEN\n      term.retire_date IS NOT NULL\n      THEN apoc.temporal.format(term.retire_date, \"YYYY-MM-dd\")\n    ELSE null\n  END AS `Retire Date`,\n  term.version AS Version,\n  def_diff,\n  subval_diff,\n  pref_term_diff,\n  concept_diff,\n  sym_diff\nRETURN\n  `Start Date`,\n  coalesce(end_date, `Retire Date`) AS `End Date`,\n  Version,\n  `Submission Value`,\n  `C-code`,\n  `Preferred Term`,\n  Synonyms,\n  Definition,\n  subval_diff AS __subval_diff,\n  concept_diff AS __concept_diff,\n  pref_term_diff AS __pref_term_diff,\n  sym_diff AS __sym_diff,\n  def_diff AS __def_diff\nORDER BY concept_id, `Start Date`, `End Date`",
-          "width": 23,
-          "height": 6,
+          "query": "//codelist_term_history\nMATCH\n  (n1:CTCodelistAttributesValue)<-[:HAS_VERSION]-\n  (:CTCodelistAttributesRoot)<-[]-\n  (n3:CTCodelistRoot)-[:HAS_TERM]->\n  (sel:CTCodelistTerm)-[:HAS_TERM_ROOT]->(n6:CTTermRoot)\nWHERE n1.name = $neodash_ctcodelistattributesvalue_name\nAND sel.submission_value IN $neodash_subval\nWITH DISTINCT n3, n6\nMATCH (n3)-[r10:HAS_TERM]->(subm_val:CTCodelistTerm)-[:HAS_TERM_ROOT]->(n6)\nWITH n3, n6, subm_val, r10\nORDER BY r10.start_date\nWITH n3, n6, subm_val, collect({s: r10.start_date, e: r10.end_date}) AS ivs\nWITH\n  n6,\n  subm_val,\n  reduce(acc = [], iv IN ivs | CASE WHEN size(acc) > 0 AND (acc[-1].e IS NULL OR iv.s <= acc[-1].e) THEN acc[0..size(acc)-1] + [{s: acc[-1].s, e: CASE WHEN acc[-1].e IS NULL OR iv.e IS NULL THEN null WHEN iv.e > acc[-1].e THEN iv.e ELSE acc[-1].e END}] ELSE acc + [iv] END) AS periods\nUNWIND periods AS m\nWITH\n  n6,\n  subm_val,\n  m.s AS sv_start,\n  m.e AS sv_end\nMATCH\n  (n6)-[:HAS_ATTRIBUTES_ROOT]->(:CTTermAttributesRoot)-[r7:HAS_VERSION]->\n  (n8:CTTermAttributesValue)\nWHERE\n  coalesce(r7.end_date, datetime('9999-12-31T00:00:00Z')) > sv_start\n  AND r7.start_date < coalesce(sv_end, datetime('9999-12-31T00:00:00Z'))\nWITH DISTINCT\n  elementId(n6) AS term_key,\n  apoc.map.merge(\n    properties(n8),\n    apoc.map.fromValues([\n      'submission_value',\n       subm_val.submission_value,\n      'version',\n      r7.version,\n      'start_date',\n      r7.start_date,\n      'retire_date',\n      r7.end_date,\n      'end_date',\n      r7.end_date,\n      'cl_start',\n      sv_start,\n      'cl_end',\n      sv_end\n    ])\n  ) AS term\nORDER BY term.cl_start, term.version\nWITH term_key, collect(term) AS terms\nWITH\n  term_key,\n  CASE\n    WHEN size(terms) = 1 THEN [[null, terms[0]]]\n    ELSE apoc.coll.pairs(terms)\n  END AS terms\nWITH\n  term_key,\n  CASE\n    WHEN size(terms) = 1 THEN terms\n    ELSE apoc.coll.insert(terms[0..size(terms) - 1], 0, [null, terms[0][0]])\n  END AS terms\nWITH\n  term_key,\n  terms,\n  [\n    p IN terms\n    | CASE\n      WHEN\n        (p[0]['definition'] = p[1]['definition']) OR p[0]['definition'] IS NULL\n        THEN 'no'\n      ELSE 'yes'\n    END\n  ] AS def_diff,\n  [\n    p IN terms\n    | CASE\n      WHEN\n        (p[0]['submission_value'] = p[1]['submission_value']) OR\n        p[0]['submission_value'] IS NULL\n        THEN 'no'\n      ELSE 'yes'\n    END\n  ] AS subval_diff,\n  [\n    p IN terms\n    | CASE\n      WHEN\n        (p[0]['preferred_term'] = p[1]['preferred_term']) OR\n        p[0]['preferred_term'] IS NULL\n        THEN 'no'\n      ELSE 'yes'\n    END\n  ] AS pref_term_diff,\n  [\n    p IN terms\n    | CASE\n      WHEN\n        (p[0]['concept_id'] = p[1]['concept_id']) OR p[0]['concept_id'] IS NULL\n        THEN 'no'\n      ELSE 'yes'\n    END\n  ] AS concept_diff,\n  [\n    p IN terms\n    | CASE\n      WHEN\n        (p[0]['synonyms'] = p[1]['synonyms']) OR p[0]['synonyms'] IS NULL\n        THEN 'no'\n      ELSE 'yes'\n    END\n  ] AS sym_diff\nWITH\n  term_key,\n  terms,\n  def_diff,\n  subval_diff,\n  pref_term_diff,\n  concept_diff,\n  sym_diff,\n  range(0, size(terms) - 1, 1) AS coll_size\nUNWIND coll_size AS idx\nWITH\n  term_key,\n  terms[idx][1] AS term,\n  def_diff[idx] AS def_diff,\n  subval_diff[idx] AS subval_diff,\n  pref_term_diff[idx] AS pref_term_diff,\n  concept_diff[idx] AS concept_diff,\n  sym_diff[idx] AS sym_diff\nWITH\n  term_key,\n  CASE\n    WHEN \"submission_value\" IN keys(term) THEN term.submission_value\n    ELSE null\n  END AS `Submission Value`,\n  CASE\n    WHEN 'concept_id' IN keys(term) THEN term.concept_id\n    ELSE null\n  END AS `C-code`,\n  CASE\n    WHEN \"preferred_term\" IN keys(term) THEN term.preferred_term\n    ELSE null\n  END AS `Preferred Term`,\n  CASE\n    WHEN \"synonyms\" IN keys(term) THEN term.synonyms\n    ELSE null\n  END AS Synonyms,\n  CASE\n    WHEN \"definition\" IN keys(term) THEN term.definition\n    ELSE null\n  END AS Definition,\n  CASE\n    WHEN\n      term.start_date IS NOT NULL\n      THEN apoc.temporal.format(term.start_date, \"yyyy-MM-dd\")\n    ELSE null\n  END AS `Start Date`,\n  CASE\n    WHEN\n      term.end_date IS NOT NULL\n      THEN apoc.temporal.format(term.end_date, \"yyyy-MM-dd\")\n    ELSE null\n  END AS end_date,\n  CASE\n    WHEN\n      term.retire_date IS NOT NULL\n      THEN apoc.temporal.format(term.retire_date, \"yyyy-MM-dd\")\n    ELSE null\n  END AS `Retire Date`,\n  CASE\n    WHEN term.cl_start IS NULL THEN ''\n    WHEN term.cl_end IS NULL\n      THEN 'from ' + apoc.temporal.format(term.cl_start, 'yyyy-MM-dd')\n    ELSE\n      apoc.temporal.format(term.cl_start, 'yyyy-MM-dd') + ' to ' +\n      apoc.temporal.format(term.cl_end, 'yyyy-MM-dd')\n  END AS `In Codelist`,\n  term.cl_start AS cl_start,\n  term.version AS Version,\n  def_diff,\n  subval_diff,\n  pref_term_diff,\n  concept_diff,\n  sym_diff\nRETURN\n  `Start Date`,\n  coalesce(end_date, `Retire Date`) AS `End Date`,\n  Version,\n  `Submission Value`,\n  `In Codelist`,\n  `C-code`,\n  `Preferred Term`,\n  Synonyms,\n  Definition,\n  subval_diff AS __subval_diff,\n  concept_diff AS __concept_diff,\n  pref_term_diff AS __pref_term_diff,\n  sym_diff AS __sym_diff,\n  def_diff AS __def_diff\nORDER BY term_key, cl_start, `Start Date`, `End Date`",
+          "width": 24,
+          "height": 5,
           "x": 0,
-          "y": 15,
+          "y": 18,
           "type": "table",
           "selection": {},
           "settings": {
             "refreshButtonEnabled": true,
             "compact": true,
             "wrapContent": true,
-            "columnWidths": "[1,1,1,1,1,1,1,4]",
+            "columnWidths": "[1,1,1,1,1.3,1,1,1,4]",
             "noDataMessage": "Select one or more terms in table above.",
             "actionsRules": [
               {
@@ -335,9 +421,9 @@
         {
           "id": "40057aeb-f904-4108-9f7b-ea6330b9cff1",
           "title": "Select CT Package",
-          "query": "MATCH\n  (n1:CTCodelistAttributesValue)<-[r1:HAS_VERSION]-\n  (n2:CTCodelistAttributesRoot)<-[r2]-\n  (n3:CTCodelistRoot),\n  (n3)<-[r11:HAS_CODELIST]-\n  (catalogue:CTCatalogue)\nOPTIONAL MATCH (catalogue)-[r12:CONTAINS_PACKAGE]->\n  (package:CTPackage)-[r13:CONTAINS_CODELIST]->\n  (cl_package:CTPackageCodelist)-[r14:CONTAINS_ATTRIBUTES]->\n  (n1)\nWITH DISTINCT n1, r1, catalogue, package\nWHERE n1.name = $neodash_ctcodelistattributesvalue_name\nRETURN  \ncatalogue.name as `CT Type`,\npackage.name as Package,\nn1.name AS Codelist,\nr1.version as Version,\nCASE WHEN r1.end_date is not null THEN apoc.text.join([apoc.temporal.format(r1.start_date,\"YYYY-MM-dd\"), apoc.temporal.format(r1.end_date,\"YYYY-MM-dd\")],'') ELSE apoc.text.join([apoc.temporal.format(r1.start_date,\"YYYY-MM-dd\"), ''],'-') END as Date,\nelementId(n1) as __id\n order by `CT Type`, Package DESC , Version DESC\n",
+          "query": "MATCH\n  (n1:CTCodelistAttributesValue)<-[r1:HAS_VERSION]-\n  (n2:CTCodelistAttributesRoot)<-[r2]-\n  (n3:CTCodelistRoot),\n  (n3)<-[r11:HAS_CODELIST]-\n  (catalogue:CTCatalogue)\nOPTIONAL MATCH (catalogue)-[r12:CONTAINS_PACKAGE]->\n  (package:CTPackage)-[r13:CONTAINS_CODELIST]->\n  (cl_package:CTPackageCodelist)-[r14:CONTAINS_ATTRIBUTES]->\n  (n1)\nOPTIONAL MATCH (n3)<-[:CONTAINS_CODELIST]-(lib:Library)\nWITH DISTINCT n1, r1, package, catalogue, coalesce(lib.name, '') AS owner\nWHERE n1.name = $neodash_ctcodelistattributesvalue_name\n  AND (\n    coalesce($neodash_ctcatalogue_name, '') = ''\n    OR ($neodash_ctcatalogue_name = 'Sponsor' AND owner = 'Sponsor')\n    OR ($neodash_ctcatalogue_name <> 'Sponsor' AND catalogue.name = $neodash_ctcatalogue_name)\n  )\nRETURN  \ncatalogue.name as `CT Type`,\nowner as Owner,\ncoalesce(package.name, '(none)') as Package,\nn1.name AS Codelist,\nr1.version as Version,\nCASE WHEN r1.end_date is not null THEN apoc.text.join([apoc.temporal.format(r1.start_date,\"yyyy-MM-dd\"), apoc.temporal.format(r1.end_date,\"yyyy-MM-dd\")],'') ELSE apoc.text.join([apoc.temporal.format(r1.start_date,\"yyyy-MM-dd\"), ''],'-') END as Date,\nelementId(n1) as __id\n order by `CT Type`, Package DESC , Version DESC\n",
           "width": 8,
-          "height": 4,
+          "height": 6,
           "x": 16,
           "y": 0,
           "type": "table",
@@ -362,6 +448,44 @@
             "refreshButtonEnabled": true,
             "compact": true,
             "wrapContent": true
+          }
+        },
+        {
+          "id": "cf333c65-fe5e-4a03-8609-b136dea92639",
+          "title": "Term(s) used in",
+          "query": "MATCH\n  (n1:CTCodelistAttributesValue)<-[r1:HAS_VERSION]-\n  (n2:CTCodelistAttributesRoot)<-[r2]-\n  (n3:CTCodelistRoot)\nWHERE n1.name = $neodash_ctcodelistattributesvalue_name\nMATCH\n  (n3)-[r10:HAS_TERM]->(subm_val:CTCodelistTerm)-[r12:HAS_TERM_ROOT]->(n6:CTTermRoot)\nWHERE subm_val.submission_value IN $neodash_subval\nWITH n3, subm_val, n6, r10\nORDER BY r10.start_date\nWITH n3, subm_val, n6, collect({s: r10.start_date, e: r10.end_date}) AS ivs\nWITH n3, subm_val, n6, reduce(acc = [], iv IN ivs | CASE WHEN size(acc) > 0 AND (acc[-1].e IS NULL OR iv.s <= acc[-1].e) THEN acc[0..size(acc)-1] + [{s: acc[-1].s, e: CASE WHEN acc[-1].e IS NULL OR iv.e IS NULL THEN null WHEN iv.e > acc[-1].e THEN iv.e ELSE acc[-1].e END}] ELSE acc + [iv] END) AS periods\nUNWIND periods AS m\nWITH n3, subm_val, n6, m.s AS sv_start, m.e AS sv_end\nMATCH (n6)-[:HAS_ATTRIBUTES_ROOT]->(:CTTermAttributesRoot)-[hist_ver:HAS_VERSION]->(hist_val:CTTermAttributesValue)\nWHERE coalesce(hist_ver.end_date, datetime('9999-12-31T00:00:00Z')) > sv_start\n  AND hist_ver.start_date < coalesce(sv_end, datetime('9999-12-31T00:00:00Z'))\nWITH DISTINCT subm_val, n6, n3, hist_ver, coalesce(hist_val.concept_id, n6.uid) AS TermCode\nOPTIONAL MATCH(n6)<-[r17:HAS_SELECTED_TERM]-(context:CTTermContext)-[r19:HAS_SELECTED_CODELIST]->(n3)\nOPTIONAL MATCH (context)<-[r20]-(term_context)\n\nOPTIONAL MATCH (term_context)<-[:CONTAINS_ACTIVITY_ITEM]-(act_inst:ActivityInstanceValue)\nOPTIONAL MATCH (term_context)<-[:ITEM_REF]-(odm_item_group:OdmItemGroupValue)\nOPTIONAL MATCH (odm_item_group)<-[:ITEM_GROUP_REF]-(odm_form:OdmFormValue)\nOPTIONAL MATCH (term_context)<-[:HAS_DATASET_VARIABLE]-(:DatasetInstance)<-[:HAS_INSTANCE]-(dataset:Dataset)\nOPTIONAL MATCH (term_context)<-[:HAS_INSTANCE]-(sponsor_var:DatasetVariable)\nOPTIONAL MATCH (term_context)<-[:HAS_TEXT_FIELD|HAS_BOOLEAN_FIELD|HAS_ARRAY_FIELD|HAS_INT_FIELD|HAS_TIME_FIELD]-(field_study:StudyValue)\nOPTIONAL MATCH (term_context)<-[:HAS_STUDY_EPOCH]-(epoch_study:StudyValue)\nOPTIONAL MATCH (term_context)-[:LATEST]->(aic_val:ActivityInstanceClassValue)\n\n// version of term_context itself, where it's a versioned Value node (e.g. OdmItemValue, ConceptValue subtypes)\nOPTIONAL MATCH ()-[tc_ver:HAS_VERSION]->(term_context)\n\n// version of the resolved parent/context node\nOPTIONAL MATCH ()-[act_inst_ver:HAS_VERSION]->(act_inst)\nOPTIONAL MATCH ()-[odm_item_group_ver:HAS_VERSION]->(odm_item_group)\nOPTIONAL MATCH ()-[aic_val_ver:HAS_VERSION]->(aic_val)\nOPTIONAL MATCH ()-[field_study_ver:HAS_VERSION]->(field_study)\nOPTIONAL MATCH ()-[epoch_study_ver:HAS_VERSION]->(epoch_study)\n\nWITH subm_val, term_context, hist_ver, TermCode,\n     act_inst, odm_item_group, odm_form, dataset, sponsor_var, field_study, epoch_study, aic_val,\n     tc_ver, act_inst_ver, odm_item_group_ver, aic_val_ver, field_study_ver, epoch_study_ver,\n  CASE\n    WHEN term_context IS NULL THEN 'Not used'\n    WHEN 'ActivityItem' IN labels(term_context) THEN 'Activity Item'\n    WHEN 'OdmItemValue' IN labels(term_context) THEN 'ODM Item'\n    WHEN 'OdmItemGroupValue' IN labels(term_context) THEN 'ODM Item Group'\n    WHEN 'ActivityInstanceClassRoot' IN labels(term_context) THEN 'Activity Instance Class'\n    WHEN 'StudyField' IN labels(term_context) THEN 'Study Field'\n    WHEN 'StudyEpoch' IN labels(term_context) THEN 'Study Epoch'\n    WHEN 'SponsorModelDatasetVariableInstance' IN labels(term_context) THEN 'Sponsor Model Dataset Variable'\n    WHEN 'DatasetVariableInstance' IN labels(term_context) THEN 'Dataset Variable'\n    WHEN 'UnitDefinitionValue' IN labels(term_context) THEN 'Unit Definition'\n    WHEN 'PharmaceuticalProductValue' IN labels(term_context) THEN 'Pharmaceutical Product'\n    WHEN 'MedicinalProductValue' IN labels(term_context) THEN 'Medicinal Product'\n    WHEN 'TemplateParameterTermValue' IN labels(term_context) THEN 'Template Parameter Term'\n    WHEN 'ConceptValue' IN labels(term_context) THEN 'Simple Concept'\n    ELSE labels(term_context)[0]\n  END AS UsedIn,\n  CASE\n    WHEN 'ActivityItem' IN labels(term_context) THEN act_inst.name\n    WHEN 'OdmItemValue' IN labels(term_context) THEN\n      CASE WHEN odm_item_group IS NULL THEN 'Not in any Item Group'\n           WHEN odm_form IS NULL THEN odm_item_group.name\n           ELSE odm_form.name + ' / ' + odm_item_group.name END\n    WHEN 'SponsorModelDatasetVariableInstance' IN labels(term_context) THEN sponsor_var.uid\n    WHEN 'DatasetVariableInstance' IN labels(term_context) THEN dataset.uid\n    WHEN 'StudyField' IN labels(term_context) THEN field_study.study_id_prefix + ' / ' + term_context.field_name\n    WHEN 'StudyEpoch' IN labels(term_context) THEN epoch_study.study_id_prefix + ' / ' + term_context.name\n    WHEN 'ActivityInstanceClassRoot' IN labels(term_context) THEN aic_val.name\n    ELSE COALESCE(term_context.name, term_context.oid, term_context.uid)\n  END AS UsedInContext,\n  tc_ver.version AS UsedInVersion,\n  COALESCE(act_inst_ver.version, odm_item_group_ver.version, aic_val_ver.version,\n           field_study_ver.version, epoch_study_ver.version) AS UsedInContextVersion,\n  CASE\n    WHEN act_inst IS NOT NULL THEN 'ActivityInstance'\n    WHEN odm_form IS NOT NULL THEN 'OdmForm / OdmItemGroup'\n    WHEN odm_item_group IS NOT NULL THEN 'OdmItemGroup'\n    WHEN dataset IS NOT NULL THEN 'Dataset'\n    WHEN sponsor_var IS NOT NULL THEN 'DatasetVariable'\n    WHEN field_study IS NOT NULL THEN 'Study'\n    WHEN epoch_study IS NOT NULL THEN 'Study'\n    WHEN aic_val IS NOT NULL THEN 'ActivityInstanceClassValue'\n    WHEN term_context IS NOT NULL THEN labels(term_context)[0]\n    ELSE null\n  END AS UsedInContextType\nWITH hist_ver.version AS TermVersion, subm_val.submission_value AS SubmissionValue, TermCode,\n       UsedIn, CASE WHEN UsedIn='Activity Item' THEN 'NA' ELSE UsedInVersion END AS UsedInVersion, UsedInContext, UsedInContextVersion, UsedInContextType\nRETURN DISTINCT\n       TermVersion, SubmissionValue, TermCode AS `C-code`,\n       UsedIn, UsedInVersion, UsedInContext, UsedInContextVersion, UsedInContextType\nORDER BY SubmissionValue, TermVersion, UsedIn, UsedInVersion DESC, UsedInContext, UsedInContextVersion DESC",
+          "width": 24,
+          "height": 4,
+          "x": 0,
+          "y": 23,
+          "type": "table",
+          "selection": {},
+          "settings": {
+            "fullscreenEnabled": true,
+            "refreshButtonEnabled": true,
+            "compact": true,
+            "wrapContent": true,
+            "allowDownload": true,
+            "columnWidths": "[0.5,1,0.8,1,1,1,0.7,1]"
+          }
+        },
+        {
+          "id": "4628eef6-2bff-4532-b8de-e7a525b78588",
+          "title": "Terms in $neodash_ctcodelistattributesvalue_name - Package : $neodash_pck_date",
+          "query": "MATCH (ct_package:CTPackage) WHERE ct_package.name = $neodash_pck_date\nMATCH\n  (n1:CTCodelistAttributesValue)<-[r1:HAS_VERSION]-\n  (n2:CTCodelistAttributesRoot)<-[r2]-\n  (n3:CTCodelistRoot),\n  (n3)<-[r3:HAS_CODELIST]-\n  (catalogue:CTCatalogue)-[r4:CONTAINS_PACKAGE]->\n  (ct_package)-[r5:CONTAINS_CODELIST]->\n  (ct_pack_cl:CTPackageCodelist)-[r6:CONTAINS_TERM]->\n  (ct_pack_term:CTPackageTerm)-[r7:CONTAINS_ATTRIBUTES]->\n  (n8:CTTermAttributesValue),\n  (ct_pack_cl)-[r8:CONTAINS_ATTRIBUTES]->(n1)\nWHERE n1.name = $neodash_ctcodelistattributesvalue_name AND r1.version = $neodash_cl_id\nMATCH\n  (n3)-[r10:HAS_TERM]->(subm_val:CTCodelistTerm)<-[r11:CONTAINS_SUBMISSION_VALUE]-(ct_pack_term),\n  (subm_val)-[r12:HAS_TERM_ROOT]->(n6:CTTermRoot)-[r13:HAS_ATTRIBUTES_ROOT]->\n  (n7:CTTermAttributesRoot)-[r14:HAS_VERSION]->(n8)\nOPTIONAL MATCH (n6)<-[r16:CONTAINS_TERM]-(lib_term:Library)\nRETURN DISTINCT\n  coalesce(subm_val.submission_value, '') AS `Submission Value`,\n  coalesce(n8.concept_id, '') AS `C-code`,\n  coalesce(n8.preferred_term, '') AS `Preferred Term`,\n  apoc.text.join(coalesce(n8.synonyms, []), '; ') AS Synonyms,\n  coalesce(n8.definition, '') AS Definition,\n  coalesce(r14.version, '') AS `Term Version`,\n  coalesce(r14.status, '') AS `Term Status`,\n  CASE\n    WHEN r14.start_date IS NOT NULL THEN apoc.temporal.format(r14.start_date, \"yyyy-MM-dd\")\n    ELSE ''\n  END AS `Start Date`,\n  coalesce(lib_term.name, '') AS `Term Owner`\n\nUNION\n\nMATCH\n  (n1:CTCodelistAttributesValue)<-[r1:HAS_VERSION]-\n  (n2:CTCodelistAttributesRoot)<-[r2]-\n  (n3:CTCodelistRoot)\nWHERE $neodash_pck_date = '(none)'\n  AND n1.name = $neodash_ctcodelistattributesvalue_name AND r1.version = $neodash_cl_id\n  AND NOT EXISTS { MATCH (:CTPackageCodelist)-[:CONTAINS_ATTRIBUTES]->(n1) }\nMATCH\n  (n3)-[r10:HAS_TERM]->(subm_val:CTCodelistTerm)-[r12:HAS_TERM_ROOT]->\n  (n6:CTTermRoot)-[r13:HAS_ATTRIBUTES_ROOT]->\n  (n7:CTTermAttributesRoot)-[r14:HAS_VERSION]->(n8:CTTermAttributesValue)\nWHERE r10.end_date IS NULL AND r14.end_date IS NULL\nOPTIONAL MATCH (n6)<-[r16:CONTAINS_TERM]-(lib_term:Library)\nRETURN DISTINCT\n  coalesce(subm_val.submission_value, '') AS `Submission Value`,\n  coalesce(n8.concept_id, '') AS `C-code`,\n  coalesce(n8.preferred_term, '') AS `Preferred Term`,\n  apoc.text.join(coalesce(n8.synonyms, []), '; ') AS Synonyms,\n  coalesce(n8.definition, '') AS Definition,\n  coalesce(r14.version, '') AS `Term Version`,\n  coalesce(r14.status, '') AS `Term Status`,\n  CASE\n    WHEN r14.start_date IS NOT NULL THEN apoc.temporal.format(r14.start_date, \"yyyy-MM-dd\")\n    ELSE ''\n  END AS `Start Date`,\n  coalesce(lib_term.name, '') AS `Term Owner`",
+          "width": 24,
+          "height": 4,
+          "x": 0,
+          "y": 6,
+          "type": "table",
+          "selection": {},
+          "settings": {
+            "compact": true,
+            "wrapContent": true,
+            "columnWidths": "[1,0.8,1.2,1.5,3,0.6,0.7,0.9,1]",
+            "allowDownload": true,
+            "refreshButtonEnabled": true,
+            "noDataMessage": "Select a Codelist and then a CT Package (or a version) above."
           }
         }
       ]

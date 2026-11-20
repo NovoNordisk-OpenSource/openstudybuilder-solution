@@ -1,3 +1,4 @@
+import copy
 from typing import Any
 
 from neomodel import NodeSet, db
@@ -37,12 +38,49 @@ from clinical_mdr_api.domains.data_supplier_rules.data_supplier_rule import (
     DataSupplierRuleAR,
     DataSupplierRuleVO,
 )
-from clinical_mdr_api.domains.versioned_object_aggregate import LibraryVO
+from clinical_mdr_api.domains.versioned_object_aggregate import (
+    LibraryItemStatus,
+    LibraryVO,
+)
 from clinical_mdr_api.models.data_supplier_rules.data_supplier_rule import (
     DataSupplierRule,
 )
+from clinical_mdr_api.repositories._utils import sb_clear_cache
 from common.config import settings
 from common.exceptions import BusinessLogicException
+
+# Expects a bound `grouping` (ActivityGrouping) and the `$retired_status` parameter.
+# Yields the roots the grouping was created for and the current state of the mapping:
+# whether any of the three is retired, and whether the latest FINAL version of the
+# activity still has a grouping to the same group and subgroup.
+GROUPING_WARNINGS_CYPHER = """
+MATCH (grouping)<-[:HAS_GROUPING]-(:ActivityValue)<-[:HAS_VERSION]-(activity_root:ActivityRoot)
+MATCH (grouping)-[:HAS_SELECTED_GROUP]->(:ActivityGroupValue)
+    <-[:HAS_VERSION]-(group_root:ActivityGroupRoot)
+MATCH (grouping)-[:HAS_SELECTED_SUBGROUP]->(:ActivitySubGroupValue)
+    <-[:HAS_VERSION]-(subgroup_root:ActivitySubGroupRoot)
+WITH *,
+    EXISTS {
+        MATCH (activity_root)-[hv:HAS_VERSION]->()
+        WHERE hv.end_date IS NULL AND hv.status = $retired_status
+    } AS is_activity_retired,
+    EXISTS {
+        MATCH (group_root)-[hv:HAS_VERSION]->()
+        WHERE hv.end_date IS NULL AND hv.status = $retired_status
+    } AS is_activity_group_retired,
+    EXISTS {
+        MATCH (subgroup_root)-[hv:HAS_VERSION]->()
+        WHERE hv.end_date IS NULL AND hv.status = $retired_status
+    } AS is_activity_subgroup_retired,
+    EXISTS {
+        MATCH (activity_root)-[:LATEST_FINAL]->(:ActivityValue)
+            -[:HAS_GROUPING]->(current_grouping:ActivityGrouping)
+        MATCH (current_grouping)-[:HAS_SELECTED_GROUP]->(:ActivityGroupValue)
+            <-[:HAS_VERSION]-(group_root)
+        MATCH (current_grouping)-[:HAS_SELECTED_SUBGROUP]->(:ActivitySubGroupValue)
+            <-[:HAS_VERSION]-(subgroup_root)
+    } AS grouping_exists
+"""
 
 
 class DataSupplierRuleRepository(  # type: ignore[misc]
@@ -88,7 +126,7 @@ class DataSupplierRuleRepository(  # type: ignore[misc]
         # Check if we need version data
         need_latest_version = field_name in version_fields
         if not need_latest_version and filter_by:
-            need_latest_version = any(key in version_fields for key in filter_by.keys())
+            need_latest_version = any(key in version_fields for key in filter_by)
 
         if need_latest_version:
             return nodeset.subquery(
@@ -133,11 +171,13 @@ class DataSupplierRuleRepository(  # type: ignore[misc]
     def _read_activity_groupings(
         self, value: DataSupplierRuleValue
     ) -> tuple[DataSupplierRuleActivityGroupingVO, ...]:
+        warnings_by_grouping_uid = self._read_grouping_warnings(value)
         groupings = []
         for grouping_node in value.has_activity_grouping.all():
             group_value = grouping_node.has_selected_group.single()
             subgroup_value = grouping_node.has_selected_subgroup.single()
             activity_value = grouping_node.has_grouping.single()
+            warnings = warnings_by_grouping_uid.get(grouping_node.uid, {})
             groupings.append(
                 DataSupplierRuleActivityGroupingVO.from_repository_values(
                     activity_uid=activity_value.has_version.single().uid,
@@ -146,9 +186,181 @@ class DataSupplierRuleRepository(  # type: ignore[misc]
                     activity_group_name=group_value.name,
                     activity_subgroup_uid=subgroup_value.has_version.single().uid,
                     activity_subgroup_name=subgroup_value.name,
+                    activity_grouping_uid=grouping_node.uid,
+                    is_activity_retired=warnings.get("is_activity_retired", False),
+                    is_activity_group_retired=warnings.get(
+                        "is_activity_group_retired", False
+                    ),
+                    is_activity_subgroup_retired=warnings.get(
+                        "is_activity_subgroup_retired", False
+                    ),
+                    grouping_exists=warnings.get("grouping_exists", True),
                 )
             )
         return tuple(groupings)
+
+    @staticmethod
+    def _read_grouping_warnings(
+        value: DataSupplierRuleValue,
+    ) -> dict[str, dict[str, bool]]:
+        rows, _ = db.cypher_query(
+            f"""
+            MATCH (rule_value:DataSupplierRuleValue)
+            WHERE elementId(rule_value) = $value_element_id
+            MATCH (rule_value)-[:HAS_ACTIVITY_GROUPING]->(grouping:ActivityGrouping)
+            {GROUPING_WARNINGS_CYPHER}
+            RETURN grouping.uid, is_activity_retired, is_activity_group_retired,
+                is_activity_subgroup_retired, grouping_exists
+            """,
+            {
+                "value_element_id": value.element_id,
+                "retired_status": LibraryItemStatus.RETIRED.value,
+            },
+        )
+        return {
+            row[0]: {
+                "is_activity_retired": row[1],
+                "is_activity_group_retired": row[2],
+                "is_activity_subgroup_retired": row[3],
+                "grouping_exists": row[4],
+            }
+            for row in rows
+        }
+
+    @staticmethod
+    def find_uids_of_rules_with_warnings() -> list[str]:
+        rows, _ = db.cypher_query(
+            f"""
+            MATCH (rule_root:DataSupplierRuleRoot)-[:LATEST]->(:DataSupplierRuleValue)
+                -[:HAS_ACTIVITY_GROUPING]->(grouping:ActivityGrouping)
+            {GROUPING_WARNINGS_CYPHER}
+            WITH rule_root, is_activity_retired, is_activity_group_retired,
+                is_activity_subgroup_retired, grouping_exists
+            WHERE is_activity_retired OR is_activity_group_retired
+                OR is_activity_subgroup_retired OR NOT grouping_exists
+            RETURN DISTINCT rule_root.uid
+            """,
+            {"retired_status": LibraryItemStatus.RETIRED.value},
+        )
+        return [row[0] for row in rows]
+
+    @staticmethod
+    def find_activity_grouping_retired_parts(
+        activity_uid: str,
+        activity_group_uid: str,
+        activity_subgroup_uid: str,
+    ) -> list[str]:
+        rows, _ = db.cypher_query(
+            """
+            OPTIONAL MATCH (activity_root:ActivityRoot {uid: $activity_uid})
+            OPTIONAL MATCH (group_root:ActivityGroupRoot {uid: $activity_group_uid})
+            OPTIONAL MATCH (subgroup_root:ActivitySubGroupRoot {uid: $activity_subgroup_uid})
+            RETURN
+                EXISTS {
+                    MATCH (activity_root)-[hv:HAS_VERSION]->()
+                    WHERE hv.end_date IS NULL AND hv.status = $retired_status
+                },
+                EXISTS {
+                    MATCH (group_root)-[hv:HAS_VERSION]->()
+                    WHERE hv.end_date IS NULL AND hv.status = $retired_status
+                },
+                EXISTS {
+                    MATCH (subgroup_root)-[hv:HAS_VERSION]->()
+                    WHERE hv.end_date IS NULL AND hv.status = $retired_status
+                }
+            """,
+            {
+                "activity_uid": activity_uid,
+                "activity_group_uid": activity_group_uid,
+                "activity_subgroup_uid": activity_subgroup_uid,
+                "retired_status": LibraryItemStatus.RETIRED.value,
+            },
+        )
+        is_activity_retired, is_group_retired, is_subgroup_retired = rows[0]
+        return [
+            label
+            for label, is_retired in (
+                ("Activity", is_activity_retired),
+                ("Activity Group", is_group_retired),
+                ("Activity Subgroup", is_subgroup_retired),
+            )
+            if is_retired
+        ]
+
+    @staticmethod
+    def find_uids_of_rules_to_upgrade(activity_uid: str) -> list[str]:
+        """
+        Returns the UIDs of FINAL rules that map the activity through a grouping
+        which is no longer the grouping of the latest FINAL version of the activity,
+        while an equivalent grouping (same activity, group and subgroup) exists there.
+        """
+        rows, _ = db.cypher_query(
+            """
+            MATCH (activity_root:ActivityRoot {uid: $activity_uid})
+                -[:LATEST_FINAL]->(:ActivityValue)-[:HAS_GROUPING]->(final_grouping:ActivityGrouping)
+            MATCH (final_grouping)-[:HAS_SELECTED_GROUP]->(:ActivityGroupValue)
+                <-[:HAS_VERSION]-(group_root:ActivityGroupRoot)
+            MATCH (final_grouping)-[:HAS_SELECTED_SUBGROUP]->(:ActivitySubGroupValue)
+                <-[:HAS_VERSION]-(subgroup_root:ActivitySubGroupRoot)
+            MATCH (rule_root:DataSupplierRuleRoot)-[rule_has_version:HAS_VERSION]->(rule_value:DataSupplierRuleValue)
+            WHERE rule_has_version.end_date IS NULL
+                AND rule_has_version.status = $final_status
+                AND (rule_root)-[:LATEST]->(rule_value)
+            MATCH (rule_value)-[:HAS_ACTIVITY_GROUPING]->(pinned_grouping:ActivityGrouping)
+            WHERE pinned_grouping <> final_grouping
+                AND (pinned_grouping)<-[:HAS_GROUPING]-(:ActivityValue)<-[:HAS_VERSION]-(activity_root)
+                AND (pinned_grouping)-[:HAS_SELECTED_GROUP]->(:ActivityGroupValue)<-[:HAS_VERSION]-(group_root)
+                AND (pinned_grouping)-[:HAS_SELECTED_SUBGROUP]->(:ActivitySubGroupValue)<-[:HAS_VERSION]-(subgroup_root)
+            RETURN DISTINCT rule_root.uid
+            """,
+            {
+                "activity_uid": activity_uid,
+                "final_status": LibraryItemStatus.FINAL.value,
+            },
+        )
+        return [row[0] for row in rows]
+
+    @staticmethod
+    def _find_pinned_grouping_node(
+        rule_uid: str,
+        activity_uid: str,
+        activity_group_uid: str,
+        activity_subgroup_uid: str,
+    ) -> ActivityGrouping | None:
+        rows, _ = db.cypher_query(
+            """
+            MATCH (:DataSupplierRuleRoot {uid: $rule_uid})-[:LATEST]->(:DataSupplierRuleValue)
+                -[:HAS_ACTIVITY_GROUPING]->(grouping:ActivityGrouping)
+            WHERE (grouping)<-[:HAS_GROUPING]-(:ActivityValue)<-[:HAS_VERSION]-(:ActivityRoot {uid: $activity_uid})
+                AND (grouping)-[:HAS_SELECTED_GROUP]->(:ActivityGroupValue)<-[:HAS_VERSION]-(:ActivityGroupRoot {uid: $activity_group_uid})
+                AND (grouping)-[:HAS_SELECTED_SUBGROUP]->(:ActivitySubGroupValue)<-[:HAS_VERSION]-(:ActivitySubGroupRoot {uid: $activity_subgroup_uid})
+            RETURN grouping
+            LIMIT 1
+            """,
+            {
+                "rule_uid": rule_uid,
+                "activity_uid": activity_uid,
+                "activity_group_uid": activity_group_uid,
+                "activity_subgroup_uid": activity_subgroup_uid,
+            },
+            resolve_objects=True,
+        )
+        return rows[0][0] if rows else None
+
+    @sb_clear_cache(caches=["cache_store_item_by_uid"])
+    def save_with_new_value_node(self, item: _AggregateRootType) -> None:
+        """
+        Saves the item, always creating a new value node, which is linked to the
+        latest FINAL activity groupings.
+        """
+        self._update(item, force_new_value_node=True)
+        root, _, library, _ = item.repository_closure_data
+        item.repository_closure_data = (
+            root,
+            root.has_latest_value.single(),
+            library,
+            copy.deepcopy(item),
+        )
 
     def find_latest_activity_groupings(
         self, uid: str
@@ -309,6 +521,14 @@ class DataSupplierRuleRepository(  # type: ignore[misc]
                 grouping.activity_group_uid,
                 grouping.activity_subgroup_uid,
             )
+            if activity_grouping_node is None:
+                # No current grouping exists, so an existing mapping is kept as is
+                activity_grouping_node = self._find_pinned_grouping_node(
+                    root.uid,
+                    grouping.activity_uid,
+                    grouping.activity_group_uid,
+                    grouping.activity_subgroup_uid,
+                )
             BusinessLogicException.raise_if(
                 activity_grouping_node is None,
                 msg=(

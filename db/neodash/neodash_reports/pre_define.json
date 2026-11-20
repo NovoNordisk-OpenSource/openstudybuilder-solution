@@ -2,56 +2,55 @@
   "title": "Pre-Define",
   "version": "2.4",
   "settings": {
-    "pagenumber": 0,
+    "pagenumber": 1,
     "editable": true,
     "fullscreenEnabled": false,
     "parameters": {
-      "neodash_studyid": "0",
+      "neodash_studyid": {},
       "neodash_sponsor_model": "",
       "neodash_dataset": "",
-      "neodash_sponsor_version_number": "Select",
+      "neodash_sponsor_version_number": "",
       "neodash_sponsor_version_number_display": [],
-      "neodash_codelist": ""
+      "neodash_codelist": "",
+      "neodash_ctpackageterm_name": "",
+      "neodash_ctpackageterm_name_display": "",
+      "neodash_ct_package": "",
+      "neodash_ct_package_display": "",
+      "neodash_study_number": "",
+      "neodash_study_number_display": "",
+      "neodash_study_subpart": "",
+      "neodash_study_subpart_display": ""
     }
   },
   "pages": [
     {
+      "title": "ReadMe",
+      "reports": [
+        {
+          "id": "00a7fa67-6127-495e-8d30-abe699ca2806",
+          "title": "Guide",
+          "query": "This report provides a define.xml-style view of a study's datasets, variables, and controlled terminology against a chosen sponsor standard.\n\n**1. Select a Study**\n- Use **Filter Study** and/or **Filter subpart for** — each one narrows the other. Start typing to refresh the list.\n- The **Select study version or subpart** table lists every version (and any subparts) of the study, with its DRAFT/LOCKED status. The LATEST version is listed first, followed by the other versions, most recent first. Click a TrialID or SubpartTrialID row to pick that specific study record.\n\n**2. Select a standard**\n- In **Standard selection**, click a row to choose the Sponsor Model IG and its underlying CDISC Model IG version.\n- In **Select SDTM CT version**, choose the SDTM Controlled Terminology package used to resolve codelists and terms.\n\n**3. Review datasets**\n- **Datasets** lists every dataset applicable to the study, derived from the Activities and Activity Instances selected in the study's SoA.\n- Click a dataset to see its variables, as defined by the chosen standard (CDISC core/type/role and applicable codelists).\n- Click a variable's codelist to see its terms and the Topic Variables they apply to (Value-Level Metadata, VLM). If no terms are shown, the item is either not defined for the Activity Instances included in the study, or has no terms defined.\n\nThis report helps users understand how the study's define.xml will look, based on its SoA selections.",
+          "width": 24,
+          "height": 6,
+          "x": 0,
+          "y": 0,
+          "type": "text",
+          "selection": {},
+          "settings": {}
+        }
+      ]
+    },
+    {
       "title": "Pre-Define.xml",
       "reports": [
         {
-          "id": "b596c443-a056-4810-808d-99d0b28e2737",
-          "title": "Study Selection",
-          "query": "MATCH (n1:StudyRoot)-[r1]->(n2:StudyValue)\nRETURN DISTINCT 'Select' AS Select,\nn2.study_number AS StudyID,\nn2.study_id_prefix AS StudyName,\nn2.study_acronym AS StudyAcronym,\nCOALESCE(n2.study_subpart_acronym,\"No sub study\") AS StudySubpart;\n\n\n",
-          "width": 8,
+          "id": "24612f46-711b-4eac-92d1-c397cc25847c",
+          "title": "Study - $neodash_study_number",
+          "query": "MATCH (n1:StudyRoot)-[r1]->(n2:StudyValue) WHERE id(n2) = $neodash_studyid\n    RETURN DISTINCT 'Study ID' AS label,\n    n2.study_id_prefix + '-' + n2.study_number AS Value\n    UNION\nMATCH (n2:StudyValue)-[r2]->(n3:StudyTextField) WHERE  id(n2) = $neodash_studyid  AND n3.field_name = \"study_title\"\n    RETURN DISTINCT 'Study Description' AS label,\n    n3.value AS Value\n    UNION\nMATCH (n2:StudyValue)  WHERE id(n2) = $neodash_studyid\n    RETURN DISTINCT 'Study Acronym' AS label,\n    n2.study_acronym AS Value\n    UNION\nMATCH (n2:StudyValue)<-[r0:HAS_VERSION]-(n1:StudyRoot) WHERE id(n2) = $neodash_studyid\n    OPTIONAL MATCH (n2)<-[:BEFORE]-(sact_before:StudyAction)\n    OPTIONAL MATCH (n2)<-[:AFTER]-(sact_after:StudyAction)\n    WITH coalesce(sact_before.date, sact_after.date) AS date\n    RETURN DISTINCT 'Date' AS label,\n    format(date, \"yyyy-MM-dd'T'HH:mm:ss\") AS Value\n    UNION\nMATCH (n2:StudyValue)<-[r0:HAS_VERSION]-(n1:StudyRoot) WHERE id(n2) = $neodash_studyid\n    WITH collect(DISTINCT r0.version) AS versions\n    RETURN DISTINCT 'Version' AS label,\n    string.join(coll.distinct(versions), '') AS Value\n    UNION\nOPTIONAL MATCH (n1:StudyRoot)-[r1:LATEST]->(n2:StudyValue) WHERE id(n2) = $neodash_studyid\n    RETURN DISTINCT 'Latest' AS label,\n    type(r1) AS Value\n    UNION\nMATCH (n2:StudyValue)<-[r0:HAS_VERSION]-(n1:StudyRoot) WHERE id(n2) = $neodash_studyid\n    WITH collect(DISTINCT r0.status) AS statuses\n    RETURN DISTINCT 'Status' AS label,\n    CASE WHEN 'LOCKED' IN statuses THEN 'LOCKED' ELSE 'DRAFT' END AS Value",
+          "width": 9,
           "height": 4,
           "x": 0,
-          "y": 0,
-          "type": "table",
-          "selection": {},
-          "settings": {
-            "compact": true,
-            "columnWidths": "[2,1,1,2,2]",
-            "allowDownload": true,
-            "actionsRules": [
-              {
-                "condition": "Click",
-                "field": "Select",
-                "value": "StudyID",
-                "customization": "set variable",
-                "customizationValue": "studyid"
-              }
-            ],
-            "wrapContent": true
-          }
-        },
-        {
-          "id": "24612f46-711b-4eac-92d1-c397cc25847c",
-          "title": "Study",
-          "query": "MATCH (n1:StudyRoot)-[r1]->(n2:StudyValue) WHERE n2.study_number = $neodash_studyid\n    RETURN 'Study Name' AS label,\n    n2.study_id_prefix AS Value\n    UNION\nMATCH (n2)-[r2]->(n3:StudyTextField) WHERE n2.study_number = $neodash_studyid AND n3.field_name = \"study_title\"\n    RETURN 'Study Description' AS label,\n    n3.value AS Value\n    UNION\nMATCH (n1:StudyRoot)-[r1]->(n2:StudyValue) WHERE n2.study_number = $neodash_studyid\n    RETURN 'Protocol Name' AS label,\n    n2.study_acronym AS Value;\n\n\n",
-          "width": 8,
-          "height": 4,
-          "x": 8,
-          "y": 0,
+          "y": 4,
           "type": "table",
           "selection": {},
           "settings": {
@@ -65,10 +64,10 @@
           "id": "caeab539-3978-4ec3-97a8-2da59c8ef20b",
           "title": "Standard selection",
           "query": "MATCH (n1:SponsorModelValue)-[r1:EXTENDS_VERSION]->(n2:DataModelIGValue)\nRETURN \"Select\" AS Select,\nn1.name AS SponsorModelIg,\nn2.name AS CdiscModelIg,\nn2.effective_date AS EffectiveDate,\nn2.version_number AS Version;\n\n\n",
-          "width": 8,
+          "width": 10,
           "height": 4,
-          "x": 16,
-          "y": 0,
+          "x": 14,
+          "y": 4,
           "type": "table",
           "selection": {},
           "settings": {
@@ -86,7 +85,7 @@
               {
                 "condition": "Click",
                 "field": "Select",
-                "value": "15",
+                "value": "Version",
                 "customization": "set variable",
                 "customizationValue": "sponsor_version_number"
               }
@@ -96,15 +95,15 @@
         {
           "id": "93fc9ba4-5ac9-419b-a242-72acebbd6043",
           "title": "Datasets - Using $neodash_sponsor_model",
-          "query": "// Study selection with applicable Visits and Study Activities and Grouping New Version\nMATCH ()-[r1:LATEST]->(n2:StudyValue {study_number: $neodash_studyid})-[r2:HAS_STUDY_VISIT]->(n3:StudyVisit)-[r3:STUDY_VISIT_HAS_SCHEDULE]->(n4:StudyActivitySchedule)<-[r4:STUDY_ACTIVITY_HAS_SCHEDULE]-(n5:StudyActivity)\n// Connection between Study Activities to Library Activities and back to the Study Visits\nWITH DISTINCT n5\nMATCH (n5)-[r9:HAS_SELECTED_ACTIVITY]->(n10:ActivityValue)-[r10:HAS_GROUPING]->(n11:ActivityGrouping)<-[r11:HAS_ACTIVITY]-(aigv:ActivityInstanceGroupingValue)<-[:LATEST]-(aigr:ActivityInstanceGroupingRoot)<-[:HAS_GROUPING_ROOT]-(air:ActivityInstanceRoot)-[:LATEST]->(n12:ActivityInstanceValue)<-[r12:HAS_SELECTED_ACTIVITY_INSTANCE]-(n13:StudyActivityInstance)\nWITH DISTINCT n12\n// Looking at the SDTMIG and the connected MasterModel\nMATCH (n27:DataModelIGValue)<-[r28:EXTENDS_VERSION]-(n28:SponsorModelValue)  \nWHERE n28.name=$neodash_sponsor_model\n// Display the Domain connected to the ActivityInstance\n// Updated: replaced HAS_CT_TERM->CTTermRoot with HAS_CT_TERM->CTTermContext->HAS_SELECTED_TERM->CTTermRoot\nOPTIONAL MATCH (n12:ActivityInstanceValue)-[r29:CONTAINS_ACTIVITY_ITEM]->(n29:ActivityItem)<-[r30:HAS_ACTIVITY_ITEM]-(n30:ActivityItemClassRoot)-[r31:MAPS_VARIABLE_CLASS]->(n31:VariableClass {uid:'DOMAIN'})-[r32:HAS_INSTANCE]->(n32:VariableClassInstance)<-[r33:IMPLEMENTS_VARIABLE {version_number:n27.version_number}]-(n33:DatasetVariableInstance)<-[r34:HAS_DATASET_VARIABLE {version_number:n27.version_number}]-(n34:DatasetInstance)<-[r35:HAS_INSTANCE]-(n35:Dataset),(n29)-[r36:HAS_CT_TERM]->(n36:CTTermContext)-[r37:HAS_SELECTED_TERM]->(n37:CTTermRoot)<-[r38]-(n39:CTCodelistTerm)\nWHERE n35.uid = n39.submission_value\nWITH DISTINCT n34, n35\nMATCH (n35)-[r57:HAS_INSTANCE]->(n48:SponsorModelDatasetInstance)\nMATCH (n34)-[r58:IMPLEMENTS_DATASET_CLASS]->(n54:DatasetClassInstance)\nRETURN DISTINCT n35.uid AS Dataset, n48.label AS Description, n54.label AS Class, n48.structure AS Structure, \"Tabulation\" AS Purpose, \"To be Specify\" AS Keys, n34.description AS Documentation, TOLOWER(n35.uid)||\".xpt\" AS Location;",
+          "query": "// Study selection with applicable Visits and Study Activities and Grouping New Version\nMATCH\n  (n2:StudyValue) where id(n2)=$neodash_studyid\nWITH n2\nMATCH(n2)-[r2:HAS_STUDY_VISIT]->\n  (n3:StudyVisit)-[r3:STUDY_VISIT_HAS_SCHEDULE]->\n  (n4:StudyActivitySchedule)<-[r4:STUDY_ACTIVITY_HAS_SCHEDULE]-\n  (n5:StudyActivity) where id(n2)=$neodash_studyid\n// Connection between Study Activities to Library Activities and back to the Study Visits\nWITH DISTINCT n5\nMATCH\n  (n5)-[r9:HAS_SELECTED_ACTIVITY]->\n  (n10:ActivityValue)-[r10:HAS_GROUPING]->\n  (n11:ActivityGrouping)<-[r11:HAS_ACTIVITY]-\n  (aigv:ActivityInstanceGroupingValue)<-[:LATEST]-\n  (aigr:ActivityInstanceGroupingRoot)<-[:HAS_GROUPING_ROOT]-\n  (air:ActivityInstanceRoot)-[:LATEST]->\n  (n12:ActivityInstanceValue)<-[r12:HAS_SELECTED_ACTIVITY_INSTANCE]-\n  (n13:StudyActivityInstance)\nWITH DISTINCT n12\n// Looking at the SDTMIG and the connected MasterModel\nMATCH (n27:DataModelIGValue)<-[r28:EXTENDS_VERSION]-(n28:SponsorModelValue)\nWHERE n28.name = $neodash_sponsor_model\n// Display the Domain connected to the ActivityInstance\n// Updated: replaced HAS_CT_TERM->CTTermRoot with HAS_CT_TERM->CTTermContext->HAS_SELECTED_TERM->CTTermRoot\nOPTIONAL MATCH\n  (n12:ActivityInstanceValue)-[r29:CONTAINS_ACTIVITY_ITEM]->\n  (n29:ActivityItem)<-[r30:HAS_ACTIVITY_ITEM]-\n  (n30:ActivityItemClassRoot)-[r31:MAPS_VARIABLE_CLASS]->\n  (n31:VariableClass {uid: 'DOMAIN'})-[r32:HAS_INSTANCE]->\n  (n32:VariableClassInstance)<-\n    [r33:IMPLEMENTS_VARIABLE {version_number: n27.version_number}]-\n  (n33:DatasetVariableInstance)<-\n    [r34:HAS_DATASET_VARIABLE {version_number: n27.version_number}]-\n  (n34:DatasetInstance)<-[r35:HAS_INSTANCE]-\n  (n35:Dataset),\n  (n29)-[r36:HAS_CT_TERM]->\n  (n36:CTTermContext)-[r37:HAS_SELECTED_TERM]->\n  (n37:CTTermRoot)<-[r38]-\n  (n39:CTCodelistTerm)\nWHERE n35.uid = n39.submission_value\nWITH DISTINCT n34, n35,n28\n//Only get the SponsorModelDatasetInstance applicable for the model chosen (SponsorModelValue)\nMATCH (n35)-[r57:HAS_INSTANCE]->(n48:SponsorModelDatasetInstance)<-[r59:HAS_DATASET]-(n28)\nMATCH (n34)-[r58:IMPLEMENTS_DATASET_CLASS]->(n54:DatasetClassInstance)\nRETURN DISTINCT\n  n35.uid AS Dataset,\n  n48.extended_domain as `Sponsor Dataset`,\n  n48.label AS Description,\n  n54.label AS Class,\n  n48.structure AS Structure,\n  \"Tabulation\" AS Purpose,\n  \"To be Specify\" AS Keys,\n  n34.description AS Documentation,\n  TOLOWER(n35.uid) || \".xpt\" AS Location;",
           "width": 24,
-          "height": 4,
+          "height": 6,
           "x": 0,
-          "y": 4,
+          "y": 8,
           "type": "table",
           "selection": {},
           "settings": {
-            "columnWidths": "[1,2,2,3,1,1,5,1]",
+            "columnWidths": "[1,1,2,2,3,1,1,5,1]",
             "allowDownload": true,
             "actionsRules": [
               {
@@ -115,17 +114,20 @@
                 "customizationValue": "dataset"
               }
             ],
-            "wrapContent": true
+            "wrapContent": true,
+            "compact": true,
+            "refreshButtonEnabled": true,
+            "fullscreenEnabled": true
           }
         },
         {
           "id": "fdd27b48-0ea9-4ee1-bbb8-fb2a5033de42",
           "title": "$neodash_dataset Using $neodash_sponsor_model",
-          "query": "MATCH (n1:SponsorModelValue)-[r1:HAS_DATASET]->(n2:SponsorModelDatasetInstance)<-[r2:HAS_INSTANCE]-(n3:Dataset)\nWHERE n1.name=$neodash_sponsor_model AND n3.uid=$neodash_dataset\nMATCH (n2)-[r3:HAS_DATASET_VARIABLE]->(n4:SponsorModelDatasetVariableInstance)<-[r4:HAS_INSTANCE]-(n5:DatasetVariable)\n//WHERE r3.version_number=toString($neodash_sponsor_version_number)\nOPTIONAL MATCH (n5)<-[r5:HAS_KEY]-(n2)\n\nRETURN DISTINCT\n  n5.uid AS Variable,\n  n4.is_basic_std AS Cdisc,\n  n4.label AS `Label/Description`,\n  (n4.xml_datatype+\" [\"+n4.variable_type+\"]\") AS Type,\n  n4.length AS Length,\n  n4.display_format AS DisplayFormat,\n  CASE WHEN n5.uid = 'DOMAIN' THEN 'DOMAIN' ELSE CASE WHEN NOT n4.term ='*' THEN replace(replace(n4.term, '(', ''), ')', '') ELSE '' END END AS Codelist,\n  n4.term AS Term,\n  n4.core AS Core,\n  n4.origin AS Origin,\n  n4.role AS Role,\n  n4.ig_comment AS Comment,\n  r3.ordinal AS Order\nORDER BY toInteger(Order);",
+          "query": "MATCH\n  (ig_root:DataModelIGRoot)-[v:HAS_VERSION]->(n1:SponsorModelValue)-[r1:HAS_DATASET]->\n  (n2:SponsorModelDatasetInstance)<-[r2:HAS_INSTANCE]-\n  (n3:Dataset)\nWHERE n1.name = $neodash_sponsor_model AND n3.uid = $neodash_dataset\nMATCH \n  (n2)-[r3:HAS_DATASET_VARIABLE]->\n  (n4:SponsorModelDatasetVariableInstance)<-[r4:HAS_INSTANCE]-\n  (n5:DatasetVariable)  WHERE r3.version_number = v.version\n//WHERE r3.version_number=toString($neodash_sponsor_version_number)\nOPTIONAL MATCH (n5)<-[r5:HAS_KEY]-(n2)\n//Get any codelist linked to a SponsorModelDatasetVariableInstance\nOPTIONAL MATCH\n  (n4)-[k1:REFERENCES_CODELIST]->\n  (cl_root:CTCodelistRoot)-[k2:HAS_ATTRIBUTES_ROOT]->\n  (cl_at_root:CTCodelistAttributesRoot)-[k3:LATEST_FINAL]->\n  (cl_name:CTCodelistAttributesValue)\n\nRETURN DISTINCT\n  n5.uid AS Variable,\n  n4.is_basic_std AS Cdisc,\n  n4.label AS `Label/Description`,\n  (n4.xml_datatype + \" [\" + n4.variable_type + \"]\") AS Type,\n  n4.length AS Length,\n  n4.display_format AS DisplayFormat,\n  CASE WHEN n5.uid = 'DOMAIN' THEN n5.uid ELSE cl_name.submission_value END AS Codelist,\n  CASE WHEN n5.uid = 'DOMAIN' THEN n4.term ELSE '('+cl_name.submission_value+')' END AS Term,\n  n4.core AS Core,\n  n4.origin AS Origin,\n  n4.role AS Role,\n  n4.ig_comment AS Comment,\n  r3.ordinal AS Order\nORDER BY toInteger(Order);",
           "width": 24,
           "height": 4,
           "x": 0,
-          "y": 8,
+          "y": 14,
           "type": "table",
           "selection": {},
           "settings": {
@@ -141,25 +143,114 @@
                 "customizationValue": "codelist"
               }
             ],
-            "compact": true
+            "compact": true,
+            "refreshButtonEnabled": true
           }
         },
         {
           "id": "21683f6d-bce3-4e01-ac1f-4ddcd5e7a16a",
           "title": "Codelist/Terms - $neodash_codelist",
-          "query": "// Cypher to export the full CT as a JSON file\nMATCH (n1:CTCodelistRoot)-[:HAS_ATTRIBUTES_ROOT]->(n2:CTCodelistAttributesRoot)-[:LATEST]->(n3:CTCodelistAttributesValue)\nWHERE n3.submission_value = $neodash_codelist\nMATCH (n1)-[:HAS_TERM]->(n39:CTCodelistTerm)-[:HAS_TERM_ROOT]->(n4:CTTermRoot)\nMATCH (n4)-[:HAS_ATTRIBUTES_ROOT]->(n5:CTTermAttributesRoot)-[:LATEST]->(n6:CTTermAttributesValue)\nRETURN DISTINCT \n    n1.uid                  AS ConceptID,\n    n3.submission_value     AS SubmissionValue,\n    n3.name                 AS Name,\n    n3.extensible           AS Extensible,\n    n4.uid                  AS SBTermConceptID,\n    n39.submission_value    AS TermSubmissionValue,\n    n6.preferred_term       AS TermName\nORDER BY SubmissionValue, TermSubmissionValue;",
+          "query": "// First get the study-specific activity items\nMATCH (n2:StudyValue)\nWITH n2\nWHERE id(n2) = $neodash_studyid\nMATCH\n  (n2)-[r2:HAS_STUDY_ACTIVITY]->\n  (n3:StudyActivity)-[r3:STUDY_ACTIVITY_HAS_STUDY_ACTIVITY_INSTANCE]->\n  (study_ai:StudyActivityInstance)-[r4:HAS_SELECTED_ACTIVITY_INSTANCE]->\n  (ai)-[r5:CONTAINS_ACTIVITY_ITEM]->\n  (aitm1)\nWHERE NOT (n3)<-[:BEFORE]-() AND NOT (study_ai)<-[:BEFORE]-()\nMATCH\n  (n2)-[l1:HAS_STUDY_ACTIVITY_SCHEDULE]->\n  (schedule)<-[l2:STUDY_ACTIVITY_HAS_SCHEDULE]-\n  (n3:StudyActivity)\nMATCH\n  (n2)-[l3:HAS_STUDY_VISIT]->\n  (vis:StudyVisit)-[l4:STUDY_VISIT_HAS_SCHEDULE]->\n  (schedule:StudyActivitySchedule)\nMATCH (s_epoch:StudyEpoch)-[l5:STUDY_EPOCH_HAS_STUDY_VISIT]->(vis)\nMATCH\n  (s_epoch)-[l6:HAS_EPOCH]->\n  (context:CTTermContext)-[l7:HAS_SELECTED_TERM]->\n  (ep_ct_term_root:CTTermRoot)<-[l8:HAS_TERM_ROOT]-\n  (epoch_term:CTCodelistTerm),\n  ()-[l9:HAS_SELECTED_CODELIST]->\n  (epoch_cl_root:CTCodelistRoot)-[l10:HAS_TERM]->\n  (epoch_term)\nMATCH(epoch_cl_root)-[l11:HAS_ATTRIBUTES_ROOT]->(epoc_cl_att_root:CTCodelistAttributesRoot)-[l12]->(epoch_cl:CTCodelistAttributesValue)\nWITH DISTINCT ai, aitm1, epoch_term,epoch_cl_root,ep_ct_term_root,epoch_cl\nMATCH\n  (ai:ActivityInstanceValue)-[l1:CONTAINS_ACTIVITY_ITEM]->\n  (aitm1_dom:ActivityItem)<-[l2:HAS_ACTIVITY_ITEM]-\n  (n1:ActivityItemClassRoot)-[l3:MAPS_VARIABLE_CLASS]->\n  (dom_class:VariableClass {uid: 'DOMAIN'}),\n  (aitm1_dom)-[l4:HAS_CT_TERM]->\n  (x1:CTTermContext)-[l5:HAS_SELECTED_TERM]->\n  (x2:CTTermRoot)<-[l6:HAS_TERM_ROOT]-\n  (ct2_dom:CTCodelistTerm)\nWHERE ct2_dom.submission_value = $neodash_dataset\n\n// Path 1: Direct CT terms via HAS_CT_TERM\nOPTIONAL MATCH\n  (aitm1)-[:HAS_CT_TERM]->\n  (ct_context:CTTermContext)-[:HAS_SELECTED_TERM]->\n  (ct2cd:CTTermRoot)<-[:HAS_TERM_ROOT]-\n  (term:CTCodelistTerm)<-[:HAS_TERM]-\n  (clr:CTCodelistRoot)-[:HAS_ATTRIBUTES_ROOT]->\n  (clatt:CTCodelistAttributesRoot)-[:LATEST]->\n  (cl_cdisc:CTCodelistAttributesValue)\n\n// Collect path 1's candidates before path 2 runs, so the two OPTIONAL MATCH\n// blocks aggregate independently instead of cross-joining into a cartesian\n// product of rows (which is what made the old COALESCE silently drop a valid\n// codelist match whenever another path also had a non-null value on the same row)\nWITH ai, aitm1, epoch_cl_root, epoch_cl, ep_ct_term_root, epoch_term,\n  collect(DISTINCT CASE WHEN clr IS NOT NULL THEN {clr: clr, cl_cdisc: cl_cdisc, term_root: ct2cd, term: term} END) AS path1_candidates\n\n// Path 2: Unit definition CT terms via HAS_UNIT_DEFINITION\nOPTIONAL MATCH\n  (aitm1)-[:HAS_UNIT_DEFINITION]->\n  (unitdefr:UnitDefinitionRoot)-[:LATEST]->\n  (unitdef:UnitDefinitionValue)-[:HAS_CT_UNIT]->\n  (ct_context_unit:CTTermContext)-[:HAS_SELECTED_TERM]->\n  (unit_code:CTTermRoot)<-[:HAS_TERM_ROOT]-\n  (unit_term:CTCodelistTerm)<-[:HAS_TERM]-\n  (unit_clr:CTCodelistRoot)-[:HAS_ATTRIBUTES_ROOT]->\n  (unit_clatt:CTCodelistAttributesRoot)-[:LATEST]->\n  (unit_cl_cdisc:CTCodelistAttributesValue)\nWITH ai, aitm1, path1_candidates, epoch_cl_root, epoch_cl, ep_ct_term_root, epoch_term,\n  collect(DISTINCT CASE WHEN unit_clr IS NOT NULL THEN {clr: unit_clr, cl_cdisc: unit_cl_cdisc, term_root: unit_code, term: unit_term} END) AS path2_candidates\n\n// Union all three sources as independent candidates (instead of COALESCE), then\n// subset on the requested codelist, so a match on any one path is never hidden\n// by a different non-null value on another path\nWITH ai, aitm1,\n  [c IN path1_candidates + path2_candidates +\n    [CASE WHEN epoch_cl_root IS NOT NULL THEN {clr: epoch_cl_root, cl_cdisc: epoch_cl, term_root: ep_ct_term_root, term: epoch_term} END]\n   WHERE c IS NOT NULL] AS candidates\n\nUNWIND candidates AS candidate\nWITH ai, aitm1,\n  candidate.clr AS final_clr,\n  candidate.cl_cdisc AS final_cl_cdisc,\n  candidate.term_root AS final_term_root,\n  candidate.term AS final_term\n\nWHERE final_cl_cdisc.submission_value = $neodash_codelist\n\n// Get term attributes\nMATCH\n  (final_term_root)-[:HAS_ATTRIBUTES_ROOT]->\n  (term_att:CTTermAttributesRoot)-[:LATEST]->\n  (term_att_value:CTTermAttributesValue)\n\nMATCH\n  (ai)-[:CONTAINS_ACTIVITY_ITEM]->\n  (aitm_topic)<-[:HAS_ACTIVITY_ITEM]-\n  (aitmc_topic_r:ActivityItemClassRoot)-[:LATEST]->\n  (aitmc_topic:ActivityItemClassValue)-[:HAS_ROLE]->\n  (:CTTermContext)-[:HAS_SELECTED_TERM]->\n  (:CTTermRoot)-[:HAS_NAME_ROOT]->\n  (:CTTermNameRoot)-[:LATEST]->\n  (role_val {name: 'Topic'})\nOPTIONAL MATCH\n  (aitm_topic)-[:HAS_CT_TERM]->\n  (:CTTermContext)-[:HAS_SELECTED_TERM]->\n  (:CTTermRoot)<-[:HAS_TERM_ROOT]-\n  (topic_name:CTCodelistTerm)\nMATCH\n  (final_term)<-[:CONTAINS_SUBMISSION_VALUE]-\n  (:CTPackageTerm)<-[:CONTAINS_TERM]-\n  (:CTPackageCodelist)<-[:CONTAINS_CODELIST]-\n  (ct_package:CTPackage)\nWHERE ct_package.name = $neodash_ct_package\nWITH DISTINCT\n  final_clr,\n  final_cl_cdisc,\n  final_term_root,\n  final_term,\n  term_att_value,\n  collect(DISTINCT {code: topic_name.submission_value, name: ai.name}) AS vlm_pairs,\n  ct_package\n\n// Group codes per originating name (instead of splitting/re-zipping two\n// independently-collected lists), so a topic variable keeps only the CT\n// codes that actually came from its own Activity Instances\nUNWIND vlm_pairs AS vlm_pair\nWITH\n  final_clr,\n  final_cl_cdisc,\n  final_term_root,\n  final_term,\n  term_att_value,\n  ct_package,\n  vlm_pair.name AS vlm_name,\n  [c IN collect(DISTINCT vlm_pair.code) WHERE c IS NOT NULL] AS vlm_codes\nWITH\n  final_clr,\n  final_cl_cdisc,\n  final_term_root,\n  final_term,\n  term_att_value,\n  ct_package,\n  collect(\n    CASE\n      WHEN size(vlm_codes) = 0 THEN vlm_name\n      ELSE reduce(joined = '', code IN vlm_codes | CASE WHEN joined = '' THEN code ELSE joined + '/' + code END) + '(' + vlm_name + ')'\n    END\n  ) AS vlm_names\n\nRETURN DISTINCT\n  final_clr.uid AS ConceptID,\n  final_cl_cdisc.submission_value AS SubmissionValue,\n  final_cl_cdisc.name AS Name,\n  final_cl_cdisc.extensible AS Extensible,\n  vlm_names AS `For Topic Variable`,\n  final_term_root.uid AS `Term ConceptID`,\n  final_term.submission_value AS `Term SubmissionValue`,\n  term_att_value.preferred_term AS `Term Name`\nORDER BY SubmissionValue, `For Topic Variable`, `Term SubmissionValue`;",
           "width": 24,
           "height": 4,
           "x": 0,
-          "y": 12,
+          "y": 18,
           "type": "table",
           "selection": {},
           "settings": {
             "compact": true,
             "columnWidths": "[1,1,2,1,3,3,2]",
             "allowDownload": true,
-            "fullscreenEnabled": true
+            "fullscreenEnabled": true,
+            "wrapContent": true,
+            "refreshButtonEnabled": true
           }
+        },
+        {
+          "id": "f8bdb599-03a7-4559-a94e-66e15e1630ad",
+          "title": "Select SDTM CT version",
+          "query": "match(:CTCatalogue{name: \"SDTM CT\"})-[:CONTAINS_PACKAGE]->(n:CTPackage) where not (n)-[:EXTENDS_PACKAGE]->() and\ntoLower(toString(n.`name`)) CONTAINS toLower($input) \nRETURN DISTINCT n.`name` as value,  n.`name` as display ORDER BY toString(value) DESC LIMIT 100",
+          "width": 5,
+          "height": 4,
+          "x": 9,
+          "y": 4,
+          "type": "select",
+          "selection": {},
+          "settings": {
+            "type": "Custom Query",
+            "entityType": "CT Package",
+            "parameterName": "neodash_ct_package",
+            "refreshButtonEnabled": true,
+            "suggestionLimit": 1000,
+            "autoSelectFirstValue": true
+          },
+          "schema": []
+        },
+        {
+          "id": "f15b8199-dfd9-4a69-ae28-14efc81a481a",
+          "title": "Select study version or subpart - $neodash_study_number",
+          "query": "MATCH (sr:StudyRoot)-[r0:HAS_VERSION]->(s:StudyValue)\nOPTIONAL MATCH (s)<-[x0:HAS_STUDY_SUBPART]-(s_sub:StudyValue)\nWITH\n  sr,\n  s,\n  r0,\n  s_sub,\n  s.study_id_prefix + '-' + s.study_number AS TrialID,\n  CASE\n    WHEN s_sub IS NOT NULL\n      THEN\n        s_sub.study_id_prefix + '-' + s_sub.study_number + '-' + s.study_subpart_acronym\n  END AS SubpartTrialID\n\nOPTIONAL MATCH (sr)-[r1:LATEST]->(s)\nOPTIONAL MATCH (s)<-[r_b:BEFORE]-(sact_before:StudyAction)\nOPTIONAL MATCH (s)<-[r_a:AFTER]-(sact_after:StudyAction)\nWITH DISTINCT\n  s,\n  s_sub,\n  TrialID,\n  SubpartTrialID,\n  sr.uid AS StudyRoot,\n  collect(r0.status) AS statuses,\n  collect(r0.version) AS versions,\n  type(r1) AS Latest,\n  coalesce(sact_before.date, sact_after.date) AS date\nORDER BY StudyRoot, date, Latest DESC WHERE TrialID =$neodash_study_number\nWITH\n  s,\n  StudyRoot,\n  CASE WHEN s_sub IS NOT NULL THEN s.study_subpart_acronym ELSE s.study_acronym END AS acronym,\n  TrialID,\n  SubpartTrialID,\n  format(date, \"yyyy-MM-dd'T'HH:mm:ss\") AS Date,\n  CASE\n    WHEN 'LOCKED' IN statuses THEN 'LOCKED'\n    ELSE 'DRAFT'\n  END AS Status,\n  string.join(coll.distinct(versions), '') AS Version,\n  Latest WHERE $neodash_study_subpart = '' OR s.study_subpart_acronym = $neodash_study_subpart\nRETURN\n  id(s) as __id,\n  TrialID,\n  SubpartTrialID,\n  acronym AS Acronym,\n  Date,\n  Version,\n  Latest,\n  Status order by TrialID, Latest, Date DESC , SubpartTrialID\n\n\n",
+          "width": 19,
+          "height": 4,
+          "x": 5,
+          "y": 0,
+          "type": "table",
+          "selection": {},
+          "settings": {
+            "wrapContent": true,
+            "compact": true,
+            "columnWidths": "[1,1,1,1,1,0.5,0.5,0.5]",
+            "actionsRules": [
+              {
+                "condition": "Click",
+                "field": "TrialID",
+                "value": "__id",
+                "customization": "set variable",
+                "customizationValue": "studyid"
+              },
+              {
+                "condition": "Click",
+                "field": "SubpartTrialID",
+                "value": "__id",
+                "customization": "set variable",
+                "customizationValue": "studyid"
+              }
+            ]
+          }
+        },
+        {
+          "id": "f392ee2b-81d8-4dfb-a3f2-0d1000790f4e",
+          "title": "Filter Study",
+          "query": "MATCH (sr:StudyRoot)-[r0:HAS_VERSION]->(s:StudyValue)\nWITH s.study_id_prefix + '-' + s.study_number AS n\nWHERE toUpper(n) CONTAINS toUpper($input)\nAND ($neodash_study_subpart = '' OR EXISTS {\n  MATCH (sp:StudyValue)<-[:HAS_STUDY_SUBPART]-(:StudyValue)\n  WHERE sp.study_id_prefix + '-' + sp.study_number = n\n  AND toUPPER(sp.study_subpart_acronym) = toUPPER($neodash_study_subpart)\n})\nRETURN DISTINCT n as value,  n as display ORDER BY n ASC Limit 500",
+          "width": 5,
+          "height": 2,
+          "x": 0,
+          "y": 0,
+          "type": "select",
+          "selection": {},
+          "settings": {
+            "type": "Custom Query",
+            "entityType": "Study Number",
+            "parameterName": "neodash_study_number"
+          },
+          "schema": []
+        },
+        {
+          "id": "c817bf7a-cdd1-4a0b-848c-a2650a09a7d4",
+          "title": "Filter subpart for - $neodash_study_number",
+          "query": "MATCH (sr:StudyRoot)-[r0:HAS_VERSION]->(s:StudyValue)\nWITH s, s.study_id_prefix + '-' + s.study_number AS n\nWITH s, n where $neodash_study_number ='' OR n=$neodash_study_number\nMATCH (s:StudyValue)<-[:HAS_STUDY_SUBPART]-(:StudyValue)\nWHERE toUPPER(s.study_subpart_acronym) CONTAINS toUPPER($input) \nRETURN DISTINCT s.study_subpart_acronym as value,  s.study_subpart_acronym as display ORDER BY value ASC LIMIT 500",
+          "width": 5,
+          "height": 2,
+          "x": 0,
+          "y": 2,
+          "type": "select",
+          "selection": {},
+          "settings": {
+            "type": "Custom Query",
+            "entityType": "Study Subpart",
+            "parameterName": "neodash_study_subpart"
+          },
+          "schema": []
         }
       ]
     }
@@ -169,6 +260,15 @@
     "active": true,
     "activeReducers": [],
     "actions": {
+      "active": true
+    },
+    "advanced-charts": {
+      "active": true
+    },
+    "styling": {
+      "active": true
+    },
+    "forms": {
       "active": true
     }
   },

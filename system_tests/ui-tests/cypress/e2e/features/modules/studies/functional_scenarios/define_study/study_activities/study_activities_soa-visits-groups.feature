@@ -52,6 +52,37 @@ Feature: Studies - Study Activities - Study Visits groups
         And The page 'study_structure/visits' is opened for current study
         And Visits 'V2, V3, V4' have group displayed as 'V2,V3,V4' in table
 
+    @pending_implementation
+    Scenario: [Collapse][Template] User must be able to select a visit as an activity template
+        Given [API] The dynamic visit data is fetched: contact mode 'On Site Visit', time reference 'Global anchor visit', type 'Pre-screening', epoch 'Run-in'
+        And [API] The visit with following attributes is created: isGlobalAnchor 1, visitWeek 0
+        And [API] The visit with following attributes is created: isGlobalAnchor 0, visitWeek 1
+        And [API] The visit with following attributes is created: isGlobalAnchor 0, visitWeek 2
+        And The page 'activities/soa' is opened for current study
+        When User selects visits 'V1, V2'
+        And Button for collapsing visits is clicked
+        And Option for collapsing in 'list' is selected
+        Then The visit template selector is visible
+        And The selected visits are available as template options
+
+    @pending_implementation
+    Scenario: [Collapse][Template][Activity schedule] User must be able to group visits with different activity schedules using a template
+        Given [API] The dynamic visit data is fetched: contact mode 'On Site Visit', time reference 'Global anchor visit', type 'Pre-screening', epoch 'Run-in'
+        And [API] The visit with following attributes is created: isGlobalAnchor 1, visitWeek 0
+        And [API] The visit with following attributes is created: isGlobalAnchor 0, visitWeek 1
+        And [API] The visit with following attributes is created: isGlobalAnchor 0, visitWeek 2
+        And [API] Different activities are assigned to the selected visits
+        And The page 'activities/soa' is opened for current study
+        When User selects visits 'V1, V2'
+        And Button for collapsing visits is clicked
+        And Option for collapsing in 'list' is selected
+        And User selects 'V1' visit as the activity template
+        And User intercepts template visit group request
+        And Form save button is clicked
+        Then The template visit group request contains the selected template UID
+        And The template activity schedule is copied to all grouped visits
+        And Visits are collapsed as 'V1,V2' in detailed SoA view
+
     Scenario: [Collapse][Global Anchor Visit] User must be able to collapse global anchor visit
         Given [API] The dynamic visit data is fetched: contact mode 'On Site Visit', time reference 'Global anchor visit', type 'Pre-screening', epoch 'Run-in'
         And [API] The visit with following attributes is created: isGlobalAnchor 1, visitWeek 0

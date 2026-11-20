@@ -15,7 +15,7 @@ from clinical_mdr_api.services.concepts.simple_concepts.simple_concept_generic i
 )
 
 
-class TimePointService(SimpleConceptGenericService[TimePointAR]):
+class TimePointService(SimpleConceptGenericService[TimePointAR, TimePoint]):
     aggregate_class = TimePointAR
     repository_interface = TimePointRepository
 

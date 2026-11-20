@@ -151,6 +151,10 @@ else:
 def dummy_user(roles: set[str] | None = None, user_id: str = "unknown-user") -> User:
     """Returns User object with dummy data"""
 
+    # The fallback set is the whole identity of a caller when OAUTH_ENABLED=false, so it
+    # holds every role OSB grants. RBAC has a switch of its own (OAUTH_RBAC_ENABLED) and
+    # is on by default, so a role left out here makes the app that requires it answer 403
+    # to everybody while authentication is supposedly off.
     return User(
         sub="xyz",
         azp=user_id,
@@ -166,6 +170,7 @@ def dummy_user(roles: set[str] | None = None, user_id: str = "unknown-user") -> 
             "Study.Write",
             "Library.Write",
             "Library.Read",
+            "Library.Import",
         },
     )
 

@@ -3,16 +3,19 @@ from typing import Any
 import pytest
 from fastapi.testclient import TestClient
 
+from clinical_mdr_api.models.controlled_terminologies.ct_term import CTTermUidInput
 from clinical_mdr_api.models.study_selections.study_selection import (
     StudySelectionDataSupplierInput,
     StudySelectionDataSupplierSyncInput,
 )
+from clinical_mdr_api.models.study_selections.study_visit import StudyVisitCreateInput
 from clinical_mdr_api.services.data_completeness_tags import DataCompletenessTagService
 from clinical_mdr_api.services.studies.study import StudyService
 from clinical_mdr_api.services.studies.study_data_supplier import (
     StudyDataSupplierSelectionService,
 )
 from clinical_mdr_api.services.studies.study_flowchart import StudyFlowchartService
+from clinical_mdr_api.services.studies.study_visit import StudyVisitService
 from clinical_mdr_api.tests.integration.utils.api import inject_base_data
 from clinical_mdr_api.tests.integration.utils.factory_visit import (
     create_study_visit_codelists,
@@ -24,6 +27,7 @@ from clinical_mdr_api.tests.integration.utils.method_library import (
 )
 from clinical_mdr_api.tests.integration.utils.utils import TestUtils
 from common.config import settings
+from common.utils import VisitClass, VisitSubclass
 from consumer_api.consumer_api import app
 from consumer_api.tests.utils import assert_response_status_code, set_db
 from consumer_api.v1 import models
@@ -268,6 +272,12 @@ STUDY_OPERATIONAL_SOA_FIELDS_NOT_NULL = [
     "activity_instance_uid",
 ]
 
+STUDY_OPERATIONAL_SOA_FIELDS_UNSCHEDULED_NOT_NULL = [
+    field
+    for field in STUDY_OPERATIONAL_SOA_FIELDS_NOT_NULL
+    if field not in ("visit_uid", "visit_short_name")
+] + ["topic_code"]
+
 # Global variables shared between fixtures and tests
 rand: str
 studies: list[models.Study]
@@ -280,7 +290,7 @@ study_activity_instances: list[models.StudyActivityInstance]
 total_study_visits_version_1: int = 25
 total_study_visits_version_latest: int = 27
 total_study_activities_version_1: int = 25
-total_study_activities_version_latest: int = 28
+total_study_activities_version_latest: int = 29
 total_study_detailed_soa_version_1: int = 25
 total_study_detailed_soa_version_latest: int = 27
 total_study_operational_soa_version_1: int = 25
@@ -331,7 +341,7 @@ def test_data(api_client):
 
     visit_to_create = generate_default_input_data_for_visit().copy()
     study_visits = []
-    for _idx in range(0, total_study_visits_version_1):
+    for _idx in range(total_study_visits_version_1):
         visit_to_create.update({"time_value": _idx})
         study_visits.append(
             TestUtils.create_study_visit(  # type: ignore[arg-type]
@@ -382,7 +392,7 @@ def test_data(api_client):
 
     study_activities = []
 
-    for idx in range(0, total_study_activities_version_1):
+    for idx in range(total_study_activities_version_1):
         _add_study_activity(
             study_uid=studies[0].uid,
             idx=idx,
@@ -392,7 +402,7 @@ def test_data(api_client):
             activity_instance_class_uid=activity_instance_class.uid,
         )
 
-    for idx in range(0, total_study_operational_soa_version_1):
+    for idx in range(total_study_operational_soa_version_1):
         TestUtils.create_study_activity_schedule(
             study_uid=studies[0].uid,
             study_visit_uid=study_visits[idx].uid,
@@ -457,7 +467,7 @@ def test_data(api_client):
     # Add an epoch-less visit with an activity+schedule to verify optional epoch
     # is returned as null in detailed and operational SOA responses
     visit_to_create.update({"time_value": total_study_visits_version_1 + 1})
-    epochless_study_visit = TestUtils.create_study_visit(  # type: ignore[arg-type,assignment]
+    epochless_study_visit = TestUtils.create_study_visit(  # type: ignore[assignment]
         study_uid=studies[0].uid,
         study_epoch_uid=None,
         **visit_to_create,
@@ -491,11 +501,22 @@ def test_data(api_client):
     # Add an unscheduled activity (no schedule linking it to any visit)
     _add_study_activity(
         study_uid=studies[0].uid,
+        idx=total_study_activities_version_latest - 1,
+        activity_group_uid=activity_group_uid,
+        activity_subgroup_uid=activity_subgroup_uid,
+        soa_group_term_uid=soa_group_term.term_uid,
+        activity_instance_class_uid=activity_instance_class.uid,
+    )
+
+    # Add an unscheduled activity whose instance has no topic code
+    _add_study_activity(
+        study_uid=studies[0].uid,
         idx=total_study_activities_version_latest,
         activity_group_uid=activity_group_uid,
         activity_subgroup_uid=activity_subgroup_uid,
         soa_group_term_uid=soa_group_term.term_uid,
         activity_instance_class_uid=activity_instance_class.uid,
+        with_topic_code=False,
     )
 
 
@@ -894,6 +915,44 @@ def test_get_study_visits_all_specific_study_version(api_client, study_version_n
     assert len(all_fetched_study_visits) == expected_fetched_count
 
     TestUtils.assert_sort_order(all_fetched_study_visits, "uid", False)
+
+
+def test_get_study_visits_manual_visit_mode(api_client):
+    # GIVEN a study in manual visit mode with visits reordered against their timing
+    study_uid = studies[-1].uid
+    study_epoch = create_study_epoch("EpochSubType_0001", study_uid=study_uid)
+    visit_service = StudyVisitService(study_uid=study_uid)
+    visit_service.set_visit_mode(study_uid=study_uid, manual_visit_mode=True)
+
+    visit_uids = [
+        visit_service.create(
+            study_uid=study_uid,
+            study_visit_input=StudyVisitCreateInput(
+                study_epoch_uid=study_epoch.uid,
+                visit_type=CTTermUidInput(term_uid="VisitType_0003"),
+                visit_contact_mode=CTTermUidInput(term_uid="VisitContactMode_0001"),
+                is_global_anchor_visit=False,
+                visit_class=VisitClass.SINGLE_VISIT,
+                visit_subclass=VisitSubclass.SINGLE_VISIT,
+                show_visit=True,
+                visit_name=f"Manual Visit {idx}",
+                visit_short_name=f"MV{idx}",
+                unique_visit_number=idx * 100,
+            ),
+        ).uid
+        for idx in (1, 2, 3)
+    ]
+    reordered_uids = [visit_uids[2], visit_uids[0], visit_uids[1]]
+    visit_service.reorder_visits(study_uid=study_uid, visit_uids=reordered_uids)
+
+    # WHEN the study visits are retrieved
+    response = api_client.get(f"{BASE_URL}/studies/{study_uid}/study-visits")
+    assert_response_status_code(response, 200)
+
+    # THEN visit_order is the order set by the user, as returned by the main API
+    assert {item["uid"]: item["visit_order"] for item in response.json()["items"]} == {
+        uid: order for order, uid in enumerate(reordered_uids, start=1)
+    }
 
 
 def test_get_study_activities(api_client):
@@ -1328,7 +1387,11 @@ def test_get_study_operational_soa(api_client):
         TestUtils.assert_response_shape_ok(
             item,
             STUDY_OPERATIONAL_SOA_FIELDS_ALL,
-            STUDY_OPERATIONAL_SOA_FIELDS_NOT_NULL,
+            (
+                STUDY_OPERATIONAL_SOA_FIELDS_NOT_NULL
+                if item["visit_uid"] is not None
+                else STUDY_OPERATIONAL_SOA_FIELDS_UNSCHEDULED_NOT_NULL
+            ),
         )
 
     # Default page size is 100
@@ -1355,7 +1418,9 @@ def test_get_study_operational_soa(api_client):
 
 def test_get_study_operational_soa_pagination_sorting(api_client):
     # Default page size
-    response = api_client.get(f"{BASE_URL}/studies/{studies[0].uid}/operational-soa")
+    response = api_client.get(
+        f"{BASE_URL}/studies/{studies[0].uid}/operational-soa?include_unscheduled_activities=false"
+    )
     assert_response_status_code(response, 200)
     res = response.json()
     TestUtils.assert_paginated_response_shape_ok(res)
@@ -1364,7 +1429,7 @@ def test_get_study_operational_soa_pagination_sorting(api_client):
 
     # Non-default page size
     response = api_client.get(
-        f"{BASE_URL}/studies/{studies[0].uid}/operational-soa?page_size=2"
+        f"{BASE_URL}/studies/{studies[0].uid}/operational-soa?page_size=2&include_unscheduled_activities=false"
     )
     assert_response_status_code(response, 200)
     res = response.json()
@@ -1374,7 +1439,7 @@ def test_get_study_operational_soa_pagination_sorting(api_client):
 
     # Non-default page number and page size
     response = api_client.get(
-        f"{BASE_URL}/studies/{studies[0].uid}/operational-soa?page_size=3&page_number=2"
+        f"{BASE_URL}/studies/{studies[0].uid}/operational-soa?page_size=3&page_number=2&include_unscheduled_activities=false"
     )
     assert_response_status_code(response, 200)
     res = response.json()
@@ -1384,7 +1449,7 @@ def test_get_study_operational_soa_pagination_sorting(api_client):
 
     # Non-default sort_by
     response = api_client.get(
-        f"{BASE_URL}/studies/{studies[0].uid}/operational-soa?page_size=10&sort_by=visit_uid"
+        f"{BASE_URL}/studies/{studies[0].uid}/operational-soa?page_size=10&sort_by=visit_uid&include_unscheduled_activities=false"
     )
     assert_response_status_code(response, 200)
     res = response.json()
@@ -1394,7 +1459,7 @@ def test_get_study_operational_soa_pagination_sorting(api_client):
 
     # Non-default sort_by and sort_order
     response = api_client.get(
-        f"{BASE_URL}/studies/{studies[0].uid}/operational-soa?sort_order=desc&sort_by=visit_uid"
+        f"{BASE_URL}/studies/{studies[0].uid}/operational-soa?sort_order=desc&sort_by=visit_uid&include_unscheduled_activities=false"
     )
     assert_response_status_code(response, 200)
     res = response.json()
@@ -1408,7 +1473,7 @@ def test_get_study_operational_soa_all(api_client, page_size):
     all_fetched_study_operational_soas = []
 
     response = api_client.get(
-        f"{BASE_URL}/studies/{studies[0].uid}/operational-soa?page_size={page_size}"
+        f"{BASE_URL}/studies/{studies[0].uid}/operational-soa?page_size={page_size}&include_unscheduled_activities=false"
     )
     all_fetched_study_operational_soas.extend(response.json()["items"])
 
@@ -1445,11 +1510,9 @@ def test_get_study_operational_soa_all_specific_study_version(
         else total_study_operational_soa_version_latest
     )
 
-    params = (
-        {"study_version_number": study_version_number}
-        if study_version_number is not None
-        else {}
-    )
+    params = {"include_unscheduled_activities": "false"}
+    if study_version_number is not None:
+        params["study_version_number"] = str(study_version_number)
     response = api_client.get(
         f"{BASE_URL}/studies/{studies[0].uid}/operational-soa", params=params
     )
@@ -1485,40 +1548,91 @@ def test_get_study_detailed_soa_includes_unscheduled_when_requested(api_client):
     assert_response_status_code(response, 200)
     res = response.json()
 
-    # Should include one extra unscheduled activity
-    assert len(res["items"]) == total_study_detailed_soa_version_latest + 1
+    # Should include both unscheduled activities (detailed SoA does not filter on topic code)
+    assert len(res["items"]) == total_study_detailed_soa_version_latest + 2
 
-    # The unscheduled activity should have null visit fields
+    # The unscheduled activities should have null visit fields
     unscheduled_items = [item for item in res["items"] if item["visit_uid"] is None]
-    assert len(unscheduled_items) == 1
-    assert unscheduled_items[0]["visit_short_name"] is None
+    assert len(unscheduled_items) == 2
+    assert all(item["visit_short_name"] is None for item in unscheduled_items)
 
 
-def test_get_study_operational_soa_excludes_unscheduled_by_default(api_client):
-    """Verify that without include_unscheduled_activities, only scheduled activities are returned."""
+def test_get_study_operational_soa_includes_unscheduled_with_topic_code_by_default(
+    api_client,
+):
+    """Unscheduled activity instances are returned by default when they have a topic code."""
     response = api_client.get(f"{BASE_URL}/studies/{studies[0].uid}/operational-soa")
     assert_response_status_code(response, 200)
     res = response.json()
 
-    # Should only contain the scheduled activities (same count as before adding the unscheduled one)
-    assert len(res["items"]) == total_study_operational_soa_version_latest
+    # Scheduled items plus the one unscheduled instance that has a topic code
+    assert len(res["items"]) == total_study_operational_soa_version_latest + 1
+
+    unscheduled_items = [item for item in res["items"] if item["visit_uid"] is None]
+    assert len(unscheduled_items) == 1
+    unscheduled_item = unscheduled_items[0]
+    assert unscheduled_item["visit_short_name"] is None
+    assert unscheduled_item["epoch_name"] is None
+    assert unscheduled_item["topic_code"] is not None
+    assert unscheduled_item["activity_instance_name"] is not None
+    assert unscheduled_item["activity_instance_uid"] is not None
+    assert unscheduled_item["param_code"] is not None
 
 
-def test_get_study_operational_soa_includes_unscheduled_when_requested(api_client):
-    """Verify that with include_unscheduled_activities=true, unscheduled activities are also returned."""
+def test_get_study_operational_soa_unscheduled_without_topic_code_not_returned(
+    api_client,
+):
+    """Unscheduled activity instances without a topic code are not listed."""
+    response = api_client.get(f"{BASE_URL}/studies/{studies[0].uid}/operational-soa")
+    assert_response_status_code(response, 200)
+    items = response.json()["items"]
+
+    no_topic_code_activity_uid = study_activities[-1].activity.uid
+    assert not any(item["activity_uid"] == no_topic_code_activity_uid for item in items)
+    assert all(
+        item["topic_code"] for item in items if item["visit_uid"] is None
+    ), "Unscheduled items must have a topic code"
+
+
+def test_get_study_operational_soa_excludes_unscheduled_when_disabled(api_client):
+    """With include_unscheduled_activities=false, only scheduled activities are returned."""
     response = api_client.get(
-        f"{BASE_URL}/studies/{studies[0].uid}/operational-soa?include_unscheduled_activities=true"
+        f"{BASE_URL}/studies/{studies[0].uid}/operational-soa?include_unscheduled_activities=false"
     )
     assert_response_status_code(response, 200)
     res = response.json()
 
-    # Should include one extra unscheduled activity
-    assert len(res["items"]) == total_study_operational_soa_version_latest + 1
+    assert len(res["items"]) == total_study_operational_soa_version_latest
+    assert all(item["visit_uid"] is not None for item in res["items"])
 
-    # The unscheduled activity should have null visit fields
+
+def test_get_study_operational_soa_includes_unscheduled_when_explicitly_enabled(
+    api_client,
+):
+    response = api_client.get(
+        f"{BASE_URL}/studies/{studies[0].uid}/operational-soa"
+        "?include_unscheduled_activities=true"
+    )
+    assert_response_status_code(response, 200)
+    res = response.json()
+
+    assert len(res["items"]) == total_study_operational_soa_version_latest + 1
     unscheduled_items = [item for item in res["items"] if item["visit_uid"] is None]
     assert len(unscheduled_items) == 1
-    assert unscheduled_items[0]["visit_short_name"] is None
+    assert unscheduled_items[0]["topic_code"]
+
+
+def test_get_study_operational_soa_unscheduled_specific_study_version(api_client):
+    """Study version 1 predates the unscheduled activities, so none are returned."""
+    response = api_client.get(
+        f"{BASE_URL}/studies/{studies[0].uid}/operational-soa",
+        params={"study_version_number": "1"},
+    )
+    assert_response_status_code(response, 200)
+    res = response.json()
+
+    assert len(res["items"]) == total_study_operational_soa_version_1
+    assert all(item["visit_uid"] is not None for item in res["items"])
 
 
 def test_get_papillons_soa(api_client):
@@ -1540,6 +1654,7 @@ def _add_study_activity(
     activity_subgroup_uid: str,
     soa_group_term_uid: str,
     activity_instance_class_uid: str | None,
+    with_topic_code: bool = True,
 ) -> models.StudyActivity:
     activity = TestUtils.create_activity(
         f"Activity {str(idx + 1).zfill(2)}",
@@ -1551,7 +1666,11 @@ def _add_study_activity(
         name=f"Activity instance {idx}",
         activity_instance_class_uid=activity_instance_class_uid,  # type: ignore[arg-type]
         name_sentence_case=f"activity instance {idx}",
-        topic_code=f"randomized activity instance topic code {idx}",
+        topic_code=(
+            f"randomized activity instance topic code {idx}"
+            if with_topic_code
+            else None
+        ),
         adam_param_code=f"randomized adam_param_code {idx}",
         is_required_for_activity=True,
         activities=[activity.uid],

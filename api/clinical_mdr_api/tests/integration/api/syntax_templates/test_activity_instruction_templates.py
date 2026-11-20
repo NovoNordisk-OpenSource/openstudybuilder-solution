@@ -349,8 +349,8 @@ def test_get_activity_instruction_templates(
     assert list(res.keys()) == ["items", "total", "page", "size"]
     assert len(res["items"]) == expected_result_len
     assert res["total"] == (len(activity_instruction_templates) if total_count else 0)
-    assert res["page"] == (page_number if page_number else 1)
-    assert res["size"] == (page_size if page_size else 10)
+    assert res["page"] == (page_number or 1)
+    assert res["size"] == (page_size or 10)
 
     for item in res["items"]:
         assert set(list(item.keys())) == set(ACTIVITY_INSTRUCTION_TEMPLATE_FIELDS_ALL)
@@ -566,13 +566,6 @@ def test_headers(api_client, field_name):
         assert len(res) == 0
 
 
-def test_pre_validate_activity_instruction_template_name(api_client):
-    data = {"name": "test [TextValue]"}
-    response = api_client.post(f"{URL}/pre-validate", json=data)
-    log.info("Pre Validated Activity Instruction Template name: %s", data)
-    assert_response_status_code(response, 204)
-
-
 def test_create_activity_instruction_template(api_client):
     data = {
         "name": "default_name [TextValue]",
@@ -619,7 +612,7 @@ def test_create_activity_instruction_template(api_client):
 
 def test_create_new_version_of_activity_instruction_template(api_client):
     data = {
-        "name": "new test name",
+        "name": "new test name with [TextValue]",
         "guidance_text": "new test guidance text",
         "change_description": "new version",
     }
@@ -632,7 +625,7 @@ def test_create_new_version_of_activity_instruction_template(api_client):
     assert_response_status_code(response, 201)
     assert res["uid"]
     assert res["sequence_id"]
-    assert res["name"] == "new test name"
+    assert res["name"] == "new test name with [TextValue]"
     assert res["guidance_text"] == "new test guidance text"
     assert res["indications"][0]["term_uid"] == dictionary_term_indication.term_uid
     assert res["indications"][0]["name"] == dictionary_term_indication.name
@@ -1206,39 +1199,6 @@ def test_cannot_change_parameter_numbers_of_activity_instruction_template_after_
         res["message"]
         == "You cannot change number or order of template parameters for a previously approved template."
     )
-
-
-def test_pre_validate_invalid_activity_instruction_template_name(api_client):
-    data = {"name": "Missing opening bracket ]"}
-    response = api_client.post(f"{URL}/pre-validate", json=data)
-    res = response.json()
-    log.info("Pre Validated Criteria Template name: %s", res)
-
-    assert_response_status_code(response, 400)
-    assert res["message"] == f"Template string syntax incorrect: {data['name']}"
-
-    data = {"name": "Lacking closing bracket ["}
-    response = api_client.post(f"{URL}/pre-validate", json=data)
-    res = response.json()
-    log.info("Pre Validated Activity Instruction Template name: %s", res)
-
-    assert_response_status_code(response, 400)
-    assert res["message"] == f"Template string syntax incorrect: {data['name']}"
-
-    data = {"name": " "}
-    response = api_client.post(f"{URL}/pre-validate", json=data)
-    res = response.json()
-    log.info("Pre Validated Activity Instruction Template name: %s", res)
-
-    assert_response_status_code(response, 400)
-    assert res["details"] == [
-        {
-            "error_code": "string_too_short",
-            "field": ["body", "name"],
-            "msg": "String should have at least 1 character",
-            "ctx": {"min_length": 1},
-        }
-    ]
 
 
 @pytest.mark.parametrize(

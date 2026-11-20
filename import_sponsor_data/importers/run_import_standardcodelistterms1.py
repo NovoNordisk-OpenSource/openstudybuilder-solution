@@ -1,5 +1,6 @@
 import asyncio
 import csv
+import os
 import sys
 import time
 
@@ -21,6 +22,10 @@ MDR_MIGRATION_SPONSOR_CODELIST_DEFINITIONS = load_env(
     "MDR_MIGRATION_SPONSOR_CODELIST_DEFINITIONS"
 )
 MDR_MIGRATION_CODELIST_PARAMETER_SET = load_env("MDR_MIGRATION_CODELIST_PARAMETER_SET")
+# Optional extra definitions, imported after the main file. Skipped if unset or missing.
+MDR_MIGRATION_SPONSOR_CODELIST_DEFINITIONS_PRIVATE = load_env(
+    "MDR_MIGRATION_SPONSOR_CODELIST_DEFINITIONS_PRIVATE", default=""
+)
 
 
 # TODO rename to codelist definitions
@@ -372,6 +377,10 @@ class StandardCodelistTerms1(BaseImporter):
             await self.handle_codelist_definitions(
                 MDR_MIGRATION_SPONSOR_CODELIST_DEFINITIONS, session
             )
+            if os.path.isfile(MDR_MIGRATION_SPONSOR_CODELIST_DEFINITIONS_PRIVATE):
+                await self.handle_codelist_definitions(
+                    MDR_MIGRATION_SPONSOR_CODELIST_DEFINITIONS_PRIVATE, session
+                )
             await self.handle_codelist_parameter_set(
                 MDR_MIGRATION_CODELIST_PARAMETER_SET, session
             )

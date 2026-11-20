@@ -282,6 +282,12 @@ export default {
       type: Boolean,
       default: false,
     },
+    // Names that denote a parameter when loadParameterValuesFromTemplate is
+    // set; any other bracket text of the template is literal
+    parameterNames: {
+      type: Array,
+      default: () => [],
+    },
     previewText: {
       type: String,
       default: '',
@@ -321,13 +327,16 @@ export default {
     },
     namePlainPreview() {
       let namePreview = this.cleanName(this.getNamePreview())
+      // Strip placeholder brackets before parsing so that literal brackets,
+      // encoded as HTML entities, survive in the text content
       namePreview = namePreview
         .replaceAll('</li>', '; ')
         .replaceAll('<li>', ' ')
+        .replaceAll(/\[|\]/g, '')
       if (namePreview !== undefined) {
         const tag = new DOMParser().parseFromString(namePreview, 'text/html')
         if (tag.documentElement.textContent) {
-          return tag.documentElement.textContent.replaceAll(/\[|\]/g, '')
+          return tag.documentElement.textContent
         }
       }
       return ''
@@ -339,54 +348,14 @@ export default {
     },
   },
   watch: {
-    /*
-     ** Here we delay the execution of the watcher to avoid unexpected behaviour when the user leaves his finger pressed
-     ** on a key for example.
-     */
     template: {
-      async handler(value) {
-        if (this.updatingParameters) {
-          return
-        }
-        setTimeout(async () => {
-          if (value !== this.template) {
-            return
-          }
-          this.updatingParameters = true
-          if (this.loadParameterValuesFromTemplate && value) {
-            this.parameters = []
-            const extractedParams =
-              templateParameters.getTemplateParametersFromTemplate(value)
-            if (extractedParams.length !== this.modelValue.length) {
-              this.$emit('update:modelValue', [])
-            }
-            for (const param of extractedParams) {
-              const resp = await templateParameterTypes.getTerms(param)
-              // remove any term with an empty name or where the name only consists of whitespaces
-              const data = resp.data.filter(
-                (term) => term.name.trim().length > 0
-              )
-              this.parameters.push({
-                name: param,
-                terms: data,
-              })
-            }
-            if (this.modelValue.length) {
-              this.modelValue.forEach((param, index) => {
-                if (param.selectedValues) {
-                  this.parameters[index].selectedValues = param.selectedValues
-                }
-                if (param.selectedSeparator) {
-                  this.parameters[index].selectedSeparator =
-                    param.selectedSeparator
-                }
-              })
-            }
-          }
-          this.updatingParameters = false
-        }, 100)
+      handler(value) {
+        this.loadParametersFromTemplate(value)
       },
       immediate: true,
+    },
+    parameterNames() {
+      this.loadParametersFromTemplate(this.template)
     },
     modelValue(newVal) {
       if (newVal) {
@@ -407,6 +376,53 @@ export default {
     this.parameters = [...this.modelValue]
   },
   methods: {
+    /*
+     ** Here we delay the execution of the watcher to avoid unexpected behaviour when the user leaves his finger pressed
+     ** on a key for example.
+     */
+    loadParametersFromTemplate(value) {
+      if (this.updatingParameters) {
+        return
+      }
+      setTimeout(async () => {
+        if (value !== this.template) {
+          return
+        }
+        this.updatingParameters = true
+        if (this.loadParameterValuesFromTemplate && value) {
+          this.parameters = []
+          const extractedParams =
+            templateParameters.getTemplateParametersFromTemplate(
+              value,
+              this.parameterNames
+            )
+          if (extractedParams.length !== this.modelValue.length) {
+            this.$emit('update:modelValue', [])
+          }
+          for (const param of extractedParams) {
+            const resp = await templateParameterTypes.getTerms(param)
+            // remove any term with an empty name or where the name only consists of whitespaces
+            const data = resp.data.filter((term) => term.name.trim().length > 0)
+            this.parameters.push({
+              name: param,
+              terms: data,
+            })
+          }
+          if (this.modelValue.length) {
+            this.modelValue.forEach((param, index) => {
+              if (param.selectedValues) {
+                this.parameters[index].selectedValues = param.selectedValues
+              }
+              if (param.selectedSeparator) {
+                this.parameters[index].selectedSeparator =
+                  param.selectedSeparator
+              }
+            })
+          }
+        }
+        this.updatingParameters = false
+      }, 100)
+    },
     clearSelection(parameter) {
       parameter.selectedValues = []
       parameter.selectedSeparator = null
@@ -446,56 +462,59 @@ export default {
       if (!this.template) {
         return ''
       }
-      if (!this.parameters.length) {
-        return this.template
-      }
+      // Literal brackets of the template and brackets inside selected values
+      // are encoded as HTML entities, as the API does in instance names, so
+      // that the only raw brackets left in the preview are placeholders
+      const escape = templateParameters.escapeBrackets
+      const parts = templateParameters.splitTemplate(
+        this.template,
+        this.parameters.map((parameter) => parameter.name)
+      )
       let result = ''
       let paramIndex = 0
-      let inParam = false
-      for (const c of this.template) {
-        if (c === '[') {
-          inParam = true
-        } else if (c === ']') {
-          if (paramIndex < this.parameters.length) {
-            if (
-              this.parameters[paramIndex].selectedValues &&
-              this.parameters[paramIndex].selectedValues.length
-            ) {
-              if (
-                this.parameters[paramIndex].name === constants.NUM_VALUE ||
-                this.parameters[paramIndex].name === constants.TEXT_VALUE
-              ) {
-                result += '[' + this.parameters[paramIndex].selectedValues + ']'
-              } else {
-                let valueNames = null
-                if (paramIndex === 0 && result.length < 4) {
-                  valueNames = this.parameters[paramIndex].selectedValues.map(
-                    (v) => v.name.charAt(0).toUpperCase() + v.name.slice(1)
-                  )
-                } else {
-                  valueNames = this.parameters[paramIndex].selectedValues.map(
-                    (v) => v.name
-                  )
-                }
-                const concatenation = this.parameters[paramIndex]
-                  .selectedSeparator
-                  ? valueNames.join(
-                      this.parameters[paramIndex].selectedSeparator
-                    )
-                  : valueNames.join(' ')
-                result += `[${concatenation}]`
-              }
-            } else if (this.parameters[paramIndex].skip) {
-              result += hideEmptyParams ? '' : '[]'
-            } else {
-              result += `[${this.parameters[paramIndex].name}]`
-            }
-          }
-          paramIndex++
-          inParam = false
-        } else if (!inParam) {
-          result += c
+      for (const part of parts) {
+        if (!part.isParameter) {
+          result += escape(part.value)
+          continue
         }
+        if (paramIndex < this.parameters.length) {
+          if (
+            this.parameters[paramIndex].selectedValues &&
+            this.parameters[paramIndex].selectedValues.length
+          ) {
+            if (
+              this.parameters[paramIndex].name === constants.NUM_VALUE ||
+              this.parameters[paramIndex].name === constants.TEXT_VALUE
+            ) {
+              result +=
+                '[' +
+                escape(String(this.parameters[paramIndex].selectedValues)) +
+                ']'
+            } else {
+              let valueNames = null
+              if (paramIndex === 0 && result.length < 4) {
+                valueNames = this.parameters[paramIndex].selectedValues.map(
+                  (v) =>
+                    escape(v.name.charAt(0).toUpperCase() + v.name.slice(1))
+                )
+              } else {
+                valueNames = this.parameters[paramIndex].selectedValues.map(
+                  (v) => escape(v.name)
+                )
+              }
+              const concatenation = this.parameters[paramIndex]
+                .selectedSeparator
+                ? valueNames.join(this.parameters[paramIndex].selectedSeparator)
+                : valueNames.join(' ')
+              result += `[${concatenation}]`
+            }
+          } else if (this.parameters[paramIndex].skip) {
+            result += hideEmptyParams ? '' : '[]'
+          } else {
+            result += `[${this.parameters[paramIndex].name}]`
+          }
+        }
+        paramIndex++
       }
       return result
     },

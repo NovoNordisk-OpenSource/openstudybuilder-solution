@@ -35,6 +35,13 @@ TS_RANDOMIZATION_QUOTIENT_TERM_UID = "C98775"
 # Submission value for the Registry Identifier TS parameter.
 TS_REGID_SUBMVAL = "REGID"
 
+# Submission values for the treatment TS parameters, and the Type of Treatment
+# terms that drive them. Other types of treatment (e.g. placebo) yield no TS row.
+TS_TRT_SUBMVAL = "TRT"
+TS_COMPTRT_SUBMVAL = "COMPTRT"
+INVESTIGATIONAL_PRODUCT_TOT_SUBMVAL = "INVESTIGATIONAL PRODUCT TYPE OF TREATMENT"
+COMPARATIVE_TREATMENT_TOT_SUBMVAL = "COMPARATIVE TREATMENT TYPE OF TREATMENT"
+
 
 def _build_registry_identifier_cypher_fragment() -> tuple[str, str]:
     """Build the CASE and IN-list fragments for registry identifier fields from FieldConfiguration."""
@@ -44,6 +51,34 @@ def _build_registry_identifier_cypher_fragment() -> tuple[str, str]:
         f"WHEN '{name}' THEN '{ref}'" for name, ref in vcdref_map.items()
     )
     return field_names_list, case_lines
+
+
+def _ts_parameter_join(
+    term: str,
+    *,
+    term_ref: str | None = None,
+    code: str = "(cclt:CTCodelistTerm)",
+    name: str = "(nclt:CTCodelistTerm)",
+) -> str:
+    """Cypher joining a TS parameter term to its TSPARMCD and TSPARM codelist terms.
+
+    Only the current HAS_TERM link (end_date IS NULL) of each codelist is kept. A
+    renamed submission value leaves the old link in place with an end_date, e.g. C98768
+    "Pharmacological Class of Invest. Therapy" -> "Pharmacologic Class", which would
+    otherwise duplicate every row of that parameter.
+
+    `term` is the node pattern of the CTTermRoot in the TSPARMCD join (it may bind the
+    variable, label or properties); `term_ref` is how the TSPARM join refers back to
+    it and defaults to `term`. `code` and `name` are the codelist term patterns.
+    """
+    return (
+        f"MATCH (:CTCodelistRoot {{uid:'{settings.ts_parmcd_codelist_uid}'}})"
+        f"-[parmcd_ht:HAS_TERM WHERE parmcd_ht.end_date IS NULL]->{code}"
+        f"-[:HAS_TERM_ROOT]->{term}\n"
+        f"MATCH (:CTCodelistRoot {{uid:'{settings.ts_parm_codelist_uid}'}})"
+        f"-[parm_ht:HAS_TERM WHERE parm_ht.end_date IS NULL]->{name}"
+        f"-[:HAS_TERM_ROOT]->{term_ref or term}"
+    )
 
 
 class QueryService:
@@ -840,12 +875,29 @@ class QueryService:
 
         query = query + f"""
         WITH sr, sv
-        CALL (sr, sv) {{
+        // Active substances of the study's investigational and comparative compounds,
+        // collected once and reused by the TRT/COMPTRT and PCLAS branches below. They
+        // are reached through the pharmaceutical products pinned on each StudyCompound,
+        // so a combination product contributes one entry per ingredient.
+        CALL (sv) {{
+            MATCH (sv)-[:HAS_STUDY_COMPOUND]->(sc:StudyCompound)-[:HAS_TYPE_OF_TREATMENT]->(ctx:CTTermContext)-[:HAS_SELECTED_TERM]->(tot:CTTermRoot)
+            MATCH (ctx)-[:HAS_SELECTED_CODELIST]->(:CTCodelistRoot)-[tot_ht:HAS_TERM WHERE tot_ht.end_date IS NULL]->(tot_clt:CTCodelistTerm)-[:HAS_TERM_ROOT]->(tot)
+            WITH sc,
+                CASE tot_clt.submission_value
+                    WHEN '{INVESTIGATIONAL_PRODUCT_TOT_SUBMVAL}' THEN '{TS_TRT_SUBMVAL}'
+                    WHEN '{COMPARATIVE_TREATMENT_TOT_SUBMVAL}' THEN '{TS_COMPTRT_SUBMVAL}'
+                END AS trt_parmcd
+            WHERE trt_parmcd IS NOT NULL
+            MATCH (sc)-[:HAS_PHARMACEUTICAL_PRODUCT]->(:PharmaceuticalProductValue)-[:HAS_FORMULATION]->(:IngredientFormulation)
+                -[:HAS_INGREDIENT]->(:Ingredient)-[:HAS_SUBSTANCE]->(:ActiveSubstanceRoot)-[:LATEST_FINAL]->(asv:ActiveSubstanceValue)
+            RETURN collect(DISTINCT {{parmcd: trt_parmcd, substance: asv}}) AS treatment_substances
+        }}
+        CALL (sr, sv, treatment_substances) {{
+        // Every TSPARMCD/TSPARM codelist join comes from _ts_parameter_join.
         // --- Field-based TS parameters (driven by CTTermNameValue → MetaStudyField graph) ---
         MATCH (ts_term:CTTermRoot)-[:HAS_NAME_ROOT]->(:CTTermNameRoot)-[:LATEST_FINAL]->(tsp:CTTermNameValue)
         MATCH (tsp)-[:RELATED_STUDY_FIELD_SELECTION]->(msf:MetaStudyField)
-        MATCH (:CTCodelistRoot {{uid:'{settings.ts_parmcd_codelist_uid}'}})-[:HAS_TERM]->(cclt:CTCodelistTerm)-[:HAS_TERM_ROOT]->(ts_term)
-        MATCH (:CTCodelistRoot {{uid:'{settings.ts_parm_codelist_uid}'}})-[:HAS_TERM]->(nclt:CTCodelistTerm)-[:HAS_TERM_ROOT]->(ts_term)
+        {_ts_parameter_join("(ts_term)")}
         // Resolve the actual StudyField value for this study.
         // Regular fields match by msf.osb_field_name; Other Study Attributes
         // (which share one MetaStudyField per data type) match by tsp.name.
@@ -914,8 +966,12 @@ class QueryService:
         // Each filled registry field produces its own row; field names and TSVCDREF
         // are driven by FieldConfiguration.registry_identifier_vcdref_map().
         WITH sr, sv
-        MATCH (:CTCodelistRoot {{uid:'{settings.ts_parmcd_codelist_uid}'}})-[:HAS_TERM]->(regid_cclt:CTCodelistTerm {{submission_value:'{TS_REGID_SUBMVAL}'}})-[:HAS_TERM_ROOT]->(regid_term:CTTermRoot)
-        MATCH (:CTCodelistRoot {{uid:'{settings.ts_parm_codelist_uid}'}})-[:HAS_TERM]->(regid_nclt:CTCodelistTerm)-[:HAS_TERM_ROOT]->(regid_term)
+        {_ts_parameter_join(
+            "(regid_term:CTTermRoot)",
+            term_ref="(regid_term)",
+            code=f"(regid_cclt:CTCodelistTerm {{submission_value:'{TS_REGID_SUBMVAL}'}})",
+            name="(regid_nclt:CTCodelistTerm)",
+        )}
         MATCH (sv)-->(sf:StudyTextField)
         WHERE sf.field_name IN [{reg_field_names}] AND sf.value IS NOT NULL AND sf.value <> ''
         RETURN DISTINCT
@@ -999,8 +1055,7 @@ class QueryService:
         WITH sr, sv
         MATCH (sv)-[:HAS_STUDY_COHORT]->(sch:StudyCohort)
         MATCH (tr:CTTermRoot {{uid:'{TS_COHORT_COUNT_TERM_UID}'}})-->(tar:CTTermAttributesRoot)-[:LATEST_FINAL]->(tav:CTTermAttributesValue)
-        MATCH (:CTCodelistRoot {{uid:'{settings.ts_parmcd_codelist_uid}'}})-[:HAS_TERM]->(cclt:CTCodelistTerm)-[:HAS_TERM_ROOT]->(tr)
-        MATCH (:CTCodelistRoot {{uid:'{settings.ts_parm_codelist_uid}'}})-[:HAS_TERM]->(nclt:CTCodelistTerm)-[:HAS_TERM_ROOT]->(tr)
+        {_ts_parameter_join("(tr)")}
         RETURN
             sv.study_id_prefix+'-'+sv.study_number AS STUDYID,
             'TS' AS DOMAIN,
@@ -1027,8 +1082,7 @@ class QueryService:
             OPTIONAL MATCH (innver_sv) -[:HAS_STUDY_BRANCH_ARM]-(sba:StudyBranchArm)-[:STUDY_BRANCH_ARM_HAS_DESIGN_CELL] -(sd)
             OPTIONAL MATCH (sep)-[:HAS_EPOCH]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(:CTTermRoot)-[:HAS_NAME_ROOT]-(:CTTermNameRoot)-[:LATEST]->(sep_term:CTTermNameValue)
             MATCH (tr:CTTermRoot {{uid:'{TS_ARM_COUNT_TERM_UID}'}})-->(tar:CTTermAttributesRoot)-[:LATEST_FINAL]->(tav:CTTermAttributesValue)
-            MATCH (:CTCodelistRoot {{uid:'{settings.ts_parmcd_codelist_uid}'}})-[:HAS_TERM]->(cclt:CTCodelistTerm)-[:HAS_TERM_ROOT]->(tr)
-            MATCH (:CTCodelistRoot {{uid:'{settings.ts_parm_codelist_uid}'}})-[:HAS_TERM]->(nclt:CTCodelistTerm)-[:HAS_TERM_ROOT]->(tr)
+            {_ts_parameter_join("(tr)")}
             RETURN distinct inner_sr,innver_sv, sar,sba, tav, cclt, nclt
             union all
             WITH sr, sv
@@ -1040,8 +1094,7 @@ class QueryService:
             (sba)-[:STUDY_ARM_HAS_BRANCH_ARM]-(sar:StudyArm)-[:HAS_STUDY_ARM]-(innver_sv)
             OPTIONAL MATCH (sep)-[:HAS_EPOCH]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(:CTTermRoot)-[:HAS_NAME_ROOT]-(:CTTermNameRoot)-[:LATEST]-(sep_term:CTTermNameValue)
             MATCH (tr:CTTermRoot {{uid:'{TS_ARM_COUNT_TERM_UID}'}})-->(tar:CTTermAttributesRoot)-[:LATEST_FINAL]->(tav:CTTermAttributesValue)
-            MATCH (:CTCodelistRoot {{uid:'{settings.ts_parmcd_codelist_uid}'}})-[:HAS_TERM]->(cclt:CTCodelistTerm)-[:HAS_TERM_ROOT]->(tr)
-            MATCH (:CTCodelistRoot {{uid:'{settings.ts_parm_codelist_uid}'}})-[:HAS_TERM]->(nclt:CTCodelistTerm)-[:HAS_TERM_ROOT]->(tr)
+            {_ts_parameter_join("(tr)")}
             RETURN distinct inner_sr,innver_sv, sar,sba, tav, cclt, nclt
             }}
         with   tav, inner_sr, innver_sv, count(*) as counter, cclt, nclt
@@ -1058,42 +1111,55 @@ class QueryService:
             '' AS TSVCDVER
 
         UNION
-        // --- Compound (type of treatment → UNII) ---
-            WITH sr, sv
-            MATCH (sv)-[:HAS_STUDY_COMPOUND]->(sc:StudyCompound)-[:HAS_TYPE_OF_TREATMENT]->(ctx:CTTermContext)-[:HAS_SELECTED_TERM]->(cttr:CTTermRoot)
-            -[:HAS_ATTRIBUTES_ROOT]->(ctar:CTTermAttributesRoot)-[:LATEST_FINAL]->(ctav:CTTermAttributesValue)
-            MATCH (ctx)-[:HAS_SELECTED_CODELIST]->(clr:CTCodelistRoot)-[:HAS_TERM]-(cclt:CTCodelistTerm)-[:HAS_TERM_ROOT]->(endplv)
-            OPTIONAL MATCH (clr)<-[:PAIRED_CODE_CODELIST]-(nclr:CTCodelistRoot)-[:HAS_TERM]->(nclt:CTCodelistTerm)-[:HAS_TERM_ROOT]->(endplv)
-            MATCH (sc)-[:HAS_SELECTED_COMPOUND]->(cav:CompoundAliasValue)-[:IS_COMPOUND]->(cr:CompoundRoot)-[:LATEST_FINAL]->(cv:CompoundValue)
-            -[:HAS_UNII_VALUE]->(uniir:UNIITermRoot)-[:LATEST_FINAL]->(uniiv:UNIITermValue)
-            MATCH (uniir)<-[:CONTAINS_DICTIONARY_TERM]-(lib:Library)
-            with sv,uniiv,lib,ctav, cclt, nclt
-            RETURN
+        // --- Investigational (TRT) and comparative (COMPTRT) treatments ---
+        // One row per distinct active substance. TSVAL is the first non-empty of INN,
+        // short number, long number, analyte number, and finally the UNII name so that
+        // an ingredient carrying only a UNII is not dropped.
+            WITH sr, sv, treatment_substances
+            UNWIND treatment_substances AS treatment_substance
+            WITH sv, treatment_substance.parmcd AS trt_parmcd, treatment_substance.substance AS asv
+            OPTIONAL MATCH (asv)-[:HAS_UNII_VALUE]->(unii_root:DictionaryTermRoot)-[:LATEST_FINAL]->(unii_val:DictionaryTermValue)
+            OPTIONAL MATCH (unii_root)<-[:CONTAINS_DICTIONARY_TERM]-(unii_lib:Library)
+            {_ts_parameter_join(
+                "(trt_term:CTTermRoot)",
+                term_ref="(trt_term)",
+                code="(cclt:CTCodelistTerm {submission_value: trt_parmcd})",
+            )}
+            RETURN DISTINCT
                 sv.study_id_prefix+'-'+sv.study_number as STUDYID,
                 'TS' as DOMAIN,
                 cclt.submission_value as TSPARMCD,
                 nclt.submission_value as TSPARM,
                 '' AS controlled_by,
-                uniiv.name as TSVAL,
+                CASE
+                    WHEN asv.inn IS NOT NULL AND asv.inn <> '' THEN asv.inn
+                    WHEN asv.short_number IS NOT NULL AND asv.short_number <> '' THEN asv.short_number
+                    WHEN asv.long_number IS NOT NULL AND asv.long_number <> '' THEN asv.long_number
+                    WHEN asv.analyte_number IS NOT NULL AND asv.analyte_number <> '' THEN asv.analyte_number
+                    ELSE unii_val.name
+                END as TSVAL,
                 '' AS TSVALNF,
-                uniiv.dictionary_id as TSVALCD,
-                lib.name as TSVCDREF,
+                coalesce(unii_val.dictionary_id, '') as TSVALCD,
+                coalesce(unii_lib.name, '') as TSVCDREF,
                 '' AS TSVCDVER
 
         UNION
         // --- Pharmacological class (from investigational products) ---
-            WITH sr, sv
-            match (sv)-[:HAS_STUDY_COMPOUND]->(sc:StudyCompound)-[:HAS_TYPE_OF_TREATMENT]->(ctx:CTTermContext)-[:HAS_SELECTED_TERM]->(cttr:CTTermRoot)
-            WHERE (ctx)-[:HAS_SELECTED_CODELIST]->(:CTCodelistRoot)-[:HAS_TERM]-(:CTCodelistTerm {{submission_value:'INVESTIGATIONAL PRODUCT TYPE OF TREATMENT'}})-[:HAS_TERM_ROOT]->(cttr)
-            WITH sr, sc, sv
-            match (sc)-[:HAS_SELECTED_COMPOUND]->(cav:CompoundAliasValue)
-            match (cav)-[:IS_COMPOUND]->(cr:CompoundRoot)-[:LATEST_FINAL]->(cv:CompoundValue)-[:HAS_UNII_VALUE]->
-              (uniir:UNIITermRoot)-[:LATEST_FINAL]->(uniiv:UNIITermValue)-[:HAS_PCLASS]->(pclass_root:DictionaryTermRoot)-[:LATEST_FINAL]->(medrt:DictionaryTermValue)
-            match (pclass_root)<-[:CONTAINS_DICTIONARY_TERM]-(lib:Library)
-            match (tr:CTTermRoot {{uid:'{TS_PHARMA_CLASS_TERM_UID}'}})-->(tar:CTTermAttributesRoot)-[:LATEST_FINAL]->(tav:CTTermAttributesValue)
-            MATCH (:CTCodelistRoot {{uid:'{settings.ts_parmcd_codelist_uid}'}})-[:HAS_TERM]->(cclt:CTCodelistTerm)-[:HAS_TERM_ROOT]->(tr)
-            MATCH (:CTCodelistRoot {{uid:'{settings.ts_parm_codelist_uid}'}})-[:HAS_TERM]->(nclt:CTCodelistTerm)-[:HAS_TERM_ROOT]->(tr)
-            RETURN sv.study_id_prefix+'-'+sv.study_number as STUDYID,
+        // CDISC defines PCLAS for the investigational therapy only, so comparators
+        // are excluded. One row per distinct MED-RT class across all ingredients.
+            WITH sr, sv, treatment_substances
+            UNWIND treatment_substances AS treatment_substance
+            WITH sv, treatment_substance.parmcd AS trt_parmcd, treatment_substance.substance AS asv
+            WHERE trt_parmcd = '{TS_TRT_SUBMVAL}'
+            MATCH (asv)-[:HAS_UNII_VALUE]->(:DictionaryTermRoot)-[:LATEST_FINAL]->(:DictionaryTermValue)
+                -[:HAS_PCLASS]->(pclass_root:DictionaryTermRoot)-[:LATEST_FINAL]->(medrt:DictionaryTermValue)
+            MATCH (pclass_root)<-[:CONTAINS_DICTIONARY_TERM]-(lib:Library)
+            {_ts_parameter_join(
+                f"(tr:CTTermRoot {{uid:'{TS_PHARMA_CLASS_TERM_UID}'}})",
+                term_ref="(tr)",
+            )}
+            RETURN DISTINCT
+                sv.study_id_prefix+'-'+sv.study_number as STUDYID,
                 'TS' as DOMAIN,
                 cclt.submission_value as TSPARMCD,
                 nclt.submission_value as TSPARM,
@@ -1131,8 +1197,7 @@ class QueryService:
                 else round(toFloat(inv_num_sub)/all_num_sub,4)
             end as rand_quotient, sv
             match (tr:CTTermRoot {{uid:'{TS_RANDOMIZATION_QUOTIENT_TERM_UID}'}})-->(tar:CTTermAttributesRoot)-[:LATEST_FINAL]->(tav:CTTermAttributesValue)
-            MATCH (:CTCodelistRoot {{uid:'{settings.ts_parmcd_codelist_uid}'}})-[:HAS_TERM]->(cclt:CTCodelistTerm)-[:HAS_TERM_ROOT]->(tr)
-            MATCH (:CTCodelistRoot {{uid:'{settings.ts_parm_codelist_uid}'}})-[:HAS_TERM]->(nclt:CTCodelistTerm)-[:HAS_TERM_ROOT]->(tr)
+            {_ts_parameter_join("(tr)")}
             with tav, rand_quotient, sv, cclt, nclt
             RETURN
                 sv.study_id_prefix+'-'+sv.study_number as STUDYID,
@@ -1150,7 +1215,12 @@ class QueryService:
         WITH *
         WHERE TSVAL IS NOT NULL OR TSVALNF <> ''
         RETURN *
-        ORDER BY TSPARMCD
+        // Tie-breakers keep rows sharing a TSPARMCD (REGID, TRT, PCLAS, ...) in a
+        // stable order, since the service paginates this result in Python.
+        // TSVAL mixes strings, counts and lists, hence toStringOrNull. Nulls are
+        // coalesced to '' so they sort first, not last (Cypher's default).
+        ORDER BY TSPARMCD, coalesce(TSPARM, ''), coalesce(toStringOrNull(TSVAL), ''),
+            coalesce(TSVALCD, ''), coalesce(TSVCDREF, '')
         """
         result_array = db.cypher_query(
             query=query,

@@ -1,6 +1,6 @@
 import datetime
 from collections.abc import Callable, Set
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from functools import reduce
 from operator import add
 from typing import Self
@@ -20,7 +20,12 @@ from clinical_mdr_api.domains.versioned_object_aggregate import (
 from clinical_mdr_api.models.controlled_terminologies.ct_term import (
     SimpleCTTermNameAndAttributes,
 )
-from clinical_mdr_api.utils import convert_to_plain, extract_parameters, strip_html
+from clinical_mdr_api.utils import (
+    convert_to_plain,
+    escape_literal_brackets,
+    find_parameters,
+    strip_html,
+)
 from common.exceptions import NotFoundException
 
 
@@ -38,6 +43,10 @@ class ParametrizedTemplateVO:
     parameter_terms: list[ParameterTermEntryVO]
     library_name: str
     template_type: SimpleCTTermNameAndAttributes | None = None
+    # Names of the template parameters used as placeholders in the template name.
+    # Defaults to the names of the parameter terms, which are the template's own
+    # parameters when loaded from the database; see `placeholder_names`.
+    template_parameter_names: list[str] | None = field(default=None, compare=False)
 
     @classmethod
     def from_repository_values(
@@ -92,6 +101,7 @@ class ParametrizedTemplateVO:
             parameter_terms=parameter_terms,
             guidance_text=guidance_text,
             library_name=library_name,
+            template_parameter_names=template.parameter_names,
         )
 
     @classmethod
@@ -113,54 +123,89 @@ class ParametrizedTemplateVO:
             library_name=library_name,
         )
 
+    @property
+    def placeholder_names(self) -> list[str]:
+        if self.template_parameter_names is not None:
+            return self.template_parameter_names
+        return [
+            parameter_term.parameter_name
+            for parameter_term in self.parameter_terms or []
+        ]
+
     @staticmethod
     def _create_name_from_template(
-        template_name: str, parameter_terms: list[ParameterTermEntryVO]
+        template_name: str,
+        parameter_terms: list[ParameterTermEntryVO],
+        placeholder_names: list[str],
     ) -> str:
         """
-        Calculates current name based on template name and current list of parameters
+        Calculates current name based on template name and current list of parameters.
+        Bracketed text that is not a placeholder is escaped, so the only square brackets
+        left in the name enclose the filled-in parameters.
         """
-        name = template_name
-        template_parameters = extract_parameters(template_name)
-        if parameter_terms is not None:
-            for i, param in enumerate(parameter_terms):
-                values = param.parameters
-                conjunction = param.conjunction
-                if len(values) == 0:
-                    # If no values are selected, the template will be filled in without a name.
-                    combined_name = ""
-                elif len(values) == 1:
-                    # if only one value is present (c.q. no conjunctions) we just use this value.
-                    combined_name = values[0].value
-                else:
-                    # Use a Python reduce function to combine the values array and the conjunctions array into a string.
-                    # We use comma's for the first few items, and the specified conjunction word between the last two.
-                    combined_name = reduce(
-                        add,
-                        [
-                            str(values[x].value)
-                            + ParametrizedTemplateVO.generate_template_value_separator(
-                                template_name,
-                                parameter_terms,
-                                template_parameters[i],
-                                i,
-                                values,
-                                x,
-                                conjunction,
-                            )
-                            for x in range(len(values) - 1)
-                        ],
-                    ) + str(values[len(values) - 1].value)
-                name = name.replace(
-                    "[" + template_parameters[i] + "]", "[" + combined_name + "]", 1
+        placeholders = find_parameters(
+            template_name, set(placeholder_names).__contains__
+        )
+        name = ""
+        previous_end = 0
+        for i, placeholder in enumerate(placeholders):
+            name += escape_literal_brackets(
+                template_name[previous_end : placeholder.start()]
+            )
+            if parameter_terms is not None and i < len(parameter_terms):
+                combined_name = ParametrizedTemplateVO._combine_parameter_values(
+                    parameter_terms, i, template_name[placeholder.end() :]
                 )
+                name += "[" + escape_literal_brackets(combined_name) + "]"
+            else:
+                name += placeholder.group(0)
+            previous_end = placeholder.end()
+        name += escape_literal_brackets(template_name[previous_end:])
 
+        if parameter_terms is not None:
             # Clean up extra spacing, unneeded brackets, etc.
             name = ParametrizedTemplateVO.clean_instantiation_name(name)
 
+        template_name_plain = strip_html(template_name)
+        if not placeholders or not template_name_plain.startswith(
+            placeholders[0].group(0)
+        ):
+            return name
         return capitalize_first_letter_if_template_parameter(
-            name, strip_html(template_name), parameter_terms
+            name, template_name_plain, parameter_terms
         )
+
+    @staticmethod
+    def _combine_parameter_values(
+        parameter_terms: list[ParameterTermEntryVO],
+        template_index: int,
+        text_after_parameter: str,
+    ) -> str:
+        values = parameter_terms[template_index].parameters
+        conjunction = parameter_terms[template_index].conjunction
+        if len(values) == 0:
+            # If no values are selected, the template will be filled in without a name.
+            return ""
+        if len(values) == 1:
+            # if only one value is present (c.q. no conjunctions) we just use this value.
+            return str(values[0].value)
+        # Use a Python reduce function to combine the values array and the conjunctions array into a string.
+        # We use comma's for the first few items, and the specified conjunction word between the last two.
+        return reduce(
+            add,
+            [
+                str(values[x].value)
+                + ParametrizedTemplateVO.generate_template_value_separator(
+                    text_after_parameter,
+                    parameter_terms,
+                    template_index,
+                    values,
+                    x,
+                    conjunction,
+                )
+                for x in range(len(values) - 1)
+            ],
+        ) + str(values[len(values) - 1].value)
 
     @staticmethod
     def clean_instantiation_name(name):
@@ -189,14 +234,12 @@ class ParametrizedTemplateVO:
         for original, replacement in replacement_rules.items():
             while original in name:
                 name = name.replace(original, replacement)
-        name = name.strip()
-        return name
+        return name.strip()
 
     @staticmethod
     def generate_template_value_separator(
-        template,
+        text_after_parameter,
         parameter_terms,
-        parameter_name,
         template_index,
         values,
         index,
@@ -207,7 +250,6 @@ class ParametrizedTemplateVO:
         # "To investigate [A,B,C] and [D]"
         # instead of:
         # "To investigate [A,B and C] and [D]".
-        text_after_parameter = template.split("[" + parameter_name + "]")[1]
         next_parameter_has_term = (
             template_index < len(parameter_terms) - 1
             and len(parameter_terms[template_index + 1].parameters) > 0
@@ -228,7 +270,9 @@ class ParametrizedTemplateVO:
     @property
     def expanded_template_value(self) -> str:
         return self._create_name_from_template(
-            template_name=self.template_name, parameter_terms=self.parameter_terms
+            template_name=self.template_name,
+            parameter_terms=self.parameter_terms,
+            placeholder_names=self.placeholder_names,
         )
 
     @property
@@ -236,6 +280,7 @@ class ParametrizedTemplateVO:
         name = self._create_name_from_template(
             template_name=self.template_name,
             parameter_terms=self.parameter_terms,
+            placeholder_names=self.placeholder_names,
         )
         return convert_to_plain(name)
 
@@ -402,6 +447,20 @@ class ParametrizedTemplateARBase(LibraryItemAggregateRootBase):
 
     def get_parameters(self) -> list[ParameterTermEntryVO]:
         return self._template.parameter_terms
+
+    def get_parameter_names(self) -> list[str]:
+        """
+        Returns the name of the template parameter at each position of `get_parameters`.
+        """
+        placeholder_names = self._template.placeholder_names
+        return [
+            (
+                placeholder_names[position]
+                if position < len(placeholder_names)
+                else parameter_term.parameter_name
+            )
+            for position, parameter_term in enumerate(self.get_parameters())
+        ]
 
     def get_possible_actions(self) -> Set[ObjectAction]:
         """

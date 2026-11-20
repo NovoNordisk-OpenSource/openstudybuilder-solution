@@ -103,6 +103,7 @@ class CTCodelistTermBaseVO:
 class CTCodelistTermVO(CTCodelistTermBaseVO):
     submission_value: str
     submission_value_test_name: str | None
+    algorithm: str | None
 
     @classmethod
     def from_result_dict(cls, result: dict[str, Any]) -> Self:
@@ -110,6 +111,7 @@ class CTCodelistTermVO(CTCodelistTermBaseVO):
             **cls._common_kwargs_from_result_dict(result),
             submission_value=result["submission_value"],
             submission_value_test_name=result.get("submission_value_test_name"),
+            algorithm=result.get("algorithm"),
         )
 
 
@@ -189,7 +191,7 @@ class CTSimpleCodelistTermVO:
 
     @classmethod
     def from_result_dict(cls, result: dict[str, Any]) -> Self:
-        ct_simple_codelist_term_vo = cls(
+        return cls(
             term_uid=result["term_uid"],
             term_name=result["term_name"],
             submission_value=result["submission_value"],
@@ -202,8 +204,6 @@ class CTSimpleCodelistTermVO:
             date_conflict=result.get("date_conflict", False),
             library_name=result.get("library_name"),
         )
-
-        return ct_simple_codelist_term_vo
 
 
 @dataclass
@@ -219,10 +219,9 @@ class CTSimpleCodelistTermAR:
         cls,
         ct_simple_codelist_term_vo: CTSimpleCodelistTermVO,
     ) -> Self:
-        ct_simple_codelist_term_ar = cls(
+        return cls(
             _ct_simple_codelist_term_vo=ct_simple_codelist_term_vo,
         )
-        return ct_simple_codelist_term_ar
 
     @classmethod
     def from_result_dict(cls, result: dict[str, Any]) -> Self:

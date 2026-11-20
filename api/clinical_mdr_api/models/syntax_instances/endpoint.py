@@ -73,6 +73,7 @@ class Endpoint(BaseModel):
     @classmethod
     def from_endpoint_ar(cls, endpoint_ar: EndpointAR) -> Self:
         parameter_terms: list[MultiTemplateParameterTerm] = []
+        parameter_names = endpoint_ar.get_parameter_names()
         for position, parameter in enumerate(endpoint_ar.get_parameters()):
             terms: list[IndexedTemplateParameterTerm] = []
             for index, parameter_term in enumerate(parameter.parameters):
@@ -87,7 +88,10 @@ class Endpoint(BaseModel):
 
             parameter_terms.append(
                 MultiTemplateParameterTerm(
-                    conjunction=conjunction, position=position + 1, terms=terms
+                    conjunction=conjunction,
+                    position=position + 1,
+                    parameter_name=parameter_names[position],
+                    terms=terms,
                 )
             )
         return cls(

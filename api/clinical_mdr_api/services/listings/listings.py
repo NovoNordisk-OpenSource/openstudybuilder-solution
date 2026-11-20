@@ -193,7 +193,7 @@ class ListingsService:
     ):
         all_items = action()
 
-        header_values = service_level_generic_header_filtering(
+        return service_level_generic_header_filtering(
             items=all_items.items,
             field_name=field_name,
             search_string=search_string,
@@ -201,5 +201,3 @@ class ListingsService:
             filter_operator=filter_operator,
             page_size=page_size,
         )
-
-        return header_values

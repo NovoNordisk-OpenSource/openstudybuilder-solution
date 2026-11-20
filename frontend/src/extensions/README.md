@@ -8,9 +8,11 @@ The extensions system provides:
 - **Dynamic Loading**: Extensions are automatically discovered and loaded at runtime
 - **Route Integration**: Extensions can add new routes to existing sections
 - **Menu Integration**: Extensions can add menu items to the sidebar
+- **In-page Integration**: Extensions can add elements to existing UI, with CRF Export as a reference integration
 - **Localization**: Extensions can provide their own translations
 - **API Integration**: Extensions can define API client methods
 - **Isolated Components**: Each extension has its own views, stores, and routing
+ 
 
 ## Directory Structure
 
@@ -40,6 +42,9 @@ Extensions are automatically discovered and loaded by the core application:
 1. **Routes**: `src/router/index.js` uses `import.meta.glob` to dynamically import all `extensions/*/router/index.js` files
 2. **Translations**: `src/plugins/i18n.js` loads and merges translations from `extensions/*/locales/en/index.js`
 3. **Menu Items**: `src/stores/app.js` loads and merges menu items from `extensions/*/stores/app.js`
+4. **CRF Viewer export actions**: `src/composables/crfExportActions.js` loads `extensions/*/crf-viewer/exportActions.js` for both CRF viewers, `OdmViewer.vue` and `OdmBuildingViewer.vue` (see [CRF Viewer Export Actions](#crf-viewer-export-actions))
+
+All four are optional: an extension that only contributes an export action needs no `router/` or `stores/` folder.
 
 ## Creating a New Extension
 
@@ -61,7 +66,7 @@ Create the necessary subdirectories:
 mkdir -p src/extensions/my-extension/{api,locales/en,router,stores,views}
 ```
 
-### 3. Define Routes (Required)
+### 3. Define Routes (Required for a new page)
 
 Create `router/index.js` to define your extension's routes:
 
@@ -100,7 +105,7 @@ export function addExtensionRoutes(routes) {
 - Use lazy loading with `import()` for components
 - Set appropriate `meta` properties for authentication and permissions
 
-### 4. Add Menu Items (Required)
+### 4. Add Menu Items (Required for a new page)
 
 Create `stores/app.js` to add menu items:
 
@@ -285,6 +290,58 @@ yarn format
 # Lint code
 yarn lint
 ```
+
+## CRF Viewer Export Actions
+
+Both CRF viewers export the previewed CRF as XML, PDF and HTML: **Library → CRF Viewer** from
+its export menu (`OdmViewer.vue`), and the **CRF Builder → CRF Viewer** tab from a row of
+buttons (`OdmBuildingViewer.vue`). An extension can add its own export to both with a
+`crf-viewer/exportActions.js` file that default-exports an array of actions:
+
+```javascript
+import { i18n } from '@/plugins/i18n'
+
+export default [
+  {
+    title: i18n.t('MyExtension.export_label'), // Menu entry text, and button tooltip
+    icon: 'mdi-file-export-outline', // Optional: Material Design Icon
+    featureFlag: 'my_extension', // Optional: show only when feature flag is enabled
+    component: () => import('../components/MyExportDialog.vue'),
+  },
+]
+```
+
+`component` must be a loader function, as in route definitions. Clicking the entry mounts the
+component, and the viewer unmounts it when it emits `close`, so every click starts from a fresh
+state. The component receives a single prop:
+
+| Prop | Content |
+|------|---------|
+| `context` | `{ targetType, targets }`: what the last generated preview shows, which is also what the built-in XML, PDF and HTML exports export. In Library → CRF Viewer, `targetType` is `'form'` and `targets` lists the selected form UIDs. In the CRF Builder, `targetType` is `'study_event'`, `'form'`, `'item_group'` or `'item'`, and `targets` holds one target: its UID, or `uid,version` when a version other than the latest is selected. Both match the `target_type` and `targets` parameters of the ODM XML export endpoint |
+
+Both viewers only offer their exports once a preview has been generated, so `context.targets` is
+never empty. The component renders its own dialog:
+
+```vue
+<template>
+  <v-dialog :model-value="true" max-width="600" @update:model-value="emit('close')">
+    <v-card :title="$t('MyExtension.export_label')">
+      <v-card-text>{{ context.targetType }}: {{ context.targets.join(', ') }}</v-card-text>
+      <v-card-actions>
+        <v-btn @click="emit('close')">{{ $t('_global.close') }}</v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
+</template>
+
+<script setup>
+defineProps({ context: { type: Object, required: true } })
+const emit = defineEmits(['close'])
+</script>
+```
+
+A malformed `exportActions.js` (not an array, or an entry without a `component` loader) is
+skipped with a console error instead of breaking the page.
 
 ## Vuetify Components
 

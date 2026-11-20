@@ -29,6 +29,7 @@
 <script setup>
 import { computed } from 'vue'
 import { sanitizeHTML } from '@/utils/sanitize'
+import templateParameters from '@/utils/templateParameters'
 
 const props = defineProps({
   value: {
@@ -55,6 +56,13 @@ const props = defineProps({
   parameters: {
     type: Array,
     default: () => [],
+  },
+  // Parameter names of the template when name is a template name: only
+  // bracket text matching one of them is highlighted, the rest is literal.
+  // Leave unset for instance names, where every bracket pair is a parameter.
+  parameterNames: {
+    type: Array,
+    default: null,
   },
   editionMode: {
     type: Boolean,
@@ -83,6 +91,9 @@ const computedPostfix = computed(() => {
 })
 
 const nameParts = computed(() => {
+  if (props.parameterNames) {
+    return getTemplateNameParts()
+  }
   const nameArray = []
   let parameterIndex = 0
 
@@ -120,6 +131,24 @@ const nameParts = computed(() => {
   return nameArray
 })
 
+function getTemplateNameParts() {
+  let parameterIndex = 0
+  return templateParameters
+    .splitTemplate(props.name, props.parameterNames)
+    .map((part) => {
+      if (!part.isParameter) {
+        return part
+      }
+      return {
+        isParameter: true,
+        index: parameterIndex++,
+        value: props.showPrefixAndPostfix
+          ? props.prefix + part.value + props.postfix
+          : part.value,
+      }
+    })
+}
+
 function getNamePartClass(namePart) {
   if (!namePart.isParameter) {
     return 'preview-text text-black'
@@ -155,7 +184,7 @@ function getShortVersion() {
   let short = ''
   let length = 0
   while (
-    short.replace(/<\/?[^>]+(>|$)/g, '').length <= props.tooltipLength &&
+    short.replace(/<\/?[^>]+(>|$)/g, '').length < props.tooltipLength &&
     length < long.length
   ) {
     short += long[length]

@@ -139,7 +139,7 @@ class MedicinalProductRepository(ConceptGenericRepository):
         self, input_dict: dict[str, Any]
     ) -> MedicinalProductAR:
         major, minor = input_dict["version"].split(".")
-        ar = MedicinalProductAR.from_repository_values(
+        return MedicinalProductAR.from_repository_values(
             uid=input_dict["uid"],
             concept_vo=MedicinalProductVO.from_repository_values(
                 external_id=input_dict.get("external_id"),
@@ -233,7 +233,6 @@ class MedicinalProductRepository(ConceptGenericRepository):
                 minor_version=int(minor),
             ),
         )
-        return ar
 
     def _create_aggregate_root_instance_from_version_root_relationship_and_value(
         self,
@@ -287,7 +286,7 @@ class MedicinalProductRepository(ConceptGenericRepository):
             name=value.is_compound.get().has_latest_value.get().name,
         )
 
-        ar = MedicinalProductAR.from_repository_values(
+        return MedicinalProductAR.from_repository_values(
             uid=root.uid,
             concept_vo=MedicinalProductVO.from_repository_values(
                 external_id=value.external_id,
@@ -316,16 +315,20 @@ class MedicinalProductRepository(ConceptGenericRepository):
             ),
             item_metadata=self._library_item_metadata_vo_from_relation(relationship),
         )
-        return ar
 
     def specific_alias_clause(self, **kwargs) -> str:
+        # Each dose value also carries a `label` such as "10 mg", which is not part
+        # of the response model. It exists so that `dose_values.label` can be used
+        # as a header and filter key, matching a dose by value and unit together.
+        # Whole numbers are rendered without a trailing ".0", as the UI shows them.
         return """
             WITH *,
                 head([(concept_value)-[:IS_COMPOUND]->(compound:CompoundRoot)-[:LATEST]->(compound_val:CompoundValue) | {uid: compound.uid, name: compound_val.name}]) AS compound,
                 [(concept_value)-[:HAS_PHARMACEUTICAL_PRODUCT]->(pp:PharmaceuticalProductRoot)-[:LATEST]->(pp_val:PharmaceuticalProductValue) 
                     | {uid: pp.uid, external_id: pp_val.external_id, version: pp_val.version}] AS pharmaceutical_products,
                 [(concept_value)-[:HAS_DOSE_VALUE]->(dv:NumericValueWithUnitRoot)-[:LATEST]->(dv_val:NumericValueWithUnitValue)-[:HAS_UNIT_DEFINITION]->(unit:UnitDefinitionRoot)-[:LATEST]->(unit_val:UnitDefinitionValue)
-                    | {uid: dv.uid, value: dv_val.value, unit_definition_uid: unit.uid, unit_label: unit_val.name}] AS dose_values,
+                    | {uid: dv.uid, value: dv_val.value, unit_definition_uid: unit.uid, unit_label: unit_val.name,
+                       label: CASE WHEN dv_val.value = toInteger(dv_val.value) THEN toString(toInteger(dv_val.value)) ELSE toString(dv_val.value) END + ' ' + unit_val.name}] AS dose_values,
                 [(concept_value)-[:HAS_DOSE_FREQUENCY]->(df_ctx:CTTermContext)-[:HAS_SELECTED_TERM]->(df:CTTermRoot)-[:HAS_NAME_ROOT]->(:CTTermNameRoot)-[:LATEST]->(df_name_val:CTTermNameValue)
                     | {uid: df.uid, name: df_name_val.name}] AS dose_frequencies,
                 head([(concept_value)-[:HAS_DISPENSER]->(disp_ctx:CTTermContext)-[:HAS_SELECTED_TERM]->(disp:CTTermRoot)-[:HAS_NAME_ROOT]->(:CTTermNameRoot)-[:LATEST]->(disp_name_val:CTTermNameValue)

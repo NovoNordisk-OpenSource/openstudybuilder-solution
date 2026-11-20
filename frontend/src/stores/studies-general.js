@@ -9,6 +9,9 @@ export const useStudiesGeneralStore = defineStore('studiesGeneral', {
   state: () => ({
     selectedStudy: null,
     selectedStudyVersion: null,
+    // Set by the MMA migration on the study itself. Fetched fresh rather than
+    // read off selectedStudy, which may be a stale copy from localStorage.
+    migratedStudy: false,
     studyPreferredTimeUnit: null,
     soaPreferredTimeUnit: null,
     soaPreferences: null,
@@ -29,6 +32,8 @@ export const useStudiesGeneralStore = defineStore('studiesGeneral', {
     endpointSubLevels: [],
     allUnits: [],
     developmentStageCodes: [],
+    ageAtBaselineRuleCodes: [],
+    ageGroupRuleCodes: [],
   }),
 
   getters: {
@@ -136,6 +141,9 @@ export const useStudiesGeneralStore = defineStore('studiesGeneral', {
     },
     async selectStudy(studyObj, forceReload) {
       this.selectedStudy = studyObj
+      // Closed until the new study's marker arrives, so a failed request below
+      // cannot leave the previous study's value in place.
+      this.migratedStudy = false
       if (!studyObj.current_metadata) {
         this.selectedStudyVersion = studyObj.version_number
       } else {
@@ -150,6 +158,21 @@ export const useStudiesGeneralStore = defineStore('studiesGeneral', {
       this.soaPreferredTimeUnit = resp.data
       resp = await study.getSoAPreferences(studyObj.uid)
       this.soaPreferences = resp.data
+      // Swallow the failure: this only gates optional legacy fields, and a
+      // study must still be selectable if the call fails.
+      const migrated = await study
+        .getStudy(studyObj.uid, true)
+        .then((r) =>
+          Boolean(
+            r.data.current_metadata.identification_metadata
+              .migrated_study_indicator
+          )
+        )
+        .catch(() => false)
+      // Another study may have been selected while this was in flight.
+      if (this.selectedStudy?.uid === studyObj.uid) {
+        this.migratedStudy = migrated
+      }
       if (forceReload) {
         document.location.reload()
       }
@@ -261,6 +284,29 @@ export const useStudiesGeneralStore = defineStore('studiesGeneral', {
       terms.getTermsByCodelist('developmentStageCodes').then((resp) => {
         this.developmentStageCodes = resp.data.items
       })
+    },
+    fetchAgeAtBaselineRuleCodes() {
+      terms
+        .getTermsByCodelist('ageAtBaselineRuleCodes', {
+          filters: { name_status: { v: ['Final'] } },
+        })
+        .then((resp) => {
+          // getTermsByCodelist sorts by name (Rule 1, 10, 11...), rules must follow codelist order
+          this.ageAtBaselineRuleCodes = resp.data.items.sort(
+            (a, b) => a.order - b.order
+          )
+        })
+    },
+    fetchAgeGroupRuleCodes() {
+      terms
+        .getTermsByCodelist('ageGroupRuleCodes', {
+          filters: { name_status: { v: ['Final'] } },
+        })
+        .then((resp) => {
+          this.ageGroupRuleCodes = resp.data.items.sort(
+            (a, b) => a.order - b.order
+          )
+        })
     },
     fetchObjectiveLevels() {
       terms.getTermsByCodelist('objectiveLevels').then((resp) => {

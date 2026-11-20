@@ -2,8 +2,13 @@ import os
 
 from neomodel import config as neomodel_config
 
-from clinical_mdr_api.models.system import SystemInformation
+from clinical_mdr_api.models.system import (
+    StudyNumberRegex,
+    SystemInformation,
+    SystemSettings,
+)
 from clinical_mdr_api.repositories import system as repository
+from common.config import settings
 
 
 def get_system_information():
@@ -17,6 +22,14 @@ def get_system_information():
         build_id=get_build_id(),
         commit_id=os.environ.get("BUILD_COMMIT"),
         branch_name=os.environ.get("BUILD_BRANCH"),
+    )
+
+
+def get_system_settings() -> SystemSettings:
+    return SystemSettings(
+        studies_study_number_regex=StudyNumberRegex(
+            **settings.studies_study_number_regex
+        )
     )
 
 

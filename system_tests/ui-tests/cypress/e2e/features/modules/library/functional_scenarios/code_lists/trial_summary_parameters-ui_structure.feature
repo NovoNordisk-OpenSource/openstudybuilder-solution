@@ -56,8 +56,9 @@ Feature: Library - Code Lists - Trial Summary Parameters - UI Structure
         Then The page header shows the CT term name with 'Library' and 'Concept ID'
 
     Scenario: [Overview][Term sponsor values][Visibility] User must be able to see the Term sponsor values section fields
-        Given The Trial Summary Parameter details page is opened
-        Then The 'Term sponsor values' section is visible with the following fields
+        Given The '/library/trial_summary_parameters' page is opened
+        And The 'View or edit details' option is clicked from the three dot menu list
+        Then The 'term-sponsor' section is visible with the following fields
             | field              |
             | Sponsor name       |
             | Sentence case name |

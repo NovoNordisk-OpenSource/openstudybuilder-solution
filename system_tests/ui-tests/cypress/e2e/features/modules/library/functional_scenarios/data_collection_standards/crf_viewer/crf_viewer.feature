@@ -24,16 +24,3 @@ Feature: Library - Data Collection Standards - CRF Viewer
     And User waits for ODM XMLS document generation request
     Then The iframe containing generated data is displayed
    
-@manual_test
-  Scenario: Verifying Falcon downloadable option in the Stylesheet dropdown works as expected in the CRF Viewer menu
-    Given The '/library/crf-viewer/odm-viewer' page is opened
-    When I select more values from the CRF collection dropdown
-    And I select more values from the CRF Forms dropdown
-    And I select 'Downloadable Falcon (Word)' in the Stylesheet dropdown list
-    And User clicks the GENERATE button
-    Then The iframe containing generated data is displayed
-    When I click the 'Export data in HTML format' option
-    Then The file should be downloaded successfully on the local machine
-    When I open the downloaded file in Word format
-    And Compare the downloaded file with the CRF view page
-    Then The content and the format in both places should look exactly the same

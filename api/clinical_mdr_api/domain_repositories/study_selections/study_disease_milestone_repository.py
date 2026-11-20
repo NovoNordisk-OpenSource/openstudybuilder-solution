@@ -129,7 +129,7 @@ class StudyDiseaseMilestoneRepository:
     def find_all_disease_milestones_by_study(
         self, study_uid: str
     ) -> list[StudyDiseaseMilestoneOGM]:
-        all_disease_milestones = [
+        return [
             StudyDiseaseMilestoneOGM.model_validate(sas_node)
             for sas_node in ListDistinct(
                 StudyDiseaseMilestone.nodes.traverse(
@@ -142,7 +142,6 @@ class StudyDiseaseMilestoneRepository:
                 .resolve_subgraph()
             ).distinct()
         ]
-        return all_disease_milestones
 
     def find_by_uid(self, uid: str) -> StudyDiseaseMilestoneVO:
         disease_milestone_node = ListDistinct(
@@ -329,7 +328,7 @@ class StudyDiseaseMilestoneRepository:
             # does not support 'self'...)
             source = StudyDiseaseMilestone.__name__.lower()
             prop = field_path
-        values = (
+        return (
             nodeset.filter(*q_filters)[:page_size]
             .intermediate_transform(
                 {
@@ -344,4 +343,3 @@ class StudyDiseaseMilestoneRepository:
             )
             .all()
         )
-        return values

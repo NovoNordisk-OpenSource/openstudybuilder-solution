@@ -122,7 +122,7 @@ class ActivityGrouping(ClinicalMdrNodeWithUID):
 
 
 class ActivityValue(ConceptValue):
-    synonyms = ArrayProperty(StringProperty())  # type: ignore
+    synonyms = ArrayProperty(StringProperty())
     is_data_collected = BooleanProperty()
     is_multiple_selection_allowed = BooleanProperty(default=True)
     has_latest_value = RelationshipFrom("ActivityRoot", "LATEST", model=ClinicalMdrRel)

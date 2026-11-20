@@ -96,7 +96,7 @@ def test_data(api_client):
 
     visit_to_create = generate_default_input_data_for_visit().copy()
     study_visits = []
-    for _idx in range(0, total_study_visits_version_1):
+    for _idx in range(total_study_visits_version_1):
         visit_to_create.update({"time_value": _idx})
         study_visits.append(
             TestUtils.create_study_visit(  # type: ignore[arg-type]
@@ -147,7 +147,7 @@ def test_data(api_client):
 
     study_activities = []
 
-    for idx in range(0, total_study_activities_version_1):
+    for idx in range(total_study_activities_version_1):
         _add_study_activity(
             study_uid=studies[0].uid,
             idx=idx,
@@ -157,7 +157,7 @@ def test_data(api_client):
             activity_instance_class_uid=activity_instance_class.uid,
         )
 
-    for idx in range(0, total_study_operational_soa_version_1):
+    for idx in range(total_study_operational_soa_version_1):
         TestUtils.create_study_activity_schedule(
             study_uid=studies[0].uid,
             study_visit_uid=study_visits[idx].uid,

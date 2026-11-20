@@ -23,7 +23,7 @@ from common.utils import sanitize_for_log
 log = logging.getLogger(__name__)
 
 
-class OdmVendorElementService(OdmGenericService[OdmVendorElementAR]):
+class OdmVendorElementService(OdmGenericService[OdmVendorElementAR, OdmVendorElement]):
     aggregate_class = OdmVendorElementAR
     version_class = OdmVendorElementVersion
     repository_interface = VendorElementRepository

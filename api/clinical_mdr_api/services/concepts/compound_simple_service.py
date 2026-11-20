@@ -13,7 +13,7 @@ from clinical_mdr_api.services.concepts.concept_generic_service import (
 )
 
 
-class CompoundSimpleService(ConceptGenericService[CompoundAR]):
+class CompoundSimpleService(ConceptGenericService[CompoundAR, SimpleCompound]):
     aggregate_class = CompoundAR
     version_class = CompoundVersion
     repository_interface = CompoundRepository

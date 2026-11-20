@@ -47,7 +47,7 @@
         </v-tooltip>
       </template>
       <template #[`item.datatype`]="{ item }">
-        {{ item.datatype.submission_value }}
+        {{ item.datatype?.submission_value }}
       </template>
       <template #[`item.start_date`]="{ item }">
         <v-tooltip location="top">
@@ -334,6 +334,7 @@ const actions = computed(() => [
     icon: 'mdi-link',
     iconColor: 'primary',
     condition: (item) =>
+      item.datatype &&
       item.possible_actions.find((action) => action === 'edit'),
     accessRole: roles.LIBRARY_WRITE,
     click: manageActivityInstancesLinks,

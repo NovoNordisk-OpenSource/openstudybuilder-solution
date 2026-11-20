@@ -42,7 +42,7 @@ class MockObject:
 def create_random_time_point_vo(
     numeric_value, unit_definition, time_reference
 ) -> TimePointVO:
-    random_time_point_vo = TimePointVO.from_input_values(
+    return TimePointVO.from_input_values(
         name_sentence_case=random_str(),
         definition=random_str(),
         abbreviation=random_str(),
@@ -54,7 +54,6 @@ def create_random_time_point_vo(
         find_unit_definition_by_uid=lambda _: unit_definition,
         find_time_reference_by_uid=lambda _: time_reference,
     )
-    return random_time_point_vo
 
 
 def create_random_time_point_ar(
@@ -65,7 +64,7 @@ def create_random_time_point_ar(
     library: str = "Library",
     is_editable: bool = True,
 ) -> TimePointAR:
-    random_time_point_ar = TimePointAR.from_input_values(
+    return TimePointAR.from_input_values(
         generate_uid_callback=generate_uid_callback,
         simple_concept_vo=create_random_time_point_vo(
             numeric_value=numeric_value,
@@ -77,8 +76,6 @@ def create_random_time_point_ar(
         ),
         author_id=AUTHOR_ID,
     )
-
-    return random_time_point_ar
 
 
 class TestTimePoint(unittest.TestCase):

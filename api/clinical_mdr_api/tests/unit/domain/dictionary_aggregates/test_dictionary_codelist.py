@@ -13,13 +13,12 @@ from clinical_mdr_api.tests.unit.domain.utils import AUTHOR_ID, random_str
 
 
 def create_random_dictionary_codelist_vo() -> DictionaryCodelistVO:
-    random_dictionary_codelist_vo = DictionaryCodelistVO.from_repository_values(
+    return DictionaryCodelistVO.from_repository_values(
         name=random_str(),
         is_template_parameter=False,
         current_terms=[],
         previous_terms=[],
     )
-    return random_dictionary_codelist_vo
 
 
 def create_random_dictionary_codelist_ar(
@@ -27,7 +26,7 @@ def create_random_dictionary_codelist_ar(
     library: str = "Library",
     is_editable: bool = True,
 ) -> DictionaryCodelistAR:
-    random_dictionary_codelist_ar = DictionaryCodelistAR.from_input_values(
+    return DictionaryCodelistAR.from_input_values(
         generate_uid_callback=generate_uid_callback,
         dictionary_codelist_vo=create_random_dictionary_codelist_vo(),
         library=LibraryVO.from_repository_values(
@@ -35,7 +34,6 @@ def create_random_dictionary_codelist_ar(
         ),
         author_id=AUTHOR_ID,
     )
-    return random_dictionary_codelist_ar
 
 
 class TestDictionaryCodelist(unittest.TestCase):

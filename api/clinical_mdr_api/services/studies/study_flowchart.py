@@ -1,17 +1,23 @@
+import io
 import logging
 from collections import defaultdict
 from collections.abc import Iterable, Mapping, Sequence
-from concurrent.futures import ThreadPoolExecutor
+from copy import deepcopy
 from datetime import datetime
 from typing import Any
 
 from docx.enum.style import WD_STYLE_TYPE
 from neomodel import db
-from opencensus.common.runtime_context import RuntimeContext
 from openpyxl.workbook import Workbook
 
+from clinical_mdr_api.domain_repositories.study_definitions.study_definition_repository_impl import (
+    StudyDefinitionRepositoryImpl,
+)
 from clinical_mdr_api.domain_repositories.study_selections.study_soa_repository import (
+    SNAPSHOT_LAYOUTS,
     SoALayout,
+    SoASnapshot,
+    SoASnapshotFormat,
     StudySoARepository,
 )
 from clinical_mdr_api.domains.study_definition_aggregates.study_metadata import (
@@ -29,7 +35,6 @@ from clinical_mdr_api.models.study_selections.study_selection import (
     ReferencedItem,
     SimpleStudySoAGroup,
     SoACellReference,
-    SoAFootnoteReference,
     StudyActivityGroup,
     StudyActivitySchedule,
     StudyActivitySubGroup,
@@ -61,7 +66,6 @@ from clinical_mdr_api.services.studies.study_activity_subgroup import (
 from clinical_mdr_api.services.studies.study_soa_footnote import StudySoAFootnoteService
 from clinical_mdr_api.services.studies.study_soa_group import StudySoAGroupService
 from clinical_mdr_api.services.studies.study_visit import StudyVisitService
-from clinical_mdr_api.services.utils.docx_builder import DocxBuilder
 from clinical_mdr_api.services.utils.table_f import (
     Ref,
     SimpleFootnote,
@@ -75,6 +79,7 @@ from clinical_mdr_api.services.utils.table_f import (
 )
 from clinical_mdr_api.utils import enumerate_letters
 from common.auth.user import user
+from common.concurrency import RequestContextThreadPoolExecutor
 from common.config import settings
 from common.exceptions import (
     BusinessLogicException,
@@ -86,6 +91,7 @@ from common.utils import VisitClass, insert_space_after_commas
 
 NUM_OPERATIONAL_CODE_COLS = 2
 SOA_CHECK_MARK = "X"
+NUM_VISIT_HEADER_ROWS = 3
 LAB_TABLE_INCLUDE_ACTIVITY_GROUP = "Laboratory Assessments"
 
 # Strings prepared for localization
@@ -101,6 +107,7 @@ _T = {
     "study_week": "Study week",
     "study_day": "Study day",
     "visit_window": "Visit window ({unit_name})",
+    "visit_window_mixed_units": "Visit window",
     "protocol_flowchart": "Protocol Flowchart",
     "protocol_lab_table": "Protocol - Lab table",
     "operational_soa": "Operational SoA",
@@ -156,7 +163,7 @@ OPERATIONAL_DOCX_STYLES = {
     "activityInstance": ("Table cell", WD_STYLE_TYPE.PARAGRAPH),
     "cell": ("Table cell", WD_STYLE_TYPE.PARAGRAPH),
     "activitySchedule": ("Table cell", WD_STYLE_TYPE.PARAGRAPH),
-    None: ("Table cell", WD_STYLE_TYPE.PARAGRAPH),
+    "": ("Table cell", WD_STYLE_TYPE.PARAGRAPH),
     "footnote": ("Table cell", WD_STYLE_TYPE.PARAGRAPH),
 }
 
@@ -181,7 +188,7 @@ OPERATIONAL_XLSX_STYLES = {
     "activityPlaceholderSubmitted": "Heading 4",
     "topicCode": "Heading 4",
     "adamCode": "Heading 4",
-    None: "Normal",
+    "": "Normal",
     "activitySchedule": "Normal",
 }
 
@@ -427,14 +434,43 @@ class StudyFlowchartService:
 
         return result
 
+    @staticmethod
+    def _cell_ref_key(ref: Ref, cell: TableCell) -> tuple[str, bool]:
+        """Key matching a cell reference to footnote referenced items
+
+        Cells propagated from hidden rows carry the propagated flag; the item's own cell does not.
+        Footnote referenced items expand to the cell keys they may be shown on, see
+        _referenced_item_cell_keys().
+        """
+        return ref.uid, bool(cell.propagated)
+
+    @staticmethod
+    def _referenced_item_key(referenced_item: ReferencedItem) -> tuple[str, bool]:
+        """Key matching a footnote referenced item to cell references, see _cell_ref_key()"""
+        return referenced_item.item_uid, referenced_item.via_propagated_cell
+
+    @classmethod
+    def _referenced_item_cell_keys(
+        cls, referenced_item: ReferencedItem
+    ) -> list[tuple[str, bool]]:
+        """Cell reference keys a footnote referenced item can be shown on, see _cell_ref_key().
+
+        A footnote attached via a propagated (virtual) checkmark is shown both on the propagated
+        cell and on the referenced item's own cell, so it also matches the item's own cell key.
+        """
+        keys = [cls._referenced_item_key(referenced_item)]
+        if referenced_item.via_propagated_cell:
+            keys.append((referenced_item.item_uid, False))
+        return keys
+
     @classmethod
     @trace_calls
     def _mk_simple_footnotes(
         cls,
         footnotes: Sequence[StudySoAFootnote],
-    ) -> tuple[dict[str, list[str]], dict[str, Footnote]]:
-        # mapping of referenced item uid to list of footnote symbols (to display in table cell)
-        footnote_symbols_by_ref_uid: dict[str, list[str]] = {}
+    ) -> tuple[dict[tuple[str, bool], list[str]], dict[str, Footnote]]:
+        # mapping of referenced item key to list of footnote symbols (to display in table cell)
+        footnote_symbols_by_ref_key: dict[tuple[str, bool], list[str]] = {}
 
         # mapping of footnote symbols to SimpleFootnote model to print footnotes at end of document
         simple_footnotes_by_symbol: dict[str, Footnote] = {}
@@ -442,10 +478,12 @@ class StudyFlowchartService:
             simple_footnotes_by_symbol[symbol] = cls._to_simple_footnote(soa_footnote)
 
             for ref in soa_footnote.referenced_items:
-                footnote_symbols_by_ref_uid.setdefault(ref.item_uid, []).append(symbol)
+                footnote_symbols_by_ref_key.setdefault(
+                    cls._referenced_item_key(ref), []
+                ).append(symbol)
 
         return (
-            footnote_symbols_by_ref_uid,
+            footnote_symbols_by_ref_key,
             simple_footnotes_by_symbol,
         )
 
@@ -593,8 +631,7 @@ class StudyFlowchartService:
                                 (
                                     (study_selection_activity.study_activity_uid or ""),
                                     visit.uid,
-                                ),
-                                None,
+                                )
                             )
                         )
 
@@ -621,32 +658,199 @@ class StudyFlowchartService:
     ) -> TableWithFootnotes:
         """Returns internal TableWithFootnotes representation of SoA, either from snapshot or freshly built"""
 
-        if study_value_version and layout == SoALayout.PROTOCOL and not force_build:
-            # Return protocol SoA from snapshot for a locked study version
-            table = self.load_soa_snapshot(
+        if layout == SoALayout.PROTOCOL_LAB_TABLE:
+            return self.get_flowchart_table_lab_table(
+                study_uid=study_uid,
+                study_value_version=study_value_version,
+                time_unit=time_unit,
+                force_build=force_build,
+            )
+
+        if not force_build:
+            # Return protocol SoA from snapshot for a locked or released study version
+            table = self._load_soa_snapshot_table(
                 study_uid=study_uid,
                 study_value_version=study_value_version,
                 layout=layout,
                 time_unit=time_unit,
             )
+            if table is not None:
+                return table
 
+        # Build SoA (of the latest draft version or detailed and operational SoA of locked versions too)
+        table = self.build_flowchart_table(
+            study_uid=study_uid,
+            study_value_version=study_value_version,
+            layout=layout,
+            time_unit=time_unit,
+        )
+
+        if layout == SoALayout.PROTOCOL:
+            # propagate checkmarks from hidden rows for protocol layout
+            self.propagate_hidden_rows(table.rows)
+
+            # remove all hidden rows (activity visibility flags apply only to PROTOCOL)
+            self.remove_hidden_rows(table)
         else:
-            # Build SoA (of the latest draft version or detailed and operational SoA of locked versions too)
-            table = self.build_flowchart_table(
-                study_uid=study_uid,
-                study_value_version=study_value_version,
-                layout=layout,
-                time_unit=time_unit,
-            )
-
-            if layout == SoALayout.PROTOCOL:
-                # propagate checkmarks from hidden rows for protocol layout
-                self.propagate_hidden_rows(table.rows)
-
-                # remove hidden rows
-                self.remove_hidden_rows(table)
+            # for other layouts activity rows are always shown; only remove hidden
+            # header rows (e.g. epoch row when show_epochs=False)
+            self.remove_hidden_header_rows(table)
 
         return table
+
+    @trace_calls
+    def _load_soa_snapshot_table(
+        self,
+        study_uid: str,
+        study_value_version: str | None,
+        layout: SoALayout,
+        time_unit: str | None = None,
+    ) -> TableWithFootnotes | None:
+        """Returns the table of the saved SoA snapshot, converted to the requested time unit.
+
+        Returns None when the SoA is not frozen and has to be built, see `_load_soa_snapshot`.
+        """
+
+        snapshot = self._load_soa_snapshot(
+            study_uid=study_uid,
+            study_value_version=study_value_version,
+            layout=layout,
+            snapshot_format=SoASnapshotFormat.JSON,
+        )
+        if snapshot is None:
+            return None
+
+        snapshot_json, snapshot_time_unit = snapshot
+        table = TableWithFootnotes.model_validate_json(snapshot_json)
+        if time_unit and time_unit != snapshot_time_unit:
+            self._convert_snapshot_time_unit(
+                table,
+                study_uid=study_uid,
+                study_value_version=study_value_version,
+                time_unit=time_unit,
+            )
+        return table
+
+    @trace_calls
+    def _load_soa_snapshot(
+        self,
+        study_uid: str,
+        study_value_version: str | None,
+        layout: SoALayout,
+        snapshot_format: SoASnapshotFormat,
+        time_unit: str | None = None,
+    ) -> tuple[str | bytes | None, str | None] | None:
+        """Returns a rendering of the saved SoA snapshot of a locked or released study version, with its time unit.
+
+        When `time_unit` is given and differs from the one of the snapshot, the rendering is returned as None,
+        without being read from the db.
+
+        Returns None when the SoA is not frozen and has to be built: for the latest draft version, for layouts
+        other than protocol and protocol lab table, and for the protocol lab table of a study version that was
+        locked or released before its snapshot was introduced.
+        Raises NotFoundException when the protocol SoA of a study version has no SoA snapshot.
+        """
+
+        if not study_value_version or layout not in SNAPSHOT_LAYOUTS:
+            return None
+
+        snapshot = self.repository.load_snapshot(
+            study_uid=study_uid,
+            study_value_version=study_value_version,
+            snapshot_format=snapshot_format,
+            layout=layout,
+            time_unit=time_unit,
+        )
+
+        if layout == SoALayout.PROTOCOL_LAB_TABLE and snapshot is None:
+            return None
+
+        NotFoundException.raise_if(
+            snapshot is None,
+            msg=f"No SoA snapshot found for Study with uid '{study_uid}' and version '{study_value_version}'",
+        )
+
+        return snapshot
+
+    @trace_calls
+    def _load_soa_snapshot_format(
+        self,
+        study_uid: str,
+        study_value_version: str | None,
+        layout: SoALayout,
+        snapshot_format: SoASnapshotFormat,
+        time_unit: str | None = None,
+    ) -> str | bytes | None:
+        """Returns a ready-made rendering of the saved SoA snapshot, if it was rendered in the requested time unit.
+
+        Returns None when the SoA has to be built, see `_load_soa_snapshot`, or when the requested
+        time unit differs from the one the snapshot was rendered with: the caller then has to render
+        the snapshot table, converted by `get_flowchart_table`.
+        """
+
+        snapshot = self._load_soa_snapshot(
+            study_uid=study_uid,
+            study_value_version=study_value_version,
+            layout=layout,
+            snapshot_format=snapshot_format,
+            time_unit=time_unit,
+        )
+        if snapshot is None:
+            return None
+
+        content, _ = snapshot
+        return content
+
+    @trace_calls
+    def _convert_snapshot_time_unit(
+        self,
+        table: TableWithFootnotes,
+        study_uid: str,
+        study_value_version: str,
+        time_unit: str,
+    ) -> None:
+        """Modifies a snapshot table in place to show visit timing in the requested time unit.
+
+        Only the visit timing header row depends on the time unit, everything else is kept as frozen.
+        The visits are looked up in the same study version, as the visit header cells reference them.
+        """
+
+        self._validate_parameters(
+            study_uid, study_value_version=study_value_version, time_unit=time_unit
+        )
+
+        # without visit columns (lab table not showing all visits) there is no visit timing to convert
+        if table.num_header_rows < NUM_VISIT_HEADER_ROWS:
+            return
+
+        # the last 3 header rows are visit names, visit timing and visit window
+        header_rows = table.rows[: table.num_header_rows]
+        visits_row, timing_row = header_rows[-3], header_rows[-2]
+
+        soa_preferences = self._get_soa_preferences(
+            study_uid, study_value_version=study_value_version
+        )
+        visits_by_uid = self._map_by_uid(
+            self._get_study_visits(study_uid, study_value_version=study_value_version)
+        )
+        visit_timing_prop = self._get_visit_timing_property(time_unit, soa_preferences)
+
+        timing_label_key = "study_day" if time_unit == "day" else "study_week"
+        timing_row.cells[0].text = _T(timing_label_key, timing_label_key)
+
+        for visit_cell, timing_cell in zip(
+            visits_row.cells[table.num_header_cols :],
+            timing_row.cells[table.num_header_cols :],
+        ):
+            visits_in_group = [
+                visits_by_uid[ref.uid]
+                for ref in visit_cell.refs
+                if ref.uid in visits_by_uid
+            ]
+            if visits_in_group:
+                timing_cell.text = self._get_visit_timing(
+                    visits_in_group, visit_timing_prop
+                )
 
     @trace_calls
     def get_flowchart_table_lab_table(
@@ -654,9 +858,37 @@ class StudyFlowchartService:
         study_uid: str,
         study_value_version: str | None,
         time_unit: str | None = None,
+        force_build: bool = False,
+    ) -> TableWithFootnotes:
+        """Returns internal TableWithFootnotes representation of Protocol Lab table SoA,
+        either from snapshot or freshly built"""
+
+        if not force_build:
+            # Return Lab table SoA from snapshot for a locked or released study version
+            table = self._load_soa_snapshot_table(
+                study_uid=study_uid,
+                study_value_version=study_value_version,
+                layout=SoALayout.PROTOCOL_LAB_TABLE,
+                time_unit=time_unit,
+            )
+            if table is not None:
+                return table
+
+        return self.build_flowchart_table_lab_table(
+            study_uid=study_uid,
+            study_value_version=study_value_version,
+            time_unit=time_unit,
+        )
+
+    @trace_calls
+    def build_flowchart_table_lab_table(
+        self,
+        study_uid: str,
+        study_value_version: str | None,
+        time_unit: str | None = None,
     ) -> TableWithFootnotes:
         """
-        Returns internal TableWithFootnotes representation of Protocol Lab table SoA.
+        Builds internal TableWithFootnotes representation of Protocol Lab table SoA.
 
         This table includes:
         - An additional first column displaying activity subgroup names
@@ -681,37 +913,35 @@ class StudyFlowchartService:
         )
 
         # Fetch database objects in parallel
-        with ThreadPoolExecutor() as executor:
+        with RequestContextThreadPoolExecutor() as executor:
             soa_preferences_future = executor.submit(
-                RuntimeContext.with_current_context(self._get_soa_preferences),
+                self._get_soa_preferences,
                 study_uid,
                 study_value_version=study_value_version,
             )
 
             activities_future = executor.submit(
-                RuntimeContext.with_current_context(self.fetch_study_activities),
+                self.fetch_study_activities,
                 study_uid,
                 study_value_version=study_value_version,
             )
 
             activity_schedules_future = executor.submit(
-                RuntimeContext.with_current_context(self._get_study_activity_schedules),
+                self._get_study_activity_schedules,
                 study_uid,
                 study_value_version=study_value_version,
                 operational=False,
             )
 
             visits_future = executor.submit(
-                RuntimeContext.with_current_context(
-                    self._get_study_visits_dict_filtered
-                ),
+                self._get_study_visits_dict_filtered,
                 study_uid,
                 study_value_version,
                 SoALayout.PROTOCOL_LAB_TABLE,
             )
 
             footnotes_future = executor.submit(
-                RuntimeContext.with_current_context(self._get_study_footnotes),
+                self._get_study_footnotes,
                 study_uid,
                 study_value_version=study_value_version,
             )
@@ -917,33 +1147,29 @@ class StudyFlowchartService:
         )
 
         # Fetch database objects in parallel
-        with ThreadPoolExecutor() as executor:
+        with RequestContextThreadPoolExecutor() as executor:
             soa_preferences_future = executor.submit(
-                RuntimeContext.with_current_context(self._get_soa_preferences),
+                self._get_soa_preferences,
                 study_uid,
                 study_value_version=study_value_version,
             )
 
             selection_activities_future = executor.submit(
-                RuntimeContext.with_current_context(
-                    self._get_study_selection_activities_sorted
-                ),
+                self._get_study_selection_activities_sorted,
                 study_uid=study_uid,
                 study_value_version=study_value_version,
                 layout=layout,
             )
 
             activity_schedules_future = executor.submit(
-                RuntimeContext.with_current_context(self._get_study_activity_schedules),
+                self._get_study_activity_schedules,
                 study_uid,
                 study_value_version=study_value_version,
                 operational=(layout == SoALayout.OPERATIONAL),
             )
 
             visits_future = executor.submit(
-                RuntimeContext.with_current_context(
-                    self._get_study_visits_dict_filtered
-                ),
+                self._get_study_visits_dict_filtered,
                 study_uid,
                 study_value_version,
                 layout,
@@ -951,7 +1177,7 @@ class StudyFlowchartService:
 
             if layout != SoALayout.OPERATIONAL:
                 footnotes_future = executor.submit(
-                    RuntimeContext.with_current_context(self._get_study_footnotes),
+                    self._get_study_footnotes,
                     study_uid,
                     study_value_version=study_value_version,
                 )
@@ -992,6 +1218,11 @@ class StudyFlowchartService:
             num_header_cols=1,
             title=_T("protocol_flowchart"),
         )
+
+        if layout == SoALayout.PROTOCOL:
+            # propagate checkmarks from hidden rows for protocol layout,
+            # before adding footnotes as footnotes can be attached to propagated checkmarks
+            self.propagate_hidden_rows(table.rows, propagate_refs=True)
 
         if layout != SoALayout.OPERATIONAL:
             footnotes: list[StudySoAFootnote] = footnotes_future.result()
@@ -1040,7 +1271,7 @@ class StudyFlowchartService:
             SoALayout.DETAILED,
             SoALayout.OPERATIONAL,
         )
-        visits = {
+        return {
             visit.uid: visit
             for visit in visits
             if (
@@ -1063,8 +1294,6 @@ class StudyFlowchartService:
             )
         }
 
-        return visits
-
     @trace_calls
     def get_study_flowchart_html(
         self,
@@ -1078,12 +1307,37 @@ class StudyFlowchartService:
         include_uids: bool = False,
     ) -> str:
         if layout == SoALayout.PROTOCOL_LAB_TABLE:
+            # UIDs need a re-rendering, still from the snapshot table for a locked or released version
+            if not include_uids:
+                snapshot_html = self._load_soa_snapshot_format(
+                    study_uid=study_uid,
+                    study_value_version=study_value_version,
+                    layout=layout,
+                    snapshot_format=SoASnapshotFormat.HTML,
+                    time_unit=time_unit,
+                )
+                if snapshot_html is not None:
+                    return snapshot_html
+
             table = self.get_flowchart_table_lab_table(
                 study_uid=study_uid,
                 study_value_version=study_value_version,
                 time_unit=time_unit,
             )
-            return tables_to_html([table], include_uids=include_uids)
+            return self._lab_table_to_html(table, include_uids=include_uids)
+
+        # Debugging and uids need a re-rendering, still from the snapshot table for a locked or released version
+        if not (debug_uids or debug_coordinates or debug_propagation or include_uids):
+            # Return protocol SoA from snapshot for a locked or released study version
+            snapshot_html = self._load_soa_snapshot_format(
+                study_uid=study_uid,
+                study_value_version=study_value_version,
+                layout=layout,
+                snapshot_format=SoASnapshotFormat.HTML,
+                time_unit=time_unit,
+            )
+            if snapshot_html is not None:
+                return snapshot_html
 
         # build internal representation of flowchart
         table = self.get_flowchart_table(
@@ -1111,6 +1365,24 @@ class StudyFlowchartService:
         if debug_uids:
             self.add_uid_debug(table)
 
+        return self._flowchart_to_html(
+            study_uid=study_uid,
+            study_value_version=study_value_version,
+            layout=layout,
+            table=table,
+            include_uids=include_uids,
+        )
+
+    def _flowchart_to_html(
+        self,
+        study_uid: str,
+        study_value_version: str | None,
+        layout: SoALayout,
+        table: TableWithFootnotes,
+        include_uids: bool = False,
+    ) -> str:
+        """Converts SoA table to HTML document, splitting protocol SoA, updates table in place"""
+
         # splitting
         if layout == SoALayout.PROTOCOL:
             tables = self.split_soa(study_uid, study_value_version, table)
@@ -1130,8 +1402,7 @@ class StudyFlowchartService:
         }
 
         # Split SoA table into multiple tables at specified StudyVisit.uids
-        tables = self.split_flowchart_table(table, split_uids)
-        return tables
+        return self.split_flowchart_table(table, split_uids)
 
     @trace_calls
     def get_study_flowchart_docx(
@@ -1140,17 +1411,38 @@ class StudyFlowchartService:
         study_value_version: str | None,
         layout: SoALayout,
         time_unit: str | None,
-    ) -> DocxBuilder:
+    ) -> io.BytesIO:
         """Returns a DOCX document with SoA table and footnotes"""
 
         if layout == SoALayout.PROTOCOL_LAB_TABLE:
+            snapshot_docx = self._load_soa_snapshot_format(
+                study_uid=study_uid,
+                study_value_version=study_value_version,
+                layout=layout,
+                snapshot_format=SoASnapshotFormat.DOCX,
+                time_unit=time_unit,
+            )
+            if snapshot_docx is not None:
+                return io.BytesIO(snapshot_docx)
+
             # Lab table uses its own table builder with different filtering and structure
             table = self.get_flowchart_table_lab_table(
                 study_uid=study_uid,
                 study_value_version=study_value_version,
                 time_unit=time_unit,
             )
-            return tables_to_docx([table], styles=DOCX_STYLES)
+            return self._lab_table_to_docx(table)
+
+        # Return protocol SoA from snapshot for a locked or released study version
+        snapshot_docx = self._load_soa_snapshot_format(
+            study_uid=study_uid,
+            study_value_version=study_value_version,
+            layout=layout,
+            snapshot_format=SoASnapshotFormat.DOCX,
+            time_unit=time_unit,
+        )
+        if snapshot_docx is not None:
+            return io.BytesIO(snapshot_docx)
 
         # build internal representation of flowchart
         table = self.get_flowchart_table(
@@ -1163,6 +1455,22 @@ class StudyFlowchartService:
         # layout alterations
         if layout != SoALayout.PROTOCOL:
             self.show_hidden_rows(table.rows)
+
+        return self._flowchart_to_docx(
+            study_uid=study_uid,
+            study_value_version=study_value_version,
+            layout=layout,
+            table=table,
+        )
+
+    def _flowchart_to_docx(
+        self,
+        study_uid: str,
+        study_value_version: str | None,
+        layout: SoALayout,
+        table: TableWithFootnotes,
+    ) -> io.BytesIO:
+        """Converts SoA table to DOCX document, splitting protocol SoA, updates table in place"""
 
         # Add Protocol Section column
         if layout == SoALayout.PROTOCOL:
@@ -1187,7 +1495,7 @@ class StudyFlowchartService:
                 if layout == SoALayout.OPERATIONAL
                 else None
             ),
-        )
+        ).get_document_stream()
 
     @trace_calls
     def get_study_flowchart_xlsx(
@@ -1196,16 +1504,35 @@ class StudyFlowchartService:
         study_value_version: str | None,
         layout: SoALayout,
         time_unit: str | None,
-    ) -> Workbook:
+    ) -> io.BytesIO:
         if layout == SoALayout.PROTOCOL_LAB_TABLE:
+            snapshot_xlsx = self._load_soa_snapshot_format(
+                study_uid=study_uid,
+                study_value_version=study_value_version,
+                layout=layout,
+                snapshot_format=SoASnapshotFormat.XLSX,
+                time_unit=time_unit,
+            )
+            if snapshot_xlsx is not None:
+                return io.BytesIO(snapshot_xlsx)
+
             table = self.get_flowchart_table_lab_table(
                 study_uid=study_uid,
                 study_value_version=study_value_version,
                 time_unit=time_unit,
             )
-            return table_to_xlsx(
-                table, styles=OPERATIONAL_XLSX_STYLES, hide_rows_without_checkmarks=True
-            )
+            return self._lab_table_to_xlsx(table)
+
+        # Return protocol SoA from snapshot for a locked or released study version
+        snapshot_xlsx = self._load_soa_snapshot_format(
+            study_uid=study_uid,
+            study_value_version=study_value_version,
+            layout=layout,
+            snapshot_format=SoASnapshotFormat.XLSX,
+            time_unit=time_unit,
+        )
+        if snapshot_xlsx is not None:
+            return io.BytesIO(snapshot_xlsx)
 
         # build internal representation of flowchart
         table = self.get_flowchart_table(
@@ -1219,7 +1546,44 @@ class StudyFlowchartService:
         if layout != SoALayout.PROTOCOL:
             self.show_hidden_rows(table.rows)
 
-        return table_to_xlsx(table, styles=OPERATIONAL_XLSX_STYLES)
+        return self._workbook_to_stream(
+            table_to_xlsx(table, styles=OPERATIONAL_XLSX_STYLES)
+        )
+
+    @staticmethod
+    def _lab_table_to_html(
+        table: TableWithFootnotes, include_uids: bool = False
+    ) -> str:
+        """Converts Protocol Lab table SoA to HTML document"""
+
+        return tables_to_html([table], include_uids=include_uids)
+
+    @staticmethod
+    def _lab_table_to_docx(table: TableWithFootnotes) -> io.BytesIO:
+        """Converts Protocol Lab table SoA to DOCX document"""
+
+        return tables_to_docx([table], styles=DOCX_STYLES).get_document_stream()
+
+    @classmethod
+    def _lab_table_to_xlsx(cls, table: TableWithFootnotes) -> io.BytesIO:
+        """Converts Protocol Lab table SoA to XLSX workbook stream"""
+
+        return cls._workbook_to_stream(
+            table_to_xlsx(
+                table,
+                styles=OPERATIONAL_XLSX_STYLES,
+                hide_rows_without_checkmarks=True,
+            )
+        )
+
+    @staticmethod
+    def _workbook_to_stream(workbook: Workbook) -> io.BytesIO:
+        """Renders XLSX workbook into bytes stream"""
+
+        stream = io.BytesIO()
+        workbook.save(stream)
+        stream.seek(0)
+        return stream
 
     @trace_calls
     def get_operational_soa_xlsx(
@@ -1605,14 +1969,12 @@ class StudyFlowchartService:
                 ),
             )
 
-        table = TableWithFootnotes(
+        return TableWithFootnotes(
             rows=rows,
             num_header_rows=4 if layout == SoALayout.OPERATIONAL else 1,
             num_header_cols=4 if layout == SoALayout.OPERATIONAL else 5,
             title=_T(f"{layout.value}_soa"),
         )
-
-        return table
 
     @classmethod
     @trace_calls(args=[2, 3, 4], kwargs=["time_unit", "soa_preferences", "layout"])
@@ -1659,18 +2021,26 @@ class StudyFlowchartService:
         # Header line 4/5: Visit window
         rows.append(window_row := TableRow())
 
-        visit_window_unit = next(
-            (
-                group[0].visit_window_unit_name
-                for _, visit_groups in grouped_visits
-                for group in visit_groups.values()
-            ),
-            "",
-        )
+        # Distinct window units across all visits that carry a window unit
+        visit_window_units = {
+            group[0].visit_window_unit_name
+            for _, visit_groups in grouped_visits
+            for group in visit_groups.values()
+            if group[0].visit_window_unit_name
+        }
+        # When visits use different window units, the unit is shown next to each
+        # value instead of once in the row header.
+        mixed_window_units = len(visit_window_units) > 1
+
+        visit_window_unit = next(iter(visit_window_units), "")
         # Append window unit used for all StudyVisits
         window_row.cells.append(
             TableCell(
-                text=_T("visit_window").format(unit_name=visit_window_unit),
+                text=(
+                    _T("visit_window_mixed_units")
+                    if mixed_window_units
+                    else _T("visit_window").format(unit_name=visit_window_unit)
+                ),
                 style="header4",
             )
         )
@@ -1763,7 +2133,7 @@ class StudyFlowchartService:
                 timing_row.cells.append(TableCell(visit_timing, style="header3"))
 
                 # Visit window
-                visit_window = cls._get_visit_window(visit)
+                visit_window = cls._get_visit_window(visit, mixed_window_units)
 
                 # Visit window cell
                 window_row.cells.append(TableCell(visit_window, style="header4"))
@@ -1902,9 +2272,7 @@ class StudyFlowchartService:
         # Replace ASCII hyphen-minus with non-breaking hyphen (U+2011) in the
         # negative-day subvisit suffix (e.g. "V2D-1") to prevent word-wrap at
         # the sign character in table header cells.
-        visit_name = visit_name.replace("D-", "D\u2011")
-
-        return visit_name
+        return visit_name.replace("D-", "D\u2011")
 
     @staticmethod
     def _get_visit_timing(
@@ -1914,12 +2282,11 @@ class StudyFlowchartService:
         num_visits_in_group = len(visits)
 
         # Single Visit
-        if num_visits_in_group == 1:
-            if (
-                visit.visit_class != VisitClass.SPECIAL_VISIT
-                and getattr(visit, visit_timing_property) is not None
-            ):
-                return f"{getattr(visit, visit_timing_property):d}"
+        if (
+            num_visits_in_group == 1
+            and getattr(visit, visit_timing_property) is not None
+        ):
+            return f"{getattr(visit, visit_timing_property):d}"
 
         # Visit Group
         if not (
@@ -1935,53 +2302,64 @@ class StudyFlowchartService:
                 visit_timings = [
                     f"{getattr(visit, visit_timing_property):d}"
                     for visit in visits
-                    if visit.visit_class != VisitClass.SPECIAL_VISIT
-                    and getattr(visit, visit_timing_property) is not None
+                    if getattr(visit, visit_timing_property) is not None
                 ]
                 visit_timing = ",".join(visit_timings)
                 # insert line-breaks after certain commas when the cell text gets too long
-                visit_timing = insert_space_after_commas(
+                return insert_space_after_commas(
                     visit_timing,
                     settings.soa_insert_space_after_commas_length,
                     space="\n",
                 )
-                return visit_timing
 
             return f"{getattr(visit, visit_timing_property):d}-{getattr(visits[-1], visit_timing_property):d}"
 
         return ""
 
     @staticmethod
-    def _get_visit_window(visit: StudyVisitLite) -> str:
+    def _get_visit_window(visit: StudyVisitLite, append_unit: bool = False) -> str:
+        visit_type_name = (
+            visit.visit_type.sponsor_preferred_name if visit.visit_type else None
+        )
+        # Unscheduled, Early Discontinuation and Non-visit types have no meaningful
+        # visit window, so nothing is shown in the SoA.
+        if visit.visit_class in (
+            VisitClass.UNSCHEDULED_VISIT,
+            VisitClass.NON_VISIT,
+        ) or visit_type_name in (
+            settings.study_visit_type_early_discontinuation_visit,
+            settings.unscheduled_visit_name,
+            settings.non_visit_name,
+        ):
+            return ""
         if None not in (
             visit.min_visit_window_value,
             visit.max_visit_window_value,
         ):
-            if visit.visit_class in (
-                VisitClass.SPECIAL_VISIT,
-                VisitClass.UNSCHEDULED_VISIT,
-                VisitClass.NON_VISIT,
-            ):
-                return ""
             if visit.min_visit_window_value == visit.max_visit_window_value == 0:
                 # visit window is zero
-                return "0"
-            if (
+                visit_window = "0"
+            elif (
                 visit.min_visit_window_value is not None
                 and visit.min_visit_window_value * -1 == visit.max_visit_window_value
             ):
                 # plus-minus sign can be used
-                return f"±{visit.max_visit_window_value:d}"
-            # plus and minus windows are different
-            if visit.min_visit_window_value == 0:
-                min_visit_window = f"{visit.min_visit_window_value}"
+                visit_window = f"±{visit.max_visit_window_value:d}"
             else:
-                min_visit_window = f"{visit.min_visit_window_value:+d}"
-            if visit.max_visit_window_value == 0:
-                max_visit_window = f"{visit.max_visit_window_value}"
-            else:
-                max_visit_window = f"{visit.max_visit_window_value:+d}"
-            visit_window = f"{min_visit_window}/{max_visit_window}"
+                # plus and minus windows are different
+                if visit.min_visit_window_value == 0:
+                    min_visit_window = f"{visit.min_visit_window_value}"
+                else:
+                    min_visit_window = f"{visit.min_visit_window_value:+d}"
+                if visit.max_visit_window_value == 0:
+                    max_visit_window = f"{visit.max_visit_window_value}"
+                else:
+                    max_visit_window = f"{visit.max_visit_window_value:+d}"
+                visit_window = f"{min_visit_window}/{max_visit_window}"
+            if append_unit and visit.visit_window_unit_name:
+                # Append the window unit abbreviation (e.g. "D"/"W") next to the
+                # value when visits use different window units across the SoA.
+                visit_window += visit.visit_window_unit_name[0].upper()
             return visit_window
         return ""
 
@@ -2031,7 +2409,7 @@ class StudyFlowchartService:
         for study_selection_activity in study_selection_activities:
             soa_group_uid = study_selection_activity.study_soa_group.soa_group_term_uid
 
-            if layout != SoALayout.PROTOCOL or getattr(
+            if layout != SoALayout.PROTOCOL or getattr(  # noqa: SIM102
                 study_selection_activity,
                 "show_soa_group_in_protocol_flowchart",
                 True,
@@ -2633,11 +3011,18 @@ class StudyFlowchartService:
     ):
         """Adds footnote symbols to table rows based on the referenced uids.
 
-        In PROTOCOL layout, only footnotes whose referenced items appear in at least one visible (non-hidden)
-        row are included. Footnotes that exclusively reference items in hidden rows are
+        In PROTOCOL and PROTOCOL_LAB_TABLE layouts, only footnotes whose referenced items appear in at
+        least one visible (non-hidden) row are included. Footnotes that exclusively reference items in
+        hidden rows (or items absent from the table, e.g. non-lab activities in the lab table) are
         silently dropped before symbols are assigned, so they do not appear in the
         rendered footnote listing.
+
+        Footnotes attached via a propagated cell are shown on the propagated cell and on the
+        referenced item's own cell (in those layouts only if visible), see _referenced_item_cell_keys().
         """
+
+        # Layouts that hide rows and so must filter footnotes down to references on visible rows.
+        visible_row_layouts = (SoALayout.PROTOCOL, SoALayout.PROTOCOL_LAB_TABLE)
 
         # A footnote without a layout applies to every layout.
         if layout is not None:
@@ -2645,27 +3030,27 @@ class StudyFlowchartService:
                 fn for fn in footnotes if fn.layout is None or fn.layout == layout
             ]
 
-        if layout == SoALayout.PROTOCOL:
+        if layout in visible_row_layouts:
             # Only process visible rows
             rows = (row for row in table.rows if not row.hide)
 
-            # Collect referenced UIDs and the sequence of order they appear in the table
-            referenced_uids_sequence: dict[str, int] = {}
+            # Collect referenced keys and the sequence of order they appear in the table
+            referenced_keys_sequence: dict[tuple[str, bool], int] = {}
             for row in rows:
                 for cell in row.cells:
                     for ref in cell.refs or []:
-                        if ref.uid not in referenced_uids_sequence:
-                            referenced_uids_sequence[ref.uid] = len(
-                                referenced_uids_sequence
-                            )
+                        referenced_keys_sequence.setdefault(
+                            cls._cell_ref_key(ref, cell), len(referenced_keys_sequence)
+                        )
 
             # Keep only footnotes that are referenced in visible rows
             footnotes = (
                 fn
                 for fn in footnotes
                 if any(
-                    ref.item_uid in referenced_uids_sequence
+                    ref_key in referenced_keys_sequence
                     for ref in fn.referenced_items
+                    for ref_key in cls._referenced_item_cell_keys(ref)
                 )
             )
 
@@ -2674,23 +3059,36 @@ class StudyFlowchartService:
                 footnotes,
                 key=lambda footnote: min(
                     (
-                        referenced_uids_sequence[ref.item_uid]
+                        referenced_keys_sequence[ref_key]
                         for ref in footnote.referenced_items
-                        if ref.item_uid in referenced_uids_sequence
+                        for ref_key in cls._referenced_item_cell_keys(ref)
+                        if ref_key in referenced_keys_sequence
                     ),
-                    default=len(referenced_uids_sequence) + (footnote.order or 0),
+                    default=len(referenced_keys_sequence) + (footnote.order or 0),
                 ),
             )
 
         (
-            footnote_symbols_by_ref_uid,
+            footnote_symbols_by_ref_key,
             simple_footnotes_by_symbol,
         ) = cls._mk_simple_footnotes(footnotes)
+
         for row in table.rows:
             for cell in row.cells:
                 _footnotes = set(cell.footnotes or [])
                 for ref in cell.refs or []:
-                    _footnotes.update(footnote_symbols_by_ref_uid.get(ref.uid, []))
+                    _footnotes.update(
+                        footnote_symbols_by_ref_key.get(
+                            cls._cell_ref_key(ref, cell), []
+                        )
+                    )
+                    # footnotes attached via propagated cell also go on the item's own cell
+                    if not cell.propagated and (
+                        layout not in visible_row_layouts or not row.hide
+                    ):
+                        _footnotes.update(
+                            footnote_symbols_by_ref_key.get((ref.uid, True), [])
+                        )
                 cell.footnotes = (
                     sorted(str(_footnote) for _footnote in _footnotes)
                     if _footnotes
@@ -2744,7 +3142,10 @@ class StudyFlowchartService:
     @staticmethod
     @trace_calls
     def _hide_repeated_subgroup_names(rows: list[TableRow]):
-        """Clears the activity subgroup name (first cell) on subsequent rows where it repeats."""
+        """Clears the activity subgroup name (first cell) on subsequent rows where it repeats.
+
+        References are cleared too, so the emptied cell does not offer footnotes it could not show.
+        """
         prev_subgroup_name = None
         for row in rows:
             if row.hide or not row.cells:
@@ -2752,6 +3153,7 @@ class StudyFlowchartService:
             cell = row.cells[0]
             if cell.text == prev_subgroup_name:
                 cell.text = ""
+                cell.refs = None
             else:
                 prev_subgroup_name = cell.text
 
@@ -2768,11 +3170,23 @@ class StudyFlowchartService:
 
     @staticmethod
     @trace_calls
+    def remove_hidden_header_rows(table: TableWithFootnotes):
+        """Removes only hidden header rows, leaving body rows untouched regardless of their hide flag."""
+
+        visible_headers = [
+            row for row in table.rows[: table.num_header_rows] if not row.hide
+        ]
+        table.rows[:] = visible_headers + table.rows[table.num_header_rows :]
+        table.num_header_rows = len(visible_headers)
+
+    @staticmethod
+    @trace_calls
     def propagate_hidden_rows(rows: Iterable[TableRow], propagate_refs: bool = False):
         """
         Modify table in place to for Protocol SoA
 
-        For hidden activity rows, up-propagate the crosses and footnotes onto the next visible group level.
+        For hidden activity rows, up-propagate the crosses onto the next visible group level.
+        With propagate_refs, also up-propagate the references of the crosses, marking the receiving cells as propagated.
         """
 
         soa_group_term_row = None
@@ -2824,6 +3238,7 @@ class StudyFlowchartService:
                                     update_cell.refs += cell.refs
                                 else:
                                     update_cell.refs = list(cell.refs)
+                                update_cell.propagated = True
 
     @staticmethod
     @trace_calls
@@ -2971,7 +3386,9 @@ class StudyFlowchartService:
             else ""
         )
         query += """
-        ORDER BY study_soa_group.order, study_activity_group.order, study_activity_subgroup.order, study_activity.order, study_visit.visit_number
+        ORDER BY study_soa_group.order, study_activity_group.order, study_activity_subgroup.order, study_activity.order,
+            // manual visit mode keeps the visit order set by the user, otherwise the unique visit number follows the timeline
+            CASE WHEN $manual_visit_mode THEN toInteger(study_visit.order) ELSE toInteger(study_visit.unique_visit_number) END
         RETURN
             CASE
                 WHEN has_version.status IN ["RELEASED", "LOCKED"]
@@ -2995,6 +3412,9 @@ class StudyFlowchartService:
             params={
                 "study_uid": study_uid,
                 "study_value_version": study_value_version,
+                "manual_visit_mode": StudyDefinitionRepositoryImpl.get_manual_visit_mode(
+                    study_uid, study_value_version=study_value_version
+                ),
                 "activity_group_filter": (
                     LAB_TABLE_INCLUDE_ACTIVITY_GROUP.lower().strip()
                     if protocol_lab_table
@@ -3066,7 +3486,9 @@ class StudyFlowchartService:
                     }]) as study_soa_group,
                 head([(study_epoch)-[:HAS_EPOCH]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(:CTTermRoot)-[:HAS_NAME_ROOT]->(:CTTermNameRoot)-[:LATEST]-
                     (epoch_term:CTTermNameValue) | epoch_term.name]) as epoch_name
-            ORDER BY study_soa_group.order, study_activity_group.order, study_activity_subgroup.order, study_activity.order, study_visit.visit_number
+            ORDER BY study_soa_group.order, study_activity_group.order, study_activity_subgroup.order, study_activity.order,
+                // manual visit mode keeps the visit order set by the user, otherwise the unique visit number follows the timeline
+                CASE WHEN $manual_visit_mode THEN toInteger(study_visit.order) ELSE toInteger(study_visit.unique_visit_number) END
             RETURN DISTINCT
                 CASE
                     WHEN has_version.status IN ["RELEASED", "LOCKED"]
@@ -3089,47 +3511,280 @@ class StudyFlowchartService:
 
         result_array, attribute_names = db.cypher_query(
             query,
-            params={"study_uid": study_uid, "study_value_version": study_value_version},
+            params={
+                "study_uid": study_uid,
+                "study_value_version": study_value_version,
+                "manual_visit_mode": StudyDefinitionRepositoryImpl.get_manual_visit_mode(
+                    study_uid, study_value_version=study_value_version
+                ),
+            },
         )
         content_rows = []
         for soa_content in result_array:
-            content_dict = {}
-            for content_prop, attribute_name in zip(soa_content, attribute_names):
-                content_dict[attribute_name] = content_prop
+            content_dict = dict(zip(attribute_names, soa_content))
             content_rows.append(content_dict)
         return content_rows
 
     @trace_calls
+    def build_protocol_soa_snapshot(
+        self,
+        study_uid: str,
+        study_value_version: str | None = None,
+    ) -> SoASnapshot:
+        """Fetches and renders Protocol SoA into all snapshot formats, without saving"""
+
+        time_unit = self.get_preferred_time_unit(
+            study_uid, study_value_version=study_value_version
+        )
+
+        # LEGACY-SOA-SNAPSHOT (242942): only used by migration 024 to render pre-existing
+        # locked/released versions from HAS_PROTOCOL_SOA_CELL refs. Remove in the next release.
+        if study_value_version and self.repository.has_legacy_snapshot(
+            study_uid=study_uid, study_value_version=study_value_version
+        ):
+            table = self.load_soa_snapshot(
+                study_uid=study_uid,
+                study_value_version=study_value_version,
+                layout=SoALayout.PROTOCOL,
+                time_unit=time_unit,
+            )
+        else:
+            table = self.get_flowchart_table(
+                study_uid=study_uid,
+                study_value_version=study_value_version,
+                layout=SoALayout.PROTOCOL,
+                time_unit=time_unit,
+                force_build=True,
+            )
+
+        return self.render_protocol_soa_snapshot(
+            study_uid=study_uid,
+            study_value_version=study_value_version,
+            table=table,
+            time_unit=time_unit,
+        )
+
+    @trace_calls
     @ensure_transaction(db)
-    def update_soa_snapshot(
+    def save_protocol_soa_snapshot(
+        self,
+        study_uid: str,
+        study_value_version: str | None = None,
+        study_status: StudyStatus | None = None,
+    ) -> SoASnapshot:
+        """Renders Protocol SoA into all snapshot formats and saves them into the db
+
+        Without study_value_version the latest draft version is rendered and saved, as done on locking and releasing.
+        """
+
+        snapshot = self.build_protocol_soa_snapshot(
+            study_uid=study_uid, study_value_version=study_value_version
+        )
+
+        self.repository.save_snapshot(
+            study_uid=study_uid,
+            snapshot=snapshot,
+            study_value_version=study_value_version,
+            layout=SoALayout.PROTOCOL,
+            study_status=study_status,
+        )
+
+        return snapshot
+
+    @trace_calls
+    def build_protocol_lab_table_soa_snapshot(
+        self,
+        study_uid: str,
+        study_value_version: str | None = None,
+    ) -> SoASnapshot:
+        """Fetches and renders Protocol Lab table SoA into all snapshot formats, without saving"""
+
+        time_unit = self.get_preferred_time_unit(
+            study_uid, study_value_version=study_value_version
+        )
+
+        table = self.get_flowchart_table_lab_table(
+            study_uid=study_uid,
+            study_value_version=study_value_version,
+            time_unit=time_unit,
+            force_build=True,
+        )
+
+        return self.render_protocol_lab_table_soa_snapshot(
+            table=table, time_unit=time_unit
+        )
+
+    @trace_calls
+    @ensure_transaction(db)
+    def save_protocol_lab_table_soa_snapshot(
+        self,
+        study_uid: str,
+        study_value_version: str | None = None,
+        study_status: StudyStatus | None = None,
+    ) -> SoASnapshot:
+        """Renders Protocol Lab table SoA into all snapshot formats and saves them into the db
+
+        Without study_value_version the latest draft version is rendered and saved, as done on locking and releasing.
+        """
+
+        snapshot = self.build_protocol_lab_table_soa_snapshot(
+            study_uid=study_uid, study_value_version=study_value_version
+        )
+
+        self.repository.save_snapshot(
+            study_uid=study_uid,
+            snapshot=snapshot,
+            study_value_version=study_value_version,
+            layout=SoALayout.PROTOCOL_LAB_TABLE,
+            study_status=study_status,
+        )
+
+        return snapshot
+
+    @trace_calls
+    def save_soa_snapshot(
+        self,
+        study_uid: str,
+        layout: SoALayout,
+        study_value_version: str | None = None,
+        study_status: StudyStatus | None = None,
+    ) -> SoASnapshot:
+        """Renders SoA of the given layout into all snapshot formats and saves them into the db"""
+
+        ValidationException.raise_if(
+            layout not in SNAPSHOT_LAYOUTS,
+            msg=self._snapshot_layouts_msg(layout),
+        )
+
+        if layout == SoALayout.PROTOCOL_LAB_TABLE:
+            return self.save_protocol_lab_table_soa_snapshot(
+                study_uid=study_uid,
+                study_value_version=study_value_version,
+                study_status=study_status,
+            )
+
+        return self.save_protocol_soa_snapshot(
+            study_uid=study_uid,
+            study_value_version=study_value_version,
+            study_status=study_status,
+        )
+
+    @trace_calls
+    @ensure_transaction(db)
+    def save_all_soa_snapshots(
+        self,
+        study_uid: str,
+        study_status: StudyStatus | None = None,
+    ) -> None:
+        """Saves the latest draft SoA snapshots of all SNAPSHOT_LAYOUTS, as done on locking and releasing.
+
+        Fetching and rendering run in parallel threads, which only read from the db. The writes stay
+        sequential in the calling thread, so they remain part of the caller's transaction.
+        """
+
+        # Services are created here, as they capture the current user, which is not available in worker threads
+        builders = {
+            SoALayout.PROTOCOL: StudyFlowchartService().build_protocol_soa_snapshot,
+            SoALayout.PROTOCOL_LAB_TABLE: (
+                StudyFlowchartService().build_protocol_lab_table_soa_snapshot
+            ),
+        }
+        assert set(builders) == set(SNAPSHOT_LAYOUTS)
+
+        with RequestContextThreadPoolExecutor() as executor:
+            futures = {
+                layout: executor.submit(build, study_uid=study_uid)
+                for layout, build in builders.items()
+            }
+            snapshots = {layout: future.result() for layout, future in futures.items()}
+
+        for layout, snapshot in snapshots.items():
+            self.repository.save_snapshot(
+                study_uid=study_uid,
+                snapshot=snapshot,
+                layout=layout,
+                study_status=study_status,
+            )
+
+    @staticmethod
+    def _snapshot_layouts_msg(layout: SoALayout) -> str:
+        supported = ", ".join(f"'{lt.value}'" for lt in SNAPSHOT_LAYOUTS)
+        return f"SoA snapshot is only supported for layouts {supported}, not '{layout.value}'."
+
+    @trace_calls
+    def render_protocol_lab_table_soa_snapshot(
+        self, table: TableWithFootnotes, time_unit: str | None
+    ) -> SoASnapshot:
+        """Renders Protocol Lab table SoA table into all snapshot formats, as returned by the flowchart endpoints"""
+
+        return SoASnapshot(
+            json=table.model_dump_json(),
+            html=self._lab_table_to_html(deepcopy(table)),
+            docx=self._lab_table_to_docx(deepcopy(table)).getvalue(),
+            xlsx=self._lab_table_to_xlsx(deepcopy(table)).getvalue(),
+            time_unit=time_unit,
+        )
+
+    @trace_calls
+    def render_protocol_soa_snapshot(
+        self,
+        study_uid: str,
+        study_value_version: str | None,
+        table: TableWithFootnotes,
+        time_unit: str | None,
+    ) -> SoASnapshot:
+        """Renders Protocol SoA table into all snapshot formats, as returned by the flowchart endpoints"""
+
+        return SoASnapshot(
+            json=table.model_dump_json(),
+            html=self._flowchart_to_html(
+                study_uid=study_uid,
+                study_value_version=study_value_version,
+                layout=SoALayout.PROTOCOL,
+                table=deepcopy(table),
+            ),
+            docx=self._flowchart_to_docx(
+                study_uid=study_uid,
+                study_value_version=study_value_version,
+                layout=SoALayout.PROTOCOL,
+                table=deepcopy(table),
+            ).getvalue(),
+            xlsx=self._workbook_to_stream(
+                table_to_xlsx(deepcopy(table), styles=OPERATIONAL_XLSX_STYLES)
+            ).getvalue(),
+            time_unit=time_unit,
+        )
+
+    @trace_calls
+    def get_soa_snapshot(
         self,
         study_uid: str,
         study_value_version: str | None = None,
         layout: SoALayout = SoALayout.PROTOCOL,
-        study_status: StudyStatus | None = None,
-    ) -> tuple[list[SoACellReference], list[SoAFootnoteReference]]:
-        """Builds and saves SoA snapshot into the db"""
+    ) -> TableWithFootnotes:
+        """Returns the SoA table saved in the SoA snapshot of a study version"""
 
         ValidationException.raise_if(
-            layout != SoALayout.PROTOCOL,
-            msg=f"SoA snapshot is only supported for layout '{SoALayout.PROTOCOL.value}', not '{layout.value}'.",
+            layout not in SNAPSHOT_LAYOUTS,
+            msg=self._snapshot_layouts_msg(layout),
         )
 
-        cell_references, footnote_references = self.build_soa_snapshot(
-            study_uid=study_uid, study_value_version=study_value_version, layout=layout
-        )
-
-        self.repository.save(
+        snapshot = self.repository.load_snapshot(
             study_uid=study_uid,
             study_value_version=study_value_version,
-            cell_references=cell_references,
-            footnote_references=footnote_references,
+            snapshot_format=SoASnapshotFormat.JSON,
             layout=layout,
-            study_status=study_status,
         )
 
-        return cell_references, footnote_references
+        NotFoundException.raise_if(
+            snapshot is None,
+            msg=f"No SoA snapshot found for Study with uid '{study_uid}' and version '{study_value_version}'",
+        )
 
+        return TableWithFootnotes.model_validate_json(snapshot[0])
+
+    # LEGACY-SOA-SNAPSHOT (242942): only used by migration 024 to render pre-existing
+    # locked/released versions from HAS_PROTOCOL_SOA_CELL refs. Remove in the next release.
     @trace_calls
     def _fetch_soa_snapshot_data(
         self, study_uid, study_value_version, layout, time_unit
@@ -3144,52 +3799,52 @@ class StudyFlowchartService:
         )
 
         # Fetch database objects in parallel
-        with ThreadPoolExecutor() as executor:
+        with RequestContextThreadPoolExecutor() as executor:
             soa_preferences_future = executor.submit(
-                RuntimeContext.with_current_context(self._get_soa_preferences),
+                self._get_soa_preferences,
                 study_uid,
                 study_value_version=study_value_version,
             )
 
             soa_snapshot_future = executor.submit(
-                RuntimeContext.with_current_context(self.repository.load),
+                self.repository.load,
                 study_uid=study_uid,
                 study_value_version=study_value_version,
                 layout=layout,
             )
 
             study_visits_future = executor.submit(
-                RuntimeContext.with_current_context(self._get_study_visits),
+                self._get_study_visits,
                 study_uid=study_uid,
                 study_value_version=study_value_version,
             )
 
             study_soa_groups_future = executor.submit(
-                RuntimeContext.with_current_context(self._get_study_soa_groups),
+                self._get_study_soa_groups,
                 study_uid=study_uid,
                 study_value_version=study_value_version,
             )
 
             study_activity_groups_future = executor.submit(
-                RuntimeContext.with_current_context(self._get_study_activity_groups),
+                self._get_study_activity_groups,
                 study_uid=study_uid,
                 study_value_version=study_value_version,
             )
 
             study_activity_subgroups_future = executor.submit(
-                RuntimeContext.with_current_context(self._get_study_activity_subgroups),
+                self._get_study_activity_subgroups,
                 study_uid=study_uid,
                 study_value_version=study_value_version,
             )
 
             study_activities_future = executor.submit(
-                RuntimeContext.with_current_context(self.fetch_study_activities),
+                self.fetch_study_activities,
                 study_uid=study_uid,
                 study_value_version=study_value_version,
             )
 
             study_footnotes_future = executor.submit(
-                RuntimeContext.with_current_context(self._get_study_footnotes),
+                self._get_study_footnotes,
                 study_uid,
                 study_value_version=study_value_version,
             )
@@ -3246,6 +3901,8 @@ class StudyFlowchartService:
             time_unit,
         )
 
+    # LEGACY-SOA-SNAPSHOT (242942): only used by migration 024 to render pre-existing
+    # locked/released versions from HAS_PROTOCOL_SOA_CELL refs. Remove in the next release.
     @trace_calls
     def load_soa_snapshot(
         self,
@@ -3299,8 +3956,11 @@ class StudyFlowchartService:
                 coords = CellCoordinates(row=ref.row, col=ref.column)
                 cell_references[coords].append(ref)
 
+        # Epoch/visit header cells use negative sentinel rows (-2/-1), so num_rows
+        # counts body rows only and is 0 for a version locked with just epochs and
+        # visits — a valid header-only SoA, not insufficient data.
         NotFoundException.raise_if_not(
-            num_rows and num_cols,
+            num_cols and (num_rows or epoch_references or visit_references),
             msg=f"Study with uid '{study_uid}' and version '{study_value_version}' has insufficient data in SoA snapshot",
         )
 
@@ -3358,17 +4018,25 @@ class StudyFlowchartService:
         visit_timing_prop = self._get_visit_timing_property(time_unit, soa_preferences)
 
         window_row = TableRow(cells=[TableCell() for _ in range(num_cols)], hide=False)
-        visit_window_unit = next(
-            (
-                study_visits_by_uid[ref.referenced_item.item_uid].visit_window_unit_name
-                for refs in visit_references.values()
-                for ref in refs
-            ),
-            "",
-        )
+        # Distinct window units across all visits that carry a window unit
+        visit_window_units = {
+            study_visits_by_uid[ref.referenced_item.item_uid].visit_window_unit_name
+            for refs in visit_references.values()
+            for ref in refs
+            if study_visits_by_uid[ref.referenced_item.item_uid].visit_window_unit_name
+        }
+        # When visits use different window units, the unit is shown next to each
+        # value instead of once in the row header.
+        mixed_window_units = len(visit_window_units) > 1
+        visit_window_unit = next(iter(visit_window_units), "")
         # Append window unit used by all StudyVisits
         window_row.cells[0] = TableCell(
-            text=_T("visit_window").format(unit_name=visit_window_unit), style="header4"
+            text=(
+                _T("visit_window_mixed_units")
+                if mixed_window_units
+                else _T("visit_window").format(unit_name=visit_window_unit)
+            ),
+            style="header4",
         )
 
         prev_visit_type_uid = None
@@ -3404,7 +4072,7 @@ class StudyFlowchartService:
                     for ref in refs
                 ],
                 # add footnote symbols
-                footnotes=[fr.symbol for fr in refs[0].footnote_references] or None,
+                footnotes=self._get_snapshot_footnote_symbols(refs) or None,
             )
 
             timing_row.cells[col_idx] = TableCell(
@@ -3413,7 +4081,7 @@ class StudyFlowchartService:
             )
 
             window_row.cells[col_idx] = TableCell(
-                self._get_visit_window(visit), style="header4"
+                self._get_visit_window(visit, mixed_window_units), style="header4"
             )
 
         for coords, refs in cell_references.items():
@@ -3454,20 +4122,21 @@ class StudyFlowchartService:
             elif refi.item_type == SoAItemType.STUDY_ACTIVITY_SCHEDULE:
                 cell = row.cells[coords.col]
                 cell.text = SOA_CHECK_MARK
+                cell.refs = [
+                    Ref(
+                        type_=ref.referenced_item.item_type.value,
+                        uid=ref.referenced_item.item_uid,
+                    )
+                    for ref in refs
+                ]
 
-                # add refs only for non-propagated rows to avoid footnote propagation
-                if not ref.is_propagated:
-                    cell.refs = [
-                        Ref(
-                            type_=ref.referenced_item.item_type.value,
-                            uid=ref.referenced_item.item_uid,
-                        )
-                    ]
-
+                if ref.is_propagated:
+                    cell.propagated = True
+                else:
                     # add style only if checkmark is not propagated to match behaviour with propagate_hidden_rows()
                     cell.style = "activitySchedule"
 
-            if not ref.is_propagated:
+            if refi.item_type != SoAItemType.STUDY_ACTIVITY_SCHEDULE:
                 # append remaining refs to cell to exactly match result of get_soa_flowchart()
                 add_refs = [
                     Ref(
@@ -3481,8 +4150,8 @@ class StudyFlowchartService:
                 elif add_refs:
                     cell.refs = add_refs
 
-                # add footnote symbols
-                cell.footnotes = [fr.symbol for fr in ref.footnote_references] or None
+            # add footnote symbols
+            cell.footnotes = self._get_snapshot_footnote_symbols(refs) or None
 
         # merge header rows
         header_rows = [
@@ -3515,55 +4184,26 @@ class StudyFlowchartService:
         return table
 
     @staticmethod
+    def _get_snapshot_footnote_symbols(refs: Iterable[SoACellReference]) -> list[str]:
+        """Returns footnote symbols of all references of a snapshot cell, in footnote order
+
+        Footnotes attached via a propagated cell apply to propagated references and to the referenced
+        item's own cell, while other footnotes apply only to the item's own cell, matching add_footnotes().
+        """
+        footnote_references = {
+            (footnote_reference.order, footnote_reference.symbol)
+            for ref in refs
+            for footnote_reference in ref.footnote_references or []
+            if footnote_reference.referenced_item.via_propagated_cell
+            or not ref.is_propagated
+        }
+        return [symbol for _, symbol in sorted(footnote_references)]
+
+    @staticmethod
     def _map_by_uid[BaseModelType: BaseModel](
         items: Iterable[BaseModelType], uid_property_name: str = "uid"
     ) -> dict[str, BaseModelType]:
         return {getattr(item, uid_property_name): item for item in items}
-
-    @trace_calls
-    def build_soa_snapshot(
-        self,
-        study_uid: str,
-        study_value_version: str | None,
-        layout: SoALayout,
-    ) -> tuple[list[SoACellReference], list[SoAFootnoteReference]]:
-        """Returns SoA cell and footnote references from a freshly built SoA"""
-
-        table = self.build_flowchart_table(
-            study_uid=study_uid,
-            study_value_version=study_value_version,
-            layout=layout,
-        )
-
-        if layout == SoALayout.PROTOCOL:
-            # propagate checkmarks from hidden rows for protocol layout
-            self.propagate_hidden_rows(table.rows, propagate_refs=True)
-
-            # remove hidden rows
-            self.remove_hidden_rows(table)
-
-        soa_cell_references = self._extract_soa_cell_refs(table=table, layout=layout)
-
-        soa_footnote_references = self._extract_soa_footnote_refs(table)
-
-        return soa_cell_references, soa_footnote_references
-
-    @staticmethod
-    @trace_calls
-    def _extract_soa_footnote_refs(
-        table: TableWithFootnotes,
-    ) -> list[SoAFootnoteReference]:
-        footnote_references = [
-            SoAFootnoteReference(
-                order=i,
-                symbol=symbol,
-                referenced_item=ReferencedItem(
-                    item_uid=fn.uid, item_type=SoAItemType.STUDY_SOA_FOOTNOTE
-                ),
-            )
-            for i, (symbol, fn) in enumerate(table.footnotes.items())
-        ]
-        return footnote_references
 
     @staticmethod
     def _get_visit_refs(header_rows: Iterable[TableRow]) -> dict[int, Ref]:
@@ -3581,101 +4221,6 @@ class StudyFlowchartService:
                         break
 
         return visit_refs
-
-    @staticmethod
-    @trace_calls
-    def _extract_soa_cell_refs(
-        table: TableWithFootnotes, layout: SoALayout
-    ) -> list[SoACellReference]:
-        """Extracts SoA cell references from SoA table
-
-        Rows index given to StudyEpochs -2 and StudyVisits -1.
-        Multiple StudyVisits are possible with the same row/column index due to visit grouping.
-        Other SoAItemTypes are extracted from data rows given row index starting from 0.
-        """
-
-        references: list[SoACellReference] = []
-
-        def collect_cell_references(
-            row_idx: int,
-            col_idx: int,
-            cell: TableCell,
-            accepted_ref_types: Iterable,
-            is_propagated=False,
-            order: int = 0,
-        ):
-            if not cell.refs:
-                return
-            for ref in dict.fromkeys(
-                cell.refs
-            ):  # iterate on unique refs preserving their order
-                if ref.type in accepted_ref_types:
-                    referenced_item = ReferencedItem(
-                        item_uid=ref.uid, item_type=SoAItemType(ref.type)
-                    )
-                    references.append(
-                        SoACellReference(
-                            row=row_idx,
-                            column=col_idx,
-                            span=cell.span,
-                            is_propagated=is_propagated,
-                            order=order,
-                            referenced_item=referenced_item,
-                        )
-                    )
-                    order += 1
-
-        num_header_cols = table.num_header_cols
-        if layout == SoALayout.OPERATIONAL:
-            num_header_cols += NUM_OPERATIONAL_CODE_COLS
-
-        # collect references from table header (Epochs and Visits)
-        for row in table.rows[: table.num_header_rows]:
-            for c, cell in enumerate(row.cells[num_header_cols:], start=1):
-                collect_cell_references(-2, c, cell, {SoAItemType.STUDY_EPOCH.value})
-                collect_cell_references(-1, c, cell, {SoAItemType.STUDY_VISIT.value})
-
-                # collect_footnote_references(0, c, cell)
-
-        # collect referenced items from table data
-        for r, row in enumerate(table.rows[table.num_header_rows :]):
-            # collect row references
-            collect_cell_references(
-                r,
-                0,
-                row.cells[0],
-                {
-                    SoAItemType.STUDY_SOA_GROUP.value,
-                    SoAItemType.STUDY_ACTIVITY_GROUP.value,
-                    SoAItemType.STUDY_ACTIVITY_SUBGROUP.value,
-                    SoAItemType.STUDY_ACTIVITY.value,
-                    (
-                        layout == SoALayout.OPERATIONAL
-                        and SoAItemType.STUDY_ACTIVITY_INSTANCE.value
-                        # No Ref.type will match with False as Ref.type cannot be bool by model definition
-                    ),
-                },
-            )
-
-            # collect schedule references
-            is_propagated = not (
-                row.cells[0].refs
-                and row.cells[0].refs[0].type
-                in {
-                    SoAItemType.STUDY_ACTIVITY.value,
-                    SoAItemType.STUDY_ACTIVITY_INSTANCE.value,
-                }
-            )
-            for c, cell in enumerate(row.cells[num_header_cols:], start=1):
-                collect_cell_references(
-                    r,
-                    c,
-                    cell,
-                    {SoAItemType.STUDY_ACTIVITY_SCHEDULE.value},
-                    is_propagated=is_propagated,
-                )
-
-        return references
 
 
 def get_study_version(study: Study) -> str:

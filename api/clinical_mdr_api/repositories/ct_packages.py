@@ -164,14 +164,7 @@ def get_ct_packages_codelist_changes(
 
     output = {}
     # codelists query
-    complete_codelist_query = " ".join(
-        [
-            CODELIST_DATA_RETRIEVAL_SPECIFIC_QUERY,
-            COMPARISON_PART,
-            CODELIST_DIFF_CLAUSE,
-            CODELIST_RETURN_CLAUSE,
-        ]
-    )
+    complete_codelist_query = f"{CODELIST_DATA_RETRIEVAL_SPECIFIC_QUERY} {COMPARISON_PART} {CODELIST_DIFF_CLAUSE} {CODELIST_RETURN_CLAUSE}"
     codelist_ret, _ = db.cypher_query(complete_codelist_query, query_params)
     output["new_codelists"] = (
         sorted(codelist_ret[0][0], key=lambda ct_codelist: ct_codelist["change_date"])
@@ -187,15 +180,7 @@ def get_ct_packages_codelist_changes(
     all_codelists_in_package = codelist_ret[0][3] if len(codelist_ret) > 0 else {}
 
     # terms query
-    complete_term_query = " ".join(
-        [
-            TERM_DATA_RETRIEVAL_SPECIFIC_QUERY,
-            COMPARISON_PART,
-            TERM_DIFF_CLAUSE,
-            TERM_NOT_MODIFIED_CLAUSE_SPECIFIC_QUERY,
-            TERM_RETURN_CLAUSE_SPECIFIC_QUERY,
-        ]
-    )
+    complete_term_query = f"{TERM_DATA_RETRIEVAL_SPECIFIC_QUERY} {COMPARISON_PART} {TERM_DIFF_CLAUSE} {TERM_NOT_MODIFIED_CLAUSE_SPECIFIC_QUERY} {TERM_RETURN_CLAUSE_SPECIFIC_QUERY}"
     terms_ret, _ = db.cypher_query(complete_term_query, query_params)
     output["new_terms"] = (
         sorted(terms_ret[0][0], key=lambda ct_term: ct_term["change_date"])
@@ -287,13 +272,12 @@ def term_diff(left_term, right_term):
     right_value = right_term["value_node"]
 
     value_diff = diff_dicts(left_value, right_value)
-    result = {
+    return {
         "uid": right_term["uid"],
         "change_date": right_term["change_date"],
         "codelists": right_term["codelists"],
         "value_node": value_diff,
     }
-    return result
 
 
 def codelist_diff(left_cl, right_cl):
@@ -301,12 +285,11 @@ def codelist_diff(left_cl, right_cl):
     right_value = right_cl["value_node"]
 
     value_diff = diff_dicts(left_value, right_value)
-    result = {
+    return {
         "uid": right_cl["uid"],
         "change_date": right_cl["change_date"],
         "value_node": value_diff,
     }
-    return result
 
 
 @db.transaction

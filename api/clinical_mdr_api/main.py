@@ -1,123 +1,38 @@
 """Application main file."""
 
 # Placed at the top to ensure logging is configured before anything else is loaded
-from fastapi.exceptions import RequestValidationError
-from pydantic import ValidationError
-
 from common.config import settings
-from common.database import configure_database
-from common.logger import default_logging_config, log_exception
+from common.database import configure_app_database
+from common.logger import default_logging_config
 
 default_logging_config()
 
-configure_database(
-    settings.neo4j_dsn,
-    soft_cardinality_check=settings.soft_cardinality_check,
-    max_connection_lifetime=settings.neo4j_connection_lifetime,
-    liveness_check_timeout=settings.neo4j_liveness_check_timeout,
-)
+configure_app_database(settings.neo4j_dsn)
 
 
 import logging
 from contextlib import asynccontextmanager
-from typing import Any
 
-from fastapi import FastAPI, Request, status
-from fastapi.encoders import jsonable_encoder
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.middleware.gzip import GZipMiddleware
-from fastapi.openapi.utils import get_openapi
-from fastapi.responses import JSONResponse
-from fastapi.routing import APIRoute
-from opencensus.ext.azure.trace_exporter import AzureExporter
-from opencensus.trace.print_exporter import PrintExporter
-from opencensus.trace.samplers import AlwaysOnSampler
+from fastapi import FastAPI
+from neomodel import db as neomodel_db
 from starlette.exceptions import HTTPException as StarletteHTTPException
-from starlette.middleware import Middleware
-from starlette_context.middleware import RawContextMiddleware
 
 from clinical_mdr_api.utils.api_version import get_api_version
-from common.auth.dependencies import security
-from common.auth.discovery import reconfigure_with_openid_discovery
-from common.exceptions import MDRApiBaseException
-from common.models.error import ErrorResponse
-from common.openapi import (
-    strip_min_length_from_nullable_input_strings,
-    strip_null_from_query_parameter_schemas,
+from common.app_factory import (
+    build_middlewares,
+    build_openapi_func,
+    register_exception_handlers,
 )
-from common.telemetry.request_metrics import patch_neomodel_database
-from common.telemetry.traceback_middleware import ExceptionTracebackMiddleware
-from common.telemetry.tracing_middleware import TracingMiddleware
+from common.auth.discovery import reconfigure_with_openid_discovery
+from common.database import log_rbac_guard_result
 
 log = logging.getLogger(__name__)
 
 
-# Middlewares - please don't use app.add_middleware() as that inserts them to the beginning of the list
-middlewares = []
-
-# gzip compress responses
-if settings.gzip_response_min_size:
-    middlewares.append(
-        Middleware(
-            GZipMiddleware,
-            minimum_size=settings.gzip_response_min_size,
-            compresslevel=settings.gzip_level,
-        )
-    )
-
-# Context middleware - must come before TracingMiddleware
-middlewares.append(Middleware(RawContextMiddleware))
-
-# Tracing middleware
-if settings.tracing_enabled:
-
-    # Azure Application Insights integration for tracing
-    if settings.appinsights_connection:
-        tracing_exporter = AzureExporter(
-            connection_string=settings.appinsights_connection,
-            enable_local_storage=False,
-        )
-
-    elif settings.zipkin_host:
-        # opencensus-ext-zipkin is a dev-only package dependency
-        from opencensus.ext.zipkin.trace_exporter import ZipkinExporter
-
-        tracing_exporter = ZipkinExporter(
-            service_name="clinical-mdr-api",
-            host_name=settings.zipkin_host,
-            port=settings.zipkin_port,
-            endpoint=settings.zipkin_endpoint,
-            protocol=settings.zipkin_protocol,
-        )
-
-    else:
-        tracing_exporter = PrintExporter()
-
-    middlewares.append(
-        Middleware(
-            TracingMiddleware,
-            sampler=AlwaysOnSampler(),
-            exporter=tracing_exporter,
-            exclude_paths={"*/system/healthcheck"},
-        )
-    )
-
-    patch_neomodel_database()
-
-
-middlewares.append(
-    Middleware(
-        CORSMiddleware,
-        allow_origin_regex=settings.allow_origin_regex,
-        allow_credentials=settings.allow_credentials,
-        allow_methods=settings.allow_methods,
-        allow_headers=settings.allow_headers,
-        expose_headers=["traceresponse"],
-    )
+# Middlewares — no exclude_clients for the main app (unlike the other three apps)
+middlewares = build_middlewares(
+    service_name="clinical-mdr-api", tracing_exclude_clients=None
 )
-
-# Convert all uncaught exceptions to response before returning to TracingMiddleware
-middlewares.append(Middleware(ExceptionTracebackMiddleware))
 
 
 @asynccontextmanager
@@ -125,6 +40,19 @@ async def lifespan(_app: FastAPI):
     if settings.oauth_enabled:
         # Reconfiguring Swagger UI settings with OpenID Connect discovery
         await reconfigure_with_openid_discovery()
+
+    try:
+        # If the `mdr` role from db/init_neo4j.py is active, this connection cannot
+        # see :CDISCStaging nodes at all — a non-zero count means either Community
+        # edition or the roles are not provisioned yet, and the app must keep working
+        # either way (this is defence in depth, not the isolation mechanism).
+        rows, _ = neomodel_db.cypher_query("MATCH (n:CDISCStaging) RETURN count(n)")
+        log_rbac_guard_result(
+            "mdr connection cannot see :CDISCStaging", rows[0][0] == 0
+        )
+    except Exception:  # pylint: disable=broad-except
+        log.exception("Could not check the RBAC guard status at startup")
+
     yield
 
 
@@ -178,85 +106,14 @@ When authentication is turned on, all requests to protected API endpoints must p
 )
 
 
-@app.exception_handler(StarletteHTTPException)
-async def http_exception_handler(request: Request, exception: StarletteHTTPException):
-    """Returns an HTTP error code associated to given exception.
-
-    Registered on ``starlette.exceptions.HTTPException`` (not
-    ``fastapi.HTTPException``) so it also catches exceptions raised inside
-    FastAPI's request-body parsing machinery, which imports ``HTTPException``
-    directly from Starlette (see ``fastapi/routing.py``). Registering on the
-    parent class covers both types via MRO.
-    """
-
-    await log_exception(request, exception)
-
-    ExceptionTracebackMiddleware.add_traceback_attributes(exception)
-
-    return JSONResponse(
-        status_code=exception.status_code,
-        content=jsonable_encoder(ErrorResponse(request, exception)),
-        headers=exception.headers,
-    )
-
-
-@app.exception_handler(MDRApiBaseException)
-async def mdr_api_exception_handler(request: Request, exception: MDRApiBaseException):
-    """Returns an HTTP error code associated to given exception."""
-
-    await log_exception(request, exception)
-
-    ExceptionTracebackMiddleware.add_traceback_attributes(exception)
-
-    return JSONResponse(
-        status_code=exception.status_code,
-        content=jsonable_encoder(ErrorResponse(request, exception)),
-        headers=exception.headers,
-    )
-
-
-@app.exception_handler(ValidationError)
-async def handle_validation_error(
-    request: Request, exception: ValidationError
-) -> JSONResponse:
-    await log_exception(request, exception)
-
-    ExceptionTracebackMiddleware.add_traceback_attributes(exception)
-
-    return JSONResponse(
-        status_code=status.HTTP_400_BAD_REQUEST,
-        content=jsonable_encoder(ErrorResponse(request, exception)),
-        headers={},
-    )
-
-
-@app.exception_handler(RequestValidationError)
-async def handle_request_validation_error(
-    request: Request, exception: RequestValidationError
-) -> JSONResponse:
-    await log_exception(request, exception)
-
-    ExceptionTracebackMiddleware.add_traceback_attributes(exception)
-
-    return JSONResponse(
-        status_code=status.HTTP_400_BAD_REQUEST,
-        content=jsonable_encoder(ErrorResponse(request, exception)),
-        headers={},
-    )
-
-
-@app.exception_handler(ValueError)
-async def value_error_handler(request: Request, exception: ValueError):
-    """Returns `400 Bad Request` http error status code in case ValueError is raised"""
-
-    await log_exception(request, exception)
-
-    ExceptionTracebackMiddleware.add_traceback_attributes(exception)
-
-    return JSONResponse(
-        status_code=status.HTTP_400_BAD_REQUEST,
-        content=jsonable_encoder(ErrorResponse(request, exception)),
-    )
+register_exception_handlers(
+    app,
+    # StarletteHTTPException (not fastapi.HTTPException) so request-body-parsing errors
+    # are also caught — see the original handler docstring in consumer_api for details.
+    http_exception_class=StarletteHTTPException,
+    include_value_error=True,
+    validation_error_include_headers=True,
+)
 
 
 # Late import of routers, because they do run code on import, and we want monkey-patching like tracing to work
@@ -609,87 +466,43 @@ app.include_router(
     routers.data_suppliers_router, prefix="/data-suppliers", tags=["Data Suppliers"]
 )
 
-
-def custom_openapi():
-    if app.openapi_schema:
-        return app.openapi_schema
-
-    openapi_schema = get_openapi(
-        title=app.title,
-        version=app.version,
-        openapi_version=app.openapi_version,
-        description=app.description,
-        routes=app.routes,
-        separate_input_output_schemas=app.separate_input_output_schemas,
+# Mount the Standards Import API's routers under /standards-import so both halves of
+# the database (MDR + staging) are served by a single process. The import is inside the
+# `if` block so `standards_import.main` is never imported here — that module calls
+# `configure_database` at module level, which would conflict with this app's own call.
+if settings.standards_import_enabled:
+    from standards_import.routers import (  # pylint: disable=wrong-import-position
+        codelists as si_codelists,
+        effective_dates as si_effective_dates,
+        imports as si_imports,
+        inconsistencies as si_inconsistencies,
+        jobs as si_jobs,
+        package_files as si_package_files,
+        resolution_rules as si_resolution_rules,
+        sponsor_impact as si_sponsor_impact,
+        type_descriptions as si_type_descriptions,
     )
 
-    openapi_schema["servers"] = [{"url": settings.openapi_schema_api_root_path}]
-
-    if settings.oauth_enabled:
-        if "components" not in openapi_schema:
-            openapi_schema["components"] = {}
-
-        if "securitySchemes" not in openapi_schema["components"]:
-            openapi_schema["components"]["securitySchemes"] = {}
-
-        # Add 'BearerJwtAuth' security schema globally
-        openapi_schema["components"]["securitySchemes"]["BearerJwtAuth"] = {
-            "type": "http",
-            "scheme": "bearer",
-            "bearerFormat": "JWT",  # optional, arbitrary value for documentation purposes
-            "in": "header",
-            "name": "Authorization",
-            "description": "Access token that will be sent as `Authorization: Bearer {token}` header in all requests",
-        }
-        openapi_schema["components"]["securitySchemes"][
-            "OAuth2AuthorizationCodeBearer"
-        ]["flows"]["authorizationCode"]["scopes"] = {
-            "api:///API.call": "Make calls to the API"
-        }
-
-        # Add 'BearerJwtAuth' security method to all endpoints
-        api_router = [route for route in app.routes if isinstance(route, APIRoute)]
-        for route in api_router:
-            if not any(
-                dependency
-                for dependency in route.dependencies
-                if dependency == security
-            ):
-                continue
-
-            path = getattr(route, "path")
-            methods = [method.lower() for method in getattr(route, "methods")]
-
-            for method in methods:
-                endpoint_security: list[Any] = openapi_schema["paths"][path][
-                    method
-                ].get("security", [])
-                endpoint_security.append({"BearerJwtAuth": []})
-                openapi_schema["paths"][path][method]["security"] = endpoint_security
-
-    # Add `400 Bad Request` error response to all endpoints and remove 422
-    for path, path_item in openapi_schema["paths"].items():
-        for method, operation in path_item.items():
-            if "responses" not in operation:
-                operation["responses"] = {}
-
-            operation["responses"].pop("422", None)
-
-            if "400" not in operation["responses"]:
-                operation["responses"]["400"] = {
-                    "description": "Bad Request",
-                    "content": {
-                        "application/json": {
-                            "schema": {"$ref": "#/components/schemas/ErrorResponse"}
-                        }
-                    },
-                }
-
-    strip_null_from_query_parameter_schemas(openapi_schema)
-    strip_min_length_from_nullable_input_strings(openapi_schema)
-
-    app.openapi_schema = openapi_schema
-    return app.openapi_schema
+    app.include_router(si_package_files.router, prefix="/standards-import")
+    app.include_router(si_package_files.discovery_router, prefix="/standards-import")
+    app.include_router(si_package_files.pairings_router, prefix="/standards-import")
+    app.include_router(si_package_files.changelog_router, prefix="/standards-import")
+    app.include_router(si_effective_dates.router, prefix="/standards-import")
+    app.include_router(si_sponsor_impact.router, prefix="/standards-import")
+    app.include_router(si_imports.router, prefix="/standards-import")
+    app.include_router(si_inconsistencies.router, prefix="/standards-import")
+    app.include_router(si_inconsistencies.options_router, prefix="/standards-import")
+    app.include_router(si_resolution_rules.router, prefix="/standards-import")
+    app.include_router(si_jobs.router, prefix="/standards-import")
+    app.include_router(si_type_descriptions.router, prefix="/standards-import")
+    app.include_router(si_codelists.router, prefix="/standards-import")
 
 
+# `custom_openapi` is kept as a module-level name for backwards compatibility — the
+# OpenAPI generation script (`generate_openapi_json.py`) imports it by name.
+custom_openapi = build_openapi_func(
+    app,
+    remove_422=True,
+    separate_input_output_schemas=app.separate_input_output_schemas,
+)
 setattr(app, "openapi", custom_openapi)

@@ -22,6 +22,10 @@ const STUDY_PAGES = [
   ['USDM listing', 'usdm'],
   ['ICH M11 listing', 'ichm11'],
   ['Analysis study metadata', 'analysis_study_metadata_new'],
+  [
+    'Data specifications - Auxiliary devices',
+    'data_specifications/auxiliary_devices',
+  ],
 ]
 
 for (const [label, segment] of STUDY_PAGES) {

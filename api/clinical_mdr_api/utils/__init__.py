@@ -1,7 +1,7 @@
 import json
 import re
 import string
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from typing import Any, overload
 
 from bs4 import BeautifulSoup
@@ -51,8 +51,7 @@ def validate_dict(item: Any, label: str, ignore_none=True) -> bool:
 
 def snake_to_camel(name):
     name = "".join(word.title() for word in name.split("_"))
-    name = f"{name[0].lower()}{name[1:]}"
-    return name
+    return f"{name[0].lower()}{name[1:]}"
 
 
 def camel_to_snake(name: str) -> str:
@@ -106,7 +105,7 @@ def is_attribute_in_model(attribute: str, model: type[BaseModel]) -> bool:
     Checks if given string is an attribute defined in a model (in the Pydantic sense).
     This works for the model's own attributes and inherited attributes.
     """
-    return attribute in model.model_fields.keys()
+    return attribute in model.model_fields
 
 
 def strip_html(html: str) -> str:
@@ -129,6 +128,8 @@ def strip_html(html: str) -> str:
 def convert_to_plain(text: str) -> str:
     """
     Converts a text with HTML tags and square brackets to plain text.
+    The brackets are removed before the HTML is parsed, so literal brackets
+    escaped as HTML entities (see `escape_literal_brackets`) are kept.
 
     Args:
         text (str): The text to convert.
@@ -137,27 +138,58 @@ def convert_to_plain(text: str) -> str:
         str: The plain text.
 
     Example:
-        >>> convert_to_plain("<p>Some [text] with <b>HTML</b> tags.</p>")
-        "Some text with HTML tags."
+        >>> convert_to_plain("<p>Some [text] with <b>HTML</b> tags &#91;1&#93;.</p>")
+        "Some text with HTML tags [1]."
     """
-    return strip_html(text).replace("[", "").replace("]", "")
+    return strip_html(text.replace("[", "").replace("]", ""))
 
 
-def extract_parameters(name: str) -> list[str]:
+def escape_literal_brackets(text: str) -> str:
     """
-    Extracts parameters from a string. A parameter is a string that is between two square brackets.
-
-    Args:
-        name (str): The string to extract parameters from.
-
-    Returns:
-        list[str]: A sequence of parameter names.
+    Escapes square brackets as HTML entities, so that a generated syntax instance name
+    contains raw square brackets only around its filled-in template parameters.
 
     Example:
-        >>> extract_parameters("Some [parameter1] and [parameter2]")
-        ["parameter1", "parameter2"]
+        >>> escape_literal_brackets("see [note]")
+        "see &#91;note&#93;"
     """
-    return re.findall(r"\[([\w\s\-]+)]", name)
+    return text.replace("[", "&#91;").replace("]", "&#93;")
+
+
+TEMPLATE_PARAMETER_CANDIDATE = re.compile(r"\[([^\[\]]+)]")
+
+
+def find_parameters(
+    name: str, is_parameter: Callable[[str], bool]
+) -> list[re.Match[str]]:
+    """
+    Finds the template parameters in a template name. A template parameter is the name of
+    a template parameter enclosed in square brackets; any other bracketed text is literal.
+
+    Args:
+        name (str): The template name to search.
+        is_parameter (Callable[[str], bool]): Tells whether a bracketed text is the name
+            of a template parameter.
+
+    Returns:
+        list[re.Match[str]]: The matches, in order. Group 1 holds the parameter name.
+    """
+    return [
+        match
+        for match in TEMPLATE_PARAMETER_CANDIDATE.finditer(name)
+        if is_parameter(match.group(1))
+    ]
+
+
+def extract_parameters(name: str, is_parameter: Callable[[str], bool]) -> list[str]:
+    """
+    Extracts the template parameter names from a template name, see `find_parameters`.
+
+    Example:
+        >>> extract_parameters("Some [Activity] and [see note]", {"Activity"}.__contains__)
+        ["Activity"]
+    """
+    return [match.group(1) for match in find_parameters(name, is_parameter)]
 
 
 def factorize_dict(data: dict[Any, Any]) -> dict[Any, Any]:
@@ -197,7 +229,7 @@ def defactorize_dict(data: dict[Any, Any]) -> dict[Any, Any]:
     """
     return_dict = {}
     for key, value in data.items():
-        new_key = key[1:] if key.startswith("_") else key
+        new_key = key.removeprefix("_")
         return_dict[new_key] = value
     return return_dict
 

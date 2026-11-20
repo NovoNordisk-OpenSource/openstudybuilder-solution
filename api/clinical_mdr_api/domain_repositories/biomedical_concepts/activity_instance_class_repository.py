@@ -328,14 +328,12 @@ class ActivityInstanceClassRepository(  # type: ignore[misc]
 
         mapped_datasets = [dict(zip(meta, row)) for row in results]
 
-        output = [
+        return [
             ActivityInstanceClassWithDataset(
                 uid=el["uid"], name=el["name"], datasets=el["dataset_uids"]
             )
             for el in mapped_datasets
         ]
-
-        return output
 
     def _maintain_parameters(
         self,

@@ -73,12 +73,14 @@ def test_import_odm_vendor_with_csv_mapper(api_client):
             "xml_file": ("odm.xml", IMPORT_INPUT2, CONTENT_TYPE),
             "mapper_file": (
                 "mapper.csv",
-                "type,parent,from_name,to_name,to_alias,from_alias,alias_context\n"
-                "attribute,,Repeated,Repeating,,,\n"
-                "element,,NameOne,cs:NameOne,,,\n"
-                "element,,Alias,,,true,CompletionInstructions\n"
-                "element,*,Alias,,,true,ImplementationNotes\n"
-                "text/csv",
+                (
+                    "type,parent,from_name,to_name,to_alias,from_alias,alias_context\n"
+                    "attribute,,Repeated,Repeating,,,\n"
+                    "element,,NameOne,cs:NameOne,,,\n"
+                    "element,,Alias,,,true,CompletionInstructions\n"
+                    "element,*,Alias,,,true,ImplementationNotes\n"
+                    "text/csv"
+                ),
             ),
         },
     )

@@ -24,6 +24,9 @@ name: PR required checks
 on:
   pull_request:
     branches: [main, "release/*"]
+  # Merge queue: the `required` check must also be reported on the
+  # temporary gh-readonly-queue/* merge-group commit, or the queue stalls.
+  merge_group:
 
 permissions:
   contents: read
@@ -66,8 +69,10 @@ jobs:
 
       - id: filter
         env:
-          BASE_SHA: ${{ github.event.pull_request.base.sha }}
-          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          # For merge_group, base_sha is the base branch tip and head_sha the
+          # queue commit (base + queued PRs), so the diff covers the whole group.
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.event.merge_group.head_sha }}
         run: |
           set -euo pipefail
 
@@ -170,6 +175,7 @@ jobs:
           # here), so only api-build matters for this filter.
           if match '^api/' \
             || match '^\.github/workflows/api-build\.' \
+            || match '^\.github/actions/free-runner-disk-space/' \
             || [ "$shared_tools" = "true" ]; then
             api=true
           else
@@ -194,6 +200,7 @@ jobs:
           if match '^db_schema_migration/' \
             || match '^api/' \
             || match '^\.github/workflows/db-schema-migration-build\.' \
+            || match '^\.github/actions/free-runner-disk-space/' \
             || [ "$shared_tools" = "true" ]; then
             db_schema_migration=true
           else

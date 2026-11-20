@@ -34,7 +34,7 @@ log = logging.getLogger(__name__)
 
 
 class CommentsRepository:
-    cache_store_item_by_uid = TTLCache(
+    cache_store_item_by_uid: TTLCache = TTLCache(
         maxsize=settings.cache_max_size, ttl=settings.cache_ttl
     )
     lock_store_item_by_uid = Lock()
@@ -65,7 +65,7 @@ class CommentsRepository:
     def find_comment_thread_by_uid(self, uid: str) -> CommentThreadAR | None:
         node: CommentThread = CommentThread.nodes.get_or_none(uid=uid, is_deleted=False)
         if node is not None:
-            item = CommentThreadAR.from_repository_values(
+            return CommentThreadAR.from_repository_values(
                 uid=node.uid,
                 text=node.text,
                 topic_path=node.topic.single().topic_path,
@@ -80,7 +80,6 @@ class CommentsRepository:
                 status_modified_by=node.status_modified_by,
                 deleted_at=node.deleted_at,
             )
-            return item
         return None
 
     @cached(cache=cache_store_item_by_uid, key=get_hashkey, lock=lock_store_item_by_uid)
@@ -90,7 +89,7 @@ class CommentsRepository:
         )
         if nodes is not None:
             node = nodes[0]
-            item = CommentReplyAR.from_repository_values(
+            return CommentReplyAR.from_repository_values(
                 uid=node.uid,
                 text=node.text,
                 comment_thread_uid=node.reply_to.single().uid,
@@ -102,17 +101,15 @@ class CommentsRepository:
                 modified_at=node.modified_at,
                 deleted_at=node.deleted_at,
             )
-            return item
         return None
 
     def find_topic_by_path(self, path: str) -> CommentTopicAR | None:
         node = CommentTopic.nodes.first_or_none(topic_path=path)
         if node is not None:
-            topic = CommentTopicAR.from_repository_values(
+            return CommentTopicAR.from_repository_values(
                 uid=node.uid,
                 topic_path=node.topic_path,
             )
-            return topic
         return None
 
     @sb_clear_cache(caches=["cache_store_item_by_uid"])
@@ -359,13 +356,13 @@ class CommentsRepository:
             count_result, _ = db.cypher_query(query=count_query, params=params)
             total_amount = count_result[0][0] if len(count_result) > 0 else 0
 
-            return threads_ars, total_amount
-
         except CypherSyntaxError as ex:
-            log.error("%s: %s", ex.code, ex.message)
+            log.exception("%s: %s", ex.code, ex.message)
             raise exceptions.ValidationException(
                 msg="Unsupported filtering or sort parameters specified"
             ) from ex
+        else:
+            return threads_ars, total_amount
 
     def find_all_comment_topics(
         self,
@@ -443,13 +440,13 @@ class CommentsRepository:
             count_result, _ = db.cypher_query(query=count_query, params=params)
             total_amount = count_result[0][0] if len(count_result) > 0 else 0
 
-            return topics_ars, total_amount
-
         except CypherSyntaxError as ex:
-            log.error("%s: %s", ex.code, ex.message)
+            log.exception("%s: %s", ex.code, ex.message)
             raise exceptions.ValidationException(
                 msg="Unsupported filtering or sort parameters specified"
             ) from ex
+        else:
+            return topics_ars, total_amount
 
     def find_all_comment_thread_replies(
         self, thread_uid: str

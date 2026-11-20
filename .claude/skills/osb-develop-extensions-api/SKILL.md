@@ -1,6 +1,6 @@
 ---
 name: osb-develop-extensions-api
-description: "Implement new or update existing API endpoints in the Extensions API by leveraging the specialized Extensions API implementation agent."
+description: "Use when creating a new extension or changing an existing one in the Extensions API (api/extensions/, port 8009). For the main API use /osb-develop-main-api; for api/consumer_api/ use /osb-develop-consumer-api."
 ---
 
 # Develop Extensions API
@@ -40,13 +40,17 @@ The README uses `my_extension` as an illustrative placeholder — it is document
 That mirrors the discovery rule in `extensions_api.py` (a directory counts as an extension only if it contains `{name}_main.py`), so it will not report build-artifact or shared-test directories.
 
 Of what it does report, use `hello` and `system` as reference patterns. Treat anything else it reports as internal and off-limits: do not copy its structure as an example, and do not modify it unless the user names it explicitly.
+
+What the caller needs from you, as the last section of your response:
+- **CHANGED FILES**: every file you created or modified, one repo-relative path per line.
+- **ROUTES TOUCHED**: whether you added, removed, or changed any route, response model, or endpoint docstring — this decides whether extensions/openapi.json must be regenerated.
 ```
 
 ## After the agent returns
 
 The specialist runs its own fast checks (format, lint, sblint) and reports what it ran. It is explicitly barred from regenerating the OpenAPI spec, because that is not a check — it rewrites the committed `extensions/openapi.json` and bumps `extensions/apiVersion`. That belongs to the user, not to an agent acting on its own initiative.
 
-Use the agent's report to decide whether the spec is even affected:
+Use the agent's ROUTES TOUCHED report to decide whether the spec is even affected. If it did not provide one, derive it from CHANGED FILES (or `git status --porcelain` under `api/extensions/`): any `*_main.py`, router, or `models.py` change is route-facing; changes confined to `db.py` or `tests/` are not.
 
 - **No route, response model, or endpoint docstring changed** → do not ask. Say the spec is unaffected and move on.
 - **Something route-facing changed** → ask, exactly once:
@@ -83,263 +87,64 @@ If they decline, say plainly that the spec is now stale and name the command the
 
 Then report what the agent verified and what you did. If the agent's response showed no lint output, or it claimed a pass without showing it, re-run the checks yourself rather than taking its word.
 
-## Task type
+## Invoking the specialist
 
-AskUserQuestion({
-  questions: [{
-    question: "What type of Extensions API development do you need?",
-    header: "Task Type",
-    options: [
-      {
-        label: "New extension implementation (Recommended)",
-        description: "Create a complete new extension following Extensions API patterns - I'll gather extension details, functionality requirements, and authentication needs"
-      },
-      {
-        label: "Modify existing extension",
-        description: "Update or enhance an existing extension - I'll identify the target extension and modification details"
-      },
-      {
-        label: "Full feature implementation",
-        description: "Complex feature spanning multiple extensions or significant extension enhancements"
-      },
-      {
-        label: "Custom implementation",
-        description: "Work directly with your provided task description for specific Extensions API requirements"
-      }
-    ],
-    multiSelect: false
-  }]
-})
+There is no task-type, extension-type, or feature-scope question. Whether this is a new extension, a modification, or a multi-extension feature is clear from the request, and the specialist reads the README and the existing extensions to settle structure.
 
-Match on the label PREFIX in every mapping below — the "(Recommended)" suffix may or may not be present.
-
-Note on options: `AskUserQuestion` accepts a maximum of 4 options per question, and always offers the user an "Other" free-text choice automatically. Do not add an explicit "Custom …" option to any question below; it would waste a slot and duplicate the built-in escape hatch.
-
----
-
-**If "New extension implementation" is selected:**
-
-AskUserQuestion({
-  questions: [{
-    question: "What type of functionality will this extension provide?",
-    header: "Extension Type",
-    options: [
-      {
-        label: "Data processing",
-        description: "Process, transform, or analyze data - typically includes Neo4j database operations and business logic"
-      },
-      {
-        label: "Integration",
-        description: "Connect with external APIs or services - includes an external client and its configuration"
-      },
-      {
-        label: "Reporting or export",
-        description: "Generate reports, exports, or data visualizations - may include file generation"
-      },
-      {
-        label: "System utility",
-        description: "System monitoring, health checks, or administrative functions"
-      }
-    ],
-    multiSelect: false
-  }, {
-    question: "What level of access control does this extension need?",
-    header: "Authentication",
-    options: [
-      {
-        label: "Admin access required",
-        description: "Requires rbac.ADMIN_READ or rbac.ADMIN_WRITE - for administrative functions"
-      },
-      {
-        label: "Study data access",
-        description: "Requires rbac.STUDY_READ - for accessing study-related data"
-      },
-      {
-        label: "Library data access",
-        description: "Requires rbac.LIBRARY_READ - for accessing library/reference data"
-      },
-      {
-        label: "Public access",
-        description: "Only requires the basic security dependency - no specific role needed"
-      }
-    ],
-    multiSelect: false
-  }]
-})
-
-`{EXTENSION_TYPE}` = the selected functionality label (or the user's "Other" text).
-`{AUTH_LEVEL}` = the selected access-control label (or the user's "Other" text).
-
-Then invoke the Extensions API implementation specialist:
-
-```
-Agent({
-  description: "New Extensions API extension implementation",
-  subagent_type: "extensions-api-implementation-specialist",
-  prompt: "I need help implementing a new Extensions API extension. Please analyze the user's request and implement the necessary changes following these guidelines:
-
-DEVELOPMENT CONTEXT:
-- Task: New extension implementation
-- Extension Type: {EXTENSION_TYPE}
-- Authentication: {AUTH_LEVEL}
-- Implementation Pattern: Complete new extension with proper structure
-
-{EXTENSIONS_CONTEXT}
-
-IMPLEMENTATION REQUIREMENTS:
-1. **Read the spec first**: Read api/extensions/README.md, then read one existing extension end to end as a worked example.
-2. **Create extension structure**: Set up the directory exactly as the README specifies.
-3. **Implement router**: Create the APIRouter with authentication dependencies matching {AUTH_LEVEL}.
-4. **Add models**: Define Pydantic request/response models in models.py if needed.
-5. **Add database operations**: Implement db.py for Neo4j operations if the extension needs persistence.
-6. **Create comprehensive tests**: Generate a test suite in the extension's tests/ subdirectory.
-7. **Document extension**: Ensure proper OpenAPI documentation and endpoint docstrings.
-8. **Verify discoverability**: Confirm the new extension satisfies the discovery rule in extensions_api.py.
-
-The user's new extension request follows:
-
-{USER_REQUEST}"
-})
-```
-
-When the agent returns, follow **## After the agent returns** above.
-
----
-
-**If "Modify existing extension" is selected:**
-
-Do NOT use a hardcoded list of extensions — it goes stale. Discover them first:
+**Target.** Discover the extensions (do NOT use a hardcoded list):
 
 ```bash
 for d in api/extensions/*/; do n=$(basename "$d"); [ -f "$d${n}_main.py" ] && echo "$n"; done
 ```
 
-Then decide whether to ask at all:
+- If the request names a discovered extension, or is clearly a new one, state which and proceed.
+- Otherwise ask, one option per plausible extension (at most 4; describe each by the first line of its `{name}_main.py` docstring or its router prefix). Say the list is filtered so the user knows to use the built-in "Other".
 
-- If the user's task description already names one of the discovered extensions unambiguously, skip the question. State which extension you inferred and proceed.
-- Otherwise ask, building the options from the command's output — one option per discovered extension, labelled with its name. For each description, read the first line of that extension's `{name}_main.py` docstring, or its router prefix if there is no docstring.
-- `AskUserQuestion` caps options at 4. If more than 4 extensions are discovered, offer the 4 most plausible given the user's description; the built-in "Other" choice covers the rest. Say in the question text that the list is filtered so the user knows to use "Other".
+`{TARGET}` = the extension name(s), or `new: <name>` for a new extension.
 
-`{TARGET_EXTENSION}` = the inferred or selected extension name.
-
-Then invoke the Extensions API implementation specialist:
+**Access level — new extensions only.** If the request creates a new extension and does not state who may call it, ask:
 
 ```
-Agent({
-  description: "Modify existing Extensions API extension",
-  subagent_type: "extensions-api-implementation-specialist",
-  prompt: "I need help modifying an existing Extensions API extension. Please analyze the user's request and implement the necessary changes following these guidelines:
-
-DEVELOPMENT CONTEXT:
-- Task: Modify existing extension
-- Target Extension: {TARGET_EXTENSION}
-- Modification Type: Enhancement or update to existing functionality
-
-{EXTENSIONS_CONTEXT}
-
-IMPLEMENTATION REQUIREMENTS:
-1. **Locate the target**: Find api/extensions/{TARGET_EXTENSION}/ and read its main file, models, and database operations. If that directory does not exist, stop and report the discovered extension names rather than guessing.
-2. **Follow existing patterns**: Match the surrounding code's style and structure rather than importing conventions from elsewhere.
-3. **Implement changes**: Modify router endpoints, models, and/or database operations as needed.
-4. **Update tests**: Modify or add test files in the extension's tests/ subdirectory.
-5. **Document changes**: Update OpenAPI documentation and docstrings.
-6. **Preserve contracts**: Keep the extension discoverable and do not break its existing endpoints unless the user explicitly asked for a breaking change.
-
-The user's extension modification request follows:
-
-{USER_REQUEST}"
-})
-```
-
-When the agent returns, follow **## After the agent returns** above.
-
----
-
-**If "Full feature implementation" is selected:**
-
 AskUserQuestion({
   questions: [{
-    question: "What is the scope of this Extensions API feature?",
-    header: "Feature Scope",
+    question: "What level of access control does this extension need?",
+    header: "Authentication",
     options: [
-      {
-        label: "Multi-extension feature",
-        description: "Feature that requires multiple coordinated extensions working together"
-      },
-      {
-        label: "Major extension enhancement",
-        description: "Significant expansion of an existing extension with multiple new capabilities"
-      },
-      {
-        label: "Cross-cutting functionality",
-        description: "Feature that adds capabilities across multiple existing extensions"
-      }
+      { label: "Admin access required", description: "Requires rbac.ADMIN_READ or rbac.ADMIN_WRITE - for administrative functions" },
+      { label: "Study data access", description: "Requires rbac.STUDY_READ - for accessing study-related data" },
+      { label: "Library data access", description: "Requires rbac.LIBRARY_READ - for accessing library/reference data" },
+      { label: "Public access", description: "Only requires the basic security dependency - no specific role needed" }
     ],
     multiSelect: false
   }]
 })
+```
 
-`{FEATURE_SCOPE}` = the selected scope label (or the user's "Other" text).
-
-Then invoke the Extensions API implementation specialist:
+`{AUTH_LEVEL}` = the selected label (or the user's "Other" text); the access level the request states; or, when modifying, `match the extension's existing routes`.
 
 ```
 Agent({
-  description: "Full Extensions API feature implementation",
+  description: "Extensions API implementation",
   subagent_type: "extensions-api-implementation-specialist",
-  prompt: "I need help implementing a complete Extensions API feature. Please analyze the user's request and implement the necessary changes following these guidelines:
+  prompt: "Implement the user's request in the Extensions API.
 
 DEVELOPMENT CONTEXT:
-- Task: Full feature implementation
-- Feature Scope: {FEATURE_SCOPE}
-- Implementation Type: Comprehensive feature with multiple components
+- Target: {TARGET}
+- Authentication: {AUTH_LEVEL}
 
 {EXTENSIONS_CONTEXT}
 
 IMPLEMENTATION REQUIREMENTS:
-1. **Design feature architecture**: Plan the complete feature structure within Extensions API patterns before writing code.
-2. **Read the spec and survey what exists**: Read api/extensions/README.md, then enumerate and read the extensions this feature will touch.
-3. **Implement extensions**: Create or modify extensions as needed for the feature.
-4. **Ensure coordination**: If the feature spans multiple extensions, make the boundaries between them explicit rather than implicit.
-5. **Create comprehensive tests**: Generate a test suite covering the whole feature, including interactions between extensions.
-6. **Document feature**: Ensure proper OpenAPI documentation for all new endpoints.
-7. **Verify discoverability**: Confirm every new or renamed extension still satisfies the discovery rule in extensions_api.py.
+1. **Read the spec first**: Read api/extensions/README.md, then read hello or system end to end as a worked example. When modifying, read the target extension's main file, models, and database operations; if its directory does not exist, stop and report the discovered extension names rather than guessing.
+2. **Structure**: For a new extension, set up the directory exactly as the README specifies. For an existing one, match its own layout rather than importing conventions from elsewhere. If the work spans several extensions, make the boundaries between them explicit.
+3. **Router and auth**: APIRouter with the security dependency plus the rbac constant matching {AUTH_LEVEL}.
+4. **Models and persistence**: Pydantic models in models.py and Neo4j operations in db.py, only where needed.
+5. **Create tests**: Add or update tests in each affected extension's tests/ subdirectory.
+6. **Document**: OpenAPI documentation and endpoint docstrings. Do not run `uv run poe extensions-openapi` and never hand-edit extensions/openapi.json.
+7. **Preserve contracts**: Every new or renamed extension must satisfy the discovery rule in extensions_api.py. Do not break existing endpoints unless the user explicitly asked for a breaking change.
+8. **Close with the handoff**: End with CHANGED FILES and ROUTES TOUCHED as described above.
 
-The user's full feature request follows:
-
-{USER_REQUEST}"
-})
-```
-
-When the agent returns, follow **## After the agent returns** above.
-
----
-
-**If "Custom implementation" is selected:**
-
-Invoke the Extensions API implementation specialist directly:
-
-```
-Agent({
-  description: "Custom Extensions API implementation",
-  subagent_type: "extensions-api-implementation-specialist",
-  prompt: "I need help with a custom Extensions API implementation. Please analyze the user's request and implement the necessary changes following these guidelines:
-
-DEVELOPMENT CONTEXT:
-- Task: Custom implementation based on user's specific requirements
-- Implementation Type: User-defined Extensions API task
-
-{EXTENSIONS_CONTEXT}
-
-IMPLEMENTATION REQUIREMENTS:
-1. **Read the spec first**: Read api/extensions/README.md and enumerate the existing extensions before deciding on an approach.
-2. **Follow conventions**: Match existing code style, naming conventions, and architectural patterns.
-3. **Implement changes**: Create or modify extensions, routers, and related code as needed.
-4. **Create tests**: Generate appropriate test files in each affected extension's tests/ subdirectory.
-5. **Document changes**: Ensure proper OpenAPI documentation and comments where needed.
-6. **Verify discoverability**: Confirm anything created or renamed still satisfies the discovery rule in extensions_api.py.
-
-The user's custom Extensions API development request follows:
+The user's request follows:
 
 {USER_REQUEST}"
 })

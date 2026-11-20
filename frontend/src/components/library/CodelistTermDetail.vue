@@ -279,6 +279,10 @@
           <td>{{ $t('_global.definition') }}</td>
           <td>{{ termAttributes.definition }}</td>
         </tr>
+        <tr>
+          <td>{{ $t('CodelistTermDetail.algorithm') }}</td>
+          <td>{{ termAttributes.algorithm }}</td>
+        </tr>
       </tbody>
     </v-table>
 

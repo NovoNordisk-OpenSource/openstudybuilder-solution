@@ -17,7 +17,11 @@
       <slot :name="slot" v-bind="scope" />
     </template>
     <template #[`item.name`]="{ item }">
-      <NNParameterHighlighter :name="item.name" default-color="orange" />
+      <NNParameterHighlighter
+        :name="item.name"
+        :parameter-names="item.parameters?.map((p) => p.name)"
+        default-color="orange"
+      />
     </template>
     <template #[`item.start_date`]="{ item }">
       <v-tooltip location="top">

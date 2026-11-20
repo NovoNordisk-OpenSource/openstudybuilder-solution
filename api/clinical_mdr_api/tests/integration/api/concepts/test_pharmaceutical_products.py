@@ -785,8 +785,8 @@ def test_get_pharmaceutical_products(
     assert list(res.keys()) == ["items", "total", "page", "size"]
     assert len(res["items"]) == expected_result_len
     assert res["total"] == (len(pharmaceutical_products_all) if total_count else 0)
-    assert res["page"] == (page_number if page_number else 1)
-    assert res["size"] == (page_size if page_size else 10)
+    assert res["page"] == (page_number or 1)
+    assert res["size"] == (page_size or 10)
 
     for item in res["items"]:
         assert set(list(item.keys())) == set(PHARMACEUTICAL_PRODUCT_FIELDS_ALL)
@@ -1612,3 +1612,34 @@ def test_delete_archived_pharmaceutical_product_fails(api_client):
     )
     resp = parse_json_response(response, assert_status=400)
     assert "Can't delete Concept" in resp["message"]
+
+
+@pytest.mark.parametrize(
+    "formulation",
+    [
+        pytest.param({"ingredients": None}, id="null"),
+        pytest.param({"ingredients": []}, id="empty"),
+        pytest.param({}, id="missing"),
+    ],
+)
+def test_create_pharmaceutical_product_without_ingredients(api_client, formulation):
+    """
+    SCENARIO: Create a pharmaceutical product whose formulation has no ingredients
+    GIVEN a formulation must contain at least one ingredient
+    WHEN POST /concepts/pharmaceutical-products is called with null, empty or missing ingredients
+    THEN 400 is returned with a validation error on the ingredients field
+    """
+    payload = {
+        "library_name": "Sponsor",
+        "external_id": "external_id-NO-INGREDIENTS",
+        "dosage_form_uids": [ct_term_dose_form.term_uid],
+        "route_of_administration_uids": [ct_term_roa.term_uid],
+        "formulations": [formulation],
+    }
+    response = api_client.post(
+        "/concepts/pharmaceutical-products", data=json.dumps(payload), headers=HEADERS
+    )
+    res = parse_json_response(response, assert_status=400)
+    assert any(
+        "ingredients" in str(detail.get("field")) for detail in res["details"]
+    ), res

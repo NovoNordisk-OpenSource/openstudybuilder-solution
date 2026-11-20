@@ -8,7 +8,7 @@ from datetime import UTC, datetime, timedelta
 from random import randint
 from typing import Any
 from urllib.parse import urljoin
-from xml.etree import ElementTree
+from xml.etree import ElementTree as ET
 
 import httpx
 import neo4j.exceptions
@@ -141,8 +141,8 @@ class TestUtils:
     def assert_valid_xml(cls, val: str):
         # Attempt to parse the XML content using ElementTree
         try:
-            _root = ElementTree.fromstring(val)
-        except ElementTree.ParseError:
+            _root = ET.fromstring(val)
+        except ET.ParseError:
             assert False, "Content is not valid XML"
 
     @classmethod
@@ -189,4 +189,4 @@ class TestUtils:
     def random_if_none(cls, val, max_length: int = 10, prefix: str = ""):
         """Return supplied `val` if its value is not None.
         Otherwise return random string with optional prefix."""
-        return val if val else cls.random_str(max_length, prefix)
+        return val or cls.random_str(max_length, prefix)

@@ -180,7 +180,7 @@ import study from '@/api/study'
 import statuses from '@/constants/statuses.js'
 
 const studiesGeneralStore = useStudiesGeneralStore()
-const emit = defineEmits(['close'])
+const emit = defineEmits(['close', 'updated'])
 const { t } = useI18n()
 const formRules = inject('formRules')
 const notificationHub = inject('notificationHub')
@@ -293,6 +293,7 @@ async function submit() {
           type: 'success',
           msg: t('StudyActivityUpdateForms.update_success'),
         })
+        emit('updated')
         close()
       })
       .finally(() => {
@@ -325,6 +326,7 @@ async function declineAndKeep() {
         type: 'success',
         msg: t('StudyActivityUpdateForms.decline_success'),
       })
+      emit('updated')
       close()
     })
 }

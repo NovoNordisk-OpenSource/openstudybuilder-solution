@@ -24,7 +24,7 @@ from clinical_mdr_api.models.concepts.activities.activity_sub_group import (
     ActivitySubGroupOverview,
     ActivitySubGroupVersion,
 )
-from clinical_mdr_api.models.utils import BaseModel, CustomPage, GenericFilteringReturn
+from clinical_mdr_api.models.utils import CustomPage, GenericFilteringReturn
 from clinical_mdr_api.services._utils import ensure_transaction
 from clinical_mdr_api.services.concepts.activities.activity_service import (
     ActivityService,
@@ -38,7 +38,9 @@ from common.utils import sanitize_for_log
 logger = logging.getLogger(__name__)
 
 
-class ActivitySubGroupService(ConceptGenericService[ActivitySubGroupAR]):
+class ActivitySubGroupService(
+    ConceptGenericService[ActivitySubGroupAR, ActivitySubGroup]
+):
     aggregate_class = ActivitySubGroupAR
     repository_interface = ActivitySubGroupRepository
     version_class = ActivitySubGroupVersion
@@ -125,15 +127,14 @@ class ActivitySubGroupService(ConceptGenericService[ActivitySubGroupAR]):
             status=subgroup.status,
             version=subgroup.version,
             possible_actions=subgroup.possible_actions,
-            change_description=subgroup.change_description,
+            change_description=subgroup.change_description,  # type: ignore[arg-type]
             author_username=subgroup.author_username,
         )
 
-        result = ActivitySubGroupOverview(
+        return ActivitySubGroupOverview(
             activity_subgroup=activity_subgroup_detail,
             all_versions=all_versions,
         )
-        return result
 
     def get_activities_for_subgroup(
         self,
@@ -364,7 +365,7 @@ class ActivitySubGroupService(ConceptGenericService[ActivitySubGroupAR]):
     @ensure_transaction(db)
     def approve(
         self, uid: str, cascade_edit_and_approve: bool = False, ignore_exc: bool = False
-    ) -> BaseModel:
+    ) -> ActivitySubGroup:
         item = self._find_by_uid_or_raise_not_found(uid, for_update=True)
         try:
             item.approve(author_id=self.author_id)

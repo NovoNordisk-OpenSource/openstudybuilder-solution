@@ -16,7 +16,7 @@ from clinical_mdr_api.services.concepts.concept_generic_service import (
 )
 
 
-class CompoundAliasService(ConceptGenericService[CompoundAliasAR]):
+class CompoundAliasService(ConceptGenericService[CompoundAliasAR, CompoundAlias]):
     aggregate_class = CompoundAliasAR
     version_class = CompoundAliasVersion
     repository_interface = CompoundAliasRepository

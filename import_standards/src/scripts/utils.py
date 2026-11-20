@@ -64,7 +64,9 @@ def get_directory_name(parameter_index: int, suffix: str = ""):
 
         return path.join(base_directory, suffix, directory_name)
     except IndexError as e:
-        default_directory = base_directory
+        # the suffix belongs in the default too - dropping it would point the
+        # caller at the parent of the directory it actually reads and writes
+        default_directory = path.join(base_directory, suffix)
         print(
             f"The script parameter {parameter_index} is not defined. "
             f"Using '{default_directory}' as default."
@@ -305,6 +307,10 @@ def get_sentence_case_string(original_string):
 
 def is_newer_than(date1: str, date2: str):
     return date1 > date2
+
+
+def is_older_than(date1: str, date2: str):
+    return date1 < date2
 
 
 def get_same_start_string(string1, string2):

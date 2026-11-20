@@ -261,7 +261,7 @@ def merge_libraries_catalogues_packages(
 
 def fetch_versioned_codelists(session):
     query = """
-        MATCH (vcl:VersionedCodelist)-[hv:HAS_VERSION]->(clv:CodelistVersion)-[:FROM_PACKAGE]->(gclp:GroupedCodelistProperties)<-[:HAS_GROUPED_PROPERTIES]-(gcp:GroupedCodelist)-[:SOURCE_CODELIST_DEF]->(rcl:RawCodelist)<-[:HAS_RAW_CODELIST]-(cat:RawCatalogue)
+        MATCH (vcl:VersionedCodelist)-[hv:HAS_STAGED_VERSION]->(clv:CodelistVersion)-[:FROM_PACKAGE]->(gclp:GroupedCodelistProperties)<-[:HAS_GROUPED_PROPERTIES]-(gcp:GroupedCodelist)-[:SOURCE_CODELIST_DEF]->(rcl:RawCodelist)<-[:HAS_RAW_CODELIST]-(cat:RawCatalogue)
         OPTIONAL MATCH (vcl)-[:PAIRED_WITH_CODES]->(paired_code_cl:VersionedCodelist)
         WITH vcl, hv, clv, collect(cat) as vcats, paired_code_cl.conceptId as paired_codes ORDER BY hv.version
         WITH vcl, paired_codes, collect(properties(hv)) as hvs, collect(clv) as clvs, collect(vcats) as cats
@@ -769,11 +769,11 @@ def count_versioned_terms(session):
 def fetch_versioned_terms(session, skip=0, limit=100):
     query = """
     MATCH (vt:VersionedTerm) WITH vt ORDER BY vt.conceptId SKIP $skip LIMIT $limit
-    MATCH (vt)-[hv:HAS_VERSION]->(tv:TermVersion)<-[:SPONSOR_NAME_FOR]-(sn:SponsorName)
-    WITH *, COLLECT { 
+    MATCH (vt)-[hv:HAS_STAGED_VERSION]->(tv:TermVersion)<-[:SPONSOR_NAME_FOR]-(sn:SponsorName)
+    WITH *, COLLECT {
         MATCH (tv)-[:FROM_PACKAGE]->(:GroupedTermProperties)<-[:HAS_GROUPED_PROPERTIES]-
-              (gt:GroupedTerm)-[:SOURCE_TERM_DEF]->(rt:RawTerm)<-[:HAS_RAW_TERM]-(rcl:RawCodelist)<-[:HAS_RAW_CODELIST]-(cat:RawCatalogue) 
-        MATCH (gt)-[ht:HAS_TERM]-(:GroupedCodelist)
+              (gt:GroupedTerm)-[:SOURCE_TERM_DEF]->(rt:RawTerm)<-[:HAS_RAW_TERM]-(rcl:RawCodelist)<-[:HAS_RAW_CODELIST]-(cat:RawCatalogue)
+        MATCH (gt)-[ht:HAS_GROUPED_TERM_MEMBER]-(:GroupedCodelist)
         RETURN {codelist: rcl.conceptId, catalogue: cat.name, submval: ht.submissionValue} } as package_data ORDER BY hv.version
     WITH properties(vt) as term, collect(properties(hv)) as hasversions, collect(properties(tv)) as values, collect(sn.name) as sponsor_names, collect(package_data) as packages
     RETURN *"""
@@ -1221,7 +1221,7 @@ def fetch_codelist_concept_ids(session):
 
 def fetch_codelist_terms(session, concept_id):
     query = """
-        MATCH (vcl:VersionedCodelist {conceptId: $cid})-[ht:HAS_TERM]->(vt:VersionedTerm)
+        MATCH (vcl:VersionedCodelist {conceptId: $cid})-[ht:HAS_GROUPED_TERM_MEMBER]->(vt:VersionedTerm)
         RETURN {term_cid: vt.conceptId, start_date: ht.start_date, end_date: ht.end_date, submval: ht.submissionValue} AS term
     """
     return [

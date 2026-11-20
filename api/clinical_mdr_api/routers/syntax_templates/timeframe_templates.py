@@ -12,7 +12,6 @@ from clinical_mdr_api.models.syntax_templates.timeframe_template import (
     TimeframeTemplate,
     TimeframeTemplateCreateInput,
     TimeframeTemplateEditInput,
-    TimeframeTemplatePreValidateInput,
     TimeframeTemplateVersion,
     TimeframeTemplateWithCount,
 )
@@ -40,6 +39,7 @@ PARAMETERS_NOTE = """**Parameters in the 'name' property**:
 The 'name' of an timeframe template may contain parameters, that can - and usually will - be replaced with concrete values once an timeframe is created out of the timeframe template.
 
 Parameters are referenced by simple strings in square brackets [] that match existing parameters defined in the MDR repository.
+Any other text in square brackets is kept as literal text.
 
 The timeframe template will be linked to those parameters defined in the 'name' property.
 
@@ -660,38 +660,3 @@ def get_parameters(
     ] = None,
 ) -> list[TemplateParameter]:
     return Service().get_parameters(timeframe_template_uid, study_uid=study_uid)
-
-
-@router.post(
-    "/pre-validate",
-    dependencies=[security, rbac.LIBRARY_WRITE],
-    summary="Validates the content of an timeframe template without actually processing it.",
-    description="""Be aware that - even if this request is accepted - there is no guarantee that
-a following request to e.g. *[POST] /timeframe-templates* or *[PATCH] /timeframe-templates/{timeframe_template_uid}*
-with the same content will succeed.
-
-"""
-    + PARAMETERS_NOTE,
-    status_code=204,
-    responses={
-        204: {
-            "description": "Accepted. The content is valid and may be submitted in another request."
-        },
-        400: {
-            "model": ErrorResponse,
-            "description": "Forbidden. The content is invalid - Reasons include e.g.: \n"
-            "- The syntax of the 'name' is not valid.\n"
-            "- One of the parameters wasn't found.",
-        },
-        403: _generic_descriptions.ERROR_403,
-    },
-)
-def pre_validate(
-    timeframe_template: Annotated[
-        TimeframeTemplatePreValidateInput,
-        Body(
-            description="The content of the timeframe template that shall be validated.",
-        ),
-    ],
-):
-    Service().validate_template_syntax(timeframe_template.name)

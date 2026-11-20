@@ -43,15 +43,6 @@ export default {
       `${resource}/${studyUid}/anchor-visits-in-group-of-subvisits`
     )
   },
-  getAnchorVisitsForSpecialVisit(studyUid, epochUid) {
-    const params = {
-      study_epoch_uid: epochUid,
-    }
-    return repository.get(
-      `${resource}/${studyUid}/anchor-visits-for-special-visit`,
-      { params }
-    )
-  },
   addStudyVisit(studyUid, data) {
     return repository.post(`${resource}/${studyUid}/study-visits`, data)
   },
@@ -77,6 +68,11 @@ export default {
     return repository.get(
       `${resource}/${studyUid}/study-visits/${studyVisitUid}/audit-trail`
     )
+  },
+  reorderStudyVisits(studyUid, visitUids) {
+    return repository.patch(`${resource}/${studyUid}/study-visits/reorder`, {
+      visit_uids: visitUids,
+    })
   },
   getGroups(studyUid) {
     return repository.get(`${resource}/${studyUid}/allowed-consecutive-groups`)
@@ -155,5 +151,13 @@ export default {
     return repository.delete(
       `${resource}/${studyUid}/consecutive-visit-groups/${groupName}`
     )
+  },
+  getStudyVisitMode(studyUid) {
+    return repository.get(`${resource}/${studyUid}/study-visits/mode`)
+  },
+  setStudyVisitMode(studyUid, manualVisitMode) {
+    return repository.patch(`${resource}/${studyUid}/study-visits/mode`, {
+      manual_visit_mode: manualVisitMode,
+    })
   },
 }

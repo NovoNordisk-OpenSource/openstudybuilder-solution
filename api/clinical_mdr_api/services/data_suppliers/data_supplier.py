@@ -17,7 +17,7 @@ from clinical_mdr_api.services._utils import ensure_transaction
 from clinical_mdr_api.services.neomodel_ext_generic import NeomodelExtGenericService
 
 
-class DataSupplierService(NeomodelExtGenericService[DataSupplierAR]):
+class DataSupplierService(NeomodelExtGenericService[DataSupplierAR, DataSupplier]):
     repository_interface = DataSupplierRepository
     api_model_class = DataSupplier
     version_class = DataSupplierVersion
@@ -139,7 +139,7 @@ class DataSupplierService(NeomodelExtGenericService[DataSupplierAR]):
 
         rs = self.create(item_input=item_input)
 
-        return self.approve(rs.uid)
+        return self.approve(rs.uid)  # type: ignore[arg-type]
 
     @ensure_transaction(db)
     def new_version_edit_approve(

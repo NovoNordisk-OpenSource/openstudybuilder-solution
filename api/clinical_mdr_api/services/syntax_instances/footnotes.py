@@ -26,14 +26,12 @@ from clinical_mdr_api.services.syntax_instances.generic_syntax_instance_service 
 
 
 class FootnoteService(GenericSyntaxInstanceService[FootnoteAR | _AggregateRootType]):
-    aggregate_class: type[FootnoteAR] | type[FootnotePreInstanceAR] = FootnoteAR
-    repository_interface: (
-        type[FootnoteRepository] | type[FootnotePreInstanceRepository]
-    ) = FootnoteRepository
-    template_repository_interface = FootnoteTemplateRepository
-    version_class: type[FootnoteVersion] | type[FootnotePreInstanceVersion] = (
-        FootnoteVersion
+    aggregate_class: type[FootnoteAR | FootnotePreInstanceAR] = FootnoteAR
+    repository_interface: type[FootnoteRepository | FootnotePreInstanceRepository] = (
+        FootnoteRepository
     )
+    template_repository_interface = FootnoteTemplateRepository
+    version_class: type[FootnoteVersion | FootnotePreInstanceVersion] = FootnoteVersion
     template_uid_property = "footnote_template_uid"
 
     def _transform_aggregate_root_to_pydantic_model(

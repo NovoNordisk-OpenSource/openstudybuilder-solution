@@ -65,13 +65,9 @@ Feature: Studies - Define Study - Study Structure - Design Matrix
         And User waits for the table
         When Transion rules are enabled
         And The pencil button is clicked
-        Then User open transition rules edit mode for epoch 'Run-in'
-        And Transition rules edit window is opened
-        And User sets transition rule
-        When Form save button is clicked
+        Then User defines transition rule for epoch 'Run-in' as 'Test Rule 1'
         And User saves changes made in the edition mode
         Then The pop up displays 'Design Matrix updated'
-        And The pencil button is clicked
         And Transition rule is visible in the table for epoch 'Run-in'
         
     Scenario: [Transition rules] User must be able to toggle transition rule on and off
@@ -80,19 +76,10 @@ Feature: Studies - Define Study - Study Structure - Design Matrix
         And Column 'Run-in' is made visible
         And Column 'Intervention' is made visible
         And User waits for the table
-        When Transion rules are enabled
-        And The pencil button is clicked
-        Then Transition rule is visible in the table for epoch 'Run-in'
         When Transion rules are disabled
         Then Transition rule is not visible in the table for epoch 'Run-in'
 
     Scenario: [Transition rules] User must be able to see transition rules in the SDTM Study Design Datasets Trial Arms
-        Given The page 'sdtm_study_design_datasets/tab-0' is opened for current study
-        And User waits for the table
-        Then Transition rule is searched
-        And The transition rule is visible in the correct table column
-
-    Scenario: [Transition rules] User must be able to see warning if transition rule exceeds 200 characters
         And User sets row page to 10 in the settings menu
         Given The page 'study_structure/design_matrix' is opened for current study
         And Column 'Run-in' is made visible
@@ -100,18 +87,20 @@ Feature: Studies - Define Study - Study Structure - Design Matrix
         And User waits for the table
         When Transion rules are enabled
         And The pencil button is clicked
-        Then User open transition rules edit mode for epoch 'Run-in'
-        And The transition rule is changed to have 201 characters
-        Then The warning message about transition rule exceeding 200 characters is displayed
-        When Form save button is clicked
-        And The form is not closed
-        Then The transition rule is changed to have 200 characters
-        When Form save button is clicked
-        And User saves changes made in the edition mode
-        Then The pop up displays 'Design Matrix updated'
-        And The pencil button is clicked
-        And Transition rule is visible in the table for epoch 'Run-in'
+        Then User defines transition rule for epoch 'Run-in' as 'Test Rule 1'
         Given The page 'sdtm_study_design_datasets/tab-0' is opened for current study
         And User waits for the table
         Then Transition rule is searched
         And The transition rule is visible in the correct table column
+
+    Scenario: [Transition rules] User must not be able to define transition rule exceeding 200 characters
+        And User sets row page to 10 in the settings menu
+        Given The page 'study_structure/design_matrix' is opened for current study
+        And Column 'Run-in' is made visible
+        And Column 'Intervention' is made visible
+        And User waits for the table
+        When Transion rules are enabled
+        And The pencil button is clicked
+        And The transition rule for epoch 'Run-in' is defined with 202 characters
+        Then The transition rule input for epoch name 'Run-in' stops at 200 characters
+

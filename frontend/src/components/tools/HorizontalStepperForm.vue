@@ -130,7 +130,7 @@
           </v-col>
           <v-col>
             <slot
-              :name="`step.${steps[currentStep - 1].name}.afterActions`"
+              :name="`step.${steps[currentStep - 1]?.name}.afterActions`"
               :step="currentStep + 1"
             />
           </v-col>
@@ -236,6 +236,14 @@ const stepTitles = computed(() => {
 watch(currentStep, (value) => {
   emit('change', value)
 })
+watch(
+  () => props.steps.map((step) => step.name),
+  (newNames, oldNames) => {
+    const activeName = oldNames[currentStep.value - 1]
+    const newIndex = newNames.indexOf(activeName)
+    currentStep.value = newIndex >= 0 ? newIndex + 1 : 1
+  }
+)
 watch(
   () => props.resetLoading,
   () => {

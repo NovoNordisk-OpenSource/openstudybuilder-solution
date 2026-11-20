@@ -11,7 +11,8 @@
       </v-tab>
     </slot>
   </v-tabs>
-  <v-window :model-value="activePanel" class="bg-white">
+  <!-- mandatory=false: otherwise v-window mounts the first tab before the route has the tab, so NNTable loads the wrong saved column layout -->
+  <v-window :model-value="activePanel" :mandatory="false" class="bg-white">
     <slot name="default" :tab-keys="tabKeys"></slot>
   </v-window>
 </template>
@@ -50,6 +51,7 @@ const route = useRoute()
 const router = useRouter()
 
 const tab = ref(null)
+// Set after the route updates, since NNTable reads its saved layout by route.path at mount
 const activePanel = ref(null)
 const tabKeys = ref({})
 
@@ -73,9 +75,8 @@ const resolveTabKey = (raw) => {
 }
 
 onMounted(() => {
-  const initial = resolveTabKey(route.params.tab)
-  tab.value = initial
-  activePanel.value = initial
+  // The panel is shown by the tab watcher after the route update; showing it here mounted it on the stale route and remounted it later
+  tab.value = resolveTabKey(route.params.tab)
 })
 
 watch(tab, async (newValue) => {
@@ -86,6 +87,8 @@ watch(tab, async (newValue) => {
   const match =
     props.tabs.find((el) => el[props.tabKey] === newValue) ?? props.tabs[0]
   const tabName = match[props.tabTitle]
+  // Bump the key before showing the panel so the content mounts once per tab entry (bumping it after remounted the content, so its requests ran twice)
+  updateTabKey(newValue)
   await router.push({
     name: route.name,
     params: { ...route.params, tab: newValue },
@@ -103,15 +106,12 @@ watch(tab, async (newValue) => {
     props.breadcrumbsLevel,
     true
   )
-  updateTabKey(newValue)
 })
 
 watch(
   () => route.params.tab,
   (newValue) => {
-    const resolved = resolveTabKey(newValue)
-    tab.value = resolved
-    activePanel.value = resolved
+    tab.value = resolveTabKey(newValue)
   }
 )
 

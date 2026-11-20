@@ -111,7 +111,7 @@ class GenericSyntaxInstanceService(GenericSyntaxService[_AggregateRootType], abc
             is_library_editable_callback=is_library_editable,
         )
 
-        item = self.aggregate_class.from_input_values(
+        return self.aggregate_class.from_input_values(
             author_id=self.author_id,
             template=template_vo,
             library=library_vo,
@@ -122,7 +122,6 @@ class GenericSyntaxInstanceService(GenericSyntaxService[_AggregateRootType], abc
             ),
             next_available_sequence_id_callback=next_available_sequence_id_callback,
         )
-        return item
 
     def create(
         self, template: BaseModel, preview=False, template_uid: str | None = None
@@ -327,7 +326,7 @@ class GenericSyntaxInstanceService(GenericSyntaxService[_AggregateRootType], abc
         ).items
 
         study_service = StudyService()
-        return_items = [
+        return [
             study_service._models_study_from_study_definition_ar(
                 study_definition_ar=item,
                 find_project_by_project_number=self._repos.project_repository.find_by_project_number,
@@ -339,4 +338,3 @@ class GenericSyntaxInstanceService(GenericSyntaxService[_AggregateRootType], abc
             )
             for item in studies
         ]
-        return return_items

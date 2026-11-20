@@ -18,7 +18,7 @@ from common.utils import sanitize_for_log
 log = logging.getLogger(__name__)
 
 
-class OdmMethodService(OdmGenericService[OdmMethodAR]):
+class OdmMethodService(OdmGenericService[OdmMethodAR, OdmMethod]):
     aggregate_class = OdmMethodAR
     version_class = OdmMethodVersion
     optional_model_class = OdmMethodOptional

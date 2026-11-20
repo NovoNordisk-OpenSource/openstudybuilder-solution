@@ -22,9 +22,7 @@ class ParameterConceptRepository:
         items, labels = db.cypher_query(query)
         return_values = []
         for row in items:
-            return_item = {}
-            for key, value in zip(labels, row):
-                return_item[key] = value
+            return_item = dict(zip(labels, row))
             return_values.append(return_item)
         return return_values
 
@@ -39,7 +37,7 @@ class ComplexTemplateParameterRepository:
         try:
             self._fetch_concepts()
         except ServiceUnavailable:
-            log.error(
+            log.exception(
                 "The neo4j database is unavailable. API functionality will be severely limited."
             )
             self.concepts = None
@@ -97,8 +95,7 @@ class ComplexTemplateParameterRepository:
                 terms
             ORDER BY name
         """)
-        return_value = [{"name": item[0], "terms": item[1]} for item in items]
-        return return_value
+        return [{"name": item[0], "terms": item[1]} for item in items]
 
     def find_values(self, template_parameter_name: str):
         items, _ = db.cypher_query(

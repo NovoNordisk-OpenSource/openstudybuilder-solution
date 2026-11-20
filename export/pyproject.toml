@@ -14,6 +14,11 @@ dependencies = [
 
 [tool.uv]
 package = false
+# Security floors for transitive dependencies: bound the resolver to fixed
+# versions without declaring these as direct dependencies of this project.
+constraint-dependencies = [
+    "certifi>=2026.10.19",  # PYSEC-2026-4320
+]
 
 [dependency-groups]
 dev = []

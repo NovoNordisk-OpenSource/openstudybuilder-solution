@@ -29,7 +29,10 @@ GET_ENDPOINTS = [
     ("/concepts/activities/activity-groups/versions", None),
     ("/concepts/activities/activity-instances", None),
     ("/concepts/activities/activity-instances/headers", {"field_name": "name"}),
-    ("/concepts/activities/activity-instances/headers", {"field_name": "name", "lite": "true"}),
+    (
+        "/concepts/activities/activity-instances/headers",
+        {"field_name": "name", "lite": "true"},
+    ),
     ("/concepts/activities/activity-instances/versions", None),
     ("/concepts/activities/activity-sub-groups", None),
     ("/concepts/activities/activity-sub-groups/headers", {"field_name": "name"}),
@@ -101,7 +104,10 @@ GET_ENDPOINTS = [
     ("/ct/catalogues", None),
     ("/ct/codelists", {"page_size": "100", "total_count": "true"}),
     ("/ct/codelists/terms", {"codelist_uid": "{codelist_uid}"}),
-    ("/ct/codelists/terms/headers", {"codelist_uid": "{codelist_uid}", "field_name": "term_uid"}),
+    (
+        "/ct/codelists/terms/headers",
+        {"codelist_uid": "{codelist_uid}", "field_name": "term_uid"},
+    ),
     ("/ct/codelists/attributes", None),
     ("/ct/codelists/attributes/headers", {"field_name": "name"}),
     ("/ct/codelists/headers", {"field_name": "name.name"}),
@@ -144,7 +150,10 @@ GET_ENDPOINTS = [
     ("/ct/terms/{term_uid}/names", None),
     ("/ct/terms/{term_uid}/names/versions", None),
     ("/dictionaries/codelists", {"library_name": "SNOMED"}),
-    ("/dictionaries/codelists/headers", {"field_name": "name", "library_name": "SNOMED"}),
+    (
+        "/dictionaries/codelists/headers",
+        {"field_name": "name", "library_name": "SNOMED"},
+    ),
     ("/dictionaries/substances", {"page_size": "100", "total_count": "true"}),
     ("/dictionaries/terms", {"codelist_uid": "C100130"}),
     ("/dictionaries/terms/headers", {"field_name": "name", "codelist_uid": "C100130"}),
@@ -206,7 +215,11 @@ GET_ENDPOINTS = [
     ("/projects/headers", {"field_name": "name"}),
     (
         "/standards/class-variables",
-        {"data_model_name": "SDTM", "data_model_version": "2.0", "dataset_class_name": "Demographics"},
+        {
+            "data_model_name": "SDTM",
+            "data_model_version": "2.0",
+            "dataset_class_name": "Demographics",
+        },
     ),
     (
         "/standards/class-variables/headers",
@@ -235,22 +248,43 @@ GET_ENDPOINTS = [
             "field_name": "label",
         },
     ),
-    ("/standards/dataset-variables", {"data_model_ig_name": "SDTMIG", "data_model_ig_version": "3.2"}),
+    (
+        "/standards/dataset-variables",
+        {"data_model_ig_name": "SDTMIG", "data_model_ig_version": "3.2"},
+    ),
     (
         "/standards/dataset-variables/headers",
-        {"data_model_ig_name": "SDTMIG", "data_model_ig_version": "3.2", "field_name": "label"},
+        {
+            "data_model_ig_name": "SDTMIG",
+            "data_model_ig_version": "3.2",
+            "field_name": "label",
+        },
     ),
-    ("/standards/datasets", {"data_model_ig_name": "SDTMIG", "data_model_ig_version": "3.2"}),
+    (
+        "/standards/datasets",
+        {"data_model_ig_name": "SDTMIG", "data_model_ig_version": "3.2"},
+    ),
     (
         "/standards/datasets/headers",
-        {"data_model_ig_name": "SDTMIG", "data_model_ig_version": "3.2", "field_name": "label"},
+        {
+            "data_model_ig_name": "SDTMIG",
+            "data_model_ig_version": "3.2",
+            "field_name": "label",
+        },
     ),
     # ("/standards/sponsor-models/dataset-classes", None),
     # ("/standards/sponsor-models/dataset-classes/headers", {"field_name": "uid"}),
-    ("/standards/sponsor-models/dataset-variables", {"data_model_ig_name": "SDTMIG", "data_model_ig_version": "3.2"}),
+    (
+        "/standards/sponsor-models/dataset-variables",
+        {"data_model_ig_name": "SDTMIG", "data_model_ig_version": "3.2"},
+    ),
     (
         "/standards/sponsor-models/dataset-variables/headers",
-        {"data_model_ig_name": "SDTMIG", "data_model_ig_version": "3.2", "field_name": "label"},
+        {
+            "data_model_ig_name": "SDTMIG",
+            "data_model_ig_version": "3.2",
+            "field_name": "label",
+        },
     ),
     ("/standards/sponsor-models/datasets", None),
     ("/standards/sponsor-models/datasets/headers", {"field_name": "xml_title"}),
@@ -285,7 +319,6 @@ GET_ENDPOINTS = [
     ("/studies/{study_uid}/soa-preferences", None),
     ("/studies/{study_uid}", None),
     ("/studies/{study_uid}/allowed-consecutive-groups", None),
-    ("/studies/{study_uid}/anchor-visits-for-special-visit", {"study_epoch_uid": "StudyEpoch_000021"}),
     ("/studies/{study_uid}/anchor-visits-in-group-of-subvisits", None),
     ("/studies/{study_uid}/ctr/odm.xml", None),
     ("/studies/{study_uid}/design.svg", None),
@@ -389,7 +422,10 @@ GET_ENDPOINTS = [
     ("/concepts/pharmaceutical-products/headers", {"field_name": "uid"}),
     ("/studies/{study_uid}/operational-soa-exports", None),
     ("/studies/{study_uid}/study-activity-instances", None),
-    ("/studies/{study_uid}/study-activity-instances/headers", {"field_name": "activity"}),
+    (
+        "/studies/{study_uid}/study-activity-instances/headers",
+        {"field_name": "activity"},
+    ),
     ("/studies/{study_uid}/complexity-score", None),
     ("/study-activity-instances", None),
     ("/usdm/v3/studyDefinitions/{study_uid}", None),

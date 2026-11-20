@@ -27,11 +27,12 @@ Feature: Library - Overview Pages - Study Structures
             | Cohorts?              |
             | Study ID(s)           |
 
-    @skip_on_prv_val
     Scenario Outline: [Table][Filtering] User must be able to filter the table by text fields
-        Given The '/library/overviews/study_structures' page is opened
+        Given User intercepts study structures requests
+        And The '/library/overviews/study_structures' page is opened
+        And User waits for study structures requests
         When The user filters field '<name>'
-        Then The table is filtered correctly
+        Then The slow table is filtered correctly
 
         Examples:
             | name                  |
@@ -44,10 +45,3 @@ Feature: Library - Overview Pages - Study Structures
             | Treatment elements    |
             | Cohorts?              |
             | Study ID(s)           |
-
-    @manual_test
-    # to be implemented later after API test complete
-    Scenario: The grouping functionality must be able to work effectively on the study structure table
-        Given The '/library/overviews/study_structures' page is opened
-        When The study structure is the same across multiple studies
-        Then The study structure should be listed only once, with all studies metioned in the StudyID column

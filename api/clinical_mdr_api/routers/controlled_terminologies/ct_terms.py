@@ -60,6 +60,7 @@ on the initial save.
             "- The library doesn't exist..\n"
             "- The library doesn't allow to add new items.\n",
         },
+        404: _generic_descriptions.ERROR_404,
     },
 )
 def create(

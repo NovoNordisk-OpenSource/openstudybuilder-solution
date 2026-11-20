@@ -1,12 +1,14 @@
 @REQ_ID:2332138
 @pending_implementation
 
-Feature: StudyBuilder: Reader access privilege
-Pre-requisite note: User granted access with a Role as 'StudyBuilder: Reader ('Environment')' in novoAccess prior verification of the below functional requirement.
-
-  As a user, I want to able to logged in with read access previlege for both 'Studies' and 'Library' Modules
+Feature: OpenStudyBuilder: Reader access privilege
+  As a reader user,
+  I want to able to log in with read only access previlege for 'Library' and 'Studies' Module,
+  So that I can view all library elements and study definitions.
+  
   Background: User must be logged in
     Given The user is logged in
+    And granted the system access group Library.Read and Study.Read
 
     Scenario: User must be able to view the data fields in the 'Library' Module
     Given The '/library' page is opened

@@ -82,7 +82,7 @@ class ActivityItemClassRepository(ConceptGenericRepository[ActivityItemClassAR])
         "uid",
         "name",
         "definition",
-        "display_name",
+        "label",
         "library_name",
         "nci_concept_id",
         "nci_concept_name",
@@ -142,7 +142,7 @@ class ActivityItemClassRepository(ConceptGenericRepository[ActivityItemClassAR])
                 concept_value.nci_concept_name AS nci_concept_name,
                 concept_value.name AS name,
                 concept_value.definition AS definition,
-                concept_value.display_name AS display_name,
+                concept_value.label AS label,
                 library_name,
                 is_library_editable,
                 version_rel.version AS version,
@@ -280,7 +280,7 @@ class ActivityItemClassRepository(ConceptGenericRepository[ActivityItemClassAR])
                     )
                     for codelist in input_dict.get("valid_codelists", [])
                 ],
-                display_name=input_dict.get("display_name"),
+                label=input_dict.get("label"),
                 non_standard_variable=non_standard_variable,
             ),
             library=LibraryVO.from_input_values_2(
@@ -394,9 +394,9 @@ class ActivityItemClassRepository(ConceptGenericRepository[ActivityItemClassAR])
         Covers the dotted fields from `wildcard_properties_list` that the generic
         lite path (`concept_value.{field_name}`) cannot resolve directly.
         """
-        if field_name == "display_name":
+        if field_name == "label":
             return """
-                WITH concept_value.display_name AS display_name
+                WITH concept_value.label AS label
             """
         if field_name == "valid_codelists.submission_value":
             return """
@@ -485,7 +485,7 @@ class ActivityItemClassRepository(ConceptGenericRepository[ActivityItemClassAR])
             "definition": vo.definition,
             "nci_concept_id": vo.nci_concept_id,
             "nci_concept_name": vo.nci_concept_name,
-            "display_name": vo.display_name,
+            "label": vo.label,
         }
         if vo.non_standard_variable is not None:
             nsv = vo.non_standard_variable
@@ -636,7 +636,7 @@ class ActivityItemClassRepository(ConceptGenericRepository[ActivityItemClassAR])
             or ar.activity_item_class_vo.nci_concept_id != value.nci_concept_id
             or ar.activity_item_class_vo.nci_concept_name != value.nci_concept_name
             or ar.activity_item_class_vo.order != value.order
-            or ar.activity_item_class_vo.display_name != value.display_name
+            or ar.activity_item_class_vo.label != value.label
             or new_activity_instance_classes != existing_activity_instance_classes
             or (
                 ar.activity_item_class_vo.role.uid,
@@ -869,7 +869,7 @@ class ActivityItemClassRepository(ConceptGenericRepository[ActivityItemClassAR])
                 nci_concept_id=value.nci_concept_id,
                 nci_concept_name=value.nci_concept_name,
                 order=value.order,
-                display_name=value.display_name,
+                label=value.label,
                 activity_instance_classes=[
                     ActivityInstanceClassActivityItemClassRelVO(
                         uid=activity_instance_class.uid,
@@ -1208,6 +1208,16 @@ class ActivityItemClassRepository(ConceptGenericRepository[ActivityItemClassAR])
         # Return a dictionary of codelist uids and filtered terms
         # Note that for now, this model does not cater for filtering down to a subset of terms
         return dict.fromkeys(codelist_uids)
+
+    def get_all_version_numbers(self, uid: str) -> list[str]:
+        """Get all version numbers of a given activity item class"""
+
+        rs, _ = db.cypher_query(
+            "MATCH (:ActivityItemClassRoot {uid: $uid})-[hv:HAS_VERSION]-(:ActivityItemClassValue) RETURN DISTINCT hv.version",
+            params={"uid": uid},
+        )
+
+        return [row[0] for row in rs]
 
     def get_activity_instance_classes_using_item(
         self,

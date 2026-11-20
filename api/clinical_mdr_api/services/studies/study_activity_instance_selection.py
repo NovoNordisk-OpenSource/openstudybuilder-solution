@@ -245,7 +245,7 @@ class StudyActivityInstanceSelectionService(
             activity_instance_ar = None
 
         # create new VO to add
-        new_selection = StudySelectionActivityInstanceVO.from_input_values(
+        return StudySelectionActivityInstanceVO.from_input_values(
             study_uid=study_uid,
             author_id=self.author,
             study_activity_uid=selection_create_input.study_activity_uid,
@@ -265,7 +265,11 @@ class StudyActivityInstanceSelectionService(
                 if activity_instance_ar
                 else None
             ),
+            activity_instance_name=(
+                activity_instance_ar.name if activity_instance_ar else None
+            ),
             activity_uid=study_activity_selection.activity_uid,
+            activity_name=study_activity_selection.activity_name,
             activity_subgroup_uid=study_activity_selection.activity_subgroup_uid,
             activity_group_uid=study_activity_selection.activity_group_uid,
             generate_uid_callback=self.repository.generate_uid,
@@ -275,7 +279,6 @@ class StudyActivityInstanceSelectionService(
             origin_type_uid=selection_create_input.origin_type_uid,
             origin_source_uid=selection_create_input.origin_source_uid,
         )
-        return new_selection
 
     ensure_transaction(db)
 
@@ -446,7 +449,13 @@ class StudyActivityInstanceSelectionService(
                 if activity_instance_ar
                 else None
             ),
+            activity_instance_name=(
+                activity_instance_ar.name
+                if activity_instance_ar
+                else current_object.activity_instance_name
+            ),
             activity_uid=current_object.activity_uid,
+            activity_name=current_object.activity_name,
             activity_subgroup_uid=current_object.activity_subgroup_uid,
             activity_group_uid=current_object.activity_group_uid,
             study_data_supplier_uid=request_object.study_data_supplier_uid,
@@ -617,7 +626,7 @@ class StudyActivityInstanceSelectionService(
                         content=BatchErrorResponse(message=str(error)),
                     )
                 )
-                raise error
+                raise
         return results
 
     @ensure_transaction(db)

@@ -27,6 +27,7 @@ class CTTermAttributesVO:
     concept_id: str | None
     preferred_term: str | None
     definition: str
+    algorithm: str | None = None
 
     @classmethod
     def from_repository_values(
@@ -35,14 +36,15 @@ class CTTermAttributesVO:
         concept_id: str | None,
         preferred_term: str | None,
         definition: str,
+        algorithm: str | None = None,
     ) -> Self:
-        ct_term_attributes_vo = cls(
+        return cls(
             catalogue_names=catalogue_names,
             concept_id=concept_id,
             preferred_term=preferred_term,
             definition=definition,
+            algorithm=algorithm,
         )
-        return ct_term_attributes_vo
 
     @classmethod
     def from_input_values(
@@ -56,6 +58,7 @@ class CTTermAttributesVO:
         concept_id_exists_callback: (
             Callable[[str | None, str | None], bool] | None
         ) = None,
+        algorithm: str | None = None,
     ) -> Self:
         for catalogue_name in catalogue_names:
             ValidationException.raise_if_not(
@@ -67,13 +70,13 @@ class CTTermAttributesVO:
             and concept_id_exists_callback(term_uid, concept_id),
             msg=f"Concept ID ({concept_id}) already in use by another term or codelist.",
         )
-        ct_term_attribute_vo = cls(
+        return cls(
             catalogue_names=catalogue_names,
             concept_id=concept_id,
             preferred_term=preferred_term,
             definition=definition,
+            algorithm=algorithm,
         )
-        return ct_term_attribute_vo
 
 
 @dataclass
@@ -96,13 +99,12 @@ class CTTermAttributesAR(LibraryItemAggregateRootBase):
         library: LibraryVO,
         item_metadata: LibraryItemMetadataVO,
     ) -> Self:
-        ct_term_ar = cls(
+        return cls(
             _uid=uid,
             _ct_term_attributes_vo=ct_term_attributes_vo,
             _item_metadata=item_metadata,
             _library=library,
         )
-        return ct_term_ar
 
     @classmethod
     def from_input_values(

@@ -76,10 +76,12 @@
     "study_intervention": {
       "add_on_to_existing_treatments": false,
       "add_on_to_existing_treatments_null_value_code": null,
-      "control_type_code": {
-        "name": "Placebo",
-        "term_uid": "C49648_PLACEBO"
-      },
+      "control_type_codes": [
+        {
+          "name": "Placebo",
+          "term_uid": "C49648_PLACEBO"
+        }
+      ],
       "control_type_null_value_code": null,
       "intervention_model_code": {
         "name": "Parallel",

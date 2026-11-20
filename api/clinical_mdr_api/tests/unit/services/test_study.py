@@ -1,7 +1,7 @@
 import random
 import unittest
 from collections.abc import Iterable
-from dataclasses import dataclass
+from dataclasses import dataclass, fields, replace
 from datetime import UTC, datetime
 from types import SimpleNamespace
 from unittest.mock import MagicMock, PropertyMock, patch
@@ -53,9 +53,6 @@ from clinical_mdr_api.tests.unit.domain_repositories.test_study_definition_repos
     StudyDefinitionRepositoryFake,
     StudyDefinitionsDBFake,
 )
-from clinical_mdr_api.tests.unit.services.test_study_description import (
-    StudyTitleRepositoryForTestImpl,
-)
 from common.config import settings
 
 
@@ -89,10 +86,7 @@ class UnitDefinitionRepositoryForTestImpl:
         return self._repo_content, len(self._repo_content)
 
     def term_exists(self, code: str) -> bool:
-        for age_unit in self._repo_content:
-            if age_unit.uid == code:
-                return True
-        return False
+        return any(age_unit.uid == code for age_unit in self._repo_content)
 
 
 @dataclass(frozen=True)
@@ -223,7 +217,7 @@ class TestStudyService(unittest.TestCase):
             create_random_clinical_programme(generate_uid_callback=random_str)
         )
 
-        for _ in range(0, 100):
+        for _ in range(100):
             with self.subTest():
                 # given
                 test_db = StudyDefinitionsDBFake()
@@ -594,6 +588,18 @@ class TestStudyService(unittest.TestCase):
             _ref_high_level_study_design.development_stage_code,
         )
         self.assertEqual(
+            self.get_field_or_simple_term_uid(
+                _res_high_level_study_design.age_at_baseline_rule_code
+            ),
+            _ref_high_level_study_design.age_at_baseline_rule_code,
+        )
+        self.assertEqual(
+            self.get_field_or_simple_term_uid(
+                _res_high_level_study_design.age_group_rule_code
+            ),
+            _ref_high_level_study_design.age_group_rule_code,
+        )
+        self.assertEqual(
             [
                 self.get_field_or_simple_term_uid(trial_type_code)
                 for trial_type_code in _res_high_level_study_design.trial_type_codes
@@ -799,11 +805,9 @@ class TestStudyService(unittest.TestCase):
                         eu_pas_number_null_value_code=None,
                     ),
                 ),
-                study_title_exists_callback=lambda _, study_number: False,
-                study_short_title_exists_callback=lambda _, study_number: False,
                 author_id=random_str(),
             )
-            for num in range(0, 2)
+            for num in range(2)
         ]
         for _study_definition in sample_study_definitions:
             prepare_repo.save(_study_definition)
@@ -984,6 +988,8 @@ class TestStudyService(unittest.TestCase):
                 trial_phase_code=None,
                 trial_phase_null_value_code=None,
                 development_stage_code=None,
+                age_at_baseline_rule_code=None,
+                age_group_rule_code=None,
                 is_adaptive_design=False,
                 is_adaptive_design_null_value_code=None,
                 is_extension_trial=False,
@@ -995,8 +1001,6 @@ class TestStudyService(unittest.TestCase):
                 post_auth_indicator=None,
                 post_auth_indicator_null_value_code=None,
             ),
-            study_title_exists_callback=lambda _, study_number: False,
-            study_short_title_exists_callback=lambda _, study_number: False,
             author_id=random_str(),
         )
         prepare_repo.save(sample_study_definition)
@@ -1117,8 +1121,6 @@ class TestStudyService(unittest.TestCase):
                     eu_pas_number_null_value_code=None,
                 ),
             ),
-            study_title_exists_callback=lambda _, study_number: False,
-            study_short_title_exists_callback=lambda _, study_number: False,
             project_exists_callback=lambda _: True,
             author_id=random_str(),
         )
@@ -1343,8 +1345,6 @@ class TestStudyService(unittest.TestCase):
                     eu_pas_number_null_value_code=None,
                 ),
             ),
-            study_title_exists_callback=lambda _, study_number: False,
-            study_short_title_exists_callback=lambda _, study_number: False,
             project_exists_callback=lambda _: True,
             author_id=random_str(),
         )
@@ -1527,6 +1527,106 @@ class TestStudyService(unittest.TestCase):
                 sample_study_definition.current_metadata.id_metadata.project_number,
             )
 
+    @patch(StudyService.__module__ + ".MetaRepository.clinical_programme_repository")
+    @patch(StudyService.__module__ + ".MetaRepository.project_repository")
+    @patch(
+        StudyService.__module__ + ".MetaRepository.study_definition_repository",
+        new_callable=PropertyMock,
+    )
+    def test__patch__id_metadata_explicit_null_registry_identifiers__keeps_current(
+        self,
+        study_definition_repository_property_mock: PropertyMock,
+        project_repository_property_mock: PropertyMock,
+        clinical_programme_repository_property_mock: PropertyMock,
+    ):
+        # `registry_identifiers` is nullable in the schema; an explicit null used
+        # to hit an assert and return 500 (schemathesis case yJPIds).
+        # given
+        test_db = StudyDefinitionsDBFake()
+
+        project_repository_property_mock.find_by_project_number.return_value = (
+            create_random_project(
+                clinical_programme_uid=random_str(),
+                generate_uid_callback=random_str,
+            )
+        )
+        clinical_programme_repository_property_mock.find_by_uid.return_value = (
+            create_random_clinical_programme(generate_uid_callback=random_str)
+        )
+        project_repository_property_mock.project_number_exists.return_value = True
+
+        registry_identifiers = replace(
+            RegistryIdentifiersVO(
+                **{field.name: None for field in fields(RegistryIdentifiersVO)}
+            ),
+            ct_gov_id="NCT01234567",
+        )
+        prepare_repo = StudyDefinitionRepositoryFake(test_db)
+        sample_study_definition = StudyDefinitionAR.from_initial_values(
+            generate_uid_callback=prepare_repo.generate_uid,
+            initial_id_metadata=StudyIdentificationMetadataVO.from_input_values(
+                project_number="TBD",
+                study_acronym="ACRONYM",
+                study_number=None,
+                subpart_id=None,
+                description=None,
+                registry_identifiers=registry_identifiers,
+            ),
+            project_exists_callback=lambda _: True,
+            author_id=random_str(),
+        )
+        prepare_repo.save(sample_study_definition)
+        prepare_repo.close()
+
+        def patch_request() -> StudyPatchRequestJsonModel:
+            return StudyPatchRequestJsonModel(
+                current_metadata=StudyMetadataJsonModel(
+                    identification_metadata=StudyIdentificationMetadataJsonModel(
+                        project_number="TBD", registry_identifiers=None
+                    )
+                )
+            )
+
+        study_definition_repository_property_mock.return_value = (
+            StudyDefinitionRepositoryFake(test_db)
+        )
+
+        # when: dry run, exactly as schemathesis sent it
+        dry_result = StudyService().patch(
+            uid=sample_study_definition.uid,
+            dry=True,
+            study_patch_request=patch_request(),
+        )
+
+        # then
+        assert dry_result.current_metadata is not None
+        assert dry_result.current_metadata.identification_metadata is not None
+        dry_registry_identifiers = (
+            dry_result.current_metadata.identification_metadata.registry_identifiers
+        )
+        assert dry_registry_identifiers is not None
+        self.assertEqual(dry_registry_identifiers.ct_gov_id, "NCT01234567")
+
+        # when: a real save
+        study_definition_repository_property_mock.return_value = (
+            StudyDefinitionRepositoryFake(test_db)
+        )
+        StudyService().patch(
+            uid=sample_study_definition.uid,
+            dry=False,
+            study_patch_request=patch_request(),
+        )
+
+        # then
+        saved = StudyDefinitionRepositoryFake(test_db).find_by_uid(
+            sample_study_definition.uid
+        )
+        assert saved is not None
+        self.assertEqual(
+            saved.current_metadata.id_metadata.registry_identifiers,
+            registry_identifiers,
+        )
+
     @patch(StudyService.__module__ + ".MetaRepository.unit_definition_repository")
     @patch(StudyService.__module__ + ".MetaRepository.clinical_programme_repository")
     @patch(StudyService.__module__ + ".MetaRepository.project_repository")
@@ -1583,8 +1683,6 @@ class TestStudyService(unittest.TestCase):
                     eu_pas_number_null_value_code=None,
                 ),
             ),
-            study_title_exists_callback=lambda _, study_number: False,
-            study_short_title_exists_callback=lambda _, study_number: False,
             author_id=random_str(),
         )
         prepare_repo.save(sample_study_definition)
@@ -1750,8 +1848,6 @@ class TestStudyService(unittest.TestCase):
                     eu_pas_number_null_value_code=None,
                 ),
             ),
-            study_title_exists_callback=lambda _, study_number: False,
-            study_short_title_exists_callback=lambda _, study_number: False,
             author_id=random_str(),
         )
         prepare_repo.save(sample_study_definition)
@@ -1865,19 +1961,13 @@ class TestStudyService(unittest.TestCase):
         StudyService.__module__ + ".MetaRepository.study_definition_repository",
         new_callable=PropertyMock,
     )
-    @patch(
-        StudyService.__module__ + ".MetaRepository.study_title_repository",
-        new_callable=PropertyMock,
-    )
     def test__patch__study_description__success(
         self,
-        study_title_repository_mock: PropertyMock,
         study_definition_repository_property_mock: PropertyMock,
         project_repository_property_mock: PropertyMock,
         clinical_programme_repository_property_mock: PropertyMock,
     ):
         # given
-        study_title_test_repo = StudyTitleRepositoryForTestImpl()
         test_db = StudyDefinitionsDBFake()
         prepare_repo = StudyDefinitionRepositoryFake(test_db)
         sample_study_definition = StudyDefinitionAR.from_initial_values(
@@ -1917,8 +2007,6 @@ class TestStudyService(unittest.TestCase):
                     eu_pas_number_null_value_code=None,
                 ),
             ),
-            study_title_exists_callback=lambda _, study_number: False,
-            study_short_title_exists_callback=lambda _, study_number: False,
             author_id=random_str(),
         )
         prepare_repo.save(sample_study_definition)
@@ -1945,7 +2033,6 @@ class TestStudyService(unittest.TestCase):
 
         # mocking repos
         study_definition_repository_property_mock.return_value = test_repo
-        study_title_repository_mock.return_value = study_title_test_repo
         project_repository_property_mock.find_by_project_number.return_value = (
             create_random_project(
                 clinical_programme_uid=random_str(),

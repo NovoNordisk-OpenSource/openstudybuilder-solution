@@ -2,16 +2,35 @@
 This list must contain all routes of the main application as (path:str, method:str, required_roles:Set[str])
 """
 
+from standards_import.tests.auth.routes import (
+    ALL_ROUTES_METHODS_ROLES as STANDARDS_IMPORT_ROUTES_METHODS_ROLES,
+)
+
+ALL_ROLES = {
+    "Admin.Read",
+    "Admin.Write",
+    "Library.Read",
+    "Library.Write",
+    "Study.Read",
+    "Study.Write",
+}
+
 ALL_ROUTES_METHODS_ROLES = (  # type: ignore[var-annotated]
+    (
+        "/system/settings",
+        "GET",
+        ALL_ROLES,
+    ),
     ("/admin/global-preferences", "PATCH", {"Admin.Write"}),
     ("/admin/global-preferences", "GET", {"Admin.Read"}),
     ("/user-preferences", "GET", {}),
     ("/user-preferences", "PATCH", {}),
     ("/user-preferences/{preference_key}", "DELETE", {}),
     ("/iso/639", "GET", {"Library.Read", "Study.Read"}),
-    ("/feature-flags", "GET", {"Admin.Read", "Library.Read", "Study.Read"}),
+    ("/feature-flags", "GET", ALL_ROLES),
+    ("/feature-flags/audit-trail", "GET", ALL_ROLES),
     ("/feature-flags/{uid}", "GET", {"Admin.Read"}),
-    ("/feature-flags/{uid}/versions", "GET", {"Admin.Read"}),
+    ("/feature-flags/{uid}/versions", "GET", ALL_ROLES),
     ("/feature-flags", "POST", {"Admin.Write"}),
     ("/feature-flags/{uid}", "PATCH", {"Admin.Write"}),
     ("/feature-flags/{uid}/activations", "DELETE", {"Admin.Write"}),
@@ -25,6 +44,7 @@ ALL_ROUTES_METHODS_ROLES = (  # type: ignore[var-annotated]
     ("/data-completeness-tags", "POST", {"Admin.Write"}),
     ("/data-completeness-tags/{uid}", "PUT", {"Admin.Write"}),
     ("/data-completeness-tags/{uid}", "DELETE", {"Admin.Write"}),
+    ("/studies/{study_uid}/comparison", "GET", {"Study.Read"}),
     ("/studies/{study_uid}/data-completeness-tags", "GET", {"Admin.Read"}),
     ("/studies/{study_uid}/data-completeness-tags", "POST", {"Admin.Write"}),
     ("/studies/{study_uid}/data-completeness-tags/{uid}", "DELETE", {"Admin.Write"}),
@@ -296,6 +316,7 @@ ALL_ROUTES_METHODS_ROLES = (  # type: ignore[var-annotated]
     ("/odms/metadata/xmls/export", "POST", {"Library.Read"}),
     ("/odms/metadata/csvs/export", "POST", {"Library.Read"}),
     ("/odms/metadata/xmls/import", "POST", {"Library.Write"}),
+    ("/odms/metadata/xmls/parse", "POST", {"Library.Read"}),
     ("/odms/metadata/xmls/stylesheets", "GET", {"Library.Read"}),
     ("/odms/metadata/xmls/stylesheets/{stylesheet}", "GET", {"Library.Read"}),
     ("/odms/study-events", "GET", {"Library.Read"}),
@@ -441,7 +462,6 @@ ALL_ROUTES_METHODS_ROLES = (  # type: ignore[var-annotated]
         "GET",
         {"Library.Read"},
     ),
-    ("/activity-instruction-templates/pre-validate", "POST", {"Library.Write"}),
     (
         "/activity-instruction-templates/{activity_instruction_template_uid}/pre-instances",
         "POST",
@@ -535,7 +555,6 @@ ALL_ROUTES_METHODS_ROLES = (  # type: ignore[var-annotated]
     ),
     ("/criteria-templates/{criteria_template_uid}", "DELETE", {"Library.Write"}),
     ("/criteria-templates/{criteria_template_uid}/parameters", "GET", {"Library.Read"}),
-    ("/criteria-templates/pre-validate", "POST", {"Library.Write"}),
     (
         "/criteria-templates/{criteria_template_uid}/pre-instances",
         "POST",
@@ -642,7 +661,6 @@ ALL_ROUTES_METHODS_ROLES = (  # type: ignore[var-annotated]
         "GET",
         {"Library.Read"},
     ),
-    ("/objective-templates/pre-validate", "POST", {"Library.Write"}),
     (
         "/objective-templates/{objective_template_uid}/pre-instances",
         "POST",
@@ -746,7 +764,6 @@ ALL_ROUTES_METHODS_ROLES = (  # type: ignore[var-annotated]
     ),
     ("/endpoint-templates/{endpoint_template_uid}", "DELETE", {"Library.Write"}),
     ("/endpoint-templates/{endpoint_template_uid}/parameters", "GET", {"Library.Read"}),
-    ("/endpoint-templates/pre-validate", "POST", {"Library.Write"}),
     (
         "/endpoint-templates/{endpoint_template_uid}/pre-instances",
         "POST",
@@ -864,7 +881,6 @@ ALL_ROUTES_METHODS_ROLES = (  # type: ignore[var-annotated]
     ("/footnote-templates", "POST", {"Library.Write", "Study.Write"}),
     ("/footnote-templates/audit-trail", "GET", {"Library.Read"}),
     ("/footnote-templates/headers", "GET", {"Library.Read"}),
-    ("/footnote-templates/pre-validate", "POST", {"Library.Write"}),
     ("/footnote-templates/{footnote_template_uid}", "DELETE", {"Library.Write"}),
     ("/footnote-templates/{footnote_template_uid}", "GET", {"Library.Read"}),
     (
@@ -944,7 +960,6 @@ ALL_ROUTES_METHODS_ROLES = (  # type: ignore[var-annotated]
         "GET",
         {"Library.Read"},
     ),
-    ("/timeframe-templates/pre-validate", "POST", {"Library.Write"}),
     ("/timeframes", "GET", {"Library.Read"}),
     ("/timeframes/audit-trail", "GET", {"Library.Read"}),
     ("/timeframes/headers", "GET", {"Library.Read"}),
@@ -1773,6 +1788,7 @@ ALL_ROUTES_METHODS_ROLES = (  # type: ignore[var-annotated]
     ("/studies/{study_uid}/audit-trail", "GET", {"Study.Read"}),
     ("/studies", "POST", {"Study.Write"}),
     ("/studies/{study_uid}/clone", "POST", {"Study.Write"}),
+    ("/studies/{study_uid}/clone/async", "POST", {"Study.Write"}),
     ("/studies/{study_uid}/protocol-title", "GET", {"Study.Read"}),
     ("/studies/{study_uid}/pharma-cm", "GET", {"Study.Read"}),
     ("/studies/{study_uid}/pharma-cm.xml", "GET", {"Study.Read"}),
@@ -1973,6 +1989,11 @@ ALL_ROUTES_METHODS_ROLES = (  # type: ignore[var-annotated]
         {"Study.Write"},
     ),
     (
+        "/studies/{study_uid}/study-criteria/{study_criteria_uid}/identifier",
+        "PATCH",
+        {"Study.Write"},
+    ),
+    (
         "/studies/{study_uid}/study-criteria/{study_criteria_uid}/sync-latest-version",
         "POST",
         {"Study.Write"},
@@ -2141,6 +2162,43 @@ ALL_ROUTES_METHODS_ROLES = (  # type: ignore[var-annotated]
     ("/studies/{study_uid}/study-source-variables", "GET", {"Study.Read"}),
     ("/studies/{study_uid}/study-source-variables", "POST", {"Study.Write"}),
     ("/studies/{study_uid}/study-source-variables", "PUT", {"Study.Write"}),
+    ("/studies/{study_uid}/study-design-populations", "GET", {"Study.Read"}),
+    ("/studies/{study_uid}/study-design-populations", "POST", {"Study.Write"}),
+    (
+        "/studies/{study_uid}/study-design-populations/audit-trail",
+        "GET",
+        {"Study.Read"},
+    ),
+    (
+        "/studies/{study_uid}/study-design-populations/{study_design_population_uid}/audit-trail",
+        "GET",
+        {"Study.Read"},
+    ),
+    (
+        "/studies/{study_uid}/study-design-populations/{study_design_population_uid}",
+        "GET",
+        {"Study.Read"},
+    ),
+    (
+        "/studies/{study_uid}/study-design-populations/{study_design_population_uid}",
+        "PATCH",
+        {"Study.Write"},
+    ),
+    (
+        "/studies/{study_uid}/study-design-populations/{study_design_population_uid}/order",
+        "PATCH",
+        {"Study.Write"},
+    ),
+    (
+        "/studies/{study_uid}/study-design-populations/{study_design_population_uid}",
+        "DELETE",
+        {"Study.Write"},
+    ),
+    (
+        "/studies/{study_uid}/study-criteria/{study_criteria_uid}/study-design-populations",
+        "PATCH",
+        {"Study.Write"},
+    ),
     ("/studies/{study_uid}/study-arms-branches-and-cohorts", "GET", {"Study.Read"}),
     ("/studies/{study_uid}/study-arms", "GET", {"Study.Read"}),
     ("/studies/{study_uid}/study-arms/headers", "GET", {"Study.Read"}),
@@ -2322,6 +2380,30 @@ ALL_ROUTES_METHODS_ROLES = (  # type: ignore[var-annotated]
         "GET",
         {"Study.Read"},
     ),
+    ("/studies/{study_uid}/study-auxiliary-devices", "GET", {"Study.Read"}),
+    ("/studies/{study_uid}/study-auxiliary-devices/headers", "GET", {"Study.Read"}),
+    ("/studies/{study_uid}/study-auxiliary-devices/audit-trail", "GET", {"Study.Read"}),
+    (
+        "/studies/{study_uid}/study-auxiliary-devices/{study_auxiliary_device_uid}",
+        "GET",
+        {"Study.Read"},
+    ),
+    (
+        "/studies/{study_uid}/study-auxiliary-devices/{study_auxiliary_device_uid}/audit-trail",
+        "GET",
+        {"Study.Read"},
+    ),
+    ("/studies/{study_uid}/study-auxiliary-devices", "POST", {"Study.Write"}),
+    (
+        "/studies/{study_uid}/study-auxiliary-devices/{study_auxiliary_device_uid}",
+        "DELETE",
+        {"Study.Write"},
+    ),
+    (
+        "/studies/{study_uid}/study-auxiliary-devices/{study_auxiliary_device_uid}/order",
+        "PATCH",
+        {"Study.Write"},
+    ),
     ("/studies/{study_uid}/study-disease-milestones", "GET", {"Study.Read"}),
     ("/studies/{study_uid}/study-disease-milestones/headers", "GET", {"Study.Read"}),
     (
@@ -2410,6 +2492,9 @@ ALL_ROUTES_METHODS_ROLES = (  # type: ignore[var-annotated]
         "GET",
         {"Study.Read"},
     ),
+    ("/studies/{study_uid}/study-visits/reorder", "PATCH", {"Study.Write"}),
+    ("/studies/{study_uid}/study-visits/mode", "GET", {"Study.Read"}),
+    ("/studies/{study_uid}/study-visits/mode", "PATCH", {"Study.Write"}),
     ("/studies/{study_uid}/study-visits/{study_visit_uid}", "PATCH", {"Study.Write"}),
     ("/studies/{study_uid}/study-visits/{study_visit_uid}", "DELETE", {"Study.Write"}),
     (
@@ -2431,7 +2516,6 @@ ALL_ROUTES_METHODS_ROLES = (  # type: ignore[var-annotated]
     ),
     ("/studies/{study_uid}/global-anchor-visit", "GET", {"Study.Read"}),
     ("/studies/{study_uid}/anchor-visits-in-group-of-subvisits", "GET", {"Study.Read"}),
-    ("/studies/{study_uid}/anchor-visits-for-special-visit", "GET", {"Study.Read"}),
     ("/studies/{study_uid}/consecutive-visit-groups", "POST", {"Study.Write"}),
     (
         "/studies/{study_uid}/consecutive-visit-groups/{consecutive_visit_group_uid}",
@@ -2573,62 +2657,62 @@ ALL_ROUTES_METHODS_ROLES = (  # type: ignore[var-annotated]
     (
         "/comment-topics",
         "GET",
-        {"Library.Write", "Study.Write", "Library.Read", "Study.Read"},
+        ALL_ROLES,
     ),
     (
         "/comment-threads",
         "GET",
-        {"Library.Write", "Study.Write", "Library.Read", "Study.Read"},
+        ALL_ROLES,
     ),
     (
         "/comment-threads/{comment_thread_uid}",
         "GET",
-        {"Library.Write", "Study.Write", "Library.Read", "Study.Read"},
+        ALL_ROLES,
     ),
     (
         "/comment-threads",
         "POST",
-        {"Library.Write", "Study.Write", "Library.Read", "Study.Read"},
+        ALL_ROLES,
     ),
     (
         "/comment-threads/{comment_thread_uid}",
         "DELETE",
-        {"Library.Write", "Study.Write", "Library.Read", "Study.Read"},
+        ALL_ROLES,
     ),
     (
         "/comment-threads/{comment_thread_uid}",
         "PATCH",
-        {"Library.Write", "Study.Write", "Library.Read", "Study.Read"},
+        ALL_ROLES,
     ),
     (
         "/comment-threads/{comment_thread_uid}/replies",
         "GET",
-        {"Library.Write", "Study.Write", "Library.Read", "Study.Read"},
+        ALL_ROLES,
     ),
     (
         "/comment-threads/{comment_thread_uid}/replies",
         "POST",
-        {"Library.Write", "Study.Write", "Library.Read", "Study.Read"},
+        ALL_ROLES,
     ),
     (
         "/comment-threads/{comment_thread_uid}/replies/{reply_uid}",
         "GET",
-        {"Library.Write", "Study.Write", "Library.Read", "Study.Read"},
+        ALL_ROLES,
     ),
     (
         "/comment-threads/{comment_thread_uid}/replies/{reply_uid}",
         "DELETE",
-        {"Library.Write", "Study.Write", "Library.Read", "Study.Read"},
+        ALL_ROLES,
     ),
     (
         "/comment-threads/{comment_thread_uid}/replies/{reply_uid}",
         "PATCH",
-        {"Library.Write", "Study.Write", "Library.Read", "Study.Read"},
+        ALL_ROLES,
     ),
     (
         "/integrations/ms-graph/users",
         "GET",
-        {"Library.Write", "Study.Write", "Library.Read", "Study.Read"},
+        ALL_ROLES,
     ),
     (
         "/usdm/v4/studyDefinitions/{study_uid}",
@@ -2748,11 +2832,18 @@ ALL_ROUTES_METHODS_ROLES = (  # type: ignore[var-annotated]
     (
         "/jobs",
         "GET",
-        {"Library.Write", "Study.Write", "Library.Read", "Study.Read"},
+        ALL_ROLES,
     ),
     (
         "/jobs/{job_uid}",
         "GET",
-        {"Library.Write", "Study.Write", "Library.Read", "Study.Read"},
+        ALL_ROLES,
     ),
+)
+
+# The Standards Import routers are mounted under /standards-import (see main.py),
+# so their own registry is reused here with that prefix.
+ALL_ROUTES_METHODS_ROLES += tuple(  # type: ignore[assignment]
+    (f"/standards-import{path}", method, roles)
+    for path, method, roles in STANDARDS_IMPORT_ROUTES_METHODS_ROLES
 )

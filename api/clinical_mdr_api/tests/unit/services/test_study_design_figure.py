@@ -740,7 +740,6 @@ STUDY_VISITS = (
         study_duration_weeks_label="-3 weeks",
         week_in_study_label="Week -3",
         study_week_label="Week -2",
-        visit_number=1,
         visit_subnumber=0,
         unique_visit_number=100,
         visit_subname="Visit 1",
@@ -800,7 +799,6 @@ STUDY_VISITS = (
         study_duration_weeks_label="0 weeks",
         week_in_study_label="Week 0",
         study_week_label="Week 1",
-        visit_number=2,
         visit_subnumber=0,
         unique_visit_number=200,
         visit_subname="Visit 2",
@@ -860,7 +858,6 @@ STUDY_VISITS = (
         study_duration_weeks_label="1 weeks",
         week_in_study_label="Week 1",
         study_week_label="Week 2",
-        visit_number=3,
         visit_subnumber=0,
         unique_visit_number=300,
         visit_subname="Visit 3",
@@ -920,7 +917,6 @@ STUDY_VISITS = (
         study_duration_weeks_label="2 weeks",
         week_in_study_label="Week 2",
         study_week_label="Week 3",
-        visit_number=4,
         visit_subnumber=0,
         unique_visit_number=400,
         visit_subname="Visit 4",
@@ -980,7 +976,6 @@ STUDY_VISITS = (
         study_duration_weeks_label="3 weeks",
         week_in_study_label="Week 3",
         study_week_label="Week 4",
-        visit_number=5,
         visit_subnumber=0,
         unique_visit_number=500,
         visit_subname="Visit 5",
@@ -1040,7 +1035,6 @@ STUDY_VISITS = (
         study_duration_weeks_label="4 weeks",
         week_in_study_label="Week 4",
         study_week_label="Week 5",
-        visit_number=6,
         visit_subnumber=0,
         unique_visit_number=600,
         visit_subname="Visit 6",
@@ -1100,7 +1094,6 @@ STUDY_VISITS = (
         study_duration_weeks_label="5 weeks",
         week_in_study_label="Week 5",
         study_week_label="Week 6",
-        visit_number=7,
         visit_subnumber=0,
         unique_visit_number=700,
         visit_subname="Visit 7",
@@ -1160,7 +1153,6 @@ STUDY_VISITS = (
         study_duration_weeks_label="6 weeks",
         week_in_study_label="Week 6",
         study_week_label="Week 7",
-        visit_number=8,
         visit_subnumber=0,
         unique_visit_number=800,
         visit_subname="Visit 8",
@@ -1220,7 +1212,6 @@ STUDY_VISITS = (
         study_duration_weeks_label="7 weeks",
         week_in_study_label="Week 7",
         study_week_label="Week 8",
-        visit_number=9,
         visit_subnumber=0,
         unique_visit_number=900,
         visit_subname="Visit 9",
@@ -1280,7 +1271,6 @@ STUDY_VISITS = (
         study_duration_weeks_label="8 weeks",
         week_in_study_label="Week 8",
         study_week_label="Week 9",
-        visit_number=10,
         visit_subnumber=0,
         unique_visit_number=1000,
         visit_subname="Visit 10",
@@ -1340,7 +1330,6 @@ STUDY_VISITS = (
         study_duration_weeks_label="1 weeks",
         week_in_study_label="Week 1",
         study_week_label="Week 10",
-        visit_number=11,
         visit_subnumber=0,
         unique_visit_number=1100,
         visit_subname="Visit 11",
@@ -1400,7 +1389,6 @@ STUDY_VISITS = (
         study_duration_weeks_label="26 weeks",
         week_in_study_label="Week 26",
         study_week_label="Week 27",
-        visit_number=12,
         visit_subnumber=0,
         unique_visit_number=1200,
         visit_subname="Visit 12",
@@ -1460,7 +1448,6 @@ STUDY_VISITS = (
         study_duration_weeks_label="26 weeks",
         week_in_study_label="Week 26",
         study_week_label="Week 53",
-        visit_number=13,
         visit_subnumber=0,
         unique_visit_number=1300,
         visit_subname="Visit 13",
@@ -2352,12 +2339,12 @@ def test_get_svg_document():
         'class="element"' in doc
     ), 'class="element" found, missing study design cells?'
 
-    for uid in STUDY_ARMS.keys():
+    for uid in STUDY_ARMS:
         assert f'id="{uid}"' in doc, f'arm id="{uid}" not found in document'
     for epoch in STUDY_EPOCHS:
         uid = epoch.uid
         assert f'id="{uid}"' in doc, f'epoch id="{uid}" not found in document'
-    for uid in STUDY_ELEMENTS.keys():
+    for uid in STUDY_ELEMENTS:
         assert f'id="{uid}"' in doc, f'element id="{uid}" not found in document'
 
     assert (

@@ -65,6 +65,7 @@ Possible errors:
 @decorators.allow_exports(
     {
         "defaults": [
+            "library=library_name",
             "uid",
             "name",
             "synonyms",
@@ -587,26 +588,23 @@ def get_instances_for_specific_activity_version(
         A paginated response containing relevant activity instances.
     """
     activity_service = ActivityService()
-    try:
-        if flatten:
-            # Return flattened list for exports
-            result = activity_service.get_flattened_activity_instances_for_version(
-                activity_uid=activity_uid,
-                version=version,
-                page_number=page_number,
-                page_size=page_size,
-            )
-        else:
-            # Return hierarchical structure (default)
-            result = activity_service.get_activity_instances_for_version(
-                activity_uid=activity_uid,
-                version=version,
-                page_number=page_number,
-                page_size=page_size,
-            )
-        return result
-    except Exception as e:
-        raise e
+    if flatten:
+        # Return flattened list for exports
+        result = activity_service.get_flattened_activity_instances_for_version(
+            activity_uid=activity_uid,
+            version=version,
+            page_number=page_number,
+            page_size=page_size,
+        )
+    else:
+        # Return hierarchical structure (default)
+        result = activity_service.get_activity_instances_for_version(
+            activity_uid=activity_uid,
+            version=version,
+            page_number=page_number,
+            page_size=page_size,
+        )
+    return result
 
 
 @router.get(

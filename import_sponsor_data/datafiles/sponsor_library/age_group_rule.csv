@@ -1,0 +1,3 @@
+CODELIST_SUBMVAL,TERM_SUBMVAL,SPONSOR_NAME,SPONSOR_NAME_SENTENCE_CASE,NCI_PREFERRED_NAME,ORDER,CONCEPT_ID,CATALOGUES,DEFINITION
+AGE_GRP_RL,AGE DECIMAL,Age with 1 decimal digit,age with 1 decimal digit,Age with 1 decimal digit,1,,,Age with 1 decimal digit
+AGE_GRP_RL,NO RULE,No Rule,no rule,No Rule,2,,,No Rule

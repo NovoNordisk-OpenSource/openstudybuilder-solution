@@ -213,7 +213,13 @@
       {{ $t('_global.login') }}
     </v-btn>
     <div class="d-flex">
-      <img class="mr-4" :src="nnLogoUrl" width="75" height="50" alt="" />
+      <img
+        class="mr-4 mb-2"
+        :src="companyLogoUrl"
+        width="109"
+        height="33"
+        alt=""
+      />
     </div>
     <v-dialog v-model="showAboutDialog" fullscreen>
       <AboutPage @close="showAboutDialog = false" />
@@ -289,8 +295,8 @@ const sbLogoUrl = new URL(
   '../../assets/study_builder_homepage_logo.png',
   import.meta.url
 ).href
-const nnLogoUrl = new URL(
-  '../../assets/nn_logo_rgb_white_small.png',
+const companyLogoUrl = new URL(
+  '../../assets/company_logo_rgb_white_small.svg',
   import.meta.url
 ).href
 

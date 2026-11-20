@@ -34,7 +34,7 @@ FROM common-stage AS prod-stage
 
 # Remove test directories and byte-code compile application
 RUN echo "Compile prod-stage" 1>&2 \
-    rm -r clinical_mdr_api/tests consumer_api/tests \
+    && rm -r clinical_mdr_api/tests consumer_api/tests \
     && python -m compileall -f -j 0 .
 
 # Install only production dependencies with uv

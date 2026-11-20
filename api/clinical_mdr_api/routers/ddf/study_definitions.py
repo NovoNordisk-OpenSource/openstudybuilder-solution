@@ -56,8 +56,7 @@ def get_study(
     study_uid: Annotated[str, Path(description="The unique uid of the study.")],
 ) -> dict[str, Any]:
     usdm_service = USDMService()
-    ddf_study_wrapper = usdm_service.get_by_uid(study_uid)
-    return ddf_study_wrapper
+    return usdm_service.get_by_uid(study_uid)
 
 
 @router.get(
@@ -336,7 +335,6 @@ def get_study_m11_protocol(
         }
 
     with trace_block("template_rendering", "Rendering M11 template"):
-        template_response = templates.TemplateResponse(
+        return templates.TemplateResponse(
             request=request, name="m11-template.html", context=context
         )
-    return template_response

@@ -321,7 +321,7 @@ def test_data():
 ACTIVITY_IC_FIELDS_ALL = [
     "uid",
     "name",
-    "display_name",
+    "label",
     "definition",
     "nci_concept_id",
     "nci_concept_name",
@@ -476,8 +476,8 @@ def test_get_activity_item_classes(
     assert list(res.keys()) == ["items", "total", "page", "size"]
     assert len(res["items"]) == expected_result_len
     assert res["total"] == (len(activity_item_classes_all) if total_count else 0)
-    assert res["page"] == (page_number if page_number else 1)
-    assert res["size"] == (page_size if page_size else 10)
+    assert res["page"] == (page_number or 1)
+    assert res["size"] == (page_size or 10)
 
     for item in res["items"]:
         assert set(list(item.keys())) == set(ACTIVITY_IC_FIELDS_ALL)
@@ -688,7 +688,7 @@ def test_edit_activity_item_class(api_client):
             "definition": "new definition for item class",
             "nci_concept_id": "new nci concept id",
             "nci_concept_name": "new nci concept name",
-            "display_name": "new display name for item class",
+            "label": "new label for item class",
             "order": 45,
             "activity_instance_classes": [
                 {
@@ -708,7 +708,7 @@ def test_edit_activity_item_class(api_client):
     assert res["definition"] == "new definition for item class"
     assert res["nci_concept_id"] == "new nci concept id"
     assert res["nci_concept_name"] == "new nci concept name"
-    assert res["display_name"] == "new display name for item class"
+    assert res["label"] == "new label for item class"
     assert res["order"] == 45
     ic_after_edit = next(
         x
@@ -733,7 +733,7 @@ def test_edit_activity_item_class(api_client):
     assert get_res["definition"] == "new definition for item class"
     assert get_res["nci_concept_id"] == "new nci concept id"
     assert get_res["nci_concept_name"] == "new nci concept name"
-    assert get_res["display_name"] == "new display name for item class"
+    assert get_res["label"] == "new label for item class"
     assert get_res["order"] == 45
     ic_after_edit = next(
         x
@@ -790,7 +790,7 @@ def test_post_activity_item_class(api_client):
             "definition": "New AIC Def",
             "nci_concept_id": "New nci id",
             "nci_concept_name": "New nci name",
-            "display_name": "New AIC Display Name",
+            "label": "New AIC Label",
             "order": 36,
             "library_name": "Sponsor",
             "activity_instance_classes": [
@@ -812,7 +812,7 @@ def test_post_activity_item_class(api_client):
     assert res["definition"] == "New AIC Def"
     assert res["nci_concept_id"] == "New nci id"
     assert res["nci_concept_name"] == "New nci name"
-    assert res["display_name"] == "New AIC Display Name"
+    assert res["label"] == "New AIC Label"
     assert res["order"] == 36
     assert res["activity_instance_classes"][0]["uid"] == activity_instance_class.uid
     assert res["activity_instance_classes"][0]["name"] == activity_instance_class.name
@@ -1043,7 +1043,7 @@ def test_get_activity_item_class_overview(api_client: TestClient) -> None:
 
     result = response.json()
     assert "activity_item_class" in result
-    assert "all_versions" in result
+    assert result["all_versions"] == ["1.0", "0.1"]
 
     item_detail = result["activity_item_class"]
     assert item_detail["uid"] == activity_item_class.uid
@@ -1798,6 +1798,89 @@ def test_nsv_nci_concept_id_headers_do_not_include_activity_item_class_codes(
         )
         assert aic_nci in aic_headers
         assert nsv_nci not in aic_headers
+
+
+def test_label_headers_respect_is_nsv_filter_in_lite_mode(api_client):
+    """
+    SCENARIO: Label filter headers work with is_nsv, including lite mode
+    GIVEN a standard Activity Item Class and an NSV with distinct labels
+    WHEN GET /activity-item-classes/headers?field_name=label is called with is_nsv
+    THEN is_nsv=true returns only the NSV label
+    AND is_nsv=false returns only the Activity Item Class label
+    AND the result is the same with lite=true (as the UI sends) and lite=false
+    """
+    aic_label = "AIC label header sentinel"
+    nsv_label = "NSV label header sentinel"
+
+    for name, order, label, extra in (
+        ("AIC label header item", 411, aic_label, {}),
+        (
+            "NSV label header item",
+            412,
+            nsv_label,
+            {
+                "non_standard_variable": {
+                    "code": "LBLHDR",
+                    "is_multiple": False,
+                    "length": 8,
+                    "is_cdisc_defined": False,
+                }
+            },
+        ),
+    ):
+        response = api_client.post(
+            "/activity-item-classes",
+            json={
+                "name": name,
+                "order": order,
+                "label": label,
+                "library_name": "Sponsor",
+                "activity_instance_classes": [
+                    {
+                        "uid": activity_instance_class.uid,
+                        "mandatory": True,
+                        "is_adam_param_specific_enabled": False,
+                        "is_additional_optional": False,
+                        "is_default_linked": False,
+                    }
+                ],
+                "role_uid": role_term.term_uid,
+                "data_type_uid": data_type_term.term_uid,
+                **extra,
+            },
+        )
+        assert_response_status_code(response, 201)
+
+    for lite in (True, False):
+        nsv_headers = parse_json_response(
+            api_client.get(
+                "/activity-item-classes/headers",
+                params={
+                    "field_name": "label",
+                    "search_string": "header sentinel",
+                    "page_size": 50,
+                    "is_nsv": "true",
+                    "lite": str(lite).lower(),
+                },
+            )
+        )
+        assert nsv_label in nsv_headers
+        assert aic_label not in nsv_headers
+
+        aic_headers = parse_json_response(
+            api_client.get(
+                "/activity-item-classes/headers",
+                params={
+                    "field_name": "label",
+                    "search_string": "header sentinel",
+                    "page_size": 50,
+                    "is_nsv": "false",
+                    "lite": str(lite).lower(),
+                },
+            )
+        )
+        assert aic_label in aic_headers
+        assert nsv_label not in aic_headers
 
 
 def test_nsv_status_headers_match_filtered_table(api_client):

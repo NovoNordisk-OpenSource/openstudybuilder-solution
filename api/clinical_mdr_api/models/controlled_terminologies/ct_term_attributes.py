@@ -20,6 +20,7 @@ class CTTermAttributes(BaseModel):
             concept_id=ct_term_attributes_ar.ct_term_vo.concept_id,
             nci_preferred_name=ct_term_attributes_ar.ct_term_vo.preferred_term,
             definition=ct_term_attributes_ar.ct_term_vo.definition,
+            algorithm=ct_term_attributes_ar.ct_term_vo.algorithm,
             library_name=Library.from_library_vo(ct_term_attributes_ar.library).name,
             possible_actions=sorted(
                 [_.value for _ in ct_term_attributes_ar.get_possible_actions()]
@@ -40,6 +41,7 @@ class CTTermAttributes(BaseModel):
             concept_id=ct_term_attributes_ar.ct_term_vo.concept_id,
             nci_preferred_name=ct_term_attributes_ar.ct_term_vo.preferred_term,
             definition=ct_term_attributes_ar.ct_term_vo.definition,
+            algorithm=ct_term_attributes_ar.ct_term_vo.algorithm,
             possible_actions=sorted(
                 [_.value for _ in ct_term_attributes_ar.get_possible_actions()]
             ),
@@ -66,6 +68,14 @@ class CTTermAttributes(BaseModel):
     ] = None
 
     definition: Annotated[str, Field(json_schema_extra={"remove_from_wildcard": True})]
+
+    algorithm: Annotated[
+        str | None,
+        Field(
+            description="SDTM algorithm text read by SAS programs",
+            json_schema_extra={"nullable": True, "remove_from_wildcard": True},
+        ),
+    ] = None
 
     library_name: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
         None
@@ -114,6 +124,8 @@ class CTTermAttributesInput(BaseModel):
     definition: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
         None
     )
+
+    algorithm: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = None
 
 
 class CTTermAttributesEditInput(CTTermAttributesInput):

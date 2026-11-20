@@ -22,7 +22,13 @@ function getTermsPayload(form, name) {
   return result
 }
 
+// Study metadata terms carry no definition, so it is looked up in the codelist terms
+function getTermDefinition(term, terms) {
+  return terms.find((item) => item.term_uid === term?.term_uid)?.definition
+}
+
 export default {
   getTermsPayload,
   getTermPayload,
+  getTermDefinition,
 }

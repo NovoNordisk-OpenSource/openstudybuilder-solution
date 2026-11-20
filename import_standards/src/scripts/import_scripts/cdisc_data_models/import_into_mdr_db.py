@@ -209,7 +209,7 @@ def get_classes(tx, catalogue: str, prefixed_version_number: str):
     classes_data = tx.run(
         """
         MATCH (import:DataModelImport{catalogue: $catalogue, version_number: $prefixed_version_number})
-            -[:INCLUDES]->(version)-[:CONTAINS]->(class)
+            -[:INCLUDES]->(version)-[:DM_CONTAINS]->(class)
         RETURN class
         """,
         catalogue=catalogue,
@@ -225,7 +225,7 @@ def get_scenarios(tx, catalogue: str, prefixed_version_number: str):
     scenarios_data = tx.run(
         """
         MATCH (import:DataModelImport{catalogue: $catalogue, version_number: $prefixed_version_number})
-            -[:INCLUDES]->(version)-[:CONTAINS]->(class:DataModelClass)-[:CONTAINS]->(scenario:DataModelScenario)
+            -[:INCLUDES]->(version)-[:DM_CONTAINS]->(class:DataModelClass)-[:DM_CONTAINS]->(scenario:DataModelScenario)
         RETURN scenario, class.href AS dataset_href
         """,
         catalogue=catalogue,
@@ -243,11 +243,11 @@ def get_variables(tx, catalogue: str, prefixed_version_number: str):
     variables_data = tx.run(
         """
         MATCH (import:DataModelImport{catalogue: $catalogue, version_number: $prefixed_version_number})
-            -[:INCLUDES]->(version)-[:CONTAINS]->(class:DataModelClass)-[:CONTAINS]->(variable:DataModelVariable)
+            -[:INCLUDES]->(version)-[:DM_CONTAINS]->(class:DataModelClass)-[:DM_CONTAINS]->(variable:DataModelVariable)
         RETURN variable, class.href AS parent_href, "class" AS parent_type
         UNION
         MATCH (import:DataModelImport{catalogue: $catalogue, version_number: $prefixed_version_number})
-            -[:INCLUDES]->(version)-[:CONTAINS]->(class:DataModelClass)-[:CONTAINS]->(scenario:DataModelScenario)-[:CONTAINS]->(variable:DataModelVariable)
+            -[:INCLUDES]->(version)-[:DM_CONTAINS]->(class:DataModelClass)-[:DM_CONTAINS]->(scenario:DataModelScenario)-[:DM_CONTAINS]->(variable:DataModelVariable)
         RETURN variable, scenario.href AS parent_href, "scenario" AS parent_type
         """,
         catalogue=catalogue,

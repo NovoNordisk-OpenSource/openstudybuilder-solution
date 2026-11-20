@@ -80,6 +80,7 @@ class Criteria(BaseModel):
         criteria_ar: CriteriaAR,
     ) -> Self:
         parameter_terms: list[MultiTemplateParameterTerm] = []
+        parameter_names = criteria_ar.get_parameter_names()
         for position, parameter in enumerate(criteria_ar.get_parameters()):
             terms: list[IndexedTemplateParameterTerm] = []
             for index, parameter_term in enumerate(parameter.parameters):
@@ -94,7 +95,10 @@ class Criteria(BaseModel):
 
             parameter_terms.append(
                 MultiTemplateParameterTerm(
-                    conjunction=conjunction, position=position + 1, terms=terms
+                    conjunction=conjunction,
+                    position=position + 1,
+                    parameter_name=parameter_names[position],
+                    terms=terms,
                 )
             )
         return cls(
@@ -130,6 +134,7 @@ class CriteriaWithType(Criteria):
     @classmethod
     def from_criteria_ar(cls, criteria_ar: CriteriaAR) -> Self:
         parameter_terms: list[MultiTemplateParameterTerm] = []
+        parameter_names = criteria_ar.get_parameter_names()
         for position, parameter in enumerate(criteria_ar.get_parameters()):
             terms: list[IndexedTemplateParameterTerm] = []
             for index, parameter_term in enumerate(parameter.parameters):
@@ -144,7 +149,10 @@ class CriteriaWithType(Criteria):
 
             parameter_terms.append(
                 MultiTemplateParameterTerm(
-                    conjunction=conjunction, position=position + 1, terms=terms
+                    conjunction=conjunction,
+                    position=position + 1,
+                    parameter_name=parameter_names[position],
+                    terms=terms,
                 )
             )
         return cls(

@@ -113,7 +113,7 @@ class OdmGenericRepository[AggregateRootType](LibraryItemRepositoryImplBase, ABC
         odm_label = self.root_class.__label__
         odm_value_label = self.value_class.__label__
 
-        version = kwargs.get("version", None)
+        version = kwargs.get("version")
         rel = (
             "hv:HAS_VERSION WHERE hv.version = $requested_version"
             if version is not None
@@ -123,7 +123,7 @@ class OdmGenericRepository[AggregateRootType](LibraryItemRepositoryImplBase, ABC
         return f"""CYPHER runtime=slotted MATCH (odm_root:{odm_label})-[{rel}]->(odm_value:{odm_value_label})"""
 
     def generic_alias_clause(self, **kwargs):
-        version = kwargs.get("version", None)
+        version = kwargs.get("version")
         where_version = (
             "WHERE hv.version = $requested_version" if version is not None else ""
         )
@@ -236,7 +236,7 @@ class OdmGenericRepository[AggregateRootType](LibraryItemRepositoryImplBase, ABC
             return_model=self.return_model,
         )
 
-        if kwargs.get("version", None) is not None:
+        if kwargs.get("version") is not None:
             query.parameters.update({"requested_version": kwargs["version"]})
 
         query.parameters.update(filter_query_parameters)
@@ -296,7 +296,7 @@ class OdmGenericRepository[AggregateRootType](LibraryItemRepositoryImplBase, ABC
             wildcard_properties_list=wildcard_properties_list,
         )
 
-        if kwargs.get("version", None) is not None:
+        if kwargs.get("version") is not None:
             query.parameters.update({"requested_version": kwargs["version"]})
 
         query.parameters.update(filter_query_parameters)
@@ -322,9 +322,7 @@ class OdmGenericRepository[AggregateRootType](LibraryItemRepositoryImplBase, ABC
     ) -> list[AggregateRootType]:
         odm_ars = []
         for item in result_array:
-            item_dictionary = {}
-            for item_property, attribute_name in zip(item, attribute_names):
-                item_dictionary[attribute_name] = item_property
+            item_dictionary = dict(zip(attribute_names, item))
             odm_ars.append(
                 self._create_aggregate_root_instance_from_cypher_result(item_dictionary)
             )
@@ -356,6 +354,7 @@ class OdmGenericRepository[AggregateRootType](LibraryItemRepositoryImplBase, ABC
             "version": "version_rel.version AS version",
             "library_name": "library.name AS library_name",
             "start_date": "version_rel.start_date AS start_date",
+            "end_date": "version_rel.end_date AS end_date",
             "author_id": "version_rel.author_id AS author_id",
             "author_username": "coalesce(author.username, version_rel.author_id) AS author_username",
             "change_description": "version_rel.change_description AS change_description",
@@ -434,6 +433,10 @@ class OdmGenericRepository[AggregateRootType](LibraryItemRepositoryImplBase, ABC
 
         return wildcard_properties
 
+    def _get_subquery_field_clauses(self) -> dict[str, str]:
+        """Fields that need a CALL subquery; each clause must return a variable named after the field."""
+        return {}
+
     def _build_minimal_alias_clause(self, select_fields: list[str], **kwargs) -> str:
         """
         Build a minimal alias clause that only includes uid and requested fields.
@@ -441,7 +444,7 @@ class OdmGenericRepository[AggregateRootType](LibraryItemRepositoryImplBase, ABC
         This method builds on top of generic_alias_clause to ensure proper context
         (library, version_rel) is available, then selects only the requested fields.
         """
-        version = kwargs.get("version", None)
+        version = kwargs.get("version")
         where_version = (
             "WHERE hv.version = $requested_version" if version is not None else ""
         )
@@ -490,9 +493,14 @@ class OdmGenericRepository[AggregateRootType](LibraryItemRepositoryImplBase, ABC
 
         # Add requested fields - only the AS-aliased expressions
         field_aliases = []
+        subquery_clauses = []
         needs_author = False
+        subquery_fields = self._get_subquery_field_clauses()
         for field in effective_fields:
-            if field in field_mapping:
+            if field in subquery_fields:
+                subquery_clauses.append(subquery_fields[field])
+                field_aliases.append(field)
+            elif field in field_mapping:
                 expression = field_mapping[field]
                 # Check if this field needs author lookup
                 if "author_username" in expression or field == "author_username":
@@ -506,6 +514,8 @@ class OdmGenericRepository[AggregateRootType](LibraryItemRepositoryImplBase, ABC
             raise ValidationException(
                 msg=f"None of the requested fields are valid for this resource: {select_fields!r}"
             )
+
+        context_setup += "".join(subquery_clauses)
 
         # If author username is needed, add author lookup
         if needs_author:
@@ -930,7 +940,7 @@ class OdmGenericRepository[AggregateRootType](LibraryItemRepositoryImplBase, ABC
 
         try:
             if not all_exist:
-                for relationship in relationships:
+                for relationship in relationships:  # noqa: SIM110
                     if getattr(value, relationship):
                         return True
 
@@ -939,11 +949,12 @@ class OdmGenericRepository[AggregateRootType](LibraryItemRepositoryImplBase, ABC
                 if not getattr(value, relationship):
                     return False
 
-            return True
         except AttributeError as exc:
             raise AttributeError(
                 f"{relationship} relationship was not found on {value}."
             ) from exc
+        else:
+            return True
 
     def get_active_relationships(
         self, uid: str, relationships: list[Any]
@@ -971,11 +982,12 @@ class OdmGenericRepository[AggregateRootType](LibraryItemRepositoryImplBase, ABC
                             rs[target_node_without_suffix].append(
                                 target_node_roots[0].uid
                             )
-            return rs
         except AttributeError as exc:
             raise AttributeError(
                 f"{relationship} relationship was not found on {source_node}."
             ) from exc
+        else:
+            return rs
 
     def get_if_has_relationship(self, relationship: str):
         values = self.value_class.nodes.has(**{relationship: True})

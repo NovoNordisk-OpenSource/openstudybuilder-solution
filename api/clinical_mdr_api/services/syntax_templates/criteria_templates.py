@@ -58,7 +58,7 @@ class CriteriaTemplateService(GenericSyntaxTemplateService[CriteriaTemplateAR]):
         ) = self._get_indexings(template)
 
         # Process item to save
-        item = CriteriaTemplateAR.from_input_values(
+        return CriteriaTemplateAR.from_input_values(
             author_id=self.author_id,
             template=template_vo,
             library=library_vo,
@@ -69,8 +69,6 @@ class CriteriaTemplateService(GenericSyntaxTemplateService[CriteriaTemplateAR]):
             categories=categories,
             sub_categories=sub_categories,
         )
-
-        return item
 
     @db.transaction
     def edit_draft(

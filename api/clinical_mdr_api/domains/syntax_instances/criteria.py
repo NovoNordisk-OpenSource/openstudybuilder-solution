@@ -66,6 +66,7 @@ class CriteriaTemplateVO(ParametrizedTemplateVO):
             parameter_terms=parameter_terms,
             guidance_text=template.guidance_text,
             library_name=library_name,
+            template_parameter_names=template.parameter_names,
         )
 
 

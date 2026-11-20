@@ -3,9 +3,9 @@ set -e
 if [ $# -lt 3 ]; then
 	cat 1>&2 <<- EOF
 		Error: not enough arguments.
-		Example usage, connects to the container 'database' and imports the data dump in 'filename.backup' into the database 'mdrdb'.
-		$ ./import_db_backup.sh database mdrdb filename.backup
-		This script assumes that the file 'filename.backup' exists in the directory
+		Example usage, connects to the container 'database' and imports the data dump in 'filename.dump' into the database 'mdrdb'.
+		$ ./import_db_dump.sh database mdrdb filename.dump
+		This script assumes that the file 'filename.dump' exists in the directory
 		'/db_backup' in the neo4j container.
 		A local directory should be mounted at that path.
 	EOF
@@ -40,7 +40,7 @@ docker exec "$1" ln -sf "/db_backup/$3" "/tmp/load/$DBNAME.dump"
 
 echo "- Stop database"
 docker exec "$1" /var/lib/neo4j/bin/cypher-shell -d system -u "$NEO4J_MDR_AUTH_USER" -p "$NEO4J_MDR_AUTH_PASSWORD" -a "neo4j://localhost:$NEO4J_MDR_BOLT_PORT" "STOP DATABASE \`$DBNAME\`;"
-echo "- Restore backup"
+echo "- Load dump"
 docker exec "$1" /var/lib/neo4j/bin/neo4j-admin database load --from-path="/tmp/load/" --overwrite-destination=true "$DBNAME"
 echo "- Create database if not already existing"
 docker exec "$1" /var/lib/neo4j/bin/cypher-shell -d system -u "$NEO4J_MDR_AUTH_USER" -p "$NEO4J_MDR_AUTH_PASSWORD" -a "neo4j://localhost:$NEO4J_MDR_BOLT_PORT" "CREATE DATABASE \`$DBNAME\` IF NOT EXISTS;"

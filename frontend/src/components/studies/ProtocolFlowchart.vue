@@ -8,6 +8,7 @@
           v-show="switchIsEnabled(['protocol'])"
           v-model="showSplitMenu"
           :label="$t('ProtocolFlowchart.show_split_menu')"
+          data-cy="show-split-menu"
           hide-details
           class="mr-4"
           :readonly="loading || toggle.length !== 0"
@@ -18,6 +19,7 @@
           v-show="switchIsEnabled(['protocol'])"
           v-model="studiesGeneralStore.soaPreferences.show_epochs"
           :label="$t('ProtocolFlowchart.show_epochs')"
+          data-cy="show-epochs"
           hide-details
           class="mr-4"
           :readonly="loading"
@@ -28,6 +30,7 @@
           v-show="switchIsEnabled(['protocol'])"
           v-model="studiesGeneralStore.soaPreferences.show_milestones"
           :label="$t('ProtocolFlowchart.show_milestones')"
+          data-cy="show-milestones"
           hide-details
           class="mr-4"
           :readonly="loading"
@@ -38,6 +41,7 @@
           v-show="switchIsEnabled(['protocol_lab_table'])"
           v-model="studiesGeneralStore.soaPreferences.show_all_visits_lab_table"
           :label="$t('ProtocolFlowchart.show_all_visits_lab_table')"
+          data-cy="show-all-visits-lab-table"
           hide-details
           class="mr-4"
           :readonly="loading"
@@ -45,6 +49,17 @@
           @update:model-value="
             updateSoaPreferences('show_all_visits_lab_table')
           "
+        />
+        <ManageFootnotesButton
+          v-if="supportsFootnotes"
+          ref="manageFootnotes"
+          :layout="layout"
+          :editable="canEditStudy"
+          :footnote-letters="footnoteLetters"
+          @footnote-expanded="highlightFootnoteItems"
+          @footnotes-changed="refreshFlowchartKeepingSelection"
+          @linking-changed="onLinkingChanged"
+          @scroll-to-item="scrollToItem"
         />
         <v-menu rounded location="bottom">
           <template #activator="{ props }">
@@ -64,11 +79,11 @@
             </v-btn>
           </template>
           <v-list>
-            <v-list-item link @click="downloadCSV">
-              <v-list-item-title>CSV</v-list-item-title>
-            </v-list-item>
             <v-list-item link @click="downloadEXCEL">
               <v-list-item-title>EXCEL</v-list-item-title>
+            </v-list-item>
+            <v-list-item link @click="downloadCSV">
+              <v-list-item-title>CSV</v-list-item-title>
             </v-list-item>
             <v-list-item link @click="downloadDocx">
               <v-list-item-title>DOCX</v-list-item-title>
@@ -100,6 +115,7 @@
             >
               <v-btn
                 selected-class="split-class"
+                data-cy="split-class"
                 variant="outlined"
                 rounded="0"
                 class="mt-2"
@@ -127,6 +143,7 @@
                   <v-btn
                     variant="outlined"
                     class="mt-n2 go-to-btn"
+                    data-cy="go-to-split"
                     elevation="0"
                     :loading="splitLoading"
                     @click="scrollToSplit(visit)"
@@ -147,22 +164,40 @@
         </v-btn-toggle>
       </div>
     </div>
-    <div
-      id="protocolFlowchart"
-      v-html="sanitizeHTMLHandler(protocolFlowchart)"
-    />
+    <div ref="flowchartWrapper" class="protocol-flowchart-wrapper">
+      <div
+        id="protocolFlowchart"
+        @click="onFlowchartClick"
+        v-html="sanitizedFlowchart"
+      />
+      <ManageCellFootnotesPopover
+        v-if="selectedCellRefs"
+        ref="manageCellFootnotesPopover"
+        :style="panelStyle"
+        :cell-refs="selectedCellRefs"
+        :layout="layout"
+        :footnote-letters="footnoteLetters"
+        @close="closeFootnotesPopover"
+        @create-footnote="createFootnoteForSelectedCell"
+        @footnotes-changed="refreshFlowchartKeepingSelection"
+      />
+    </div>
   </div>
 </template>
 
 <script setup>
-import { inject, onMounted, ref, watch } from 'vue'
+import { computed, inject, nextTick, onMounted, ref, watch } from 'vue'
 import study from '@/api/study'
 import soaDownloads from '@/utils/soaDownloads'
 import { useStudiesGeneralStore } from '@/stores/studies-general'
 import unitConstants from '@/constants/units'
+import footnoteConstants from '@/constants/footnotes'
 import units from '@/api/units'
 import { useAccessGuard } from '@/composables/accessGuard'
 import { sanitizeHTML } from '@/utils/sanitize'
+import { referencedItemMatchesRef } from '@/utils/soaFootnotes'
+import ManageCellFootnotesPopover from '@/components/studies/ManageCellFootnotesPopover.vue'
+import ManageFootnotesButton from '@/components/studies/ManageFootnotesButton.vue'
 
 const props = defineProps({
   update: {
@@ -175,13 +210,24 @@ const props = defineProps({
   },
   studyVisits: {
     type: Array,
-    default: null,
+    default: () => [],
   },
 })
+
+const supportsFootnotes = computed(() =>
+  footnoteConstants.FOOTNOTE_LAYOUTS.includes(props.layout)
+)
 
 const studiesGeneralStore = useStudiesGeneralStore()
 const accessGuard = useAccessGuard()
 const roles = inject('roles')
+
+// Write requests always target the latest study, so a selected version is read-only.
+const canEditStudy = computed(
+  () =>
+    !studiesGeneralStore.selectedStudyVersion &&
+    accessGuard.checkPermission(roles.STUDY_WRITE)
+)
 
 const protocolFlowchart = ref('')
 const loading = ref(true)
@@ -190,6 +236,23 @@ const toggle = ref([])
 const groupedVisits = ref([])
 const showSplitMenu = ref(false)
 const splitLoading = ref(false)
+
+const OBJECT_UID_ATTR_RE = /^object-uid(-\d+)?$/
+const OBJECT_PROPAGATED_ATTR = 'object-propagated'
+const OBJECT_ATTR_ALLOW_RE = /^object-(type|uid)(-\d+)?$|^object-propagated$/
+
+const flowchartWrapper = ref(null)
+const manageCellFootnotesPopover = ref(null)
+const manageFootnotes = ref(null)
+const isLinkingFootnote = ref(false)
+const LOADING_CELL_CLASS = 'footnote-loading-cell'
+// Refs of the cells whose footnote link is being saved, one entry per pending click.
+const loadingCellRefs = []
+let flowchartRefresh = Promise.resolve()
+const selectedCellRefs = ref(null)
+const selectedCellEl = ref(null)
+const panelStyle = ref({})
+const DEFAULT_PANEL_WIDTH = 360
 
 watch(
   () => props.layout,
@@ -203,6 +266,14 @@ watch(
     if (newVal !== oldVal) updateFlowchart()
   }
 )
+watch(
+  () => props.studyVisits,
+  () => loadVisits()
+)
+watch(canEditStudy, () => {
+  closeFootnotesPopover()
+  markClickableCells()
+})
 
 onMounted(() => {
   updateFlowchart()
@@ -233,7 +304,7 @@ async function loadVisits() {
     // These visit names are placeholders and should be excluded from split-menu grouping.
     const excludedVisitNames = new Set(['29500', '29999'])
 
-    const visits = props.studyVisits.map((v) => ({
+    const visits = (props.studyVisits ?? []).map((v) => ({
       name: v.visit_short_name,
       uid: v.uid,
       show_visit: v.show_visit,
@@ -295,15 +366,232 @@ async function getSoASplits() {
     showSplitMenu.value = true
   }
 }
-function sanitizeHTMLHandler(html) {
-  return sanitizeHTML(html)
+const sanitizedFlowchart = computed(() =>
+  sanitizeHTML(protocolFlowchart.value, {
+    allowAttrPattern: OBJECT_ATTR_ALLOW_RE,
+  })
+)
+// StudySoAFootnote uid -> the letter the protocol prints for it
+const footnoteLetters = computed(() => {
+  const letters = {}
+  if (!protocolFlowchart.value) {
+    return letters
+  }
+  const doc = new DOMParser().parseFromString(
+    protocolFlowchart.value,
+    'text/html'
+  )
+  doc.querySelectorAll('p.footnote[object-uid]').forEach((p) => {
+    const letter = p.querySelector('sup')?.textContent?.trim()
+    if (letter) {
+      letters[p.getAttribute('object-uid')] = letter
+    }
+  })
+  return letters
+})
+const highlightedFootnoteItems = ref(null)
+function applyFootnoteHighlight(items) {
+  const wrapperEl = flowchartWrapper.value
+  if (!wrapperEl) {
+    return
+  }
+  wrapperEl.querySelectorAll('.highlighted-footnote-cell').forEach((cell) => {
+    cell.classList.remove('highlighted-footnote-cell')
+  })
+  if (!items?.length) {
+    return
+  }
+  wrapperEl.querySelectorAll('td, th').forEach((cell) => {
+    if (
+      extractRefs(cell).some((ref) =>
+        items.some((item) => referencedItemMatchesRef(item, ref))
+      )
+    ) {
+      cell.classList.add('highlighted-footnote-cell')
+    }
+  })
+}
+function highlightFootnoteItems(items) {
+  highlightedFootnoteItems.value = items
+  applyFootnoteHighlight(items)
+}
+function scrollToItem(item) {
+  const wrapperEl = flowchartWrapper.value
+  if (!wrapperEl) {
+    return
+  }
+  const cell = Array.from(wrapperEl.querySelectorAll('td, th')).find((el) =>
+    extractRefs(el).some((ref) => referencedItemMatchesRef(item, ref))
+  )
+  if (!cell) {
+    return
+  }
+  cell.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  cell.classList.add('flash-highlight-cell')
+  setTimeout(() => {
+    cell.classList.remove('flash-highlight-cell')
+  }, 2000)
+}
+function findObjectCell(el) {
+  if (!supportsFootnotes.value) {
+    return null
+  }
+  let node = el
+  while (node && node !== flowchartWrapper.value) {
+    if (
+      (node.tagName === 'TD' || node.tagName === 'TH') &&
+      node.attributes &&
+      Array.from(node.attributes).some((attr) =>
+        OBJECT_UID_ATTR_RE.test(attr.name)
+      )
+    ) {
+      return node
+    }
+    node = node.parentElement
+  }
+  return null
+}
+function extractRefs(cell) {
+  const viaPropagatedCell = cell.hasAttribute(OBJECT_PROPAGATED_ATTR)
+  return Array.from(cell.attributes)
+    .filter((attr) => OBJECT_UID_ATTR_RE.test(attr.name))
+    .map((attr) => {
+      const suffix = attr.name.slice('object-uid'.length)
+      return {
+        uid: attr.value,
+        type: cell.getAttribute(`object-type${suffix}`),
+        viaPropagatedCell,
+      }
+    })
+}
+function findCellByRefs(refs) {
+  const wrapperEl = flowchartWrapper.value
+  if (!wrapperEl || !refs?.length) {
+    return null
+  }
+  return (
+    Array.from(wrapperEl.querySelectorAll('td, th')).find((cell) => {
+      const cellRefs = extractRefs(cell)
+      return (
+        cellRefs.length === refs.length &&
+        refs.every((ref) =>
+          cellRefs.some(
+            (cellRef) =>
+              cellRef.uid === ref.uid &&
+              cellRef.type === ref.type &&
+              cellRef.viaPropagatedCell === ref.viaPropagatedCell
+          )
+        )
+      )
+    }) ?? null
+  )
+}
+function positionPanel(cell) {
+  const wrapperEl = flowchartWrapper.value
+  if (!wrapperEl) {
+    return
+  }
+  const wrapperRect = wrapperEl.getBoundingClientRect()
+  const cellRect = cell.getBoundingClientRect()
+  const panelWidth =
+    manageCellFootnotesPopover.value?.$el?.getBoundingClientRect().width ||
+    DEFAULT_PANEL_WIDTH
+  let left = cellRect.right - wrapperRect.left + 8
+  if (left + panelWidth > wrapperEl.clientWidth) {
+    left = Math.max(0, cellRect.left - wrapperRect.left - panelWidth - 8)
+  }
+  panelStyle.value = {
+    top: `${cellRect.top - wrapperRect.top}px`,
+    left: `${left}px`,
+  }
+}
+function onLinkingChanged(isLinking) {
+  isLinkingFootnote.value = isLinking
+  if (isLinking) {
+    closeFootnotesPopover()
+  }
+}
+// The flowchart HTML is replaced after every change, so the class is reapplied by refs.
+function applyCellLoading() {
+  const wrapperEl = flowchartWrapper.value
+  if (!wrapperEl) {
+    return
+  }
+  wrapperEl.querySelectorAll(`.${LOADING_CELL_CLASS}`).forEach((cell) => {
+    cell.classList.remove(LOADING_CELL_CLASS)
+  })
+  loadingCellRefs.forEach((refs) => {
+    findCellByRefs(refs)?.classList.add(LOADING_CELL_CLASS)
+  })
+}
+async function toggleFootnoteLink(cell) {
+  const refs = extractRefs(cell)
+  const pending = manageFootnotes.value?.toggleCellRefs(refs)
+  // Picking cells for a new footnote is synchronous, there is nothing to wait for.
+  if (!pending) {
+    return
+  }
+  loadingCellRefs.push(refs)
+  applyCellLoading()
+  try {
+    await pending
+    await flowchartRefresh
+  } catch {
+    // Failed requests are already reported by the Axios interceptor.
+  }
+  loadingCellRefs.splice(loadingCellRefs.indexOf(refs), 1)
+  applyCellLoading()
+}
+function onFlowchartClick(event) {
+  if (!canEditStudy.value) {
+    return
+  }
+  const cell = findObjectCell(event.target)
+  if (isLinkingFootnote.value) {
+    if (cell) {
+      toggleFootnoteLink(cell)
+    }
+    return
+  }
+  if (!cell) {
+    closeFootnotesPopover()
+    return
+  }
+  if (selectedCellEl.value === cell) {
+    closeFootnotesPopover()
+    return
+  }
+  selectedCellEl.value?.classList.remove('selected-object-cell')
+  selectedCellEl.value = cell
+  selectedCellEl.value.classList.add('selected-object-cell')
+  selectedCellRefs.value = extractRefs(cell)
+  nextTick(() => positionPanel(cell))
+}
+function createFootnoteForSelectedCell() {
+  manageFootnotes.value?.openNewFootnote(selectedCellRefs.value ?? [])
+}
+function closeFootnotesPopover() {
+  selectedCellEl.value?.classList.remove('selected-object-cell')
+  selectedCellEl.value = null
+  selectedCellRefs.value = null
+}
+function markClickableCells() {
+  const wrapperEl = flowchartWrapper.value
+  if (!wrapperEl) {
+    return
+  }
+  wrapperEl.querySelectorAll('td, th').forEach((cell) => {
+    const hasRef = Array.from(cell.attributes).some((attr) =>
+      OBJECT_UID_ATTR_RE.test(attr.name)
+    )
+    cell.classList.toggle(
+      'clickable-object-cell',
+      supportsFootnotes.value && canEditStudy.value && hasRef
+    )
+  })
 }
 function switchIsEnabled(layouts = []) {
-  return (
-    !studiesGeneralStore.selectedStudyVersion &&
-    accessGuard.checkPermission(roles.STUDY_WRITE) &&
-    (!layouts || layouts.includes(props.layout))
-  )
+  return canEditStudy.value && (!layouts || layouts.includes(props.layout))
 }
 function updateSoaPreferences(key) {
   loading.value = true
@@ -313,19 +601,66 @@ function updateSoaPreferences(key) {
       updateFlowchart()
     })
 }
-function updateFlowchart() {
-  loading.value = true
-  study
+// Fetches can overlap (e.g. one per saved footnote link) and finish out of order,
+// so only the newest one may replace the flowchart or clear the loading state.
+let flowchartFetchCount = 0
+let latestFlowchartFetch = Promise.resolve()
+
+// Resolves to whether this fetch was applied, i.e. was not superseded by a newer one.
+function fetchFlowchart() {
+  const fetchId = ++flowchartFetchCount
+  const isLatest = () => fetchId === flowchartFetchCount
+  const request = study
     .getStudyProtocolFlowchartHtml(studiesGeneralStore.selectedStudy.uid, {
       layout: props.layout,
+      include_uids: supportsFootnotes.value,
     })
-    .then((resp) => {
+    .then(async (resp) => {
+      if (!isLatest()) {
+        // Wait for the newer fetch so callers resume once the flowchart is up to date.
+        await latestFlowchartFetch.catch(() => {})
+        return false
+      }
       protocolFlowchart.value = resp.data
       splitLoading.value = false
+      await nextTick()
+      markClickableCells()
+      applyFootnoteHighlight(highlightedFootnoteItems.value)
+      applyCellLoading()
+      return true
     })
     .finally(() => {
-      stopLoading()
+      if (isLatest()) {
+        stopLoading()
+      }
     })
+  latestFlowchartFetch = request
+  return request
+}
+function updateFlowchart() {
+  loading.value = true
+  closeFootnotesPopover()
+  return fetchFlowchart()
+}
+function refreshFlowchartKeepingSelection() {
+  loading.value = true
+  flowchartRefresh = fetchFlowchart().then((applied) => {
+    const refs = selectedCellRefs.value
+    // A newer fetch restores the selection itself.
+    if (!applied || !refs) {
+      return
+    }
+    const cell = findCellByRefs(refs)
+    if (!cell) {
+      closeFootnotesPopover()
+      return
+    }
+    selectedCellEl.value?.classList.remove('selected-object-cell')
+    selectedCellEl.value = cell
+    selectedCellEl.value.classList.add('selected-object-cell')
+    positionPanel(cell)
+  })
+  return flowchartRefresh
 }
 async function downloadDocx() {
   loading.value = true
@@ -383,8 +718,97 @@ function stopLoading() {
   border-bottom-left-radius: 5px !important;
   border-bottom-right-radius: 5px !important;
 }
+.protocol-flowchart-wrapper {
+  position: relative;
+}
+
 #protocolFlowchart {
   padding-bottom: 1em;
+
+  .clickable-object-cell {
+    position: relative;
+    cursor: pointer;
+
+    &::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 0;
+      height: 0;
+      border-style: solid;
+      border-width: 0 6px 6px 0;
+      border-color: transparent rgba(var(--v-theme-nnBaseBlue), 0.55)
+        transparent transparent;
+    }
+
+    &:hover,
+    &.selected-object-cell {
+      background-color: rgba(var(--v-theme-nnBaseBlue), 0.15);
+
+      &::after {
+        border-color: transparent rgb(var(--v-theme-nnBaseBlue)) transparent
+          transparent;
+      }
+    }
+  }
+
+  .footnote-loading-cell {
+    position: relative;
+    // Hides the cell content so the spinner is not drawn over it.
+    color: transparent;
+
+    &::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      margin: auto;
+      width: 14px;
+      height: 14px;
+      box-sizing: border-box;
+      border: 2px solid rgba(var(--v-theme-nnBaseBlue), 0.25);
+      border-top-color: rgb(var(--v-theme-nnBaseBlue));
+      border-radius: 50%;
+      animation: footnote-cell-spin 0.8s linear infinite;
+    }
+  }
+
+  .highlighted-footnote-cell,
+  .flash-highlight-cell {
+    outline-offset: -2px;
+    transition:
+      background-color 0.3s ease,
+      outline-color 0.3s ease;
+  }
+
+  .highlighted-footnote-cell {
+    outline: 2px solid rgb(var(--v-theme-warning));
+  }
+
+  .flash-highlight-cell {
+    outline: 2px solid rgb(var(--v-theme-success));
+  }
+
+  // Opaque tint with a selector more specific than the grey group / header rules
+  // below, so the highlight replaces their background instead of sitting under it.
+  table tr > td,
+  table tr > th {
+    &.highlighted-footnote-cell {
+      background-color: color-mix(
+        in srgb,
+        rgb(var(--v-theme-warning)) 25%,
+        rgb(var(--v-theme-surface))
+      );
+    }
+
+    &.flash-highlight-cell {
+      background-color: color-mix(
+        in srgb,
+        rgb(var(--v-theme-success)) 35%,
+        rgb(var(--v-theme-surface))
+      );
+    }
+  }
 
   table {
     width: 100%;
@@ -457,6 +881,12 @@ function stopLoading() {
         font-style: italic;
       }
     }
+  }
+}
+
+@keyframes footnote-cell-spin {
+  to {
+    transform: rotate(360deg);
   }
 }
 

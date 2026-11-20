@@ -29,14 +29,12 @@ from clinical_mdr_api.services.syntax_instances.generic_syntax_instance_service 
 
 
 class CriteriaService(GenericSyntaxInstanceService[CriteriaAR | _AggregateRootType]):
-    aggregate_class: type[CriteriaAR] | type[CriteriaPreInstanceAR] = CriteriaAR
-    repository_interface: (
-        type[CriteriaRepository] | type[CriteriaPreInstanceRepository]
-    ) = CriteriaRepository
-    template_repository_interface = CriteriaTemplateRepository
-    version_class: type[CriteriaVersion] | type[CriteriaPreInstanceVersion] = (
-        CriteriaVersion
+    aggregate_class: type[CriteriaAR | CriteriaPreInstanceAR] = CriteriaAR
+    repository_interface: type[CriteriaRepository | CriteriaPreInstanceRepository] = (
+        CriteriaRepository
     )
+    template_repository_interface = CriteriaTemplateRepository
+    version_class: type[CriteriaVersion | CriteriaPreInstanceVersion] = CriteriaVersion
     template_uid_property = "criteria_template_uid"
     parametrized_template_vo_class = CriteriaTemplateVO
 

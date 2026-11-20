@@ -119,7 +119,7 @@ VITE_DEMO_AUTH_ROLES=Library.Read,Library.Write,Study.Read,Study.Write,Admin.Rea
 ```
 
 ### Limitations
-- Extensions API (`src/extensions/`) and consumer APIs are not mocked.
+- Extensions API (`src/extensions/`) is not mocked.
 - Endpoints not in the spec return 404 with a console warning — that's the signal to add a hand-tuned handler.
 - For paginated endpoints, `page_size=0` (the API's "give me everything" sentinel) is capped at 25 synthetic items. Lists requesting all rows will appear truncated.
 - Mutations only persist round-trip if the relevant fixture handler explicitly merges from `state` on read. Generated (schema-walked) GET responses don't see prior PATCH/POST writes — when that matters, add a hand-tuned handler that reads from `state`.

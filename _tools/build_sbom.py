@@ -10,6 +10,7 @@
 # - Log messages can be formatted for Azure DevOps pipelines.
 # - Outputs SBOM in Markdown format to standard output or a file.
 # - The built SBOM includes a summary table which list installed packages with name, version, license type, and (optional) author columns.
+# - Packages are sorted by name: Python names normalized by PEP 503, Node names case-insensitively.
 # - Includes license files (one or may) in distinct sections for each package.
 # - License text get inserted as re-flowable blockquotes or pre-formatted code blocks.
 # - Sections get linked from the summary table.
@@ -171,7 +172,6 @@ def include_licence_files(
         if not license_paths:
             continue
 
-        lines.append("---")
         lines.append(
             f"{prefix_headers}## {name}\n"
         )  # mind these headers are also link targets
@@ -378,9 +378,11 @@ def fallback_license_paths(
 
     expected_path = os.path.join(fallback_dir, f"{name}-{version}")
     versioned_paths = glob(expected_path)
-    versioned_paths.extend(glob(os.path.join(fallback_dir, f"{name}-{version}.*")))
+    versioned_paths.extend(
+        sorted(glob(os.path.join(fallback_dir, f"{name}-{version}.*")))
+    )
 
-    non_versioned_paths = glob(os.path.join(fallback_dir, f"{name}*"))
+    non_versioned_paths = sorted(glob(os.path.join(fallback_dir, f"{name}*")))
 
     if not versioned_paths:
         if non_versioned_paths:
@@ -420,15 +422,16 @@ def discover_node_package(
 
     metadata = read_package_json_if_exists(module_path)
 
+    # glob returns files in filesystem order, sort each pattern for reproducible output
     filenames = []
     filenames.extend(
         glob("LICENSE", root_dir=module_path)
     )  # next will also match, but this takes preference
-    filenames.extend(glob("LICENSE*", root_dir=module_path))
+    filenames.extend(sorted(glob("LICENSE*", root_dir=module_path)))
     filenames.extend(glob("license", root_dir=module_path))
     filenames.extend(glob("License", root_dir=module_path))
-    filenames.extend(glob("license.?*", root_dir=module_path))
-    filenames.extend(glob("License.?*", root_dir=module_path))
+    filenames.extend(sorted(glob("license.?*", root_dir=module_path)))
+    filenames.extend(sorted(glob("License.?*", root_dir=module_path)))
 
     filenames = dict.fromkeys(filenames).keys()  # unique
     if as_path:
@@ -471,19 +474,19 @@ def discover_python_package(
             )
             # also matches LICENSE, but that comes first by repeating it above
             filenames_exist.extend(
-                glob(os.path.join(prefix, "LICENSE*"), root_dir=module_path)
+                sorted(glob(os.path.join(prefix, "LICENSE*"), root_dir=module_path))
             )
             if filenames_exist:
                 break
 
             filenames_exist.extend(
-                glob(os.path.join(prefix, "COPYING*"), root_dir=module_path)
+                sorted(glob(os.path.join(prefix, "COPYING*"), root_dir=module_path))
             )
             if filenames_exist:
                 break
 
             filenames_exist.extend(
-                glob(os.path.join(prefix, "NOTICE*"), root_dir=module_path)
+                sorted(glob(os.path.join(prefix, "NOTICE*"), root_dir=module_path))
             )
             if filenames_exist:
                 break
@@ -658,7 +661,11 @@ def discover_node_packages(
 
         packages.append((name, version, module_path, license_paths, metadata or {}))
 
-    return packages
+    # package-lock.json is ordered by install path, so nested modules land out of place
+    return sorted(packages, key=lambda package: package[0].lower())
+
+
+_pep503_separators_re = re.compile(r"[-_.]+")
 
 
 def discover_python_packages(
@@ -698,7 +705,11 @@ def discover_python_packages(
 
         packages.append((name, version, module_path, license_paths, metadata or {}))
 
-    return packages
+    # uv.lock is walked in dependency order; sort like Pipfile.lock (PEP 503 names)
+    return sorted(
+        packages,
+        key=lambda package: _pep503_separators_re.sub("-", package[0]).lower(),
+    )
 
 
 def discover_fallback_licenses(

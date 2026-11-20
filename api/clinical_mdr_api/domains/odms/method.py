@@ -51,11 +51,10 @@ class OdmMethodVO:
             "oid": self.oid,
             "method_type": self.method_type,
         }
-        if uids := odm_object_exists_callback(**data):
-            if uids[0] != odm_uid:
-                raise AlreadyExistsException(
-                    msg=f"ODM Method already exists with UID ({uids[0]}) and data {data}"
-                )
+        if (uids := odm_object_exists_callback(**data)) and uids[0] != odm_uid:
+            raise AlreadyExistsException(
+                msg=f"ODM Method already exists with UID ({uids[0]}) and data {data}"
+            )
 
 
 @dataclass

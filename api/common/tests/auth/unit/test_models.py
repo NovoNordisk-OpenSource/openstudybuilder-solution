@@ -149,6 +149,7 @@ def test_has_only_role():
                 "Study.Write",
                 "Library.Write",
                 "Library.Read",
+                "Library.Import",
             ),
             True,
         ),

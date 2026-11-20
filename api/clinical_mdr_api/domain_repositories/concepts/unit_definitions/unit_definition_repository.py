@@ -104,8 +104,8 @@ class UnitDefinitionRepository(ConceptGenericRepository[UnitDefinitionAR]):
         extended_filter_statements = " AND ".join(filter_parameters)
         if filter_statements_from_concept != "":
             if len(extended_filter_statements) > 0:
-                filter_statements_to_return = " AND ".join(
-                    [filter_statements_from_concept, extended_filter_statements]
+                filter_statements_to_return = (
+                    f"{filter_statements_from_concept} AND {extended_filter_statements}"
                 )
             else:
                 filter_statements_to_return = filter_statements_from_concept
@@ -116,61 +116,6 @@ class UnitDefinitionRepository(ConceptGenericRepository[UnitDefinitionAR]):
                 else ""
             )
         return filter_statements_to_return, filter_query_parameters
-
-    def _create_ar(
-        self,
-        root: VersionRoot,
-        library: Library,
-        relationship: VersionRelationship,
-        value: VersionValue,
-        **_kwargs,
-    ) -> UnitDefinitionAR:
-        ar_root = cast(UnitDefinitionRoot, root)
-        ar_value = cast(UnitDefinitionValue, value)
-
-        ct_units = []
-        for ct_unit in _kwargs["unit_definition"]["ct_units"]:
-            ct_term = CTTerm(
-                uid=ct_unit["uid"],
-                name=ct_unit["name"],
-            )
-            ct_units.append(ct_term)
-
-        unit_subsets = []
-        for unit_subset in _kwargs["unit_definition"]["unit_subsets"]:
-            unit_subset_term = CTTerm(
-                uid=unit_subset["uid"],
-                name=unit_subset["name"],
-            )
-            unit_subsets.append(unit_subset_term)
-        result = UnitDefinitionAR.from_repository_values(
-            library=LibraryVO.from_repository_values(
-                library_name=library.name, is_editable=library.is_editable
-            ),
-            uid=ar_root.uid,
-            item_metadata=self._library_item_metadata_vo_from_relation(relationship),
-            unit_definition_value=UnitDefinitionValueVO.from_repository_values(
-                name=ar_value.name,
-                definition=ar_value.definition,
-                display_unit=ar_value.display_unit,
-                master_unit=ar_value.master_unit,
-                convertible_unit=ar_value.convertible_unit,
-                us_conventional_unit=ar_value.us_conventional_unit,
-                use_complex_unit_conversion=ar_value.use_complex_unit_conversion,
-                use_molecular_weight=ar_value.use_molecular_weight,
-                conversion_factor_to_master=ar_value.conversion_factor_to_master,
-                order=ar_value.order,
-                comment=ar_value.comment,
-                ct_units=ct_units,
-                unit_subsets=unit_subsets,
-                unit_dimension_uid=_kwargs["unit_definition"]["ct_dimension_uid"],
-                ucum_uid=_kwargs["unit_definition"]["ucum_term_uid"],
-                ucum_name=None,
-                unit_dimension_name=None,
-                is_template_parameter=_kwargs["unit_definition"]["bool_template"],
-            ),
-        )
-        return result
 
     def _create_aggregate_root_instance_from_version_root_relationship_and_value(
         self,
@@ -206,7 +151,7 @@ class UnitDefinitionRepository(ConceptGenericRepository[UnitDefinitionAR]):
             ct_dimension = ct_dimension.has_selected_term.get_or_none()
         ucum_term = ar_value.has_ucum_term.get_or_none()
 
-        result = UnitDefinitionAR.from_repository_values(
+        return UnitDefinitionAR.from_repository_values(
             library=LibraryVO.from_repository_values(
                 library_name=library.name, is_editable=library.is_editable
             ),
@@ -233,7 +178,6 @@ class UnitDefinitionRepository(ConceptGenericRepository[UnitDefinitionAR]):
                 is_template_parameter=self.is_concept_node_a_tp(concept_node=value),
             ),
         )
-        return result
 
     def _create_aggregate_root_instance_from_cypher_result(
         self, input_dict: dict[str, Any]

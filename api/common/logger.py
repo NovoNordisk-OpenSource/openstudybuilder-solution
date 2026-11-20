@@ -136,7 +136,7 @@ async def log_exception(request: Request, exception: MDRApiBaseException | Excep
         )
 
     # Log exception traceback with info level
-    log.info(exception, exc_info=True)
+    log.info(exception)
 
     if not request._stream_consumed and settings.app_debug:
         curl_cmd = f"curl -X {request.method} '{request.url}'"

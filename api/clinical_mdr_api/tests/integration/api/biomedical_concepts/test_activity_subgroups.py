@@ -10,9 +10,13 @@ import pytest
 from fastapi.testclient import TestClient
 
 from clinical_mdr_api.main import app
+from clinical_mdr_api.models.concepts.activities.activity import ActivityEditInput
 from clinical_mdr_api.models.concepts.activities.activity_sub_group import (
     ActivitySubGroup,
     ActivitySubGroupCreateInput,
+)
+from clinical_mdr_api.services.concepts.activities.activity_service import (
+    ActivityService,
 )
 from clinical_mdr_api.tests.integration.utils.api import (
     inject_and_clear_db,
@@ -134,8 +138,8 @@ def test_get_activity_subgroups(
     assert list(res.keys()) == ["items", "total", "page", "size"]
     assert len(res["items"]) == expected_result_len
     assert res["total"] == (len(activity_subgroups_all) if total_count else 0)
-    assert res["page"] == (page_number if page_number else 1)
-    assert res["size"] == (page_size if page_size else 10)
+    assert res["page"] == (page_number or 1)
+    assert res["size"] == (page_size or 10)
 
     for item in res["items"]:
         assert set(list(item.keys())) == set(ACTIVITY_SUBGROUP_FIELDS_ALL)
@@ -716,6 +720,240 @@ def test_archived_activity_subgroup_excluded_from_headers(api_client):
     payload = parse_json_response(response, assert_status=200)
     assert isinstance(payload, list)
     assert activity_subgroup.name not in payload
+
+
+def test_activity_subgroup_headers_correlate_by_linked_activity_library(api_client):
+    """
+    SCENARIO: getting headers of Activity Sub Groups filtered by the library of a linked Activity
+    GIVEN: an Activity Sub Group linked (via an Activity Grouping) to an Activity in the
+           "Requested" library
+    WHEN: GET /concepts/activities/activity-sub-groups/headers?field_name=name
+          &activity_library_names[]=Requested
+    THEN: should respond with 200 HTTP status code and JSON payload including the subgroup's name.
+    WHEN: the same request instead filters by a library the linked Activity does NOT belong to
+    THEN: the subgroup's name should be excluded from the results.
+    """
+    activity_group = TestUtils.create_activity_group(
+        name="Requested Library Canary Group For Subgroup"
+    )
+    activity_subgroup = TestUtils.create_activity_subgroup(
+        name="Requested Library Canary Subgroup"
+    )
+    TestUtils.create_activity(
+        name="Requested Library Canary Activity For Subgroup",
+        activity_groups=[activity_group.uid],
+        activity_subgroups=[activity_subgroup.uid],
+        library_name=settings.requested_library_name,
+    )
+
+    # Filtering by the library the linked Activity actually belongs to returns the subgroup
+    response = api_client.get(
+        "/concepts/activities/activity-sub-groups/headers",
+        params={
+            "field_name": "name",
+            "search_string": "requested library canary",
+            "activity_library_names[]": [settings.requested_library_name],
+        },
+    )
+    payload = parse_json_response(response, assert_status=200)
+    assert isinstance(payload, list)
+    assert activity_subgroup.name in payload
+
+    # Filtering by a different library, which the linked Activity does not belong to,
+    # excludes the subgroup even though it matches the search string
+    response = api_client.get(
+        "/concepts/activities/activity-sub-groups/headers",
+        params={
+            "field_name": "name",
+            "search_string": "requested library canary",
+            "activity_library_names[]": [settings.sponsor_library_name],
+        },
+    )
+    payload = parse_json_response(response, assert_status=200)
+    assert isinstance(payload, list)
+    assert activity_subgroup.name not in payload
+
+
+def _activity_subgroup_header_names(api_client, search_string, **params):
+    response = api_client.get(
+        "/concepts/activities/activity-sub-groups/headers",
+        params={"field_name": "name", "search_string": search_string, **params},
+    )
+    payload = parse_json_response(response, assert_status=200)
+    assert isinstance(payload, list)
+    return payload
+
+
+def _create_linked_activity(group, subgroup, name, library_name):
+    return TestUtils.create_activity(
+        name=name,
+        activity_groups=[group.uid],
+        activity_subgroups=[subgroup.uid],
+        library_name=library_name,
+    )
+
+
+def test_activity_subgroup_headers_linked_activity_in_any_of_several_libraries(
+    api_client,
+):
+    """
+    SCENARIO: getting headers of Activity Sub Groups filtered by several libraries of linked Activities
+    GIVEN: an Activity Sub Group linked to one Activity in the "Requested" library
+           and to another Activity in the "Sponsor" library
+    WHEN: GET /concepts/activities/activity-sub-groups/headers
+          with activity_library_names[] set to either or both libraries
+    THEN: the activity_subgroup's name is included in each case.
+    """
+    group = TestUtils.create_activity_group(
+        name="Multi Library Activity Sub Group Group"
+    )
+    subgroup = TestUtils.create_activity_subgroup(
+        name="Multi Library Activity Sub Group Subgroup"
+    )
+    _create_linked_activity(
+        group,
+        subgroup,
+        "Multi Library Activity Sub Group Requested Activity",
+        settings.requested_library_name,
+    )
+    _create_linked_activity(
+        group,
+        subgroup,
+        "Multi Library Activity Sub Group Sponsor Activity",
+        settings.sponsor_library_name,
+    )
+    target = subgroup
+
+    for libraries in (
+        [settings.requested_library_name],
+        [settings.sponsor_library_name],
+        [settings.requested_library_name, settings.sponsor_library_name],
+    ):
+        names = _activity_subgroup_header_names(
+            api_client,
+            "multi library activity sub group",
+            **{"activity_library_names[]": libraries},
+        )
+        assert target.name in names
+
+    names = _activity_subgroup_header_names(
+        api_client,
+        "multi library activity sub group",
+        **{"activity_library_names[]": ["Library Without Activities"]},
+    )
+    assert target.name not in names
+
+
+def test_activity_subgroup_headers_library_and_activity_name_match_same_activity(
+    api_client,
+):
+    """
+    SCENARIO: combining the linked Activity library and name filters on Activity Sub Group headers
+    GIVEN: an Activity Sub Group linked to Activity A in the "Requested" library
+           and to Activity B in the "Sponsor" library
+    WHEN: filtering by library "Requested" and the name of Activity B
+    THEN: the activity_subgroup is excluded, as no single linked Activity satisfies both conditions
+    WHEN: filtering by library "Sponsor" and the name of Activity B
+    THEN: the activity_subgroup is included.
+    """
+    group = TestUtils.create_activity_group(
+        name="Same Activity Activity Sub Group Group"
+    )
+    subgroup = TestUtils.create_activity_subgroup(
+        name="Same Activity Activity Sub Group Subgroup"
+    )
+    _create_linked_activity(
+        group,
+        subgroup,
+        "Same Activity Activity Sub Group A",
+        settings.requested_library_name,
+    )
+    activity_b = _create_linked_activity(
+        group,
+        subgroup,
+        "Same Activity Activity Sub Group B",
+        settings.sponsor_library_name,
+    )
+    target = subgroup
+
+    names = _activity_subgroup_header_names(
+        api_client,
+        "same activity activity sub group",
+        **{
+            "activity_library_names[]": [settings.requested_library_name],
+            "activity_names[]": [activity_b.name],
+        },
+    )
+    assert target.name not in names
+
+    names = _activity_subgroup_header_names(
+        api_client,
+        "same activity activity sub group",
+        **{
+            "activity_library_names[]": [settings.sponsor_library_name],
+            "activity_names[]": [activity_b.name],
+        },
+    )
+    assert target.name in names
+
+
+def test_activity_subgroup_headers_linked_activity_filters_use_current_activity_version(
+    api_client,
+):
+    """
+    SCENARIO: filtering Activity Sub Group headers by the name of a linked Activity that was renamed
+    GIVEN: an Activity Sub Group linked to an Activity that got a new version with a different name
+    WHEN: filtering by the Activity's previous name
+    THEN: the activity_subgroup is excluded, as only the current Activity version counts
+    WHEN: filtering by the Activity's current name
+    THEN: the activity_subgroup is included.
+    """
+    group = TestUtils.create_activity_group(
+        name="Renamed Activity Activity Sub Group Group"
+    )
+    subgroup = TestUtils.create_activity_subgroup(
+        name="Renamed Activity Activity Sub Group Subgroup"
+    )
+    activity = _create_linked_activity(
+        group,
+        subgroup,
+        "Renamed Activity Activity Sub Group Old Name",
+        settings.sponsor_library_name,
+    )
+    target = subgroup
+
+    activity_service = ActivityService()
+    activity_service.create_new_version(uid=activity.uid)
+    new_name = "Renamed Activity Activity Sub Group New Name"
+    activity_service.edit_draft(
+        uid=activity.uid,
+        concept_edit_input=ActivityEditInput(
+            name=new_name,
+            name_sentence_case=new_name,
+            change_description="Rename activity",
+            activity_groupings=[
+                {
+                    "activity_group_uid": group.uid,
+                    "activity_subgroup_uid": subgroup.uid,
+                }
+            ],
+        ),
+        patch_mode=False,
+    )
+
+    names = _activity_subgroup_header_names(
+        api_client,
+        "renamed activity activity sub group",
+        **{"activity_names[]": [activity.name]},
+    )
+    assert target.name not in names
+
+    names = _activity_subgroup_header_names(
+        api_client,
+        "renamed activity activity sub group",
+        **{"activity_names[]": [new_name]},
+    )
+    assert target.name in names
 
 
 def test_archiving_activity_subgroup_draft(api_client):

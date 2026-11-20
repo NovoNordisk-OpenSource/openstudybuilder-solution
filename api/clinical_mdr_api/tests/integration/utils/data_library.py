@@ -2633,7 +2633,9 @@ set sa.author_id = "unknown-user"
 
 WITH sc
 MATCH (term_root:CTTermRoot {uid: "term_root_final"})
-MERGE (sc)-[:HAS_TYPE_OF_TREATMENT]->(term_root)
+MATCH (codelist_root:CTCodelistRoot {uid: "ct_codelist_root1"})
+MERGE (sc)-[:HAS_TYPE_OF_TREATMENT]->(term_context:CTTermContext)-[:HAS_SELECTED_TERM]->(term_root)
+MERGE (term_context)-[:HAS_SELECTED_CODELIST]->(codelist_root)
 """
 
 STARTUP_STUDY_CYPHER = """
@@ -3104,34 +3106,6 @@ MERGE (cv)-[:HAS_DOSE_VALUE]->(term_root)
 // WITH (cv)
 // MATCH (term_root:NumericValueWithUnitRoot {uid: "LagTime_000001"})
 // MERGE (cv)-[:HAS_LAG_TIME]->(term_root)
-"""
-
-STARTUP_STUDY_COMPOUND_DOSING_CYPHER = """
-MATCH (sr:StudyRoot {uid: "study_root"})-[:LATEST]->(sv:StudyValue)
-MATCH (est:CTTermRoot {uid: "ElementSubTypeTermUid_1"})
-MERGE (sv)-[:HAS_STUDY_ELEMENT]->(se:StudyElement:StudySelection)-[:HAS_ELEMENT_SUBTYPE]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(est)
-set se.order = 1
-set se.uid = "StudyElement_000001"
-set se.name = "Element_Name_1"
-set se.short_name = "Element_Short_Name_1"
-set se.code = "Code1"
-set se.description = "Description"
-CREATE (sa1:StudyAction:Create)-[:AFTER]->(se)
-set sa1.date = datetime()
-set sa1.author_id = "unknown-user"
-
-WITH sv
-MATCH (cav:CompoundAliasValue)<-[:LATEST]-(car:CompoundAliasRoot {uid: "TemplateParameter_000002"})
-MERGE (sv)-[:HAS_STUDY_COMPOUND]->(sc:StudyCompound:StudySelection)-[:HAS_SELECTED_COMPOUND]->(cav)
-set sc.order = 1
-set sc.uid = "StudyCompound_000001"
-CREATE (sa2:StudyAction:Create)-[:AFTER]->(sc)
-set sa2.date = datetime()
-set sa2.author_id = "unknown-user"
-
-WITH sc
-MATCH (term_root:CTTermRoot {uid: "CTTerm_000001"})
-MERGE (sc)-[:HAS_TYPE_OF_TREATMENT]->(term_root)
 """
 
 STARTUP_STUDY_CRITERIA_CYPHER = """
@@ -3689,12 +3663,10 @@ def get_path(path):
 
 def is_specific(path):
     # return "_uid}" in path
-    if any(
+    return any(
         x in path
         for x in ("_uid}", "{serial_number}", "{catalogue_name}", "{study_number}")
-    ):
-        return True
-    return False
+    )
 
 
 def create_stub(path, methods):

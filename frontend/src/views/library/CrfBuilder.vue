@@ -51,6 +51,9 @@
       <v-window-item value="odm-viewer">
         <OdmBuildingViewer :element-prop="uid" :refresh="tab" />
       </v-window-item>
+      <v-window-item value="crf-compare">
+        <CrfCompare :key="`crf-compare-${tabKeys['crf-compare']}`" />
+      </v-window-item>
     </v-window>
   </div>
 </template>
@@ -64,6 +67,7 @@ import CrfItemGroupTable from '@/components/library/crfs/CrfItemGroupTable.vue'
 import CrfItemTable from '@/components/library/crfs/CrfItemTable.vue'
 import CrfTreeMain from '@/components/library/crfs/crfTreeComponents/CrfTreeMain.vue'
 import OdmBuildingViewer from '@/components/library/crfs/OdmBuildingViewer.vue'
+import CrfCompare from '@/components/library/crfs/crfCompare/CrfCompare.vue'
 import { ref, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -106,6 +110,7 @@ const tabs = [
   },
   { tab: 'crf-tree', name: t('CRFBuilder.tab5_title') },
   { tab: 'odm-viewer', name: t('CRFBuilder.tab6_title') },
+  { tab: 'crf-compare', name: t('CRFBuilder.tab7_title') },
 ]
 
 watch(tab, (newValue) => {

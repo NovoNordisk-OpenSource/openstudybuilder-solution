@@ -8,7 +8,7 @@ supporting both strict mode (raises exceptions) and warning mode (returns warnin
 import logging
 from dataclasses import dataclass
 
-from neomodel import db  # type: ignore
+from neomodel import db
 
 from clinical_mdr_api.domains.enums import ValidationMode
 from common.exceptions import BusinessLogicException
@@ -220,7 +220,8 @@ QUERIES: list[tuple[str, str, str]] = [
         "StudyValue nodes should be connected to a single version of each StudySelection node",
         """
         MATCH (sr:StudyRoot {uid: $study_uid})-[sr_sv]-(sv:StudyValue)-[sv_ss]-(ss:StudySelection) 
-            WHERE NOT TYPE(sv_ss) <> "HAS_PROTOCOL_SOA_CELL" AND TYPE(sv_ss) <> "HAS_PROTOCOL_SOA_FOOTNOTE"
+            // LEGACY-SOA-SNAPSHOT (242942): drop the HAS_PROTOCOL_SOA_* condition in the next release
+            WHERE TYPE(sv_ss) <> "HAS_PROTOCOL_SOA_CELL" AND TYPE(sv_ss) <> "HAS_PROTOCOL_SOA_FOOTNOTE"
         WITH DISTINCT ss, sv
         WITH ss.uid as ss_uid, sv,  count(ss.uid) as ss_uid_count
         WHERE ss_uid_count>=2
@@ -340,13 +341,23 @@ QUERIES: list[tuple[str, str, str]] = [
         """ + build_root_summary_return_statement("study_version"),
     ),
     (
-        "study_version_exists_if_has_protocol_soa_cell_and_study_definition_document_exists",
-        "StudyVersion node must exists if there is a HAS_PROTOCOL_SOA_CELL relationship and a StudyDefinitionDocument node for a StudyValue node",
+        "study_version_exists_if_has_soa_snapshot_and_study_definition_document_exists",
+        "StudyVersion node must exists if there is a StudySoASnapshot node and a StudyDefinitionDocument node for a StudyValue node",
         """
-        MATCH (study_root:StudyRoot {uid: $study_uid})-[:HAS_VERSION {status: 'RELEASED'}]->(study_value:StudyValue)-[:HAS_PROTOCOL_SOA_CELL]->(soa_cell:StudySelection)
+        MATCH (study_root:StudyRoot {uid: $study_uid})-[:HAS_VERSION {status: 'RELEASED'}]->(study_value:StudyValue)-[:HAS_SOA_SNAPSHOT]->(:StudySoASnapshot)
         MATCH (study_value)-[:HAS_STUDY_DEFINITION_DOCUMENT]->(study_definition_document:StudyDefinitionDocument)
         WHERE NOT (study_value)-[:HAS_STUDY_VERSION]->(:StudyVersion)
         """ + build_root_summary_return_statement("study_definition_document"),
+    ),
+    (
+        "soa_snapshot_only_on_locked_or_released_study_value",
+        "StudySoASnapshot nodes must only be connected to StudyValue nodes of LOCKED or RELEASED study versions, at most one per layout",
+        """
+        MATCH (study_root:StudyRoot {uid: $study_uid})-[:LATEST|HAS_VERSION]->(study_value:StudyValue)-[:HAS_SOA_SNAPSHOT]->(snapshot:StudySoASnapshot)
+        WITH study_root, study_value, snapshot.layout AS layout, count(DISTINCT snapshot) AS snapshot_count
+        WHERE snapshot_count > 1 OR NOT (study_root)-[:HAS_VERSION {status: 'RELEASED'}]->(study_value)
+        WITH DISTINCT study_value
+        """ + build_root_summary_return_statement("study_value"),
     ),
     (
         "study_version_exists_if_study_definition_document_exists",
@@ -437,14 +448,12 @@ def execute_check_for_study(
             description=description,
             passed=noncompliant_count == 0,
             noncompliant_count=noncompliant_count,
-            noncompliant_labels=noncompliant_labels if noncompliant_labels else [],
-            noncompliant_node_ids=(
-                noncompliant_node_ids if noncompliant_node_ids else []
-            ),
+            noncompliant_labels=noncompliant_labels or [],
+            noncompliant_node_ids=noncompliant_node_ids or [],
             root_uids=root_uids,
         )
     except Exception as e:
-        log.error("Error executing check %s: %s", check_id, e, exc_info=True)
+        log.exception("Error executing check %s", check_id)
         return CheckResult(
             check_id=check_id,
             description=description,

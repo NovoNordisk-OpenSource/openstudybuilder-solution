@@ -47,6 +47,17 @@ extensions/
 │       ├── __init__.py
 │       └── test_extension.py
 |
+├── consumer_sample/             # Example of a read-only extension serving CT terms (see its README.md)
+│   ├── __init__.py
+│   ├── consumer_sample_main.py  # Router definition
+│   ├── db.py                    # Database operations (Cypher, pagination, sorting)
+│   ├── models.py                # Response models
+│   ├── README.md                # Guide for external users of the endpoint
+│   └── tests/
+│       ├── __init__.py
+│       ├── test_extension.py
+│       └── test_unit.py
+│
 ├── system/                      # System/health check extension
 │   ├── __init__.py
 │   ├── system_main.py
@@ -421,5 +432,8 @@ def get_item(item_id: str):
 Refer to existing extensions for working examples:
 - **hello**: Simple extension showing basic structure
 - **system**: Health check and system monitoring endpoints
+- **consumer_sample**: A read-only endpoint that serves CT terms straight from the database,
+  for external systems: authentication, role, sorting and pagination. Start with
+  [consumer_sample/README.md](consumer_sample/README.md)
 
 

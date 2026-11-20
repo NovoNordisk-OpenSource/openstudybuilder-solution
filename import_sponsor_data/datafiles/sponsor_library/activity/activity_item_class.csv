@@ -1,149 +1,209 @@
 ACTIVITY_INSTANCE_CLASS,ACTIVITY_ITEM_CLASS,DISPLAY_LABEL,DEFINITION,NCI_C_CODE,SPONSOR_CONCEPT_CODE,LEGACY_CDW_COLUMN,MANDATORY,IS_ADAM_PARAM_SPECIFIC_ENABLED,ADDITIONAL_OPTIONAL_ACTIVITY_ITEM,DEFAULT_LINKED_TO_INSTANCE,ORDER,DATA_COLLECTION,SEMANTIC_ROLE,SEMANTIC_DATA_TYPE,CODELIST
-GeneralObservation,domain,Domain,SDTM domain,C66734,,,Yes,No,No,No,1,No,IDENTIFIER,ctTerm,DOMAIN
-GeneralObservation,study_id,Study Identifier,Study identifier,C83082,,,No,No,No,Yes,2,No,IDENTIFIER,text,
-GeneralObservation,group_id,Group Identifier,group identifier,C82529,,,No,No,Yes,No,3,Yes,IDENTIFIER,text,
-GeneralObservation,link_id,Link Identifier,Link ID,C117050,,,No,No,Yes,No,4,Yes,IDENTIFIER,text,
-GeneralObservation,link_group,Link Group Identifier,Link Group ID,C117049,,,No,No,Yes,No,5,Yes,IDENTIFIER,text,
-GeneralObservation,associated_persons_id,Associated Persons Identifier,Associated persons identifier,C117707,,,No,No,Yes,No,6,Yes,IDENTIFIER,text,
-GeneralObservation,related_device_id,Related Device Identifier,Related device identifier,,,,No,No,Yes,No,7,Yes,IDENTIFIER,text,
-SubjectObservation,subject_id,Subject Identifier,"A sequence of characters used to identify, name, or characterize a trial or study subject.",C83083,,,No,No,Yes,No,1,Yes,IDENTIFIER,text,
-SubjectObservation,unique_subject_id,Unique Subject Identifier,A unique identifier for a subject in a study.,C69256,,,No,No,Yes,No,2,No,IDENTIFIER,text,
-SubjectObservation,related_subject_id,Related Subject Identifier,Related subject identifier,C117708,,,No,No,Yes,No,3,No,IDENTIFIER,text,
-Comments,reference_id,Reference Identifier,Reference identifier,C82531,,,No,No,Yes,No,1,Yes,IDENTIFIER,text,
-Comments,related_domain_abbreviation,Related Domain Abbreviation,Related domain abbreviation,C83391,,,No,No,Yes,No,2,Yes,RECOQUAL,ctTerm,DOMAIN
-Comments,comment_reference,Comment Reference,Reference associated with the comment,C82504,,,No,No,Yes,No,2,Yes,RECOQUAL,text,
-Comments,comment,Comment,Text of the comment,C70936,,,No,No,Yes,No,3,Yes,TOPIC,text,
-Comments,evaluator,Evaluator,Role of the person who provided the evaluation.,C51824,,,No,No,Yes,No,4,Yes,RECOQUAL,text,
-Comments,evaluator_id,Evaluator Identifier,Used to distinguish multiple evaluators with the same role recorded in evaluator.,C117043,,,No,No,Yes,No,5,Yes,VARIQUAL,ctTerm,MEDEVAL
-Comments,collection_datetime,Date and Time of Collection,Date/time of collection,C82515,,,No,No,No,Yes,6,Yes,TIMING,datetime,
-Demographics,date_of_birth,Date of Birth,Date of birth of the subject,C69259,,,No,No,Yes,No,1,Yes,RECOQUAL,text,
-Demographics,age,Age,Age of the subject,C25150,,,No,No,Yes,No,2,Yes,RECOQUAL,float,
-Demographics,age_unit,Age Unit,Unit of age of the subject,C50400,,,No,No,Yes,No,3,Yes,VARIQUAL,ctTerm,AGEU
-Demographics,sex,Sex,Sex of the subject,C28421,,,No,No,Yes,No,4,Yes,RECOQUAL,ctTerm,SEX
-Demographics,race,Race,Self reported race of the subject,C74457,,,No,No,Yes,No,5,Yes,RECOQUAL,ctTerm,RACE
-Demographics,ethnicity,Ethnicity,Ethnicity of the subject,C128690,,,No,No,Yes,No,6,Yes,RECOQUAL,ctTerm,ETHNIC
-Events,reference_id,Reference Identifier,Reference identifier,C82531,,,No,No,Yes,No,1,Yes,IDENTIFIER,text,
-Events,term,Name of the Event,Verbatim name of the observed event,C82571,,,No,No,No,Yes,2,Yes,TOPIC,text,
-Events,decod,Decode,Dictionary-derived form of the event,C170991,,,No,No,Yes,No,3,No,SYNOQUAL,ctTerm,NCOMPLT; PROTMLST
-Events,continuing,Continuing,Continuing,C53279,,,No,No,Yes,No,4,Yes,RECOQUAL,ctTerm,NY
-Events,observation_start_datetime,Start Date and Time of Observation,Start date/time of the observation,C82517,,,No,No,Yes,No,5,Yes,TIMING,datetime,
-Events,observation_end_datetime,End Date and Time of Observation,End date/time of the observation,C82516,,,No,No,Yes,No,6,Yes,TIMING,datetime,
-Events,event_category,Event Category,Event category of related records.,C25372,,,No,No,Yes,No,7,No,GROUQUAL,ctTerm,DECAT; DSCAT; CECAT; HOCAT; MHCAT
-Events,event_subcategory,Event Sub-Category,Event sub-Category of related records.,C25692,,,No,No,Yes,No,8,No,GROUQUAL,ctTerm,DSSCAT; MHSCAT
-Events,prespecified,Event Prespecified,"An indication or description that something was previously determined, characterized, or detailed.",C82510,,,No,No,Yes,No,9,No,RECOQUAL,ctTerm,NY
-Events,event_occurred,Event Occurred,Used when the occurrence of specific events is solicited to indicate whether or not a clinical event occurred.,C82438,,,No,No,Yes,No,10,Yes,RECOQUAL,ctTerm,NY
-Events,completion_status,Completion Status,The completion status indicates that a question was not answered.,C41202,,,No,No,No,Yes,11,Yes,RECOQUAL,ctTerm,ND
-Events,reason_not_done,Reason Not Done,Describes the reason data was not collected. Used in conjunction with completion_status  when value is NOT DONE.,C82556,,,No,No,Yes,No,12,Yes,RECOQUAL,text,
-Events,location,Location,Location,C25341,,,No,No,Yes,No,13,Yes,RECOQUAL,ctTerm,LOC
-Events,laterality,Laterality,Laterality,C25185,,,No,No,Yes,No,14,Yes,RECOQUAL,ctTerm,LAT
-Events,directionality,Directionality,Anatomical location further detailing directionality,C54215,,,No,No,Yes,No,15,Yes,RECOQUAL,ctTerm,DIR
-Events,portion,Portion,"Anatomical location further detailing distribution. For e.g. ENTIRE, SINGLE, SEGMENT.",C103166,,,No,No,Yes,No,16,Yes,RECOQUAL,ctTerm,PORTOT
-Events,severity,Severity,The severity or intensity of the event.,C25676,,,No,No,Yes,No,17,Yes,RECOQUAL,ctTerm,AESEV
-Events,serious,Serious,Used to indicate whether the event was serious,C82578,,,No,No,Yes,No,18,Yes,RECOQUAL,ctTerm,NY
-Events,action_taken,Action Taken,Action Taken with Study Treatment,,,,No,No,Yes,No,19,Yes,RECOQUAL,ctTerm,ACN
-Events,causality,Causality,Causality,,,,No,No,Yes,No,20,Yes,RECOQUAL,text,
-Events,outcome,Outcome of the Event,Description of the outcome of an event.,C20200,,,No,No,Yes,No,21,Yes,RECOQUAL,ctTerm,OUT
-Events,evaluation_interval,Evaluation Interval,Evaluation interval,C82534,,,No,No,Yes,No,22,Yes,TIMING,text,
-Events,ae_number,AE Number,Adverse event number,C83209,,,No,No,Yes,No,23,Yes,IDENTIFIER,text,
-Events,congenital,Congenital Anomaly,The serious event associated with congenital anomaly or birth defect.,C2849,,,No,No,Yes,No,24,Yes,RECOQUAL,ctTerm,NY
-Events,disability,Disability,The serious event resulting in persistent or significant disability/incapacity.,C68606,,,No,No,Yes,No,25,Yes,RECOQUAL,ctTerm,NY
-Events,death,Death,The serious event resulting in death.,C93546,,,No,No,Yes,No,26,Yes,RECOQUAL,ctTerm,NY
-Events,hospitalisation,Hospitalisation,The serious event that requires or prolongs hospitalization.,C68605,,,No,No,Yes,No,27,Yes,RECOQUAL,ctTerm,NY
-Events,life_threatening,Life Threatening,The serious event is life threatening.,C82508,,,No,No,Yes,No,28,Yes,RECOQUAL,ctTerm,NY
-Events,toxicity,Toxicity,Toxicity,C27990,,,No,No,Yes,No,29,Yes,RECOQUAL,text,
-Events,toxicity_grade,Toxicity Grade,Records toxicity grade using a standard toxicity scale (such as the NCI CTCAE). Sponsor should specify which scale and version is used in the Sponsor Comments column of the Define.XML document.,C82528,,,No,No,Yes,No,30,Yes,RECOQUAL,text,
-Events,medically_imp_serious_event,Medically Important Serious Event,An important serious medical event,C82521,,,No,No,Yes,No,31,Yes,RECOQUAL,ctTerm,NY
-Finding,reference_id,Reference Identifier,Reference identifier,C82531,,,No,No,Yes,No,1,Yes,IDENTIFIER,text,
-Finding,test_code,Test Code,Test code linkage to external or sponsor-defined controlled  terminology,C82503,,,Yes,No,No,No,2,Yes,TOPIC,ctTerm,DDTESTCD;FATESTCD;TSQM01TC;RPTESTCD;AIMS01TC;SCTESTCD;VSTESTCD;ZATESTCD;BSTESTCD;CVTESTCD;DATESTCD;DOTESTCD;DUTESTCD;EGTESTCD;ADCTC;ISTESTCD;LBTESTCD;MBTESTCD;MITESTCD;MUSCTSCD;MOTESTCD;MSTESTCD;NVTESTCD;OETESTCD;PCTESTCD;PFTESTCD;RETESTCD;SRTESTCD;SSTESTCD;TRTESTCD;TUTESTCD;URNSTSCD;GASTROCD
-Finding,test_name,Test Name,Test name linkage to external or sponsor-defined controlled  terminology,C82541,,,Yes,No,No,No,3,Yes,SYNOQUAL,ctTerm,DDTEST;FATEST;TSQM01TN;RPTEST;AIMS01TN;VSTEST;ZATEST;BSTEST;CVTEST;DATEST;DOTEST;DUTEST;EGTEST;ADCTN;ISTEST;LBTEST;MBTEST;MITEST;MUSCTS;MOTEST;MSTEST;NVTEST;OETEST;PCTEST;PFTEST;RETEST;SRTEST;SSTEST;TRTEST;TUTEST;URNSTS;GASTRO
-Finding,object_of_observation,Object of Observation,Object of the observation,C82546,,,No,No,Yes,No,4,Yes,RECOQUAL,text,
-Finding,repitition_number,Repitition Number,Repitition number,,,,No,No,Yes,No,5,No,RECOQUAL,float,
-Finding,test_detail,Test Detail,"Measurement, Test or Examination Detail",C117062,,,No,No,Yes,No,6,Yes,RECOQUAL,ctTerm,MIFTSDTL
-Finding,finding_category,Finding Category,Finding category of related records.,C25372,,,No,No,Yes,No,7,No,GROUQUAL,ctTerm,QSCAT;RPCAT;CCCAT;VSCAT;EGCAT;IECAT;OECAT;QSCAT;RPCAT;CCCAT;IECAT;VSCAT
-Finding,finding_subcategory,Finding Sub-Category,Finding sub-Category of related records.,C25692,,,No,No,Yes,No,8,No,GROUQUAL,text,
-Finding,position,Position,Position of subject,C71148,,,No,Yes,Yes,No,9,Yes,RECOQUAL,ctTerm,POSITION
-Finding,normal_range_lower_limit,Lower Normal Limit,Lower Normal Limit,C82580,,,No,No,Yes,No,10,Yes,VARIQUAL,float,
-Finding,normal_range_upper_limit,Upper Normal Limit,Upper Normal Limit,C70933,,,No,No,Yes,No,11,Yes,VARIQUAL,float,
-Finding,normal_range_indicator,Reference Range Indicator,Reference Range Indicator,C82532,,,No,No,Yes,No,12,Yes,VARIQUAL,ctTerm,NRIND
-Finding,location,Location,Location,C25341,,,No,Yes,Yes,No,13,Yes,RECOQUAL,ctTerm,LOC
-Finding,laterality,Laterality,Laterality,C25185,,,No,Yes,Yes,No,14,Yes,RECOQUAL,ctTerm,LAT
-Finding,directionality,Directionality,Anatomical location further detailing directionality,C54215,,,No,Yes,Yes,No,15,Yes,RECOQUAL,ctTerm,DIR
-Finding,portion,Portion,"Anatomical location further detailing distribution. For e.g. ENTIRE, SINGLE, SEGMENT.",C103166,,,No,No,Yes,No,16,Yes,RECOQUAL,ctTerm,PORTOT
-Finding,finding_result_category,Finding Result Category,Used to categorize the result of a finding.,C82498,,,No,No,Yes,No,17,Yes,VARIQUAL,ctTerm,MSRESCAT
-Finding,completion_status,Completion Status,The completion status indicates that a question was not answered.,C41202,,,No,No,No,Yes,18,Yes,RECOQUAL,ctTerm,ND
-Finding,reason_not_done,Reason Not Done,Describes the reason data was not collected. Used in conjunction with completion_status  when value is NOT DONE.,C82556,,,No,No,Yes,No,19,Yes,RECOQUAL,text,
-Finding,vendor_name,Vendor Name,Name or identifier of the laboratory or vendor who provided the test results.,C82537,,,No,No,Yes,No,20,Yes,RECOQUAL,text,
-Finding,loinc,LOINC Code,LOINC code,C82502,,,No,No,Yes,No,21,Yes,SYNOQUAL,text,
-Finding,specimen,Specimen,Defines the type of specimen used for a measurement.,C70713,,,No,Yes,Yes,No,22,Yes,RECOQUAL,ctTerm,SPECTYPE; GENSMP
-Finding,anatomical_region,Anatomical Region,"Defines the specific anatomical or biological region of a tissue, organ specimen or the region from which the specimen is obtained, as defined in the protocol",C170983,,,No,No,Yes,No,23,Yes,VARIQUAL,text,
-Finding,specimen_condition,Condition of the Specimen,Defines the condition of the specimen,C70714,,,No,No,Yes,No,24,Yes,RECOQUAL,ctTerm,SPECCOND
-Finding,method,Method,Method of the test or examination,C82535,,,No,Yes,Yes,No,25,Yes,RECOQUAL,ctTerm,METHOD; EGMETHOD
-Finding,analysis_method,Analysis Method,Analysis method applied to obtain a summarized result. Analysis method describes the method of secondary processing applied to a complex observation result,C117039,,,No,Yes,Yes,No,26,Yes,RECOQUAL,text,
-Finding,lead_to_collect_measurement,Lead to Collect Measurement,"The lead used for the measurement, examples, V1, V6, aVR, I, II, III.",C90013,,,No,No,Yes,No,27,Yes,RECOQUAL,ctTerm,LOC
-Finding,fasting_status,Fasting Status,"Indicator used to identify fasting status such as Y, N, U, or null if not relevant.",C93566,,,No,Yes,Yes,No,28,Yes,RECOQUAL,ctTerm,NY
-Finding,evaluator,Evaluator,Role of the person who provided the evaluation.,C51824,,,No,No,Yes,No,29,Yes,RECOQUAL,ctTerm,EVAL
-Finding,evaluator_id,Evaluator Identifier,Used to distinguish multiple evaluators with the same role recorded in evaluator.,C117043,,,No,No,Yes,No,30,Yes,VARIQUAL,ctTerm,MEDEVAL
-Finding,collection_datetime,Date and Time of Collection,Date/time of collection,C82515,,,No,No,No,Yes,31,Yes,TIMING,datetime,
-Finding,observation_end_datetime,End Date and Time of Observation,End date/time of the observation,C82516,,,No,No,Yes,No,32,Yes,TIMING,datetime,
-Finding,time_point,Time Point,Text description of time when a measurement or observation should be taken as defined in the protocol.,C82539,,,No,No,Yes,No,33,Yes,TIMING,text,
-Finding,elapsed_time,Elapsed Time,"Planned Elapsed time in ISO 8601 format which is relative to a planned fixed reference. It is to be used when there are repetitive measurements. It is not a clock time or a date/time variable, but an interval.",C82572,,,No,No,Yes,No,34,Yes,RECOQUAL,text,
-Finding,evaluation_interval,Evaluation Interval,Evaluation interval,C82534,,,No,No,Yes,No,35,Yes,TIMING,text,
-Finding,evaluation_interval_text,Evaluation Interval Text,"Evaluation interval associated with an observation, where the interval is not able to be represented in ISO 8601 format",C117044,,,No,No,Yes,No,36,Yes,TIMING,text,
-CategoricFindings,categoric_finding_original_result,Categoric Finding Original result,Categoric Finding Original result,C117221,,,Yes,No,No,No,1,Yes,RESUQUAL,ctTerm,HEP_CQ; NY
-CategoricFindings,categoric_finding_original_result_unit,Categoric Finding Original result unit,Categoric Finding Original result unit,,,,No,No,Yes,No,2,Yes,VARIQUAL,ctTerm,UNIT
-NumericFindings,numeric_finding_original_result,Numeric Finding Original result,Numeric Finding Original result,C117221,,,No,No,No,Yes,1,Yes,RESUQUAL,float,
-NumericFindings,numeric_finding_original_result_unit,Numeric Finding Original result unit,Numeric Finding Original result unit,C82586,,,No,No,Yes,No,2,Yes,VARIQUAL,ctTerm,UNIT
-NumericFindings,standard_unit,Standardised unit,Standardised unit,C82587,,,Yes,Yes,No,No,3,Yes,VARIQUAL,ctTerm,UNIT
-NumericFindings,unit_dimension,Unit dimension,Unit dimension,C42568,,,Yes,No,No,No,4,Yes,VARIQUAL,ctTerm,UNITDIM
-TextualFindings,textual_finding_original_result,Textual Finding Original result,Textual Finding Original result,C117221,,,No,No,No,Yes,1,Yes,RESUQUAL,text,
-Interventions,reference_id,Reference Identifier,Reference identifier,C82531,,,No,No,Yes,No,1,Yes,IDENTIFIER,text,
-Interventions,treatment,Name of the Treatment,Treatment name,C82542,,,No,No,No,Yes,2,Yes,TOPIC,text,ECTRT;EXTRT
-Interventions,mood,Mood,Mode or condition of the record specifying whether the intervention is intended to happen or has happened.,C117051,,,No,No,Yes,No,3,Yes,RECOQUAL,ctTerm,BRDGMOOD
-Interventions,intervention_category,Intervention Category,Intervention category of related records.,C25372,,,No,No,Yes,No,4,No,GROUQUAL,ctTerm,AGCAT;CMCAT;ECCAT; EXCAT;SUCAT
-Interventions,intervention_subcategory,Intervention Sub-Category,completion status,C25692,,,No,No,Yes,No,5,No,GROUQUAL,ctTerm,MHSCAT; DSSCAT
-Interventions,prespecified,Intervention Prespecified,"An indication or description that something was previously determined, characterized, or detailed.",C82510,,,No,No,Yes,No,6,No,VARIQUAL,ctTerm,NY
-Interventions,intervention_occurred,Intervention Occurred,Used to indicate whether a treatment occurred when information about the occurrence is solicited.,C127786,,,No,No,Yes,No,7,Yes,RECOQUAL,ctTerm,NY
-Interventions,completion_status,Completion Status,The completion status indicates that a question was not answered.,C41202,,,No,No,No,Yes,8,Yes,RECOQUAL,ctTerm,ND
-Interventions,reason_not_done,Reason Not Done,Describes the reason data was not collected. Used in conjunction with completion_status  when value is NOT DONE.,C82556,,,No,No,Yes,No,9,Yes,RECOQUAL,text,
-Interventions,dose,Dose,Amount of treatment in numeric format,C25488,,,No,No,Yes,No,10,Yes,RECOQUAL,float,
-Interventions,dose_description,Dose Description,Amount of treatment in non-numeric format,C70961,,,No,No,Yes,No,11,Yes,RECOQUAL,text,
-Interventions,dose_unit,Dose Unit,Unit for dose,C166259,,,No,No,Yes,No,12,Yes,VARIQUAL,ctTerm,UNIT
-Interventions,dose_form,Dose Form,Dose form for treatment,C42636,,,No,No,Yes,No,13,Yes,VARIQUAL,ctTerm,FRM
-Interventions,frequency,Frequence,Intended schedule or regimen for the Intervention,C71113,,,No,No,Yes,No,14,Yes,VARIQUAL,ctTerm,FREQ
-Interventions,total_daily_dose,Total Daily Dose,Total daily dose of treatment,C70888,,,No,No,Yes,No,15,Yes,RECOQUAL,float,
-Interventions,dose_regimen,Dose Regimen,Intended schedule or regimen for the Intervention,C71137,,,No,No,Yes,No,16,Yes,VARIQUAL,text,
-Interventions,route,Route,Route of administration of treatment,C38114,,,No,No,Yes,No,17,Yes,VARIQUAL,ctTerm,ROUTE
-Interventions,location,Location,Location,C25341,,,No,No,Yes,No,18,Yes,RECOQUAL,ctTerm,LOC
-Interventions,laterality,Laterality,Laterality,C25185,,,No,No,Yes,No,19,Yes,RECOQUAL,ctTerm,LAT
-Interventions,directionality,Directionality,Anatomical location further detailing directionality,C54215,,,No,No,Yes,No,20,Yes,RECOQUAL,ctTerm,DIR
-Interventions,portion,Portion,"Anatomical location further detailing distribution. For e.g. ENTIRE, SINGLE, SEGMENT.",C103166,,,No,No,Yes,No,21,Yes,RECOQUAL,ctTerm,PORTOT
-Interventions,lot_number,Lot Number,Lot number of treatment,C70848,,,No,No,Yes,No,22,Yes,RECOQUAL,text,
-Interventions,fasting_status,Fasting Status,"Indicator used to identify fasting status such as Y, N, U, or null if not relevant.",C93566,,,No,No,Yes,No,23,Yes,RECOQUAL,ctTerm,NY
-Interventions,observation_start_datetime,Start Date and Time of Observation,Start date/time of the observation,C82517,,,No,No,Yes,No,24,Yes,TIMING,datetime,
-Interventions,observation_end_datetime,End Date and Time of Observation,End date/time of the observation,C82516,,,No,No,Yes,No,25,Yes,TIMING,datetime,
-Interventions,evaluation_interval,Evaluation Interval,Evaluation interval,C82534,,,No,No,Yes,No,26,Yes,TIMING,text,
-Interventions,strength,Strength,"Amount of an active ingredient expressed quantitatively per dosage unit, per unit of volume, or per unit of weight, according to the pharmaceutical dose form.",C53294,,,No,No,Yes,No,27,Yes,RECOQUAL,float,
-Interventions,strength_unit,Strength Unit,Unit for strength,C117055,,,No,No,Yes,No,28,Yes,RECOQUAL,ctTerm,UNIT
-Interventions,reason_for_dose_ajdustment,Reason for Dose Adjustment,Description of reason or explanation of why a dose is adjusted.,C82555,,,No,No,Yes,No,29,Yes,RECOQUAL,text,
-Interventions,continuing,Continuing,Continuing,C53279,,,No,No,Yes,No,30,Yes,RECOQUAL,ctTerm,NY
-Interventions,primary_indication,Primary Indication,Primary indication denotes why a medication was taken or administered.,C41184,,,No,No,Yes,No,31,Yes,RECOQUAL,text,
-Interventions,prim_indicat_ae_num,Primary Indication AE Number,Adverse event number when primary indication is an adverse event.,C83097,,,No,No,Yes,No,32,Yes,RECOQUAL,float,
-Interventions,prim_indicat_mh_num,Primary Indication MH Number,Medical history sequence number when primary indication is an event from medical history.,C83098,,,No,No,Yes,No,33,Yes,RECOQUAL,float,
-Interventions,other_indication,Other Indication,Other indication as primary indication for concomitant medication,C41184,,,No,No,Yes,No,34,Yes,RECOQUAL,text,
-DeviceIdentifiers,serial_number,Serial Number,Serial number,C70710,,,No,No,Yes,No,1,No,IDENTIFIER,float,
-DeviceIdentifiers,device_id_element_short_name,Device ID Element Short Name,"Short name of the identifier characteristic of the device (e.g., ""SERIAL"", ""MODEL"").",C106481,,,No,No,Yes,No,2,Yes,TOPIC,ctTerm,DIPARMCD
-DeviceIdentifiers,device_id_element_name,Device ID Element Name,Name of the identifier characteristic of the device.,C106480,,,No,No,Yes,No,3,Yes,SYNOQUAL,ctTerm,DIPARM
-DeviceIdentifiers,device_id_element_value,Device ID Element Value,Value for the parameter. ,,,,No,No,Yes,No,4,Yes,RESUQUAL,text,
-SubjectVisit,contact_mode,Contact Mode,Contact mode,C188841,,,No,No,Yes,No,1,Yes,RECOQUAL,ctTerm,CNTMODE
-SubjectVisit,epi_pandemic_change_indicator,Epi/Pandemic Change Indicator,Epi/Pandemic Related Change Indicator,,,,No,No,Yes,No,2,No,RECOQUAL,ctTerm,NY
-SubjectVisit,visit_occurence_reason,Visit Occurrence Reason,Reason for occurrence of visit,,,,No,No,Yes,No,3,Yes,RECOQUAL,text,
-SubjectVisit,visit_start_datetime,Start Date and Time of Visit,Start date/time of the visit,C83436,,,No,No,Yes,No,4,Yes,TIMING,datetime,
-SubjectVisit,visit_end_datetime,End Date and Time of Visit,End date/time of the visit,C83435,,,No,No,Yes,No,5,Yes,TIMING,datetime,
-SubjectVisit,description_of_unplanned_visit,Description of Unplanned Visit,Description of unplanned visit,C88009,,,No,No,Yes,No,6,Yes,SYNOQUAL,text,
-GeneralObservation,diparmcd,Device Parameters,To specify details of auxiliary device for Standard Program (DEVTYPE MANUF MODEL),,,,,No,No,No,No,8,No,VARIQUAL,text,
-GeneralObservation,orresu,Original Result Unit,To specify that collected original result unit to be retained in SDTM for non numeric topic codes,,,,,No,No,No,No,9,No,VARIQUAL,text,
-GeneralObservation,sf36,SF36 Category,To indicate category of SF36 collected data,,,,,No,No,No,No,10,No,VARIQUAL,text,
-GeneralObservation,stdunit,Standard Unit,To specify standard unit for an intervention topic code,,,,,No,No,No,No,11,No,VARIQUAL,text,
-GeneralObservation,__bdagnt,Binding Agent,To specify the submission value for --BDAGNT (Binding agent in CP IS LB domains),,,,,No,No,No,No,12,No,VARIQUAL,text,
-GeneralObservation,__tstopo,Test Operational Objective,To specify the submission value for --TSTOPO (Test Operational Objective in IS LB),,,,,No,No,No,No,13,No,VARIQUAL,text,
-GeneralObservation,__tmthsn,Test Method Sensitivity,To specify the submission value for --TMTHSN (Test method sensitivity in LB),,,,,No,No,No,No,14,No,VARIQUAL,text,
+GeneralObservation,domain,Domain,SDTM domain,C66734,,,Yes,No,No,No,1,No,IDENTIFIER,CTTERM,DOMAIN
+GeneralObservation,study_id,Study Identifier,Study identifier,C83082,,,No,No,No,Yes,2,No,IDENTIFIER,TEXT,
+GeneralObservation,group_id,Group Identifier,group identifier,C82529,,,No,No,Yes,No,3,Yes,IDENTIFIER,TEXT,
+GeneralObservation,link_id,Link Identifier,Link ID,C117050,,,No,No,Yes,No,4,Yes,IDENTIFIER,TEXT,
+GeneralObservation,link_group,Link Group Identifier,Link Group ID,C117049,,,No,No,Yes,No,5,Yes,IDENTIFIER,TEXT,
+GeneralObservation,associated_persons_id,Associated Persons Identifier,Associated persons identifier,C117707,,,No,No,Yes,No,6,Yes,IDENTIFIER,TEXT,
+GeneralObservation,related_device_id,Related Device Identifier,Related device identifier,C117710,,,No,No,Yes,No,7,Yes,IDENTIFIER,TEXT,
+GeneralObservation,point_in_time_flag,Point in Time Flag,Point in Time Flag,,,,No,No,No,No,8,No,TIMING,TEXT,
+GeneralObservation,planned_duration,Planned Duration,"Planned duration of a finding. For a sample-based finding, this could apply to the planned duration of specimen collection.",,,,No,No,No,No,9,No,TIMING,TEXT,
+GeneralObservation,sponsor_device_id,Sponsor Device Identifier,Sponsor Device Identifier,C117060,,,No,No,No,No,10,Yes,IDENTIFIER,TEXT,
+GeneralObservation,reference_id,Reference Identifier,Reference identifier,C82531,,,No,No,Yes,No,11,Yes,IDENTIFIER,TEXT,
+SubjectObservation,subject_id,Subject Identifier,"A sequence of characters used to identify, name, or characterize a trial or study subject.",C83083,,,No,No,Yes,No,1,Yes,IDENTIFIER,TEXT,
+SubjectObservation,unique_subject_id,Unique Subject Identifier,A unique identifier for a subject in a study.,C69256,,,No,No,Yes,No,2,No,IDENTIFIER,TEXT,
+SubjectObservation,related_subject_id,Related Subject Identifier,Related subject identifier,C117708,,,No,No,Yes,No,3,No,IDENTIFIER,TEXT,
+SubjectObservation,toxicity,Toxicity,Toxicity,C27990,,,No,No,Yes,No,4,Yes,RECOQUAL,TEXT,
+SubjectObservation,toxicity_grade,Toxicity Grade,Records toxicity grade using a standard toxicity scale (such as the NCI CTCAE). Sponsor should specify which scale and version is used in the Sponsor Comments column of the Define.XML document.,C82528,,,No,No,Yes,No,5,Yes,RECOQUAL,TEXT,
+SubjectObservation,severity,Severity,The severity or intensity of the event.,C25676,,,No,No,Yes,No,6,Yes,RECOQUAL,CTTERM,
+SubjectObservation,reason_for_occur_value,Reason for Occur Value,The explanation for why an event or intervention did or did not occur,,,,No,No,Yes,No,7,Yes,RECOQUAL,TEXT,
+SubjectObservation,body_system,Body System or Organ Class,Body System or Organ Class,C170986,,,No,No,No,No,8,No,RECOQUAL,CTTERM,
+SubjectObservation,completion_status,Completion Status,The completion status indicates that a question was not answered.,C41202,,,No,No,No,Yes,9,Yes,RECOQUAL,CTTERM,ND
+SubjectObservation,contact_mode,Contact Mode,Contact Mode,C188841,,,No,No,Yes,No,10,Yes,RECOQUAL,CTTERM,CNTMODE
+SubjectObservation,reason_not_done,Reason Not Done,Describes the reason data was not collected. Used in conjunction with completion_status  when value is NOT DONE.,C82556,,,No,No,Yes,No,11,Yes,RECOQUAL,TEXT,
+SubjectObservation,portion,Portion,"Anatomical location further detailing distribution. For e.g. ENTIRE, SINGLE, SEGMENT.",C103166,,,No,No,Yes,No,12,Yes,RECOQUAL,CTTERM,PORTOT
+SubjectObservation,evaluation_interval,Evaluation Interval,Evaluation interval,C82534,,,No,No,Yes,No,13,Yes,TIMING,TEXT,
+SubjectObservation,evaluation_interval_text,Evaluation Interval Text,"Evaluation interval associated with an observation, where the interval is not able to be represented in ISO 8601 format",C117044,,,No,No,Yes,No,14,Yes,TIMING,TEXT,
+SubjectObservation,evaluator_id,Evaluator Identifier,Used to distinguish multiple evaluators with the same role recorded in evaluator.,C117043,,,No,No,Yes,No,15,Yes,VARIQUAL,CTTERM,MEDEVAL
+SubjectObservation,evaluator,Evaluator,Role of the person who provided the evaluation.,C51824,,,No,No,Yes,No,16,Yes,RECOQUAL,CTTERM,EVAL
+SubjectObservation,prespecified,Prespecified,"An indication or description that something was previously determined, characterized, or detailed.",C82510,,,No,No,Yes,No,17,No,RECOQUAL,CTTERM,NY
+Comments,related_domain_abbreviation,Related Domain Abbreviation,Related domain abbreviation,C83391,,,No,No,Yes,No,1,Yes,RECOQUAL,CTTERM,DOMAIN
+Comments,comment_reference,Comment Reference,Reference associated with the comment,C82504,,,No,No,Yes,No,2,Yes,RECOQUAL,TEXT,
+Comments,comment,Comment,Text of the comment,C70936,,,No,No,Yes,No,3,Yes,TOPIC,TEXT,
+Comments,collection_datetime,Date and Time of Collection,Date/time of collection,C82515,,,No,No,No,Yes,4,Yes,TIMING,DATETIME,
+Events,term,Name of the Event,Verbatim name of the observed event,C82571,,,No,No,No,Yes,1,Yes,TOPIC,TEXT,
+Events,modified_reported_term,Modified Reported Term,Modified Reported Term,C25446,,,No,No,Yes,No,2,Yes,SYNOQUAL,TEXT,
+Events,lowest_level_term,Lowest Level Term,Lowest Level Term,C71886,,,No,No,No,No,3,No,VARIQUAL,TEXT,
+Events,lowest_level_term_code,Lowest Level Term Code,Lowest Level Term Code,C117048,,,No,No,No,No,4,No,VARIQUAL,TEXT,
+Events,decod,Decode,Dictionary-derived form of the event or intervention,C170991,,,No,No,Yes,No,5,Yes,SYNOQUAL,CTTERM,NCOMPLT; PROTMLST
+Events,event_date_type,Event Date Type,Event Date Type,,,,No,No,Yes,No,6,Yes,VARIQUAL,CTTERM,MHEDTTYP
+Events,preferred_term_code,Preferred Term Code,Preferred Term Code,C117056,,,No,No,No,No,7,No,VARIQUAL,TEXT,
+Events,high_level_term,High Level Term,High Level Term,C71880,,,No,No,No,No,8,No,VARIQUAL,TEXT,
+Events,high_level_term_code,High Level Term Code,High Level Term Code,C117047,,,No,No,No,No,9,No,VARIQUAL,TEXT,
+Events,high_level_group_term,High Level Group Term,High Level Group Term,C71889,,,No,No,No,No,10,No,VARIQUAL,TEXT,
+Events,high_level_group_term_code,High Level Group Term Code,High Level Group Term Code,C117046,,,No,No,No,No,11,No,VARIQUAL,TEXT,
+Events,continuing,Continuing,Continuing,C53279,,,No,No,Yes,No,12,Yes,RECOQUAL,CTTERM,NY
+Events,observation_start_datetime,Start Date and Time of Observation,Start date/time of the observation,C82517,,,No,No,Yes,No,13,Yes,TIMING,DATETIME,
+Events,observation_end_datetime,End Date and Time of Observation,End date/time of the observation,C82516,,,No,No,Yes,No,14,Yes,TIMING,DATETIME,
+Events,event_category,Event Category,Event category of related records.,C25372,,,No,No,Yes,No,15,No,GROUQUAL,CTTERM,DECAT; DSCAT; CECAT; HOCAT; MHCAT
+Events,event_subcategory,Event Sub-Category,Event sub-Category of related records.,C25692,,,No,No,Yes,No,16,No,GROUQUAL,CTTERM,DSSCAT; MHSCAT
+Events,event_occurred,Event Occurred,Used when the occurrence of specific events is solicited to indicate whether or not a clinical event occurred.,C82438,,,No,No,Yes,No,17,Yes,RECOQUAL,CTTERM,NY
+Events,body_system_code,Body System or Organ Class Code,Body System or Organ Class Code,C170985,,,No,No,No,No,18,No,VARIQUAL,CTTERM,
+Events,primary_system_organ_class,Primary System Organ Class,Primary System Organ Class,C71888,,,No,No,No,No,19,No,VARIQUAL,TEXT,
+Events,primary_system_organ_class_code,Primary System Organ Class Code,Primary System Organ Class Code,C117059,,,No,No,No,No,20,No,VARIQUAL,TEXT,
+Events,epi_pandemic_change_indicator,Epi/Pandemic Change Indicator,Epi/Pandemic Related Change Indicator,C227308,,,No,No,Yes,No,21,Yes,RECOQUAL,CTTERM,NY
+Events,location,Location,Location,C25341,,,No,No,Yes,No,22,Yes,RECOQUAL,CTTERM,LOC
+Events,laterality,Laterality,Laterality,C25185,,,No,No,Yes,No,23,Yes,RECOQUAL,CTTERM,LAT
+Events,directionality,Directionality,Anatomical location further detailing directionality,C54215,,,No,No,Yes,No,24,Yes,RECOQUAL,CTTERM,DIR
+Events,accountable_party,Accountable Party,Accountable Party,C117052,,,No,No,No,No,25,No,VARIQUAL,TEXT,
+Events,accountable_party_id,Accountable Party Identifier,Accountable Party Identifier,C117054,,,No,No,No,No,26,No,VARIQUAL,TEXT,
+Events,serious,Serious,Used to indicate whether the event was serious,C82578,,,No,No,Yes,No,27,Yes,RECOQUAL,CTTERM,NY
+Events,action_taken,Action Taken,Action Taken with Study Treatment,C49499,,,No,No,Yes,No,28,Yes,RECOQUAL,CTTERM,ACN
+Events,action_taken_other,Other Action Taken,Other Action Taken,C82509,,,No,No,Yes,No,29,Yes,RECOQUAL,TEXT,
+Events,action_taken_with_device,Action Taken with Device,Action Taken with Device,C117037,,,No,No,Yes,No,30,Yes,RECOQUAL,TEXT,
+Events,causality,Causality,Causality,C103163,,,No,No,Yes,No,31,Yes,RECOQUAL,TEXT,
+Events,relationship_of_event_to_device,Relationship of Event to Device,Relationship of Event to Device,,,,No,No,Yes,No,32,Yes,RECOQUAL,TEXT,
+Events,relationship_to_nonstudy_treatment,Relationship to Non-Study Treatment,Relationship to Non-Study Treatment,C82564,,,No,No,Yes,No,33,Yes,RECOQUAL,TEXT,
+Events,pattern_of_event,Pattern of Event,Pattern of Event,C82550,,,No,No,Yes,No,34,Yes,RECOQUAL,TEXT,
+Events,outcome,Outcome of the Event,Description of the outcome of an event.,C20200,,,No,No,Yes,No,35,Yes,RECOQUAL,CTTERM,OUT
+Events,involves_cancer,Involves Cancer,Involves Cancer,C82561,,,No,No,Yes,No,36,Yes,RECOQUAL,CTTERM,NY
+Events,ae_number,AE Number,Adverse event number,C83209,,,No,No,Yes,No,37,Yes,IDENTIFIER,TEXT,
+Events,congenital,Congenital Anomaly,The serious event associated with congenital anomaly or birth defect.,C2849,,,No,No,Yes,No,38,Yes,RECOQUAL,CTTERM,NY
+Events,disability,Disability,The serious event resulting in persistent or significant disability/incapacity.,C68606,,,No,No,Yes,No,39,Yes,RECOQUAL,CTTERM,NY
+Events,death,Death,The serious event resulting in death.,C93546,,,No,No,Yes,No,40,Yes,RECOQUAL,CTTERM,NY
+Events,hospitalisation,Hospitalisation,The serious event that requires or prolongs hospitalization.,C68605,,,No,No,Yes,No,41,Yes,RECOQUAL,CTTERM,NY
+Events,life_threatening,Life Threatening,The serious event is life threatening.,C82508,,,No,No,Yes,No,42,Yes,RECOQUAL,CTTERM,NY
+Events,occurred_with_overdose,Occurred with Overdose,Occurred with Overdose,C82548,,,No,No,Yes,No,43,Yes,RECOQUAL,CTTERM,NY
+Events,medically_imp_serious_event,Medically Important Serious Event,An important serious medical event,C82521,,,No,No,Yes,No,44,Yes,RECOQUAL,CTTERM,NY
+Events,concomitant_or_additional_treatment,Concomitant or Additional Treatment Given,Concomitant or Additional Treatment Given,C170989,,,No,No,Yes,No,45,Yes,RECOQUAL,CTTERM,NY
+Finding,test_code,Test Code,Test code linkage to external or sponsor-defined controlled  terminology,C82503,,,Yes,No,No,No,1,Yes,TOPIC,CTTERM,DDTESTCD;FATESTCD;TSQM01TC;RPTESTCD;AIMS01TC;SCTESTCD;VSTESTCD;ZATESTCD;BSTESTCD;CVTESTCD;DATESTCD;DOTESTCD;DUTESTCD;EGTESTCD;ADCTC;ISTESTCD;LBTESTCD;MBTESTCD;MITESTCD;MUSCTSCD;MOTESTCD;MSTESTCD;NVTESTCD;OETESTCD;PCTESTCD;PFTESTCD;RETESTCD;SRTESTCD;SSTESTCD;TRTESTCD;TUTESTCD;URNSTSCD;GASTROCD
+Finding,test_name,Test Name,Test name linkage to external or sponsor-defined controlled  terminology,C82541,,,Yes,No,No,No,2,No,SYNOQUAL,CTTERM,DDTEST;FATEST;TSQM01TN;RPTEST;AIMS01TN;VSTEST;ZATEST;BSTEST;CVTEST;DATEST;DOTEST;DUTEST;EGTEST;ADCTN;ISTEST;LBTEST;MBTEST;MITEST;MUSCTS;MOTEST;MSTEST;NVTEST;OETEST;PCTEST;PFTEST;RETEST;SRTEST;SSTEST;TRTEST;TUTEST;URNSTS;GASTRO
+Finding,test_name_code,Test Name Code Pair,,,,,Yes,No,No,No,3,No,TOPIC,TEXT,
+Finding,object_of_observation,Object of Observation,Object of the observation,C82546,,,No,No,Yes,No,4,Yes,RECOQUAL,TEXT,
+Finding,repitition_number,Repitition Number,Repitition number,,,,No,No,Yes,No,5,No,RECOQUAL,FLOAT,
+Finding,modified_collected_term,Modified Term,Modified Term,C170998,,,No,No,Yes,No,6,No,SYNOQUAL,TEXT,
+Finding,test_detail,Test Detail,"Measurement, Test or Examination Detail",C117062,,,No,No,Yes,No,7,Yes,RECOQUAL,CTTERM,MIFTSDTL
+Finding,finding_category,Finding Category,Finding category of related records.,C25372,,,No,No,Yes,No,8,No,GROUQUAL,CTTERM,QSCAT;RPCAT;CCCAT;VSCAT;EGCAT;IECAT;OECAT;QSCAT;RPCAT;CCCAT;IECAT;VSCAT
+Finding,finding_subcategory,Finding Sub-Category,Finding sub-Category of related records.,C25692,,,No,No,Yes,No,9,No,GROUQUAL,TEXT,
+Finding,position,Position,Position of subject,C71148,,,No,Yes,Yes,No,10,Yes,RECOQUAL,CTTERM,POSITION
+Finding,normal_range_lower_limit_original_unit,Lower Normal Limit-Original Unit,Lower Normal Limit-Original Unit,C82580,,,No,No,Yes,No,11,Yes,VARIQUAL,FLOAT,
+Finding,normal_range_upper_limit_original_unit,Upper Normal Limit-Original Unit,Upper Normal Limit-Original Unit,C70933,,,No,No,Yes,No,12,Yes,VARIQUAL,FLOAT,
+Finding,reference_result_in_original_unit,Reference Result in Original Units,Reference Result in Original Units,C227323,,,No,No,Yes,No,13,Yes,VARIQUAL,TEXT,
+Finding,result_in_standard_format,Result in Standard Format,Result in Standard Format,C117222,,,No,No,No,No,14,No,RESUQUAL,TEXT,
+Finding,agent_concentration_unit,Agent Concentration Units,Agent Concentration Units,,,,No,No,No,No,15,Yes,VARIQUAL,CTTERM,UNIT
+Finding,result_in_standard_unit,Numeric Result/Finding in Standard Units,Numeric Result/Finding in Standard Units,C171009,,,No,No,No,No,16,No,RESUQUAL,FLOAT,
+Finding,agent_concentration,Agent Concentration,Agent Concentration,,,,No,No,No,No,17,Yes,VARIQUAL,CTTERM,UNIT
+Finding,normal_range_lower_limit_standard_unit,Lower Normal Limit-Standard Unit,Lower Normal Limit-Standard Unit,C171008,,,No,No,No,No,18,No,VARIQUAL,FLOAT,
+Finding,normal_range_upper_limit_standard_unit,Upper Normal Limit-Standard Unit,Upper Normal Limit-Standard Unit,C171007,,,No,No,No,No,19,No,VARIQUAL,FLOAT,
+Finding,normal_range_character_results,Normal Range for Character Results,Normal Range for Character Results,C171006,,,No,No,No,No,20,No,VARIQUAL,TEXT,
+Finding,normal_range_indicator,Reference Range Indicator,Reference Range Indicator,C82532,,,No,No,Yes,No,21,Yes,VARIQUAL,CTTERM,NRIND
+Finding,result_scale,Result Scale,Result Scale,,,,No,No,No,No,22,No,RECOQUAL,CTTERM,RSLSCLRS
+Finding,reference_result_in_standard_format,Reference Result in Standard Format,Reference Result in Standard Format,,,,No,No,No,No,23,No,VARIQUAL,TEXT,
+Finding,result_type,Result Type,Result Type,,,,No,No,No,No,24,No,RECOQUAL,CTTERM,RESTYPRS
+Finding,result_type_collected_summary,Collected Summary Result Type,Collected Summary Result Type,,,,No,No,No,No,25,No,VARIQUAL,CTTERM,COLSTYP
+Finding,reference_result_in_standard_unit,Numeric Reference Result in Std Units,Numeric Reference Result in Std Units,,,,No,No,No,No,26,No,VARIQUAL,FLOAT,
+Finding,test_operational_objective,Test Operational Objective,Test Operational Objective,,,,No,No,No,No,27,No,VARIQUAL,CTTERM,TSTOPOBJ
+Finding,lower_limit_of_detection,Lower Limit of Detection,Lower Limit of Detection,C105701,,,No,No,No,No,28,No,VARIQUAL,TEXT,
+Finding,molecule_secreted_by_cells,Molecule Secreted by Cells,Molecule Secreted by Cells,,,,No,No,No,No,29,No,VARIQUAL,TEXT,
+Finding,test_method_sensitivity,Test Method Sensitivity,Test Method Sensitivity,,,,No,No,No,No,30,Yes,RECOQUAL,CTTERM,TSTMTHSN
+Finding,chronicity_of_finding,Chronicity of Finding,Chronicity of Finding,,,,No,No,No,No,31,Yes,VARIQUAL,TEXT,
+Finding,external_file_path,External File Path,External File Path,C82536,,,No,No,No,No,32,Yes,RECOQUAL,TEXT,
+Finding,distribution_of_pattern_finding,Distribution Pattern of Finding,Description of the distribution pattern of a finding within the examined area.,C198212,,,No,No,No,No,33,Yes,VARIQUAL,TEXT,
+Finding,location,Location,Location,C25341,,,No,Yes,Yes,No,34,Yes,RECOQUAL,CTTERM,LOC
+Finding,laterality,Laterality,Laterality,C25185,,,No,Yes,Yes,No,35,Yes,RECOQUAL,CTTERM,LAT
+Finding,directionality,Directionality,Anatomical location further detailing directionality,C54215,,,No,Yes,Yes,No,36,Yes,RECOQUAL,CTTERM,DIR
+Finding,finding_result_category,Finding Result Category,Used to categorize the result of a finding.,C82498,,,No,No,Yes,No,37,Yes,VARIQUAL,CTTERM,MSRESCAT
+Finding,vendor_name,Vendor Name,Name or identifier of the laboratory or vendor who provided the test results.,C82537,,,No,No,Yes,No,38,Yes,RECOQUAL,TEXT,
+Finding,loinc,LOINC Code,LOINC code,C82502,,,No,No,Yes,No,39,Yes,SYNOQUAL,TEXT,
+Finding,loinc_version,LOINC Version,LOINC Version,,,,No,No,Yes,No,40,Yes,SYNOQUAL,TEXT,
+Finding,specimen,Specimen,Defines the type of specimen used for a measurement.,C70713,,,No,Yes,Yes,No,41,Yes,RECOQUAL,CTTERM,SPECTYPE; GENSMP
+Finding,anatomical_region,Anatomical Region,"Defines the specific anatomical or biological region of a tissue, organ specimen or the region from which the specimen is obtained, as defined in the protocol",C170983,,,No,No,Yes,No,42,Yes,VARIQUAL,TEXT,
+Finding,specimen_condition,Condition of the Specimen,Defines the condition of the specimen,C70714,,,No,No,Yes,No,43,Yes,RECOQUAL,CTTERM,SPECCOND
+Finding,specimen_usability_for_test,Specimen Usability for the Test,Describes the usability of the specimen for the test.,C171004,,,No,No,No,No,44,Yes,RECOQUAL,CTTERM,NY
+Finding,method,Method,Method of the test or examination,C82535,,,No,Yes,Yes,No,45,Yes,RECOQUAL,CTTERM,METHOD; EGMETHOD
+Finding,run_id,Run ID,Run ID,C117058,,,No,No,No,No,46,Yes,RECOQUAL,TEXT,
+Finding,analysis_method,Analysis Method,Analysis method applied to obtain a summarized result. Analysis method describes the method of secondary processing applied to a complex observation result,C117039,,,No,Yes,Yes,No,47,Yes,RECOQUAL,TEXT,
+Finding,lead_to_collect_measurement,Lead to Collect Measurement,"The lead used for the measurement, examples, V1, V6, aVR, I, II, III.",C90013,,,No,No,Yes,No,48,Yes,RECOQUAL,CTTERM,LOC
+Finding,consciousness_state,Consciousness State,Consciousness State,C88429,,,No,No,Yes,No,49,Yes,RECOQUAL,TEXT,
+Finding,baseline_flag,Baseline Flag,Baseline Flag,C82526,,,No,No,No,No,50,No,RECOQUAL,CTTERM,NY
+Finding,fasting_status,Fasting Status,"Indicator used to identify fasting status such as Y, N, U, or null if not relevant.",C93566,,,No,Yes,Yes,No,51,Yes,RECOQUAL,CTTERM,NY
+Finding,derived_flag,Derived Flag,An indication that the measurement or finding is not a collected value but is processed or computed by the sponsor from collected data.,C81197,,,No,No,No,No,52,No,RECOQUAL,CTTERM,NY
+Finding,accepted_record_flag,Accepted Record Flag,An indication that a record is the endorsed assessment.,C117038,,,No,No,No,No,53,No,RECOQUAL,CTTERM,NY
+Finding,last_observation_before_exposure_flag,Last Observation Before Exposure Flag,Last Observation Before Exposure Flag,,,,No,No,No,No,54,No,RECOQUAL,CTTERM,NY
+Finding,relationship_to_death,Relationship to Death,An indication that a particular finding is related to the cause of death.,C82563,,,No,No,No,No,55,No,RECOQUAL,CTTERM,NY
+Finding,lower_limit_of_quantification,Lower Limit of Quantitation,Indicates the lower limit of quantitation for an assay,C82589,,,No,No,No,No,56,No,VARIQUAL,FLOAT,
+Finding,upper_limit_of_quantification,Upper Limit of Quantitation,Indicates the upper limit of quantitation for an assay,C85533,,,No,No,No,No,57,No,VARIQUAL,FLOAT,
+Finding,exclude_from_statistics,Exclude from Statistics,Indicates whether the values in the result variables for this record should be excluded from summary statistical calculations,C117045,,,No,No,No,No,58,No,RECOQUAL,CTTERM,NY
+Finding,inheritability,Inheritability,Inheritability,,,,No,No,No,No,59,Yes,VARIQUAL,CTTERM,INHERTGF
+Finding,genome_reference,Genome Reference,Genome Reference,,,,No,No,No,No,60,Yes,VARIQUAL,TEXT,
+Finding,chromosome_identifier,Chromosome Identifier,Chromosome Identifier,,,,No,No,No,No,61,Yes,VARIQUAL,TEXT,
+Finding,genomic_symbol,Genomic Symbol,Genomic Symbol,,,,No,No,No,No,62,Yes,VARIQUAL,TEXT,
+Finding,genomic_symbol_type,Genomic Symbol Type,Genomic Symbol Type,,,,No,No,No,No,63,Yes,VARIQUAL,TEXT,
+Finding,genetic_location,Genetic Location,Genetic Location,,,,No,No,No,No,64,Yes,VARIQUAL,TEXT,
+Finding,genetic_subregion,Genetic Subregion,Genetic Subregion,,,,No,No,No,No,65,Yes,VARIQUAL,TEXT,
+Finding,sequence_id,Sequence Identifier,Sequence Identifier,,,,No,No,No,No,66,Yes,VARIQUAL,TEXT,
+Finding,published_variant_id,Published Variant Identifier,Published Variant Identifier,,,,No,No,No,No,67,Yes,VARIQUAL,TEXT,
+Finding,copy_id,Copy Identifier,Copy Identifier,,,,No,No,No,No,68,Yes,VARIQUAL,TEXT,
+Finding,collection_datetime,Date and Time of Collection,Date/time of collection,C82515,,,No,No,No,Yes,69,Yes,TIMING,DATETIME,
+Finding,observation_end_datetime,End Date and Time of Observation,End date/time of the observation,C82516,,,No,No,Yes,No,70,Yes,TIMING,DATETIME,
+Finding,time_point,Time Point,Text description of time when a measurement or observation should be taken as defined in the protocol.,C82539,,,No,No,Yes,No,71,Yes,TIMING,TEXT,
+Finding,elapsed_time,Elapsed Time,"Planned Elapsed time in ISO 8601 format which is relative to a planned fixed reference. It is to be used when there are repetitive measurements. It is not a clock time or a date/time variable, but an interval.",C82572,,,No,No,Yes,No,72,Yes,RECOQUAL,TEXT,
+Finding,clinically_significant,Clinically Significant,Clinically significant,,,,No,No,Yes,No,73,Yes,RECOQUAL,CTTERM,
+Finding,logically_skipped_item,Logically Skipped Item,Logically skipped item,,,,No,No,Yes,No,74,No,RECOQUAL,TEXT,
+CategoricFindings,categoric_finding_original_result,Categoric Finding Original result,Categoric Finding Original result,C117221,,,Yes,No,No,No,1,Yes,RESUQUAL,CTTERM,HEP_CQ; NY
+CategoricFindings,categoric_finding_original_result_unit,Categoric Finding Original result unit,Categoric Finding Original result unit,,,,No,No,Yes,No,2,Yes,VARIQUAL,CTTERM,UNIT
+CategoricFindings,finding_original_result_text,Original Result in Text Format,Original Result in Text Format,,,,No,No,Yes,No,3,Yes,RESUQUAL,TEXT,
+NumericFindings,numeric_finding_original_result,Numeric Finding Original result,Numeric Finding Original result,C117221,,,No,No,No,Yes,1,Yes,RESUQUAL,FLOAT,
+NumericFindings,numeric_finding_original_result_unit,Numeric Finding Original result unit,Numeric Finding Original result unit,C82586,,,No,No,Yes,No,2,Yes,VARIQUAL,CTTERM,UNIT
+NumericFindings,standard_unit,Standardised unit,Standardised unit,C82587,,,Yes,Yes,No,No,3,Yes,VARIQUAL,CTTERM,UNIT
+NumericFindings,si_unit,SI Unit,SI Unit,,,,No,No,Yes,No,4,No,VARIQUAL,CTTERM,UNIT
+NumericFindings,us_conventional_unit,US Conventional Unit,US Conventional Unit,,,,No,No,Yes,No,5,No,VARIQUAL,CTTERM,UNIT
+NumericFindings,unit_dimension,Unit dimension,Unit dimension,C42568,,,Yes,No,No,No,6,Yes,VARIQUAL,CTTERM,UNITDIM
+TextualFindings,textual_finding_original_result,Textual Finding Original result,Textual Finding Original result,C117221,,,No,No,No,Yes,1,Yes,RESUQUAL,TEXT,
+Interventions,treatment,Name of the Treatment,Treatment name,C82542,,,No,No,No,Yes,1,Yes,TOPIC,TEXT,ECTRT;EXTRT
+Interventions,modified_treatment_name,Modified Treatment Name,Modified Treatment Name,C170998,,,No,No,No,No,2,Yes,SYNOQUAL,TEXT,
+Interventions,decod,Decode,Dictionary-derived form of the event or intervention,C170991,,,No,No,Yes,No,3,Yes,SYNOQUAL,CTTERM,
+Interventions,mood,Mood,Mode or condition of the record specifying whether the intervention is intended to happen or has happened.,C117051,,,No,No,Yes,No,4,Yes,RECOQUAL,CTTERM,BRDGMOOD
+Interventions,intervention_category,Intervention Category,Intervention category of related records.,C25372,,,No,No,Yes,No,5,No,GROUQUAL,CTTERM,AGCAT;CMCAT;ECCAT; EXCAT;SUCAT
+Interventions,intervention_subcategory,Intervention Sub-Category,completion status,C25692,,,No,No,Yes,No,6,No,GROUQUAL,CTTERM,MHSCAT; DSSCAT
+Interventions,intervention_occurred,Intervention Occurred,Used to indicate whether a treatment occurred when information about the occurrence is solicited.,C127786,,,No,No,Yes,No,7,Yes,RECOQUAL,CTTERM,NY
+Interventions,epi_pandemic_change_indicator,Epi/Pandemic Change Indicator,Epi/Pandemic Related Change Indicator,C227308,,,No,No,Yes,No,8,Yes,RECOQUAL,CTTERM,NY
+Interventions,dose,Dose,Amount of treatment in numeric format,C25488,,,No,No,Yes,No,9,Yes,RECOQUAL,FLOAT,
+Interventions,dose_description,Dose Description,Amount of treatment in non-numeric format,C70961,,,No,No,Yes,No,10,Yes,RECOQUAL,TEXT,
+Interventions,dose_unit,Dose Unit,Unit for dose,C166259,,,No,No,Yes,No,11,Yes,VARIQUAL,CTTERM,UNIT
+Interventions,dose_form,Dose Form,Dose form for treatment,C42636,,,No,No,Yes,No,12,Yes,VARIQUAL,CTTERM,FRM
+Interventions,frequency,Frequence,Intended schedule or regimen for the Intervention,C71113,,,No,No,Yes,No,13,Yes,VARIQUAL,CTTERM,FREQ
+Interventions,total_daily_dose,Total Daily Dose,Total daily dose of treatment,C70888,,,No,No,Yes,No,14,Yes,RECOQUAL,FLOAT,
+Interventions,dose_regimen,Dose Regimen,Intended schedule or regimen for the Intervention,C71137,,,No,No,Yes,No,15,Yes,VARIQUAL,TEXT,
+Interventions,route,Route,Route of administration of treatment,C38114,,,No,No,Yes,No,16,Yes,VARIQUAL,CTTERM,ROUTE
+Interventions,location,Location,Location,C25341,,,No,No,Yes,No,17,Yes,RECOQUAL,CTTERM,LOC
+Interventions,laterality,Laterality,Laterality,C25185,,,No,No,Yes,No,18,Yes,RECOQUAL,CTTERM,LAT
+Interventions,directionality,Directionality,Anatomical location further detailing directionality,C54215,,,No,No,Yes,No,19,Yes,RECOQUAL,CTTERM,DIR
+Interventions,lot_number,Lot Number,Lot number of treatment,C70848,,,No,No,Yes,No,20,Yes,RECOQUAL,TEXT,
+Interventions,fasting_status,Fasting Status,"Indicator used to identify fasting status such as Y, N, U, or null if not relevant.",C93566,,,No,No,Yes,No,21,Yes,RECOQUAL,CTTERM,NY
+Interventions,observation_start_datetime,Start Date and Time of Observation,Start date/time of the observation,C82517,,,No,No,Yes,No,22,Yes,TIMING,DATETIME,
+Interventions,observation_end_datetime,End Date and Time of Observation,End date/time of the observation,C82516,,,No,No,Yes,No,23,Yes,TIMING,DATETIME,
+Interventions,strength,Strength,"Amount of an active ingredient expressed quantitatively per dosage unit, per unit of volume, or per unit of weight, according to the pharmaceutical dose form.",C53294,,,No,No,Yes,No,24,Yes,RECOQUAL,FLOAT,
+Interventions,strength_unit,Strength Unit,Unit for strength,C117055,,,No,No,Yes,No,25,Yes,RECOQUAL,CTTERM,UNIT
+Interventions,treatment_vehicle,Treatment Vehicle,Treatment Vehicle,C927,,,No,No,Yes,No,26,Yes,RECOQUAL,TEXT,
+Interventions,treatment_vehicle_amount,Treatment Vehicle Amount,Treatment Vehicle Amount,C82553,,,No,No,Yes,No,27,Yes,RECOQUAL,TEXT,
+Interventions,treatment_vehicle_amount_unit,Treatment Vehicle Amount Units,Treatment Vehicle Amount Units,C82583,,,No,No,Yes,No,28,Yes,VARIQUAL,CTTERM,UNIT
+Interventions,reason_for_dose_ajdustment,Reason for Dose Adjustment,Description of reason or explanation of why a dose is adjusted.,C82555,,,No,No,Yes,No,29,Yes,RECOQUAL,TEXT,
+Interventions,treatment_discontinuation_reason,Reason for Treatment Discontinuation,Reason for Treatment Discontinuation,,,,No,No,Yes,No,30,Yes,RECOQUAL,TEXT,
+Interventions,continuing,Continuing,Continuing,C53279,,,No,No,Yes,No,31,Yes,RECOQUAL,CTTERM,NY
+Interventions,primary_indication,Primary Indication,Primary indication denotes why a medication was taken or administered.,C41184,,,No,No,Yes,No,32,Yes,RECOQUAL,TEXT,
+Interventions,prim_indicat_ae_num,Primary Indication AE Number,Adverse event number when primary indication is an adverse event.,C83097,,,No,No,Yes,No,33,Yes,RECOQUAL,FLOAT,
+Interventions,prim_indicat_mh_num,Primary Indication MH Number,Medical history sequence number when primary indication is an event from medical history.,C83098,,,No,No,Yes,No,34,Yes,RECOQUAL,FLOAT,
+Interventions,other_indication,Other Indication,Other indication as primary indication for concomitant medication,C41184,,,No,No,Yes,No,35,Yes,RECOQUAL,TEXT,
+Interventions,intervention_class,Intervention Class,Intervention Class,C170987,,,No,No,Yes,No,36,Yes,VARIQUAL,TEXT,
+Interventions,intervention_class_code,Intervention Class Code,Intervention Class Code,C170988,,,No,No,Yes,No,37,Yes,VARIQUAL,TEXT,
+Interventions,collected_duration,Duration,Collected duration of intervention,C25330,,,No,No,Yes,No,38,Yes,RECOQUAL,FLOAT,
+DeviceIdentifiers,serial_number,Serial Number,Serial number,C70710,,,No,No,Yes,No,1,No,IDENTIFIER,FLOAT,
+DeviceIdentifiers,device_id_element_short_name,Device ID Element Short Name,"Short name of the identifier characteristic of the device (e.g., ""SERIAL"", ""MODEL"").",C106481,,,No,No,Yes,No,2,Yes,TOPIC,CTTERM,DIPARMCD
+DeviceIdentifiers,device_id_element_name,Device ID Element Name,Name of the identifier characteristic of the device.,C106480,,,No,No,Yes,No,3,Yes,SYNOQUAL,CTTERM,DIPARM
+DeviceIdentifiers,device_id_element_value,Device ID Element Value,Value for the parameter. ,,,,No,No,Yes,No,4,Yes,RESUQUAL,TEXT,
+SubjectVisit,epi_pandemic_change_indicator,Epi/Pandemic Change Indicator,Epi/Pandemic Related Change Indicator,C227308,,,No,No,Yes,No,1,No,RECOQUAL,CTTERM,NY
+SubjectVisit,visit_occurence_reason,Visit Occurrence Reason,Reason for occurrence of visit,,,,No,No,Yes,No,2,Yes,RECOQUAL,TEXT,
+SubjectVisit,visit_start_datetime,Start Date and Time of Visit,Start date/time of the visit,C83436,,,No,No,Yes,No,3,Yes,TIMING,DATETIME,
+SubjectVisit,visit_end_datetime,End Date and Time of Visit,End date/time of the visit,C83435,,,No,No,Yes,No,4,Yes,TIMING,DATETIME,
+SubjectVisit,description_of_unplanned_visit,Description of Unplanned Visit,Description of unplanned visit,C88009,,,No,No,Yes,No,5,Yes,SYNOQUAL,TEXT,

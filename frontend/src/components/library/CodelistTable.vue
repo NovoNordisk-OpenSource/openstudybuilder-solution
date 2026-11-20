@@ -111,6 +111,9 @@
     <template #[`item.name.template_parameter`]="{ item }">
       {{ $filters.yesno(item.name.template_parameter) }}
     </template>
+    <template #[`item.name.is_ordinal`]="{ item }">
+      {{ $filters.yesno(item.name.is_ordinal) }}
+    </template>
     <template #[`item.name.status`]="{ item }">
       <StatusChip :status="item.name.status" />
     </template>
@@ -236,6 +239,7 @@ const headers = ref([
     title: t('CtCatalogueTable.template_parameter'),
     key: 'name.template_parameter',
   },
+  { title: t('CodeListDetail.is_ordinal'), key: 'name.is_ordinal' },
   { title: t('CtCatalogueTable.cd_status'), key: 'name.status' },
   { title: t('CtCatalogueTable.modified_name'), key: 'name.start_date' },
   { title: t('CtCatalogueTable.concept_id'), key: 'codelist_uid' },

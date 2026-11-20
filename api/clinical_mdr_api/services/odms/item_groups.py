@@ -25,7 +25,7 @@ from common.exceptions import BusinessLogicException, NotFoundException
 from common.utils import strtobool
 
 
-class OdmItemGroupService(OdmGenericService[OdmItemGroupAR]):
+class OdmItemGroupService(OdmGenericService[OdmItemGroupAR, OdmItemGroup]):
     aggregate_class = OdmItemGroupAR
     version_class = OdmItemGroupVersion
     repository_interface = ItemGroupRepository
@@ -43,6 +43,9 @@ class OdmItemGroupService(OdmGenericService[OdmItemGroupAR]):
             ),
             find_odm_vendor_attribute_by_uid_with_odm_element_relation=(
                 self._repos.odm_vendor_attribute_repository.find_by_uid_with_odm_element_relation
+            ),
+            find_odm_vendor_element_attribute_by_uid_with_odm_element_relation=(
+                self._repos.odm_vendor_attribute_repository.find_element_attribute_by_uid_with_odm_element_relation
             ),
         )
 

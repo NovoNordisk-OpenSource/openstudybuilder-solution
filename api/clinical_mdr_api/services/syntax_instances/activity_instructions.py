@@ -34,15 +34,14 @@ class ActivityInstructionService(
     ) -> ActivityInstruction:
         return ActivityInstruction.from_activity_instruction_ar(item_ar)
 
-    aggregate_class: (
-        type[ActivityInstructionAR] | type[ActivityInstructionPreInstanceAR]
-    ) = ActivityInstructionAR
-    repository_interface: (
-        type[ActivityInstructionRepository]
-        | type[ActivityInstructionPreInstanceRepository]
-    ) = ActivityInstructionRepository
+    aggregate_class: type[ActivityInstructionAR | ActivityInstructionPreInstanceAR] = (
+        ActivityInstructionAR
+    )
+    repository_interface: type[
+        ActivityInstructionRepository | ActivityInstructionPreInstanceRepository
+    ] = ActivityInstructionRepository
     template_repository_interface = ActivityInstructionTemplateRepository
     template_uid_property = "activity_instruction_template_uid"
-    version_class: (
-        type[ActivityInstructionVersion] | type[ActivityInstructionPreInstanceVersion]
-    ) = ActivityInstructionVersion
+    version_class: type[
+        ActivityInstructionVersion | ActivityInstructionPreInstanceVersion
+    ] = ActivityInstructionVersion

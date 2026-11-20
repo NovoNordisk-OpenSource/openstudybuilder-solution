@@ -175,9 +175,8 @@ class StudyDefinitionRepositoryFake(StudyDefinitionRepository):
     ) -> tuple[StudyDefinitionSnapshot | None, Any]:
         snapshot: StudyDefinitionSnapshot | None = self._simulated_db.find_by_id(uid)
         additional_closure: Any = None
-        if snapshot is not None:
-            if for_update:
-                additional_closure = copy.deepcopy(snapshot)
+        if snapshot is not None and for_update:
+            additional_closure = copy.deepcopy(snapshot)
         return snapshot, additional_closure
 
     def _save(
@@ -222,7 +221,7 @@ class StudyDefinitionRepositoryFake(StudyDefinitionRepository):
         everything: list[StudyDefinitionSnapshot] = list(
             self._simulated_db.get_all_instances()
         )
-        filtered_items = service_level_generic_filtering(
+        return service_level_generic_filtering(
             items=everything,
             filter_by=filter_by,
             sort_by=sort_by,
@@ -230,7 +229,6 @@ class StudyDefinitionRepositoryFake(StudyDefinitionRepository):
             page_number=page_number,
             page_size=page_size,
         )
-        return filtered_items
 
     def generate_uid(self) -> str:
         return random_str()
@@ -308,7 +306,7 @@ class StudyDefinitionRepositoryFake(StudyDefinitionRepository):
 
 
 def _random_study_number() -> str:
-    choice = [str(_) for _ in range(0, 10)]
+    choice = [str(_) for _ in range(10)]
     return (
         random.choice(choice)
         + random.choice(choice)
@@ -403,8 +401,6 @@ class TestStudyDefinitionsRepositoryBase(unittest.TestCase):
             initial_id_metadata=new_id_metadata,
             project_exists_callback=lambda _: True,
             study_number_exists_callback=lambda _x, y: False,
-            study_title_exists_callback=lambda _, study_number: False,
-            study_short_title_exists_callback=lambda _, study_number: False,
             author_id=random_str(),
         )
 
@@ -420,8 +416,6 @@ class TestStudyDefinitionsRepositoryBase(unittest.TestCase):
         study = TestStudyDefinitionsRepositoryBase.create_random_study()
         while random.random() > 0.2:
             study.edit_metadata(
-                study_title_exists_callback=lambda _, study_number: False,
-                study_short_title_exists_callback=lambda _, study_number: False,
                 new_study_description=StudyDescriptionVO.from_input_values(
                     study_title="new_study_title", study_short_title="study_short_title"
                 ),
@@ -439,8 +433,6 @@ class TestStudyDefinitionsRepositoryBase(unittest.TestCase):
                 TestStudyDefinitionsRepositoryBase.make_random_study_edit(study)
             else:
                 study.edit_metadata(
-                    study_title_exists_callback=lambda _, study_number: False,
-                    study_short_title_exists_callback=lambda _, study_number: False,
                     new_study_description=StudyDescriptionVO.from_input_values(
                         study_title="new_study_title",
                         study_short_title="study_short_title",
@@ -453,7 +445,7 @@ class TestStudyDefinitionsRepositoryBase(unittest.TestCase):
     def test__save__new_instance__results(self):
         test_data = [
             TestStudyDefinitionsRepositoryBase.prepare_random_study()
-            for _ in range(0, 100)
+            for _ in range(100)
         ]
         test_db = StudyDefinitionsDBFake()
         for test_study in test_data:
@@ -475,7 +467,7 @@ class TestStudyDefinitionsRepositoryBase(unittest.TestCase):
     def test__save__modified_instance__results(self):
         test_data = [
             TestStudyDefinitionsRepositoryBase.prepare_random_study()
-            for _ in range(0, 100)
+            for _ in range(100)
         ]
         test_db = StudyDefinitionsDBFake()
         for item in test_data:
@@ -511,7 +503,7 @@ class TestStudyDefinitionsRepositoryBase(unittest.TestCase):
     def test__get_all__results(self):
         test_data = [
             TestStudyDefinitionsRepositoryBase.prepare_random_study()
-            for _ in range(0, 100)
+            for _ in range(100)
         ]
         test_db = StudyDefinitionsDBFake()
         for item in test_data:

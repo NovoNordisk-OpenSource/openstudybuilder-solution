@@ -18,7 +18,7 @@ from clinical_mdr_api.models.dictionaries.dictionary_term import (
 )
 from clinical_mdr_api.models.utils import GenericFilteringReturn
 from clinical_mdr_api.repositories._utils import FilterOperator
-from clinical_mdr_api.services._meta_repository import MetaRepository  # type: ignore
+from clinical_mdr_api.services._meta_repository import MetaRepository
 from clinical_mdr_api.services._utils import (
     calculate_diffs,
     fill_missing_values_in_base_model_from_reference_base_model,
@@ -144,7 +144,7 @@ class DictionaryTermGenericService(ABC):
                 msg=f"Invalid field name specified in the filter dictionary : {field_name}"
             )
 
-        header_values = self.repository.get_distinct_headers(
+        return self.repository.get_distinct_headers(
             codelist_uid=codelist_uid,
             field_name=field_name,
             search_string=search_string,
@@ -152,7 +152,6 @@ class DictionaryTermGenericService(ABC):
             filter_operator=filter_operator,
             page_size=page_size,
         )
-        return header_values
 
     @db.transaction
     def get_by_uid(self, term_uid: str) -> DictionaryTerm:
@@ -193,14 +192,14 @@ class DictionaryTermGenericService(ABC):
     def create(self, term_input: BaseModel) -> BaseModel:
         BusinessLogicException.raise_if_not(
             self._repos.dictionary_codelist_generic_repository.codelist_exists(
-                normalize_string(term_input.codelist_uid)  # type: ignore[arg-type]
+                normalize_string(term_input.codelist_uid)
             ),
             msg=f"Dictionary Codelist with UID '{term_input.codelist_uid}' doesn't exist.",
         )
 
         BusinessLogicException.raise_if_not(
             self._repos.library_repository.library_exists(
-                normalize_string(term_input.library_name)  # type: ignore[arg-type]
+                normalize_string(term_input.library_name)
             ),
             msg=f"Library with Name '{term_input.library_name}' doesn't exist.",
         )

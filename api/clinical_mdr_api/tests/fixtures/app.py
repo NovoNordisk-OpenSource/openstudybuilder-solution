@@ -34,5 +34,4 @@ def api_client(main_app, request) -> TestClient:
 
 @pytest.fixture(scope="session")
 def openapi_schema(main_app) -> dict[str, Any]:
-    schema = get_openapi(title="test", version="test", routes=main_app.routes)
-    return schema
+    return get_openapi(title="test", version="test", routes=main_app.routes)

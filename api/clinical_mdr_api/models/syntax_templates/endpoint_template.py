@@ -196,25 +196,6 @@ class EndpointTemplateVersion(EndpointTemplate):
     changes: list[str] = Field(description=CHANGES_FIELD_DESC, default_factory=list)
 
 
-class EndpointTemplatePreValidateInput(PostInputModel):
-    name: Annotated[
-        str,
-        Field(
-            description="The actual value/content. It may include parameters referenced by simple strings in square brackets [].",
-            min_length=1,
-            json_schema_extra={"format": "html"},
-        ),
-    ]
-    guidance_text: Annotated[
-        str | None,
-        Field(
-            description="Optional guidance text for using the template.",
-            min_length=1,
-            json_schema_extra={"format": "html"},
-        ),
-    ] = None
-
-
 class EndpointTemplateCreateInput(PostInputModel):
     name: Annotated[
         str,

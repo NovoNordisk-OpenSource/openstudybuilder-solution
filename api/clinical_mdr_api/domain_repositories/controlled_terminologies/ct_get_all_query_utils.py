@@ -5,6 +5,7 @@ Utility module to store the common parts of terms get all and specific term get 
 from typing import Any
 
 from clinical_mdr_api.domains.controlled_terminologies.ct_codelist_attributes import (
+    DEFAULT_CODELIST_TYPE,
     CTCodelistAttributesAR,
     CTCodelistAttributesVO,
 )
@@ -166,7 +167,7 @@ def create_term_name_aggregate_instances_from_cypher_result(
             name=term_dict.get(f"value_node{specific_suffix}").get("name"),
         )
 
-    term_name_ar = CTTermNameAR.from_repository_values(
+    return CTTermNameAR.from_repository_values(
         uid=term_dict["term_uid"],
         ct_term_name_vo=CTTermNameVO.from_repository_values(
             name=term_dict.get(f"value_node{specific_suffix}").get("name"),
@@ -228,8 +229,6 @@ def create_term_name_aggregate_instances_from_cypher_result(
         ),
     )
 
-    return term_name_ar
-
 
 def create_term_attributes_aggregate_instances_from_cypher_result(
     term_dict: dict[str, Any], is_aggregated_query: bool = False
@@ -248,7 +247,7 @@ def create_term_attributes_aggregate_instances_from_cypher_result(
     rel_data = term_dict[f"rel_data{specific_suffix}"]
     major, minor = rel_data.get("version").split(".")
 
-    term_attributes_ar = CTTermAttributesAR.from_repository_values(
+    return CTTermAttributesAR.from_repository_values(
         uid=term_dict["term_uid"],
         ct_term_attributes_vo=CTTermAttributesVO.from_repository_values(
             concept_id=term_dict.get(f"value_node{specific_suffix}").get("concept_id"),
@@ -257,6 +256,7 @@ def create_term_attributes_aggregate_instances_from_cypher_result(
             ),
             definition=term_dict.get(f"value_node{specific_suffix}").get("definition"),
             catalogue_names=term_dict["catalogue_names"],
+            algorithm=term_dict.get(f"value_node{specific_suffix}").get("algorithm"),
         ),
         library=(
             LibraryVO.from_input_values_2(
@@ -279,8 +279,6 @@ def create_term_attributes_aggregate_instances_from_cypher_result(
             minor_version=int(minor),
         ),
     )
-
-    return term_attributes_ar
 
 
 def create_term_codelist_vos_from_cypher_result(term_dict: dict[str, Any]) -> CTTermVO:
@@ -351,6 +349,7 @@ def format_term_filter_sort_keys(key: str, prefix: str | None = None) -> str:
         "cardinality",
         "notes",
         "short_code",
+        "algorithm",
     ]:
         parsed_key = key.replace("sponsor_preferred_", "")
         return (
@@ -377,7 +376,7 @@ def format_term_filter_sort_keys(key: str, prefix: str | None = None) -> str:
     ]:
         return f"rel_data_{prefix}.{key}" if prefix else f"rel_data.{key}"
     # Nested field names -> recursive call with prefix
-    if key.startswith("name.") or key.startswith("attributes."):
+    if key.startswith(("name.", "attributes.")):
         prefix = key.split(".", maxsplit=1)[0]
         suffix = key.split(".")[1]
         if suffix == "order":
@@ -410,7 +409,7 @@ def _parse_target_model_items(
         if (
             get_field_type(attr_desc.annotation) is str
             and get_sub_fields(attr_desc) is None
-            and attribute not in ["possible_actions"]
+            and attribute != "possible_actions"
             and not jse.get("remove_from_wildcard", False)
         ):
             output.append(format_term_filter_sort_keys(attribute, prefix))
@@ -496,14 +495,16 @@ def create_codelist_name_aggregate_instances_from_cypher_result(
 
     rel_data = codelist_dict[f"rel_data{specific_suffix}"]
     major, minor = rel_data.get("version").split(".")
+    value_node = codelist_dict.get(f"value_node{specific_suffix}")
 
-    codelist_name_ar = CTCodelistNameAR.from_repository_values(
+    return CTCodelistNameAR.from_repository_values(
         uid=codelist_dict["codelist_uid"],
         ct_codelist_name_vo=CTCodelistNameVO.from_repository_values(
-            name=codelist_dict.get(f"value_node{specific_suffix}").get("name"),
+            name=value_node.get("name"),
             catalogue_names=codelist_dict["catalogue_names"],
-            is_template_parameter="TemplateParameter"
-            in codelist_dict.get(f"value_node{specific_suffix}").labels,
+            is_template_parameter="TemplateParameter" in value_node.labels,
+            is_ordinal=bool(value_node.get("is_ordinal")),
+            codelist_type=value_node.get("codelist_type") or DEFAULT_CODELIST_TYPE,
         ),
         library=LibraryVO.from_input_values_2(
             library_name=codelist_dict["library_name"],
@@ -525,8 +526,6 @@ def create_codelist_name_aggregate_instances_from_cypher_result(
         ),
     )
 
-    return codelist_name_ar
-
 
 def create_codelist_attributes_aggregate_instances_from_cypher_result(
     codelist_dict: dict[str, Any], is_aggregated_query: bool = False
@@ -546,7 +545,7 @@ def create_codelist_attributes_aggregate_instances_from_cypher_result(
     rel_data = codelist_dict[f"rel_data{specific_suffix}"]
     major, minor = rel_data.get("version").split(".")
 
-    codelist_attributes_ar = CTCodelistAttributesAR.from_repository_values(
+    return CTCodelistAttributesAR.from_repository_values(
         uid=codelist_dict["codelist_uid"],
         ct_codelist_attributes_vo=CTCodelistAttributesVO.from_repository_values(
             name=codelist_dict.get(f"value_node{specific_suffix}").get("name"),
@@ -585,8 +584,6 @@ def create_codelist_attributes_aggregate_instances_from_cypher_result(
             minor_version=int(minor),
         ),
     )
-
-    return codelist_attributes_ar
 
 
 def format_codelist_filter_sort_keys(key: str, prefix: str | None = None) -> str:
@@ -637,7 +634,7 @@ def format_codelist_filter_sort_keys(key: str, prefix: str | None = None) -> str
     ]:
         return f"rel_data_{prefix}.{key}" if prefix else f"rel_data.{key}"
     # Nested field names -> recursive call with prefix
-    if key.startswith("name.") or key.startswith("attributes."):
+    if key.startswith(("name.", "attributes.")):
         prefix = key.split(".", maxsplit=1)[0]
         suffix = key.split(".")[1]
         return format_codelist_filter_sort_keys(suffix, prefix)
@@ -692,7 +689,7 @@ def _parse_target_model_items_codelist(
         if (
             get_field_type(attr_desc.annotation) is str
             and get_sub_fields(attr_desc) is None
-            and attribute not in ["possible_actions"]
+            and attribute != "possible_actions"
             and not jse.get("remove_from_wildcard", False)
         ):
             if transform:

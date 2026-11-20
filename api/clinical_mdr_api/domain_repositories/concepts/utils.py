@@ -19,7 +19,7 @@ def list_concept_wildcard_properties(
         jse = attr_desc.json_schema_extra or {}
         if (
             get_field_type(attr_desc.annotation) is str
-            and attribute not in ["possible_actions"]
+            and attribute != "possible_actions"
             # remove fields that shouldn't be included in wildcard filter
             and not jse.get("remove_from_wildcard", False)
         ):

@@ -230,6 +230,7 @@ def get_study_visits(
             study_visit.uid AS uid,
             study_visit.unique_visit_number AS unique_visit_number,
             study_visit.visit_number AS visit_number,
+            study_visit.order AS order,
             study_visit.short_visit_label AS visit_short_name,
             study_visit.visit_window_min AS visit_window_min,
             study_visit.visit_window_max AS visit_window_max,
@@ -249,7 +250,8 @@ def get_study_visits(
             time_unit_unit_definition_value.conversion_factor_to_master AS time_unit_conversion_factor_to_master,
             time_value_root.uid AS time_value_uid,
             time_value_value.value AS time_value_value,
-            time_ref_ct_term_name_value.name AS time_reference_name
+            time_ref_ct_term_name_value.name AS time_reference_name,
+            study_visit.expected_time_value AS expected_time_value
         RETURN *
         """
 
@@ -269,6 +271,27 @@ def get_study_visits(
         ]
     )
     return query(full_query, params)
+
+
+def get_study_manual_visit_mode(
+    study_uid: str, study_version_number: str | None = None
+) -> bool:
+    """Returns True if the given study version is in manual visit mode"""
+
+    params = {
+        "study_uid": study_uid,
+        "study_version_number": study_version_number,
+        "field_name": settings.study_field_manual_visit_mode,
+    }
+    base_query = get_base_query_for_study_root_and_value(study_version_number)
+    full_query = f"""
+        {base_query}
+        OPTIONAL MATCH (study_value)-[:HAS_BOOLEAN_FIELD]->(field:StudyBooleanField {{field_name: $field_name}})
+        RETURN coalesce(field.value, false) AS manual_visit_mode
+        """
+
+    res = query(full_query, params)
+    return bool(res and res[0]["manual_visit_mode"])
 
 
 def get_study_activities(
@@ -527,7 +550,7 @@ def get_study_operational_soa(
     page_size: int = 10,
     page_number: int = 1,
     study_version_number: str | None = None,
-    include_unscheduled_activities: bool = False,
+    include_unscheduled_activities: bool = True,
 ) -> list[dict[Any, Any]]:
     validate_page_number_and_page_size(page_number, page_size)
 
@@ -542,6 +565,12 @@ def get_study_operational_soa(
         OPTIONAL MATCH (study_activity)-[:STUDY_ACTIVITY_HAS_SCHEDULE]->(study_activity_schedule:StudyActivitySchedule)<-[:HAS_STUDY_ACTIVITY_SCHEDULE]-(study_value),
             (study_activity_schedule)<-[:STUDY_VISIT_HAS_SCHEDULE]-(study_visit:StudyVisit)<-[:HAS_STUDY_VISIT]-(study_value)
         OPTIONAL MATCH (study_visit)<-[:STUDY_EPOCH_HAS_STUDY_VISIT]-(study_epoch:StudyEpoch)<-[:HAS_STUDY_EPOCH]-(study_value)
+        WITH hv, study_root, study_value, study_activity, study_activity_instance, study_visit, study_epoch
+        WHERE study_visit IS NOT NULL
+            OR EXISTS {
+                MATCH (study_activity_instance)-[:HAS_SELECTED_ACTIVITY_INSTANCE]->(topic_code_instance:ActivityInstanceValue)
+                WHERE trim(topic_code_instance.topic_code) <> ''
+            }
         """
     else:
         base_query += """
@@ -1003,6 +1032,62 @@ def _get_study_arms_for_listing(
             }
         )
     return arms
+
+
+def _get_study_auxiliary_devices_for_listing(
+    project_id: str,
+    study_number: str,
+    subpart_acronym: str | None,
+    study_value_version: str,
+) -> list[dict[str, Any]]:
+    """
+    Return study auxiliary devices for the given study value.
+    """
+    params = {
+        "project": project_id,
+        "study_number": study_number,
+        "subpart": subpart_acronym,
+        "study_version_number": study_value_version,
+    }
+    full_query = get_base_query_for_study_root_and_value_with_study_id(
+        study_version_number=study_value_version, subpart=subpart_acronym
+    )
+    full_query += common_queries.study_standard_version_ct_terms_datetime
+    full_query += """
+        MATCH (study_value)-[:HAS_STUDY_AUXILIARY_DEVICE]->(sad:StudyAuxiliaryDevice)
+            -[:HAS_AUXILIARY_DEVICE]->(device_ctx:CTTermContext)-[:HAS_SELECTED_TERM]->
+            (dev_root:CTTermRoot)
+    """
+    full_query += _build_ct_term_with_codelist_cypher(
+        root="dev_root", value="device", context="device_ctx"
+    )
+    # mirrors the attr_value pick in common/queries.py; move algorithm
+    # into that shared map if a second listing needs it
+    full_query += """
+        CALL {
+            WITH dev_root, ct_terms_datetime
+            OPTIONAL MATCH (dev_root)-[:HAS_ATTRIBUTES_ROOT]->(:CTTermAttributesRoot)
+                -[av:HAS_VERSION]->(attr:CTTermAttributesValue)
+            WHERE av.status IN ['Final', 'Retired']
+            RETURN attr.algorithm AS algorithm
+            ORDER BY (ct_terms_datetime IS NULL OR av.start_date <= ct_terms_datetime
+                AND (av.end_date IS NULL OR av.end_date > ct_terms_datetime)) DESC,
+                av.start_date DESC
+            LIMIT 1
+        }
+        WITH sad, device, algorithm
+        ORDER BY sad.order
+        RETURN sad.uid AS uid, sad.order AS order, device, algorithm
+    """
+    return [
+        {
+            "uid": row.get("uid") or "",
+            "order": row.get("order") or 0,
+            "device": _ct_term_dict_from_query_result(row.get("device")),
+            "algorithm": row.get("algorithm"),
+        }
+        for row in query(full_query, params)
+    ]
 
 
 def _get_study_branch_arms_for_listing(
@@ -1804,9 +1889,9 @@ def _get_study_type_for_listing(
     """
     Return study type (high-level study design) for the given study value.
     Returns None if no study value; otherwise a dict with stype, stype_nf,
-    trial_type, trial_type_nf, phase, phase_nf, extension, extension_nf,
-    adaptive, adaptive_nf, stop_rule, stop_rule_nf, confirmed_res_min_dur,
-    confirmed_res_min_dur_nf, post_auth, post_auth_nf.
+    trial_type, trial_type_nf, phase, phase_nf, age_bl_rule, age_grp_rule,
+    extension, extension_nf, adaptive, adaptive_nf, stop_rule, stop_rule_nf,
+    confirmed_res_min_dur, confirmed_res_min_dur_nf, post_auth, post_auth_nf.
     """
     params = {
         "project": project_id,
@@ -1844,6 +1929,15 @@ def _get_study_type_for_listing(
         "phase_nf",
         bound_field_var=phase_alias,
     )
+    # Age rules have no reason-for-missing field, so no null flavor resolution.
+    age_bl_cypher, _ = _resolve_ct_term_name_root(
+        "study_value", "age_at_baseline_rule_code", "age_bl"
+    )
+    full_query += age_bl_cypher
+    age_grp_cypher, _ = _resolve_ct_term_name_root(
+        "study_value", "age_group_rule_code", "age_grp"
+    )
+    full_query += age_grp_cypher
     full_query += _resolve_ct_null_flavor_root(
         "study_value",
         "HAS_ARRAY_FIELD",
@@ -1919,6 +2013,12 @@ def _get_study_type_for_listing(
         root="ct_root_phase_nf", value="ct_phase_nf", context="ctx_phase_nf"
     )
     full_query += _build_ct_term_with_codelist_cypher(
+        root="ct_root_age_bl", value="ct_age_bl", context="ctx_age_bl"
+    )
+    full_query += _build_ct_term_with_codelist_cypher(
+        root="ct_root_age_grp", value="ct_age_grp", context="ctx_age_grp"
+    )
+    full_query += _build_ct_term_with_codelist_cypher(
         root="ct_root_trial_type_nf",
         value="ct_trial_type_nf",
         context="ctx_trial_type_nf",
@@ -1946,6 +2046,8 @@ def _get_study_type_for_listing(
             CASE WHEN ct_stype_nf.term_uid IS NULL OR ct_stype_nf.term_uid = '' THEN null ELSE ct_stype_nf END AS stype_nf,
             CASE WHEN ct_phase.term_uid IS NULL OR ct_phase.term_uid = '' THEN null ELSE ct_phase END AS phase,
             CASE WHEN ct_phase_nf.term_uid IS NULL OR ct_phase_nf.term_uid = '' THEN null ELSE ct_phase_nf END AS phase_nf,
+            CASE WHEN ct_age_bl.term_uid IS NULL OR ct_age_bl.term_uid = '' THEN null ELSE ct_age_bl END AS age_bl_rule,
+            CASE WHEN ct_age_grp.term_uid IS NULL OR ct_age_grp.term_uid = '' THEN null ELSE ct_age_grp END AS age_grp_rule,
             CASE WHEN ct_trial_type_nf.term_uid IS NULL OR ct_trial_type_nf.term_uid = '' THEN null ELSE ct_trial_type_nf END AS trial_type_nf,
             CASE WHEN ct_stop_rule_nf.term_uid IS NULL OR ct_stop_rule_nf.term_uid = '' THEN null ELSE ct_stop_rule_nf END AS stop_rule_nf,
             CASE WHEN ct_extension_nf.term_uid IS NULL OR ct_extension_nf.term_uid = '' THEN null ELSE ct_extension_nf END AS extension_nf,
@@ -1957,7 +2059,8 @@ def _get_study_type_for_listing(
             CASE WHEN sbf_ext.value = true THEN 'Y' WHEN sbf_ext.value = false THEN 'N' ELSE '' END AS extension,
             CASE WHEN sbf_adapt.value = true THEN 'Y' WHEN sbf_adapt.value = false THEN 'N' ELSE '' END AS adaptive,
             CASE WHEN sbf_pa.value = true THEN 'Y' WHEN sbf_pa.value = false THEN 'N' ELSE '' END AS post_auth
-        RETURN stype, stype_nf, phase, phase_nf, trial_type_nf, extension, extension_nf,
+        RETURN stype, stype_nf, phase, phase_nf, age_bl_rule, age_grp_rule,
+            trial_type_nf, extension, extension_nf,
             adaptive, adaptive_nf, stop_rule, stop_rule_nf, confirmed_res_min_dur,
             confirmed_res_min_dur_nf, post_auth, post_auth_nf
     """
@@ -1979,6 +2082,8 @@ def _get_study_type_for_listing(
         "trial_type_nf": row.get("trial_type_nf"),
         "phase": row.get("phase"),
         "phase_nf": row.get("phase_nf"),
+        "age_bl_rule": row.get("age_bl_rule"),
+        "age_grp_rule": row.get("age_grp_rule"),
         "extension": (row.get("extension") or "").strip(),
         "extension_nf": row.get("extension_nf"),
         "adaptive": (row.get("adaptive") or "").strip(),
@@ -2021,6 +2126,22 @@ def _get_study_intent_list_for_listing(
         subpart_acronym=subpart_acronym,
         study_value_version=study_value_version,
         field_name="trial_intent_types_codes",
+    )
+
+
+def _get_control_type_list_for_listing(
+    project_id: str,
+    study_number: str,
+    subpart_acronym: str | None,
+    study_value_version: str,
+) -> list[dict[str, Any]]:
+    """Resolve control_type_codes array to list of CTTermWithCodelistAndConflictFlag-like dicts."""
+    return _get_multiselect_ct_list_for_listing(
+        project_id=project_id,
+        study_number=study_number,
+        subpart_acronym=subpart_acronym,
+        study_value_version=study_value_version,
+        field_name="control_type_codes",
     )
 
 
@@ -2145,17 +2266,12 @@ def _get_study_attributes_for_listing(
         "add_on_nf",
         bound_field_var="sbf_addon",
     )
-    control_type_cypher, control_type_alias = _resolve_ct_term_name_root(
-        "study_value", "control_type_code", "control_type"
-    )
-    full_query += control_type_cypher
     full_query += _resolve_ct_null_flavor_root(
         "study_value",
-        "HAS_TEXT_FIELD",
-        "StudyTextField",
-        "control_type_code",
+        "HAS_ARRAY_FIELD",
+        "StudyArrayField",
+        "control_type_codes",
         "control_type_nf",
-        bound_field_var=control_type_alias,
     )
     intv_model_cypher, intv_model_alias = _resolve_ct_term_name_root(
         "study_value", "intervention_model_code", "intv_model"
@@ -2231,9 +2347,6 @@ def _get_study_attributes_for_listing(
         root="ct_root_add_on_nf", value="ct_add_on_nf", context="ctx_add_on_nf"
     )
     full_query += _build_ct_term_with_codelist_cypher(
-        root="ct_root_control_type", value="ct_control_type", context="ctx_control_type"
-    )
-    full_query += _build_ct_term_with_codelist_cypher(
         root="ct_root_control_type_nf",
         value="ct_control_type_nf",
         context="ctx_control_type_nf",
@@ -2275,7 +2388,6 @@ def _get_study_attributes_for_listing(
             CASE WHEN ct_intv_type.term_uid IS NULL OR ct_intv_type.term_uid = '' THEN null ELSE ct_intv_type END AS intv_type,
             CASE WHEN ct_intv_type_nf.term_uid IS NULL OR ct_intv_type_nf.term_uid = '' THEN null ELSE ct_intv_type_nf END AS intv_type_nf,
             CASE WHEN ct_add_on_nf.term_uid IS NULL OR ct_add_on_nf.term_uid = '' THEN null ELSE ct_add_on_nf END AS add_on_nf,
-            CASE WHEN ct_control_type.term_uid IS NULL OR ct_control_type.term_uid = '' THEN null ELSE ct_control_type END AS control_type,
             CASE WHEN ct_control_type_nf.term_uid IS NULL OR ct_control_type_nf.term_uid = '' THEN null ELSE ct_control_type_nf END AS control_type_nf,
             CASE WHEN ct_intv_model.term_uid IS NULL OR ct_intv_model.term_uid = '' THEN null ELSE ct_intv_model END AS intv_model,
             CASE WHEN ct_intv_model_nf.term_uid IS NULL OR ct_intv_model_nf.term_uid = '' THEN null ELSE ct_intv_model_nf END AS intv_model_nf,
@@ -2289,7 +2401,7 @@ def _get_study_attributes_for_listing(
             COALESCE(stf_pl.value, '') AS planned_length,
             CASE WHEN sbf_addon.value = true THEN 'Y' WHEN sbf_addon.value = false THEN 'N' ELSE '' END AS add_on,
             CASE WHEN sbf_rand.value = true THEN 'Y' WHEN sbf_rand.value = false THEN 'N' ELSE '' END AS randomised
-        RETURN intv_type, intv_type_nf, add_on, add_on_nf, control_type, control_type_nf,
+        RETURN intv_type, intv_type_nf, add_on, add_on_nf, control_type_nf,
             intv_model, intv_model_nf, randomised, randomised_nf, strata, strata_nf,
             blinding, blinding_nf, planned_length, planned_length_nf, study_intent_nf
     """
@@ -2303,12 +2415,18 @@ def _get_study_attributes_for_listing(
         subpart_acronym=subpart_acronym,
         study_value_version=study_value_version,
     )
+    control_type = _get_control_type_list_for_listing(
+        project_id=project_id,
+        study_number=study_number,
+        subpart_acronym=subpart_acronym,
+        study_value_version=study_value_version,
+    )
     return {
         "intv_type": row.get("intv_type"),
         "intv_type_nf": row.get("intv_type_nf"),
         "add_on": (row.get("add_on") or "").strip(),
         "add_on_nf": row.get("add_on_nf"),
-        "control_type": row.get("control_type"),
+        "control_type": control_type,
         "control_type_nf": row.get("control_type_nf"),
         "intv_model": row.get("intv_model"),
         "intv_model_nf": row.get("intv_model_nf"),
@@ -2667,7 +2785,7 @@ def get_study_metadata_listing(
             subpart=subpart_acronym,
         )
     request_dt = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%S")
-    specified_dt = datetime_value if datetime_value else ""
+    specified_dt = datetime_value or ""
     api_version = "v1"
     params = {
         "project": project_id,
@@ -2723,6 +2841,12 @@ def get_study_metadata_listing(
         study_value_version=selected_study_value_version,
     )
     branches = _get_study_branch_arms_for_listing(
+        project_id=project_id,
+        study_number=study_number,
+        subpart_acronym=subpart_acronym,
+        study_value_version=selected_study_value_version,
+    )
+    auxiliary_devices = _get_study_auxiliary_devices_for_listing(
         project_id=project_id,
         study_number=study_number,
         subpart_acronym=subpart_acronym,
@@ -2824,6 +2948,7 @@ def get_study_metadata_listing(
         "criteria": criteria,
         "objectives": objectives,
         "endpoints": endpoints,
+        "auxiliary_devices": auxiliary_devices,
     }
     return models.StudyMetadataListingModel(**payload)
 
@@ -3481,7 +3606,7 @@ def get_library_activity_item_classes(
             concept_value.definition AS definition,
             concept_value.nci_concept_id AS nci_concept_id,
             concept_value.nci_concept_name AS nci_concept_name,
-            concept_value.display_name AS display_name,
+            concept_value.label AS label,
             concept_value.order AS order,
             last_version_rel.status AS status,
             last_version_rel.version AS version,
@@ -3557,6 +3682,241 @@ def get_nsv_xml_data_type_for_semtcdt_term(term_submission_value: str) -> str | 
     return rows[0]["nsv_xml_data_type"] if rows else None
 
 
+def _topic_cd_item_value(item_class_names_param: str, projection: str) -> str:
+    """
+    Cypher expression yielding ``projection`` for the Activity Item of the
+    activity instance ``value`` whose Activity Item Class name is in the list
+    parameter ``item_class_names_param`` (an instance holds at most one item
+    per class). Should several match, the alphabetically first value wins so
+    the result is deterministic.
+    """
+    return f"""head(apoc.coll.sort([
+                item_value IN [
+                    (value)-[:CONTAINS_ACTIVITY_ITEM]->(item:ActivityItem)
+                    <-[:HAS_ACTIVITY_ITEM]-(:ActivityItemClassRoot)
+                    -[:LATEST]->(item_class:ActivityItemClassValue)
+                    WHERE item_class.name IN {item_class_names_param}
+                    | {projection}
+                ] WHERE item_value IS NOT NULL
+            ]))"""
+
+
+_TERM_NAME_OF_ITEM = """head(apoc.coll.sort([
+                    (item)-[:HAS_CT_TERM]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(:CTTermRoot)
+                    -[:HAS_NAME_ROOT]->(:CTTermNameRoot)-[:LATEST]->(term_name:CTTermNameValue)
+                    | term_name.name
+                ]))"""
+
+_TERM_SUBMVAL_OF_ITEM = """head(apoc.coll.sort([
+                    (item)-[:HAS_CT_TERM]->(term_context:CTTermContext)
+                    -[:HAS_SELECTED_CODELIST]->(:CTCodelistRoot)
+                    -[codelist_term_rel:HAS_TERM]->(codelist_term:CTCodelistTerm)
+                    -[:HAS_TERM_ROOT]->(:CTTermRoot)<-[:HAS_SELECTED_TERM]-(term_context)
+                    WHERE codelist_term_rel.end_date IS NULL
+                    | codelist_term.submission_value
+                ]))"""
+
+_CODELIST_SUBMVAL_OF_ITEM = """head(apoc.coll.sort([
+                    (item)-[:HAS_CODELIST]->(:CTCodelistRoot)
+                    -[:HAS_ATTRIBUTES_ROOT]->(:CTCodelistAttributesRoot)
+                    -[:LATEST]->(codelist_attrs:CTCodelistAttributesValue)
+                    | codelist_attrs.submission_value
+                ]))"""
+
+_UNIT_NAME_OF_ITEM = """head(apoc.coll.sort([
+                    (item)-[:HAS_UNIT_DEFINITION]->(:UnitDefinitionRoot)
+                    -[:LATEST]->(unit:UnitDefinitionValue)
+                    | unit.name
+                ]))"""
+
+
+_DOMAIN_CLASS_LEVEL = 2
+_SUB_DOMAIN_CLASS_LEVEL = 3
+
+
+# Cypher expression yielding [level, name] pairs of the Activity Instance
+# Classes the activity instance `value` is classified under: the classes its
+# Activity Items' Item Classes are attached to (HAS_ITEM_CLASS) plus their
+# PARENT_CLASS ancestors, restricted to the instance's own class lineage so
+# Item Classes shared across sibling branches (e.g. `location`) cannot pull in
+# an unrelated Finding/Event/Intervention class. Level 2 holds the general
+# domain (Finding, Event, Intervention), level 3 the sub domain
+# (NumericFindings, ...).
+_INSTANCE_CLASS_LEVELS_CYPHER = """[
+                (value)-[:CONTAINS_ACTIVITY_ITEM]->(:ActivityItem)
+                <-[:HAS_ACTIVITY_ITEM]-(:ActivityItemClassRoot)
+                <-[:HAS_ITEM_CLASS]-(:ActivityInstanceClassRoot)
+                -[:PARENT_CLASS*0..]->(class_root:ActivityInstanceClassRoot)
+                -[:LATEST]->(class_value:ActivityInstanceClassValue)
+                WHERE class_value.level IN [$domain_class_level, $sub_domain_class_level]
+                    AND EXISTS {
+                        (value)-[:ACTIVITY_INSTANCE_CLASS]->(:ActivityInstanceClassRoot)
+                        -[:PARENT_CLASS*0..]->(class_root)
+                    }
+                | [class_value.level, class_value.name]
+            ]"""
+
+
+def _class_name_at_level(level_param: str) -> str:
+    return (
+        f"head(apoc.coll.sort([class_level IN class_levels "
+        f"WHERE class_level[0] = {level_param} | class_level[1]]))"
+    )
+
+
+def get_papillons_topic_cd_def(
+    sort_by: models.SortByPapillonsTopicCdDef = models.SortByPapillonsTopicCdDef.LB,
+    sort_order: models.SortOrder = models.SortOrder.ASC,
+    page_size: int = 10,
+    page_number: int = 1,
+    date_time: datetime | None = None,
+) -> list[dict[Any, Any]]:
+    """
+    Return the Papillons TOPIC_CD_DEF listing: one row per Activity Instance
+    in its latest Final version (or, if ``date_time`` is given, in the latest
+    Final version that had started by that moment).
+    """
+    validate_page_number_and_page_size(page_number, page_size)
+
+    params: dict[str, Any] = {
+        "category_item_classes": [
+            "finding_category",
+            "intervention_category",
+            "event_category",
+        ],
+        "subcategory_item_classes": [
+            "finding_subcategory",
+            "intervention_subcategory",
+            "event_subcategory",
+        ],
+        "response_item_classes": ["categoric_finding_original_result"],
+        "standard_unit_item_classes": ["standard_unit"],
+        "unit_dimension_item_classes": ["unit_dimension"],
+        "domain_class_level": _DOMAIN_CLASS_LEVEL,
+        "sub_domain_class_level": _SUB_DOMAIN_CLASS_LEVEL,
+    }
+    if date_time is None:
+        match_clause = """
+            MATCH (root:ActivityInstanceRoot)-[:LATEST_FINAL]->(value:ActivityInstanceValue)
+            CALL {
+                WITH root, value
+                MATCH (root)-[hv:HAS_VERSION]->(value)
+                WHERE hv.status = 'Final'
+                RETURN hv.version AS version, hv.status AS status
+                ORDER BY
+                    toInteger(split(hv.version, '.')[0]) DESC,
+                    toInteger(split(hv.version, '.')[1]) DESC
+                LIMIT 1
+            }
+        """
+    else:
+        params["date_time"] = date_time
+        match_clause = """
+            MATCH (root:ActivityInstanceRoot)
+            CALL {
+                WITH root
+                MATCH (root)-[hv:HAS_VERSION]->(value:ActivityInstanceValue)
+                WHERE hv.status = 'Final' AND hv.start_date <= $date_time
+                RETURN value, hv.version AS version, hv.status AS status
+                ORDER BY
+                    toInteger(split(hv.version, '.')[0]) DESC,
+                    toInteger(split(hv.version, '.')[1]) DESC
+                LIMIT 1
+            }
+        """
+
+    sort_clause = db_sort_clause(sort_by.value, sort_order.value)
+
+    # Only the sort keys are read before SKIP/LIMIT, so the expensive
+    # per-instance columns are computed for the requested page alone.
+    full_query = (
+        match_clause
+        + f"""
+        WITH
+            root.uid AS uid,
+            value,
+            version,
+            status,
+            value.name AS lb,
+            value.topic_code AS topic_cd,
+            value.adam_param_code AS short_topic_cd
+        {sort_clause}
+        {db_pagination_clause(page_size, page_number)}
+        WITH
+            uid,
+            value,
+            version,
+            status,
+            lb,
+            topic_cd,
+            short_topic_cd,
+            [
+                (value)-[:CONTAINS_ACTIVITY_ITEM]->(:ActivityItem)
+                -[:HAS_UNIT_DEFINITION]->(:UnitDefinitionRoot)
+                -[:LATEST]->(unit:UnitDefinitionValue)
+                | coalesce(unit.us_conventional_unit, false)
+            ] AS us_conventional_flags,
+            """
+        + _INSTANCE_CLASS_LEVELS_CYPHER
+        + """ AS class_levels
+        RETURN
+            uid,
+            lb,
+            topic_cd,
+            short_topic_cd,
+            value.legacy_description AS description,
+            value.molecular_weight AS molecular_weight,
+            value.value_sas_display_format AS sas_display_format,
+            """
+        + _class_name_at_level("$domain_class_level")
+        + """ AS general_domain_class,
+            """
+        + _class_name_at_level("$sub_domain_class_level")
+        + """ AS sub_domain_class,
+            CASE
+                WHEN value:CompoundValue THEN 'Compound'
+                WHEN value:LaboratoryActivityValue THEN 'LaboratoryActivity'
+                WHEN value:RatingScaleValue THEN 'RatingScale'
+                ELSE 'Other'
+            END AS sub_domain_type,
+            """
+        + _topic_cd_item_value(
+            "$category_item_classes",
+            "coalesce(" + _TERM_NAME_OF_ITEM + ", item.text_value)",
+        )
+        + """ AS cat,
+            """
+        + _topic_cd_item_value(
+            "$subcategory_item_classes",
+            "coalesce(" + _TERM_NAME_OF_ITEM + ", item.text_value)",
+        )
+        + """ AS sub_cat,
+            """
+        + _topic_cd_item_value("$response_item_classes", _CODELIST_SUBMVAL_OF_ITEM)
+        + """ AS catgo_resp_list,
+            CASE
+                WHEN size(us_conventional_flags) = 0 THEN null
+                ELSE true IN us_conventional_flags
+            END AS convert_to_us_conv_unit,
+            version,
+            status,
+            """
+        + _topic_cd_item_value("$standard_unit_item_classes", _UNIT_NAME_OF_ITEM)
+        + """ AS std_unit,
+            head([
+                (value)-[:ACTIVITY_INSTANCE_CLASS]->(:ActivityInstanceClassRoot)
+                -[:LATEST]->(class_value:ActivityInstanceClassValue)
+                | class_value.name
+            ]) AS topic_cd_type,
+            """
+        + _topic_cd_item_value("$unit_dimension_item_classes", _TERM_SUBMVAL_OF_ITEM)
+        + f""" AS unit_dimension
+        {sort_clause}
+        """
+    )
+    return query(full_query, params)
+
+
 def get_papillons_non_standard_variables() -> list[dict[Any, Any]]:
     """
     Return every Final Non-Standard Variable whose data type belongs to the
@@ -3604,7 +3964,7 @@ def get_papillons_non_standard_variables() -> list[dict[Any, Any]]:
         + """
         RETURN
             concept_value.code AS variable_name,
-            concept_value.display_name AS label,
+            concept_value.label AS label,
             concept_value.definition AS definition,
             nsv_xml_data_type,
             concept_value.length AS length,

@@ -129,6 +129,9 @@ def create_study(
     - The study ID is derived by the server as `{project_id}-{study_number}`
     and cannot be supplied by the caller.
 
+    - `title` is optional and is not required to be unique: several studies may
+    share the same title.
+
     <br/>
     Valid values for payload fields:
 
@@ -248,7 +251,14 @@ def get_study_visits(
     ]
 
     # Generate timeline to assign `visit_order` and `visit_number` to all study visits
-    BaseTimelineAR(study_uid=uid, _visits=items_all)._generate_timeline()
+    ordered_visits = BaseTimelineAR(
+        study_uid=uid, _visits=items_all
+    )._generate_timeline()
+
+    if DB.get_study_manual_visit_mode(
+        study_uid=uid, study_version_number=study_version_number
+    ):
+        models.StudyVisit.apply_manual_visit_order(ordered_visits)
 
     # Return the requested page of study visits
     items = items_all[(page_number - 1) * page_size : page_number * page_size]
@@ -502,13 +512,20 @@ def get_study_operational_soa(
     include_unscheduled_activities: Annotated[
         bool,
         Query(
-            description="If true, includes activities that are not scheduled to any visit.",
+            description="If true (default), also includes activity instances that are not scheduled to any visit, "
+            "provided they have a topic code. Their visit and epoch fields are null. "
+            "If false, only scheduled activity instances are returned.",
         ),
-    ] = False,
+    ] = True,
 ) -> PaginatedResponseWithStudyVersion[models.StudyOperationalSoA]:
     """
     Returns a paginated list of operational SoA items representing a point in the activities/visits matrix.
     SoA items are sorted by the specified sort criteria and order.
+
+    Activity instances that are not scheduled to any visit are included when they have a topic code
+    (their visit and epoch fields are null); use `include_unscheduled_activities=false` to exclude them.
+    Note that, unlike this endpoint, the detailed SoA endpoint excludes unscheduled
+    activities by default and does not filter on topic code.
 
     If `study_version_number` query parameter is provided, operational SoA
     associated with the specified study version will be returned.
@@ -901,6 +918,98 @@ def get_papillons_data_type_mapping(
     nsv_xml_term = DB.get_nsv_xml_data_type_for_semtcdt_term(semtcdt_term)
     return models.PapillonsNsvXmlDataTypeMapping(
         semtcdt_term=semtcdt_term, nsv_xml_term=nsv_xml_term
+    )
+
+
+# ISO 8601 date and time; a plain `datetime` type would also accept numbers such as
+# `0` as Unix timestamps. The timezone is optional here only so a missing one gets a
+# clear error message from `_parse_topic_cd_def_datetime`.
+TOPIC_CD_DEF_DATETIME_PATTERN = (
+    r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:\d{2})?$"
+)
+
+
+def _parse_topic_cd_def_datetime(value: str | None) -> datetime | None:
+    if value is None:
+        return None
+    try:
+        parsed = datetime.fromisoformat(value)
+    except ValueError as exc:
+        raise ValidationException(
+            msg=f"The datetime parameter is not a valid date and time: '{value}'"
+        ) from exc
+    ValidationException.raise_if(
+        parsed.tzinfo is None,
+        msg="The datetime parameter must include a timezone, e.g. 2021-01-01T09:00:00Z",
+    )
+    return parsed
+
+
+# GET endpoint to retrieve the Papillons TOPIC_CD_DEF listing
+@router.get(
+    "/papillons/topic-cd-def",
+    tags=["[V1] Papillons"],
+    dependencies=[security, rbac.LIBRARY_READ],
+    status_code=200,
+)
+def get_papillons_topic_cd_def(
+    request: Request,
+    sort_by: Annotated[
+        models.SortByPapillonsTopicCdDef, Query()
+    ] = models.SortByPapillonsTopicCdDef.LB,
+    sort_order: models.SortOrder = models.SortOrder.ASC,
+    page_size: Annotated[int, PAGE_SIZE_QUERY] = settings.page_size_100,
+    page_number: Annotated[
+        int, PAGE_NUMBER_QUERY
+    ] = settings.default_page_number_consumer_api,
+    date_time: Annotated[
+        str | None,
+        Query(
+            alias="datetime",
+            pattern=TOPIC_CD_DEF_DATETIME_PATTERN,
+            description="If specified, the latest Final version of each activity instance that "
+            "had started by this moment is returned; instances without a Final version by then "
+            "are omitted. Only the activity instance version is time-travelled: item classes, "
+            "terms, units and classes are read in their current state. "
+            "Format: YYYY-MM-DDThh:mm:ssZ (timezone required). "
+            "Omit to use the latest Final version.",
+        ),
+    ] = None,
+) -> PaginatedResponse[models.PapillonsTopicCdDef]:
+    """
+    Returns the topic code definitions (`TOPIC_CD_DEF`) used by Papillons: a paginated list with one
+    item per library activity instance, in its latest Final version, sorted by the specified sort
+    field and order.
+
+    Each item carries the activity instance label, topic code, short (ADaM parameter) topic code,
+    legacy description, molecular weight, SAS display format, its domain classification
+    (`general_domain_class`, `sub_domain_class`, `sub_domain_type`, `topic_cd_type`), the version
+    number and status of the returned version, and the values of its activity items: category
+    (`cat`), subcategory (`sub_cat`), response codelist (`catgo_resp_list`), standard unit
+    (`std_unit`), unit dimension (`unit_dimension`) and whether it uses a US conventional unit
+    (`convert_to_us_conv_unit`).
+
+    If `datetime` is specified, the latest Final version that had started by that moment is used
+    instead. Only the activity instance version is time-travelled; the classes, terms and units
+    it refers to are read in their current state.
+    """
+    parsed_date_time = _parse_topic_cd_def_datetime(date_time)
+    topic_cd_defs = DB.get_papillons_topic_cd_def(
+        sort_by=sort_by,
+        sort_order=sort_order,
+        page_size=page_size,
+        page_number=page_number,
+        date_time=parsed_date_time,
+    )
+
+    return PaginatedResponse.from_input(
+        request=request,
+        sort_by=sort_by.value,
+        sort_order=sort_order.value,
+        page_size=page_size,
+        page_number=page_number,
+        items=[models.PapillonsTopicCdDef.from_input(item) for item in topic_cd_defs],
+        query_param_names=["datetime"],
     )
 
 

@@ -236,4 +236,4 @@ class NeomodelExtBaseRepository:
 
 def _get_author_id(node) -> str:
     author_id = node._relations.get("latest_version_relationship").author_id
-    return author_id if author_id else "?"
+    return author_id or "?"

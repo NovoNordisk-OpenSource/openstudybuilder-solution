@@ -60,12 +60,15 @@
       <template #[`item.template_name`]="{ item }">
         <NNParameterHighlighter
           :name="item.template_name"
+          :parameter-names="item.parameter_terms?.map((p) => p.parameter_name)"
           default-color="orange"
         />
       </template>
       <template #[`item.name`]="{ item }">
+        <!-- Pre-instances have no parameters: highlighted like instance names -->
         <NNParameterHighlighter
           :name="item.name"
+          :parameter-names="item.parameters?.map((p) => p.name)"
           default-color="green"
           :show-prefix-and-postfix="false"
         />

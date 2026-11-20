@@ -118,8 +118,8 @@ class StudySelectionCompoundRepository:
             query += " AND ".join(filter_list)
 
         if type_of_treatment:
-            query += """MATCH (sc)-[:HAS_TYPE_OF_TREATMENT]->(tot:CTTermRoot)
-            -[:HAS_NAME_ROOT]->(:CTTermNameRoot)-->(:CTTermNameValue {name: $type_of_treatment})"""
+            query += """MATCH (sc)-[:HAS_TYPE_OF_TREATMENT]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(tot:CTTermRoot)
+            -[:HAS_NAME_ROOT]->(:CTTermNameRoot)-[:LATEST]->(:CTTermNameValue {name: $type_of_treatment})"""
             query_parameters["type_of_treatment"] = type_of_treatment
         else:
             query += " OPTIONAL MATCH (sc)-[:HAS_TYPE_OF_TREATMENT]->(:CTTermContext)-[:HAS_SELECTED_TERM]->(tot:CTTermRoot)"

@@ -1,5 +1,4 @@
-@REQ_ID:1070683 @skip_on_prv_val
-
+@REQ_ID:1070683
 Feature: Library - Concepts - Activities - Activities - Extended Scope
     As a user, I want to manage every Activities in the Concepts Library
 

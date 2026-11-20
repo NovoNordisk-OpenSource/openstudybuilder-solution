@@ -27,12 +27,10 @@ class EndpointService(GenericSyntaxInstanceService[EndpointAR | _AggregateRootTy
     ) -> Endpoint:
         return Endpoint.from_endpoint_ar(item_ar)
 
-    aggregate_class: type[EndpointAR] | type[EndpointPreInstanceAR] = EndpointAR
-    repository_interface: (
-        type[EndpointRepository] | type[EndpointPreInstanceRepository]
-    ) = EndpointRepository
-    template_repository_interface = EndpointTemplateRepository
-    version_class: type[EndpointVersion] | type[EndpointPreInstanceVersion] = (
-        EndpointVersion
+    aggregate_class: type[EndpointAR | EndpointPreInstanceAR] = EndpointAR
+    repository_interface: type[EndpointRepository | EndpointPreInstanceRepository] = (
+        EndpointRepository
     )
+    template_repository_interface = EndpointTemplateRepository
+    version_class: type[EndpointVersion | EndpointPreInstanceVersion] = EndpointVersion
     template_uid_property = "endpoint_template_uid"

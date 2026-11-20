@@ -7,24 +7,32 @@ Prerequisites (Docker, Python 3.14, uv) are documented in the
 
 ---
 ## Setup environment variables
-Create `.env` file in the `db/` directory with the following content (adjust accordingly):
+Create `.env` file (in the root of cloned repository). Use the `.env.example` file as a template and adjust as needed.
+
+---
+## Least-privileged roles for the API apps (Enterprise only)
+
+Optionally, `init_neo4j.py` provisions two Neo4j roles so that once a connection is
+authenticated as one or the other, it cannot see the other half's data: an `mdr` role
+that can see everything except `:CDISCStaging` nodes, and a `staging` role that can
+only see `:CDISCStaging` nodes. This is fine-grained RBAC, a **Neo4j Enterprise**
+feature — on Community, or if the env vars below are left unset, provisioning is
+silently skipped and every connection keeps using the admin user exactly as before.
+This is defence in depth, not something the apps depend on for correctness.
+
+Add these to the same `.env` if you want the two API apps (`clinical_mdr_api` and
+`standards_import`) to connect with less-privileged users instead of the admin one:
 ```
-NEO4J_MDR_HTTP_PORT=5074
-NEO4J_MDR_BOLT_PORT=5078
-NEO4J_MDR_HTTPS_PORT=443
-NEO4J_MDR_HOST=localhost
-NEO4J_MDR_AUTH_USER=neo4j
-NEO4J_MDR_AUTH_PASSWORD=<your-neo4j-password>
-NEO4J_MDR_DATABASE=neo4j
-NEO4J_MDR_CLEAR_DATABASE=false
-NEO4J_MDR_BACKUP_DATABASE=false
+NEO4J_MDR_ROLE_USER=mdr_user
+NEO4J_MDR_ROLE_PASSWORD=<a-different-password>
+NEO4J_STAGING_ROLE_USER=staging_user
+NEO4J_STAGING_ROLE_PASSWORD=<a-different-password>
 ```
-**Note:**
-If you run neo4j desktop, the defaults ports are
-```
-NEO4J_MDR_HTTP_PORT=7474
-NEO4J_MDR_BOLT_PORT=7687
-```
+Point each app's `NEO4J_DSN`/`STANDARDS_IMPORT_STAGING_DSN` at the matching user once
+provisioned (see `api/.env.example`). Everything else — migrations,
+`db_schema_migration`, `verifications`, NeoDash, `export` — keeps connecting as the
+admin user for now; only the two API apps use these roles.
+
 ---
 ## Create container
 Create/re-create and start the `neo4j_local` container. Run this from the `db`
@@ -137,6 +145,26 @@ Initiate the database using uv:
 $ uv run poe init_neo4j
 ```
 
+#### Choosing which schema to create
+
+The indexes and constraints are split in two groups, defined in `db_schema.py`:
+
+- `mdr`: the OpenStudyBuilder domain data (`INDEXES`, `TEXT_INDEXES`, `FULLTEXT_INDEXES`, `REL_INDEXES`, `CONSTRAINTS`).
+- `staging`: the CDISC staging data carrying the `:CDISCStaging` marker label (`STAGING_*`).
+
+Use the `--schema` option to select which group is created. The default is `all`.
+
+```
+$ uv run poe init_neo4j                      # same as --schema all
+$ uv run poe init_neo4j --schema mdr
+$ uv run poe init_neo4j --schema staging
+```
+
+Notes:
+- The MDR seed data (`TemplateParameter` tree, `NA` template parameter value, `:Counter` nodes)
+  is only loaded with `all` or `mdr`.
+- Database/alias creation and role provisioning are not affected by this option.
+
 ---
 ### Verify setup is correctly done
 
@@ -189,6 +217,14 @@ $ export $(grep -v '^#' .env | xargs)
 $ ./import_db_backup.sh neo4j_local neo4j neo4j-{timestamp}.backup
 ```
 This replaces any existing content in the database `neo4j` with the data stored in the file `./db_backups/neo4j-{timestamp}.backup`.
+
+# Importing a database dump
+
+In case you have a dump instead of a backup, the script `import_db_dump.sh` can be used instead.
+
+```sh
+$ ./import_db_dump.sh neo4j_local neo4j filename.dump
+```
 
 ---
 
@@ -281,6 +317,29 @@ To connect via the standalone site, follow these steps:
 ### Accessing or Creating Dashboards  
 - If you have already imported NeoDash reports in the previous step, you will see the existing dashboards.  
 - To create a new dashboard, click **New Dashboard** and start building your reports.  
+
+# Clear staging data
+The script `clear_staging` deletes every node carrying the `:CDISCStaging` marker label
+(and every relationship attached to those nodes). MDR data — nodes without that label —
+is completely untouched.
+
+This is useful during local development when you want to re-run a staging import from
+scratch without resetting the entire MDR database.
+
+```sh
+$ pipenv run clear_staging
+```
+
+The target database is read from `STANDARDS_IMPORT_STAGING_DSN` (same env var the
+standards-import API uses). In the merged deployment that resolves to the same Neo4j
+database as `NEO4J_DSN`; in a split deployment it can point at a separate server or
+database. If `STANDARDS_IMPORT_STAGING_DSN` is not set the script falls back to
+`NEO4J_DSN`.
+
+The script is idempotent: safe to run on an already-empty database, and will print
+before/after node counts so you can confirm what was deleted.
+
+---
 
 # Update CT stats
 The script `update_ct_stats` loops through all CT packages to update the counters of added, modified and removed terms and codelists.

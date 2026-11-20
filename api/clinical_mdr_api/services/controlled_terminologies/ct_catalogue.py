@@ -9,7 +9,7 @@ from clinical_mdr_api.repositories.ct_catalogues import (
     CatalogueComparisonType,
     get_ct_catalogues_changes,
 )
-from clinical_mdr_api.services._meta_repository import MetaRepository  # type: ignore
+from clinical_mdr_api.services._meta_repository import MetaRepository
 from clinical_mdr_api.utils import normalize_string
 from common import exceptions
 from common.auth.user import user

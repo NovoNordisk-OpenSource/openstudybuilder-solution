@@ -26,3 +26,7 @@ reports/
 
 # Fetched at build time by .github/actions/copy-sbom-script in build-tools.
 build_sbom.py
+
+# Generated CDISC CT diff review sites (generate_cdisc_ct_diff_site).
+*_diff_site_*/
+

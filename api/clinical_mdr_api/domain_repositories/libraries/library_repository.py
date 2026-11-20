@@ -11,7 +11,7 @@ class LibraryRepository:
     def __init__(self):
         self._cache = {}
 
-    def library_exists(self, library_name: str) -> bool:
+    def library_exists(self, library_name: str | None) -> bool:
         library_node = Library.nodes.get_or_none(name=library_name)
         return bool(library_node)
 

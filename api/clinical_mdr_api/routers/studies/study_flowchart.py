@@ -61,10 +61,9 @@ def get_study_flowchart_coordinates(
         str | None, _generic_descriptions.STUDY_VALUE_VERSION_QUERY
     ] = None,
 ) -> dict[str, list[int]]:
-    coordinates = StudyFlowchartService().get_flowchart_item_uid_coordinates(
+    return StudyFlowchartService().get_flowchart_item_uid_coordinates(
         study_uid=study_uid, study_value_version=study_value_version
     )
-    return coordinates
 
 
 @router.get(
@@ -90,15 +89,13 @@ def get_study_flowchart(
         Query(description="Force building of SoA without using any saved snapshot"),
     ] = False,
 ) -> TableWithFootnotes:
-    table = StudyFlowchartService().get_flowchart_table(
+    return StudyFlowchartService().get_flowchart_table(
         study_uid=study_uid,
         time_unit=time_unit,
         study_value_version=study_value_version,
         layout=layout,
         force_build=force_build,
     )
-
-    return table
 
 
 @router.get(
@@ -163,15 +160,11 @@ def get_study_flowchart_docx(
     time_unit: Annotated[str | None, TIME_UNIT_QUERY] = None,
     layout: Annotated[SoALayout, LAYOUT_QUERY] = SoALayout.PROTOCOL,
 ) -> StreamingResponse:
-    stream = (
-        StudyFlowchartService()
-        .get_study_flowchart_docx(
-            study_uid=study_uid,
-            study_value_version=study_value_version,
-            layout=layout,
-            time_unit=time_unit,
-        )
-        .get_document_stream()
+    stream = StudyFlowchartService().get_study_flowchart_docx(
+        study_uid=study_uid,
+        study_value_version=study_value_version,
+        layout=layout,
+        time_unit=time_unit,
     )
 
     study_id = StudyService().get_study_id(study_uid, study_value_version)
@@ -199,16 +192,12 @@ def get_study_flowchart_xlsx(
     time_unit: Annotated[str | None, TIME_UNIT_QUERY] = None,
     layout: Annotated[SoALayout, LAYOUT_QUERY] = SoALayout.PROTOCOL,
 ) -> StreamingResponse:
-    workbook = StudyFlowchartService().get_study_flowchart_xlsx(
+    stream = StudyFlowchartService().get_study_flowchart_xlsx(
         study_uid=study_uid,
         study_value_version=study_value_version,
         layout=layout,
         time_unit=time_unit,
     )
-
-    # render document into Bytes stream
-    stream = io.BytesIO()
-    workbook.save(stream)
 
     study_id = StudyService().get_study_id(study_uid, study_value_version)
     filename = f"{study_id or study_uid} {layout.value} SoA.xlsx"
@@ -410,11 +399,10 @@ def export_detailed_soa_content(
         str | None, _generic_descriptions.STUDY_VALUE_VERSION_QUERY
     ] = None,
 ) -> list[dict[str, Any]]:
-    soa_content = StudyFlowchartService().download_detailed_soa_content(
+    return StudyFlowchartService().download_detailed_soa_content(
         study_uid=study_uid,
         study_value_version=study_value_version,
     )
-    return soa_content
 
 
 @router.get(
@@ -472,11 +460,10 @@ def export_operational_soa_content(
         str | None, _generic_descriptions.STUDY_VALUE_VERSION_QUERY
     ] = None,
 ) -> list[dict[str, Any]]:
-    soa_content = StudyFlowchartService().download_operational_soa_content(
+    return StudyFlowchartService().download_operational_soa_content(
         study_uid=study_uid,
         study_value_version=study_value_version,
     )
-    return soa_content
 
 
 @router.get(
@@ -523,13 +510,12 @@ def export_protocol_soa_content(
         Query(description="Whether to export Protocol Lab table SoA"),
     ] = False,
 ) -> list[dict[str, Any]]:
-    soa_content = StudyFlowchartService().download_detailed_soa_content(
+    return StudyFlowchartService().download_detailed_soa_content(
         study_uid=study_uid,
         study_value_version=study_value_version,
         protocol_flowchart=not protocol_lab_table,
         protocol_lab_table=protocol_lab_table,
     )
-    return soa_content
 
 
 @router.get(
@@ -549,9 +535,11 @@ def get_soa_snapshot(
     study_value_version: Annotated[
         str | None, _generic_descriptions.STUDY_VALUE_VERSION_QUERY
     ] = None,
-    layout: Annotated[Literal["protocol"], LAYOUT_QUERY] = "protocol",
+    layout: Annotated[
+        Literal["protocol", "protocol_lab_table"], LAYOUT_QUERY
+    ] = "protocol",
 ) -> TableWithFootnotes:
-    return StudyFlowchartService().load_soa_snapshot(
+    return StudyFlowchartService().get_soa_snapshot(
         study_uid=study_uid,
         study_value_version=study_value_version,
         layout=SoALayout(layout),
@@ -561,7 +549,7 @@ def get_soa_snapshot(
 @router.post(
     "/{study_uid}/flowchart/snapshot",
     dependencies=[security, rbac.ADMIN_WRITE],
-    summary="Update SoA snapshot for a study version based on the recent SoA rules (intended for data migration only)",
+    summary="Render and save SoA snapshot (HTML, DOCX, XLSX and JSON) for a study version (intended for data migration only)",
     responses={
         status.HTTP_201_CREATED: {"model": None, "description": "SoA snapshot updated"},
         status.HTTP_404_NOT_FOUND: _generic_descriptions.ERROR_404,
@@ -574,12 +562,14 @@ def update_soa_snapshot(
     study_value_version: Annotated[
         str, _generic_descriptions.STUDY_VALUE_VERSION_QUERY
     ],
-    layout: Annotated[Literal["protocol"], LAYOUT_QUERY] = "protocol",
+    layout: Annotated[
+        Literal["protocol", "protocol_lab_table"], LAYOUT_QUERY
+    ] = "protocol",
 ) -> Response:
-    StudyFlowchartService().update_soa_snapshot(
+    StudyFlowchartService().save_soa_snapshot(
         study_uid=study_uid,
-        study_value_version=study_value_version,
         layout=SoALayout(layout),
+        study_value_version=study_value_version,
     )
     return Response(content=None, status_code=status.HTTP_201_CREATED)
 
@@ -594,7 +584,7 @@ def _streaming_response(
     stream.seek(0)
 
     # response with document info HTTP headers
-    response = StreamingResponse(
+    return StreamingResponse(
         stream,
         media_type=mime_type,
         headers={
@@ -604,5 +594,3 @@ def _streaming_response(
             "Content-Security-Policy": "default-src 'none'",
         },
     )
-
-    return response

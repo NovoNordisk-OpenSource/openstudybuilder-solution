@@ -5,6 +5,7 @@ from clinical_mdr_api.models.study_selections.study_visit import (
     StudyVisit,
     StudyVisitCreateInput,
     StudyVisitEditInput,
+    StudyVisitPreviewInput,
 )
 from clinical_mdr_api.services.concepts.unit_definitions.unit_definition import (
     UnitDefinitionService,
@@ -243,6 +244,19 @@ def create_study_visit_codelists(
             }
         ],
     )
+    create_ct_term(
+        "Unscheduled",
+        "VisitType_0006",
+        catalogue_name,
+        library_name,
+        codelists=[
+            {
+                "uid": codelist.codelist_uid,
+                "order": 6,
+                "submission_value": "Visit Type6",
+            }
+        ],
+    )
     codelist = create_codelist(
         "Time Point Reference",
         "CTCodelist_00005",
@@ -450,8 +464,7 @@ def create_visit_with_update(study_uid="study_root", **inputs) -> StudyVisit:
     datadict = generate_default_input_data_for_visit().copy()
     datadict.update(inputs)
     visit_input = StudyVisitCreateInput(**datadict)
-    visit = visit_service.create(study_uid=study_uid, study_visit_input=visit_input)
-    return visit
+    return visit_service.create(study_uid=study_uid, study_visit_input=visit_input)
 
 
 def update_visit_with_update(
@@ -461,12 +474,11 @@ def update_visit_with_update(
     datadict = generate_default_input_data_for_visit().copy()
     datadict.update(inputs)
     visit_input = StudyVisitEditInput(**datadict)
-    visit = visit_service.edit(
+    return visit_service.edit(
         study_uid=study_uid,
         study_visit_uid=visit_uid,
         study_visit_input=visit_input,
     )
-    return visit
 
 
 def preview_visit_with_update(study_uid, **inputs) -> StudyVisit:
@@ -474,7 +486,7 @@ def preview_visit_with_update(study_uid, **inputs) -> StudyVisit:
     datadict = generate_default_input_data_for_visit().copy()
     datadict.update(inputs)
     del datadict["visit_window_unit_uid"]
-    visit_input = StudyVisitCreateInput(**datadict)
+    visit_input = StudyVisitPreviewInput(**datadict)
     preview: StudyVisit = visit_service.preview(study_uid, visit_input)
     return preview
 

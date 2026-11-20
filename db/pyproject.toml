@@ -14,11 +14,16 @@ dependencies = [
 # install. Keep `uv sync` in virtual/non-package mode so it only installs the
 # declared dependencies rather than trying to build this directory as a package.
 package = false
+# Security floors for transitive dependencies: bound the resolver to fixed
+# versions without declaring these as direct dependencies of this project.
+constraint-dependencies = [
+    "certifi>=2026.10.19",  # PYSEC-2026-4320
+]
 
 [dependency-groups]
 dev = [
     "ruff~=0.16.8",
-    "black~=26.3.1",
+    "black~=26.10.1",
     "poethepoet>=0.30",
 ]
 
@@ -28,6 +33,7 @@ envfile = ".env"
 [tool.poe.tasks]
 lint = "ruff check *.py"
 init_neo4j = "python init_neo4j.py"
+clear_staging = "python clear_staging.py"
 init_aura = "python init_aura.py"
 update_ct_stats = "python update_ct_stats.py"
 export_to_cypher = "python export_to_cypher.py"

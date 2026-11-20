@@ -196,10 +196,9 @@ class StudySelectionActivityBaseRepository[AggregateRootType](abc.ABC):
             study_uids=study_uids,
             **kwargs,
         )
-        selection_aggregate = self._aggregate_root_type.from_repository_values(
+        return self._aggregate_root_type.from_repository_values(
             study_uid="", study_objects_selection=all_selections
         )
-        return selection_aggregate
 
     @trace_calls
     def find_by_study(

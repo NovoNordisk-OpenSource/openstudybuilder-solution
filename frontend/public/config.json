@@ -2,6 +2,7 @@
     "APP_ENV": "",
     "API_BASE_URL": "http://127.0.0.1:8000",
     "EXTENSIONS_API_BASE_URL": "http://127.0.0.1:8009",
+    "STANDARDS_IMPORT_API_BASE_URL": "http://127.0.0.1:8000/standards-import",
     "DOC_BASE_URL": "http://127.0.0.1:8081",
     "NEODASH_BASE_URL": "",
     "NEED_HELP_URL": "https://example.com/sites/MDR-StudyBuilder/SitePages/Support.aspx",

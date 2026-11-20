@@ -407,9 +407,7 @@ class StudySelectionObjectiveRepository:
         study_objective_node = StudyObjective.nodes.first_or_none(
             uid=study_objective_uid
         )
-        if study_objective_node is None:
-            return False
-        return True
+        return study_objective_node is not None
 
     def generate_uid(self) -> str:
         return StudyObjective.get_next_free_uid_and_increment_counter()

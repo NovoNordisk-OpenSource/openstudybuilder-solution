@@ -113,6 +113,7 @@ class TestStudyEndpointUpversion(unittest.TestCase):
         self.template_vo = TemplateVO(
             name=self.default_template_name,
             name_plain=self.default_template_name_plain,
+            parameter_names=[self.TPR_LABEL],
         )
         self.item_metadata = LibraryItemMetadataVO.get_initial_item_metadata(
             author_id="Test"
@@ -140,6 +141,7 @@ class TestStudyEndpointUpversion(unittest.TestCase):
         self.ntv = TemplateVO(
             name=self.changed_template_name,
             name_plain=self.changed_template_name_plain,
+            parameter_names=[self.TPR_LABEL],
         )
         self.ot_ar.edit_draft(
             author_id="TEST", change_description="Change", template=self.ntv

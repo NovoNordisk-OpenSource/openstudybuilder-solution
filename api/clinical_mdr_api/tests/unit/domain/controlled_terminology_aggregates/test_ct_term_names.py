@@ -14,12 +14,11 @@ from clinical_mdr_api.tests.unit.domain.utils import AUTHOR_ID, random_str
 
 def create_random_ct_term_name_vo() -> CTTermNameVO:
     name = random_str()
-    random_ct_term_name_vo = CTTermNameVO.from_repository_values(
+    return CTTermNameVO.from_repository_values(
         catalogue_names=[random_str()],
         name=name,
         name_sentence_case=name.lower(),
     )
-    return random_ct_term_name_vo
 
 
 def create_random_ct_term_name_ar(
@@ -27,7 +26,7 @@ def create_random_ct_term_name_ar(
     library: str = "Library",
     is_editable: bool = True,
 ) -> CTTermNameAR:
-    random_ct_term_name_ar = CTTermNameAR.from_input_values(
+    return CTTermNameAR.from_input_values(
         generate_uid_callback=generate_uid_callback,
         ct_term_name_vo=create_random_ct_term_name_vo(),
         library=LibraryVO.from_repository_values(
@@ -35,7 +34,6 @@ def create_random_ct_term_name_ar(
         ),
         author_id=AUTHOR_ID,
     )
-    return random_ct_term_name_ar
 
 
 def create_random_ct_term_name_ars(

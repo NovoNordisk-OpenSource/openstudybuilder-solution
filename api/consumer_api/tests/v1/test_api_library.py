@@ -206,7 +206,7 @@ def test_data(api_client):
     # Use the "day" unit definition created by inject_base_data
     activity_item_unit_definition_uid = TestUtils.get_unit_uid_by_name("day")
 
-    for idx in range(0, total_activities):
+    for idx in range(total_activities):
         # Create Final Activity
         activity = TestUtils.create_activity(
             f"Activity {str(idx + 1).zfill(2)}",
@@ -318,7 +318,7 @@ def test_data(api_client):
         ],
         approve=True,
     )
-    activity_instances.append(activity_instance_with_items)  # type: ignore[arg-type]
+    activity_instances.append(activity_instance_with_items)
 
     # sort activities by name
     activities.sort(key=lambda x: x.name)

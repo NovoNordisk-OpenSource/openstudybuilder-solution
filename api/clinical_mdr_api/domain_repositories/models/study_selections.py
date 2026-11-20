@@ -74,6 +74,8 @@ class AuditTrailMixin:
     )
 
 
+# LEGACY-SOA-SNAPSHOT (242942): only used by migration 024 to render pre-existing
+# locked/released versions from HAS_PROTOCOL_SOA_CELL refs. Remove in the next release.
 class HasProtocolSoACellRel(ClinicalMdrRel):
     row = IntegerProperty()
     column = IntegerProperty()
@@ -82,9 +84,16 @@ class HasProtocolSoACellRel(ClinicalMdrRel):
     order = IntegerProperty()
 
 
+# LEGACY-SOA-SNAPSHOT (242942): see HasProtocolSoACellRel. Remove in the next release.
 class HasProtocolSoAFootnoteRel(ClinicalMdrRel):
     order = IntegerProperty()
     symbol = StringProperty()
+
+
+class FootnoteReferencesScheduleRel(ClinicalMdrRel):
+    # set only when the footnote was attached to a checkmark propagated from hidden rows,
+    # absent otherwise
+    via_propagated_cell = BooleanProperty()
 
 
 class StudySelection(ClinicalMdrNodeWithUID, AuditTrailMixin):
@@ -273,6 +282,13 @@ class StudyCriteria(StudySelection):
         cardinality=ZeroOrOne,
     )
     key_criteria = BooleanProperty(default=False)
+    identifier = StringProperty()
+    has_study_design_population = RelationshipTo(
+        "StudyDesignPopulation",
+        "HAS_STUDY_DESIGN_POPULATION",
+        model=ClinicalMdrRel,
+        cardinality=ZeroOrMore,
+    )
     study_value = RelationshipFrom(
         STUDY_VALUE_CLASS_NAME,
         "HAS_STUDY_CRITERIA",
@@ -487,7 +503,7 @@ class StudyActivitySchedule(StudySelection):
         STUDY_SOA_FOOTNOTE_CLASS_NAME,
         "REFERENCES_STUDY_ACTIVITY_SCHEDULE",
         cardinality=ZeroOrMore,
-        model=ClinicalMdrRel,
+        model=FootnoteReferencesScheduleRel,
     )
 
 
@@ -758,7 +774,7 @@ class StudySoAFootnote(StudySelection):
         StudyActivitySchedule,
         "REFERENCES_STUDY_ACTIVITY_SCHEDULE",
         cardinality=ZeroOrMore,
-        model=ClinicalMdrRel,
+        model=FootnoteReferencesScheduleRel,
     )
     references_study_visit = RelationshipTo(
         ".study_visit.StudyVisit",
@@ -800,6 +816,19 @@ class StudyDesignClass(StudySelection):
     has_study_design_class = RelationshipFrom(
         STUDY_VALUE_CLASS_NAME,
         "HAS_STUDY_DESIGN_CLASS",
+        cardinality=ZeroOrMore,
+        model=ClinicalMdrRel,
+    )
+
+
+class StudyDesignPopulation(StudySelection):
+    group_id = StringProperty()
+    name = StringProperty()
+    definition = StringProperty()
+    notes = StringProperty()
+    has_study_design_population = RelationshipFrom(
+        STUDY_VALUE_CLASS_NAME,
+        "HAS_STUDY_DESIGN_POPULATION",
         cardinality=ZeroOrMore,
         model=ClinicalMdrRel,
     )
@@ -869,12 +898,14 @@ STUDY_SELECTION_CONCRETE_LABELS: frozenset[str] = frozenset(
         "StudyCompoundDosing",
         "StudySoAFootnote",
         "StudyDesignClass",
+        "StudyDesignPopulation",
         "StudySourceVariable",
         "StudyVersion",
         "StudyDefinitionDocument",
         "StudyEpoch",
         "StudyVisit",
         "StudyDiseaseMilestone",
+        "StudyAuxiliaryDevice",
         "StudyStandardVersion",
     }
 )

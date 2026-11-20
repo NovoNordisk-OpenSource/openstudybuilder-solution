@@ -96,7 +96,7 @@ class ComplexityScoreService:
                 head([(study_activity)-[:HAS_SELECTED_ACTIVITY]->(activity_value:ActivityValue)<-[:HAS_VERSION]-(activity_root:ActivityRoot) | {uid: activity_root.uid}]) AS activity,
                 head([(study_activity)-[:STUDY_ACTIVITY_HAS_STUDY_ACTIVITY_SUBGROUP]->(:StudyActivitySubGroup)-[:HAS_SELECTED_ACTIVITY_SUBGROUP]->(activity_subgroup_value:ActivitySubGroupValue)
                     <-[:LATEST]-(activity_subgroup_root:ActivitySubGroupRoot) | {name: activity_subgroup_value.name, uid: activity_subgroup_root.uid}]) AS activity_subgroup
-            ORDER BY study_activity.order, study_visit.visit_number
+            ORDER BY study_activity.order, toInteger(study_visit.unique_visit_number)
 
             RETURN DISTINCT
                 study_visit.uid AS visit_uid,
@@ -141,11 +141,7 @@ class ComplexityScoreService:
                 visit = SoaRow.Visit(
                     uid=row["visit_uid"],
                     short_name=str(row["visit_short_name"]),
-                    visit_contact_mode=(
-                        row["visit_contact_mode"]
-                        if "visit_contact_mode" in row
-                        else None
-                    ),
+                    visit_contact_mode=row.get("visit_contact_mode"),
                 )
                 grouped[activity_subgroup_uid].visits.append(visit)
 
@@ -154,7 +150,7 @@ class ComplexityScoreService:
             subgroup.visits.sort(key=lambda v: v.short_name)
 
         # Convert to list of SoaRow items
-        soa = [
+        return [
             SoaRow(
                 activity_subgroup_uid=uid,
                 activity_subgroup_name=data.activity_subgroup_name,
@@ -162,7 +158,6 @@ class ComplexityScoreService:
             )
             for uid, data in grouped.items()
         ]
-        return soa
 
     @classmethod
     def get_visits_summary(

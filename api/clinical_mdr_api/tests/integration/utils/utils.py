@@ -4,7 +4,7 @@ import logging
 from datetime import UTC, date, datetime, timedelta
 from random import randint
 from typing import Any, Literal
-from xml.etree import ElementTree
+from xml.etree import ElementTree as ET
 
 import openpyxl
 from fastapi.testclient import TestClient
@@ -212,6 +212,10 @@ from clinical_mdr_api.models.study_selections.study import (
     StudySoaPreferences,
     StudySoaPreferencesInput,
     StudySubpartCreateInput,
+)
+from clinical_mdr_api.models.study_selections.study_auxiliary_device import (
+    StudyAuxiliaryDevice,
+    StudyAuxiliaryDeviceCreateInput,
 )
 from clinical_mdr_api.models.study_selections.study_disease_milestone import (
     StudyDiseaseMilestone,
@@ -470,6 +474,9 @@ from clinical_mdr_api.services.studies.study_activity_selection import (
 )
 from clinical_mdr_api.services.studies.study_arm_selection import (
     StudyArmSelectionService,
+)
+from clinical_mdr_api.services.studies.study_auxiliary_device import (
+    StudyAuxiliaryDeviceService,
 )
 from clinical_mdr_api.services.studies.study_branch_arm_selection import (
     StudyBranchArmSelectionService,
@@ -734,8 +741,8 @@ class TestUtils:
     def assert_valid_xml(cls, val: str):
         # Attempt to parse the XML content using ElementTree
         try:
-            _root = ElementTree.fromstring(val)
-        except ElementTree.ParseError:
+            _root = ET.fromstring(val)
+        except ET.ParseError:
             assert False, "Content is not valid XML"
 
     @classmethod
@@ -784,7 +791,7 @@ class TestUtils:
         """Return supplied `val` if its value is not None.
         Otherwise, return random numerical string of `length` with optional string prefix (length excludes prefix)
         """
-        return val if val else cls.random_str(length, prefix)
+        return val or cls.random_str(length, prefix)
 
     @classmethod
     def create_dummy_user(cls, user_id: str = "unknown-user"):
@@ -902,7 +909,7 @@ class TestUtils:
             template_parameter=template_parameter,
         )
 
-        result: TextValue = service.create(payload)  # type: ignore[assignment]
+        result: TextValue = service.create(payload)
         return result
 
     @classmethod
@@ -1563,7 +1570,7 @@ class TestUtils:
             external_id=cls.random_if_none(external_id, prefix="prodex-id-"),
         )
 
-        result: Compound = service.create(payload)  # type: ignore[assignment]
+        result: Compound = service.create(payload)
         if approve:
             service.approve(result.uid)
         return result
@@ -1589,13 +1596,11 @@ class TestUtils:
             definition=cls.random_if_none(definition, prefix="definition-"),
             abbreviation=cls.random_if_none(abbreviation, prefix="abbreviation-"),
             library_name=library_name,
-            is_preferred_synonym=(
-                is_preferred_synonym if is_preferred_synonym else False
-            ),
-            compound_uid=compound_uid if compound_uid else "None",
+            is_preferred_synonym=is_preferred_synonym or False,
+            compound_uid=compound_uid or "None",
         )
 
-        result: CompoundAlias = service.create(payload)  # type: ignore[assignment]
+        result: CompoundAlias = service.create(payload)
         if approve:
             service.approve(result.uid)
         return result
@@ -1620,10 +1625,10 @@ class TestUtils:
             long_number=cls.random_if_none(long_number, prefix="long-number-"),
             inn=cls.random_if_none(inn, prefix="inn-"),
             library_name=library_name,
-            unii_term_uid=unii_term_uid if unii_term_uid else None,
+            unii_term_uid=unii_term_uid or None,
         )
 
-        result: ActiveSubstance = service.create(payload)  # type: ignore[assignment]
+        result: ActiveSubstance = service.create(payload)
         if approve:
             service.approve(result.uid)
         return result
@@ -1642,14 +1647,12 @@ class TestUtils:
         payload: PharmaceuticalProductCreateInput = PharmaceuticalProductCreateInput(
             external_id=cls.random_if_none(external_id, prefix="prodex-id-"),
             library_name=library_name,
-            dosage_form_uids=dosage_form_uids if dosage_form_uids else [],
-            route_of_administration_uids=(
-                route_of_administration_uids if route_of_administration_uids else []
-            ),
-            formulations=formulations if formulations else [],
+            dosage_form_uids=dosage_form_uids or [],
+            route_of_administration_uids=route_of_administration_uids or [],
+            formulations=formulations or [],
         )
 
-        result: PharmaceuticalProduct = service.create(payload)  # type: ignore[assignment]
+        result: PharmaceuticalProduct = service.create(payload)
         if approve:
             service.approve(result.uid)
         return result
@@ -1677,17 +1680,15 @@ class TestUtils:
             ),
             external_id=cls.random_if_none(external_id, prefix="prodex-id-"),
             library_name=library_name,
-            dose_value_uids=dose_value_uids if dose_value_uids else [],
-            dose_frequency_uids=dose_frequency_uids if dose_frequency_uids else [],
+            dose_value_uids=dose_value_uids or [],
+            dose_frequency_uids=dose_frequency_uids or [],
             delivery_device_uid=delivery_device_uid,
             dispenser_uid=dispenser_uid,
-            pharmaceutical_product_uids=(
-                pharmaceutical_product_uids if pharmaceutical_product_uids else []
-            ),
-            compound_uid=compound_uid if compound_uid else "None",
+            pharmaceutical_product_uids=pharmaceutical_product_uids or [],
+            compound_uid=compound_uid or "None",
         )
 
-        result: MedicinalProduct = service.create(payload)  # type: ignore[assignment]
+        result: MedicinalProduct = service.create(payload)
         if approve:
             service.approve(result.uid)
         return result
@@ -1759,11 +1760,11 @@ class TestUtils:
                 legacy_description=legacy_description,
                 activity_groupings=groupings,
                 activity_instance_class_uid=activity_instance_class_uid,
-                activity_items=activity_items if activity_items else [],
+                activity_items=activity_items or [],
                 library_name=library_name,
             )
         )
-        result: ActivityInstance = service.create(  # type: ignore[assignment]
+        result: ActivityInstance = service.create(
             concept_input=activity_instance_input, preview=preview
         )
         if approve and not preview:
@@ -1819,7 +1820,7 @@ class TestUtils:
         data_type_uid: str,
         activity_instance_classes: list[ActivityInstanceClassRelInput],
         definition: str | None = None,
-        display_name: str | None = None,
+        label: str | None = None,
         nci_concept_id: str | None = None,
         nci_concept_name: str | None = None,
         library_name: str = SPONSOR_LIBRARY_NAME,
@@ -1832,7 +1833,7 @@ class TestUtils:
             ActivityItemClassCreateInput(
                 name=name,
                 definition=definition,
-                display_name=display_name,
+                label=label,
                 nci_concept_id=nci_concept_id,
                 nci_concept_name=nci_concept_name,
                 order=order,
@@ -1844,7 +1845,9 @@ class TestUtils:
                 valid_codelist_uids=valid_codelist_uids,
             )
         )
-        result: ActivityItemClass = service.create(concept_input=activity_item_class_input)  # type: ignore[assignment]
+        result: ActivityItemClass = service.create(
+            concept_input=activity_item_class_input
+        )
         if approve and result.uid is not None:
             service.approve(result.uid)
         return result
@@ -1889,7 +1892,7 @@ class TestUtils:
             nci_concept_name=nci_concept_name,
             synonyms=synonyms,
             name=name,
-            name_sentence_case=name_sentence_case if name_sentence_case else name,
+            name_sentence_case=name_sentence_case or name,
             definition=definition,
             abbreviation=abbreviation,
             activity_groupings=groupings,
@@ -1899,7 +1902,7 @@ class TestUtils:
             is_multiple_selection_allowed=is_multiple_selection_allowed,
             library_name=library_name,
         )
-        result: Activity = service.create(concept_input=activity_create_input)  # type: ignore[assignment]
+        result: Activity = service.create(concept_input=activity_create_input)
         if approve:
             return service.approve(result.uid)
         return result
@@ -1920,7 +1923,7 @@ class TestUtils:
         activity_subgroup_create_input: ActivitySubGroupCreateInput = (
             ActivitySubGroupCreateInput(
                 name=name,
-                name_sentence_case=name_sentence_case if name_sentence_case else name,
+                name_sentence_case=name_sentence_case or name,
                 definition=definition,
                 abbreviation=abbreviation,
                 library_name=library_name,
@@ -1928,7 +1931,7 @@ class TestUtils:
                 nci_concept_name=nci_concept_name,
             )
         )
-        result: ActivitySubGroup = service.create(  # type: ignore[assignment]
+        result: ActivitySubGroup = service.create(
             concept_input=activity_subgroup_create_input
         )
         if approve:
@@ -1951,7 +1954,7 @@ class TestUtils:
         activity_group_create_input: ActivityGroupCreateInput = (
             ActivityGroupCreateInput(
                 name=name,
-                name_sentence_case=name_sentence_case if name_sentence_case else name,
+                name_sentence_case=name_sentence_case or name,
                 definition=definition,
                 abbreviation=abbreviation,
                 library_name=library_name,
@@ -1959,7 +1962,7 @@ class TestUtils:
                 nci_concept_name=nci_concept_name,
             )
         )
-        result: ActivityGroup = service.create(  # type: ignore[assignment]
+        result: ActivityGroup = service.create(
             concept_input=activity_group_create_input
         )
         if approve:
@@ -2045,11 +2048,10 @@ class TestUtils:
                 study_visit_uid=study_visit_uid,
             )
         )
-        schedule = service.create(
+        return service.create(
             study_uid=study_uid,
             schedule_input=study_activity_schedule,
         )
-        return schedule
 
     @classmethod
     def patch_study_activity_schedule(
@@ -2064,12 +2066,11 @@ class TestUtils:
             show_activity_in_protocol_flowchart=show_activity_in_protocol_flowchart,
             soa_group_term_uid=soa_group_term_uid,
         )
-        schedule = service.patch_selection(
+        return service.patch_selection(
             study_uid=study_uid,
             study_selection_uid=study_selection_uid,
             selection_update_input=update,
         )
-        return schedule
 
     @classmethod
     def create_study_soa_footnote(
@@ -2091,12 +2092,11 @@ class TestUtils:
                 referenced_items=referenced_items,
             )
         )
-        soa_footnote = service.create(
+        return service.create(
             study_uid=study_uid,
             footnote_input=study_soa_footnote_input,
             create_footnote=False,
         )
-        return soa_footnote
 
     @classmethod
     def create_study_visit(
@@ -2157,11 +2157,10 @@ class TestUtils:
             visit_subclass=visit_subclass,
             is_global_anchor_visit=is_global_anchor_visit,
         )
-        study_visit = service.create(
+        return service.create(
             study_uid=study_uid,
             study_visit_input=study_visit_input,
         )
-        return study_visit
 
     # region Study selection
     @classmethod
@@ -2478,8 +2477,8 @@ class TestUtils:
             master_unit=master_unit,
             us_conventional_unit=us_conventional_unit,
             use_complex_unit_conversion=use_complex_unit_conversion,
-            ct_units=ct_units if ct_units else [],
-            unit_subsets=unit_subsets if unit_subsets else [],
+            ct_units=ct_units or [],
+            unit_subsets=unit_subsets or [],
             ucum=ucum,
             unit_dimension=unit_dimension,
             use_molecular_weight=use_molecular_weight,
@@ -2490,7 +2489,7 @@ class TestUtils:
             template_parameter=template_parameter,
         )
 
-        result: UnitDefinitionModel = service.create(concept_input=payload)  # type: ignore[assignment]
+        result: UnitDefinitionModel = service.create(concept_input=payload)
         if approve:
             service.approve(result.uid)
         return result
@@ -2520,7 +2519,7 @@ class TestUtils:
             display_in_tree=display_in_tree,
         )
 
-        result: OdmStudyEvent = service.create(odm_input=payload)  # type: ignore[assignment]
+        result: OdmStudyEvent = service.create(odm_input=payload)
         if approve:
             service.approve(result.uid)
         return result
@@ -2554,7 +2553,7 @@ class TestUtils:
             aliases=aliases,
         )
 
-        result: OdmForm = service.create(odm_input=payload)  # type: ignore[assignment]
+        result: OdmForm = service.create(odm_input=payload)
         if approve:
             service.approve(result.uid)
         return result
@@ -2600,7 +2599,7 @@ class TestUtils:
             sdtm_domain_uids=sdtm_domain_uids,
         )
 
-        result: OdmItemGroup = service.create(odm_input=payload)  # type: ignore[assignment]
+        result: OdmItemGroup = service.create(odm_input=payload)
         if approve:
             service.approve(result.uid)
         return result
@@ -2690,7 +2689,7 @@ class TestUtils:
             aliases=aliases,
         )
 
-        result: OdmCondition = service.create(odm_input=payload)  # type: ignore[assignment]
+        result: OdmCondition = service.create(odm_input=payload)
         if approve:
             service.approve(result.uid)
         return result
@@ -2726,7 +2725,7 @@ class TestUtils:
             aliases=aliases,
         )
 
-        result: OdmMethod = service.create(odm_input=payload)  # type: ignore[assignment]
+        result: OdmMethod = service.create(odm_input=payload)
         if approve:
             service.approve(result.uid)
         return result
@@ -2749,7 +2748,7 @@ class TestUtils:
             url=url,
         )
 
-        result: OdmVendorNamespace = service.create(odm_input=payload)  # type: ignore[assignment]
+        result: OdmVendorNamespace = service.create(odm_input=payload)
         if approve:
             service.approve(result.uid)
         return result
@@ -2775,7 +2774,7 @@ class TestUtils:
             vendor_namespace_uid=vendor_namespace_uid,
         )
 
-        result: OdmVendorElement = service.create(odm_input=payload)  # type: ignore[assignment]
+        result: OdmVendorElement = service.create(odm_input=payload)
         if approve:
             service.approve(result.uid)
         return result
@@ -2807,7 +2806,7 @@ class TestUtils:
             vendor_element_uid=vendor_element_uid,
         )
 
-        result: OdmVendorAttribute = service.create(odm_input=payload)  # type: ignore[assignment]
+        result: OdmVendorAttribute = service.create(odm_input=payload)
         if approve:
             service.approve(result.uid)
         return result
@@ -2942,6 +2941,7 @@ class TestUtils:
         effective_date: datetime | None = None,
         term_uid: str | None = None,
         concept_id: str | None = None,
+        algorithm: str | None = None,
     ) -> CTTerm:
         service: CTTermService = CTTermService()
         if submission_value is None:
@@ -2969,6 +2969,7 @@ class TestUtils:
                 prefix="name_sent_case-",
             ),
             concept_id=cls.random_if_none(concept_id, prefix="CID-"),
+            algorithm=algorithm,
             library_name=library_name,
         )
         ct_term: CTTerm = service.create(payload, start_date=effective_date)
@@ -2993,7 +2994,7 @@ class TestUtils:
                 SET ht.start_date = datetime($start_date)
                 """,
                 params={
-                    "term_uid": term_uid if term_uid else ct_term.term_uid,
+                    "term_uid": term_uid or ct_term.term_uid,
                     "codelist_uid": codelist_uid,
                     "start_date": effective_date,
                 },
@@ -3011,7 +3012,7 @@ class TestUtils:
         service: CTTermService = CTTermService()
         service.add_parent(
             term_uid=term.term_uid,
-            parent_uid=parent_uid if parent_uid else parent.term_uid,
+            parent_uid=parent_uid or parent.term_uid,
             relationship_type=TermParentType(relationship_type),
         )
 
@@ -3040,8 +3041,7 @@ class TestUtils:
         }
         if library_name is not None:
             kwargs["library_name"] = library_name
-        package = CTPackageService().create_sponsor_ct_package(**kwargs)
-        return package
+        return CTPackageService().create_sponsor_ct_package(**kwargs)
 
     @classmethod
     def create_ct_package(
@@ -3336,9 +3336,7 @@ class TestUtils:
                 codelist_uid=codelist_uid,
                 dictionary_id=cls.random_if_none(dictionary_id, prefix="dict-"),
                 name=target_name,
-                name_sentence_case=(
-                    name_sentence_case if name_sentence_case else target_name
-                ),
+                name_sentence_case=name_sentence_case or target_name,
                 abbreviation=cls.random_if_none(abbreviation, prefix="abbr-"),
                 definition=cls.random_if_none(definition, prefix="definition-"),
                 library_name=library_name,
@@ -3405,7 +3403,7 @@ class TestUtils:
             unit_definition_uid=unit_definition_uid,
         )
 
-        result: NumericValueWithUnit = service.create(payload)  # type: ignore[assignment]
+        result: NumericValueWithUnit = service.create(payload)
         return result
 
     @classmethod
@@ -3482,15 +3480,12 @@ class TestUtils:
             sdtm_domain_uid=sdtm_domain_uid,
         )
 
-        result: NumericValueWithUnit = service.create(payload)  # type: ignore[assignment]
+        result: NumericValueWithUnit = service.create(payload)
         return result
 
     @classmethod
     def get_unit_uid_by_name(cls, unit_name) -> str:
-        unit_uid = MetaRepository().unit_definition_repository.find_uid_by_name(
-            unit_name
-        )
-        return unit_uid
+        return MetaRepository().unit_definition_repository.find_uid_by_name(unit_name)
 
     @classmethod
     def get_unit_by_uid(
@@ -3610,14 +3605,11 @@ class TestUtils:
                 query = create_ct_term_with_custom_uid_query
 
             cl_uid = codelist_uid
-            if codelist_uid is None:
-                if field_name in ct_codelist_map:
-                    cl_uid, codelist_name, codelist_submval = ct_codelist_map[
-                        field_name
-                    ]
-                    cl_uid = cls.get_or_create_codelist(
-                        cl_uid, codelist_name, codelist_submval
-                    )
+            if codelist_uid is None and field_name in ct_codelist_map:
+                cl_uid, codelist_name, codelist_submval = ct_codelist_map[field_name]
+                cl_uid = cls.get_or_create_codelist(
+                    cl_uid, codelist_name, codelist_submval
+                )
 
             if isinstance(value, list):
                 for uid, name in value:
@@ -3671,8 +3663,7 @@ class TestUtils:
             extensible=True,
             codelist_uid=codelist_uid,
         )
-        codelist_uid = codelist.codelist_uid
-        return codelist_uid
+        return codelist.codelist_uid
 
     @classmethod
     def create_data_model_catalogue(
@@ -3920,7 +3911,7 @@ class TestUtils:
         library_name: str = SPONSOR_LIBRARY_NAME,
     ) -> SponsorModelAPIModel:
         service: SponsorModelService = SponsorModelService()
-        result: SponsorModelAPIModel = service.create(  # type: ignore[assignment]
+        result: SponsorModelAPIModel = service.create(
             item_input=SponsorModelCreateInput(
                 ig_uid=ig_uid,
                 ig_version_number=ig_version_number,
@@ -3977,7 +3968,7 @@ class TestUtils:
             "state": state,
             "extended_domain": extended_domain,
         }
-        result: SponsorModelDatasetAPIModel = service.create(  # type: ignore[assignment]
+        result: SponsorModelDatasetAPIModel = service.create(
             item_input=SponsorModelDatasetInput(
                 dataset_uid=dataset_uid,
                 sponsor_model_name=sponsor_model_name,
@@ -4066,7 +4057,7 @@ class TestUtils:
             "enrich_build_order": enrich_build_order,
             "enrich_rule": enrich_rule,
         }
-        result: SponsorModelDatasetVariableAPIModel = service.create(  # type: ignore[assignment]
+        result: SponsorModelDatasetVariableAPIModel = service.create(
             item_input=SponsorModelDatasetVariableInput(
                 target_data_model_catalogue=target_data_model_catalogue,
                 dataset_uid=dataset_uid,
@@ -4102,6 +4093,17 @@ class TestUtils:
             study_uid, study_disease_milestone_input=payload
         )
         return result
+
+    @classmethod
+    def create_study_auxiliary_device(
+        cls, study_uid: str, auxiliary_device_term_uid: str, order: int | None = None
+    ) -> StudyAuxiliaryDevice:
+        return StudyAuxiliaryDeviceService().create(
+            study_uid=study_uid,
+            item_input=StudyAuxiliaryDeviceCreateInput(
+                auxiliary_device_term_uid=auxiliary_device_term_uid, order=order
+            ),
+        )
 
     @classmethod
     def create_variable_class(

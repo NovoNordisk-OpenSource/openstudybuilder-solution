@@ -116,7 +116,7 @@ class StudyStandardVersionRepository:
             filters = {
                 "study_value__latest_value__uid": study_uid,
             }
-        standard_versions = [
+        return [
             StudyStandardVersionOGM.model_validate(sas_node)
             for sas_node in ListDistinct(
                 StudyStandardVersion.nodes.traverse(
@@ -128,7 +128,6 @@ class StudyStandardVersionRepository:
                 .resolve_subgraph()
             ).distinct()
         ]
-        return standard_versions
 
     def find_by_uid(
         self,

@@ -404,6 +404,7 @@ function verifyTableRow(columnName, rowIndex, value) {
         cy.get('table tbody tr').eq(rowIndex).find('td').eq(columnIndex).should('contain.text', value)
     })
 }
+
 function openOverviewPage(name, uid) {
     cy.visit(`/library/activities/${name}/${uid}/overview`)
     cy.waitForPage()

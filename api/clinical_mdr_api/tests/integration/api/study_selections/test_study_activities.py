@@ -1799,6 +1799,132 @@ def test_detailed_soa_export(api_client):
             assert "LATEST" in str(exported_data.read())
 
 
+def test_detailed_soa_export_follows_manual_visit_order(api_client):
+    # GIVEN a study in manual visit mode with visits reordered against their unique visit number
+    study_for_export = TestUtils.create_study(project_number=project.project_number)
+    study_epoch = create_study_epoch(
+        "EpochSubType_0001", study_uid=study_for_export.uid
+    )
+    response = api_client.patch(
+        f"/studies/{study_for_export.uid}/study-visits/mode",
+        json={"manual_visit_mode": True},
+    )
+    assert_response_status_code(response, 200)
+
+    visit_uids = []
+    for idx in (1, 2, 3):
+        response = api_client.post(
+            f"/studies/{study_for_export.uid}/study-visits",
+            json={
+                "study_epoch_uid": study_epoch.uid,
+                "visit_type": {"term_uid": "VisitType_0003"},
+                "visit_contact_mode": {"term_uid": "VisitContactMode_0001"},
+                "is_global_anchor_visit": False,
+                "visit_class": "SINGLE_VISIT",
+                "visit_subclass": "SINGLE_VISIT",
+                "show_visit": True,
+                "visit_name": f"Visit {idx}",
+                "visit_short_name": f"V{idx}",
+                "unique_visit_number": idx * 100,
+            },
+        )
+        assert_response_status_code(response, 201)
+        visit_uids.append(response.json()["uid"])
+    response = api_client.patch(
+        f"/studies/{study_for_export.uid}/study-visits/reorder",
+        json={"visit_uids": [visit_uids[2], visit_uids[0], visit_uids[1]]},
+    )
+    assert_response_status_code(response, 200)
+
+    study_activity = create_study_activity(
+        study_uid=study_for_export.uid,
+        activity_uid=randomized_activity.uid,
+        activity_subgroup_uid=randomisation_activity_subgroup.uid,
+        activity_group_uid=general_activity_group.uid,
+        soa_group_term_uid=term_efficacy_uid,
+    )
+    for visit_uid in visit_uids:
+        TestUtils.create_study_activity_schedule(
+            study_uid=study_for_export.uid,
+            study_activity_uid=study_activity.study_activity_uid,
+            study_visit_uid=visit_uid,
+        )
+
+    # WHEN the detailed SoA is exported
+    response = api_client.get(f"/studies/{study_for_export.uid}/detailed-soa-exports")
+    assert_response_status_code(response, 200)
+
+    # THEN the visits follow the order set by the user
+    assert [row["visit"] for row in response.json()] == ["V3", "V1", "V2"]
+
+
+def test_detailed_soa_export_follows_timeline_in_assisted_mode(api_client):
+    # GIVEN an unscheduled visit, whose stored order isn't updated when visits are inserted before it
+    study_for_export = TestUtils.create_study(project_number=project.project_number)
+    study_epoch = create_study_epoch(
+        "EpochSubType_0001", study_uid=study_for_export.uid
+    )
+    visit_to_create = generate_default_input_data_for_visit().copy()
+    visit_uids = [
+        TestUtils.create_study_visit(
+            study_uid=study_for_export.uid,
+            study_epoch_uid=study_epoch.uid,
+            **(visit_to_create | {"time_value": 1}),
+        ).uid
+    ]
+    unscheduled_visit_input = {
+        key: value
+        for key, value in visit_to_create.items()
+        if key
+        not in (
+            "time_value",
+            "time_unit_uid",
+            "min_visit_window_value",
+            "max_visit_window_value",
+        )
+    } | {
+        "study_epoch_uid": study_epoch.uid,
+        "visit_type": {"term_uid": "VisitType_0006"},
+        "time_reference": None,
+        "visit_class": "UNSCHEDULED_VISIT",
+        "visit_subclass": None,
+    }
+    response = api_client.post(
+        f"/studies/{study_for_export.uid}/study-visits", json=unscheduled_visit_input
+    )
+    assert_response_status_code(response, 201)
+    visit_uids.append(response.json()["uid"])
+    for time_value in (2, 3):
+        visit_uids.append(
+            TestUtils.create_study_visit(
+                study_uid=study_for_export.uid,
+                study_epoch_uid=study_epoch.uid,
+                **(visit_to_create | {"time_value": time_value}),
+            ).uid
+        )
+
+    study_activity = create_study_activity(
+        study_uid=study_for_export.uid,
+        activity_uid=randomized_activity.uid,
+        activity_subgroup_uid=randomisation_activity_subgroup.uid,
+        activity_group_uid=general_activity_group.uid,
+        soa_group_term_uid=term_efficacy_uid,
+    )
+    for visit_uid in visit_uids:
+        TestUtils.create_study_activity_schedule(
+            study_uid=study_for_export.uid,
+            study_activity_uid=study_activity.study_activity_uid,
+            study_visit_uid=visit_uid,
+        )
+
+    # WHEN the detailed SoA is exported
+    response = api_client.get(f"/studies/{study_for_export.uid}/detailed-soa-exports")
+    assert_response_status_code(response, 200)
+
+    # THEN the visits follow the timeline, with the unscheduled visit last
+    assert [row["visit"] for row in response.json()] == ["V1", "V2", "V3", "V29500"]
+
+
 def test_protocol_soa_html_with_time_units_and_study_versioning(api_client):
     study_for_export = TestUtils.create_study(project_number=project.project_number)
     visit_to_create = generate_default_input_data_for_visit().copy()
@@ -4565,6 +4691,124 @@ def test_clone_copies_soa_footnotes_for_activity_related_selections(api_client):
     assert activity_subgroup_ref_count == 1
     assert activity_ref_count == 1
     assert activity_schedule_ref_count == 1
+
+
+def test_clone_keeps_soa_footnotes_attached_via_propagated_cell(api_client):
+    source_study = TestUtils.create_study(
+        project_number=project.project_number,
+        acronym="MCPACTFNP",
+    )
+
+    source_epoch = create_study_epoch("EpochSubType_0001", study_uid=source_study.uid)
+    source_visit = TestUtils.create_study_visit(
+        study_uid=source_study.uid,
+        study_epoch_uid=source_epoch.uid,
+        **generate_default_input_data_for_visit(),
+    )
+
+    activity_group = TestUtils.create_activity_group(name="Propagated Activity Group")
+    activity_subgroup = TestUtils.create_activity_subgroup(
+        name="Propagated Activity Subgroup"
+    )
+    activity = TestUtils.create_activity(
+        name="Propagated Activity",
+        activity_subgroups=[activity_subgroup.uid],
+        activity_groups=[activity_group.uid],
+    )
+
+    source_study_activity = create_study_activity(
+        study_uid=source_study.uid,
+        activity_uid=activity.uid,
+        activity_subgroup_uid=activity_subgroup.uid,
+        activity_group_uid=activity_group.uid,
+        soa_group_term_uid=term_efficacy_uid,
+    )
+    source_study_activity_schedule = TestUtils.create_study_activity_schedule(
+        study_uid=source_study.uid,
+        study_activity_uid=source_study_activity.study_activity_uid,
+        study_visit_uid=source_visit.uid,
+    )
+
+    # footnote templates take their type from the first FTNTTP codelist, which other tests of this module may create
+    catalogue_name, library_name = get_catalogue_name_library_name(use_test_utils=True)
+    ftnttp_codelist_uids, _ = db.cypher_query("""
+        MATCH (clr:CTCodelistRoot)-[:HAS_ATTRIBUTES_ROOT]->(:CTCodelistAttributesRoot)-[:LATEST]->(:CTCodelistAttributesValue {submission_value: 'FTNTTP'})
+        RETURN clr.uid
+        """)
+    ftnttp_codelist_uid = (
+        ftnttp_codelist_uids[0][0]
+        if ftnttp_codelist_uids
+        else create_codelist(
+            name="Footnote Type",
+            uid=f"FTNTTP{source_study.uid[-6:]}",
+            catalogue=catalogue_name,
+            library=library_name,
+            submission_value="FTNTTP",
+        ).codelist_uid
+    )
+    footnote_type = TestUtils.create_ct_term(
+        codelist_uid=ftnttp_codelist_uid,
+        submission_value=f"FT{source_study.uid[-4:]}",
+        sponsor_preferred_name="Footnote Type via propagated cell",
+        catalogue_name=catalogue_name,
+        library_name=library_name,
+        approve=True,
+    )
+
+    # own template, as the default one of create_footnote() is shared by tests of this module
+    footnote_template = TestUtils.create_footnote_template(
+        name="<p>Footnote via propagated cell</p>",
+        type_uid=footnote_type.term_uid,
+        approve=True,
+    )
+    footnote = TestUtils.create_footnote(footnote_template_uid=footnote_template.uid)
+    TestUtils.create_study_soa_footnote(
+        study_uid=source_study.uid,
+        footnote_uid=footnote.uid,
+        referenced_items=[
+            ReferencedItem(
+                item_uid=source_study_activity_schedule.study_activity_schedule_uid,
+                item_type=SoAItemType.STUDY_ACTIVITY_SCHEDULE,
+                via_propagated_cell=True,
+            ),
+        ],
+    )
+
+    clone_response = api_client.post(
+        f"/studies/{source_study.uid}/clone",
+        json={
+            "study_number": "9910",
+            "study_acronym": "MCPACTFNPC",
+            "project_number": project.project_number,
+            "description": "Clone footnotes via propagated cell",
+            "copy_study_arm": False,
+            "copy_study_branch_arm": False,
+            "copy_study_cohort": False,
+            "copy_study_element": False,
+            "copy_study_visit": True,
+            "copy_study_epoch": True,
+            "copy_study_visits_study_footnote": False,
+            "copy_study_epochs_study_footnote": False,
+            "copy_study_design_matrix": False,
+            "copy_study_soa_group": True,
+            "copy_study_activity_group": True,
+            "copy_study_activity_subgroup": True,
+            "copy_study_activity": True,
+            "copy_study_activity_instance": False,
+            "copy_study_activity_schedule": True,
+            "validation_mode": ValidationMode.WARNING.value,
+        },
+    )
+    assert_response_status_code(clone_response, 201)
+    cloned_study_uid = clone_response.json()["uid"]
+
+    # THEN the cloned footnote still references the checkmark via propagated cell
+    response = api_client.get(f"/studies/{cloned_study_uid}/study-soa-footnotes")
+    assert_response_status_code(response, 200)
+    (cloned_footnote,) = response.json()["items"]
+    (referenced_item,) = cloned_footnote["referenced_items"]
+    assert referenced_item["item_type"] == SoAItemType.STUDY_ACTIVITY_SCHEDULE.value
+    assert referenced_item["via_propagated_cell"] is True
 
 
 def test_cross_soa_group_duplicate_study_activity_blocked_on_patch(api_client):

@@ -41,7 +41,7 @@ class LagTimeVO(NumericValueWithUnitVO):
         sdtm_domain_uid: str,
     ) -> Self:
         value = cls.derive_value_property(value=value)
-        simple_concept_vo = cls(
+        return cls(
             name=str(value),
             value=value,
             name_sentence_case=str(value).lower(),
@@ -51,8 +51,6 @@ class LagTimeVO(NumericValueWithUnitVO):
             unit_definition_uid=unit_definition_uid,
             sdtm_domain_uid=sdtm_domain_uid,
         )
-
-        return simple_concept_vo
 
     @classmethod
     def from_input_values(
@@ -78,7 +76,7 @@ class LagTimeVO(NumericValueWithUnitVO):
             msg=f"{cls.__name__} tried to connect to non-existent SDTM Domain with UID '{sdtm_domain_uid}'.",
         )
         value = cls.derive_value_property(value=value)
-        simple_concept_vo = cls(
+        return cls(
             name=f"{value} [{unit_definition_uid}] for SDTM domain [{sdtm_domain_uid}]",
             value=value,
             name_sentence_case=str(value).lower(),
@@ -88,8 +86,6 @@ class LagTimeVO(NumericValueWithUnitVO):
             unit_definition_uid=unit_definition_uid,
             sdtm_domain_uid=sdtm_domain_uid,
         )
-
-        return simple_concept_vo
 
 
 class LagTimeAR(NumericValueWithUnitAR):
@@ -133,7 +129,7 @@ class LagTimeAR(NumericValueWithUnitAR):
             getattr(simple_concept_vo, "sdtm_domain_uid"),
         )
 
-        simple_concept_ar = cls(
+        return cls(
             _uid=(
                 generate_uid_callback()
                 if simple_concept_uid is None
@@ -143,4 +139,3 @@ class LagTimeAR(NumericValueWithUnitAR):
             _library=library,
             _concept_vo=simple_concept_vo,
         )
-        return simple_concept_ar

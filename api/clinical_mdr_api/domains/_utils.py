@@ -1,4 +1,4 @@
-from typing import Literal, overload
+from typing import Literal, cast, overload
 
 from clinical_mdr_api.domains.iso_languages import LANGUAGES_INDEXED_BY
 from clinical_mdr_api.domains.libraries.parameter_term import ParameterTermEntryVO
@@ -89,49 +89,18 @@ def get_iso_lang_data(
     return lang[key] if not return_key else lang[return_key]
 
 
+def get_iso_lang_value(query: str) -> str:
+    """
+    Returns the language value matching `query` as a string.
+
+    `get_iso_lang_data` without `return_key` is annotated as a union; callers that
+    pass the value on as a plain string (e.g. `xml:lang`) use this typed wrapper.
+    """
+    return cast(str, get_iso_lang_data(query=query))
+
+
 def is_language_english(lang: str) -> bool:
     return lang.casefold() in [EN_LANGUAGE, ENG_LANGUAGE]
-
-
-def is_syntax_of_template_name_correct(name: str) -> bool:
-    """
-    Checks the syntax of the name.
-    The syntax is considered to be valid if all of the following conditions are true:
-    - The name consists of at least one printable character.
-    - The name contains no brackets or a matching number of opening and closing brackets [].
-    - The name does not contain nested brackets like this: [a[b]c].
-    - The parameters within the brackets need to consist of at least one character.
-
-    Args:
-        name (str): The name of the template.
-
-    Returns:
-        bool: True if the syntax of the name is valid.
-    """
-    if not isinstance(name, str):
-        raise TypeError(f"Expected type str but found {type(name)}")
-
-    if len(name.strip()) == 0:
-        return False
-
-    brackets_counter = 0
-    char_counter = 0
-    for char in name:
-        if char == "[":
-            brackets_counter += 1
-            char_counter = 0
-        elif char == "]":
-            if char_counter == 0:
-                return False
-            brackets_counter -= 1
-            char_counter = 0
-        else:
-            char_counter += 1
-
-        if brackets_counter < 0 or brackets_counter > 1:
-            return False
-
-    return brackets_counter == 0
 
 
 def capitalize_first_letter_if_template_parameter(

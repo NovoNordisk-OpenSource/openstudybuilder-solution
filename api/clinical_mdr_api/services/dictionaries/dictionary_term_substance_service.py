@@ -138,11 +138,10 @@ class DictionaryTermSubstanceService(DictionaryTermGenericService):
                 msg=f"Invalid field name specified in the filter dictionary : {field_name}"
             )
 
-        header_values = self.repository.get_distinct_headers(
+        return self.repository.get_distinct_headers(
             field_name=field_name,
             search_string=search_string,
             filter_by=filter_by,
             filter_operator=filter_operator,
             page_size=page_size,
         )
-        return header_values

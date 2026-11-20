@@ -3,7 +3,7 @@
   "info": {
     "title": "OpenStudyBuilder Consumer API",
     "description": "\n## NOTICE\n\nThis license information is applicable to the swagger documentation of the clinical-mdr-api, that is the openapi.json.\n\n## License Terms (MIT)\n\nCopyright (C) 2025 Novo Nordisk A/S, Danish company registration no. 24256790\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies\nof the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS\nFOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER\nIN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\n\n## Licenses and Acknowledgements for Incorporated Software\n\nThis component contains software licensed under different licenses when compiled, please refer to the third-party-licenses.md file for further information and full license texts.\n\n## Authentication\n\nSupports OAuth2 [Authorization Code Flow](https://datatracker.ietf.org/doc/html/rfc6749#section-4.1),\nat paths described in the OpenID Connect Discovery metadata document (whose URL is defined by the `OAUTH_METADATA_URL` environment variable).\n\nMicrosoft Identity Platform documentation can be read \n([here](https://docs.microsoft.com/en-us/azure/active-directory/develop/v2-oauth2-auth-code-flow)).\n",
-    "version": "0.1.153"
+    "version": "0.1.160"
   },
   "paths": {
     "/": {
@@ -280,7 +280,7 @@
           "[V1] Studies"
         ],
         "summary": "Create Study",
-        "description": "Creates a new study definition in `DRAFT` status.\n\n- Only top-level studies can be created here. Study subparts are not supported\nby this endpoint.\n\n- At least one of `study_number` and `study_acronym` must be provided.\n\n- `study_number` and `study_acronym` must each be unique across all studies,\nnot just within the project. A collision is rejected with HTTP 409.\n\n- The study ID is derived by the server as `{project_id}-{study_number}`\nand cannot be supplied by the caller.\n\n<br/>\nValid values for payload fields:\n\n- **project_id**: Allowed values are retrieved from the `GET /v1/library/projects`\nendpoint (**id** field). The value is matched exactly and case-sensitively.",
+        "description": "Creates a new study definition in `DRAFT` status.\n\n- Only top-level studies can be created here. Study subparts are not supported\nby this endpoint.\n\n- At least one of `study_number` and `study_acronym` must be provided.\n\n- `study_number` and `study_acronym` must each be unique across all studies,\nnot just within the project. A collision is rejected with HTTP 409.\n\n- The study ID is derived by the server as `{project_id}-{study_number}`\nand cannot be supplied by the caller.\n\n- `title` is optional and is not required to be unique: several studies may\nshare the same title.\n\n<br/>\nValid values for payload fields:\n\n- **project_id**: Allowed values are retrieved from the `GET /v1/library/projects`\nendpoint (**id** field). The value is matched exactly and case-sensitively.",
         "operationId": "create_study_v1_studies_post",
         "security": [
           {
@@ -301,7 +301,8 @@
                     "study_number": "5678",
                     "study_acronym": "STUDY-ACRONYM",
                     "project_id": "AB1234",
-                    "description": "Study description"
+                    "description": "Study description",
+                    "title": "Study title"
                   }
                 }
               }
@@ -952,7 +953,7 @@
           "[V1] Studies"
         ],
         "summary": "Get Study Operational Soa",
-        "description": "Returns a paginated list of operational SoA items representing a point in the activities/visits matrix.\nSoA items are sorted by the specified sort criteria and order.\n\nIf `study_version_number` query parameter is provided, operational SoA\nassociated with the specified study version will be returned.\nOtherwise, operational SoA items for the latest study version will be returned.",
+        "description": "Returns a paginated list of operational SoA items representing a point in the activities/visits matrix.\nSoA items are sorted by the specified sort criteria and order.\n\nActivity instances that are not scheduled to any visit are included when they have a topic code\n(their visit and epoch fields are null); use `include_unscheduled_activities=false` to exclude them.\nNote that, unlike this endpoint, the detailed SoA endpoint excludes unscheduled\nactivities by default and does not filter on topic code.\n\nIf `study_version_number` query parameter is provided, operational SoA\nassociated with the specified study version will be returned.\nOtherwise, operational SoA items for the latest study version will be returned.",
         "operationId": "get_study_operational_soa_v1_studies__uid__operational_soa_get",
         "security": [
           {
@@ -1039,11 +1040,11 @@
             "required": false,
             "schema": {
               "type": "boolean",
-              "description": "If true, includes activities that are not scheduled to any visit.",
-              "default": false,
+              "description": "If true (default), also includes activity instances that are not scheduled to any visit, provided they have a topic code. Their visit and epoch fields are null. If false, only scheduled activity instances are returned.",
+              "default": true,
               "title": "Include Unscheduled Activities"
             },
-            "description": "If true, includes activities that are not scheduled to any visit."
+            "description": "If true (default), also includes activity instances that are not scheduled to any visit, provided they have a topic code. Their visit and epoch fields are null. If false, only scheduled activity instances are returned."
           }
         ],
         "responses": {
@@ -1614,6 +1615,103 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PapillonsNsvXmlDataTypeMapping"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/papillons/topic-cd-def": {
+      "get": {
+        "tags": [
+          "[V1] Papillons"
+        ],
+        "summary": "Get Papillons Topic Cd Def",
+        "description": "Returns the topic code definitions (`TOPIC_CD_DEF`) used by Papillons: a paginated list with one\nitem per library activity instance, in its latest Final version, sorted by the specified sort\nfield and order.\n\nEach item carries the activity instance label, topic code, short (ADaM parameter) topic code,\nlegacy description, molecular weight, SAS display format, its domain classification\n(`general_domain_class`, `sub_domain_class`, `sub_domain_type`, `topic_cd_type`), the version\nnumber and status of the returned version, and the values of its activity items: category\n(`cat`), subcategory (`sub_cat`), response codelist (`catgo_resp_list`), standard unit\n(`std_unit`), unit dimension (`unit_dimension`) and whether it uses a US conventional unit\n(`convert_to_us_conv_unit`).\n\nIf `datetime` is specified, the latest Final version that had started by that moment is used\ninstead. Only the activity instance version is time-travelled; the classes, terms and units\nit refers to are read in their current state.",
+        "operationId": "get_papillons_topic_cd_def_v1_papillons_topic_cd_def_get",
+        "security": [
+          {
+            "OAuth2AuthorizationCodeBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "sort_by",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/SortByPapillonsTopicCdDef",
+              "default": "lb"
+            }
+          },
+          {
+            "name": "sort_order",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/SortOrder",
+              "default": "asc"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 1000,
+              "minimum": 1,
+              "description": "Number of items to be returned per page. Must be between 1 and the maximum allowed page size.",
+              "default": 100,
+              "title": "Page Size"
+            },
+            "description": "Number of items to be returned per page. Must be between 1 and the maximum allowed page size."
+          },
+          {
+            "name": "page_number",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 1000000000,
+              "minimum": 1,
+              "description": "Page number of the returned list of entities. Must be between 1 and the maximum allowed page number.",
+              "default": 1,
+              "title": "Page Number"
+            },
+            "description": "Page number of the returned list of entities. Must be between 1 and the maximum allowed page number."
+          },
+          {
+            "name": "datetime",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "description": "If specified, the latest Final version of each activity instance that had started by this moment is returned; instances without a Final version by then are omitted. Only the activity instance version is time-travelled: item classes, terms, units and classes are read in their current state. Format: YYYY-MM-DDThh:mm:ssZ (timezone required). Omit to use the latest Final version.",
+              "title": "Datetime",
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}(:\\d{2}(\\.\\d+)?)?(Z|[+-]\\d{2}:\\d{2})?$"
+            },
+            "description": "If specified, the latest Final version of each activity instance that had started by this moment is returned; instances without a Final version by then are omitted. Only the activity instance version is time-travelled: item classes, terms, units and classes are read in their current state. Format: YYYY-MM-DDThh:mm:ssZ (timezone required). Omit to use the latest Final version."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedResponse_PapillonsTopicCdDef_"
                 }
               }
             }
@@ -3931,7 +4029,7 @@
             "description": "NCI Concept Name",
             "nullable": true
           },
-          "display_name": {
+          "label": {
             "anyOf": [
               {
                 "type": "string"
@@ -3940,8 +4038,8 @@
                 "type": "null"
               }
             ],
-            "title": "Display Name",
-            "description": "Display name shown to end users",
+            "title": "Label",
+            "description": "Label shown to end users",
             "nullable": true
           },
           "order": {
@@ -4697,6 +4795,41 @@
         ],
         "title": "PaginatedResponse[LibraryActivity]"
       },
+      "PaginatedResponse_PapillonsTopicCdDef_": {
+        "properties": {
+          "self": {
+            "type": "string",
+            "title": "Self",
+            "description": "Pagination link pointing to the current page"
+          },
+          "prev": {
+            "type": "string",
+            "title": "Prev",
+            "description": "Pagination link pointing to the previous page"
+          },
+          "next": {
+            "type": "string",
+            "title": "Next",
+            "description": "Pagination link pointing to the next page"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PapillonsTopicCdDef"
+            },
+            "type": "array",
+            "title": "Items",
+            "description": "List of items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "self",
+          "prev",
+          "next",
+          "items"
+        ],
+        "title": "PaginatedResponse[PapillonsTopicCdDef]"
+      },
       "PaginatedResponse_Project_": {
         "properties": {
           "self": {
@@ -4963,6 +5096,242 @@
           "visits"
         ],
         "title": "PapillonsSoAItem"
+      },
+      "PapillonsSubDomainType": {
+        "type": "string",
+        "enum": [
+          "Compound",
+          "LaboratoryActivity",
+          "RatingScale",
+          "Other"
+        ],
+        "title": "PapillonsSubDomainType"
+      },
+      "PapillonsTopicCdDef": {
+        "properties": {
+          "uid": {
+            "type": "string",
+            "title": "Uid",
+            "description": "UID of the activity instance"
+          },
+          "lb": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lb",
+            "description": "Label",
+            "nullable": true
+          },
+          "topic_cd": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Topic Cd",
+            "description": "Topic Code",
+            "nullable": true
+          },
+          "short_topic_cd": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Short Topic Cd",
+            "description": "Short Topic Code",
+            "nullable": true
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Legacy description of the activity instance",
+            "nullable": true
+          },
+          "molecular_weight": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Molecular Weight",
+            "description": "Molecular weight",
+            "nullable": true
+          },
+          "sas_display_format": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sas Display Format",
+            "description": "SAS display format",
+            "nullable": true
+          },
+          "general_domain_class": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "General Domain Class",
+            "description": "Name of the level 2 Activity Instance Class (e.g. `Finding`, `Intervention`, `Event`) above the classes the instance's activity items' item classes are attached to; null if there is none",
+            "nullable": true
+          },
+          "sub_domain_class": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sub Domain Class",
+            "description": "Name of the level 3 Activity Instance Class (e.g. `NumericFindings`, `CategoricFindings`, `TextualFindings`) the instance's activity items' item classes are attached to; null if there is none",
+            "nullable": true
+          },
+          "sub_domain_type": {
+            "$ref": "#/components/schemas/PapillonsSubDomainType",
+            "description": "Sub domain type, `Other` if none of the others applies"
+          },
+          "cat": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cat",
+            "description": "Category of the activity instance: the name of the CT term of its finding, intervention or event category activity item (the item's text value if it holds text instead of a term)",
+            "nullable": true
+          },
+          "sub_cat": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sub Cat",
+            "description": "Subcategory of the activity instance: the name of the CT term of its finding, intervention or event subcategory activity item (the item's text value if it holds text instead of a term)",
+            "nullable": true
+          },
+          "catgo_resp_list": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Catgo Resp List",
+            "description": "Submission value of the response codelist selected on the `categoric_finding_original_result` activity item. `null` if there is none.",
+            "nullable": true
+          },
+          "convert_to_us_conv_unit": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Convert To Us Conv Unit",
+            "description": "`true` if any unit linked to the activity instance is a US conventional unit, `false` if it has units but none is. `null` if it has no units.",
+            "nullable": true
+          },
+          "version": {
+            "type": "string",
+            "title": "Version",
+            "description": "Version number of the returned (Final) activity instance version"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Status of the returned activity instance version"
+          },
+          "std_unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Std Unit",
+            "description": "Name of the unit selected on the `standard_unit` activity item",
+            "nullable": true
+          },
+          "topic_cd_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Topic Cd Type",
+            "description": "Name of the activity instance class, e.g. `NumericFindings`",
+            "nullable": true
+          },
+          "unit_dimension": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit Dimension",
+            "description": "Submission value of the CT term selected on the `unit_dimension` activity item, e.g. `CONCENTRATION`",
+            "nullable": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "uid",
+          "sub_domain_type",
+          "version",
+          "status"
+        ],
+        "title": "PapillonsTopicCdDef"
       },
       "Project": {
         "properties": {
@@ -5238,6 +5607,15 @@
           "name"
         ],
         "title": "SortByLibraryItem"
+      },
+      "SortByPapillonsTopicCdDef": {
+        "type": "string",
+        "enum": [
+          "lb",
+          "topic_cd",
+          "short_topic_cd"
+        ],
+        "title": "SortByPapillonsTopicCdDef"
       },
       "SortByStudies": {
         "type": "string",
@@ -5720,15 +6098,11 @@
             "nullable": true
           },
           "control_type": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/CTTermWithCodelistAndConflictFlag"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "nullable": true
+            "items": {
+              "$ref": "#/components/schemas/CTTermWithCodelistAndConflictFlag"
+            },
+            "type": "array",
+            "title": "Control Type"
           },
           "control_type_nf": {
             "anyOf": [
@@ -5890,6 +6264,42 @@
           "TemplateParameterTermRoot"
         ],
         "title": "StudyAuditTrailEntity"
+      },
+      "StudyAuxiliaryDeviceListingModel": {
+        "properties": {
+          "uid": {
+            "type": "string",
+            "title": "Uid",
+            "default": ""
+          },
+          "order": {
+            "type": "integer",
+            "title": "Order",
+            "default": 0
+          },
+          "device": {
+            "$ref": "#/components/schemas/CTTermWithCodelistAndConflictFlag"
+          },
+          "algorithm": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Algorithm",
+            "description": "SDTM algorithm text read by SAS programs",
+            "nullable": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "device"
+        ],
+        "title": "StudyAuxiliaryDeviceListingModel",
+        "description": "Study auxiliary device for study metadata listing."
       },
       "StudyBranchArmListingModel": {
         "properties": {
@@ -6055,6 +6465,19 @@
             "title": "Description",
             "description": "Free-text description of the study",
             "nullable": true
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title",
+            "description": "Title of the study. Free text, not required to be unique across studies. An empty or whitespace-only value is treated as no title.",
+            "nullable": true
           }
         },
         "additionalProperties": false,
@@ -6100,6 +6523,19 @@
             ],
             "title": "Description",
             "description": "Study description",
+            "nullable": true
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title",
+            "description": "Study title",
             "nullable": true
           }
         },
@@ -6934,6 +7370,21 @@
             ],
             "title": "Endpoints",
             "nullable": true
+          },
+          "auxiliary_devices": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/StudyAuxiliaryDeviceListingModel"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Auxiliary Devices",
+            "nullable": true
           }
         },
         "type": "object",
@@ -7570,6 +8021,30 @@
                 "type": "null"
               }
             ],
+            "nullable": true
+          },
+          "age_bl_rule": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CTTermWithCodelistAndConflictFlag"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Age at baseline rule",
+            "nullable": true
+          },
+          "age_grp_rule": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CTTermWithCodelistAndConflictFlag"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Age group rule",
             "nullable": true
           },
           "extension": {
@@ -8701,7 +9176,6 @@
         "type": "string",
         "enum": [
           "SINGLE_VISIT",
-          "SPECIAL_VISIT",
           "NON_VISIT",
           "UNSCHEDULED_VISIT",
           "MANUALLY_DEFINED_VISIT"

@@ -225,3 +225,8 @@ class Logger:
         self.log.error(msg, *args)
         self.full_log.append(self.format_message(msg, *args, level="ERROR"))
         self.all_errors.append(self.format_message(msg, *args, level="ERROR"))
+
+    def exception(self, msg: str, *args) -> None:
+        self.log.exception(msg, *args)  # noqa: LOG004
+        self.full_log.append(self.format_message(msg, *args, level="EXCEPTION"))
+        self.all_errors.append(self.format_message(msg, *args, level="EXCEPTION"))

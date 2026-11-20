@@ -644,7 +644,7 @@
             {% set question = item.translated_texts | selectattr('text_type.value', '==', 'Question') | first |
             default('') %}
             {% set external_question = item.external_question | default('') %}
-            {% if item.datatype|lower == 'comment' %}
+            {% if not item.datatype %}
             <td class="border border-gray-600 p-4 text-center text-2xl" colspan="5">
                 <h4 class="inline-block font-medium my-2">
                     <svg xmlns="http://www.w3.org/2000/svg" style="display: inline-block;" viewBox="0 0 24 24"
@@ -654,6 +654,9 @@
                     </svg>
                     {{ display_text.text|safe or external_question.name|safe or question.text|safe or item.name }}
                 </h4>
+                <div class="text-red-600 text-xs keys-container hidden">
+                    [OID={{ item_in.oid }}, Version={{ item_in.version }}]
+                </div>
             </td>
             {% else %}
             <td class="border border-gray-600 p-2 w-2 text-red-600 font-bold text-center">
@@ -958,7 +961,7 @@
                         term.version }}]
                     </div>
                     {% endfor %}
-                    {% else %}
+                    {% elif item.datatype %}
                     <input type="{{ get_input_type(item.datatype|lower)|trim }}"
                         class="p-2 border border-gray-300 rounded" />
                     {% endif %}

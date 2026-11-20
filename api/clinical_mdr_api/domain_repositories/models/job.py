@@ -12,4 +12,4 @@ class Job(ClinicalMdrNodeWithUID):
     started_at = ZonedDateTimeProperty()
     ended_at = ZonedDateTimeProperty()
     response_json = StringProperty()
-    log = ArrayProperty(StringProperty())  # type: ignore
+    log = ArrayProperty(StringProperty())

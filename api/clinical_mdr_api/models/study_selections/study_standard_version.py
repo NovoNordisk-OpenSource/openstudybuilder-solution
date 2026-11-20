@@ -194,11 +194,7 @@ class StudyStandardVersion(BaseModel):
         return cls(
             uid=study_standard_version_vo.uid or "",
             study_uid=study_standard_version_vo.study_uid,
-            study_version=(
-                study_value_version
-                if study_value_version
-                else get_latest_on_datetime_str()
-            ),
+            study_version=study_value_version or get_latest_on_datetime_str(),
             ct_package=ct_package,
             description=study_standard_version_vo.description,
             author_username=UserInfoService.get_author_username_from_id(

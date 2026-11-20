@@ -5727,6 +5727,7 @@ IMPORT_OUTPUT1 = {
                 }
             ],
             "concept_id": None,
+            "algorithm": None,
             "nci_preferred_name": "codelistitem codedvalue",
             "definition": "codelistitem codedvalue",
             "sponsor_preferred_name": "preferred term for new codelist",

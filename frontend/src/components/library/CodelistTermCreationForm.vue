@@ -207,6 +207,7 @@
       </v-form>
     </template>
   </StepperForm>
+  <ConfirmDialog ref="confirm" :text-cols="6" :action-cols="5" />
 </template>
 
 <script setup>
@@ -218,6 +219,7 @@ import controlledTerminology from '@/api/controlledTerminology'
 import termsApi from '@/api/controlledTerminology/terms'
 import { useEditableLibraries } from '@/composables/editableLibraries'
 import StepperForm from '@/components/tools/StepperForm.vue'
+import ConfirmDialog from '@/components/tools/ConfirmDialog.vue'
 import NNTable from '@/components/tools/NNTable.vue'
 import filteringParameters from '@/utils/filteringParameters'
 import { escapeHTML } from '@/utils/sanitize'
@@ -346,6 +348,7 @@ const namesForm = ref()
 const attributesForm = ref()
 const orderAndSubmvalForm = ref()
 const pairedCodelist = ref(null)
+const confirm = ref()
 
 watch(createNewTerm, (value) => {
   steps.value = value ? alternateSteps : getInitialSteps()
@@ -423,6 +426,13 @@ async function submit() {
       ],
     }
     try {
+      if (
+        !(await confirmSubmissionValueReuse([
+          { submission_value: form.value.submission_value },
+        ]))
+      ) {
+        return
+      }
       const resp = await controlledTerminology.createCodelistTerm(data)
       notificationHub.add({
         msg: t('CodelistTermCreationForm.add_success'),
@@ -440,16 +450,67 @@ async function submit() {
       })
       return
     }
-    const codelistUid = props.codelistUid
-    // TODO this should be a single api call
-    for (const term of form.value) {
-      await controlledTerminology.addTermToCodelist(codelistUid, term)
+    try {
+      const termsToAdd = form.value.map((term) => ({ ...term }))
+      if (!(await confirmSubmissionValueReuse(termsToAdd))) {
+        return
+      }
+      const codelistUid = props.codelistUid
+      // TODO this should be a single api call
+      for (const term of termsToAdd) {
+        await controlledTerminology.addTermToCodelist(codelistUid, term)
+      }
+      notificationHub.add({
+        msg: t('CodelistTermCreationForm.add_success'),
+      })
+      close()
+    } finally {
+      stepper.value.loading = false
     }
-    notificationHub.add({
-      msg: t('CodelistTermCreationForm.add_success'),
-    })
-    close()
   }
+}
+// entries: [{ submission_value, term_uid }]; a term's own uses of the value are not reported
+async function confirmSubmissionValueReuse(entries) {
+  entries = entries.map((entry) => ({
+    ...entry,
+    submission_value: entry.submission_value?.trim(),
+  }))
+  const { data } = await termsApi.getAll({
+    filters: JSON.stringify({
+      'codelists.submission_value': {
+        v: [
+          ...new Set(entries.map(({ submission_value }) => submission_value)),
+        ],
+        op: 'eq',
+      },
+    }),
+    page_size: 0,
+  })
+  const usages = entries.flatMap(({ submission_value, term_uid }) =>
+    data.items
+      .filter((term) => term.term_uid !== term_uid)
+      .flatMap((term) =>
+        term.codelists
+          .filter((codelist) => codelist.submission_value === submission_value)
+          .map(
+            (codelist) =>
+              `• '${submission_value}': ${term.name.sponsor_preferred_name} (${term.term_uid}) — ${codelist.codelist_name} (${codelist.codelist_submission_value})`
+          )
+      )
+  )
+  if (!usages.length) {
+    return true
+  }
+  return confirm.value.open(
+    t('CodelistTermCreationForm.submission_value_in_use', {
+      usages: usages.join('\n'),
+    }),
+    {
+      type: 'warning',
+      cancelLabel: t('_global.cancel'),
+      agreeLabel: t('_global.continue'),
+    }
+  )
 }
 function setSentenceCase(value) {
   if (value) {

@@ -231,7 +231,6 @@ Feature: All API endpoints can be called successfully
       | /studies/structure-overview/headers                        | field_name=study_ids                                                                            |
       | /studies/{study_uid}                                       | <none>                                                                                          |
       | /studies/{study_uid}/allowed-consecutive-groups            | <none>                                                                                          |
-      | /studies/{study_uid}/anchor-visits-for-special-visit       | study_epoch_uid=StudyEpoch_000021                                                               |
       | /studies/{study_uid}/anchor-visits-in-group-of-subvisits   | <none>                                                                                          |
       | /studies/{study_uid}/audit-trail                           | <none>                                                                                          |
       | /studies/{study_uid}/ctr/odm.xml                           | <none>                                                                                          |

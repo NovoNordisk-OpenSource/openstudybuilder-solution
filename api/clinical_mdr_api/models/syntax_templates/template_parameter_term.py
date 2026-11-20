@@ -73,6 +73,14 @@ class MultiTemplateParameterTerm(BaseModel):
             json_schema_extra={"nullable": True},
         ),
     ]
+    parameter_name: Annotated[
+        str | None,
+        Field(
+            description="The name of the template parameter at this position in the template, e.g. 'Activity'. "
+            "Only a template parameter name in square brackets is a placeholder, other bracketed text is literal.",
+            json_schema_extra={"nullable": True},
+        ),
+    ] = None
     terms: list[IndexedTemplateParameterTerm] = Field(
         description="A list of indexed template parameter terms that are used at this position in the template.",
         default_factory=list,

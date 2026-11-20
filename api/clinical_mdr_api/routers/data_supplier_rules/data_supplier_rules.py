@@ -1,6 +1,6 @@
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Body, Path
+from fastapi import APIRouter, Body, Path, Query
 from starlette.requests import Request
 
 from clinical_mdr_api.models.data_supplier_rules.data_supplier_rule import (
@@ -75,6 +75,16 @@ def get_data_supplier_rules(
     total_count: Annotated[
         bool | None, _generic_descriptions.TOTAL_COUNT_QUERY
     ] = False,
+    has_warnings: Annotated[
+        bool | None,
+        Query(
+            description=(
+                "If true, only rules with a retired or missing activity grouping are "
+                "returned. If false, only rules without such warnings are returned. "
+                "Always combined with the other filters using AND."
+            ),
+        ),
+    ] = None,
 ) -> CustomPage[DataSupplierRule]:
     data_supplier_rule_service = DataSupplierRuleService()
     results = data_supplier_rule_service.get_all_items(
@@ -84,6 +94,7 @@ def get_data_supplier_rules(
         total_count=total_count,
         filter_by=filters,
         filter_operator=FilterOperator.from_str(operator),
+        has_warnings=has_warnings,
     )
     return CustomPage.create(
         items=results.items, total=results.total, page=page_number, size=page_size

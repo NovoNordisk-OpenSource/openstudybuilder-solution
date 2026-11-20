@@ -68,6 +68,19 @@
 
           <!-- Right side: tooltips, status, version -->
           <div class="d-flex align-center">
+            <v-tooltip v-if="item.activity_instances?.length" location="top">
+              <template #activator="{ props: tooltipProps }">
+                <v-icon
+                  v-bind="tooltipProps"
+                  class="mx-1"
+                  color="darkGrey"
+                  data-cy="item-activity-instances-flag"
+                >
+                  mdi-link
+                </v-icon>
+              </template>
+              <span>{{ t('CRFTree.has_activity_instances') }}</span>
+            </v-tooltip>
             <CrfTreeTooltipsHandler :item="item" value="mandatory" />
             <CrfTreeTooltipsHandler :item="item" value="locked" />
             <CrfTreeTooltipsHandler :item="item" value="refAttrs" />
@@ -321,8 +334,10 @@ async function newVersion(item) {
     loading.value = true
 
     crfs
-      .newVersion('items', item.uid)
+      .newVersionInTree('items', item.uid)
       .then((resp) => {
+        if (!resp) return
+
         if (props.parentItemGroup?.status === statuses.DRAFT) {
           updateItem(resp.data)
         }
@@ -369,7 +384,7 @@ async function fetchItems() {
           params: {
             version: item.version,
             fields:
-              'uid,oid,name,datatype,status,version,mandatory,locked,order_number,vendor_attributes',
+              'uid,oid,name,datatype,status,version,mandatory,locked,order_number,vendor_attributes,activity_instances',
           },
         })
         .then((rs) => ({ ...item, ...rs.data }))

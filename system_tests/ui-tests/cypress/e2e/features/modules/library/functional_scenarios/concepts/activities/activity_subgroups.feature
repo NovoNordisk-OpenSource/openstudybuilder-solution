@@ -1,5 +1,4 @@
-@REQ_ID:1070683 @skip_on_prv_val
-
+@REQ_ID:1070683
 Feature: Library - Concepts - Activities - Activity Subgroups
 
     As a user, I want to manage every Activity Subgroups in the Concepts Library

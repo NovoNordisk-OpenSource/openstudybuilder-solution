@@ -185,6 +185,13 @@ def get_distinct_values_for_header(
             alias="activity_names[]",
         ),
     ] = None,
+    activity_library_names: Annotated[
+        list[str] | None,
+        Query(
+            description="A list of library names of the linked activities to use as a specific filter",
+            alias="activity_library_names[]",
+        ),
+    ] = None,
     search_string: _generic_descriptions.HEADER_SEARCH_STRING_QUERY = "",
     filters: _generic_descriptions.FILTERS_QUERY = None,
     operator: _generic_descriptions.FILTER_OPERATOR_QUERY = settings.default_filter_operator,
@@ -200,6 +207,7 @@ def get_distinct_values_for_header(
         page_size=page_size,
         activity_names=activity_names,
         activity_subgroup_names=activity_subgroup_names,
+        activity_library_names=activity_library_names,
     )
 
 

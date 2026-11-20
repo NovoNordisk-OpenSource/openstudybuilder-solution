@@ -89,7 +89,7 @@ class ConditionRepository(OdmGenericRepository[OdmConditionAR]):
             input_dict["uid"],
             input_dict["version"],
         )
-        odm_condition_ar = OdmConditionAR.from_repository_values(
+        return OdmConditionAR.from_repository_values(
             uid=input_dict["uid"],
             odm_vo=OdmConditionVO.from_repository_values(
                 oid=input_dict["oid"],
@@ -131,8 +131,6 @@ class ConditionRepository(OdmGenericRepository[OdmConditionAR]):
                 minor_version=int(minor),
             ),
         )
-
-        return odm_condition_ar
 
     def _get_specific_field_mapping(self) -> dict[str, str]:
         """Field mappings for condition-specific fields."""

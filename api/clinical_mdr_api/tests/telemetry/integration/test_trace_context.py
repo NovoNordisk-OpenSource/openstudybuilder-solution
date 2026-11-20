@@ -27,8 +27,7 @@ def get_traceresponse_header(api_client, traceparent=None):
     headers = {"traceparent": traceparent} if traceparent else {}
     response = api_client.get(TEST_PATH, headers=headers)
     response.raise_for_status()
-    traceresponse = response.headers.get("traceresponse")
-    return traceresponse
+    return response.headers.get("traceresponse")
 
 
 def parse_trace_context_id(traceresponse):

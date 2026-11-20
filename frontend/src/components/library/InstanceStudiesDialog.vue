@@ -15,6 +15,7 @@
         <v-col cols="10">
           <NNParameterHighlighter
             :name="template"
+            :parameter-names="templateParameterNames"
             :show-prefix-and-postfix="false"
           />
         </v-col>
@@ -75,6 +76,10 @@ export default {
   props: {
     template: {
       type: String,
+      default: null,
+    },
+    templateParameterNames: {
+      type: Array,
       default: null,
     },
     text: {

@@ -1,0 +1,30 @@
+# Removes pre-installed toolchains we don't use. The runner ships with
+# ~10 GB of Android SDK, .NET, Haskell, Swift, etc.; docker save/load
+# plus Neo4j data quickly fill the remaining ~14 GB free.
+name: Free up runner disk space
+description: Remove unused toolchains, optionally preserving the runner tool cache.
+inputs:
+  preserve-tool-cache:
+    description: Keep the runner tool cache for jobs that use host-installed tools.
+    required: false
+    default: 'false'
+runs:
+  using: composite
+  steps:
+    - name: Remove unused runner toolchains
+      shell: bash
+      env:
+        PRESERVE_TOOL_CACHE: ${{ inputs.preserve-tool-cache }}
+      run: |
+        df -h /
+        toolchain_paths=(
+          /usr/share/dotnet /usr/local/lib/android /opt/ghc
+          /usr/local/share/boost /usr/local/lib/heroku
+          /usr/local/share/powershell /usr/local/share/chromium
+        )
+        if [[ "$PRESERVE_TOOL_CACHE" != "true" && -n "${AGENT_TOOLSDIRECTORY:-}" ]]; then
+          toolchain_paths+=("$AGENT_TOOLSDIRECTORY")
+        fi
+        printf '%s\0' "${toolchain_paths[@]}" \
+          | sudo -n xargs -0 -r -n 1 -P 4 rm -rf -- || true
+        df -h /

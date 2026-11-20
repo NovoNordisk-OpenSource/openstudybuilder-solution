@@ -119,8 +119,6 @@ def create_random_study(
             control_type_exists_callback=lambda _: True,
             intervention_model_exists_callback=lambda _: True,
             trial_blinding_schema_exists_callback=lambda _: True,
-            study_title_exists_callback=lambda _, study_number: False,
-            study_short_title_exists_callback=lambda _, study_number: False,
             author_id=author_id,
         )
 
@@ -273,8 +271,6 @@ def prepare_random_study(
         )
         while random.random() > 0.2:
             study.edit_metadata(
-                study_title_exists_callback=lambda _, study_number: False,
-                study_short_title_exists_callback=lambda _, study_number: False,
                 new_study_description=StudyDescriptionVO.from_input_values(
                     study_title="new_study_title", study_short_title="study_short_title"
                 ),
@@ -307,8 +303,6 @@ def prepare_random_study(
                 )
             else:
                 study.edit_metadata(
-                    study_title_exists_callback=lambda _, study_number: False,
-                    study_short_title_exists_callback=lambda _, study_number: False,
                     new_study_description=StudyDescriptionVO.from_input_values(
                         study_title="new_study_title",
                         study_short_title="study_short_title",
@@ -340,12 +334,12 @@ def prepare_random_study_sequence(
             condition=condition,
             max_count=max_count,
         )
-        for _ in range(0, count)
+        for _ in range(count)
     ]
 
 
 def _random_study_number() -> str:
-    choice = [str(_) for _ in range(0, 10)]
+    choice = [str(_) for _ in range(10)]
     return (
         random.choice(choice)
         + random.choice(choice)
@@ -418,8 +412,6 @@ class TestStudyDefinitionAR(unittest.TestCase):
                     generate_uid_callback=generate_uid_callback,
                     initial_id_metadata=study_id_metadata,
                     project_exists_callback=lambda _: True,
-                    study_title_exists_callback=lambda _, study_number: False,
-                    study_short_title_exists_callback=lambda _, study_number: False,
                     study_number_exists_callback=lambda x, y: False,
                     study_acronym_exists_callback=lambda x, y: False,
                     author_id=author,
@@ -548,7 +540,7 @@ class TestStudyDefinitionAR(unittest.TestCase):
                         intervention_type_null_value_code=None,
                         add_on_to_existing_treatments=None,
                         add_on_to_existing_treatments_null_value_code=None,
-                        control_type_code=None,
+                        control_type_codes=[],
                         control_type_null_value_code=None,
                         intervention_model_code=None,
                         intervention_model_null_value_code=None,
@@ -581,7 +573,7 @@ class TestStudyDefinitionAR(unittest.TestCase):
                 self.assertIsNone(study.latest_released_or_locked_metadata)
 
     def test__get_snapshot__results(self):
-        for _ in range(0, 10):
+        for _ in range(10):
             with self.subTest():
                 # given
                 study = prepare_random_study(generate_uid_callback=_test_uid_generator)
@@ -688,7 +680,7 @@ class TestStudyDefinitionAR(unittest.TestCase):
                         )
 
     def test__study_ar_from_snapshot__results(self):
-        for _ in range(0, 10):
+        for _ in range(10):
             with self.subTest():
                 # given
                 original_study = prepare_random_study(
@@ -747,7 +739,7 @@ class TestStudyDefinitionAR(unittest.TestCase):
                 exp_released_ver_number: Decimal = (
                     given_study_released_metadata.ver_metadata.version_number
                     if given_study_released_metadata
-                    else Decimal("0")
+                    else Decimal(0)
                 )
                 expected_released_metadata = StudyMetadataVO(
                     id_metadata=given_study_metadata.id_metadata,
@@ -833,8 +825,6 @@ class TestStudyDefinitionAR(unittest.TestCase):
                 study_short_title = "study_short_title"
                 # when
                 study.edit_metadata(
-                    study_title_exists_callback=lambda _, study_number: False,
-                    study_short_title_exists_callback=lambda _, study_number: False,
                     new_study_description=StudyDescriptionVO.from_input_values(
                         study_title=study_title, study_short_title=study_short_title
                     ),
@@ -906,10 +896,6 @@ class TestStudyDefinitionAR(unittest.TestCase):
                 with self.assertRaises(exceptions.BusinessLogicException):
                     # when
                     study.edit_metadata(
-                        study_title_exists_callback=lambda _, study_number: False,
-                        study_short_title_exists_callback=(
-                            lambda _, study_number: False
-                        ),
                         new_study_description=StudyDescriptionVO.from_input_values(
                             study_title="new_study_title",
                             study_short_title="study_short_title",

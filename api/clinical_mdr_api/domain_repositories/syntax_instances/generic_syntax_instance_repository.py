@@ -276,10 +276,9 @@ class GenericSyntaxInstanceRepository[AggregateRootType: LibraryItemAggregateRoo
         return parameter_terms[0] if len(parameter_terms) > 0 else []
 
     def _from_repository_values(self, value):
-        simple_parameter_term_vo = SimpleParameterTermVO.from_repository_values(
+        return SimpleParameterTermVO.from_repository_values(
             uid=value["parameter_uid"], value=value["parameter_term"]
         )
-        return simple_parameter_term_vo
 
     def get_template_vo(self, root, value, template):
         return ParametrizedTemplateVO(
@@ -327,7 +326,7 @@ class GenericSyntaxInstanceRepository[AggregateRootType: LibraryItemAggregateRoo
         if template_value_object is None:
             template_value_object = template_object.latest_final.get()
 
-        template = ParametrizedTemplateVO(
+        return ParametrizedTemplateVO(
             template_name=template_value_object.name,
             template_uid=template_object.uid,
             template_sequence_id=template_object.sequence_id,
@@ -335,7 +334,6 @@ class GenericSyntaxInstanceRepository[AggregateRootType: LibraryItemAggregateRoo
             guidance_text=template_value_object.guidance_text,
             library_name=template_object.has_library.get().name,
         )
-        return template
 
     def check_usage_count(self, _: str) -> bool:
         return False

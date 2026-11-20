@@ -18,7 +18,7 @@ class StudyDurationWeeksVO(NumericValueVO):
         is_template_parameter: bool,
     ) -> Self:
         value = cls.derive_value_property(value=value)
-        simple_concept_vo = cls(
+        return cls(
             name=f"{value!s} weeks",
             value=value,
             name_sentence_case=f"{value!s} weeks",
@@ -26,8 +26,6 @@ class StudyDurationWeeksVO(NumericValueVO):
             abbreviation=abbreviation,
             is_template_parameter=is_template_parameter,
         )
-
-        return simple_concept_vo
 
 
 class StudyDurationWeeksAR(NumericValueAR):

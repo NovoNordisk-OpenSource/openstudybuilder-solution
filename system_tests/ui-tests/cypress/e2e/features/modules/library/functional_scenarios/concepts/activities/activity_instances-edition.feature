@@ -197,4 +197,4 @@ Feature: Library - Concepts - Activities - Activity instances - wizard stepper -
 
     @pending_implementation
     Scenario: [Edit][Groupings] User must be able to edit activity instance groupings
-        
+    

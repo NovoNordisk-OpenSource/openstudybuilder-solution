@@ -40,7 +40,7 @@ class ActivityInstructionTemplateRepository(
                 is_library_editable_callback=lambda _: library.is_editable,
             ),
             item_metadata=self._library_item_metadata_vo_from_relation(relationship),
-            template=self._get_template(value),
+            template=self._get_template(value, kwargs["template_parameter_names"]),
             indications=sorted(
                 [
                     SimpleTermModel(

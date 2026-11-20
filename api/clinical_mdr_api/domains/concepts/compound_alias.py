@@ -30,7 +30,7 @@ class CompoundAliasVO(ConceptVO):
         is_preferred_synonym: bool,
         compound_uid: str,
     ) -> Self:
-        compound_alias_vo = cls(
+        return cls(
             name=name,
             name_sentence_case=name_sentence_case,
             definition=definition,
@@ -39,8 +39,6 @@ class CompoundAliasVO(ConceptVO):
             is_preferred_synonym=is_preferred_synonym,
             compound_uid=compound_uid,
         )
-
-        return compound_alias_vo
 
     def validate(
         self,
@@ -139,13 +137,12 @@ class CompoundAliasAR(ConceptARBase):
             compound_existing_preferred_synonyms_callback=compound_existing_preferred_synonyms_callback,
         )
 
-        compound_alias_ar = cls(
+        return cls(
             _uid=uid,
             _item_metadata=item_metadata,
             _library=library,
             _concept_vo=concept_vo,
         )
-        return compound_alias_ar
 
     def edit_draft(
         self,

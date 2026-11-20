@@ -14,14 +14,13 @@ from clinical_mdr_api.tests.unit.domain.utils import AUTHOR_ID, random_str
 
 def create_random_text_value_vo() -> TextValueVO:
     name = random_str()
-    random_text_value_vo = TextValueVO.from_repository_values(
+    return TextValueVO.from_repository_values(
         name=name,
         name_sentence_case=name.lower(),
         definition=random_str(),
         abbreviation=random_str(),
         is_template_parameter=True,
     )
-    return random_text_value_vo
 
 
 def create_random_text_value_ar(
@@ -29,7 +28,7 @@ def create_random_text_value_ar(
     library: str = "Library",
     is_editable: bool = True,
 ) -> TextValueAR:
-    random_text_value_ar = TextValueAR.from_input_values(
+    return TextValueAR.from_input_values(
         generate_uid_callback=generate_uid_callback,
         simple_concept_vo=create_random_text_value_vo(),
         library=LibraryVO.from_repository_values(
@@ -37,8 +36,6 @@ def create_random_text_value_ar(
         ),
         author_id=AUTHOR_ID,
     )
-
-    return random_text_value_ar
 
 
 class TestTextValue(unittest.TestCase):

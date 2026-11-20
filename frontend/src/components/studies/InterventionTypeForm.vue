@@ -46,14 +46,15 @@
         </NotApplicableField>
         <v-row>
           <v-col cols="11">
-            <v-autocomplete
-              v-model="form.control_type_code"
+            <MultipleSelect
+              v-model="form.control_type_codes"
               :data-cy="$t('StudyInterventionTypeForm.control_type')"
               :label="$t('StudyInterventionTypeForm.control_type')"
               :items="studiesGeneralStore.controlTypes"
               item-title="sponsor_preferred_name"
               item-value="term_uid"
               return-object
+              density="compact"
               clearable
             />
           </v-col>
@@ -280,9 +281,9 @@ export default {
       if (durationValue === undefined || durationValue === '') {
         data.planned_study_length = null
       }
-      data.control_type_code = studyMetadataForms.getTermPayload(
+      data.control_type_codes = studyMetadataForms.getTermsPayload(
         data,
-        'control_type_code'
+        'control_type_codes'
       )
       data.intervention_model_code = studyMetadataForms.getTermPayload(
         data,

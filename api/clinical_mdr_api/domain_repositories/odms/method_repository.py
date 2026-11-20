@@ -90,7 +90,7 @@ class MethodRepository(OdmGenericRepository[OdmMethodAR]):
             input_dict["uid"],
             input_dict["version"],
         )
-        odm_method_ar = OdmMethodAR.from_repository_values(
+        return OdmMethodAR.from_repository_values(
             uid=input_dict["uid"],
             odm_vo=OdmMethodVO.from_repository_values(
                 oid=input_dict.get("oid"),
@@ -133,8 +133,6 @@ class MethodRepository(OdmGenericRepository[OdmMethodAR]):
                 minor_version=int(minor),
             ),
         )
-
-        return odm_method_ar
 
     def _get_specific_field_mapping(self) -> dict[str, str]:
         """Field mappings for method-specific fields."""

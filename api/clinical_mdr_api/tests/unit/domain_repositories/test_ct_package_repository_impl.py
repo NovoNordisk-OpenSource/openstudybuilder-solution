@@ -24,7 +24,7 @@ def create_random_ct_package_node(catalogue_name: str) -> CTPackage:
     mock = Mock()
     mocked_catalogue_node = MockLibrary(catalogue_name)
     mock.single = lambda: mocked_catalogue_node
-    random_ct_package = CTPackage(
+    return CTPackage(
         uid=random_str(),
         name=random_str(),
         label=random_str(),
@@ -37,7 +37,6 @@ def create_random_ct_package_node(catalogue_name: str) -> CTPackage:
         author_id=random_str(),
         contains_package=mock,
     )
-    return random_ct_package
 
 
 class TestCTPackageRepositoryImpl(unittest.TestCase):

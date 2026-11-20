@@ -5,26 +5,22 @@
     :help-items="helpItems"
     :help-text="$t('HelpMessages.units')"
     :open="open"
+    max-width="1000px"
     @close="cancel"
     @submit="submit"
   >
     <template #body>
       <v-form ref="observer">
+        <v-alert
+          v-if="!editing && form.master_unit"
+          type="info"
+          variant="tonal"
+          class="mb-4"
+        >
+          {{ $t('UnitForm.created_as_master_unit') }}
+        </v-alert>
         <v-row>
-          <v-col>
-            <v-autocomplete
-              v-model="form.unit_dimension"
-              :label="$t('UnitForm.dimension')"
-              data-cy="unit-dimension"
-              :items="unitDimensions"
-              item-title="sponsor_preferred_name"
-              item-value="term_uid"
-              clearable
-            />
-          </v-col>
-        </v-row>
-        <v-row>
-          <v-col cols="12">
+          <v-col cols="12" md="8">
             <v-text-field
               v-model="form.name"
               :label="$t('_global.name')"
@@ -33,24 +29,23 @@
               :rules="[formRules.required]"
             />
           </v-col>
-        </v-row>
-        <v-row>
-          <v-col>
-            <v-select
-              v-model="form.unit_subsets"
-              label="Unit Subset"
-              data-cy="unit-subset"
-              :items="unitSubsets"
+          <v-col cols="12" md="4">
+            <v-autocomplete
+              v-model="form.unit_dimension"
+              :label="$t('UnitForm.dimension')"
+              data-cy="unit-dimension"
+              :items="unitDimensions"
               item-title="sponsor_preferred_name"
               item-value="term_uid"
-              single-line
-              multiple
               clearable
+              :disabled="dimensionLocked"
+              :hint="dimensionLocked ? $t('UnitForm.dimension_locked') : ''"
+              :persistent-hint="dimensionLocked"
             />
           </v-col>
         </v-row>
         <v-row>
-          <v-col cols="12">
+          <v-col cols="12" md="4">
             <v-autocomplete
               v-model="form.ct_units"
               :label="$t('UnitForm.ct_term')"
@@ -60,58 +55,83 @@
               item-value="term_uid"
               single-line
               multiple
+              chips
+              closable-chips
               clearable
               :rules="[formRules.required]"
             />
           </v-col>
-        </v-row>
-        <v-row>
-          <v-col cols="6">
-            <v-switch
-              v-model="form.convertible_unit"
-              :label="$t('UnitForm.convertible_unit')"
-              data-cy="convertible-unit"
-            />
-            <v-switch
-              v-model="form.use_molecular_weight"
-              :label="$t('UnitForm.molecular_weight')"
-            />
-            <v-switch
-              v-model="form.use_complex_unit_conversion"
-              :label="$t('UnitForm.complex_conversion')"
-            />
-            <v-switch
-              v-model="form.display_unit"
-              :label="$t('UnitForm.display_unit')"
-              data-cy="display-unit"
-            />
-            <v-switch
-              v-model="form.master_unit"
-              :label="$t('UnitForm.master_unit')"
-              data-cy="master-unit"
-              :disabled="masterUnitExists"
-              :hint="masterUnitExists ? $t('UnitForm.master_unit_exists') : ''"
-              :persistent-hint="masterUnitExists"
-            />
-            <v-switch
-              v-model="form.us_conventional_unit"
-              :label="$t('UnitForm.us_unit')"
-              data-cy="us-unit"
+          <v-col cols="12" md="4">
+            <v-select
+              v-model="form.unit_subsets"
+              label="Unit Subset"
+              data-cy="unit-subset"
+              :items="unitSubsets"
+              item-title="sponsor_preferred_name"
+              item-value="term_uid"
+              single-line
+              multiple
+              chips
+              closable-chips
+              clearable
             />
           </v-col>
-          <v-col>
+          <v-col cols="12" md="4">
             <StudybuilderUCUMField v-model="form.ucum" />
           </v-col>
         </v-row>
         <v-row>
-          <v-col>
+          <v-col cols="12" md="4">
+            <v-checkbox
+              v-model="form.convertible_unit"
+              :label="$t('UnitForm.convertible_unit')"
+              data-cy="convertible-unit"
+            />
+            <v-checkbox
+              v-model="form.use_molecular_weight"
+              :label="$t('UnitForm.molecular_weight')"
+            />
+          </v-col>
+          <v-col cols="12" md="4">
             <v-number-input
               v-model="form.conversion_factor_to_master"
               :label="$t('UnitForm.conversion_factor')"
               data-cy="unit-conversion-factor"
-              :disabled="!form.convertible_unit && !form.master_unit"
+              :disabled="
+                (!form.convertible_unit && !form.master_unit) ||
+                forcedMasterFactor
+              "
               clearable
               :precision="5"
+            />
+          </v-col>
+          <v-col cols="12" md="4">
+            <v-text-field
+              :model-value="masterUnit?.name"
+              :label="$t('UnitForm.master_unit')"
+              data-cy="master-unit"
+              disabled
+            />
+          </v-col>
+        </v-row>
+        <v-row>
+          <v-col cols="12" class="d-flex flex-column flex-md-row ga-md-6">
+            <v-checkbox
+              v-model="form.display_unit"
+              :label="$t('UnitForm.display_unit')"
+              data-cy="display-unit"
+              class="flex-grow-0"
+            />
+            <v-checkbox
+              v-model="form.us_conventional_unit"
+              :label="$t('UnitForm.us_unit')"
+              data-cy="us-unit"
+              class="flex-grow-0"
+            />
+            <v-checkbox
+              v-model="form.use_complex_unit_conversion"
+              :label="$t('UnitForm.complex_conversion')"
+              class="flex-grow-0"
             />
           </v-col>
         </v-row>
@@ -177,7 +197,7 @@ const helpItems = [
 const unitTerms = ref([])
 const unitDimensions = ref([])
 const unitSubsets = ref([])
-const masterUnitExists = ref(false)
+const masterUnit = ref(null)
 
 const title = computed(() => {
   return props.unit.uid ? t('UnitForm.edit_title') : t('UnitForm.add_title')
@@ -187,24 +207,44 @@ const editing = computed(() => {
   return !_isEmpty(props.unit)
 })
 
+// Only a draft that has never been approved (version 0.x) may change dimension
+const dimensionLocked = computed(() => {
+  return (
+    editing.value &&
+    !(props.unit.status === 'Draft' && parseFloat(props.unit.version) < 1)
+  )
+})
+
+// A new master unit converts to itself, so its factor is always 1
+const forcedMasterFactor = computed(() => {
+  return !editing.value && form.value.master_unit
+})
+
 watch(
   () => form.value.convertible_unit,
   (value) => {
-    if (!value) {
+    if (!value && !forcedMasterFactor.value) {
       form.value.conversion_factor_to_master = null
     }
   }
 )
 
-// A dimension can only have one master unit, so the option is locked when
-// creating a unit in a dimension that already has one. The API enforces this
-// across every library, but its list endpoint leaves out the Archived library
-// unless asked for it explicitly, so that library is queried separately.
+watch(forcedMasterFactor, (value) => {
+  form.value.conversion_factor_to_master = value ? 1.0 : null
+})
+
+// A dimension can only have one master unit: a new unit becomes the master
+// unless its dimension already has one. The API enforces this across every
+// library, but its list endpoint leaves out the Archived library unless asked
+// for it explicitly, so that library is queried separately.
 watch(
   () => form.value.unit_dimension,
   async (dimensionUid) => {
-    masterUnitExists.value = false
-    if (editing.value || !dimensionUid) {
+    masterUnit.value = null
+    if (!editing.value) {
+      form.value.master_unit = false
+    }
+    if (!dimensionUid) {
       return
     }
     const params = {
@@ -224,11 +264,9 @@ watch(
     if (form.value.unit_dimension !== dimensionUid) {
       return
     }
-    masterUnitExists.value = responses.some(
-      (resp) => resp.data.items.length > 0
-    )
-    if (masterUnitExists.value) {
-      form.value.master_unit = false
+    masterUnit.value = responses.flatMap((resp) => resp.data.items)[0] || null
+    if (!editing.value) {
+      form.value.master_unit = !masterUnit.value
     }
   }
 )
@@ -277,6 +315,7 @@ function getInitialForm() {
     convertible_unit: false,
     display_unit: true,
     master_unit: false,
+    conversion_factor_to_master: null,
     us_conventional_unit: false,
     use_molecular_weight: false,
     use_complex_unit_conversion: false,

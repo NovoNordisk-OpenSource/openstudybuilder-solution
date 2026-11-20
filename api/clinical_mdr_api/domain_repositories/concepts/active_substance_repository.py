@@ -78,7 +78,7 @@ class ActiveSubstanceRepository(ConceptGenericRepository):
         self, input_dict: dict[str, Any]
     ) -> ActiveSubstanceAR:
         major, minor = input_dict["version"].split(".")
-        ar = ActiveSubstanceAR.from_repository_values(
+        return ActiveSubstanceAR.from_repository_values(
             uid=input_dict["uid"],
             concept_vo=ActiveSubstanceVO.from_repository_values(
                 analyte_number=input_dict.get("analyte_number"),
@@ -109,7 +109,6 @@ class ActiveSubstanceRepository(ConceptGenericRepository):
                 minor_version=int(minor),
             ),
         )
-        return ar
 
     def _create_aggregate_root_instance_from_version_root_relationship_and_value(
         self,
@@ -120,7 +119,7 @@ class ActiveSubstanceRepository(ConceptGenericRepository):
         **_kwargs,
     ) -> ActiveSubstanceAR:
         unii_term = value.has_unii_value.get_or_none()
-        ar = ActiveSubstanceAR.from_repository_values(
+        return ActiveSubstanceAR.from_repository_values(
             uid=root.uid,
             concept_vo=ActiveSubstanceVO.from_repository_values(
                 analyte_number=value.analyte_number,
@@ -136,7 +135,6 @@ class ActiveSubstanceRepository(ConceptGenericRepository):
             ),
             item_metadata=self._library_item_metadata_vo_from_relation(relationship),
         )
-        return ar
 
     def specific_alias_clause(self, **kwargs) -> str:
         return """

@@ -111,7 +111,7 @@ class StudySoaPreferencesInput(PatchInputModel):
     )
 
     show_epochs: bool = Field(  # type: ignore[literal-required]
-        True,
+        False,
         description="Show study epochs in detailed SoA",
         alias=settings.study_field_soa_show_epochs,
     )
@@ -724,13 +724,33 @@ class StudyIdentificationMetadataJsonModel(BaseModel):
     registry_identifiers: Annotated[
         RegistryIdentifiersJsonModel | None, Field(json_schema_extra={"nullable": True})
     ] = None
+    migrated_study_indicator: Annotated[
+        bool | None,
+        Field(
+            description=(
+                "True when the study was migrated from MMA. Set by the migration. "
+                "Gates the legacy epoch lag time fields in the UI."
+            ),
+            json_schema_extra={"nullable": True},
+        ),
+    ] = None
+    migrated_study_comment: Annotated[
+        str | None,
+        Field(
+            description=(
+                "Free text about the migration, e.g. 'Migrated in phase 1'. "
+                "Only allowed when migrated_study_indicator is true."
+            ),
+            json_schema_extra={"nullable": True},
+        ),
+    ] = None
 
     @overload
     @classmethod
     def from_study_identification_vo(
         cls,
         study_identification_o: StudyIdentificationMetadataVO,
-        find_project_by_project_number: Callable[[str], ProjectAR],
+        find_project_by_project_number: Callable[[str], ProjectAR | None],
         find_clinical_programme_by_uid: Callable[[str], ClinicalProgrammeAR],
         find_term_by_uids: Callable[..., list[CTTermNameAR] | None],
         terms_at_specific_datetime: datetime | None = None,
@@ -740,7 +760,7 @@ class StudyIdentificationMetadataJsonModel(BaseModel):
     def from_study_identification_vo(
         cls,
         study_identification_o: None,
-        find_project_by_project_number: Callable[[str], ProjectAR],
+        find_project_by_project_number: Callable[[str], ProjectAR | None],
         find_clinical_programme_by_uid: Callable[[str], ClinicalProgrammeAR],
         find_term_by_uids: Callable[..., list[CTTermNameAR] | None],
         terms_at_specific_datetime: datetime | None = None,
@@ -749,7 +769,7 @@ class StudyIdentificationMetadataJsonModel(BaseModel):
     def from_study_identification_vo(
         cls,
         study_identification_o: StudyIdentificationMetadataVO | None,
-        find_project_by_project_number: Callable[[str], ProjectAR],
+        find_project_by_project_number: Callable[[str], ProjectAR | None],
         find_clinical_programme_by_uid: Callable[[str], ClinicalProgrammeAR],
         find_term_by_uids: Callable[..., list[CTTermNameAR] | None],
         terms_at_specific_datetime: datetime | None = None,
@@ -780,6 +800,8 @@ class StudyIdentificationMetadataJsonModel(BaseModel):
                 find_term_by_uids=find_term_by_uids,
                 terms_at_specific_datetime=terms_at_specific_datetime,
             ),
+            migrated_study_indicator=study_identification_o.migrated_study_indicator,
+            migrated_study_comment=study_identification_o.migrated_study_comment,
         )
 
 
@@ -815,7 +837,7 @@ class CompactStudyIdentificationMetadataJsonModel(BaseModel):
     def from_study_identification_vo(
         cls,
         study_identification_o: StudyIdentificationMetadataVO | None,
-        find_project_by_project_number: Callable[[str], ProjectAR],
+        find_project_by_project_number: Callable[[str], ProjectAR | None],
         find_clinical_programme_by_uid: Callable[[str], ClinicalProgrammeAR],
     ) -> Self | None:
         if study_identification_o is None:
@@ -908,6 +930,16 @@ class HighLevelStudyDesignJsonModel(BaseModel):
         Field(json_schema_extra={"nullable": True}),
     ] = None
 
+    age_at_baseline_rule_code: Annotated[
+        SimpleCTTermNameWithConflictFlag | None,
+        Field(json_schema_extra={"nullable": True}),
+    ] = None
+
+    age_group_rule_code: Annotated[
+        SimpleCTTermNameWithConflictFlag | None,
+        Field(json_schema_extra={"nullable": True}),
+    ] = None
+
     is_extension_trial: Annotated[
         bool | None, Field(json_schema_extra={"nullable": True})
     ] = None
@@ -985,6 +1017,8 @@ class HighLevelStudyDesignJsonModel(BaseModel):
                 high_level_study_design_vo.trial_phase_code,
                 high_level_study_design_vo.trial_phase_null_value_code,
                 high_level_study_design_vo.development_stage_code,
+                high_level_study_design_vo.age_at_baseline_rule_code,
+                high_level_study_design_vo.age_group_rule_code,
                 high_level_study_design_vo.is_extension_trial_null_value_code,
                 high_level_study_design_vo.is_adaptive_design_null_value_code,
                 high_level_study_design_vo.study_stop_rules_null_value_code,
@@ -1049,6 +1083,16 @@ class HighLevelStudyDesignJsonModel(BaseModel):
             development_stage_code=(
                 terms[high_level_study_design_vo.development_stage_code]
                 if high_level_study_design_vo.development_stage_code
+                else None
+            ),
+            age_at_baseline_rule_code=(
+                terms[high_level_study_design_vo.age_at_baseline_rule_code]
+                if high_level_study_design_vo.age_at_baseline_rule_code
+                else None
+            ),
+            age_group_rule_code=(
+                terms[high_level_study_design_vo.age_group_rule_code]
+                if high_level_study_design_vo.age_group_rule_code
                 else None
             ),
             is_extension_trial_null_value_code=(
@@ -1448,8 +1492,8 @@ class StudyInterventionJsonModel(BaseModel):
         Field(json_schema_extra={"nullable": True}),
     ] = None
 
-    control_type_code: Annotated[
-        SimpleCTTermNameWithConflictFlag | None,
+    control_type_codes: Annotated[
+        list[SimpleCTTermNameWithConflictFlag] | None,
         Field(json_schema_extra={"nullable": True}),
     ] = None
     control_type_null_value_code: Annotated[
@@ -1542,7 +1586,6 @@ class StudyInterventionJsonModel(BaseModel):
                 study_intervention_vo.intervention_type_code,
                 study_intervention_vo.intervention_type_null_value_code,
                 study_intervention_vo.add_on_to_existing_treatments_null_value_code,
-                study_intervention_vo.control_type_code,
                 study_intervention_vo.control_type_null_value_code,
                 study_intervention_vo.intervention_model_code,
                 study_intervention_vo.intervention_model_null_value_code,
@@ -1558,6 +1601,10 @@ class StudyInterventionJsonModel(BaseModel):
         for trial_intent_types_code in study_intervention_vo.trial_intent_types_codes:
             if trial_intent_types_code is not None:
                 _c_codes.append(trial_intent_types_code)
+
+        for control_type_code in study_intervention_vo.control_type_codes:
+            if control_type_code is not None:
+                _c_codes.append(control_type_code)
 
         c_codes = [code for code in _c_codes if code is not None]
 
@@ -1598,11 +1645,9 @@ class StudyInterventionJsonModel(BaseModel):
                 if study_intervention_vo.add_on_to_existing_treatments_null_value_code
                 else None
             ),
-            control_type_code=(
-                terms[study_intervention_vo.control_type_code]
-                if study_intervention_vo.control_type_code
-                else None
-            ),
+            control_type_codes=[
+                terms[c_code] for c_code in study_intervention_vo.control_type_codes
+            ],
             control_type_null_value_code=(
                 terms[study_intervention_vo.control_type_null_value_code]
                 if study_intervention_vo.control_type_null_value_code
@@ -1712,7 +1757,7 @@ class CompactStudyMetadataJsonModel(BaseModel):
     def from_study_metadata_vo(
         cls,
         study_metadata_vo: StudyMetadataVO,
-        find_project_by_project_number: Callable[[str], ProjectAR],
+        find_project_by_project_number: Callable[[str], ProjectAR | None],
         find_clinical_programme_by_uid: Callable[[str], ClinicalProgrammeAR],
     ) -> Self:
         return cls(
@@ -1758,7 +1803,7 @@ class StudyMetadataJsonModel(BaseModel):
     def from_study_metadata_vo(
         cls,
         study_metadata_vo: StudyMetadataVO,
-        find_project_by_project_number: Callable[[str], ProjectAR],
+        find_project_by_project_number: Callable[[str], ProjectAR | None],
         find_clinical_programme_by_uid: Callable[[str], ClinicalProgrammeAR],
         find_all_study_time_units: Callable[[str], tuple[list[UnitDefinitionAR], int]],
         find_term_by_uids: Callable[..., list[CTTermNameAR] | None],
@@ -1942,7 +1987,7 @@ class CompactStudy(BaseModel):
     def from_study_definition_ar(
         cls,
         study_definition_ar: StudyDefinitionAR,
-        find_project_by_project_number: Callable[[str], ProjectAR],
+        find_project_by_project_number: Callable[[str], ProjectAR | None],
         find_clinical_programme_by_uid: Callable[[str], ClinicalProgrammeAR],
         find_study_parent_part_by_uid: Callable[[str], StudyDefinitionAR | None],
         find_term_by_uids: Callable[..., list[CTTermNameAR] | None],
@@ -2208,7 +2253,7 @@ class Study(BaseModel):
     def from_study_definition_ar(
         cls,
         study_definition_ar: StudyDefinitionAR,
-        find_project_by_project_number: Callable[[str], ProjectAR],
+        find_project_by_project_number: Callable[[str], ProjectAR | None],
         find_clinical_programme_by_uid: Callable[[str], ClinicalProgrammeAR],
         find_all_study_time_units: Callable[[str], tuple[list[UnitDefinitionAR], int]],
         find_study_parent_part_by_uid: Callable[[str], StudyDefinitionAR | None],
@@ -2360,6 +2405,12 @@ class StudyCreateInput(PostInputModel):
     project_number: Annotated[str, Field(min_length=1)]
 
     description: Annotated[str | None, Field()] = None
+
+    migrated_study_indicator: Annotated[bool | None, Field()] = None
+
+    study_title: Annotated[str | None, Field()] = None
+
+    migrated_study_comment: Annotated[str | None, Field()] = None
 
 
 class StudyCloneInput(StudyCreateInput):

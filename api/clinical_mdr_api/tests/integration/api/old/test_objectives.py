@@ -147,6 +147,7 @@ def test_previewing_objective(api_client):
         {
             "position": 1,
             "conjunction": "and",
+            "parameter_name": "Indication",
             "terms": [
                 {
                     "index": 1,
@@ -220,6 +221,7 @@ def test_adding_objective(api_client):
         {
             "position": 1,
             "conjunction": "and",
+            "parameter_name": "Indication",
             "terms": [
                 {
                     "index": 1,

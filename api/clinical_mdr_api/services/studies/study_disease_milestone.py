@@ -76,11 +76,7 @@ class StudyDiseaseMilestoneService:
         return StudyDiseaseMilestone(
             uid=disease_milestone.uid,
             study_uid=disease_milestone.study_uid,
-            study_version=(
-                study_value_version
-                if study_value_version
-                else get_latest_on_datetime_str()
-            ),
+            study_version=study_value_version or get_latest_on_datetime_str(),
             order=disease_milestone.order,
             status=disease_milestone.status.value,
             start_date=disease_milestone.start_date,
@@ -108,10 +104,9 @@ class StudyDiseaseMilestoneService:
         self,
         study_disease_milestone_create_input: StudyDiseaseMilestoneCreateInput,
     ) -> DiseaseMilestoneTypeNamedTuple:
-        dm_type = StudyDiseaseMilestoneType[
+        return StudyDiseaseMilestoneType[
             study_disease_milestone_create_input.disease_milestone_type
         ]
-        return dm_type
 
     @db.transaction
     def get_all_disease_milestones(
@@ -145,8 +140,7 @@ class StudyDiseaseMilestoneService:
             for disease_milestone in items
         ]
 
-        study_disease_milestones = GenericFilteringReturn(items=all_items, total=total)
-        return study_disease_milestones
+        return GenericFilteringReturn(items=all_items, total=total)
 
     @db.transaction
     def find_by_uid(self, uid: str) -> StudyDiseaseMilestone:
@@ -390,21 +384,19 @@ class StudyDiseaseMilestoneService:
             self._transform_all_to_response_history_model(_).model_dump()
             for _ in all_versions
         ]
-        data = calculate_diffs(versions, StudyDiseaseMilestoneVersion)
-        return data
+        return calculate_diffs(versions, StudyDiseaseMilestoneVersion)
 
     @db.transaction
     def audit_trail_all_disease_milestones(
         self,
         study_uid: str,
     ) -> list[StudyDiseaseMilestoneVersion]:
-        data = calculate_diffs_history(
+        return calculate_diffs_history(
             get_all_object_versions=self.repo.get_all_disease_milestone_versions,
             transform_all_to_history_model=self._transform_all_to_response_history_model,
             study_uid=study_uid,
             version_object_class=StudyDiseaseMilestoneVersion,
         )
-        return data
 
     def get_distinct_values_for_header(
         self,
@@ -415,7 +407,7 @@ class StudyDiseaseMilestoneService:
         page_size: int = 10,
         **kwargs,
     ):
-        header_values = self.repo.get_distinct_headers(
+        return self.repo.get_distinct_headers(
             field_name=field_name,
             search_string=search_string,
             filter_by=filter_by,
@@ -423,4 +415,3 @@ class StudyDiseaseMilestoneService:
             page_size=page_size,
             **kwargs,
         )
-        return header_values

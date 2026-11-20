@@ -97,6 +97,7 @@ class CTTermAttributesRepository(CTTermGenericRepository[CTTermAttributesAR]):
                 preferred_term=value.preferred_term,
                 definition=value.definition,
                 catalogue_names=catalogue_names,
+                algorithm=value.algorithm,
             ),
             library=LibraryVO.from_input_values_2(
                 library_name=library.name,
@@ -121,6 +122,7 @@ class CTTermAttributesRepository(CTTermGenericRepository[CTTermAttributesAR]):
                 preferred_term=ar.ct_term_vo.preferred_term,
                 definition=ar.ct_term_vo.definition,
                 concept_id=ar.ct_term_vo.concept_id,
+                algorithm=ar.ct_term_vo.algorithm,
             ):
                 return itm
             latest_draft = root.latest_draft.get_or_none()
@@ -137,6 +139,7 @@ class CTTermAttributesRepository(CTTermGenericRepository[CTTermAttributesAR]):
             preferred_term=ar.ct_term_vo.preferred_term,
             definition=ar.ct_term_vo.definition,
             concept_id=ar.ct_term_vo.concept_id,
+            algorithm=ar.ct_term_vo.algorithm,
         )
         self._db_save_node(new_value)
         return new_value
@@ -146,6 +149,7 @@ class CTTermAttributesRepository(CTTermGenericRepository[CTTermAttributesAR]):
             ar.ct_term_vo.preferred_term != value.preferred_term
             or ar.ct_term_vo.definition != value.definition
             or ar.ct_term_vo.concept_id != value.concept_id
+            or ar.ct_term_vo.algorithm != value.algorithm
         )
 
     def _create(self, item: CTTermAttributesAR) -> CTTermAttributesAR:
@@ -162,6 +166,7 @@ class CTTermAttributesRepository(CTTermGenericRepository[CTTermAttributesAR]):
             preferred_term=item.ct_term_vo.preferred_term,
             definition=item.ct_term_vo.definition,
             concept_id=item.ct_term_vo.concept_id,
+            algorithm=item.ct_term_vo.algorithm,
         )
         self._db_save_node(root)
 

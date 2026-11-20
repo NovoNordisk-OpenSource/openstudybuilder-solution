@@ -21,7 +21,7 @@ from common.exceptions import BusinessLogicException, NotFoundException
 _AggregateRootType = TypeVar("_AggregateRootType")
 
 
-class NeomodelExtGenericService[AggregateRootType](ABC):
+class NeomodelExtGenericService[AggregateRootType, ModelT: BaseModel = BaseModel](ABC):
     object_name: str
     _repos: MetaRepository
     author_id: str
@@ -40,7 +40,7 @@ class NeomodelExtGenericService[AggregateRootType](ABC):
     def _create_aggregate_root(
         self, item_input: BaseModel, library: LibraryVO
     ) -> AggregateRootType:
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @abstractmethod
     def _edit_aggregate(self, item, item_edit_input: BaseModel) -> AggregateRootType:
@@ -49,7 +49,7 @@ class NeomodelExtGenericService[AggregateRootType](ABC):
     @abstractmethod
     def _transform_aggregate_root_to_pydantic_model(
         self, item_ar: AggregateRootType
-    ) -> BaseModel:
+    ) -> ModelT:
         raise NotImplementedError
 
     @property
@@ -67,7 +67,7 @@ class NeomodelExtGenericService[AggregateRootType](ABC):
         filter_operator: FilterOperator = FilterOperator.AND,
         total_count: bool = False,
         **kwargs,
-    ) -> GenericFilteringReturn[BaseModel]:
+    ) -> GenericFilteringReturn[ModelT]:
         items, total = self.repository.find_all(
             total_count=total_count,
             sort_by=sort_by,
@@ -78,9 +78,7 @@ class NeomodelExtGenericService[AggregateRootType](ABC):
             **kwargs,
         )
 
-        all_items = GenericFilteringReturn(items=items, total=total)
-
-        return all_items
+        return GenericFilteringReturn(items=items, total=total)
 
     def get_distinct_values_for_header(
         self,
@@ -91,7 +89,7 @@ class NeomodelExtGenericService[AggregateRootType](ABC):
         page_size: int = 10,
         **kwargs,
     ) -> list[Any]:
-        header_values = self.repository.get_distinct_headers(
+        return self.repository.get_distinct_headers(
             field_name=field_name,
             search_string=search_string,
             filter_by=filter_by,
@@ -99,8 +97,6 @@ class NeomodelExtGenericService[AggregateRootType](ABC):
             page_size=page_size,
             **kwargs,
         )
-
-        return header_values
 
     @ensure_transaction(db)
     def get_by_uid(
@@ -132,7 +128,7 @@ class NeomodelExtGenericService[AggregateRootType](ABC):
         return item
 
     @ensure_transaction(db)
-    def get_version_history(self, uid: str) -> list[BaseModel]:
+    def get_version_history(self, uid: str) -> list[ModelT]:
         if self.version_class is not None:
             all_versions = self.repository.get_all_versions_2(uid=uid)
 
@@ -150,14 +146,14 @@ class NeomodelExtGenericService[AggregateRootType](ABC):
         return []
 
     @ensure_transaction(db)
-    def create_new_version(self, uid: str) -> BaseModel:
+    def create_new_version(self, uid: str) -> ModelT:
         item = self._find_by_uid_or_raise_not_found(uid, for_update=True)
         item.create_new_version(author_id=self.author_id)
         self.repository.save(item)
         return self._transform_aggregate_root_to_pydantic_model(item)
 
     @ensure_transaction(db)
-    def edit_draft(self, uid: str, item_edit_input: BaseModel) -> BaseModel:
+    def edit_draft(self, uid: str, item_edit_input: BaseModel) -> ModelT:
         item = self._find_by_uid_or_raise_not_found(uid=uid, for_update=True)
         fill_missing_values_in_base_model_from_reference_base_model(
             base_model_with_missing_values=item_edit_input,
@@ -168,10 +164,10 @@ class NeomodelExtGenericService[AggregateRootType](ABC):
         return self._transform_aggregate_root_to_pydantic_model(item)
 
     @ensure_transaction(db)
-    def create(self, item_input: BaseModel) -> BaseModel:
+    def create(self, item_input: BaseModel) -> ModelT:
         BusinessLogicException.raise_if_not(
             self._repos.library_repository.library_exists(
-                normalize_string(item_input.library_name)  # type: ignore[arg-type]
+                normalize_string(item_input.library_name)
             ),
             msg=f"Library with Name '{item_input.library_name}' doesn't exist.",
         )
@@ -187,21 +183,21 @@ class NeomodelExtGenericService[AggregateRootType](ABC):
         return self._transform_aggregate_root_to_pydantic_model(concept_ar)
 
     @ensure_transaction(db)
-    def approve(self, uid: str) -> BaseModel:
+    def approve(self, uid: str) -> ModelT:
         item = self._find_by_uid_or_raise_not_found(uid, for_update=True)
         item.approve(author_id=self.author_id)
         self.repository.save(item)
         return self._transform_aggregate_root_to_pydantic_model(item)
 
     @ensure_transaction(db)
-    def inactivate_final(self, uid: str) -> BaseModel:
+    def inactivate_final(self, uid: str) -> ModelT:
         item = self._find_by_uid_or_raise_not_found(uid, for_update=True)
         item.inactivate(author_id=self.author_id)
         self.repository.save(item)
         return self._transform_aggregate_root_to_pydantic_model(item)
 
     @ensure_transaction(db)
-    def reactivate_retired(self, uid: str) -> BaseModel:
+    def reactivate_retired(self, uid: str) -> ModelT:
         item = self._find_by_uid_or_raise_not_found(uid, for_update=True)
         item.reactivate(author_id=self.author_id)
         self.repository.save(item)

@@ -393,8 +393,8 @@ def test_activity_instruction_pre_instances(
     assert res["total"] == (
         len(activity_instruction_pre_instances) if total_count else 0
     )
-    assert res["page"] == (page_number if page_number else 1)
-    assert res["size"] == (page_size if page_size else 10)
+    assert res["page"] == (page_number or 1)
+    assert res["size"] == (page_size or 10)
 
     for item in res["items"]:
         assert set(list(item.keys())) == set(

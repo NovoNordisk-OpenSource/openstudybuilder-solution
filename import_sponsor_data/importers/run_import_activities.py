@@ -706,7 +706,7 @@ class Activities(BaseImporter):
 
         properties_to_compare = [
             "name",
-            "display_name",
+            "label",
             "library_name",
             "mandatory",
             "definition",
@@ -743,16 +743,23 @@ class Activities(BaseImporter):
             value="uid",
         )
 
-        semantic_roles = self.api.get_all_identifiers(
-            self._get_codelist_terms("ROLE"),
-            identifier="submission_value",
-            value="term_uid",
+        semantic_roles = CaselessDict(
+            self.api.get_all_identifiers(
+                self._get_codelist_terms("ROLE"),
+                identifier="submission_value",
+                value="term_uid",
+            )
         )
-        data_types = self.api.get_all_identifiers(
-            self._get_codelist_terms("DATATYPE"),
-            identifier="submission_value",
-            value="term_uid",
-        )
+        # Data type submission values are camelCase (ctTerm) while the item class
+        # CSV spells them in upper case (CTTERM), so match case-insensitively.
+        data_types = {
+            submission_value.lower(): term_uid
+            for submission_value, term_uid in self.api.get_all_identifiers(
+                self._get_codelist_terms("DATATYPE"),
+                identifier="submission_value",
+                value="term_uid",
+            ).items()
+        }
 
         activity_item_data = {}
         for row in readCSV:
@@ -769,8 +776,8 @@ class Activities(BaseImporter):
                 )
                 continue
             data_type = row["SEMANTIC_DATA_TYPE"]
-            if data_type in data_types:
-                data_type_uid = data_types[data_type]
+            if data_type.lower() in data_types:
+                data_type_uid = data_types[data_type.lower()]
             else:
                 self.log.warning(
                     f"The data_type ({data_type}) wasn't found for the following ActivityInstanceClass ({activity_instance_class_name})"
@@ -791,7 +798,7 @@ class Activities(BaseImporter):
                 "approve_path": ACTIVITY_ITEM_CLASSES_PATH,
                 "body": {
                     "name": activity_item_class_name,
-                    "display_name": row["DISPLAY_LABEL"],
+                    "label": row["DISPLAY_LABEL"],
                     "order": order,
                     "definition": (
                         row["DEFINITION"].strip() if row["DEFINITION"] else None

@@ -58,7 +58,7 @@ DOCX_STYLES = {
     "table": ("SB Table Condensed", WD_STYLE_TYPE.TABLE),
     "header1": ("Table Header lvl1", WD_STYLE_TYPE.PARAGRAPH),
     "header2": ("Table Header lvl2", WD_STYLE_TYPE.PARAGRAPH),
-    None: ("Table Text", WD_STYLE_TYPE.PARAGRAPH),
+    "": ("Table Text", WD_STYLE_TYPE.PARAGRAPH),
 }
 
 
@@ -67,8 +67,7 @@ class StudyInterventionsService:
         compounds = self._get_study_compounds(study_uid)
         arms = self._get_arms_for_compounds(study_uid)
         dosings = self._get_compound_dosings(study_uid)
-        table = self.mk_table(compounds, arms, dosings)
-        return table
+        return self.mk_table(compounds, arms, dosings)
 
     def get_html(self, study_uid: str) -> str:
         table = self.get_table(study_uid)
@@ -76,8 +75,7 @@ class StudyInterventionsService:
 
     def get_docx(self, study_uid: str):
         table = self.get_table(study_uid)
-        docx = table_to_docx(table, DOCX_STYLES)
-        return docx
+        return table_to_docx(table, DOCX_STYLES)
 
     @staticmethod
     def mk_table(
@@ -114,9 +112,7 @@ class StudyInterventionsService:
             )
         )
         for cmp in compounds:
-            row.cells.append(
-                TableCell(text=cmp.compound.name if cmp.compound.name else "")
-            )
+            row.cells.append(TableCell(text=cmp.compound.name or ""))
 
         table.rows.append(
             row := TableRow(

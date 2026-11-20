@@ -113,14 +113,7 @@ def get_ct_catalogues_changes(
 
     output = {}
     # codelist query
-    complete_codelist_query = " ".join(
-        [
-            codelist_data_retrieval,
-            COMPARISON_PART,
-            CODELIST_DIFF_CLAUSE,
-            CODELIST_RETURN_CLAUSE,
-        ]
-    )
+    complete_codelist_query = f"{codelist_data_retrieval} {COMPARISON_PART} {CODELIST_DIFF_CLAUSE} {CODELIST_RETURN_CLAUSE}"
     codelist_ret, _ = db.cypher_query(complete_codelist_query, query_params)
     output["new_codelists"] = (
         sorted(codelist_ret[0][0], key=lambda ct_codelist: ct_codelist["change_date"])
@@ -136,9 +129,7 @@ def get_ct_catalogues_changes(
     all_codelists_in_package = codelist_ret[0][3] if codelist_ret else {}
 
     # terms query
-    complete_term_query = " ".join(
-        [term_data_retrieval, COMPARISON_PART, TERM_DIFF_CLAUSE, term_return_clause]
-    )
+    complete_term_query = f"{term_data_retrieval} {COMPARISON_PART} {TERM_DIFF_CLAUSE} {term_return_clause}"
     terms_ret, _ = db.cypher_query(complete_term_query, query_params)
     output["new_terms"] = (
         sorted(terms_ret[0][0], key=lambda ct_term: ct_term["change_date"])

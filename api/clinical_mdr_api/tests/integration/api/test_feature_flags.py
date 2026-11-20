@@ -417,3 +417,148 @@ def test_versions_include_retired_after_inactivate(api_client):
     assert "Retired" in statuses
     assert all("changes" in item for item in res)
     assert all(item["uid"] == uid for item in res)
+
+
+def _create_flag(
+    api_client, name: str, enabled: bool = False, section: str = "library"
+) -> str:
+    response = api_client.post(
+        "/feature-flags",
+        json={
+            "section": section,
+            "feature": f"{name} feature",
+            "name": name,
+            "enabled": enabled,
+        },
+    )
+    assert_response_status_code(response, 201)
+    return response.json()["uid"]
+
+
+def test_get_audit_trail_returns_versions_of_all_flags_newest_first(api_client):
+    """The audit trail merges the versions of every flag into one paginated list."""
+    uid = _create_flag(api_client, "Audit trail flag A", enabled=True)
+    other_uid = _create_flag(api_client, "Audit trail flag B", enabled=False)
+    assert_response_status_code(
+        api_client.patch(f"/feature-flags/{uid}", json={"enabled": False}), 200
+    )
+    assert_response_status_code(
+        api_client.patch(f"/feature-flags/{other_uid}", json={"enabled": True}), 200
+    )
+
+    response = api_client.get(
+        "/feature-flags/audit-trail", params={"page_size": 0, "total_count": True}
+    )
+    assert_response_status_code(response, 200)
+    res = response.json()
+
+    assert res["total"] == len(res["items"])
+    assert len({item["uid"] for item in res["items"]}) > 2
+    start_dates = [item["start_date"] for item in res["items"]]
+    assert start_dates == sorted(start_dates, reverse=True)
+
+    # Each flag is diffed against its own previous version, however the
+    # versions of the different flags are interleaved.
+    for flag_uid in (uid, other_uid):
+        versions = [item for item in res["items"] if item["uid"] == flag_uid]
+        assert len(versions) == 2
+        assert "enabled" in versions[0]["changes"]
+        assert versions[-1]["changes"] == []
+
+
+def test_get_audit_trail_pagination(api_client):
+    """Pages are slices of the same ordered list and diff across page borders."""
+    uid = _create_flag(api_client, "Audit trail pagination flag", enabled=True)
+    assert_response_status_code(
+        api_client.patch(f"/feature-flags/{uid}", json={"enabled": False}), 200
+    )
+    everything = api_client.get(
+        "/feature-flags/audit-trail", params={"page_size": 0}
+    ).json()["items"]
+    # The newest version of the flag created above is alone on the first page
+    # of size 1; its predecessor is on the next page but still gets diffed.
+    assert everything[0]["uid"] == uid
+    assert "enabled" in everything[0]["changes"]
+
+    first = api_client.get(
+        "/feature-flags/audit-trail",
+        params={"page_number": 1, "page_size": 1, "total_count": True},
+    )
+    assert_response_status_code(first, 200)
+    first_page = first.json()
+    assert first_page["page"] == 1
+    assert first_page["size"] == 1
+    assert first_page["total"] == len(everything)
+    assert first_page["items"] == everything[:1]
+
+    second = api_client.get(
+        "/feature-flags/audit-trail", params={"page_number": 2, "page_size": 2}
+    ).json()
+    assert second["total"] == 0
+    assert second["items"] == everything[2:4]
+
+
+def test_get_audit_trail_filters_by_current_section(api_client):
+    """Only flags currently in the requested section are listed, with all versions."""
+    admin_uid = _create_flag(api_client, "Audit trail admin flag", section="admin")
+    moved_uid = _create_flag(api_client, "Audit trail moved flag", section="library")
+    assert_response_status_code(
+        api_client.patch(f"/feature-flags/{moved_uid}", json={"section": "admin"}),
+        200,
+    )
+
+    response = api_client.get(
+        "/feature-flags/audit-trail",
+        params={"section": "admin", "page_size": 0, "total_count": True},
+    )
+    assert_response_status_code(response, 200)
+    res = response.json()
+    uids = {item["uid"] for item in res["items"]}
+    assert {admin_uid, moved_uid} <= uids
+    assert res["total"] == len(res["items"])
+    # Every version of a flag that is now in the section is listed, including
+    # the one from before it moved there, and the move itself is a change.
+    moved_versions = [item for item in res["items"] if item["uid"] == moved_uid]
+    assert [item["section"] for item in moved_versions] == ["admin", "library"]
+    assert "section" in moved_versions[0]["changes"]
+
+    everything = api_client.get(
+        "/feature-flags/audit-trail", params={"page_size": 0}
+    ).json()["items"]
+    assert len(res["items"]) < len(everything)
+    library_uids = {
+        item["uid"]
+        for item in api_client.get(
+            "/feature-flags/audit-trail",
+            params={"section": "library", "page_size": 0},
+        ).json()["items"]
+    }
+    assert not library_uids & {admin_uid, moved_uid}
+
+
+@pytest.mark.parametrize(
+    "params",
+    [
+        {"page_number": 0},
+        {"page_size": -1},
+        {"page_size": 1001},
+        {"section": "unknown"},
+    ],
+)
+def test_get_audit_trail_rejects_invalid_pagination(api_client, params):
+    assert_response_status_code(
+        api_client.get("/feature-flags/audit-trail", params=params), 400
+    )
+
+
+def test_get_audit_trail_includes_retired_versions(api_client):
+    """Inactivating a flag shows up in the audit trail as a Retired version."""
+    uid = _create_flag(api_client, "Audit trail retired flag")
+    assert_response_status_code(
+        api_client.delete(f"/feature-flags/{uid}/activations"), 200
+    )
+
+    response = api_client.get("/feature-flags/audit-trail", params={"page_size": 0})
+    assert_response_status_code(response, 200)
+    versions = [item for item in response.json()["items"] if item["uid"] == uid]
+    assert [item["status"] for item in versions] == ["Retired", "Final"]

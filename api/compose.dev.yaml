@@ -11,9 +11,11 @@ services:
         UID: ${UID:-1000}
     environment:
       NEO4J_DSN: "${NEO4J_DSN:-bolt://neo4j:${NEO4J_MDR_AUTH_PASSWORD:?Set NEO4J_MDR_AUTH_PASSWORD in .env or environment}@database:7687/mdrdb}"
+      NEO4J_STANDARDS_IMPORT_STAGING_DSN: "${NEO4J_DSN:-bolt://neo4j:${NEO4J_MDR_AUTH_PASSWORD:?Set NEO4J_MDR_AUTH_PASSWORD in .env or environment}@database:7687/mdrdb}"
+      NEO4J_NEO4J_MDR_ROLE_PASSWORD: "${NEO4J_MDR_AUTH_PASSWORD:?Set NEO4J_MDR_AUTH_PASSWORD in .env or environment}"
+      NEO4J_NEO4J_STAGING_ROLE_PASSWORD: "${NEO4J_MDR_AUTH_PASSWORD:?Set NEO4J_MDR_AUTH_PASSWORD in .env or environment}"
       UVICORN_ROOT_PATH: ""
       UVICORN_RELOAD: "true"
-      EXPIRED_ACCESS_TOKEN: "${EXPIRED_ACCESS_TOKEN:-}"
       TRACE_REQUEST_BODY: "on"
     ports:
       - "${BIND_ADDRESS:-127.0.0.1}:${API_PORT:-8000}:8000"

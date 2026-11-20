@@ -27,7 +27,7 @@ class CompoundVO(ConceptVO):
         abbreviation: str | None,
         external_id: str | None,
     ) -> Self:
-        compound_vo = cls(
+        return cls(
             name=name,
             name_sentence_case=name_sentence_case,
             definition=definition,
@@ -35,8 +35,6 @@ class CompoundVO(ConceptVO):
             is_template_parameter=True,
             external_id=external_id,
         )
-
-        return compound_vo
 
     def validate(
         self,
@@ -110,13 +108,12 @@ class CompoundAR(ConceptARBase):
             compound_uid_by_property_value_callback=compound_uid_by_property_value_callback,
         )
 
-        compound_ar = cls(
+        return cls(
             _uid=uid,
             _item_metadata=item_metadata,
             _library=library,
             _concept_vo=concept_vo,
         )
-        return compound_ar
 
     def edit_draft(
         self,

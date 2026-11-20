@@ -60,7 +60,7 @@ class CTCodelistAttributesVO:
     ) -> Self:
         if child_codelist_uids is None:
             child_codelist_uids = []
-        ct_codelist_attribute_vo = cls(
+        return cls(
             name=name,
             catalogue_names=catalogue_names,
             parent_codelist_uid=parent_codelist_uid,
@@ -70,8 +70,6 @@ class CTCodelistAttributesVO:
             definition=definition,
             extensible=extensible,
         )
-
-        return ct_codelist_attribute_vo
 
     @classmethod
     def from_input_values(
@@ -117,7 +115,7 @@ class CTCodelistAttributesVO:
             "Submission Value",
         )
 
-        ct_codelist_attribute_vo = cls(
+        return cls(
             name=name,
             parent_codelist_uid=parent_codelist_uid,
             child_codelist_uids=child_codelist_uids,
@@ -127,8 +125,6 @@ class CTCodelistAttributesVO:
             definition=definition,
             extensible=extensible,
         )
-
-        return ct_codelist_attribute_vo
 
 
 @dataclass
@@ -151,13 +147,12 @@ class CTCodelistAttributesAR(LibraryItemAggregateRootBase):
         library: LibraryVO,
         item_metadata: LibraryItemMetadataVO,
     ) -> Self:
-        ct_codelist_ar = cls(
+        return cls(
             _uid=uid,
             _ct_codelist_attributes_vo=ct_codelist_attributes_vo,
             _item_metadata=item_metadata,
             _library=library,
         )
-        return ct_codelist_ar
 
     @classmethod
     def from_input_values(
@@ -241,13 +236,13 @@ class CTCodelistAttributesAR(LibraryItemAggregateRootBase):
         """
         Inactivates latest version.
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def reactivate(self, author_id: str, change_description: str | None = None):
         """
         Reactivates latest retired version and sets the version to draft.
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def soft_delete(self):
-        raise NotImplementedError()
+        raise NotImplementedError

@@ -99,7 +99,7 @@ Feature: Library - Data Collection Standards - CRF Builder - Item Groups
         When The 'Delete' option is clicked from the three dot menu list
         Then The CRF Item Group is no longer available
 
-    Scenario: User must not be able to create CRF Item Group without Name provided
+    Scenario: [Field validation] User must not be able to create CRF Item Group without Name provided
         Given The '/library/crf-builder/item-groups' page is opened
         When The 'add-crf-item-group' button is clicked
         And Form continue button is clicked
@@ -108,10 +108,23 @@ Feature: Library - Data Collection Standards - CRF Builder - Item Groups
         And Form save button is clicked
         Then The pop up displays 'Name must be provided'
 
-    @manual_test    
-    Scenario: User must be able to read change history of selected element
+    Scenario: [Actions][History] User must be able to read change history of selected element
         Given The '/library/crf-builder/item-groups' page is opened
-        And The 'Show history' option is clicked from the three dot menu list
-        When The user clicks on History for particular element
-        Then The user is presented with history of changes for that element
-        And The history contains timestamps and usernames
+        And The 'History' option is clicked from the three dot menu list
+        Then The History page is displayed
+        And The following column list with values will exist
+        | header                 |
+        | Library                |
+        | OID                    |
+        | Name                   |
+        | Repeating              |
+        | Version                |
+        | Status                 |
+        | Change type            |
+        | User                   |
+        | From                   |
+        | To                     |
+        And The history table is not empty
+        When The CLOSE button is clicked
+        Then The current URL is '/library/crf-builder/item-groups'
+        

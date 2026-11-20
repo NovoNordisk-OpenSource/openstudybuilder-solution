@@ -23,9 +23,7 @@ from common.utils import VisitClass, VisitSubclass
 
 class StudyVisitCreateInput(PostInputModel):
     study_epoch_uid: Annotated[str | None, Field()] = None
-    visit_type: Annotated[
-        CTTermUidInput, Field(json_schema_extra={"source": "has_visit_type.uid"})
-    ]
+    visit_type: Annotated[CTTermUidInput, Field()]
     time_reference: Annotated[CTTermUidInput | None, Field()] = None
 
     @field_validator("time_reference", "epoch_allocation", mode="before")
@@ -74,7 +72,13 @@ class StudyVisitCreateInput(PostInputModel):
     is_soa_milestone: Annotated[bool, Field()] = False
     visit_name: Annotated[str | None, Field()] = None
     visit_short_name: Annotated[str | None, Field()] = None
-    visit_number: Annotated[float | None, Field()] = None
+    visit_suffix: Annotated[
+        str | None,
+        Field(
+            pattern=r"^[A-Za-z0-9-]{0,20}$",
+            json_schema_extra={"nullable": True},
+        ),
+    ] = None
     unique_visit_number: Annotated[
         int | None,
         Field(
@@ -83,17 +87,31 @@ class StudyVisitCreateInput(PostInputModel):
             lt=settings.max_int_neo4j,
         ),
     ] = None
-    repeating_frequency_uid: Annotated[
-        str | None, Field(json_schema_extra={"source": "has_repeating_frequency.uid"})
+    repeating_frequency_uid: Annotated[str | None, Field()] = None
+    expected_time_value: Annotated[
+        int | None,
+        Field(
+            json_schema_extra={"nullable": True},
+            gt=-settings.max_int_neo4j,
+            lt=settings.max_int_neo4j,
+        ),
+    ] = None
+
+
+class StudyVisitPreviewInput(StudyVisitCreateInput):
+    uid: Annotated[
+        str | None,
+        Field(
+            description="Uid of an existing visit that is being edited. "
+            "It is left out of the uniqueness and ordering checks, so the previewed visit does not conflict with its stored version."
+        ),
     ] = None
 
 
 class StudyVisitEditInput(PatchInputModel):
     uid: Annotated[str, Field(description="Uid of the Visit")]
     study_epoch_uid: Annotated[str | None, Field()] = None
-    visit_type: Annotated[
-        CTTermUidInput, Field(json_schema_extra={"source": "has_visit_type.uid"})
-    ]
+    visit_type: Annotated[CTTermUidInput, Field()]
     time_reference: Annotated[CTTermUidInput | None, Field()] = None
 
     @field_validator("time_reference", "epoch_allocation", mode="before")
@@ -142,7 +160,13 @@ class StudyVisitEditInput(PatchInputModel):
     is_soa_milestone: Annotated[bool, Field()] = False
     visit_name: Annotated[str | None, Field()] = None
     visit_short_name: Annotated[str | None, Field()] = None
-    visit_number: Annotated[float | None, Field()] = None
+    visit_suffix: Annotated[
+        str | None,
+        Field(
+            pattern=r"^[A-Za-z0-9-]{0,20}$",
+            json_schema_extra={"nullable": True},
+        ),
+    ] = None
     unique_visit_number: Annotated[
         int | None,
         Field(
@@ -151,8 +175,14 @@ class StudyVisitEditInput(PatchInputModel):
             lt=settings.max_int_neo4j,
         ),
     ] = None
-    repeating_frequency_uid: Annotated[
-        str | None, Field(json_schema_extra={"source": "has_repeating_frequency.uid"})
+    repeating_frequency_uid: Annotated[str | None, Field()] = None
+    expected_time_value: Annotated[
+        int | None,
+        Field(
+            json_schema_extra={"nullable": True},
+            gt=-settings.max_int_neo4j,
+            lt=settings.max_int_neo4j,
+        ),
     ] = None
 
 
@@ -222,11 +252,13 @@ class StudyVisitLite(BaseModel):
         int | None, Field(json_schema_extra={"nullable": True})
     ] = None
 
-    visit_number: Annotated[float, Field()]
-
     unique_visit_number: Annotated[int | None, Field()]
 
     visit_short_name: Annotated[str, Field()]
+
+    visit_suffix: Annotated[str | None, Field(json_schema_extra={"nullable": True})] = (
+        None
+    )
 
     visit_window_unit_name: Annotated[
         str | None, Field(json_schema_extra={"nullable": True})
@@ -280,6 +312,9 @@ class StudyVisitDetailed(StudyVisitLite):
     )
     time_unit_uid: Annotated[
         str | None, Field(json_schema_extra={"nullable": True})
+    ] = None
+    expected_time_value: Annotated[
+        int | None, Field(json_schema_extra={"nullable": True})
     ] = None
     time_unit_name: Annotated[
         str | None, Field(json_schema_extra={"nullable": True})
@@ -359,6 +394,7 @@ class StudyVisitDetailed(StudyVisitLite):
         visit: StudyVisitVO,
         study_value_version: str | None = None,
         derive_props_based_on_timeline: bool = False,
+        manual_visit_mode: bool = False,
     ) -> Self:
         timepoint = visit.timepoint
         return cls(
@@ -374,9 +410,10 @@ class StudyVisitDetailed(StudyVisitLite):
             study_epoch=visit.epoch.epoch if visit.epoch else None,
             order=visit.visit_order,
             visit_type=visit.visit_type,
-            time_reference=getattr(timepoint, "visit_timereference", None),
-            time_value=getattr(timepoint, "visit_value", None),
-            time_unit_uid=getattr(timepoint, "time_unit_uid", None),
+            time_reference=visit.api_time_reference,
+            time_value=visit.api_time_value,
+            time_unit_uid=visit.api_time_unit_uid,
+            expected_time_value=visit.expected_time_value,
             time_unit_name=getattr(visit.time_unit_object, "name", None),
             duration_time=visit.get_absolute_duration() if timepoint else None,
             duration_time_unit=getattr(timepoint, "time_unit_uid", None),
@@ -391,8 +428,8 @@ class StudyVisitDetailed(StudyVisitLite):
                 visit, "study_duration_weeks_label", None
             ),
             week_in_study_label=getattr(visit, "week_in_study_label", None),
-            visit_number=visit.visit_number,
             visit_subnumber=visit.visit_subnumber,
+            visit_suffix=visit.effective_visit_suffix,
             unique_visit_number=(
                 visit.unique_visit_number
                 if derive_props_based_on_timeline
@@ -417,8 +454,8 @@ class StudyVisitDetailed(StudyVisitLite):
                 visit.study_visit_group.uid if visit.study_visit_group else None
             ),
             show_visit=visit.show_visit,
-            min_visit_window_value=visit.visit_window_min,
-            max_visit_window_value=visit.visit_window_max,
+            min_visit_window_value=visit.api_visit_window_min(manual_visit_mode),
+            max_visit_window_value=visit.api_visit_window_max(manual_visit_mode),
             visit_window_unit_uid=visit.window_unit_uid,
             visit_window_unit_name=(
                 visit.window_unit_object.name if visit.window_unit_object else None
@@ -433,7 +470,7 @@ class StudyVisitDetailed(StudyVisitLite):
             author_username=visit.author_username or visit.author_id,
             possible_actions=visit.possible_actions,
             visit_class=visit.visit_class,  # type: ignore[arg-type]
-            visit_subclass=visit.visit_subclass if visit.visit_subclass else None,
+            visit_subclass=visit.visit_subclass or None,
             is_global_anchor_visit=visit.is_global_anchor_visit,
             is_soa_milestone=visit.is_soa_milestone,
             repeating_frequency_uid=(
@@ -485,3 +522,15 @@ class VisitConsecutiveGroupInput(PostInputModel):
 class StudyVisitGroup(BaseModel):
     uid: Annotated[str, Field()]
     group_name: Annotated[str, Field()]
+
+
+class StudyVisitModeResponse(BaseModel):
+    manual_visit_mode: bool
+
+
+class StudyVisitModeInput(PatchInputModel):
+    manual_visit_mode: Annotated[bool, Field()]
+
+
+class StudyVisitReorderInput(PatchInputModel):
+    visit_uids: list[str]

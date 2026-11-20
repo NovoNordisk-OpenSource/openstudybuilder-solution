@@ -13,13 +13,12 @@ from clinical_mdr_api.tests.unit.domain.utils import AUTHOR_ID, random_str
 
 
 def create_random_study_duration_weeks_vo() -> StudyDurationWeeksVO:
-    random_study_duration_weeks_vo = StudyDurationWeeksVO.from_input_values(
+    return StudyDurationWeeksVO.from_input_values(
         value=1.23,
         definition=random_str(),
         abbreviation=random_str(),
         is_template_parameter=True,
     )
-    return random_study_duration_weeks_vo
 
 
 def create_random_study_duration_weeks_ar(
@@ -27,7 +26,7 @@ def create_random_study_duration_weeks_ar(
     library: str = "Library",
     is_editable: bool = True,
 ) -> StudyDurationWeeksAR:
-    random_study_duration_weeks_ar = StudyDurationWeeksAR.from_input_values(
+    return StudyDurationWeeksAR.from_input_values(
         generate_uid_callback=generate_uid_callback,
         simple_concept_vo=create_random_study_duration_weeks_vo(),
         library=LibraryVO.from_repository_values(
@@ -35,7 +34,6 @@ def create_random_study_duration_weeks_ar(
         ),
         author_id=AUTHOR_ID,
     )
-    return random_study_duration_weeks_ar
 
 
 class TestStudyDurationWeeks(unittest.TestCase):

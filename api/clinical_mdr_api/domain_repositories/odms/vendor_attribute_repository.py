@@ -62,9 +62,7 @@ class VendorAttributeRepository(OdmGenericRepository[OdmVendorAttributeAR]):
             uid=root.uid,
             odm_vo=OdmVendorAttributeVO.from_repository_values(
                 name=value.name,
-                compatible_types=(
-                    value.compatible_types if value.compatible_types else []
-                ),
+                compatible_types=value.compatible_types or [],
                 data_type=value.data_type,
                 value_regex=value.value_regex,
                 vendor_namespace_uid=(
@@ -93,7 +91,7 @@ class VendorAttributeRepository(OdmGenericRepository[OdmVendorAttributeAR]):
             "Creating OdmVendorAttributeAR from Cypher result for uid=%s",
             input_dict["uid"],
         )
-        odm_form_ar = OdmVendorAttributeAR.from_repository_values(
+        return OdmVendorAttributeAR.from_repository_values(
             uid=input_dict["uid"],
             odm_vo=OdmVendorAttributeVO.from_repository_values(
                 name=input_dict["name"],
@@ -120,8 +118,6 @@ class VendorAttributeRepository(OdmGenericRepository[OdmVendorAttributeAR]):
                 minor_version=int(minor),
             ),
         )
-
-        return odm_form_ar
 
     def _get_specific_field_mapping(self) -> dict[str, str]:
         """Field mappings for vendor attribute specific fields."""
@@ -241,59 +237,78 @@ class VendorAttributeRepository(OdmGenericRepository[OdmVendorAttributeAR]):
             or ar.odm_vo.value_regex != value.value_regex
         )
 
+    @staticmethod
+    def _odm_element_root_and_value_labels(
+        odm_element_type: RelationType,
+    ) -> tuple[str, str]:
+        if odm_element_type == RelationType.FORM:
+            return "OdmFormRoot", "OdmFormValue"
+        if odm_element_type == RelationType.ITEM_GROUP:
+            return "OdmItemGroupRoot", "OdmItemGroupValue"
+        if odm_element_type == RelationType.ITEM:
+            return "OdmItemRoot", "OdmItemValue"
+        raise BusinessLogicException(msg="Invalid ODM element type.")
+
+    def find_element_attribute_by_uid_with_odm_element_relation(
+        self,
+        uid: str,
+        odm_element_uid: str,
+        odm_element_version: str,
+        odm_element_type: RelationType,
+    ) -> OdmVendorElementAttributeRelationVO:
+        log.info(
+            "Finding VendorElementAttribute with uid=%s for ODM element uid=%s, version=%s",
+            uid,
+            odm_element_uid,
+            odm_element_version,
+        )
+        odm_element_root, odm_element_value = self._odm_element_root_and_value_labels(
+            odm_element_type
+        )
+
+        rs, _ = db.cypher_query(
+            f"""
+            MATCH (:{odm_element_root} {{uid: $odm_element_uid}})-[:HAS_VERSION {{version: $odm_element_version}}]->(:{odm_element_value})
+            -[ref:HAS_VENDOR_ELEMENT_ATTRIBUTE]->(value:OdmVendorAttributeValue)<-[:HAS_VERSION]-(:OdmVendorAttributeRoot {{uid: $uid}})
+            MATCH (value)<-[:HAS_VENDOR_ATTRIBUTE]-(:OdmVendorElementValue)<-[:HAS_VERSION]-(vendor_element_root:OdmVendorElementRoot)
+            RETURN
+                value.name AS name,
+                value.data_type AS data_type,
+                value.value_regex AS value_regex,
+                ref.value AS value,
+                vendor_element_root.uid AS vendor_element_uid
+            """,
+            params={
+                "uid": uid,
+                "odm_element_uid": odm_element_uid,
+                "odm_element_version": odm_element_version,
+            },
+        )
+        return OdmVendorElementAttributeRelationVO.from_repository_values(
+            uid=uid,
+            name=rs[0][0],
+            data_type=rs[0][1],
+            value_regex=rs[0][2],
+            value=rs[0][3],
+            vendor_element_uid=rs[0][4],
+        )
+
     def find_by_uid_with_odm_element_relation(
         self,
         uid: str,
         odm_element_uid: str,
         odm_element_version: str,
         odm_element_type: RelationType,
-        vendor_element_attribute: bool = True,
-    ):
+    ) -> OdmVendorAttributeRelationVO:
         log.info(
             "Finding VendorAttribute with uid=%s for ODM element uid=%s, version=%s",
             uid,
             odm_element_uid,
             odm_element_version,
         )
-        if odm_element_type == RelationType.FORM:
-            odm_element_root = "OdmFormRoot"
-            odm_element_value = "OdmFormValue"
-        elif odm_element_type == RelationType.ITEM_GROUP:
-            odm_element_root = "OdmItemGroupRoot"
-            odm_element_value = "OdmItemGroupValue"
-        elif odm_element_type == RelationType.ITEM:
-            odm_element_root = "OdmItemRoot"
-            odm_element_value = "OdmItemValue"
-        else:
-            raise BusinessLogicException(msg="Invalid ODM element type.")
-
-        if vendor_element_attribute:
-            rs, _ = db.cypher_query(
-                f"""
-                MATCH (:{odm_element_root} {{uid: $odm_element_uid}})-[:HAS_VERSION {{version: $odm_element_version}}]->(:{odm_element_value})
-                -[ref:HAS_VENDOR_ELEMENT_ATTRIBUTE]->(value:OdmVendorAttributeValue)<-[:HAS_VERSION]-(:OdmVendorAttributeRoot {{uid: $uid}})
-                MATCH (value)<-[:HAS_VENDOR_ATTRIBUTE]-(:OdmVendorElementValue)<-[:HAS_VERSION]-(vendor_element_root:OdmVendorElementRoot)
-                RETURN
-                    value.name AS name,
-                    value.data_type AS data_type,
-                    value.value_regex AS value_regex,
-                    ref.value AS value,
-                    vendor_element_root.uid AS vendor_element_uid
-                """,
-                params={
-                    "uid": uid,
-                    "odm_element_uid": odm_element_uid,
-                    "odm_element_version": odm_element_version,
-                },
-            )
-            return OdmVendorElementAttributeRelationVO.from_repository_values(
-                uid=uid,
-                name=rs[0][0],
-                data_type=rs[0][1],
-                value_regex=rs[0][2],
-                value=rs[0][3],
-                vendor_element_uid=rs[0][4],
-            )
+        odm_element_root, odm_element_value = self._odm_element_root_and_value_labels(
+            odm_element_type
+        )
 
         rs, _ = db.cypher_query(
             f"""

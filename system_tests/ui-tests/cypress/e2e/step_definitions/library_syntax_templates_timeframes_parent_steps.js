@@ -21,6 +21,8 @@ Then("The validation appears for timeframe name field", () => cy.get('.v-overlay
 
 When('The timeframe template form is filled with base data', () => fillBaseData(`Timeframe${getShortUniqueId()}`))
 
+When('The timeframe template form is filled with value with brackets', () => cy.get('[data-cy="input-field"]').type('xxx'))
+
 When('The timeframe template metadata update is started', () => fillBaseData(`Update${getShortUniqueId()}`))
 
 When('The timeframe template edition form is filled with data', () => fillBaseData(`CancelEdit${getShortUniqueId()}`))

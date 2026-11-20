@@ -10,18 +10,31 @@ dependencies = [
     "urllib3>=2.8.0",
     "idna>=3.15",
     "pygments>=2.20.0",
+    "xlrd~=2.0",
 ]
 
 [tool.uv]
 package = false
+# Security floors for transitive dependencies: bound the resolver to fixed
+# versions without declaring these as direct dependencies of this project.
+constraint-dependencies = [
+    "certifi>=2026.10.19",  # PYSEC-2026-4320
+]
 
 [dependency-groups]
 dev = [
     "ruff~=0.16.8",
-    "black>=26.3.1",
+    "black>=26.10.1",
     "pytest-cov~=6.0.0",
     "poethepoet>=0.30",
     'colorama>=0.4.6; sys_platform != "win32"',
+    # Renders the CT diff review site to HTML. Dev-only: the site is written as
+    # Markdown with no dependency on these, and the Docker image has no reason to
+    # carry a static site generator.
+    # Pin below 2.0 deliberately - MkDocs 2.0 drops the plugin system and the
+    # Material theme with it, and offers no migration path.
+    "mkdocs~=1.6",
+    "mkdocs-material~=9.5",
 ]
 
 [tool.poe]
@@ -30,10 +43,14 @@ envfile = ".env"
 [tool.poe.tasks]
 import_cdisc_ct_into_cdisc_db = "python cdisc_staging.py"
 import_ct_from_cdisc_db_into_mdr = "python cdisc_import.py"
+diff_cdisc_ct_packages = "python -m src.scripts.package_diff.ct_diff"
+fetch_cdisc_changelogs = "python -m src.scripts.package_diff.changelog_fetch"
+generate_cdisc_ct_diff_site = "python -m src.scripts.package_diff.site_gen"
 bulk_import_data_models = "python -m src.scripts.wrapper.cdisc_data_models.wrapper_bulk_import"
 import_cdisc_data_models_into_cdisc_db = "python -m src.scripts.wrapper.cdisc_data_models.wrapper_import_into_cdisc_db"
 import_data_models_from_cdisc_db_into_mdr = "python -m src.scripts.wrapper.cdisc_data_models.wrapper_import_from_cdisc_db_into_mdr"
 download_ct_json_data_from_cdisc_api = "python -m src.scripts.import_scripts.cdisc_ct.download_json_data_from_cdisc_api"
+format_jsons = "python format_jsons.py"
 download_data_models_json_data_from_cdisc_api = "python -m src.scripts.import_scripts.cdisc_data_models.download_json_data_from_cdisc_api"
 test = "python -m pytest -s --cov-report html:test_coverage --cov-report xml:reports/coverage.xml --cov --junitxml=reports/test_report.xml src/tests"
 build-sbom = "python3 ../_tools/build_sbom.py --uv --fallback-dir doc/licenses --level 2 --output sbom.md"

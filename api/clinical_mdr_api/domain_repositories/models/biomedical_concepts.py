@@ -70,7 +70,7 @@ class ActivityItemClassValue(VersionValue):
     nci_concept_id = StringProperty()
     nci_concept_name = StringProperty()
     order = IntegerProperty()
-    display_name = StringProperty()
+    label = StringProperty()
     has_latest_value = RelationshipFrom(
         "ActivityItemClassRoot", "LATEST", model=ClinicalMdrRel
     )

@@ -21,7 +21,7 @@ class GenericRepository[AggregateRootType](abc.ABC):
         status: LibraryItemStatus | None = None,
         library_name: str | None = None,
     ) -> Iterable[AggregateRootType]:
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @abc.abstractmethod
     def find_by_uid_2(
@@ -33,27 +33,27 @@ class GenericRepository[AggregateRootType](abc.ABC):
         at_specific_date: datetime | None = None,
         for_update: bool = False,
     ) -> AggregateRootType | None:
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @abc.abstractmethod
     def save(self, item: AggregateRootType) -> None:
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @property
     @abc.abstractmethod
     def author_id(self) -> str | None:
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @author_id.setter
     @abc.abstractmethod
     def author_id(self, author_id: str) -> None:
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @abc.abstractmethod
     def get_all_versions_2(
         self, uid: str, return_study_count: bool = False
     ) -> Iterable[AggregateRootType]:
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @abc.abstractmethod
     def check_exists_by_name(self, name: str) -> bool:

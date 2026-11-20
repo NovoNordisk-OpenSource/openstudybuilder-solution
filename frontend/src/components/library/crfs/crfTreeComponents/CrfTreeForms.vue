@@ -511,8 +511,10 @@ async function newVersion(item) {
     loading.value = true
 
     crfs
-      .newVersion('forms', item.uid)
+      .newVersionInTree('forms', item.uid)
       .then((resp) => {
+        if (!resp) return
+
         if (props.parentCollection?.status === statuses.DRAFT) {
           updateForm(resp.data)
         }

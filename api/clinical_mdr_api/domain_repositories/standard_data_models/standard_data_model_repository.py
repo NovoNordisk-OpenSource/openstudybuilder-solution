@@ -20,10 +20,10 @@ from clinical_mdr_api.repositories._utils import (
 from common.exceptions import NotFoundException, ValidationException
 
 
-class StandardDataModelRepository(ABC):
+class StandardDataModelRepository[T: BaseModel](ABC):
     root_class = type
     value_class = type
-    return_model: type
+    return_model: type[T]
 
     def _create_base_model_from_cypher_result(self, input_dict: dict[str, Any]):
         return self.return_model.from_repository_output(input_dict)
@@ -49,7 +49,7 @@ class StandardDataModelRepository(ABC):
         self,
         uid: str,
         **kwargs,
-    ) -> BaseModel | None:
+    ) -> T | None:
         if not uid:
             return None
 
@@ -89,9 +89,7 @@ class StandardDataModelRepository(ABC):
         return f"""MATCH (standard_root:{standard_data_model_label})-[:{versioning_relationship}]->
                 (standard_value:{standard_data_model_value_label})"""
 
-    def _retrieve_items_from_cypher_res(
-        self, result_array, attribute_names
-    ) -> list[BaseModel]:
+    def _retrieve_items_from_cypher_res(self, result_array, attribute_names) -> list[T]:
         """
         Method maps the result of the cypher query into real aggregate objects.
         :param result_array:
@@ -100,9 +98,7 @@ class StandardDataModelRepository(ABC):
         """
         items = []
         for item in result_array:
-            concept_dictionary = {}
-            for concept_property, attribute_name in zip(item, attribute_names):
-                concept_dictionary[attribute_name] = concept_property
+            concept_dictionary = dict(zip(attribute_names, item))
             items.append(self._create_base_model_from_cypher_result(concept_dictionary))
         return items
 
@@ -129,7 +125,7 @@ class StandardDataModelRepository(ABC):
         filter_operator: FilterOperator = FilterOperator.AND,
         total_count: bool = False,
         **kwargs,
-    ) -> tuple[list[BaseModel], int]:
+    ) -> tuple[list[T], int]:
         """
         Method runs a cypher query to fetch all needed data to create objects of type AggregateRootType.
         In the case of the following repository it will be some Concept aggregates.
@@ -165,7 +161,7 @@ class StandardDataModelRepository(ABC):
                 )
                 else None
             ),
-            sort_by=self.sort_by() if self.sort_by() else sort_by,
+            sort_by=self.sort_by() or sort_by,
             page_number=page_number,
             page_size=page_size,
             filter_by=FilterDict.model_validate({"elements": filter_by}),

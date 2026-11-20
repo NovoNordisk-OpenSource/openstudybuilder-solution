@@ -54,3 +54,22 @@ Then('The yellow alert badge is present', () => {
         cy.get('.mdi-alert-outline').should('be.visible')
     })
 })
+
+Then('The field {string} shows validation message {string}', (dataCy, message) => {
+    cy.get(`[data-cy="${dataCy}"]`)
+        .find('.v-messages__message')
+        .should('be.visible')
+        .and('have.text', message)
+})
+
+Then('The field {string} is checked', (dataCy) => {
+    cy.get(`[data-cy="${dataCy}"]`)
+        .find('input[type="checkbox"], input[type="radio"]')
+        .should('be.checked')
+})
+
+Then('The field {string} is not checked', (dataCy) => {
+    cy.get(`[data-cy="${dataCy}"]`)
+        .find('input[type="checkbox"], input[type="radio"]')
+        .should('not.be.checked')
+})

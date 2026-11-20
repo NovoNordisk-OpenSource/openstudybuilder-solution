@@ -53,8 +53,8 @@ const params = [
   },
   {
     label: t('StudyInterventionTypeForm.control_type'),
-    name: 'control_type_code',
-    valuesDisplay: 'term',
+    name: 'control_type_codes',
+    valuesDisplay: 'terms',
   },
   {
     label: t('StudyInterventionTypeForm.intervention_model'),

@@ -166,11 +166,6 @@ from clinical_mdr_api.domain_repositories.study_definitions.study_definition_rep
 from clinical_mdr_api.domain_repositories.study_definitions.study_definition_repository_impl import (
     StudyDefinitionRepositoryImpl,
 )
-
-# noinspection PyProtectedMember
-from clinical_mdr_api.domain_repositories.study_definitions.study_title.study_title_repository import (
-    StudyTitleRepository,
-)
 from clinical_mdr_api.domain_repositories.study_selections.study_activity_group_repository import (
     StudySelectionActivityGroupRepository,
 )
@@ -191,6 +186,9 @@ from clinical_mdr_api.domain_repositories.study_selections.study_activity_subgro
 )
 from clinical_mdr_api.domain_repositories.study_selections.study_arm_repository import (
     StudySelectionArmRepository,
+)
+from clinical_mdr_api.domain_repositories.study_selections.study_auxiliary_device_repository import (
+    StudyAuxiliaryDeviceRepository,
 )
 from clinical_mdr_api.domain_repositories.study_selections.study_branch_arm_repository import (
     StudySelectionBranchArmRepository,
@@ -218,6 +216,9 @@ from clinical_mdr_api.domain_repositories.study_selections.study_design_cell_rep
 )
 from clinical_mdr_api.domain_repositories.study_selections.study_design_class_repository import (
     StudyDesignClassRepository,
+)
+from clinical_mdr_api.domain_repositories.study_selections.study_design_population_repository import (
+    StudyDesignPopulationRepository,
 )
 from clinical_mdr_api.domain_repositories.study_selections.study_disease_milestone_repository import (
     StudyDiseaseMilestoneRepository,
@@ -773,12 +774,14 @@ class MetaRepository:
         return self.get_repository_instance(StudyActivityInstructionRepository)
 
     @property
-    def study_title_repository(self) -> StudyTitleRepository:
-        return self.get_repository_instance(StudyTitleRepository)
-
-    @property
     def study_epoch_repository(self) -> StudyEpochRepository:
         return self.get_repository_instance(StudyEpochRepository)
+
+    @property
+    def study_auxiliary_device_repository(self) -> StudyAuxiliaryDeviceRepository:
+        return self.get_repository_instance(
+            StudyAuxiliaryDeviceRepository, author_id=self._author_id
+        )
 
     @property
     def study_disease_milestone_repository(self) -> StudyDiseaseMilestoneRepository:
@@ -817,6 +820,12 @@ class MetaRepository:
     @property
     def study_design_class_repository(self) -> StudyDesignClassRepository:
         return self.get_repository_instance(StudyDesignClassRepository)
+
+    @property
+    def study_design_population_repository(self) -> StudyDesignPopulationRepository:
+        return self.get_repository_instance(
+            StudyDesignPopulationRepository, author_id=self._author_id
+        )
 
     @property
     def study_source_variable_repository(self) -> StudySourceVariableRepository:

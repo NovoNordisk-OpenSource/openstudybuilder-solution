@@ -123,16 +123,10 @@ jobs:
         # the ~14 GB free on a stock ubuntu-latest runner.
         # NOTE: do NOT delete "$AGENT_TOOLSDIRECTORY" here — that's where
         # actions/setup-python lives, and we run `uv run poe test` natively
-        # on the host (not inside a container). Removing it makes uv
-        # disappear mid-job and the test steps fail with "uv: command
-        # not found". Toolcache stays; only the non-Python toolchains go.
-        run: |
-          df -h /
-          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc \
-                      /usr/local/share/boost /usr/local/lib/heroku \
-                      /usr/local/share/powershell /usr/local/share/chromium \
-                      || true
-          df -h /
+        # on the host (not inside a container).
+        uses: ./.github/actions/free-runner-disk-space
+        with:
+          preserve-tool-cache: 'true'
 
       - name: Create reports directory
         run: mkdir -p reports
@@ -182,7 +176,6 @@ jobs:
           # MDR_MIGRATION_* compound-file vars from the ADO pipeline are gone.
           DATABASE_NAME: ""
           API_BASE_URL: http://localhost:8000
-          API_AUTH_TOKEN: ""
         run: uv run poe test
 
       - name: Test corrections
@@ -201,7 +194,6 @@ jobs:
           # NEO4J_PASSWORD" step above; no override needed here.
           DATABASE_NAME: neo4j
           API_BASE_URL: http://localhost:8000
-          API_AUTH_TOKEN: ""
         run: uv run poe test_corrections
 
       - name: Collect container logs

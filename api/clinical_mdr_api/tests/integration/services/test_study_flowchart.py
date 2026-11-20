@@ -3,20 +3,21 @@ from collections import defaultdict
 from collections.abc import Iterable, Sequence
 from typing import Any
 
+import bs4
 import pydantic
 import pytest
 from docx.table import Table
+from neomodel import db
 
-from clinical_mdr_api.domain_repositories.models.study import StudyRoot
 from clinical_mdr_api.domain_repositories.study_selections.study_soa_repository import (
     SoALayout,
+    SoASnapshot,
+    StudySoARepository,
 )
 from clinical_mdr_api.domains.study_selections.study_selection_base import SoAItemType
 from clinical_mdr_api.models.study_selections.study_epoch import StudyEpoch
 from clinical_mdr_api.models.study_selections.study_selection import (
     ReferencedItem,
-    SoACellReference,
-    SoAFootnoteReference,
     StudyActivityGroup,
     StudyActivityGroupEditInput,
     StudyActivitySchedule,
@@ -70,6 +71,7 @@ from clinical_mdr_api.tests.unit.services.test_study_flowchart import (
     check_hidden_row_propagation,
 )
 from common.config import settings
+from common.exceptions import NotFoundException
 
 log = logging.getLogger(__name__)
 
@@ -837,9 +839,7 @@ def test_download_operational_soa_content(
 class TestSoASnapshot:
     """Tests StudyFlowchartService and StudySoARepository saving and loading SoA snapshots with Study versioning"""
 
-    def test_soa_snapshot_versioned(
-        self, soa_test_data2: SoATestData, layout: SoALayout = SoALayout.PROTOCOL
-    ):
+    def test_soa_snapshot_versioned(self, soa_test_data2: SoATestData):
         """Tests saving and retrieving SoA snapshots with study versioning"""
 
         study_flowchart_service = StudyFlowchartService()
@@ -848,11 +848,14 @@ class TestSoASnapshot:
         # GIVEN: a Study populated with data required for SoA
         study_uid = soa_test_data2.study.uid
 
-        # GIVEN: references of SoA snapshot
-        expected_refs: list[SoACellReference] = (
-            study_flowchart_service.build_soa_snapshot(
-                study_uid, study_value_version=None, layout=layout
-            )
+        # GIVEN: Protocol SoA of the latest draft version
+        expected_table, expected_html = self._render_protocol_soa(
+            study_flowchart_service, study_uid, study_value_version=None
+        )
+
+        # GIVEN: Protocol Lab table SoA of the latest draft version
+        expected_lab_table = study_flowchart_service.get_flowchart_table_lab_table(
+            study_uid, study_value_version=None
         )
 
         # SCENARIO: After locking the Study, the SoA snapshot can be read back from database
@@ -865,26 +868,30 @@ class TestSoASnapshot:
         previous_study_version = str(
             study.current_metadata.version_metadata.version_number
         )
-        # THEN: StudyValue has HAS_PROTOCOL_SOA_CELL relationship
-        assert len(
-            StudyRoot.nodes.get(uid=study_uid)
-            .has_version.match(status="RELEASED", version=previous_study_version)[0]
-            .has_protocol_soa_cell
+        # THEN: Locked StudyValue has a single SoA snapshot with all renderings
+        previous_snapshot = self._get_soa_snapshot_node(
+            study_uid, previous_study_version
         )
-        # THEN: StudyValue has HAS_PROTOCOL_SOA_FOOTNOTE relationship
-        assert len(
-            StudyRoot.nodes.get(uid=study_uid)
-            .has_version.match(status="RELEASED", version=previous_study_version)[0]
-            .has_protocol_soa_footnote
-        )
-        # WHEN: SoA snapshot of the previous Study version read back from the db
-        # THEN: It matches the SoA snapshot of the previous Study version
-        self._assert_soa_snapshot_refs_from_db_match_expected_refs(
+        assert previous_snapshot["json"] == expected_table.model_dump_json()
+        assert previous_snapshot["html"] == expected_html
+        # THEN: SoA of the locked Study version matches
+        self._assert_soa_matches_snapshot(
             study_flowchart_service,
             study_uid,
-            study_value_version=previous_study_version,
-            layout=layout,
-            expected_refs=expected_refs,
+            previous_study_version,
+            previous_snapshot,
+        )
+
+        # THEN: Locked StudyValue has a single Protocol Lab table SoA snapshot with all renderings
+        previous_lab_snapshot = self._get_soa_snapshot_node(
+            study_uid, previous_study_version, layout=SoALayout.PROTOCOL_LAB_TABLE
+        )
+        assert previous_lab_snapshot["json"] == expected_lab_table.model_dump_json()
+        self._assert_lab_table_matches_snapshot(
+            study_flowchart_service,
+            study_uid,
+            previous_study_version,
+            previous_lab_snapshot,
         )
 
         # SCENARIO: After unlocking the Study, the latest draft version has no SoA snapshot
@@ -893,86 +900,83 @@ class TestSoASnapshot:
             uid=study_uid,
             reason_for_unlock_term_uid=soa_test_data2.reason_for_unlock_term_uid,
         )
-        # THEN StudyValue has no HAS_PROTOCOL_SOA_CELL relationships
-        assert (
-            len(
-                StudyRoot.nodes.get(uid=study_uid)
-                .latest_value.get()
-                .has_protocol_soa_cell
-            )
-            == 0
+        # THEN: Latest StudyValue has no SoA snapshot
+        assert not self._get_soa_snapshot_nodes(
+            study_uid, study_value_version=None, layout=None
         )
-        # THEN StudyValue has no HAS_PROTOCOL_SOA_FOOTNOTE relationships
+        # THEN: SoA snapshot of the previous Study version is unchanged
         assert (
-            len(
-                StudyRoot.nodes.get(uid=study_uid)
-                .latest_value.get()
-                .has_protocol_soa_footnote
-            )
-            == 0
+            self._get_soa_snapshot_node(study_uid, previous_study_version)
+            == previous_snapshot
         )
-        # THEN SoA snapshot read form db returns empty result
-        self._assert_soa_snapshot_refs_from_db_match_expected_refs(
-            study_flowchart_service,
-            study_uid,
-            study_value_version=None,
-            layout=layout,
-            expected_refs=([], []),
+        assert (
+            self._get_soa_snapshot_node(
+                study_uid, previous_study_version, layout=SoALayout.PROTOCOL_LAB_TABLE
+            )
+            == previous_lab_snapshot
         )
 
-        # SCENARIO: After Study is unlocked, the SoA snapshot of the previous study version can be read
-        # GIVEN: Study is recently unlocked (and no modifications made)
-        # WHEN: SoA snapshot of the previous Study version read from the db
-        # THEN: It matches the SoA snapshot of the previous Study version
-        self._assert_soa_snapshot_refs_from_db_match_expected_refs(
-            study_flowchart_service,
-            study_uid,
-            study_value_version=previous_study_version,
-            layout=layout,
-            expected_refs=expected_refs,
-        )
-
-        # SCENARIO: After changing the SoA data of DRAFT Study, the SoA snapshot of the previous Study version reads back correctly
+        # SCENARIO: After changing the SoA data of DRAFT Study, the SoA of the previous Study version stays the same
         # WHEN: Changed Study SoA data
         self._update_a_study_activity_subgroup(soa_test_data2)
         self._remove_first_visible_study_activity(soa_test_data2)
         self._update_a_study_activity_group(soa_test_data2)
-        # WHEN: SoA snapshot of the previous Study version read from the db
-        # THEN: It matches the SoA snapshot of the previous Study version
-        self._assert_soa_snapshot_refs_from_db_match_expected_refs(
+        # THEN: SoA of the latest draft version changed
+        latest_table, _ = self._render_protocol_soa(
+            study_flowchart_service, study_uid, study_value_version=None
+        )
+        assert latest_table.model_dump() != expected_table.model_dump()
+        # THEN: SoA of the previous Study version matches its SoA snapshot
+        self._assert_soa_matches_snapshot(
             study_flowchart_service,
             study_uid,
-            study_value_version=previous_study_version,
-            layout=layout,
-            expected_refs=expected_refs,
+            previous_study_version,
+            previous_snapshot,
+        )
+
+        # THEN: Protocol Lab table SoA of the previous Study version matches its SoA snapshot
+        self._assert_lab_table_matches_snapshot(
+            study_flowchart_service,
+            study_uid,
+            previous_study_version,
+            previous_lab_snapshot,
         )
 
         # SCENARIO: After releasing a Study version, the released version has a SoA snapshot
-        # GIVEN: A Study version is released
+        # WHEN: A Study version is released
         study_service.release(
             uid=study_uid,
             change_description="r1",
             reason_for_release_uid=soa_test_data2.reason_for_lock_term_uid,
         )
         released_study_version = f"{previous_study_version}.1"  # release API call does not return version number
-        # GIVEN: SoA snapshot of the latest Study version built
-        latest_refs: list[SoACellReference] = (
-            study_flowchart_service.build_soa_snapshot(
-                study_uid, study_value_version=None, layout=layout
-            )
+        # THEN: Released StudyValue has a SoA snapshot of the draft Study version at the time of release
+        released_snapshot = self._get_soa_snapshot_node(
+            study_uid, released_study_version
         )
-        # WHEN: SoA snapshot of the released Study version read from the db
-        # THEN: It matches the SoA snapshot of the draft Study version
-        self._assert_soa_snapshot_refs_from_db_match_expected_refs(
+        assert released_snapshot["json"] == latest_table.model_dump_json()
+        self._assert_soa_matches_snapshot(
             study_flowchart_service,
             study_uid,
-            study_value_version=released_study_version,
-            layout=layout,
-            expected_refs=latest_refs,
+            released_study_version,
+            released_snapshot,
+        )
+        # THEN: Released StudyValue has a Protocol Lab table SoA snapshot too
+        self._assert_lab_table_matches_snapshot(
+            study_flowchart_service,
+            study_uid,
+            released_study_version,
+            self._get_soa_snapshot_node(
+                study_uid, released_study_version, layout=SoALayout.PROTOCOL_LAB_TABLE
+            ),
+        )
+        # THEN: Latest StudyValue has no SoA snapshot
+        assert not self._get_soa_snapshot_nodes(
+            study_uid, study_value_version=None, layout=None
         )
 
-        # SCENARIO: After locking the Study, the SoA snapshots of the latest draft and previous locked versions differ
-        # GIVEN: Study is locked
+        # SCENARIO: After locking the Study again, SoA snapshots of the previous versions are unchanged
+        # WHEN: Study is locked
         study = study_service.lock(
             uid=study_uid,
             change_description="v2",
@@ -981,134 +985,695 @@ class TestSoASnapshot:
         latest_study_version = str(
             study.current_metadata.version_metadata.version_number
         )
-        # GIVEN: SoA snapshot of the latest Study version built
-        latest_refs: list[SoACellReference] = (
-            study_flowchart_service.build_soa_snapshot(
-                study_uid, study_value_version=None, layout=layout
-            )
+        # THEN: Locked StudyValue has a SoA snapshot of the latest draft
+        latest_snapshot = self._get_soa_snapshot_node(study_uid, latest_study_version)
+        assert latest_snapshot["json"] == latest_table.model_dump_json()
+        assert latest_snapshot["json"] != previous_snapshot["json"]
+        # THEN: SoA snapshots of previous versions are unchanged
+        assert (
+            self._get_soa_snapshot_node(study_uid, previous_study_version)
+            == previous_snapshot
         )
-        # THEN: SoA snapshots of the latest and previous version differ
-        assert latest_refs[0] != expected_refs[1]
-        # WHEN: SoA snapshot of the previous Study version read from the db
-        # THEN: It matches the SoA snapshot of the previous Study version
-        self._assert_soa_snapshot_refs_from_db_match_expected_refs(
-            study_flowchart_service,
-            study_uid,
-            study_value_version=previous_study_version,
-            layout=layout,
-            expected_refs=expected_refs,
+        assert (
+            self._get_soa_snapshot_node(study_uid, released_study_version)
+            == released_snapshot
         )
-        # WHEN: SoA snapshot of the latest draft Study version read from the db
-        # THEN: It matches the SoA snapshot of the latest Study version
-        self._assert_soa_snapshot_refs_from_db_match_expected_refs(
-            study_flowchart_service,
-            study_uid,
-            study_value_version=latest_study_version,
-            layout=layout,
-            expected_refs=latest_refs,
-        )
-        # WHEN: SoA snapshot read from db without specifying Study version
-        # THEN: It matches the SoA snapshot of the latest Study version
-        self._assert_soa_snapshot_refs_from_db_match_expected_refs(
-            study_flowchart_service,
-            study_uid,
-            study_value_version=None,
-            layout=layout,
-            expected_refs=latest_refs,
-        )
-        # WHEN: unlocking Study
-        study = study_service.unlock(
+
+        # WHEN: Study is unlocked
+        study_service.unlock(
             uid=study_uid,
             reason_for_unlock_term_uid=soa_test_data2.reason_for_unlock_term_uid,
         )
-        # THEN Latest StudyValue has no HAS_PROTOCOL_SOA_CELL relationships
-        assert (
-            len(
-                StudyRoot.nodes.get(uid=study_uid)
-                .latest_value.get()
-                .has_protocol_soa_cell
-            )
-            == 0
+        # THEN: Latest StudyValue has no SoA snapshot
+        assert not self._get_soa_snapshot_nodes(
+            study_uid, study_value_version=None, layout=None
         )
-        # THEN Latest StudyValue has no HAS_PROTOCOL_SOA_FOOTNOTE relationships
-        assert (
-            len(
-                StudyRoot.nodes.get(uid=study_uid)
-                .latest_value.get()
-                .has_protocol_soa_footnote
+        # THEN: SoA of the locked versions match their SoA snapshots
+        for study_value_version, snapshot in (
+            (previous_study_version, previous_snapshot),
+            (latest_study_version, latest_snapshot),
+        ):
+            self._assert_soa_matches_snapshot(
+                study_flowchart_service, study_uid, study_value_version, snapshot
             )
-            == 0
-        )
-        # THEN SoA snapshot read form the db returns empty result
-        self._assert_soa_snapshot_refs_from_db_match_expected_refs(
-            study_flowchart_service,
+
+    def test_soa_snapshot_served_verbatim(self, soa_test_data2: SoATestData):
+        """Tests that SoA of a locked Study version is returned from the saved snapshot without any rendering"""
+
+        service = StudyFlowchartService()
+        study_uid = soa_test_data2.study.uid
+
+        # GIVEN: Study has a locked version
+        study_value_version = TestUtils.lock_and_unlock_study(
             study_uid,
-            study_value_version=None,
-            layout=layout,
-            expected_refs=([], []),
+            reason_for_lock_term_uid=soa_test_data2.reason_for_lock_term_uid,
+            reason_for_unlock_term_uid=soa_test_data2.reason_for_unlock_term_uid,
+        )
+        snapshot = self._get_soa_snapshot_node(study_uid, study_value_version)
+        snapshot_time_unit = snapshot["time_unit"]
+
+        # GIVEN: Renderings saved in SoA snapshot are replaced with sentinel values
+        frozen_title = "Frozen SoA snapshot"
+        frozen_table = TableWithFootnotes.model_validate_json(snapshot["json"])
+        frozen_table.title = frozen_title
+        frozen_json = frozen_table.model_dump_json()
+        db.cypher_query(
+            """
+            MATCH (:StudyRoot {uid: $study_uid})-[:HAS_VERSION {status: 'RELEASED', version: $version}]->
+                (:StudyValue)-[:HAS_SOA_SNAPSHOT]->(snapshot:StudySoASnapshot)
+            SET snapshot.html = $html, snapshot.json = $json, snapshot.docx = $docx, snapshot.xlsx = $xlsx
+            """,
+            {
+                "study_uid": study_uid,
+                "version": study_value_version,
+                "html": "<p>frozen html</p>",
+                "json": frozen_json,
+                "docx": b"frozen docx",
+                "xlsx": b"frozen xlsx",
+            },
         )
 
-        # WHEN: SoA snapshot of the latest locked Study version read from the db
-        # THEN: It matches the SoA snapshot of the latest locked Study version
-        self._assert_soa_snapshot_refs_from_db_match_expected_refs(
-            study_flowchart_service,
-            study_uid,
-            study_value_version=latest_study_version,
-            layout=layout,
-            expected_refs=latest_refs,
+        # THEN: Every rendering of the locked Study version is the saved one
+        assert (
+            service.get_study_flowchart_html(
+                study_uid, study_value_version, layout=SoALayout.PROTOCOL
+            )
+            == "<p>frozen html</p>"
         )
-        # WHEN: SoA snapshot of the previous locked Study version read from the db
-        # THEN: It matches the SoA snapshot of the previous locked Study version
-        self._assert_soa_snapshot_refs_from_db_match_expected_refs(
-            study_flowchart_service,
-            study_uid,
-            study_value_version=previous_study_version,
-            layout=layout,
-            expected_refs=expected_refs,
+        assert (
+            service.get_flowchart_table(
+                study_uid, study_value_version, layout=SoALayout.PROTOCOL
+            ).title
+            == frozen_title
+        )
+        assert (
+            service.get_study_flowchart_docx(
+                study_uid,
+                study_value_version,
+                layout=SoALayout.PROTOCOL,
+                time_unit=None,
+            ).getvalue()
+            == b"frozen docx"
+        )
+        assert (
+            service.get_study_flowchart_xlsx(
+                study_uid,
+                study_value_version,
+                layout=SoALayout.PROTOCOL,
+                time_unit=None,
+            ).getvalue()
+            == b"frozen xlsx"
+        )
+        assert (
+            service.get_soa_snapshot(study_uid, study_value_version).title
+            == frozen_title
+        )
+        # THEN: Requesting the time unit of the snapshot also returns the saved rendering
+        assert (
+            service.get_study_flowchart_html(
+                study_uid,
+                study_value_version,
+                layout=SoALayout.PROTOCOL,
+                time_unit=snapshot_time_unit,
+            )
+            == "<p>frozen html</p>"
         )
 
-    @classmethod
-    def _assert_soa_snapshot_refs_from_db_match_expected_refs(
-        cls,
+        # THEN: HTML with uids is rendered from the saved SoA table
+        assert frozen_title in service.get_study_flowchart_html(
+            study_uid,
+            study_value_version,
+            layout=SoALayout.PROTOCOL,
+            include_uids=True,
+        )
+
+        # THEN: Other time unit is shown on the saved SoA table, with the frozen content kept
+        other_time_unit = "day" if snapshot_time_unit == "week" else "week"
+        converted_table = service.get_flowchart_table(
+            study_uid,
+            study_value_version,
+            layout=SoALayout.PROTOCOL,
+            time_unit=other_time_unit,
+        )
+        assert converted_table.title == frozen_title
+        assert converted_table.rows[converted_table.num_header_rows - 2].cells[
+            0
+        ].text == _gettext(f"study_{other_time_unit}")
+        assert (
+            converted_table.rows[converted_table.num_header_rows - 2].cells
+            != frozen_table.rows[frozen_table.num_header_rows - 2].cells
+        )
+        assert frozen_title in service.get_study_flowchart_html(
+            study_uid,
+            study_value_version,
+            layout=SoALayout.PROTOCOL,
+            time_unit=other_time_unit,
+        )
+
+        # THEN: Forced build, other layouts and the latest draft version are built
+        assert (
+            service.get_flowchart_table(
+                study_uid,
+                study_value_version,
+                layout=SoALayout.PROTOCOL,
+                force_build=True,
+            ).title
+            != frozen_title
+        )
+        assert (
+            service.get_flowchart_table(
+                study_uid, study_value_version, layout=SoALayout.DETAILED
+            ).title
+            != frozen_title
+        )
+        assert (
+            service.get_flowchart_table(
+                study_uid, study_value_version=None, layout=SoALayout.PROTOCOL
+            ).title
+            != frozen_title
+        )
+
+    def test_lab_table_soa_snapshot_served_verbatim(self, soa_test_data2: SoATestData):
+        """Tests that Protocol Lab table SoA of a locked Study version is returned from its saved snapshot"""
+
+        service = StudyFlowchartService()
+        study_uid = soa_test_data2.study.uid
+        layout = SoALayout.PROTOCOL_LAB_TABLE
+
+        # GIVEN: Study has a locked version
+        study_value_version = TestUtils.lock_and_unlock_study(
+            study_uid,
+            reason_for_lock_term_uid=soa_test_data2.reason_for_lock_term_uid,
+            reason_for_unlock_term_uid=soa_test_data2.reason_for_unlock_term_uid,
+        )
+        snapshot = self._get_soa_snapshot_node(
+            study_uid, study_value_version, layout=layout
+        )
+        # THEN: Lab table and Protocol SoA snapshots are separate
+        protocol_snapshot = self._get_soa_snapshot_node(study_uid, study_value_version)
+        assert snapshot["json"] != protocol_snapshot["json"]
+
+        # GIVEN: Renderings saved in Lab table SoA snapshot are replaced with sentinel values
+        frozen_title = "Frozen Lab table SoA snapshot"
+        frozen_table = TableWithFootnotes.model_validate_json(snapshot["json"])
+        frozen_table.title = frozen_title
+        db.cypher_query(
+            """
+            MATCH (:StudyRoot {uid: $study_uid})-[:HAS_VERSION {status: 'RELEASED', version: $version}]->
+                (:StudyValue)-[:HAS_SOA_SNAPSHOT]->(snapshot:StudySoASnapshot {layout: $layout})
+            SET snapshot.html = $html, snapshot.json = $json, snapshot.docx = $docx, snapshot.xlsx = $xlsx
+            """,
+            {
+                "study_uid": study_uid,
+                "version": study_value_version,
+                "layout": layout.value,
+                "html": "<p>frozen lab html</p>",
+                "json": frozen_table.model_dump_json(),
+                "docx": b"frozen lab docx",
+                "xlsx": b"frozen lab xlsx",
+            },
+        )
+
+        # THEN: Every rendering of the Lab table SoA of the locked Study version is the saved one
+        assert (
+            service.get_study_flowchart_html(study_uid, study_value_version, layout)
+            == "<p>frozen lab html</p>"
+        )
+        assert (
+            service.get_flowchart_table(study_uid, study_value_version, layout).title
+            == frozen_title
+        )
+        assert (
+            service.get_flowchart_table_lab_table(study_uid, study_value_version).title
+            == frozen_title
+        )
+        assert (
+            service.get_study_flowchart_docx(
+                study_uid, study_value_version, layout, time_unit=None
+            ).getvalue()
+            == b"frozen lab docx"
+        )
+        assert (
+            service.get_study_flowchart_xlsx(
+                study_uid, study_value_version, layout, time_unit=None
+            ).getvalue()
+            == b"frozen lab xlsx"
+        )
+        assert (
+            service.get_soa_snapshot(study_uid, study_value_version, layout).title
+            == frozen_title
+        )
+
+        # THEN: Protocol SoA snapshot is not affected
+        assert (
+            service.get_study_flowchart_html(
+                study_uid, study_value_version, SoALayout.PROTOCOL
+            )
+            == protocol_snapshot["html"]
+        )
+
+        # THEN: HTML with uids is rendered from the saved Lab table SoA table
+        assert frozen_title in service.get_study_flowchart_html(
+            study_uid, study_value_version, layout, include_uids=True
+        )
+
+        # THEN: Forced build and the latest draft version are built
+        assert (
+            service.get_flowchart_table_lab_table(
+                study_uid, study_value_version, force_build=True
+            ).title
+            != frozen_title
+        )
+        assert (
+            service.get_flowchart_table_lab_table(study_uid, None).title != frozen_title
+        )
+
+    def test_lab_table_of_locked_version_without_snapshot_is_built(
+        self, soa_test_data2: SoATestData
+    ):
+        """Tests that Protocol Lab table SoA of a Study version locked before Lab table snapshots existed is built"""
+
+        service = StudyFlowchartService()
+        study_uid = soa_test_data2.study.uid
+        layout = SoALayout.PROTOCOL_LAB_TABLE
+
+        # GIVEN: Study has a locked version without Lab table SoA snapshot
+        study_value_version = TestUtils.lock_and_unlock_study(
+            study_uid,
+            reason_for_lock_term_uid=soa_test_data2.reason_for_lock_term_uid,
+            reason_for_unlock_term_uid=soa_test_data2.reason_for_unlock_term_uid,
+        )
+        db.cypher_query(
+            """
+            MATCH (:StudyRoot {uid: $study_uid})-[:HAS_VERSION {status: 'RELEASED', version: $version}]->
+                (:StudyValue)-[:HAS_SOA_SNAPSHOT]->(snapshot:StudySoASnapshot {layout: $layout})
+            DETACH DELETE snapshot
+            """,
+            {
+                "study_uid": study_uid,
+                "version": study_value_version,
+                "layout": layout.value,
+            },
+        )
+
+        # THEN: Lab table SoA of the locked version is built, while the Protocol SoA is still served from snapshot
+        assert service.get_flowchart_table_lab_table(
+            study_uid, study_value_version
+        ).rows
+        assert service.get_study_flowchart_html(
+            study_uid, study_value_version, layout
+        ).startswith("<")
+        assert service.get_flowchart_table(
+            study_uid, study_value_version, SoALayout.PROTOCOL
+        ).rows
+
+        # WHEN: Lab table SoA snapshot saved
+        service.save_soa_snapshot(
+            study_uid=study_uid, layout=layout, study_value_version=study_value_version
+        )
+
+        # THEN: The snapshot is saved and replaced on repeated save
+        service.save_soa_snapshot(
+            study_uid=study_uid, layout=layout, study_value_version=study_value_version
+        )
+        snapshot = self._get_soa_snapshot_node(
+            study_uid, study_value_version, layout=layout
+        )
+        self._assert_lab_table_matches_snapshot(
+            service, study_uid, study_value_version, snapshot
+        )
+
+    def test_soa_of_locked_version_without_snapshot_not_found(
+        self, soa_test_data2: SoATestData
+    ):
+        """Tests that SoA of a locked Study version without SoA snapshot is not built from current data"""
+
+        service = StudyFlowchartService()
+        study_uid = soa_test_data2.study.uid
+
+        # GIVEN: Study has a locked version without SoA snapshot
+        study_value_version = TestUtils.lock_and_unlock_study(
+            study_uid,
+            reason_for_lock_term_uid=soa_test_data2.reason_for_lock_term_uid,
+            reason_for_unlock_term_uid=soa_test_data2.reason_for_unlock_term_uid,
+        )
+        db.cypher_query(
+            """
+            MATCH (:StudyRoot {uid: $study_uid})-[:HAS_VERSION {status: 'RELEASED', version: $version}]->
+                (:StudyValue)-[:HAS_SOA_SNAPSHOT]->(snapshot:StudySoASnapshot)
+            DETACH DELETE snapshot
+            """,
+            {"study_uid": study_uid, "version": study_value_version},
+        )
+
+        # THEN: Every rendering of the Protocol SoA of the locked Study version is not found
+        for get_soa in (
+            service.get_flowchart_table,
+            service.get_study_flowchart_html,
+            lambda **kwargs: service.get_study_flowchart_html(
+                include_uids=True, **kwargs
+            ),
+            lambda **kwargs: service.get_study_flowchart_docx(time_unit=None, **kwargs),
+            lambda **kwargs: service.get_study_flowchart_xlsx(time_unit=None, **kwargs),
+        ):
+            with pytest.raises(NotFoundException, match="No SoA snapshot found"):
+                get_soa(
+                    study_uid=study_uid,
+                    study_value_version=study_value_version,
+                    layout=SoALayout.PROTOCOL,
+                )
+
+        # THEN: Forced build and other layouts are still built
+        assert service.get_flowchart_table(
+            study_uid,
+            study_value_version,
+            layout=SoALayout.PROTOCOL,
+            force_build=True,
+        ).rows
+        assert service.get_flowchart_table(
+            study_uid, study_value_version, layout=SoALayout.DETAILED
+        ).rows
+
+    def test_save_snapshot_of_nonexistent_study_version(
+        self, soa_test_data2: SoATestData
+    ):
+        """Tests that saving a SoA snapshot of a nonexistent Study version fails and leaves no trace"""
+
+        study_uid = soa_test_data2.study.uid
+        snapshot = SoASnapshot(
+            html="html", docx=b"docx", xlsx=b"xlsx", json="{}", time_unit="week"
+        )
+
+        # WHEN: saving SoA snapshot to a Study version that does not exist
+        # THEN: NotFoundException is raised
+        with pytest.raises(NotFoundException):
+            StudySoARepository.save_snapshot(
+                study_uid=study_uid, snapshot=snapshot, study_value_version="99.9"
+            )
+
+        # THEN: no SoA snapshot node is created
+        assert not db.cypher_query(
+            "MATCH (:StudyRoot {uid: $study_uid})-[:HAS_VERSION]->(:StudyValue)-[:HAS_SOA_SNAPSHOT]->(s:StudySoASnapshot) "
+            "WHERE s.html = 'html' RETURN s",
+            {"study_uid": study_uid},
+        )[0]
+
+    def test_save_protocol_soa_snapshot_of_previous_versions(
+        self, soa_test_data2: SoATestData
+    ):
+        """Tests re-rendering SoA snapshots of previous locked Study versions"""
+
+        study_flowchart_service = StudyFlowchartService()
+        study_uid = soa_test_data2.study.uid
+
+        # GIVEN: Study has 2 locked versions and a draft version, all differs in SoA
+        version_v1 = TestUtils.lock_and_unlock_study(
+            study_uid,
+            reason_for_lock_term_uid=soa_test_data2.reason_for_lock_term_uid,
+            reason_for_unlock_term_uid=soa_test_data2.reason_for_unlock_term_uid,
+        )
+        activity_v2 = soa_test_data2.create_study_activity(
+            name="Potassium",
+            soa_group="Efficacy",
+            group="Laboratory Assessments",
+            subgroup="Biochemistry",
+            visits=["V1", "V6"],
+            show_soa_group=True,
+            show_group=True,
+            show_subgroup=False,
+            show_activity=True,
+        )
+        version_v2 = TestUtils.lock_and_unlock_study(
+            study_uid,
+            reason_for_lock_term_uid=soa_test_data2.reason_for_lock_term_uid,
+            reason_for_unlock_term_uid=soa_test_data2.reason_for_unlock_term_uid,
+        )
+        StudyActivitySelectionService().delete_selection(
+            study_uid=study_uid,
+            study_selection_uid=activity_v2.study_activity_uid,
+        )
+
+        snapshot_v1 = self._get_soa_snapshot_node(study_uid, version_v1)
+        snapshot_v2 = self._get_soa_snapshot_node(study_uid, version_v2)
+        assert snapshot_v1["json"] != snapshot_v2["json"]
+
+        # GIVEN: SoA snapshots removed
+        db.cypher_query(
+            """
+            MATCH (:StudyRoot {uid: $study_uid})-[:HAS_VERSION]->(:StudyValue)-[:HAS_SOA_SNAPSHOT]->(snapshot:StudySoASnapshot)
+            DETACH DELETE snapshot
+            """,
+            {"study_uid": study_uid},
+        )
+
+        # WHEN: SoA snapshots of older study versions saved one-by-one
+        for study_value_version in (version_v1, version_v2):
+            study_flowchart_service.save_protocol_soa_snapshot(
+                study_uid=study_uid, study_value_version=study_value_version
+            )
+
+        # THEN: Latest draft version of Study has no SoA snapshot
+        assert not self._get_soa_snapshot_nodes(
+            study_uid, study_value_version=None, layout=None
+        )
+        # THEN: SoA snapshots match the SoA snapshots saved when locking the Study versions
+        for study_value_version, expected_snapshot in (
+            (version_v1, snapshot_v1),
+            (version_v2, snapshot_v2),
+        ):
+            snapshot = self._get_soa_snapshot_node(study_uid, study_value_version)
+            assert snapshot["json"] == expected_snapshot["json"]
+            assert snapshot["html"] == expected_snapshot["html"]
+
+        # WHEN: SoA snapshot saved again
+        study_flowchart_service.save_protocol_soa_snapshot(
+            study_uid=study_uid, study_value_version=version_v1
+        )
+        # THEN: Previous SoA snapshot is replaced
+        assert len(self._get_soa_snapshot_nodes(study_uid, version_v1)) == 1
+
+    # LEGACY-SOA-SNAPSHOT (242942): only used by migration 024 to render pre-existing
+    # locked/released versions from HAS_PROTOCOL_SOA_CELL refs. Remove in the next release.
+    def test_save_protocol_soa_snapshot_from_legacy_snapshot(
+        self, soa_test_data2: SoATestData
+    ):
+        """Tests that a SoA snapshot of a Study version with legacy HAS_PROTOCOL_SOA_CELL relationships
+        is rendered from those relationships, not built from the Study selections"""
+
+        service = StudyFlowchartService()
+        study_uid = soa_test_data2.study.uid
+
+        # GIVEN: Study has a locked version
+        study_value_version = TestUtils.lock_and_unlock_study(
+            study_uid,
+            reason_for_lock_term_uid=soa_test_data2.reason_for_lock_term_uid,
+            reason_for_unlock_term_uid=soa_test_data2.reason_for_unlock_term_uid,
+        )
+        built_table = service.get_flowchart_table(
+            study_uid, study_value_version, SoALayout.PROTOCOL, force_build=True
+        )
+
+        # GIVEN: the locked version has legacy SoA cell references of a single activity at a single visit
+        schedule = soa_test_data2.study_activity_schedules[0]
+        study_visit = next(
+            visit
+            for visit in soa_test_data2.study_visits.values()
+            if visit.uid == schedule.study_visit_uid
+        )
+        db.cypher_query(
+            """
+            MATCH (:StudyRoot {uid: $study_uid})-[:HAS_VERSION {status: 'RELEASED', version: $version}]->(sv:StudyValue)
+            MATCH (sv)-[:HAS_STUDY_EPOCH]->(epoch:StudyEpoch {uid: $epoch_uid})
+            MATCH (sv)-[:HAS_STUDY_VISIT]->(visit:StudyVisit {uid: $visit_uid})
+            MATCH (sv)-[:HAS_STUDY_ACTIVITY]->(activity:StudyActivity {uid: $activity_uid})
+            MATCH (sv)-[:HAS_STUDY_ACTIVITY_SCHEDULE]->(schedule:StudyActivitySchedule {uid: $schedule_uid})
+            CREATE (sv)-[:HAS_PROTOCOL_SOA_CELL {row: -2, column: 1, span: 1, is_propagated: false, order: 0}]->(epoch)
+            CREATE (sv)-[:HAS_PROTOCOL_SOA_CELL {row: -1, column: 1, span: 1, is_propagated: false, order: 0}]->(visit)
+            CREATE (sv)-[:HAS_PROTOCOL_SOA_CELL {row: 0, column: 0, span: 1, is_propagated: false, order: 0}]->(activity)
+            CREATE (sv)-[:HAS_PROTOCOL_SOA_CELL {row: 0, column: 1, span: 1, is_propagated: false, order: 0}]->(schedule)
+            """,
+            {
+                "study_uid": study_uid,
+                "version": study_value_version,
+                "epoch_uid": study_visit.study_epoch_uid,
+                "visit_uid": study_visit.uid,
+                "activity_uid": schedule.study_activity_uid,
+                "schedule_uid": schedule.study_activity_schedule_uid,
+            },
+        )
+        legacy_table = service.load_soa_snapshot(
+            study_uid, study_value_version, SoALayout.PROTOCOL
+        )
+        assert len(legacy_table.rows) == legacy_table.num_header_rows + 1
+        assert len(legacy_table.rows) < len(built_table.rows)
+
+        # WHEN: SoA snapshot saved
+        service.save_protocol_soa_snapshot(
+            study_uid=study_uid, study_value_version=study_value_version
+        )
+
+        # THEN: SoA snapshot is rendered from the legacy cell references
+        snapshot = self._get_soa_snapshot_node(study_uid, study_value_version)
+        assert snapshot["json"] == legacy_table.model_dump_json()
+        assert (
+            service.get_flowchart_table(
+                study_uid, study_value_version, SoALayout.PROTOCOL
+            ).model_dump()
+            == legacy_table.model_dump()
+        )
+
+    @staticmethod
+    def _render_protocol_soa(
         study_flowchart_service: StudyFlowchartService,
         study_uid: str,
+        study_value_version: str | None,
+    ) -> tuple[TableWithFootnotes, str]:
+        """builds Protocol SoA table and HTML"""
+
+        table = study_flowchart_service.get_flowchart_table(
+            study_uid=study_uid,
+            study_value_version=study_value_version,
+            layout=SoALayout.PROTOCOL,
+            force_build=True,
+        )
+        html = study_flowchart_service.get_study_flowchart_html(
+            study_uid=study_uid,
+            study_value_version=study_value_version,
+            layout=SoALayout.PROTOCOL,
+        )
+        return table, html
+
+    @staticmethod
+    def _get_soa_snapshot_nodes(
+        study_uid: str,
+        study_value_version: str | None,
+        layout: SoALayout | None = SoALayout.PROTOCOL,
+    ) -> list[dict[str, Any]]:
+        """returns properties of StudySoASnapshot nodes of a study version, or of the latest version,
+        of the given layout or of all layouts"""
+
+        if study_value_version:
+            query = """
+                MATCH (:StudyRoot {uid: $study_uid})-[:HAS_VERSION {status: 'RELEASED', version: $version}]->(sv:StudyValue)
+            """
+        else:
+            query = """
+                MATCH (:StudyRoot {uid: $study_uid})-[:LATEST]->(sv:StudyValue)
+            """
+        query += """
+            MATCH (sv)-[:HAS_SOA_SNAPSHOT]->(snapshot:StudySoASnapshot)
+            WHERE $layout IS NULL OR snapshot.layout = $layout
+            RETURN DISTINCT snapshot {.layout, .html, .docx, .xlsx, .json, .time_unit}
+        """
+        results, _ = db.cypher_query(
+            query,
+            {
+                "study_uid": study_uid,
+                "version": study_value_version,
+                "layout": layout.value if layout else None,
+            },
+        )
+        return [row[0] for row in results]
+
+    @classmethod
+    def _get_soa_snapshot_node(
+        cls,
+        study_uid: str,
         study_value_version: str,
-        layout: SoALayout,
-        expected_refs: tuple[list[SoACellReference], list[SoAFootnoteReference]],
-    ):
-        """loads SoA snapshot references from db and compares them to expected references"""
+        layout: SoALayout = SoALayout.PROTOCOL,
+    ) -> dict[str, Any]:
+        """returns properties of the single StudySoASnapshot node of a layout of a study version, checking all renderings"""
 
         __tracebackhide__ = True
 
-        refs = TestSoASnapshot._load_soa_snapshot_for_comparison(
-            study_flowchart_service, study_uid, study_value_version, layout
+        snapshots = cls._get_soa_snapshot_nodes(
+            study_uid, study_value_version, layout=layout
         )
+        assert len(snapshots) == 1, f"Expected a single SoA snapshot: {snapshots}"
+        snapshot = snapshots[0]
 
-        # THEN: SoA snapshot (without cell footnote references) match as expected
-        if expected_refs[0]:
-            assert refs[0], "Missing SoA cell references"
-        if expected_refs[1]:
-            assert refs[1], "Missing SoA footnote references"
-        assert refs[0] == expected_refs[0], "SoA cell references mismatch"
-        assert refs[1] == expected_refs[1], "SoA footnote references mismatch"
+        assert snapshot["layout"] == layout.value
+        assert snapshot["time_unit"] in ("day", "week")
+        assert snapshot["html"].startswith("<")
+        # DOCX and XLSX are ZIP archives
+        assert snapshot["docx"].startswith(b"PK")
+        assert snapshot["xlsx"].startswith(b"PK")
+        assert TableWithFootnotes.model_validate_json(snapshot["json"]).rows
+
+        return snapshot
 
     @staticmethod
-    def _load_soa_snapshot_for_comparison(
-        study_flowchart_service, study_uid, study_value_version, layout
-    ) -> tuple[list[SoACellReference], list[SoAFootnoteReference]]:
-        """loads SoA snapshot references from db, and removes cell footnote references to prepare for comparison"""
+    def _assert_soa_matches_snapshot(
+        study_flowchart_service: StudyFlowchartService,
+        study_uid: str,
+        study_value_version: str,
+        snapshot: dict[str, Any],
+    ):
+        """checks that SoA renderings of a study version are those saved in the SoA snapshot"""
 
-        refs = study_flowchart_service.repository.load(
-            study_uid=study_uid,
-            study_value_version=study_value_version,
-            layout=layout,
+        __tracebackhide__ = True
+
+        assert (
+            study_flowchart_service.get_flowchart_table(
+                study_uid, study_value_version, SoALayout.PROTOCOL
+            ).model_dump_json()
+            == snapshot["json"]
+        )
+        assert (
+            study_flowchart_service.get_study_flowchart_html(
+                study_uid, study_value_version, SoALayout.PROTOCOL
+            )
+            == snapshot["html"]
+        )
+        assert (
+            study_flowchart_service.get_study_flowchart_docx(
+                study_uid, study_value_version, SoALayout.PROTOCOL, time_unit=None
+            ).getvalue()
+            == snapshot["docx"]
+        )
+        assert (
+            study_flowchart_service.get_study_flowchart_xlsx(
+                study_uid, study_value_version, SoALayout.PROTOCOL, time_unit=None
+            ).getvalue()
+            == snapshot["xlsx"]
         )
 
-        # Remove cell footnote references for comparison
-        for ref in refs[0]:
-            ref.footnote_references = None
+    @staticmethod
+    def _assert_lab_table_matches_snapshot(
+        study_flowchart_service: StudyFlowchartService,
+        study_uid: str,
+        study_value_version: str,
+        snapshot: dict[str, Any],
+    ):
+        """checks that Protocol Lab table SoA renderings of a study version are those saved in the SoA snapshot"""
 
-        return refs
+        __tracebackhide__ = True
+
+        layout = SoALayout.PROTOCOL_LAB_TABLE
+        assert (
+            study_flowchart_service.get_flowchart_table(
+                study_uid, study_value_version, layout
+            ).model_dump_json()
+            == snapshot["json"]
+        )
+        assert (
+            study_flowchart_service.get_study_flowchart_html(
+                study_uid, study_value_version, layout
+            )
+            == snapshot["html"]
+        )
+        assert (
+            study_flowchart_service.get_study_flowchart_docx(
+                study_uid, study_value_version, layout, time_unit=None
+            ).getvalue()
+            == snapshot["docx"]
+        )
+        assert (
+            study_flowchart_service.get_study_flowchart_xlsx(
+                study_uid, study_value_version, layout, time_unit=None
+            ).getvalue()
+            == snapshot["xlsx"]
+        )
 
     @staticmethod
     def _remove_first_visible_study_activity(test_data: SoATestData):
@@ -1161,299 +1726,6 @@ class TestSoASnapshot:
         )
         log.info("updated StudyActivitySubGroup [%s]", sasg.study_activity_subgroup_uid)
 
-    def test_build_soa_snapshot_versioned(
-        self, soa_test_data2: SoATestData, layout: SoALayout = SoALayout.PROTOCOL
-    ):
-        """tests StudyFlowchartService.get_soa_row_refs with versioning
-
-        SCENARIO: When a Study with SoA data has a previous locked version,
-         and a later draft version with a new activity row added,
-         then the row references from the SoA snapshot of the previous locked Study version
-         are a subset of those from the SoA snapshot of the latest draft version.
-        """
-
-        study_flowchart_service = StudyFlowchartService()
-
-        # GIVEN: SoA snapshot of latest draft built
-        previous_refs = study_flowchart_service.build_soa_snapshot(
-            study_uid=soa_test_data2.study.uid, study_value_version=None, layout=layout
-        )
-        # GIVEN: Study has a locked version
-        previous_study_version = TestUtils.lock_and_unlock_study(
-            soa_test_data2.study.uid,
-            reason_for_lock_term_uid=soa_test_data2.reason_for_lock_term_uid,
-            reason_for_unlock_term_uid=soa_test_data2.reason_for_unlock_term_uid,
-        )
-
-        # GIVEN: Latest draft version has a new activity added
-        soa_test_data2.create_study_activity(
-            name="Mind the gap",
-            soa_group="Safety",
-            group="General",
-            subgroup="Napoleon",
-            visits=["V2", "V6"],
-            show_soa_group=True,
-            show_group=True,
-            show_subgroup=False,
-            show_activity=True,
-        )
-
-        # WHEN Building SoA snapshot of the locked study version
-        refs = study_flowchart_service.build_soa_snapshot(
-            study_uid=soa_test_data2.study.uid,
-            study_value_version=previous_study_version,
-            layout=layout,
-        )
-        # THEN It matches the SoA snapshot built from the previous study version
-        assert refs == previous_refs
-
-        # WHEN Building SoA snapshot of the latest draft
-        current_refs = study_flowchart_service.build_soa_snapshot(
-            study_uid=soa_test_data2.study.uid,
-            study_value_version=None,
-            layout=layout,
-        )
-        # THEN The row references from the SoA snapshot of the previous study version is a subset of those from the SoA snapshot of the latest draft version
-        current_refs = set(ref.referenced_item.item_uid for ref in current_refs[0])
-        previous_refs = set(ref.referenced_item.item_uid for ref in previous_refs[0])
-        assert current_refs > previous_refs
-
-    def test_soa_snapshot_of_previous_locked_versions(
-        self, soa_test_data2: SoATestData, layout: SoALayout = SoALayout.PROTOCOL
-    ):
-        """Tests SoA snapshot of previous locked Study versions"""
-
-        study_flowchart_service = StudyFlowchartService()
-        study_service = StudyService()
-
-        # GIVEN: a Study populated with SoA data
-        study_uid = soa_test_data2.study.uid
-        # GIVEN: Study has 3 locked versions and a draft version, all differs in SoA
-
-        # Build SoA snapshot
-        refs_v1 = study_flowchart_service.build_soa_snapshot(
-            study_uid,
-            study_value_version=None,
-            layout=layout,
-        )
-        # create a locked study version
-        version_v1 = str(
-            study_service.lock(
-                uid=study_uid,
-                change_description="vz1",
-                reason_for_lock_term_uid=soa_test_data2.reason_for_lock_term_uid,
-            ).current_metadata.version_metadata.version_number
-        )
-        study_service.unlock(
-            uid=study_uid,
-            reason_for_unlock_term_uid=soa_test_data2.reason_for_unlock_term_uid,
-        )
-
-        # add a new activity
-        activity_v2 = soa_test_data2.create_study_activity(
-            name="Potassium",
-            soa_group="Efficacy",
-            group="Laboratory Assessments",
-            subgroup="Biochemistry",
-            visits=["V1", "V6"],
-            show_soa_group=True,
-            show_group=True,
-            show_subgroup=False,
-            show_activity=True,
-        )
-        # Build SoA snapshot
-        refs_v2 = study_flowchart_service.build_soa_snapshot(
-            study_uid,
-            study_value_version=None,
-            layout=layout,
-        )
-        # create a locked study version
-        version_v2 = str(
-            study_service.lock(
-                uid=study_uid,
-                change_description="vz2",
-                reason_for_lock_term_uid=soa_test_data2.reason_for_lock_term_uid,
-            ).current_metadata.version_metadata.version_number
-        )
-        study_service.unlock(
-            uid=study_uid,
-            reason_for_unlock_term_uid=soa_test_data2.reason_for_unlock_term_uid,
-        )
-
-        # add another activity
-        soa_test_data2.create_study_activity(
-            name="Potato peeler",
-            soa_group="Safety",
-            group="General",
-            subgroup="Napoleon",
-            visits=["V2", "V4", "V5"],
-            show_soa_group=True,
-            show_group=True,
-            show_subgroup=False,
-            show_activity=True,
-        )
-        # Build SoA snapshot
-        refs_v3 = study_flowchart_service.build_soa_snapshot(
-            study_uid,
-            study_value_version=None,
-            layout=layout,
-        )
-        # create a locked study version
-        version_v3 = str(
-            study_service.lock(
-                uid=study_uid,
-                change_description="vz2",
-                reason_for_lock_term_uid=soa_test_data2.reason_for_lock_term_uid,
-            ).current_metadata.version_metadata.version_number
-        )
-        study_service.unlock(
-            uid=study_uid,
-            reason_for_unlock_term_uid=soa_test_data2.reason_for_unlock_term_uid,
-        )
-
-        # remove an activity from draft version
-        StudyActivitySelectionService().delete_selection(
-            study_uid=soa_test_data2.study.uid,
-            study_selection_uid=activity_v2.study_activity_uid,
-        )
-        log.info("deleted StudyActivity [%s]", activity_v2.study_activity_uid)
-        # Build SoA snapshot
-        refs_draft = study_flowchart_service.build_soa_snapshot(
-            study_uid,
-            study_value_version=None,
-            layout=layout,
-        )
-
-        # all versions differ
-        assert refs_v2 != refs_v1
-        assert refs_v3 != refs_v1
-        assert refs_v3 != refs_v2
-        assert refs_draft != refs_v2
-        assert refs_draft != refs_v3
-
-        # GIVEN: removed SoA snapshot
-        for study_version in StudyRoot.nodes.get(uid=study_uid).has_version.all():
-            study_version.has_protocol_soa_cell.disconnect_all()
-            study_version.has_protocol_soa_footnote.disconnect_all()
-            # THEN: StudyValue has no HAS_PROTOCOL_SOA_CELL or HAS_PROTOCOL_SOA_FOOTNOTE relationships
-            assert len(study_version.has_protocol_soa_cell) == 0
-            assert len(study_version.has_protocol_soa_footnote) == 0
-
-        # WHEN SoA snapshots of older study versions created one-by-one
-        for study_value_version in (version_v1, version_v2, version_v3):
-            study_flowchart_service.update_soa_snapshot(
-                study_uid=study_uid,
-                study_value_version=study_value_version,
-                layout=layout,
-            )
-        # THEN Latest draft version of Study has no SoA snapshot
-        assert (
-            len(
-                StudyRoot.nodes.get(uid=study_uid)
-                .latest_value.get()
-                .has_protocol_soa_cell
-            )
-            == 0
-        )
-        assert (
-            len(
-                StudyRoot.nodes.get(uid=study_uid)
-                .latest_value.get()
-                .has_protocol_soa_footnote
-            )
-            == 0
-        )
-        # THEN SoA snapshots loaded from db matches with SoA snapshot built for the particular Study version
-        for study_value_version, expected_refs in (
-            (version_v1, refs_v1),
-            (version_v2, refs_v2),
-            (version_v3, refs_v3),
-        ):
-            self._assert_soa_snapshot_refs_from_db_match_expected_refs(
-                study_flowchart_service,
-                study_uid,
-                study_value_version=study_value_version,
-                layout=layout,
-                expected_refs=expected_refs,
-            )
-
-    def test_soa_snapshot_references(
-        self, soa_test_data2: SoATestData, layout: SoALayout = SoALayout.PROTOCOL
-    ):
-        """checks that saving and loading SoA snapshot references match"""
-
-        service = StudyFlowchartService()
-
-        expected_cell_references, expected_footnote_references = (
-            service.build_soa_snapshot(
-                study_uid=soa_test_data2.study.uid,
-                study_value_version=None,
-                layout=layout,
-            )
-        )
-
-        service.update_soa_snapshot(
-            study_uid=soa_test_data2.study.uid, study_value_version=None, layout=layout
-        )
-
-        cell_references, footnote_references = self._load_soa_snapshot_for_comparison(
-            service,
-            study_uid=soa_test_data2.study.uid,
-            study_value_version=None,
-            layout=layout,
-        )
-
-        assert cell_references == expected_cell_references
-        assert footnote_references == expected_footnote_references
-
-    @pytest.mark.parametrize(
-        "time_unit",
-        [
-            "day",
-            "week",
-        ],
-    )
-    def test_soa_snapshot_and_reconstruction(
-        self,
-        soa_test_data2: SoATestData,
-        time_unit: str,
-        layout: SoALayout = SoALayout.PROTOCOL,
-    ):
-        """tests saving of SoA snapshot and reconstruction of SoA from snapshot"""
-
-        service = StudyFlowchartService()
-
-        expected_table = service.build_flowchart_table(
-            study_uid=soa_test_data2.study.uid,
-            study_value_version=None,
-            layout=layout,
-            time_unit=time_unit,
-        )
-        if layout == SoALayout.PROTOCOL:
-            service.propagate_hidden_rows(expected_table.rows)
-            expected_table.rows = [row for row in expected_table.rows if not row.hide]
-        else:
-            service.show_hidden_rows(expected_table.rows)
-
-        # unique cell references
-        for row in expected_table.rows:
-            for cell in row.cells:
-                if cell.refs:
-                    cell.refs = list(dict.fromkeys(cell.refs))
-
-        service.update_soa_snapshot(
-            study_uid=soa_test_data2.study.uid, study_value_version=None, layout=layout
-        )
-
-        table = service.load_soa_snapshot(
-            study_uid=soa_test_data2.study.uid,
-            study_value_version=None,
-            layout=layout,
-            time_unit=time_unit,
-        )
-
-        assert table.model_dump() == expected_table.model_dump()
-
 
 def test_soa_snapshot_versioning_with_footnote_linking(
     temp_database_populated,
@@ -1470,15 +1742,6 @@ def test_soa_snapshot_versioning_with_footnote_linking(
         force_build=True,
     )
 
-    # get cell references
-    expected_cell_references_v1, expected_footnote_references_v1 = (
-        service.build_soa_snapshot(
-            study_uid=soa_test_data.study.uid,
-            study_value_version=None,
-            layout=layout,
-        )
-    )
-
     # create a locked study version
     v1_version = TestUtils.lock_and_unlock_study(
         soa_test_data.study.uid,
@@ -1487,24 +1750,14 @@ def test_soa_snapshot_versioning_with_footnote_linking(
     )
 
     # check SoA after locking v1
-    soa = service.get_flowchart_table(
-        study_uid=soa_test_data.study.uid,
-        study_value_version=v1_version,
-        layout=layout,
-        force_build=True,
-    )
-    assert soa.model_dump() == soa_v1.model_dump()
-
-    # check v1 SoA snapshot
-    cell_references, footnote_references = service.repository.load(
-        study_uid=soa_test_data.study.uid,
-        study_value_version=v1_version,
-        layout=layout,
-    )
-    for ref in cell_references:
-        ref.footnote_references = None
-    assert cell_references == expected_cell_references_v1
-    assert footnote_references == expected_footnote_references_v1
+    for force_build in (True, False):
+        soa = service.get_flowchart_table(
+            study_uid=soa_test_data.study.uid,
+            study_value_version=v1_version,
+            layout=layout,
+            force_build=force_build,
+        )
+        assert soa.model_dump() == soa_v1.model_dump()
 
     # assign footnote to study-activity-group
     study_activity_subgroup = next(
@@ -1536,33 +1789,14 @@ def test_soa_snapshot_versioning_with_footnote_linking(
     assert soa_v1.model_dump() != soa_v2.model_dump()
 
     # check v1 SoA after modifications to draft
-    soa = service.get_flowchart_table(
-        study_uid=soa_test_data.study.uid,
-        study_value_version=v1_version,
-        layout=layout,
-        force_build=True,
-    )
-    assert soa.model_dump() == soa_v1.model_dump()
-
-    # check v1 SoA snapshot build after modifications to draft
-    cell_references, footnote_references = service.build_soa_snapshot(
-        study_uid=soa_test_data.study.uid,
-        study_value_version=v1_version,
-        layout=layout,
-    )
-    assert cell_references == expected_cell_references_v1
-    assert footnote_references == expected_footnote_references_v1
-
-    # check v1 SoA snapshot after modifications to draft
-    cell_references, footnote_references = service.repository.load(
-        study_uid=soa_test_data.study.uid,
-        study_value_version=v1_version,
-        layout=layout,
-    )
-    for ref in cell_references:
-        ref.footnote_references = None
-    assert cell_references == expected_cell_references_v1
-    assert footnote_references == expected_footnote_references_v1
+    for force_build in (True, False):
+        soa = service.get_flowchart_table(
+            study_uid=soa_test_data.study.uid,
+            study_value_version=v1_version,
+            layout=layout,
+            force_build=force_build,
+        )
+        assert soa.model_dump() == soa_v1.model_dump()
 
     # create a locked study version
     v2_version = TestUtils.lock_and_unlock_study(
@@ -1571,99 +1805,33 @@ def test_soa_snapshot_versioning_with_footnote_linking(
         reason_for_unlock_term_uid=temp_database_populated.reason_for_unlock_term_uid,
     )
 
-    # check SoA after locking v2
-    soa = service.get_flowchart_table(
-        study_uid=soa_test_data.study.uid,
-        study_value_version=v1_version,
-        layout=layout,
-        force_build=True,
-    )
-    assert soa.model_dump() == soa_v1.model_dump()
+    # check SoA of both versions after locking v2
+    for study_value_version, expected_soa in (
+        (v1_version, soa_v1),
+        (v2_version, soa_v2),
+    ):
+        assert (
+            service.get_soa_snapshot(
+                study_uid=soa_test_data.study.uid,
+                study_value_version=study_value_version,
+                layout=layout,
+            ).model_dump()
+            == expected_soa.model_dump()
+        )
 
-    # check v1 SoA snapshot build after modifications to draft
-    cell_references, footnote_references = service.build_soa_snapshot(
-        study_uid=soa_test_data.study.uid,
-        study_value_version=v1_version,
-        layout=layout,
-    )
-    assert cell_references == expected_cell_references_v1
-    assert footnote_references == expected_footnote_references_v1
-
-    # check v1 SoA snapshot after locking v2
-    cell_references, footnote_references = service.repository.load(
-        study_uid=soa_test_data.study.uid,
-        study_value_version=v1_version,
-        layout=layout,
-    )
-    for ref in cell_references:
-        ref.footnote_references = None
-    assert cell_references == expected_cell_references_v1
-    assert footnote_references == expected_footnote_references_v1
-
-    # update protocol SoA snapshot of v1
-    cell_references, footnote_references = service.update_soa_snapshot(
-        study_uid=soa_test_data.study.uid,
-        study_value_version=v1_version,
-        layout=layout,
-    )
-    assert cell_references == expected_cell_references_v1
-    assert footnote_references == expected_footnote_references_v1
-
-    # fetch updated SoA references from db
-    expected_cell_references, expected_footnote_references = (
-        cell_references,
-        footnote_references,
-    )
-    cell_references, footnote_references = service.repository.load(
-        study_uid=soa_test_data.study.uid,
-        study_value_version=v1_version,
-        layout=layout,
-    )
-    for ref in cell_references:
-        ref.footnote_references = None
-    assert cell_references == expected_cell_references
-    assert footnote_references == expected_footnote_references
-
-    # compare v1 SoA
-    soa = service.load_soa_snapshot(
-        study_uid=soa_test_data.study.uid, study_value_version=v1_version, layout=layout
-    )
-    assert soa.model_dump() == soa_v1.model_dump()
-
-    # check v2 SoA snapshot
-    expected_cell_references, expected_footnote_references = service.repository.load(
-        study_uid=soa_test_data.study.uid,
-        study_value_version=v2_version,
-        layout=layout,
-    )
-    for ref in expected_cell_references:
-        ref.footnote_references = None
-
-    # update protocol SoA snapshot of v2
-    cell_references, footnote_references = service.update_soa_snapshot(
-        study_uid=soa_test_data.study.uid,
-        study_value_version=v2_version,
-        layout=layout,
-    )
-    assert cell_references == expected_cell_references
-    assert footnote_references == expected_footnote_references
-
-    # check v2 SoA snapshot
-    cell_references, footnote_references = service.repository.load(
-        study_uid=soa_test_data.study.uid,
-        study_value_version=v2_version,
-        layout=layout,
-    )
-    for ref in cell_references:
-        ref.footnote_references = None
-    assert cell_references == expected_cell_references
-    assert footnote_references == expected_footnote_references
-
-    # compare v2 SoA
-    soa = service.load_soa_snapshot(
-        study_uid=soa_test_data.study.uid, study_value_version=v2_version, layout=layout
-    )
-    assert soa.model_dump() == soa_v2.model_dump()
+        # re-render SoA snapshot and compare
+        service.save_protocol_soa_snapshot(
+            study_uid=soa_test_data.study.uid,
+            study_value_version=study_value_version,
+        )
+        assert (
+            service.get_soa_snapshot(
+                study_uid=soa_test_data.study.uid,
+                study_value_version=study_value_version,
+                layout=layout,
+            ).model_dump()
+            == expected_soa.model_dump()
+        )
 
 
 def test_operational_soa(soa_test_data: SoATestData):
@@ -1812,13 +1980,12 @@ def test_fetch_study_activity_instances(soa_test_data2):
 
 
 def _get_study_version_numbers(study_uid: str) -> set[str | None]:
-    study_versions = {
+    return {
         study.metadata_version and str(study.metadata_version)
         for study in StudyService()
         .get_study_snapshot_history(study_uid=study_uid)
         .items
     }
-    return study_versions
 
 
 def _to_list_of_dicts(items: Sequence[pydantic.BaseModel]) -> list[dict[str, Any]]:
@@ -2121,3 +2288,111 @@ def test_hide_rows_without_checkmarks_integration(
             assert (
                 has_checkmark
             ), f"Visible activity row should have checkmarks: {row.cells[:5]}"  # Show first few cells for debugging
+
+
+def test_soa_footnote_via_propagated_cell(temp_database_populated):
+    """A footnote attached to a checkmark propagated from hidden rows is shown on that checkmark only,
+    in freshly built and snapshot Protocol SoA, and left out of other layouts"""
+
+    # GIVEN a Study where hidden activity Acetaminophen is propagated to its visible PK subgroup at V1,
+    # and footnote "Some footnote" is attached to the hidden activity's own V1 checkmark
+    soa_test_data = SoATestDataMinimal(project=temp_database_populated.project)
+    study_uid = soa_test_data.study.uid
+    service = StudyFlowchartService()
+
+    def get_propagated_cell(table: TableWithFootnotes):
+        (cell,) = [cell for row in table.rows for cell in row.cells if cell.propagated]
+        return cell
+
+    def symbol_of(table: TableWithFootnotes, footnote_uid: str) -> str | None:
+        return next(
+            (sym for sym, fn in table.footnotes.items() if fn.uid == footnote_uid),
+            None,
+        )
+
+    table = service.get_flowchart_table(
+        study_uid=study_uid, study_value_version=None, layout=SoALayout.PROTOCOL
+    )
+    propagated_cell = get_propagated_cell(table)
+
+    # THEN the footnote of the hidden activity's own checkmark is not shown
+    assert len(soa_test_data.soa_footnotes) == 1
+    hidden_footnote = soa_test_data.soa_footnotes[0]
+    assert symbol_of(table, hidden_footnote.uid) is None
+    assert not propagated_cell.footnotes
+
+    # WHEN a footnote is attached to the propagated checkmark
+    template = TestUtils.create_footnote_template(
+        name="<p>Footnote via propagated cell</p>",
+        type_uid=soa_test_data._footnote_types["SoA Footnote"].term_uid,
+        approve=True,
+    )
+    footnote = TestUtils.create_footnote(
+        footnote_template_uid=template.uid, approve=True
+    )
+    soa_footnote = TestUtils.create_study_soa_footnote(
+        study_uid=study_uid,
+        footnote_uid=footnote.uid,
+        referenced_items=[
+            ReferencedItem(
+                item_uid=ref.uid,
+                item_type=SoAItemType(ref.type),
+                via_propagated_cell=True,
+            )
+            for ref in propagated_cell.refs
+        ],
+    )
+
+    # THEN the reference via propagated cell is read back
+    assert soa_footnote.referenced_items
+    assert all(ref.via_propagated_cell for ref in soa_footnote.referenced_items)
+
+    # THEN the footnote is shown on the propagated checkmark of Protocol SoA
+    table = service.get_flowchart_table(
+        study_uid=study_uid, study_value_version=None, layout=SoALayout.PROTOCOL
+    )
+    symbol = symbol_of(table, soa_footnote.uid)
+    assert symbol
+    assert get_propagated_cell(table).footnotes == [symbol]
+    assert symbol_of(table, hidden_footnote.uid) is None
+    check_flowchart_table_footnotes(
+        table,
+        StudySoAFootnoteService().get_all_by_study_uid(study_uid).items,
+        layout=SoALayout.PROTOCOL,
+    )
+
+    # THEN the HTML marks the propagated checkmark and references the footnote from its symbol
+    html = service.get_study_flowchart_html(
+        study_uid=study_uid,
+        study_value_version=None,
+        layout=SoALayout.PROTOCOL,
+        include_uids=True,
+    )
+    doc = bs4.BeautifulSoup(html, features="html.parser")
+    (propagated_element,) = doc.find_all(attrs={"object-propagated": "true"})
+    assert propagated_element.find("sup").get("object-uid") == soa_footnote.uid
+
+    # THEN Detailed SoA shows the footnote attached via propagated cell too
+    detailed_table = service.get_flowchart_table(
+        study_uid=study_uid, study_value_version=None, layout=SoALayout.DETAILED
+    )
+    assert symbol_of(detailed_table, soa_footnote.uid)
+    assert symbol_of(detailed_table, hidden_footnote.uid)
+
+    # WHEN the study is locked, saving the Protocol SoA snapshot, and the snapshot is loaded back
+    locked_version = TestUtils.lock_and_unlock_study(
+        study_uid,
+        reason_for_lock_term_uid=temp_database_populated.reason_for_lock_term_uid,
+        reason_for_unlock_term_uid=temp_database_populated.reason_for_unlock_term_uid,
+    )
+    snapshot_table = service.get_flowchart_table(
+        study_uid=study_uid,
+        study_value_version=locked_version,
+        layout=SoALayout.PROTOCOL,
+    )
+
+    # THEN the snapshot shows the footnote on the propagated checkmark like the freshly built SoA
+    assert snapshot_table.footnotes == table.footnotes
+    snapshot_propagated_cell = get_propagated_cell(snapshot_table)
+    assert snapshot_propagated_cell.refs == get_propagated_cell(table).refs
+    assert snapshot_propagated_cell.footnotes == [symbol]

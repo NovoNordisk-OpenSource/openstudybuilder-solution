@@ -42,13 +42,11 @@ The management of an Endpoint Template follow the versionning diagram below:
 | ------ |:---------------|:-------------:|:---------:|
 | Library | Please select the library where you want to store your *Endpoint Template*. | Sponsor | Yes |
 | Template | Complete this Textarea with the sentence of your *Endpoint Template*. Please note that as you are typing here, the system is suggesting some *Templates Parameters* that are linked with XXXXX. Those *Templates Parameters* after being selected from the below listing, will be surrounded by [] in the template text. | | Yes |
-| Verify Syntax | After completing your Template, click here to verify if your *Endpoint Template* is using correct *Templates Parameters*. An Alert will be displayed with the result of the verification. | NA | |
 | Cancel | Click here to close the popup windows WITHOUT saving your input. | NA | |
 | Save | Click on this button to save your definition of your new *Endpoint Template* | NA | |
 
 | Button | Behaviour       |
 |:------:|:----------------|
-| ![Verify Syntax](/images/bt_verifysyntax_blue.png) | After completing your Template, click here to verify if your *Endpoint Template* is using correct *Templates Parameters*. An Alert will be displayed with the result of the verification. |
 | ![Cancel](/images/bt_cancel_blue.png) | Click here to close the popup windows WITHOUT saving your input. This will close the popup and display back the  |
 | ![Save](/images/bt_save_blue.png) | Click on this button to save your definition of your new *Endpoint Template* |
 
@@ -72,7 +70,6 @@ And the popup will be closed. An alert message will inform the user that the *En
 
 | Button | Behaviour       |
 |:------:|:----------------|
-| ![Verify Syntax](/images/bt_verifysyntax_blue.png) | After completing your Template, click here to verify if your *Endpoint Template* is using correct *Templates Parameters*. An Alert will be displayed with the result of the verification. |
 | ![Cancel](/images/bt_cancel_blue.png) | Click here to close the popup windows WITHOUT saving your input. This will close the popup and display back the  |
 | ![Save](/images/bt_save_blue.png) | Click on this button to save your definition of your new *Endpoint Template*. This will update the *Endpoint Template* to the next sub-version number. For example, if your Draft *Endpoint Template* was in version 0.2, then it will turn into 0.3 and so on. |
 

@@ -407,7 +407,7 @@ def test_study_metadata_listing_api(api_client):
             "intv_type_nf": "",
             "add_on": "N",
             "add_on_nf": "",
-            "control_type": "",
+            "control_type": [],
             "control_type_nf": "",
             "intv_model": "",
             "intv_model_nf": "",
@@ -805,7 +805,7 @@ def test_study_metadata_listing_with_subpart(api_client):
 
     response = api_client.get(
         "/listings/studies/study-metadata?"
-        + f"project_id={project_id}&study_number={p_study_number}&subpart_acronym={subpart_acronym}&datetime=2099-12-30",
+        f"project_id={project_id}&study_number={p_study_number}&subpart_acronym={subpart_acronym}&datetime=2099-12-30",
     )
     assert_response_status_code(response, 200)
     res = response.json()
@@ -856,7 +856,7 @@ def test_study_metadata_listing_with_subpart(api_client):
             "intv_type_nf": "",
             "add_on": "N",
             "add_on_nf": "",
-            "control_type": "",
+            "control_type": [],
             "control_type_nf": "",
             "intv_model": "",
             "intv_model_nf": "",

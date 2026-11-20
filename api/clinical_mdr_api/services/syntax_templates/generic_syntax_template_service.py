@@ -46,15 +46,13 @@ class GenericSyntaxTemplateService(GenericSyntaxService[_AggregateRootType], abc
         template_vo, library_vo = self._create_template_vo(template)
 
         # Process item to save
-        item = TemplateAggregateRootBase.from_input_values(
+        return TemplateAggregateRootBase.from_input_values(
             author_id=self.author_id,
             template=template_vo,
             library=library_vo,
             generate_uid_callback=self.repository.generate_uid_callback,
             next_available_sequence_id_callback=self.repository.next_available_sequence_id,
         )
-
-        return item
 
     def create(self, template: BaseModel) -> BaseModel:
         # This function is not decorated with db.transaction as internal transactions
@@ -282,10 +280,3 @@ class GenericSyntaxTemplateService(GenericSyntaxService[_AggregateRootType], abc
             return process_parameters(parameters)
         except DoesNotExist as exc:
             raise NotFoundException(field_value=uid) from exc
-
-    @db.transaction
-    def validate_template_syntax(self, template_name_to_validate: str) -> None:
-        TemplateVO.from_input_values_2(
-            template_name=template_name_to_validate,
-            parameter_name_exists_callback=self._parameter_name_exists,
-        )

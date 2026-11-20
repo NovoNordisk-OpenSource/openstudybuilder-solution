@@ -29,7 +29,7 @@ class ErrorResponse(BaseModel):
         **data,
     ) -> None:
         data["message"] = (
-            data.get("message", None)
+            data.get("message")
             or str(
                 getattr(exception, "msg", None)
                 or getattr(exception, "detail", None)

@@ -25,6 +25,7 @@
           <ScheduleOfActivities
             :key="`soa-${tabKeys.soa}`"
             :update="updateFlowchart"
+            @load-failed="soaOutdated = true"
           />
         </v-window-item>
         <v-window-item value="list">
@@ -32,6 +33,7 @@
             ref="activitiesTable"
             :key="`activities-${tabKeys.activities}`"
             :update="updateActivitiesTable"
+            @activities-changed="onActivitiesChanged"
           />
         </v-window-item>
       </template>
@@ -86,6 +88,9 @@ const helpItems = [
 const showSoaSettings = ref(false)
 const updateActivitiesTable = ref(0)
 const activitiesTable = ref()
+const currentTab = ref(null)
+// Set when activities change while another tab is selected, or when a SoA reload fails; the SoA tab stays mounted, so it is refetched on its next entry
+const soaOutdated = ref(false)
 
 const lockSettings = computed(() => {
   if (
@@ -97,13 +102,27 @@ const lockSettings = computed(() => {
   return false
 })
 
-const onTabChanged = () => {
+// A change can be reported after the user already switched to the SoA tab (e.g. a delete still in flight)
+function onActivitiesChanged() {
+  if (currentTab.value === 'soa') {
+    updateFlowchart.value++
+  } else {
+    soaOutdated.value = true
+  }
+}
+
+const onTabChanged = (tab) => {
+  currentTab.value = tab
+  if (tab === 'soa' && soaOutdated.value) {
+    soaOutdated.value = false
+    updateFlowchart.value++
+  }
   if (localStorage.getItem('open-form')) {
     updateActivitiesTable.value++
   }
   studiesGeneralStore.getSoaPreferences()
   if (localStorage.getItem('refresh-activities')) {
-    activitiesTable.value.onStudyActivitiesUpdated()
+    activitiesTable.value?.onStudyActivitiesUpdated()
     localStorage.removeItem('refresh-activities')
   }
 }

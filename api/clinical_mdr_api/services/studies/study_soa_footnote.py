@@ -123,10 +123,9 @@ class StudySoAFootnoteService:
             page_number=page_number,
             page_size=page_size,
         )
-        all_items = GenericFilteringReturn(
+        return GenericFilteringReturn(
             items=filtered_items.items, total=filtered_items.total
         )
-        return all_items
 
     @trace_calls
     def get_all_by_study_uid(
@@ -166,10 +165,9 @@ class StudySoAFootnoteService:
             page_number=page_number,
             page_size=page_size,
         )
-        all_items = GenericFilteringReturn(
+        return GenericFilteringReturn(
             items=filtered_items.items, total=filtered_items.total
         )
-        return all_items
 
     def get_distinct_values_for_header(
         self,
@@ -191,7 +189,7 @@ class StudySoAFootnoteService:
                 filter_by=filter_by,
                 filter_operator=filter_operator,
             )
-        header_values = service_level_generic_header_filtering(
+        return service_level_generic_header_filtering(
             items=all_items.items,
             field_name=field_name,
             search_string=search_string,
@@ -200,7 +198,6 @@ class StudySoAFootnoteService:
             page_size=page_size,
         )
         # Return values for field_name
-        return header_values
 
     def get_by_uid(
         self,
@@ -268,6 +265,7 @@ class StudySoAFootnoteService:
                     item_type=ref_item.item_type,
                     item_uid=ref_item.item_uid,
                     item_name=None,
+                    via_propagated_cell=ref_item.via_propagated_cell,
                 )
                 for ref_item in referenced_items
             ],
@@ -278,6 +276,7 @@ class StudySoAFootnoteService:
             accepted_version=accepted_version,
             layout=layout,
         )
+        footnote_vo.validate_referenced_items()
         return footnote_vo
 
     def create_with_underlying_footnote(
@@ -375,6 +374,7 @@ class StudySoAFootnoteService:
                 footnote_input, "footnote_template_uid", None
             ),
             soa_footnote_uid=footnote_vo.uid,
+            layout=footnote_vo.layout,
         )
         self.repository.save(footnote_vo)
 
@@ -428,6 +428,7 @@ class StudySoAFootnoteService:
         footnote_uid: str | None,
         footnote_template_uid: str | None,
         soa_footnote_uid: str,
+        layout: str | None = None,
     ):
         NotFoundException.raise_if(
             footnote_template_uid
@@ -455,10 +456,12 @@ class StudySoAFootnoteService:
                 study_uid=study_uid,
                 footnote_uid=footnote_uid,
                 soa_footnote_uid_to_exclude=soa_footnote_uid,
+                layout=layout,
             )
             AlreadyExistsException.raise_if(
                 existing_footnote,
-                msg=f"The SoaFootnote already exists for the Footnote with Name '{existing_footnote}'.",
+                msg=f"The SoaFootnote already exists for the Footnote with Name '{existing_footnote}' "
+                f"in layout '{layout or 'all layouts'}'.",
             )
 
     @ensure_transaction(db)
@@ -522,20 +525,14 @@ class StudySoAFootnoteService:
             footnote_uid = footnote_edit_input.footnote_uid
         elif soa_footnote.footnote_uid:
             footnote_uid = soa_footnote.footnote_uid
-            footnote_version = (
-                soa_footnote.footnote_version if soa_footnote.footnote_version else None
-            )
+            footnote_version = soa_footnote.footnote_version or None
         footnote_template_uid = None
         footnote_template_version = None
         if footnote_edit_input.footnote_template_uid:
             footnote_template_uid = footnote_edit_input.footnote_template_uid
         elif soa_footnote.footnote_template_uid:
             footnote_template_uid = soa_footnote.footnote_template_uid
-            footnote_template_version = (
-                soa_footnote.footnote_template_version
-                if soa_footnote.footnote_template_version
-                else None
-            )
+            footnote_template_version = soa_footnote.footnote_template_version or None
         if accept_version:
             self.validate_footnote_for_update_or_sync(
                 study_soa_footnote_vo=soa_footnote
@@ -576,6 +573,7 @@ class StudySoAFootnoteService:
             footnote_uid=footnote_uid,
             footnote_template_uid=footnote_template_uid,
             soa_footnote_uid=new_footnote_vo.uid,
+            layout=new_footnote_vo.layout,
         )
         self.repository.save(new_footnote_vo, create=False)
 
@@ -646,20 +644,18 @@ class StudySoAFootnoteService:
             self._transform_vo_to_pydantic_history_model(_).model_dump()
             for _ in all_versions
         ]
-        data = calculate_diffs(versions, StudySoAFootnoteVersion)
-        return data
+        return calculate_diffs(versions, StudySoAFootnoteVersion)
 
     def audit_trail_all_soa_footnotes(
         self,
         study_uid: str,
     ) -> list[StudySoAFootnoteVersion]:
-        data = calculate_diffs_history(
+        return calculate_diffs_history(
             get_all_object_versions=self.repository.get_all_versions,
             transform_all_to_history_model=self._transform_vo_to_pydantic_history_model,
             study_uid=study_uid,
             version_object_class=StudySoAFootnoteVersion,
         )
-        return data
 
     def validate_footnote_for_update_or_sync(
         self,

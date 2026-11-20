@@ -94,13 +94,6 @@ API_PATHS = [
     ("POST", 201, "/objective-templates", "guidance_text", {"name": "test"}),
     (
         "POST",
-        204,
-        "/objective-templates/pre-validate",
-        "guidance_text",
-        {"name": "test"},
-    ),
-    (
-        "POST",
         201,
         "/objective-templates/{objective_template_uid}/versions",
         "guidance_text",
@@ -133,14 +126,6 @@ API_PATHS = [
         "/criteria-templates/{criteria_template_uid}/versions",
         "guidance_text",
         {"name": "Default name with [TextValue]", "change_description": "testing"},
-    ),
-    ("POST", 204, "/criteria-templates/pre-validate", "name", {}),
-    (
-        "POST",
-        204,
-        "/criteria-templates/pre-validate",
-        "guidance_text",
-        {"name": "name"},
     ),
     ("POST", 201, "/endpoint-templates", "name", {}),
     ("POST", 201, "/endpoint-templates", "guidance_text", {"name": "name"}),
@@ -184,6 +169,6 @@ def test_input_sanitization(
     path = path.format_map(test_data)
     resp = api_client.request(method, path, json=input_data)
     assert_response_status_code(resp, expected_status_code)
-    if expected_status_code not in {204}:
+    if expected_status_code != 204:
         payload = resp.json()
         assert payload[property_name] == expected_string

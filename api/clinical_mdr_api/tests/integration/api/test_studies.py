@@ -756,6 +756,7 @@ def test_get_protocol_title_for_specific_version(api_client):
     )
     assert_response_status_code(response, 200)
     res_old = response.json()
+    assert res_old["substance_name"] == compound.name
 
     # Unlock
     response = api_client.post(
@@ -899,6 +900,8 @@ def test_create_study_subpart(api_client):
             "eu_pas_number": None,
             "eu_pas_number_null_value_code": None,
         },
+        "migrated_study_indicator": None,
+        "migrated_study_comment": None,
     }
     assert post_res["current_metadata"]["version_metadata"]["study_status"] == "DRAFT"
     assert post_res["current_metadata"]["version_metadata"]["version_number"] is None
@@ -991,6 +994,8 @@ def test_create_study_subpart(api_client):
             "eu_pas_number": None,
             "eu_pas_number_null_value_code": None,
         },
+        "migrated_study_indicator": None,
+        "migrated_study_comment": None,
     }
     assert get_res["current_metadata"]["version_metadata"]["study_status"] == "DRAFT"
     assert get_res["current_metadata"]["version_metadata"]["version_number"] is None
@@ -1111,6 +1116,8 @@ def test_use_an_already_existing_study_as_a_study_subpart(api_client):
             "eu_pas_number": None,
             "eu_pas_number_null_value_code": None,
         },
+        "migrated_study_indicator": None,
+        "migrated_study_comment": None,
     }
     assert post_res["current_metadata"]["version_metadata"]["study_status"] == "DRAFT"
     assert post_res["current_metadata"]["version_metadata"]["version_number"] is None
@@ -1216,6 +1223,8 @@ def test_use_an_already_existing_study_as_a_study_subpart(api_client):
             "eu_pas_number": None,
             "eu_pas_number_null_value_code": None,
         },
+        "migrated_study_indicator": None,
+        "migrated_study_comment": None,
     }
     assert get_res["current_metadata"]["version_metadata"]["study_status"] == "DRAFT"
     assert get_res["current_metadata"]["version_metadata"]["version_number"] is None
@@ -1670,6 +1679,8 @@ def test_remove_study_subpart_from_parent_part(api_client):
             "eu_pas_number": None,
             "eu_pas_number_null_value_code": None,
         },
+        "migrated_study_indicator": None,
+        "migrated_study_comment": None,
     }
     assert res["current_metadata"]["version_metadata"]["study_status"] == "DRAFT"
     assert res["current_metadata"]["version_metadata"]["version_number"] is None
@@ -1730,6 +1741,8 @@ def test_remove_study_subpart_from_parent_part(api_client):
             "eu_pas_number": None,
             "eu_pas_number_null_value_code": None,
         },
+        "migrated_study_indicator": None,
+        "migrated_study_comment": None,
     }
     assert res["current_metadata"]["version_metadata"]["study_status"] == "DRAFT"
     assert res["current_metadata"]["version_metadata"]["version_number"] is None
@@ -3100,6 +3113,82 @@ def test_filtering_wildcard(
         assert len(res["items"]) == 0
 
 
+# Keep this after the tests asserting hardcoded Study_0000NN UIDs (creating a
+# study earlier shifts them) and before the first test using tst_study, which
+# swaps in a temp database without the YesNo CT terms this test needs.
+def test_migrated_study_indicator_and_comment_set_on_post_and_patch(api_client):
+    response = api_client.post(
+        "/studies",
+        json={
+            "project_number": PROJECT_NUMBER,
+            "study_number": TestUtils.get_study_number(),
+            "migrated_study_comment": "Migrated in phase 1",
+        },
+    )
+    assert_response_status_code(response, 400)
+
+    response = api_client.post(
+        "/studies",
+        json={
+            "project_number": PROJECT_NUMBER,
+            "study_number": TestUtils.get_study_number(),
+            "migrated_study_indicator": True,
+            "migrated_study_comment": "Migrated in phase 1",
+        },
+    )
+    study_uid = parse_json_response(response, assert_status=201)["uid"]
+
+    def get_migration():
+        response = api_client.get(f"/studies/{study_uid}")
+        assert_response_status_code(response, 200)
+        id_metadata = response.json()["current_metadata"]["identification_metadata"]
+        return (
+            id_metadata["migrated_study_indicator"],
+            id_metadata["migrated_study_comment"],
+        )
+
+    assert get_migration() == (True, "Migrated in phase 1")
+
+    for current_metadata, status, expected in (
+        (
+            {"identification_metadata": {"description": "new description"}},
+            200,
+            (True, "Migrated in phase 1"),
+        ),
+        (
+            {"high_level_study_design": {"study_stop_rules": "new stop rule"}},
+            200,
+            (True, "Migrated in phase 1"),
+        ),
+        (
+            {"identification_metadata": {"migrated_study_comment": "Phase 2"}},
+            200,
+            (True, "Phase 2"),
+        ),
+        (
+            {"identification_metadata": {"migrated_study_indicator": False}},
+            400,
+            (True, "Phase 2"),
+        ),
+        (
+            {
+                "identification_metadata": {
+                    "migrated_study_indicator": False,
+                    "migrated_study_comment": None,
+                }
+            },
+            200,
+            (False, None),
+        ),
+    ):
+        response = api_client.patch(
+            f"/studies/{study_uid}",
+            json={"current_metadata": current_metadata},
+        )
+        assert_response_status_code(response, status)
+        assert get_migration() == expected
+
+
 def test_study_structure_statistics(
     api_client, tst_study, study_epochs, study_arms, study_elements
 ):
@@ -3867,3 +3956,47 @@ def test_create_study(api_client):
         res["current_metadata"]["identification_metadata"]["study_id"]
         == f"{project_number}-{study_number}".upper()
     )
+
+
+def test_create_study_with_study_title(api_client):
+    project = TestUtils.create_project(
+        name="Study title test",
+        project_number=TestUtils.random_str(2, "tst"),
+        description="Study title test project",
+        clinical_programme_uid=test_data_dict["clinical_programme"].uid,
+    )
+
+    study_title = TestUtils.random_str(prefix="Study title ")
+    response = api_client.post(
+        "/studies",
+        json={
+            "project_number": project.project_number,
+            "study_acronym": TestUtils.random_str(prefix="acronym-"),
+            "study_title": study_title,
+        },
+    )
+    res = parse_json_response(response, assert_status=201)
+
+    response = api_client.get(
+        f"/studies/{res['uid']}",
+        params={"include_sections": ["study_description"]},
+    )
+    res = parse_json_response(response, assert_status=200)
+    assert res["current_metadata"]["study_description"]["study_title"] == study_title
+
+
+def test_study_titles_are_not_unique(api_client):
+    """Several studies may share the same study title and study short title."""
+    study_description = {
+        "study_title": TestUtils.random_str(prefix="Shared title "),
+        "study_short_title": TestUtils.random_str(prefix="Shared short title "),
+    }
+
+    for _ in range(2):
+        study = TestUtils.create_study()
+        response = api_client.patch(
+            f"/studies/{study.uid}",
+            json={"current_metadata": {"study_description": study_description}},
+        )
+        res = parse_json_response(response, assert_status=200)
+        assert res["current_metadata"]["study_description"] == study_description

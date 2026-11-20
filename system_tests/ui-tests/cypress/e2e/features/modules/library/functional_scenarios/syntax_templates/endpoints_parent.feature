@@ -14,14 +14,6 @@ Feature: Library - Syntax Templates - Endpoints - Parent
         And The endpoint template is found
         Then Sequence number is incremented
 
-    # If approval is for version +1.0 and any instantiations exist then a cascade update and approval is needed
-    @pending_implementation
-    Scenario: Template Instantiations must be update when parent template has been updated
-        Given The test Endpoint Parent Template exists with a status as 'Draft'
-        When The'Approve' option is clicked from the three dot menu list
-        Then all related endpoint template instantiations must be cascade updated to new version and approved
-        And the displayed pop-up snack must include information on number of updated endpoint template instantiations
-
     @smoke_test
     Scenario: [Create][Positive case] User must be able to create Endpoint template
         And The Add template button is clicked
@@ -98,11 +90,15 @@ Feature: Library - Syntax Templates - Endpoints - Parent
         Then The validation appears for 'endpoint' template subcategory field
         And The form is not closed
 
-    Scenario: [Create][Syntax validation] User must be able to verify syntax when creating Endpoint template
+    Scenario: [Create][Brackets restriction] User must be able to add value in brackets in the syntax template
         And The Add template button is clicked
-        When The new template name is prepared with a parameters
-        And The syntax is verified
-        Then The pop up displays "This syntax is valid"
+        When The endpoint template form is filled with base data
+        And User adds to template value in brackets
+        And Form continue button is clicked
+        And Form continue button is clicked
+        And All Not Applicable checkboxes are checked
+        And Form save button is clicked
+        And The pop up displays 'Endpoint template added'
 
     Scenario: [Create][Hide parameters] User must be able to hide parameter of the Endpoint template
         And The Add template button is clicked
@@ -118,38 +114,29 @@ Feature: Library - Syntax Templates - Endpoints - Parent
         And The user picks the parameter from the dropdown list
         Then The parameter value is visible in the text representation
 
-    @manual_test
-    Scenario: User must be able to view the history for the Endpoint template with a status as 'Retired'
-        And [API] Create endpoint template
-        And [API] Approve endpoint template
-        And [API] Endpoint template is inactivated
-        And The endpoint template is found
-        When The 'Reactivate' option is clicked from the three dot menu list
-        Then The 'History for template' window is displayed with the following column list with values
-            | Column | Header                 |
-            | 1      | Indication or disorder |
-            | 2      | Criterion category     |
-            | 3      | Criterion sub-category |
-            | 4      | Template               |
-            | 5      | Guidance text          |
-            | 6      | Status                 |
-            | 7      | Version                |
-            | 8      | Change type            |
-            | 9      | User                   |
-            | 10     | From                   |
-            | 11     | To                     |
+    Scenario: [Actions][History] User must be able to view the history for the Objectives
+        And The 'History' option is clicked from the three dot menu list
+        Then The History page is displayed
+        And The following column list with values will exist
+        | header                 |
+        | Sequence number        |
+        | Parent template        |
+        | Status                 |
+        | Version                |
+        | Change type            |
+        | User                   |
+        | From                   |
+        | To                     |
+        And The history table is not empty
+        When The CLOSE button is clicked
+        Then The current URL is 'library/endpoint_templates/parent'
 
-    @manual_test
-    Scenario: User must be able to read change history of output
-        When The user opens version history
-        Then The user is presented with version history of the output containing timestamp and username
-
-    @manual_test
-    Scenario: User must be able to read change history of selected element
-        And The 'Show history' option is clicked from the three dot menu list
-        When The user clicks on History for particular element
-        Then The user is presented with history of changes for that element
-        And The history contains timestamps and usernames
+    #@manual_test
+    #Scenario: User must be able to read change history of selected element
+    #    And The 'Show history' option is clicked from the three dot menu list
+    #    When The user clicks on History for particular element
+    #    Then The user is presented with history of changes for that element
+    #    And The history contains timestamps and usernames
 
     Scenario: [Cancel][Creation] User must be able to Cancel creation of the Endpoint template
         And The Add template button is clicked

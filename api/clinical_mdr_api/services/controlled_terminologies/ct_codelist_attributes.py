@@ -17,7 +17,9 @@ from clinical_mdr_api.services.controlled_terminologies.ct_codelist_generic_serv
 )
 
 
-class CTCodelistAttributesService(CTCodelistGenericService[CTCodelistAttributesAR]):
+class CTCodelistAttributesService(
+    CTCodelistGenericService[CTCodelistAttributesAR, CTCodelistAttributes]
+):
     aggregate_class = CTCodelistAttributesAR
     repository_interface = CTCodelistAttributesRepository
     version_class = CTCodelistAttributesVersion

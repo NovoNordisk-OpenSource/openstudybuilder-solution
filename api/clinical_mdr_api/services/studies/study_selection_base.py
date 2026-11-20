@@ -459,7 +459,7 @@ class StudySelectionMixin:
                 study_value_version=study_value_version,
             )
         )
-        branch_arms_transformed = (
+        return (
             [
                 StudySelectionBranchArmWithoutStudyArm.from_study_selection_branch_arm_ar_and_order(
                     study_uid=study_uid, selection=i_vo[0], order=i_vo[1]
@@ -469,8 +469,6 @@ class StudySelectionMixin:
             if branch_arms_vo is not None
             else None
         )
-
-        return branch_arms_transformed
 
     @trace_calls
     def _get_specific_objective_selection_by_uids(
@@ -595,9 +593,10 @@ class StudySelectionMixin:
                     selection is None, "Study Activity Subgroup", study_selection_uid
                 )
 
-                return selection_aggregate, selection, order
             except ValueError as value_error:
                 raise exceptions.NotFoundException(msg=value_error.args[0])
+            else:
+                return selection_aggregate, selection, order
         finally:
             repos.close()
 
@@ -620,9 +619,10 @@ class StudySelectionMixin:
                     selection is None, "Study Activity Group", study_selection_uid
                 )
 
-                return selection_aggregate, selection, order
             except ValueError as value_error:
                 raise exceptions.NotFoundException(msg=value_error.args[0])
+            else:
+                return selection_aggregate, selection, order
         finally:
             repos.close()
 
@@ -740,9 +740,10 @@ class StudySelectionMixin:
                     selection is None, "Study SoA Group", study_selection_uid
                 )
 
-                return selection_aggregate, selection, order
             except ValueError as value_error:
                 raise exceptions.NotFoundException(msg=value_error.args[0])
+            else:
+                return selection_aggregate, selection, order
         finally:
             repos.close()
 
@@ -773,9 +774,10 @@ class StudySelectionMixin:
                     selection is None, "Study Activity Instance", study_selection_uid
                 )
 
-                return selection_aggregate, selection, order
             except ValueError as value_error:
                 raise exceptions.NotFoundException(msg=value_error.args[0])
+            else:
+                return selection_aggregate, selection, order
         finally:
             repos.close()
 

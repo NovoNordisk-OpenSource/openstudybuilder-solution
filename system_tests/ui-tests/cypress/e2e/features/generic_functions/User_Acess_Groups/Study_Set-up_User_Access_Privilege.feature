@@ -1,12 +1,14 @@
 @REQ_ID:2332141 
 @pending_implementation
 
-Feature: StudyBuilder: Study Set-up User Write access privilege for 'Studies' Module
-Pre-requisite note: User granted access with a Role as 'StudyBuilder: Study Set-up User ('Environment')' in novoAccess prior verification of the below functional requirement.
+Feature: StudyBuilder: Study Set-up User access privilege
+  As a study set-up user user,
+  I want to able to log in with read and write access previlege for 'Study' Module and read access previlege for 'Library' Module,
+  So that I can create, update, delete, retire and re-activate study definitions using library elements.
 
-  As a user, I want to able to logged in with write access previlege for 'Studies' Module and read access previlege for 'Library' Module
   Background: User must be logged in
     Given The user is logged in
+    And granted the system access group Study.Read, Study.Write and Library.Read
 
   Scenario: User must be able to navigate to the 'Studies' Module
     Given The '/studies' page is opened

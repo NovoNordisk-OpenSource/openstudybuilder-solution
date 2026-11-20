@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Annotated, Any
 import neo4j.time
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from common.config import settings
 from common.utils import TimeUnit, VisitClass, VisitSubclass, convert_to_datetime
 
 log = logging.getLogger(__name__)
@@ -94,7 +95,7 @@ class Study(BaseModel):
         def from_input(cls, val: dict[str, Any]):
             log.debug("Create Study Version from input: %s", val)
 
-            author_id = val.get("version_author_id", None)
+            author_id = val.get("version_author_id")
             author_username = next(
                 (
                     x["username"]
@@ -105,12 +106,12 @@ class Study(BaseModel):
             )
 
             return cls(
-                version_status=val.get("version_status", None),
-                version_number=val.get("version_number", None),
+                version_status=val.get("version_status"),
+                version_number=val.get("version_number"),
                 version_started_at=convert_to_datetime(val["version_started_at"]),
-                version_ended_at=convert_to_datetime(val.get("version_ended_at", None)),
+                version_ended_at=convert_to_datetime(val.get("version_ended_at")),
                 version_author=author_username,
-                version_description=val.get("version_description", None),
+                version_description=val.get("version_description"),
             )
 
     class StudyDataSupplier(BaseModel):
@@ -151,7 +152,7 @@ class Study(BaseModel):
             id=val["id"],
             id_prefix=val["id_prefix"],
             number=val["number"],
-            acronym=val.get("acronym", None),
+            acronym=val.get("acronym"),
             versions=[
                 Study.StudyVersion.from_input(version)
                 for version in val.get("versions", [])
@@ -295,6 +296,13 @@ class StudyVisit(BaseModel):
             exclude=True,
         ),
     ] = None
+    expected_time_value: Annotated[
+        int | None,
+        Field(
+            json_schema_extra={"nullable": True},
+            exclude=True,
+        ),
+    ] = None
     anchor_visit: Annotated[
         StudyVisit | None,
         Field(
@@ -303,16 +311,17 @@ class StudyVisit(BaseModel):
             exclude=True,
         ),
     ] = None
-    special_visit_number: Annotated[
+    subvisit_number: Annotated[
         int | None,
         Field(
             json_schema_extra={"nullable": True},
             exclude=True,
         ),
     ] = None
-    subvisit_number: Annotated[
+    stored_visit_order: Annotated[
         int | None,
         Field(
+            description="Visit order persisted in the database, set by the user in manual visit mode",
             json_schema_extra={"nullable": True},
             exclude=True,
         ),
@@ -354,13 +363,53 @@ class StudyVisit(BaseModel):
             time_value=val["time_value_value"],
             time_reference_name=val["time_reference_name"],
             visit_sublabel_reference=val["anchor_visit_uid"],
+            expected_time_value=val.get("expected_time_value"),
+            stored_visit_order=val.get("order"),
+        )
+
+    @staticmethod
+    def apply_manual_visit_order(ordered_visits: list[StudyVisit]) -> None:
+        """Replaces the timeline-derived `visit_order` with the order the user set in manual visit mode,
+        as returned by the main API.
+
+        Visits without a stored order go after the ordered ones, keeping their chronological position
+        among themselves, the same way the main API sorts them.
+        """
+
+        next_order = max(
+            (
+                visit.stored_visit_order
+                for visit in ordered_visits
+                if visit.stored_visit_order is not None
+            ),
+            default=0,
+        )
+        for visit in ordered_visits:
+            if visit.stored_visit_order is not None:
+                visit.visit_order = visit.stored_visit_order
+            else:
+                next_order += 1
+                visit.visit_order = next_order
+
+    @property
+    def is_early_discontinuation_visit(self) -> bool:
+        return (
+            self.visit_type_name
+            == settings.study_visit_type_early_discontinuation_visit
         )
 
     def get_absolute_duration(self) -> int | None:
-        # Special visit doesn't have a timing but we want to place it
-        # after the anchor visit for the special visit hence we derive timing based on the anchor visit
-        if self.visit_class == VisitClass.SPECIAL_VISIT and self.anchor_visit:
+        # Early Discontinuation visits take place at the timing of the parent visit they reference
+        if self.is_early_discontinuation_visit and self.anchor_visit is not None:
             return self.anchor_visit.get_absolute_duration()
+        if (
+            self.expected_time_value is not None
+            and self.time_unit_object is not None
+            and self.time_unit_object.conversion_factor_to_master is not None
+        ):
+            return self.time_unit_object.from_timedelta(
+                self.time_unit_object, self.expected_time_value
+            )
         if self.time_value is not None:
             if self.time_value == 0:
                 return 0
@@ -431,8 +480,8 @@ class StudyActivity(BaseModel):
             soa_group=val["soa_group"],
             activity_uid=val["activity_uid"],
             activity_name=val["activity_name"],
-            activity_nci_concept_id=val.get("nci_concept_id", None),
-            activity_nci_concept_name=val.get("nci_concept_name", None),
+            activity_nci_concept_id=val.get("nci_concept_id"),
+            activity_nci_concept_name=val.get("nci_concept_name"),
             is_data_collected=val["is_data_collected"],
         )
 
@@ -623,8 +672,8 @@ class StudyDetailedSoA(BaseModel):
             epoch_name=val["epoch_name"],
             activity_uid=val["activity_uid"],
             activity_name=val["activity_name"],
-            activity_nci_concept_id=val.get("activity_nci_concept_id", None),
-            activity_nci_concept_name=val.get("activity_nci_concept_name", None),
+            activity_nci_concept_id=val.get("activity_nci_concept_id"),
+            activity_nci_concept_name=val.get("activity_nci_concept_name"),
             activity_subgroup_uid=val["activity_subgroup_uid"],
             activity_subgroup_name=val["activity_subgroup_name"],
             activity_group_uid=val["activity_group_uid"],
@@ -736,8 +785,8 @@ class StudyOperationalSoA(BaseModel):
             study_id=val["study_id"],
             study_activity_uid=val["study_activity_uid"],
             activity_name=val["activity_name"],
-            activity_nci_concept_id=val.get("activity_nci_concept_id", None),
-            activity_nci_concept_name=val.get("activity_nci_concept_name", None),
+            activity_nci_concept_id=val.get("activity_nci_concept_id"),
+            activity_nci_concept_name=val.get("activity_nci_concept_name"),
             activity_uid=val["activity_uid"],
             activity_group_name=val["activity_group_name"],
             activity_group_uid=val["activity_group_uid"],
@@ -745,10 +794,10 @@ class StudyOperationalSoA(BaseModel):
             activity_subgroup_uid=val["activity_subgroup_uid"],
             activity_instance_name=val["activity_instance_name"],
             activity_instance_nci_concept_id=val.get(
-                "activity_instance_nci_concept_id", None
+                "activity_instance_nci_concept_id"
             ),
             activity_instance_nci_concept_name=val.get(
-                "activity_instance_nci_concept_name", None
+                "activity_instance_nci_concept_name"
             ),
             activity_instance_uid=val["activity_instance_uid"],
             epoch_name=val["epoch_name"],
@@ -778,8 +827,6 @@ else:
         Includes all editable libraries from settings.editable_library_names
         plus the Requested library.
         """
-        from common.config import settings
-
         members = {}
         for name in settings.editable_library_names:
             members[name.upper().replace(" ", "_")] = name
@@ -838,9 +885,9 @@ class LibraryActivity(BaseModel):
             uid=val["uid"],
             library=val["library"],
             name=val["name"],
-            definition=val.get("definition", None),
-            nci_concept_id=val.get("nci_concept_id", None),
-            nci_concept_name=val.get("nci_concept_name", None),
+            definition=val.get("definition"),
+            nci_concept_id=val.get("nci_concept_id"),
+            nci_concept_name=val.get("nci_concept_name"),
             is_data_collected=val["is_data_collected"],
             status=LibraryItemStatus(val["status"]),
             version=val["version"],
@@ -967,11 +1014,11 @@ class LibraryActivityInstance(BaseModel):
             uid=val["uid"],
             library=val["library_name"],
             name=val["name"],
-            definition=val.get("definition", None),
-            nci_concept_id=val.get("nci_concept_id", None),
-            nci_concept_name=val.get("nci_concept_name", None),
-            topic_code=val.get("topic_code", None),
-            param_code=val.get("param_code", None),
+            definition=val.get("definition"),
+            nci_concept_id=val.get("nci_concept_id"),
+            nci_concept_name=val.get("nci_concept_name"),
+            topic_code=val.get("topic_code"),
+            param_code=val.get("param_code"),
             status=LibraryItemStatus(val["status"]),
             version=val["version"],
             activity_instance_class=(
@@ -1255,10 +1302,10 @@ class LibraryActivityItemClassFull(BaseModel):
         str | None,
         Field(description="NCI Concept Name", json_schema_extra={"nullable": True}),
     ] = None
-    display_name: Annotated[
+    label: Annotated[
         str | None,
         Field(
-            description="Display name shown to end users",
+            description="Label shown to end users",
             json_schema_extra={"nullable": True},
         ),
     ] = None
@@ -1403,7 +1450,7 @@ class LibraryActivityItemClassFull(BaseModel):
             definition=val.get("definition"),
             nci_concept_id=val.get("nci_concept_id"),
             nci_concept_name=val.get("nci_concept_name"),
-            display_name=val.get("display_name"),
+            label=val.get("label"),
             order=val.get("order"),
             status=LibraryItemStatus(val["status"]),
             version=val["version"],
@@ -1509,6 +1556,141 @@ class PapillonsNsvXmlDataTypeMapping(BaseModel):
             "SEMTCDT or has no NSVXMLDT ancestor."
         ),
     ]
+
+
+class SortByPapillonsTopicCdDef(Enum):
+    LB = "lb"
+    TOPIC_CD = "topic_cd"
+    SHORT_TOPIC_CD = "short_topic_cd"
+
+
+class PapillonsSubDomainType(StrEnum):
+    COMPOUND = "Compound"
+    LABORATORY_ACTIVITY = "LaboratoryActivity"
+    RATING_SCALE = "RatingScale"
+    OTHER = "Other"
+
+
+class PapillonsTopicCdDef(BaseModel):
+    uid: Annotated[str, Field(description="UID of the activity instance")]
+    lb: Annotated[
+        str | None,
+        Field(description="Label", json_schema_extra={"nullable": True}),
+    ] = None
+    topic_cd: Annotated[
+        str | None,
+        Field(description="Topic Code", json_schema_extra={"nullable": True}),
+    ] = None
+    short_topic_cd: Annotated[
+        str | None,
+        Field(description="Short Topic Code", json_schema_extra={"nullable": True}),
+    ] = None
+    description: Annotated[
+        str | None,
+        Field(
+            description="Legacy description of the activity instance",
+            json_schema_extra={"nullable": True},
+        ),
+    ] = None
+    molecular_weight: Annotated[
+        float | None,
+        Field(description="Molecular weight", json_schema_extra={"nullable": True}),
+    ] = None
+    sas_display_format: Annotated[
+        str | None,
+        Field(description="SAS display format", json_schema_extra={"nullable": True}),
+    ] = None
+    general_domain_class: Annotated[
+        str | None,
+        Field(
+            description="Name of the level 2 Activity Instance Class (e.g. `Finding`, "
+            "`Intervention`, `Event`) above the classes the instance's activity items' "
+            "item classes are attached to; null if there is none",
+            json_schema_extra={"nullable": True},
+        ),
+    ] = None
+    sub_domain_class: Annotated[
+        str | None,
+        Field(
+            description="Name of the level 3 Activity Instance Class (e.g. "
+            "`NumericFindings`, `CategoricFindings`, `TextualFindings`) the instance's "
+            "activity items' item classes are attached to; null if there is none",
+            json_schema_extra={"nullable": True},
+        ),
+    ] = None
+    sub_domain_type: Annotated[
+        PapillonsSubDomainType,
+        Field(description="Sub domain type, `Other` if none of the others applies"),
+    ]
+    cat: Annotated[
+        str | None,
+        Field(
+            description="Category of the activity instance: the name of the CT term of its "
+            "finding, intervention or event category activity item (the item's text value "
+            "if it holds text instead of a term)",
+            json_schema_extra={"nullable": True},
+        ),
+    ] = None
+    sub_cat: Annotated[
+        str | None,
+        Field(
+            description="Subcategory of the activity instance: the name of the CT term of its "
+            "finding, intervention or event subcategory activity item (the item's text value "
+            "if it holds text instead of a term)",
+            json_schema_extra={"nullable": True},
+        ),
+    ] = None
+    catgo_resp_list: Annotated[
+        str | None,
+        Field(
+            description="Submission value of the response codelist selected on the "
+            "`categoric_finding_original_result` activity item. `null` if there is none.",
+            json_schema_extra={"nullable": True},
+        ),
+    ] = None
+    convert_to_us_conv_unit: Annotated[
+        bool | None,
+        Field(
+            description="`true` if any unit linked to the activity instance is a US "
+            "conventional unit, `false` if it has units but none is. `null` if it has no units.",
+            json_schema_extra={"nullable": True},
+        ),
+    ] = None
+    version: Annotated[
+        str,
+        Field(
+            description="Version number of the returned (Final) activity instance version"
+        ),
+    ]
+    status: Annotated[
+        str, Field(description="Status of the returned activity instance version")
+    ]
+    std_unit: Annotated[
+        str | None,
+        Field(
+            description="Name of the unit selected on the `standard_unit` activity item",
+            json_schema_extra={"nullable": True},
+        ),
+    ] = None
+    topic_cd_type: Annotated[
+        str | None,
+        Field(
+            description="Name of the activity instance class, e.g. `NumericFindings`",
+            json_schema_extra={"nullable": True},
+        ),
+    ] = None
+    unit_dimension: Annotated[
+        str | None,
+        Field(
+            description="Submission value of the CT term selected on the `unit_dimension` "
+            "activity item, e.g. `CONCENTRATION`",
+            json_schema_extra={"nullable": True},
+        ),
+    ] = None
+
+    @classmethod
+    def from_input(cls, val: dict[str, Any]):
+        return cls.model_validate(val)
 
 
 class VisitWindow(BaseModel):
@@ -1690,6 +1872,17 @@ class StudyCreateInput(BaseModel):
             json_schema_extra={"nullable": True},
         ),
     ] = None
+    title: Annotated[
+        str | None,
+        Field(
+            description=(
+                "Title of the study. Free text, not required to be unique "
+                "across studies. An empty or whitespace-only value is treated "
+                "as no title."
+            ),
+            json_schema_extra={"nullable": True},
+        ),
+    ] = None
 
     @model_validator(mode="after")
     def _require_study_number_or_study_acronym(self) -> StudyCreateInput:
@@ -1722,6 +1915,10 @@ class StudyCreateResponse(BaseModel):
     description: Annotated[
         str | None,
         Field(description="Study description", json_schema_extra={"nullable": True}),
+    ] = None
+    title: Annotated[
+        str | None,
+        Field(description="Study title", json_schema_extra={"nullable": True}),
     ] = None
 
 
@@ -1782,8 +1979,8 @@ class CodelistTerm(BaseModel):
             ordinal=val.get("ordinal"),
             submission_value=val["submission_value"],
             sponsor_preferred_name=val["sponsor_preferred_name"],
-            concept_id=val.get("concept_id", None),
-            nci_preferred_name=val.get("nci_preferred_name", None),
+            concept_id=val.get("concept_id"),
+            nci_preferred_name=val.get("nci_preferred_name"),
             library_name=val["library_name"],
             name_status=val["name_status"],
             name_version=val["name_version"],
@@ -2057,6 +2254,20 @@ class StudyTypeListingModel(BaseModel):
         CTTermWithCodelistAndConflictFlag | None,
         Field(json_schema_extra={"nullable": True}),
     ] = None
+    age_bl_rule: Annotated[
+        CTTermWithCodelistAndConflictFlag | None,
+        Field(
+            description="Age at baseline rule",
+            json_schema_extra={"nullable": True},
+        ),
+    ] = None
+    age_grp_rule: Annotated[
+        CTTermWithCodelistAndConflictFlag | None,
+        Field(
+            description="Age group rule",
+            json_schema_extra={"nullable": True},
+        ),
+    ] = None
     extension: str = ""
     extension_nf: Annotated[
         CTTermWithCodelistAndConflictFlag | None,
@@ -2180,10 +2391,7 @@ class StudyAttributesListingModel(BaseModel):
         CTTermWithCodelistAndConflictFlag | None,
         Field(json_schema_extra={"nullable": True}),
     ] = None
-    control_type: Annotated[
-        CTTermWithCodelistAndConflictFlag | None,
-        Field(json_schema_extra={"nullable": True}),
-    ] = None
+    control_type: list[CTTermWithCodelistAndConflictFlag] = Field(default_factory=list)
     control_type_nf: Annotated[
         CTTermWithCodelistAndConflictFlag | None,
         Field(json_schema_extra={"nullable": True}),
@@ -2308,6 +2516,21 @@ class StudyArmListingModel(StudySelectionListingModel):
     ] = None
 
 
+class StudyAuxiliaryDeviceListingModel(BaseModel):
+    """Study auxiliary device for study metadata listing."""
+
+    uid: str = ""
+    order: int = 0
+    device: CTTermWithCodelistAndConflictFlag
+    algorithm: Annotated[
+        str | None,
+        Field(
+            description="SDTM algorithm text read by SAS programs",
+            json_schema_extra={"nullable": True},
+        ),
+    ] = None
+
+
 class StudyBranchArmListingModel(StudySelectionListingModel):
     """Study branch arm for study metadata listing."""
 
@@ -2340,7 +2563,8 @@ class StudyEpochListingModel(BaseModel):
     start_rule: str = ""
     end_rule: str = ""
     description: str = ""
-    # Lag time is legacy data migrated from MMA; null on every other study.
+    # Lag time is null unless set. Hypo and CE lag times only carry legacy data
+    # migrated from MMA; AE lag time can also be set on any study.
     ae_lag_time: Annotated[int | None, Field(json_schema_extra={"nullable": True})] = (
         None
     )
@@ -2540,5 +2764,9 @@ class StudyMetadataListingModel(BaseModel):
     ] = None
     endpoints: Annotated[
         list[StudyEndpointListingModel] | None,
+        Field(json_schema_extra={"nullable": True}),
+    ] = None
+    auxiliary_devices: Annotated[
+        list[StudyAuxiliaryDeviceListingModel] | None,
         Field(json_schema_extra={"nullable": True}),
     ] = None

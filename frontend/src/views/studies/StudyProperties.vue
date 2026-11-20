@@ -20,6 +20,9 @@
             :key="`other_study_attributes-${tabKeys.other_study_attributes}`"
           />
         </v-window-item>
+        <v-window-item value="age_rules">
+          <StudyAgeRulesSummary :key="`age_rules-${tabKeys.age_rules}`" />
+        </v-window-item>
       </template>
     </NavigationTabs>
   </div>
@@ -32,6 +35,7 @@ import HelpButtonWithPanels from '@/components/tools/HelpButtonWithPanels.vue'
 import InterventionTypeSummary from '@/components/studies/InterventionTypeSummary.vue'
 import NavigationTabs from '@/components/tools/NavigationTabs.vue'
 import OtherStudyAttributesTable from '@/components/studies/OtherStudyAttributesTable.vue'
+import StudyAgeRulesSummary from '@/components/studies/StudyAgeRulesSummary.vue'
 import StudyTypeSummary from '@/components/studies/StudyTypeSummary.vue'
 import { useStudiesGeneralStore } from '@/stores/studies-general'
 
@@ -46,6 +50,7 @@ const tabs = [
     tab: 'other_study_attributes',
     name: t('Sidebar.study.other_study_attributes'),
   },
+  { tab: 'age_rules', name: t('Sidebar.study.age_rules') },
 ]
 
 const studyId = computed(() => studiesGeneralStore.studyId)

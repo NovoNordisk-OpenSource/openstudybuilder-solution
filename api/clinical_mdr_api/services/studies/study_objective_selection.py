@@ -627,11 +627,10 @@ class StudyObjectiveSelectionService(StudySelectionMixin):
             parsed_selections = self._transform_all_to_response_model(
                 ar, no_brackets=no_brackets
             )
-            for selection in parsed_selections:
-                selections.append(selection)
+            selections.extend(parsed_selections)
 
         # Do filtering, sorting, pagination and count
-        filtered_items = service_level_generic_filtering(
+        return service_level_generic_filtering(
             items=selections,
             filter_by=filter_by,
             filter_operator=filter_operator,
@@ -640,7 +639,6 @@ class StudyObjectiveSelectionService(StudySelectionMixin):
             page_number=page_number,
             page_size=page_size,
         )
-        return filtered_items
 
     @db.transaction
     def get_distinct_values_for_header(
@@ -662,7 +660,7 @@ class StudyObjectiveSelectionService(StudySelectionMixin):
                 study_uid, study_value_version=study_value_version
             )
 
-            header_values = service_level_generic_header_filtering(
+            return service_level_generic_header_filtering(
                 items=self._transform_all_to_response_model(
                     objective_selection_ar, no_brackets=False
                 ),
@@ -672,8 +670,6 @@ class StudyObjectiveSelectionService(StudySelectionMixin):
                 filter_operator=filter_operator,
                 page_size=page_size,
             )
-
-            return header_values
 
         # Extract the study uids to use database level filtering for these
         # instead of service level filtering
@@ -695,11 +691,10 @@ class StudyObjectiveSelectionService(StudySelectionMixin):
             parsed_selections = self._transform_all_to_response_model(
                 ar, no_brackets=False
             )
-            for selection in parsed_selections:
-                selections.append(selection)
+            selections.extend(parsed_selections)
 
         # Do filtering, sorting, pagination and count
-        header_values = service_level_generic_header_filtering(
+        return service_level_generic_header_filtering(
             items=selections,
             field_name=field_name,
             search_string=search_string,
@@ -708,7 +703,6 @@ class StudyObjectiveSelectionService(StudySelectionMixin):
             page_size=page_size,
         )
         # Return values for field_name
-        return header_values
 
     @db.transaction
     def get_all_selection(
@@ -774,8 +768,7 @@ class StudyObjectiveSelectionService(StudySelectionMixin):
                 no_brackets=no_brackets,
                 study_value_version=study_value_version,
             )
-            for selection in parsed_selections:
-                selections.append(selection)
+            selections.extend(parsed_selections)
 
             # Do filtering, sorting, pagination and count
             return service_level_generic_filtering(

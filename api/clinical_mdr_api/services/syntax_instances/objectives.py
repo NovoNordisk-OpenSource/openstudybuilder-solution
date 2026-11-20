@@ -30,12 +30,12 @@ class ObjectiveService(GenericSyntaxInstanceService[ObjectiveAR | _AggregateRoot
     ) -> Objective:
         return Objective.from_objective_ar(item_ar)
 
-    aggregate_class: type[ObjectiveAR] | type[ObjectivePreInstanceAR] = ObjectiveAR
-    repository_interface: (
-        type[ObjectiveRepository] | type[ObjectivePreInstanceRepository]
-    ) = ObjectiveRepository
+    aggregate_class: type[ObjectiveAR | ObjectivePreInstanceAR] = ObjectiveAR
+    repository_interface: type[ObjectiveRepository | ObjectivePreInstanceRepository] = (
+        ObjectiveRepository
+    )
     template_repository_interface = ObjectiveTemplateRepository
-    version_class: type[ObjectiveVersion] | type[ObjectivePreInstanceVersion] = (
+    version_class: type[ObjectiveVersion | ObjectivePreInstanceVersion] = (
         ObjectiveVersion
     )
     template_uid_property = "objective_template_uid"

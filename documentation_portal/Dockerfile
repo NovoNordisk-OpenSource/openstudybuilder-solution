@@ -28,6 +28,10 @@ RUN npm run docs:build
 ## Production stage
 FROM $NGINX_IMAGE AS production-stage
 
+## Upgrade the CA bundle at build time instead of trusting the base image to be current (CVE-2026-111943).
+## Name both packages: ca-certificates alone rewrites the bundle file but leaves ca-certificates-bundle at the old version.
+RUN apk upgrade --no-cache ca-certificates ca-certificates-bundle
+
 COPY --from=build-stage /app/docs/.vitepress/dist /usr/share/nginx/html
 COPY --from=build-stage /app/build.json /usr/share/nginx/html
 COPY --from=build-stage /app/sbom.md /usr/share/nginx/html

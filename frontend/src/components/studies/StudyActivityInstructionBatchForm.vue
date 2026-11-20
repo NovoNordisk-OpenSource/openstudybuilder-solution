@@ -115,6 +115,9 @@
         <v-card-text>
           <NNParameterHighlighter
             :name="selectedTemplateName"
+            :parameter-names="
+              form.activity_instruction_template?.parameters?.map((p) => p.name)
+            "
             default-color="orange"
           />
         </v-card-text>
@@ -180,7 +183,11 @@
             </template>
           </template>
           <template #[`item.name`]="{ item }">
-            <NNParameterHighlighter :name="item.name" default-color="orange" />
+            <NNParameterHighlighter
+              :name="item.name"
+              :parameter-names="item.parameters?.map((p) => p.name)"
+              default-color="orange"
+            />
           </template>
           <template #[`item.actions`]="{ item }">
             <v-btn

@@ -2,7 +2,7 @@ import dataclasses
 import datetime
 from typing import Any
 
-from neomodel import Q, db
+from neomodel import db
 from neomodel.sync_.match import Path
 
 from clinical_mdr_api.domain_repositories._utils.helpers import (
@@ -50,9 +50,6 @@ from clinical_mdr_api.domains.concepts.simple_concepts.week_in_study import (
     WeekInStudyAR,
     WeekInStudyVO,
 )
-from clinical_mdr_api.domains.concepts.unit_definitions.unit_definition import (
-    UnitDefinitionAR,
-)
 from clinical_mdr_api.domains.study_definition_aggregates.study_metadata import (
     StudyStatus,
 )
@@ -82,6 +79,8 @@ from clinical_mdr_api.models.study_selections.study_visit import (
     StudyVisitEditInput,
     StudyVisitGroup as StudyVisitGroupModel,
     StudyVisitLite,
+    StudyVisitModeResponse,
+    StudyVisitPreviewInput,
     StudyVisitVersion,
 )
 from clinical_mdr_api.models.utils import GenericFilteringReturn
@@ -141,7 +140,9 @@ class StudyVisitService(StudySelectionMixin):
 
             self.update_ctterm_maps(self.terms_at_specific_datetime)
 
-            self._day_unit, self._week_unit = self.repo.get_day_week_units()
+            self._day_conversion_factor, self._week_conversion_factor = (
+                self.repo.get_day_week_conversion_factors()
+            )
 
     def get_allowed_time_references_for_study(self, study_uid: str):
         resp = []
@@ -180,14 +181,31 @@ class StudyVisitService(StudySelectionMixin):
     @staticmethod
     @trace_calls
     def _get_all_visits(
-        study_uid: str, study_value_version: str | None = None
+        study_uid: str,
+        study_value_version: str | None = None,
+        manual_mode: bool = False,
     ) -> list[StudyVisitVO]:
         study_visits = StudyVisitRepository.find_all_visits_by_study_uid(
             study_uid=study_uid, study_value_version=study_value_version
         )
-        timeline = TimelineAR(study_uid=study_uid, _visits=study_visits)
         assert study_visits is not None
-        return timeline.ordered_study_visits
+        stored_orders = (
+            {sv.uid: sv.visit_order for sv in study_visits} if manual_mode else {}
+        )
+        timeline = TimelineAR(study_uid=study_uid, _visits=study_visits)
+        ordered = timeline.ordered_study_visits
+        if manual_mode:
+            for sv in ordered:
+                sv.visit_order = stored_orders[sv.uid]
+            return sorted(ordered, key=StudyVisitService._manual_order_key)
+        return ordered
+
+    @staticmethod
+    def _manual_order_key(visit: StudyVisitVO) -> tuple[bool, int]:
+        # The persisted order can be missing (e.g. a visit the migration did not
+        # assign one to). Such visits go after the ordered ones and, as the sort
+        # is stable, keep their chronological position among themselves.
+        return (visit.visit_order is None, visit.visit_order or 0)
 
     def get_amount_of_visits_in_given_epoch(
         self, study_uid: str, study_epoch_uid: str
@@ -239,31 +257,6 @@ class StudyVisitService(StudySelectionMixin):
             SimpleStudyVisit.model_validate(anchor_visit)
             for anchor_visit in anchor_visits_in_a_group_of_subv
         ]
-
-    def get_anchor_for_special_visit(
-        self, study_uid: str, study_epoch_uid: str
-    ) -> list[SimpleStudyVisit]:
-        anchor_visits_for_special_visit = (
-            StudyVisitNeoModel.nodes.traverse(
-                "has_visit_name__has_latest_value",
-                "has_visit_type__has_selected_term__has_name_root__has_latest_value",
-            )
-            .filter(
-                Q(visit_subclass=VisitSubclass.SINGLE_VISIT.name)
-                | Q(visit_subclass=VisitSubclass.ANCHOR_VISIT_IN_GROUP_OF_SUBV.name),
-                visit_class=VisitClass.SINGLE_VISIT.name,
-                has_study_visit__latest_value__uid=study_uid,
-                study_epoch_has_study_visit__uid=study_epoch_uid,
-            )
-            .resolve_subgraph()
-        )
-        return sorted(
-            [
-                SimpleStudyVisit.model_validate(anchor_visit)
-                for anchor_visit in anchor_visits_for_special_visit
-            ],
-            key=lambda visit: int(visit.visit_name.split()[1]),
-        )
 
     def get_study_visits_for_specific_activity_instance(
         self, study_uid: str, study_activity_instance_uid: str
@@ -332,22 +325,36 @@ class StudyVisitService(StudySelectionMixin):
             dicts = StudyVisitRepository.list_all_visits_by_study_uid(
                 study_uid=study_uid, study_value_version=study_value_version
             )
+            if MetaRepository().study_definition_repository.get_manual_visit_mode(
+                study_uid, study_value_version=study_value_version
+            ):
+                # Stable sort: visits without a stored order keep their
+                # unique_visit_number position, after the ordered ones.
+                dicts.sort(key=lambda d: (d.get("order") is None, d.get("order") or 0))
             visits = [StudyVisitLite(**d) for d in dicts]
 
         else:
+            manual_mode = (
+                MetaRepository().study_definition_repository.get_manual_visit_mode(
+                    study_uid, study_value_version=study_value_version
+                )
+            )
             visit_vos = StudyVisitService._get_all_visits(
-                study_uid, study_value_version=study_value_version
+                study_uid,
+                study_value_version=study_value_version,
+                manual_mode=manual_mode,
             )
             visits = [
                 StudyVisit.transform_to_response_model(
                     visit,
                     study_value_version=study_value_version,
                     derive_props_based_on_timeline=derive_props_based_on_timeline,
+                    manual_visit_mode=manual_mode,
                 )
                 for visit in visit_vos
             ]
 
-        filtered_visits = service_level_generic_filtering(
+        return service_level_generic_filtering(
             items=visits,
             filter_by=filter_by,
             filter_operator=filter_operator,
@@ -356,7 +363,6 @@ class StudyVisitService(StudySelectionMixin):
             page_number=page_number,
             page_size=page_size,
         )
-        return filtered_visits
 
     @classmethod
     @trace_calls
@@ -375,7 +381,7 @@ class StudyVisitService(StudySelectionMixin):
         )
 
         # Do filtering, sorting, pagination and count
-        header_values = service_level_generic_header_filtering(
+        return service_level_generic_header_filtering(
             items=all_items.items,
             field_name=field_name,
             search_string=search_string,
@@ -384,10 +390,10 @@ class StudyVisitService(StudySelectionMixin):
             page_size=page_size,
         )
         # Return values for field_name
-        return header_values
 
     def get_all_references(self, study_uid: str) -> list[StudyVisit]:
-        visits = self._get_all_visits(study_uid)
+        manual_mode = self._is_manual_visit_mode(study_uid)
+        visits = self._get_all_visits(study_uid, manual_mode=manual_mode)
         result = []
         sponsor_names = [
             timeref.sponsor_preferred_name
@@ -395,7 +401,11 @@ class StudyVisitService(StudySelectionMixin):
         ]
         for visit in visits:
             if visit.visit_type.sponsor_preferred_name in sponsor_names:
-                result.append(StudyVisit.transform_to_response_model(visit))
+                result.append(
+                    StudyVisit.transform_to_response_model(
+                        visit, manual_visit_mode=manual_mode
+                    )
+                )
         return result
 
     @staticmethod
@@ -417,15 +427,29 @@ class StudyVisitService(StudySelectionMixin):
         exceptions.NotFoundException.raise_if_not(all_study_visits, "Study visits")
 
         # Find StudyVisitVO by uid in TimelineAR._generate_timeline() results, which sets properties on StudyVisitVOs
+        manual_mode = (
+            MetaRepository().study_definition_repository.get_manual_visit_mode(
+                study_uid, study_value_version=study_value_version
+            )
+        )
+        stored_orders = (
+            {sv.uid: sv.visit_order for sv in all_study_visits} if manual_mode else {}
+        )
         timeline = TimelineAR(study_uid=study_uid, _visits=all_study_visits)
+        ordered_visits = timeline.ordered_study_visits
+        if manual_mode:
+            for sv in ordered_visits:
+                sv.visit_order = stored_orders[sv.uid]
         study_visit: StudyVisitVO | None = next(
-            (sv for sv in timeline.ordered_study_visits if sv.uid == uid), None
+            (sv for sv in ordered_visits if sv.uid == uid), None
         )
         if study_visit is None:
             raise exceptions.NotFoundException("Study Visit", uid)
 
         return StudyVisit.transform_to_response_model(
-            study_visit, derive_props_based_on_timeline=derive_props_based_on_timeline
+            study_visit,
+            derive_props_based_on_timeline=derive_props_based_on_timeline,
+            manual_visit_mode=manual_mode,
         )
 
     def _chronological_order_check(
@@ -435,103 +459,224 @@ class StudyVisitService(StudySelectionMixin):
     ):
         chronological_order_dict = {}
         for idx, visit in enumerate(ordered_visits[:-1]):
-            if VisitClass.SPECIAL_VISIT not in (
-                visit.visit_class,
-                ordered_visits[idx + 1].visit_class,
-            ) and VisitSubclass.ADDITIONAL_SUBVISIT_IN_A_GROUP_OF_SUBV not in (
-                visit.visit_subclass,
-                ordered_visits[idx + 1].visit_subclass,
+            if (
+                VisitSubclass.ADDITIONAL_SUBVISIT_IN_A_GROUP_OF_SUBV
+                not in (
+                    visit.visit_subclass,
+                    ordered_visits[idx + 1].visit_subclass,
+                )
+                and visit.unique_visit_number is not None
+                and ordered_visits[idx + 1].unique_visit_number is not None
+                and visit.unique_visit_number
+                > ordered_visits[idx + 1].unique_visit_number
             ):
-                if visit.visit_number > ordered_visits[idx + 1].visit_number:
-                    chronological_order_dict["visit number"] = visit_vo.visit_number
-                if (
-                    visit.unique_visit_number
-                    > ordered_visits[idx + 1].unique_visit_number
-                ):
-                    chronological_order_dict["unique visit number"] = (
-                        visit_vo.unique_visit_number
-                    )
+                chronological_order_dict["unique visit number"] = (
+                    visit_vo.unique_visit_number
+                )
         return chronological_order_dict
+
+    @staticmethod
+    def _group_anchor_uid(visit: StudyVisitVO) -> str | None:
+        if visit.visit_subclass == VisitSubclass.ANCHOR_VISIT_IN_GROUP_OF_SUBV:
+            return visit.uid
+        if visit.visit_subclass == VisitSubclass.ADDITIONAL_SUBVISIT_IN_A_GROUP_OF_SUBV:
+            return visit.visit_sublabel_reference
+        return None
+
+    def _raise_if_same_timing_in_visit_group(
+        self,
+        visit_vo: StudyVisitVO,
+        conflicting_visits: list[StudyVisitVO],
+        ordered_visits: list[StudyVisitVO],
+    ) -> None:
+        """
+        Visits in a group of subvisits get their default suffix (D<day>) from their timing,
+        so two visits of a group taking place at the same time end up with the same short name.
+        """
+        group_anchor_uid = self._group_anchor_uid(visit_vo)
+        if group_anchor_uid is None:
+            return
+        same_timing_visit = next(
+            (
+                visit
+                for visit in conflicting_visits
+                if self._group_anchor_uid(visit) == group_anchor_uid
+                and visit.get_absolute_duration() == visit_vo.get_absolute_duration()
+            ),
+            None,
+        )
+        if same_timing_visit is None:
+            return
+        group_anchor = next(
+            (visit for visit in ordered_visits if visit.uid == group_anchor_uid), None
+        )
+        group_name = group_anchor.visit_name if group_anchor else group_anchor_uid
+        raise exceptions.ValidationException(
+            msg=f"The visit {same_timing_visit.visit_short_name} of visit group '{group_name}' already takes place at the same time. "
+            "Change the timing of the visit or give it a different visit suffix."
+        )
+
+    @staticmethod
+    def _manually_defined_value_hint(
+        visit_vo: StudyVisitVO, conflicting_visits: list[StudyVisitVO]
+    ) -> str:
+        """Hint added when a derived value of the visit conflicts with the value of a manually defined visit."""
+        if visit_vo.visit_class != VisitClass.MANUALLY_DEFINED_VISIT and any(
+            visit.visit_class == VisitClass.MANUALLY_DEFINED_VISIT
+            for visit in conflicting_visits
+            if visit.uid != visit_vo.uid
+        ):
+            return " as a manually defined value exists. Change the manually defined value before this visit can be defined."
+        return ""
 
     def _validate_derived_properties(
         self, visit_vo: StudyVisitVO, ordered_visits: list[StudyVisitVO]
     ):
-        if visit_vo.visit_class != VisitClass.SPECIAL_VISIT:
-            error_dict = {}
-            chronological_order_dict = {}
-            for idx, visit in enumerate(ordered_visits):
-                if (
-                    visit_vo.uid != visit.uid
-                    and visit.visit_class != VisitClass.SPECIAL_VISIT
-                ):
-                    exclude_from_comparison = (
-                        (
-                            visit_vo.visit_subclass
-                            == VisitSubclass.ANCHOR_VISIT_IN_GROUP_OF_SUBV
-                            and visit.visit_subclass
-                            == VisitSubclass.ADDITIONAL_SUBVISIT_IN_A_GROUP_OF_SUBV
-                        )
-                        or visit_vo.visit_subclass
+        error_dict = {}
+        conflicting_visits: list[StudyVisitVO] = []
+        chronological_order_dict = {}
+        chronological_neighbours: list[StudyVisitVO] = []
+        for idx, visit in enumerate(ordered_visits):
+            if visit_vo.uid != visit.uid:
+                exclude_from_comparison = (
+                    (
+                        visit_vo.visit_subclass
+                        == VisitSubclass.ANCHOR_VISIT_IN_GROUP_OF_SUBV
+                        and visit.visit_subclass
                         == VisitSubclass.ADDITIONAL_SUBVISIT_IN_A_GROUP_OF_SUBV
                     )
-                    if (
-                        visit_vo.visit_number == visit.visit_number
-                        and not exclude_from_comparison
-                    ):
-                        error_dict["visit number"] = visit_vo.visit_number
-                    if visit_vo.unique_visit_number == visit.unique_visit_number:
-                        error_dict["unique visit number"] = visit_vo.unique_visit_number
-                    if (
-                        visit_vo.visit_name == visit.visit_name
-                        and not exclude_from_comparison
-                    ):
-                        error_dict["visit name"] = visit_vo.visit_name
-                    if visit_vo.visit_short_name == visit.visit_short_name:
-                        error_dict["visit short name"] = visit_vo.visit_short_name
-                elif visit_vo.uid == visit.uid:
-                    # If visit which is about to be created is the fist visit in schedule
-                    if idx == 0 and len(ordered_visits) > 1:
-                        chronological_order_dict = self._chronological_order_check(
-                            visit_vo=visit_vo,
-                            ordered_visits=[visit_vo, ordered_visits[idx + 1]],
-                        )
-                    # If visit which is about to be created is the last visit in schedule
-                    elif idx + 1 == len(ordered_visits) and len(ordered_visits) > 1:
-                        chronological_order_dict = self._chronological_order_check(
-                            visit_vo=visit_vo,
-                            ordered_visits=[ordered_visits[idx - 1], visit_vo],
-                        )
-                    # If visit which is about to be created is not the first or the last one visit in the schedule
-                    elif (
-                        len(ordered_visits) > MIN_VISITS_FOR_MIDDLE_CHRONOLOGICAL_CHECK
-                    ):
-                        chronological_order_dict = self._chronological_order_check(
-                            visit_vo=visit_vo,
-                            ordered_visits=[
-                                ordered_visits[idx - 1],
-                                visit_vo,
-                                ordered_visits[idx + 1],
-                            ],
-                        )
-            if chronological_order_dict:
-                count = len(chronological_order_dict)
-                joined_error = " and ".join(
-                    [f"{v} in field {k}" for k, v in chronological_order_dict.items()]
+                    or visit_vo.visit_subclass
+                    == VisitSubclass.ADDITIONAL_SUBVISIT_IN_A_GROUP_OF_SUBV
                 )
-                error_msg = f"Value{'s' if count > 1 else ''} {joined_error} {'are' if count > 1 else 'is'}"
-                error_msg += " not defined in chronological order by study visit timing"
-                if visit_vo.visit_class == VisitClass.SINGLE_VISIT:
-                    error_msg += " as a manually defined value exists. Change the manually defined value before this visit can be defined."
-                raise exceptions.ValidationException(msg=error_msg)
-            if error_dict:
-                count = len(error_dict)
-                joined_error = " and ".join(
-                    [f"{k} - {v}" for k, v in error_dict.items()]
-                )
-                error_msg = f"Field{'s' if count > 1 else ''} {joined_error} {'are' if count > 1 else 'is'} not unique for the Study"
-                if visit_vo.visit_class == VisitClass.SINGLE_VISIT:
-                    error_msg += " as a manually defined value exists. Change the manually defined value before this visit can be defined."
-                raise exceptions.ValidationException(msg=error_msg)
+                is_conflicting = False
+                if visit_vo.unique_visit_number == visit.unique_visit_number:
+                    error_dict["unique visit number"] = visit_vo.unique_visit_number
+                    is_conflicting = True
+                if (
+                    visit_vo.visit_name == visit.visit_name
+                    and not exclude_from_comparison
+                ):
+                    error_dict["visit name"] = visit_vo.visit_name
+                    is_conflicting = True
+                if visit_vo.visit_short_name == visit.visit_short_name:
+                    error_dict["visit short name"] = visit_vo.visit_short_name
+                    is_conflicting = True
+                if is_conflicting:
+                    conflicting_visits.append(visit)
+            elif visit_vo.uid == visit.uid:
+                # If visit which is about to be created is the fist visit in schedule
+                if idx == 0 and len(ordered_visits) > 1:
+                    chronological_neighbours = [visit_vo, ordered_visits[idx + 1]]
+                # If visit which is about to be created is the last visit in schedule
+                elif idx + 1 == len(ordered_visits) and len(ordered_visits) > 1:
+                    chronological_neighbours = [ordered_visits[idx - 1], visit_vo]
+                # If visit which is about to be created is not the first or the last one visit in the schedule
+                elif len(ordered_visits) > MIN_VISITS_FOR_MIDDLE_CHRONOLOGICAL_CHECK:
+                    chronological_neighbours = [
+                        ordered_visits[idx - 1],
+                        visit_vo,
+                        ordered_visits[idx + 1],
+                    ]
+                if chronological_neighbours:
+                    chronological_order_dict = self._chronological_order_check(
+                        visit_vo=visit_vo,
+                        ordered_visits=chronological_neighbours,
+                    )
+        if chronological_order_dict:
+            count = len(chronological_order_dict)
+            joined_error = " and ".join(
+                [f"{v} in field {k}" for k, v in chronological_order_dict.items()]
+            )
+            error_msg = f"Value{'s' if count > 1 else ''} {joined_error} {'are' if count > 1 else 'is'}"
+            error_msg += " not defined in chronological order by study visit timing"
+            error_msg += self._manually_defined_value_hint(
+                visit_vo, chronological_neighbours
+            )
+            raise exceptions.ValidationException(msg=error_msg)
+        if error_dict:
+            self._raise_if_same_timing_in_visit_group(
+                visit_vo=visit_vo,
+                conflicting_visits=conflicting_visits,
+                ordered_visits=ordered_visits,
+            )
+            count = len(error_dict)
+            joined_error = " and ".join([f"{k} - {v}" for k, v in error_dict.items()])
+            error_msg = f"Field{'s' if count > 1 else ''} {joined_error} {'are' if count > 1 else 'is'} not unique for the Study"
+            error_msg += self._manually_defined_value_hint(visit_vo, conflicting_visits)
+            raise exceptions.ValidationException(msg=error_msg)
+
+    @staticmethod
+    def _can_be_early_discontinuation_parent(visit: StudyVisitVO) -> bool:
+        return (
+            visit.visit_class == VisitClass.SINGLE_VISIT
+            and visit.visit_subclass
+            in (
+                None,
+                VisitSubclass.SINGLE_VISIT,
+                VisitSubclass.ANCHOR_VISIT_IN_GROUP_OF_SUBV,
+            )
+            and not visit.is_early_discontinuation_visit
+            and not visit.is_unscheduled_visit_type
+            and not visit.is_non_visit_type
+        )
+
+    def _validate_early_discontinuation_visit(
+        self, visit_vo: StudyVisitVO, timeline: TimelineAR
+    ) -> None:
+        """
+        Early Discontinuation visits reference a parent visit via visit_sublabel_reference.
+        They take place at the timing of the parent and share its visit number, so the suffix
+        is what distinguishes their name from the parent one.
+        """
+        ValidationException.raise_if(
+            visit_vo.expected_time_value is not None,
+            msg="Early Discontinuation visits take place at the timing of their parent visit, 'expected_time_value' is not allowed.",
+        )
+        ValidationException.raise_if(
+            visit_vo.visit_subclass not in (None, VisitSubclass.SINGLE_VISIT),
+            msg="Early Discontinuation visits can't be a repeating visit or be part of a group of subvisits.",
+        )
+        ValidationException.raise_if(
+            not visit_vo.visit_sublabel_reference,
+            msg="Early Discontinuation visits must reference their parent visit via 'visit_sublabel_reference'.",
+        )
+        ValidationException.raise_if(
+            visit_vo.visit_class == VisitClass.SINGLE_VISIT
+            and not visit_vo.visit_suffix,
+            msg="Early Discontinuation visits require 'visit_suffix' as they share the visit number of their parent visit.",
+        )
+        other_visits = [
+            visit for visit in timeline._visits if visit.uid != visit_vo.uid
+        ]
+        parent_visit = next(
+            (
+                visit
+                for visit in other_visits
+                if visit.uid == visit_vo.visit_sublabel_reference
+            ),
+            None,
+        )
+        ValidationException.raise_if(
+            parent_visit is None,
+            msg=f"visit_sublabel_reference '{visit_vo.visit_sublabel_reference}' does not match any visit in this study.",
+        )
+        assert parent_visit is not None
+        ValidationException.raise_if(
+            not self._can_be_early_discontinuation_parent(parent_visit),
+            msg=f"Visit '{parent_visit.visit_name}' can't be the parent of an Early Discontinuation visit. "
+            "The parent has to be a single visit or an anchor visit in a group of subvisits.",
+        )
+        if visit_vo.visit_class == VisitClass.SINGLE_VISIT:
+            ValidationException.raise_if(
+                visit_vo.visit_suffix == parent_visit.visit_suffix
+                or any(
+                    visit.is_early_discontinuation_visit
+                    and visit.visit_sublabel_reference == parent_visit.uid
+                    and visit.visit_suffix == visit_vo.visit_suffix
+                    for visit in other_visits
+                ),
+                msg=f"Visit suffix '{visit_vo.visit_suffix}' is already used by another visit sharing the visit number of '{parent_visit.visit_name}'.",
+            )
 
     def _validate_visit(
         self,
@@ -540,6 +685,7 @@ class StudyVisitService(StudySelectionMixin):
         timeline: TimelineAR,
         create: bool = True,
         preview: bool = False,
+        manual_mode: bool = False,
     ):
         visit_group_name = (
             visit_vo.study_visit_group.group_name if visit_vo.study_visit_group else ""
@@ -548,19 +694,27 @@ class StudyVisitService(StudySelectionMixin):
             not create and visit_vo.study_visit_group is not None,
             msg=f"The study visit can't be edited as it is part of visit group {visit_group_name}. The visit group should be uncollapsed first.",
         )
+        if manual_mode:
+            return
+        if visit_vo.is_early_discontinuation_visit:
+            self._validate_early_discontinuation_visit(
+                visit_vo=visit_vo, timeline=timeline
+            )
+        # Early Discontinuation visits are positioned by their parent visit and Unscheduled visit types
+        # by their expected timing, so they skip schedule validation (masked timing, day 0 allowed).
+        if (
+            visit_vo.is_early_discontinuation_visit
+            or visit_vo.is_unscheduled_visit_type
+        ):
+            return
         visit_classes_without_timing = (
             VisitClass.NON_VISIT,
             VisitClass.UNSCHEDULED_VISIT,
-            VisitClass.SPECIAL_VISIT,
         )
         is_time_reference_visit = False
         if (
-            visit_vo.visit_class
-            not in (
-                VisitClass.NON_VISIT,
-                VisitClass.UNSCHEDULED_VISIT,
-                VisitClass.SPECIAL_VISIT,
-            )
+            visit_vo.visit_class not in visit_classes_without_timing
+            and visit_vo.timepoint is not None
             and visit_vo.visit_type.sponsor_preferred_name
             == visit_vo.timepoint.visit_timereference.sponsor_preferred_name
         ):
@@ -611,6 +765,7 @@ class StudyVisitService(StudySelectionMixin):
                     # if we found another visit with the same visit type
                     visit.visit_type == visit_vo.visit_type
                     # if visit with the same visit type had selected the same value for visit type and time reference
+                    and visit.timepoint is not None
                     and visit.visit_type.sponsor_preferred_name
                     == visit.timepoint.visit_timereference.sponsor_preferred_name
                     # if visit we are creating has the same value selected as visit type and time reference
@@ -619,13 +774,20 @@ class StudyVisitService(StudySelectionMixin):
                 )
                 BusinessLogicException.raise_if(
                     # We shouldn't allow to create circular time references between Study Visits
-                    visit.visit_type.sponsor_preferred_name
+                    visit_vo.timepoint is not None
+                    and visit.timepoint is not None
+                    and visit.visit_type.sponsor_preferred_name
                     == visit_vo.timepoint.visit_timereference.sponsor_preferred_name
                     and visit.timepoint.visit_timereference.sponsor_preferred_name
                     == visit_vo.visit_type.sponsor_preferred_name
                     and visit.uid != visit_vo.uid,
-                    msg=f"""Circular Visit time reference detected: The visit which is being created, refers to ({visit_vo.timepoint.visit_timereference.sponsor_preferred_name})
-                    Visit which refers by time reference to Visit Type ({visit.timepoint.visit_timereference.sponsor_preferred_name}) of the Visit which is being created""",
+                    msg=(
+                        "Circular Visit time reference detected: The visit which is being created, refers to "
+                        f"({visit_vo.timepoint.visit_timereference.sponsor_preferred_name if visit_vo.timepoint else settings.global_anchor_visit_name})"
+                        " Visit which refers by time reference to Visit Type "
+                        f"({visit.timepoint.visit_timereference.sponsor_preferred_name if visit.timepoint else settings.global_anchor_visit_name})"
+                        " of the Visit which is being created"
+                    ),
                 )
 
         if visit_vo.is_global_anchor_visit:
@@ -673,19 +835,17 @@ class StudyVisitService(StudySelectionMixin):
                     settings.global_anchor_visit_name.lower(),
                     settings.anchor_visit_in_visit_group.lower(),
                 ],
-                msg=f"Time reference of type '{visit_vo.timepoint.visit_timereference.sponsor_preferred_name}' wasn't used by previous visits as visit type.",
+                msg=(
+                    "Time reference of type '"
+                    f"{visit_vo.timepoint.visit_timereference.sponsor_preferred_name if visit_vo.timepoint else reference_name.sponsor_preferred_name}"
+                    "' wasn't used by previous visits as visit type."
+                ),
             )
 
         if visit_vo.visit_class not in (
             VisitClass.NON_VISIT,
             VisitClass.UNSCHEDULED_VISIT,
         ):
-            ValidationException.raise_if(
-                visit_vo.visit_class == VisitClass.SPECIAL_VISIT
-                and visit_vo.visit_sublabel_reference is None,
-                msg="Special Visit has to time reference to some other visit.",
-            )
-
             ordered_visits = timeline.ordered_study_visits
             if create:
                 timeline.add_visit(visit_vo)
@@ -736,23 +896,22 @@ class StudyVisitService(StudySelectionMixin):
                         msg=f"The visit can't be placed in the middle of Visit Group '{group.group_name}' which is grouped in the Range way. Uncollapse the '{group.group_name}' Visit Group first."
                     )
 
-            # Perform check for timing uniqueness excluding Special Visits.
             # There can exist 2 visits with the same timing unless timing is 0, then there can exist only one such visit
-            if visit_vo.visit_class != VisitClass.SPECIAL_VISIT:
-                all_visit_timings = [
-                    visit.get_absolute_duration()
-                    for visit in ordered_visits
-                    if visit.uid != visit_vo.uid
-                    and visit.visit_class != VisitClass.SPECIAL_VISIT
-                ]
-                existing_visits_with_same_timing = all_visit_timings.count(
-                    visit_vo.get_absolute_duration()
-                )
-                exceptions.AlreadyExistsException.raise_if(
-                    existing_visits_with_same_timing > 0
-                    and visit_vo.get_absolute_duration() == 0,
-                    msg=f"There already exists a visit with timing set to {visit_vo.timepoint.visit_value}",
-                )
+            all_visit_timings = [
+                visit.get_absolute_duration()
+                for visit in ordered_visits
+                if visit.uid != visit_vo.uid
+                and not visit.is_early_discontinuation_visit
+                and not visit.is_unscheduled_visit_type
+            ]
+            existing_visits_with_same_timing = all_visit_timings.count(
+                visit_vo.get_absolute_duration()
+            )
+            exceptions.AlreadyExistsException.raise_if(
+                existing_visits_with_same_timing > 0
+                and visit_vo.get_absolute_duration() == 0,
+                msg=f"There already exists a visit with timing set to {visit_vo.timepoint.visit_value if visit_vo.timepoint else visit_vo.expected_time_value}",
+            )
 
             if create:
                 timeline.remove_visit(visit_vo)
@@ -770,13 +929,13 @@ class StudyVisitService(StudySelectionMixin):
             not preview
             and visit_input.visit_class == VisitClass.NON_VISIT
             and VisitClass.NON_VISIT in visits_classes,
-            msg=f"There's already and exists Non Visit in Study {visit_vo.study_uid}",
+            msg=f"There is already a Visit 29999 in the Study {visit_vo.study_uid}",
         )
         ValidationException.raise_if(
             not preview
             and visit_input.visit_class == VisitClass.UNSCHEDULED_VISIT
             and VisitClass.UNSCHEDULED_VISIT in visits_classes,
-            msg=f"There's already and exists an Unscheduled Visit in Study {visit_vo.study_uid}",
+            msg=f"There is already a Visit 29500 in the Study {visit_vo.study_uid}",
         )
 
     def _get_sponsor_library_vo(
@@ -850,19 +1009,11 @@ class StudyVisitService(StudySelectionMixin):
             find_uid_by_name_callback=repository_class.find_uid_by_name,
         )
         repository_class.save(numeric_ar)
-        numeric_value_object = NumericValue(
-            uid=numeric_ar.uid, value=numeric_ar.concept_vo.value
-        )
-        return numeric_value_object
+        return NumericValue(uid=numeric_ar.uid, value=numeric_ar.concept_vo.value)
 
     def _create_timepoint_simple_concept(
         self, study_visit_input: StudyVisitCreateInput | StudyVisitEditInput
     ):
-        if study_visit_input.time_value is None:
-            raise exceptions.BusinessLogicException(
-                msg="Time value is required for creating a timepoint."
-            )
-
         if study_visit_input.time_unit_uid is None:
             raise exceptions.BusinessLogicException(
                 msg="Time unit UID is required for creating a timepoint."
@@ -873,8 +1024,15 @@ class StudyVisitService(StudySelectionMixin):
                 msg="Time reference UID is required for creating a timepoint."
             )
 
+        # When only expected_time_value is set (e.g. repeating visits), time_value is None.
+        # The graph requires a numeric value node, so we use 0 as a placeholder, but
+        # visit_value on the TimePoint object stays None so api_time_value returns None.
         numeric_ar = self._create_numeric_value_simple_concept(
-            value=study_visit_input.time_value,
+            value=(
+                study_visit_input.time_value
+                if study_visit_input.time_value is not None
+                else 0
+            ),
             numeric_value_type=NumericValueType.NUMERIC_VALUE,
         )
         timepoint_ar = TimePointAR.from_input_values(
@@ -896,7 +1054,7 @@ class StudyVisitService(StudySelectionMixin):
             find_uid_by_name_callback=self._repos.time_point_repository.find_uid_by_name,
         )
         self._repos.time_point_repository.save(timepoint_ar)
-        timepoint_object = TimePoint(
+        return TimePoint(
             uid=timepoint_ar.uid,
             visit_timereference=self.study_visit_time_references_by_uid[
                 study_visit_input.time_reference.term_uid
@@ -904,7 +1062,6 @@ class StudyVisitService(StudySelectionMixin):
             time_unit_uid=study_visit_input.time_unit_uid,
             visit_value=study_visit_input.time_value,
         )
-        return timepoint_object
 
     def derive_visit_number(self, visit_class: VisitClass | None):
         if visit_class == VisitClass.NON_VISIT:
@@ -913,69 +1070,100 @@ class StudyVisitService(StudySelectionMixin):
             return settings.unscheduled_visit_number
         return 1
 
+    def _resolve_time_unit_object(self, uid: str | None) -> TimeUnit | None:
+        if not uid:
+            return None
+        ar = self._repos.unit_definition_repository.find_by_uid_2(uid)
+        if ar is None:
+            raise exceptions.ValidationException(
+                msg=f"Time unit with UID '{uid}' does not exist."
+            )
+        concept = ar.concept_vo
+        if not concept.name:
+            return None
+        if concept.conversion_factor_to_master is None:
+            raise exceptions.ValidationException(
+                msg="Time unit conversion factor to master is required for creating a visit."
+            )
+        return TimeUnit(
+            name=concept.name,
+            conversion_factor_to_master=concept.conversion_factor_to_master,
+        )
+
+    def _resolve_window_unit_object(self, uid: str | None) -> TimeUnit | None:
+        if not uid:
+            return None
+        ar = self._repos.unit_definition_repository.find_by_uid_2(uid)
+        if ar is None:
+            raise exceptions.ValidationException(
+                msg=f"Visit window unit with UID '{uid}' does not exist."
+            )
+        concept = ar.concept_vo
+        if concept.name is None:
+            raise exceptions.ValidationException(
+                msg="Visit window unit UID is required for creating a visit window."
+            )
+        if concept.conversion_factor_to_master is None:
+            raise exceptions.ValidationException(
+                msg="Visit window unit conversion factor to master is required for creating a visit window."
+            )
+        return TimeUnit(
+            name=concept.name,
+            conversion_factor_to_master=concept.conversion_factor_to_master,
+        )
+
+    def _resolve_day_week_unit_objects(self) -> tuple[TimeUnit, TimeUnit]:
+        if self._day_conversion_factor is None or self._week_conversion_factor is None:
+            raise exceptions.NotFoundException(
+                msg="Unit definitions 'day' and 'week' with a conversion factor to master are required for creating a visit."
+            )
+        return (
+            TimeUnit(
+                name="day",
+                conversion_factor_to_master=self._day_conversion_factor,
+            ),
+            TimeUnit(
+                name="Week",
+                conversion_factor_to_master=self._week_conversion_factor,
+            ),
+        )
+
+    def _derive_window_params(
+        self,
+        create_input: StudyVisitCreateInput | StudyVisitEditInput,
+        is_fixed_window_visit_type: bool,
+        window_unit_object: TimeUnit | None,
+        manual_mode: bool = False,
+    ) -> tuple[int | None, int | None, str | None, TimeUnit | None]:
+        # The Unscheduled and Non-visit classes carry the same fixed window as the
+        # fixed-window visit types, and it is persisted (not derived on read) so the
+        # value and its unit survive a later switch to manual visit mode.
+        is_technical_visit_class = create_input.visit_class in (
+            VisitClass.NON_VISIT,
+            VisitClass.UNSCHEDULED_VISIT,
+        )
+        if not manual_mode and (is_technical_visit_class or is_fixed_window_visit_type):
+            return -9999, 9999, create_input.visit_window_unit_uid, window_unit_object
+        return (
+            create_input.min_visit_window_value,
+            create_input.max_visit_window_value,
+            create_input.visit_window_unit_uid,
+            window_unit_object,
+        )
+
     def _from_input_values(
         self,
         create_input: StudyVisitCreateInput | StudyVisitEditInput,
         epoch: StudyEpochVO | None,
         study_uid: str | None = None,
+        manual_mode: bool = False,
     ):
-        unit_repository = self._repos.unit_definition_repository
-        if create_input.time_unit_uid:
-            req_time_unit_ar: UnitDefinitionAR = unit_repository.find_by_uid_2(
-                create_input.time_unit_uid
-            )
-            if req_time_unit_ar is None:
-                raise exceptions.ValidationException(
-                    msg=f"Time unit with UID '{create_input.time_unit_uid}' does not exist."
-                )
-            req_time_unit = req_time_unit_ar.concept_vo
-        else:
-            req_time_unit = None
-
-        if create_input.visit_window_unit_uid:
-            window_time_unit_ar: UnitDefinitionAR = unit_repository.find_by_uid_2(
-                create_input.visit_window_unit_uid
-            )
-            if window_time_unit_ar is None:
-                raise exceptions.ValidationException(
-                    msg=f"Visit window unit with UID '{create_input.visit_window_unit_uid}' does not exist."
-                )
-            window_time_unit = window_time_unit_ar.concept_vo
-            if window_time_unit.name is None:
-                raise exceptions.ValidationException(
-                    msg="Visit window unit UID is required for creating a visit window."
-                )
-            if window_time_unit.conversion_factor_to_master is None:
-                raise exceptions.ValidationException(
-                    msg="Visit window unit conversion factor to master is required for creating a visit window."
-                )
-            window_unit_object = TimeUnit(
-                name=window_time_unit.name,
-                conversion_factor_to_master=window_time_unit.conversion_factor_to_master,
-            )
-        else:
-            window_unit_object = None
-
-        if req_time_unit and req_time_unit.name:
-            if req_time_unit.conversion_factor_to_master is None:
-                raise exceptions.ValidationException(
-                    msg="Time unit conversion factor to master is required for creating a visit."
-                )
-            time_unit_object = TimeUnit(
-                name=req_time_unit.name,
-                conversion_factor_to_master=req_time_unit.conversion_factor_to_master,
-            )
-        else:
-            time_unit_object = None
-        day_unit_object = TimeUnit(
-            name="day",
-            conversion_factor_to_master=self._day_unit.concept_vo.conversion_factor_to_master,
+        time_unit_object = self._resolve_time_unit_object(create_input.time_unit_uid)
+        window_unit_object = self._resolve_window_unit_object(
+            create_input.visit_window_unit_uid
         )
+        day_unit_object, week_unit_object = self._resolve_day_week_unit_objects()
 
-        week_unit_object = TimeUnit(
-            name="Week",
-            conversion_factor_to_master=self._week_unit.concept_vo.conversion_factor_to_master,
-        )
         visit_contact_mode = self.study_visit_contact_modes_by_uid.get(
             create_input.visit_contact_mode.term_uid
         )
@@ -988,31 +1176,51 @@ class StudyVisitService(StudySelectionMixin):
             visit_type,
             msg=f"Visit type with UID '{create_input.visit_type.term_uid}' is not valid.",
         )
-        start_rule: str | None
         if create_input.visit_class == VisitClass.NON_VISIT:
-            start_rule = create_input.start_rule or settings.non_visit_start_rule
+            start_rule: str | None = (
+                create_input.start_rule or settings.non_visit_start_rule
+            )
         elif create_input.visit_class == VisitClass.UNSCHEDULED_VISIT:
             start_rule = (
                 create_input.start_rule or settings.unscheduled_visit_start_rule
             )
         else:
             start_rule = create_input.start_rule
-        # Unscheduled and non-visits do not have window unit information
-        if create_input.visit_class in (
-            VisitClass.NON_VISIT,
-            VisitClass.UNSCHEDULED_VISIT,
-        ):
-            window_unit_object = None
-            visit_window_min = None
-            visit_window_max = None
-            window_unit_uid = None
-        else:
-            visit_window_min = create_input.min_visit_window_value
-            visit_window_max = create_input.max_visit_window_value
-            window_unit_uid = create_input.visit_window_unit_uid
+        is_fixed_window_visit_type = (
+            visit_type is not None
+            and visit_type.sponsor_preferred_name
+            in (
+                settings.study_visit_type_early_discontinuation_visit,
+                settings.unscheduled_visit_name,
+                settings.non_visit_name,
+            )
+        )
+        visit_window_min, visit_window_max, window_unit_uid, window_unit_object = (
+            self._derive_window_params(
+                create_input,
+                is_fixed_window_visit_type,
+                window_unit_object,
+                manual_mode,
+            )
+        )
+        is_group_subvisit = create_input.visit_subclass in (
+            VisitSubclass.ANCHOR_VISIT_IN_GROUP_OF_SUBV,
+            VisitSubclass.ADDITIONAL_SUBVISIT_IN_A_GROUP_OF_SUBV,
+        )
+        # Early Discontinuation visits reference their parent visit via visit_sublabel_reference
+        is_ed_visit_type = (
+            visit_type is not None
+            and visit_type.sponsor_preferred_name
+            == settings.study_visit_type_early_discontinuation_visit
+        )
+        visit_sublabel_reference = (
+            create_input.visit_sublabel_reference
+            if is_group_subvisit or is_ed_visit_type
+            else None
+        )
         study_visit_vo = StudyVisitVO(
             uid=self.repo.generate_uid(),
-            visit_sublabel_reference=create_input.visit_sublabel_reference,
+            visit_sublabel_reference=visit_sublabel_reference,
             show_visit=create_input.show_visit,
             visit_window_min=visit_window_min,
             visit_window_max=visit_window_max,
@@ -1054,49 +1262,112 @@ class StudyVisitService(StudySelectionMixin):
                 if create_input.repeating_frequency_uid
                 else None
             ),
+            expected_time_value=create_input.expected_time_value,
         )
-        if study_visit_vo.visit_class not in [
-            VisitClass.NON_VISIT,
-            VisitClass.UNSCHEDULED_VISIT,
-            VisitClass.SPECIAL_VISIT,
-        ]:
+        if manual_mode or (
+            study_visit_vo.visit_class
+            not in [
+                VisitClass.NON_VISIT,
+                VisitClass.UNSCHEDULED_VISIT,
+            ]
+            or study_visit_vo.is_early_discontinuation_visit
+            or study_visit_vo.is_unscheduled_visit_type
+            or study_visit_vo.is_non_visit_type
+        ):
+            self._init_timed_visit(
+                study_visit_vo, create_input, manual_mode=manual_mode
+            )
+        return study_visit_vo
+
+    def _init_timed_visit(
+        self,
+        study_visit_vo: StudyVisitVO,
+        create_input: StudyVisitCreateInput | StudyVisitEditInput,
+        manual_mode: bool = False,
+    ) -> None:
+        if (
+            study_visit_vo.visit_class == VisitClass.MANUALLY_DEFINED_VISIT
+            or manual_mode
+        ):
+            # No scheduling rules apply, but the names and the unique visit number are used
+            # downstream (SoA, consumer API) and can't be derived from the timeline
+            missing_fields = [
+                field_name
+                for field_name in (
+                    "visit_name",
+                    "visit_short_name",
+                    "unique_visit_number",
+                )
+                if getattr(create_input, field_name) in (None, "")
+            ]
+            ValidationException.raise_if(
+                missing_fields,
+                msg=f"The following fields are required for a manually defined visit: {', '.join(repr(field_name) for field_name in missing_fields)}.",
+            )
+            study_visit_vo.vis_unique_number = create_input.unique_visit_number
+            study_visit_vo.vis_short_name = create_input.visit_short_name
+            study_visit_vo.visit_name_sc = self._create_visit_name_simple_concept(
+                visit_name=create_input.visit_name
+            )
+        else:
+            if any(
+                [
+                    create_input.unique_visit_number,
+                    create_input.visit_short_name,
+                    create_input.visit_name,
+                ]
+            ):
+                raise exceptions.ValidationException(
+                    msg="Only Manually defined visit can specify unique_visit_number, visit_short_name or visit_name properties."
+                )
+            study_visit_vo.visit_suffix = create_input.visit_suffix
+        if not manual_mode:
             missing_fields = []
             if create_input.time_unit_uid is None:
                 missing_fields.append("time_unit_uid")
             if create_input.time_reference is None:
                 missing_fields.append("time_reference")
-            if create_input.time_value is None:
+            if create_input.visit_subclass == VisitSubclass.REPEATING_VISIT:
+                has_time_value = create_input.time_value is not None
+                has_expected_time_value = create_input.expected_time_value is not None
+                if has_time_value and has_expected_time_value:
+                    raise exceptions.ValidationException(
+                        msg="For a Repeating visit, only one of 'time_value' or 'expected_time_value' may be set, not both."
+                    )
+                if not has_time_value and not has_expected_time_value:
+                    raise exceptions.ValidationException(
+                        msg="For a Repeating visit, either 'time_value' or 'expected_time_value' must be set."
+                    )
+            elif create_input.time_value is None:
                 missing_fields.append("time_value")
             ValidationException.raise_if(
                 missing_fields,
                 msg=f"The following fields are missing '{missing_fields}' for the Visit with Visit Class '{study_visit_vo.visit_class.value}'.",
             )
+        if (
+            create_input.time_unit_uid is not None
+            and create_input.time_reference is not None
+            and (
+                create_input.time_value is not None
+                or create_input.expected_time_value is not None
+            )
+        ):
+            if (
+                create_input.visit_subclass != VisitSubclass.REPEATING_VISIT
+                and create_input.time_value is None
+                and create_input.expected_time_value is not None
+            ):
+                create_input.time_value = 0
             study_visit_vo.timepoint = self._create_timepoint_simple_concept(
                 study_visit_input=create_input
             )
-
-            if study_visit_vo.visit_class == VisitClass.MANUALLY_DEFINED_VISIT:
-                study_visit_vo.visit_number = create_input.visit_number  # type: ignore[assignment]
-                study_visit_vo.vis_unique_number = create_input.unique_visit_number
-                study_visit_vo.vis_short_name = create_input.visit_short_name
-                study_visit_vo.visit_name_sc = self._create_visit_name_simple_concept(
-                    visit_name=create_input.visit_name
-                )
-            elif (
-                study_visit_vo.visit_class != VisitClass.MANUALLY_DEFINED_VISIT
-                and any(
-                    [
-                        create_input.visit_number,
-                        create_input.unique_visit_number,
-                        create_input.visit_short_name,
-                        create_input.visit_name,
-                    ]
-                )
-            ):
-                raise exceptions.ValidationException(
-                    msg="Only Manually defined visit can specify visit_number, unique_visit_number, visit_short_name or visit_name properties."
-                )
-        return study_visit_vo
+        if (
+            not manual_mode
+            and study_visit_vo.visit_class != VisitClass.MANUALLY_DEFINED_VISIT
+            and not study_visit_vo.visit_suffix
+        ):
+            # Derived once the timepoint is known, as the suffix of a subvisit depends on its timing
+            study_visit_vo.visit_suffix = study_visit_vo.default_visit_suffix
 
     def _reconcile_visit_numbering(
         self,
@@ -1107,7 +1378,7 @@ class StudyVisitService(StudySelectionMixin):
         Re-derive numbering-related properties (visit_number, visit_order,
         vis_unique_number, vis_short_name, visit_name_sc) for every visit in
         the timeline and persist any visit whose stored value drifted from
-        the value derived from its current position.
+        the value derived from its current position, including its order.
 
         This is the single entry point that replaces the previous
         index-based partial sync routines. It removes the need for each
@@ -1127,13 +1398,15 @@ class StudyVisitService(StudySelectionMixin):
         for visit in timeline.ordered_study_visits:
             if visit.uid in skip:
                 continue
-            # Manually defined visits have explicitly specified numbering
-            # that is never derived from the timeline.
             if visit.visit_class == VisitClass.MANUALLY_DEFINED_VISIT:
+                # Manually defined visits have explicitly specified numbering
+                # that is never derived from the timeline, only their position in the order is.
+                if visit.stored_visit_order == visit.visit_order:
+                    continue
+            elif self._derived_numbering_drifted(visit):
+                self.assign_props_derived_from_visit_number(study_visit=visit)
+            else:
                 continue
-            if not self._derived_numbering_drifted(visit):
-                continue
-            self.assign_props_derived_from_visit_number(study_visit=visit)
             self.repo.save(visit)
 
     @staticmethod
@@ -1142,16 +1415,16 @@ class StudyVisitService(StudySelectionMixin):
         Return True if any persisted numbering-derived property differs from
         the value derived from the visit's current position in the timeline.
         """
+        if visit.stored_visit_order != visit.visit_order:
+            return True
         if visit.vis_unique_number != visit.unique_visit_number:
             return True
         if visit.vis_short_name != visit.visit_short_name:
             return True
-        if (
+        return (
             visit.visit_name_sc is None
             or visit.visit_name_sc.name != visit.derive_visit_name()
-        ):
-            return True
-        return False
+        )
 
     def assign_props_derived_from_visit_number(self, study_visit: StudyVisitVO):
         """
@@ -1183,11 +1456,18 @@ class StudyVisitService(StudySelectionMixin):
         Assigns some properties of StudyVisitVO that are derived by the absolute timing of a given StudyVisit.
         The absolute timing can be known after Visits are set in the schedule and we assign Anchor Visits if given Visit anchors the other one.
         """
-        if study_visit_vo.visit_class not in [
-            VisitClass.NON_VISIT,
-            VisitClass.UNSCHEDULED_VISIT,
-            VisitClass.SPECIAL_VISIT,
-        ]:
+        # Unscheduled, Early Discontinuation and Non-visit types have no real
+        # position in the schedule, so no StudyDay/StudyWeek/Duration nodes are derived.
+        if (
+            study_visit_vo.visit_class
+            not in [
+                VisitClass.NON_VISIT,
+                VisitClass.UNSCHEDULED_VISIT,
+            ]
+            and not study_visit_vo.is_early_discontinuation_visit
+            and not study_visit_vo.is_unscheduled_visit_type
+            and not study_visit_vo.is_non_visit_type
+        ):
             if (value := study_visit_vo.derive_study_day_number()) is not None:
                 study_visit_vo.study_day = self._create_numeric_value_simple_concept(
                     value=value,
@@ -1224,9 +1504,90 @@ class StudyVisitService(StudySelectionMixin):
                     )
                 )
 
+    def _is_manual_visit_mode(self, study_uid: str) -> bool:
+        return self._repos.study_definition_repository.get_manual_visit_mode(study_uid)
+
+    def get_visit_mode(self, study_uid: str) -> StudyVisitModeResponse:
+        return StudyVisitModeResponse(
+            manual_visit_mode=self._is_manual_visit_mode(study_uid)
+        )
+
+    @ensure_transaction(db)
+    def enable_manual_visit_mode(self, study_uid: str) -> StudyVisitModeResponse:
+        acquire_write_lock_study_value(uid=study_uid)
+        self._repos.study_definition_repository.enable_manual_visit_mode(study_uid)
+        return StudyVisitModeResponse(manual_visit_mode=True)
+
+    def _can_switch_to_assisted_mode(self, study_uid: str) -> bool:
+        # Switching back is safe only when nothing diverged from what assisted mode
+        # would produce: either there are no visits, or no visit has been modified
+        # (created, edited, reordered, ...) since manual mode was enabled.
+        study_visits = self.repo.find_all_visits_by_study_uid(study_uid)
+        if not study_visits:
+            return True
+        enabled_date = (
+            self._repos.study_definition_repository.get_manual_visit_mode_enabled_date(
+                study_uid
+            )
+        )
+        if enabled_date is None:
+            return True
+        enabled_date = convert_to_datetime(enabled_date)
+        return all(
+            visit.start_date is not None and visit.start_date <= enabled_date
+            for visit in study_visits
+        )
+
+    @ensure_transaction(db)
+    def disable_manual_visit_mode(self, study_uid: str) -> StudyVisitModeResponse:
+        acquire_write_lock_study_value(uid=study_uid)
+        if not self._is_manual_visit_mode(study_uid):
+            return StudyVisitModeResponse(manual_visit_mode=False)
+        BusinessLogicException.raise_if(
+            not self._can_switch_to_assisted_mode(study_uid),
+            msg="Cannot switch to assisted visit mode because visits have been "
+            "modified since manual mode was enabled. Switching back is only allowed "
+            "when the study has no visits, or no visit has changed since the switch.",
+        )
+        self._repos.study_definition_repository.disable_manual_visit_mode(study_uid)
+        return StudyVisitModeResponse(manual_visit_mode=False)
+
+    def set_visit_mode(
+        self, study_uid: str, manual_visit_mode: bool
+    ) -> StudyVisitModeResponse:
+        if manual_visit_mode:
+            return self.enable_manual_visit_mode(study_uid=study_uid)
+        return self.disable_manual_visit_mode(study_uid=study_uid)
+
+    @ensure_transaction(db)
+    def reorder_visits(self, study_uid: str, visit_uids: list[str]) -> list[StudyVisit]:
+        BusinessLogicException.raise_if(
+            not self._is_manual_visit_mode(study_uid),
+            msg="Visit reordering is only available in manual visit mode.",
+        )
+        acquire_write_lock_study_value(uid=study_uid)
+        study_visits = self.repo.find_all_visits_by_study_uid(study_uid)
+        uid_to_visit = {v.uid: v for v in study_visits}
+        ValidationException.raise_if(
+            len(visit_uids) != len(set(visit_uids))
+            or set(visit_uids) != set(uid_to_visit.keys()),
+            msg="Provided visit_uids do not match the study's current visit set.",
+        )
+        for order, uid in enumerate(visit_uids, start=1):
+            visit = uid_to_visit[uid]
+            visit.visit_order = order
+            self.repo.save(visit)
+        return [
+            StudyVisit.transform_to_response_model(
+                uid_to_visit[uid], manual_visit_mode=True
+            )
+            for uid in visit_uids
+        ]
+
     @ensure_transaction(db)
     def create(self, study_uid: str, study_visit_input: StudyVisitCreateInput):
         acquire_write_lock_study_value(uid=study_uid)
+        manual_mode = self._is_manual_visit_mode(study_uid)
         study_visits = self.repo.find_all_visits_by_study_uid(study_uid)
 
         epoch = None
@@ -1235,7 +1596,7 @@ class StudyVisitService(StudySelectionMixin):
                 uid=study_visit_input.study_epoch_uid, study_uid=study_uid
             )
         study_visit = self._from_input_values(
-            study_visit_input, epoch, study_uid=study_uid
+            study_visit_input, epoch, study_uid=study_uid, manual_mode=manual_mode
         )
         timeline = TimelineAR(study_uid=study_uid, _visits=study_visits)
         self._validate_visit(
@@ -1243,19 +1604,31 @@ class StudyVisitService(StudySelectionMixin):
             study_visit,
             timeline,
             create=True,
+            manual_mode=manual_mode,
         )
+        if manual_mode:
+            max_order = max(
+                (v.visit_order for v in study_visits if v.visit_order is not None),
+                default=0,
+            )
         timeline.add_visit(study_visit)
-        self.assign_props_derived_from_visit_number(study_visit=study_visit)
+        if manual_mode:
+            study_visit.visit_order = max_order + 1
+        else:
+            self.assign_props_derived_from_visit_number(study_visit=study_visit)
         self.assign_props_derived_from_visit_absolute_timing(study_visit_vo=study_visit)
         added_item = self.repo.save(study_visit, create=True)
 
-        # Persist any drift caused by the new visit's insertion (downstream
-        # visit numbers shifting, sub-visit numbering thresholds, anchor
-        # numbers, etc.). The new visit is skipped because its derived
-        # properties were just assigned from the correct post-insertion timeline.
-        self._reconcile_visit_numbering(timeline, skip={study_visit.uid})
+        if not manual_mode:
+            # Persist any drift caused by the new visit's insertion (downstream
+            # visit numbers shifting, sub-visit numbering thresholds, anchor
+            # numbers, etc.). The new visit is skipped because its derived
+            # properties were just assigned from the correct post-insertion timeline.
+            self._reconcile_visit_numbering(timeline, skip={study_visit.uid})
 
-        return StudyVisit.transform_to_response_model(added_item)
+        return StudyVisit.transform_to_response_model(
+            added_item, manual_visit_mode=manual_mode
+        )
 
     def update_ct_term_properties_of_study_visit(
         self, visit: StudyVisitVO
@@ -1305,25 +1678,43 @@ class StudyVisitService(StudySelectionMixin):
         return visit
 
     @ensure_transaction(db)
-    def preview(self, study_uid: str, study_visit_input: StudyVisitCreateInput):
+    def preview(self, study_uid: str, study_visit_input: StudyVisitPreviewInput):
+        manual_mode = self._is_manual_visit_mode(study_uid)
         study_visits = self.repo.find_all_visits_by_study_uid(study_uid)
+        if study_visit_input.uid:
+            # Previewing an edit: the stored visit is being replaced, so it must not conflict with itself
+            study_visits = [
+                sv for sv in study_visits if sv.uid != study_visit_input.uid
+            ]
 
         epoch = None
         if study_visit_input.study_epoch_uid:
             epoch = self._repos.study_epoch_repository.find_by_uid(
                 uid=study_visit_input.study_epoch_uid, study_uid=study_uid
             )
-        study_visit = self._from_input_values(study_visit_input, epoch)
+        study_visit = self._from_input_values(
+            study_visit_input, epoch, study_uid=study_uid, manual_mode=manual_mode
+        )
         timeline = TimelineAR(study_uid=study_uid, _visits=study_visits)
         self._validate_visit(
-            study_visit_input, study_visit, timeline, create=True, preview=True
+            study_visit_input,
+            study_visit,
+            timeline,
+            create=True,
+            preview=True,
+            manual_mode=manual_mode,
         )
 
         study_visit.uid = "preview"
         timeline.add_visit(study_visit)
-        self.assign_props_derived_from_visit_absolute_timing(study_visit_vo=study_visit)
-        self.assign_props_derived_from_visit_number(study_visit=study_visit)
-        return StudyVisit.transform_to_response_model(study_visit)
+        if not manual_mode:
+            self.assign_props_derived_from_visit_absolute_timing(
+                study_visit_vo=study_visit
+            )
+            self.assign_props_derived_from_visit_number(study_visit=study_visit)
+        return StudyVisit.transform_to_response_model(
+            study_visit, manual_visit_mode=manual_mode
+        )
 
     @ensure_transaction(db)
     def edit(
@@ -1332,15 +1723,47 @@ class StudyVisitService(StudySelectionMixin):
         study_visit_uid: str,
         study_visit_input: StudyVisitEditInput,
     ):
+        manual_mode = self._is_manual_visit_mode(study_uid)
         study_visits = self.repo.find_all_visits_by_study_uid(study_uid)
+        stored_orders = (
+            {sv.uid: sv.visit_order for sv in study_visits} if manual_mode else {}
+        )
+
         timeline = TimelineAR(study_uid=study_uid, _visits=study_visits)
         acquire_write_lock_study_value(uid=study_uid)
+        ordered_visits = timeline.ordered_study_visits
+        if manual_mode:
+            # The timeline overwrites visit_order with chronological values
+            for sv in ordered_visits:
+                sv.visit_order = stored_orders[sv.uid]
         study_visit: StudyVisitVO | None = next(
-            (sv for sv in timeline.ordered_study_visits if sv.uid == study_visit_uid),
+            (sv for sv in ordered_visits if sv.uid == study_visit_uid),
             None,
         )
         if study_visit is None:
             raise exceptions.NotFoundException("Study Visit", study_visit_uid)
+
+        if (
+            study_visit.visit_subclass == VisitSubclass.ANCHOR_VISIT_IN_GROUP_OF_SUBV
+            and (
+                (
+                    study_visit_input.visit_subclass is not None
+                    and study_visit_input.visit_subclass
+                    != VisitSubclass.ANCHOR_VISIT_IN_GROUP_OF_SUBV
+                )
+                or (
+                    study_visit_input.visit_class is not None
+                    and study_visit_input.visit_class != study_visit.visit_class
+                )
+            )
+        ):
+            subvisits = self.repo.find_all_visits_referencing_study_visit(
+                study_visit_uid=study_visit_uid
+            )
+            BusinessLogicException.raise_if(
+                subvisits,
+                msg=f"Cannot change the class or subclass of an anchor visit while it has subvisits ({[x.short_visit_label for x in subvisits]}). Remove the subvisits first.",
+            )
 
         epoch = None
         if study_visit_input.study_epoch_uid:
@@ -1348,12 +1771,22 @@ class StudyVisitService(StudySelectionMixin):
                 uid=study_visit_input.study_epoch_uid, study_uid=study_uid
             )
         updated_visit = self._from_input_values(
-            study_visit_input, epoch, study_uid=study_uid
+            study_visit_input, epoch, study_uid=study_uid, manual_mode=manual_mode
         )
+        if (
+            not manual_mode
+            and study_visit.effective_visit_suffix == study_visit.default_visit_suffix
+            and study_visit_input.visit_suffix == study_visit.effective_visit_suffix
+        ):
+            # The suffix was never customized, so it follows the edited visit, e.g. D5 -> D7 for a subvisit moved in time
+            updated_visit.visit_suffix = updated_visit.default_visit_suffix
+        excluded_fields = {"uid", "study_visit_group"}
+        if manual_mode:
+            excluded_fields.add("visit_order")
         update_dict = {
             field.name: getattr(updated_visit, field.name)
             for field in dataclasses.fields(updated_visit)
-            if field.name not in ["uid", "study_visit_group"]
+            if field.name not in excluded_fields
         }
 
         # Preserve study_visit_group from original as it can't be modified in Edit flow
@@ -1362,34 +1795,67 @@ class StudyVisitService(StudySelectionMixin):
         )
         new_study_visit.epoch_connector = epoch
 
-        timeline.update_visit(new_study_visit)
-        # Force the timeline to regenerate so that numbering-related fields
-        # (visit_number, subvisit_number, special_visit_number, anchor_visit)
-        # are recomputed for every visit - including new_study_visit - before
-        # we derive and persist its name / short name / unique visit number.
-        _ = timeline.ordered_study_visits
+        if not manual_mode and not self._can_be_early_discontinuation_parent(
+            new_study_visit
+        ):
+            early_discontinuation_visits = [
+                visit
+                for visit in timeline._visits
+                if visit.is_early_discontinuation_visit
+                and visit.visit_sublabel_reference == study_visit_uid
+            ]
+            BusinessLogicException.raise_if(
+                early_discontinuation_visits,
+                msg="The visit can't be changed this way as it is the parent of Early Discontinuation visits "
+                f"({[x.visit_short_name for x in early_discontinuation_visits]}). Remove the Early Discontinuation visits first.",
+            )
 
-        self.assign_props_derived_from_visit_number(study_visit=new_study_visit)
+        timeline.update_visit(new_study_visit)
+        if not manual_mode:
+            # Force the timeline to regenerate so that numbering-related fields
+            # (visit_number, subvisit_number, anchor_visit)
+            # are recomputed for every visit - including new_study_visit - before
+            # we derive and persist its name / short name / unique visit number.
+            _ = timeline.ordered_study_visits
+            self.assign_props_derived_from_visit_number(study_visit=new_study_visit)
         self.assign_props_derived_from_visit_absolute_timing(
             study_visit_vo=new_study_visit
         )
-        self._validate_visit(study_visit_input, new_study_visit, timeline, create=False)
+        self._validate_visit(
+            study_visit_input,
+            new_study_visit,
+            timeline,
+            create=False,
+            manual_mode=manual_mode,
+        )
         self.repo.save(new_study_visit)
 
-        # Persist any drift on other visits caused by this edit (visit order
-        # changes, sub-visit threshold crossings, anchor renumbering, ...).
-        # The edited visit was just saved with up-to-date derived properties,
-        # so it is skipped to avoid a redundant write.
-        self._reconcile_visit_numbering(timeline, skip={new_study_visit.uid})
+        if not manual_mode:
+            # Persist any drift on other visits caused by this edit (visit order
+            # changes, sub-visit threshold crossings, anchor renumbering, ...).
+            # The edited visit was just saved with up-to-date derived properties,
+            # so it is skipped to avoid a redundant write.
+            self._reconcile_visit_numbering(timeline, skip={new_study_visit.uid})
 
-        return StudyVisit.transform_to_response_model(new_study_visit)
+        return StudyVisit.transform_to_response_model(
+            new_study_visit, manual_visit_mode=manual_mode
+        )
 
     @ensure_transaction(db)
     def delete(self, study_uid: str, study_visit_uid: str):
         acquire_write_lock_study_value(uid=study_uid)
         study_visits = self.repo.find_all_visits_by_study_uid(study_uid)
+        manual_mode = self._is_manual_visit_mode(study_uid)
+        stored_orders = (
+            {sv.uid: sv.visit_order for sv in study_visits} if manual_mode else {}
+        )
+
         timeline = TimelineAR(study_uid=study_uid, _visits=study_visits)
         ordered_visits = timeline.ordered_study_visits
+        if manual_mode:
+            # The timeline overwrites visit_order with chronological values
+            for sv in ordered_visits:
+                sv.visit_order = stored_orders[sv.uid]
         study_visit: StudyVisitVO | None = None
         for visit in ordered_visits:
             if visit.uid == study_visit_uid:
@@ -1446,10 +1912,22 @@ class StudyVisitService(StudySelectionMixin):
         timeline.remove_visit(study_visit)
         self.repo.save(study_visit)
 
-        # Persist any drift on the remaining visits caused by the removal
-        # (downstream visit numbers shifting back, sub-visit threshold
-        # transitions, anchor renumbering, ...).
-        self._reconcile_visit_numbering(timeline)
+        if not manual_mode:
+            # Persist any drift on the remaining visits caused by the removal
+            # (downstream visit numbers shifting back, sub-visit threshold
+            # transitions, anchor renumbering, ...).
+            self._reconcile_visit_numbering(timeline)
+        else:
+            # Renumber remaining visits to fill the gap while preserving relative order.
+            # Visits without a stored order get one assigned here.
+            remaining = sorted(
+                (sv for sv in ordered_visits if sv.uid != study_visit.uid),
+                key=self._manual_order_key,
+            )
+            for new_order, visit in enumerate(remaining, start=1):
+                if stored_orders[visit.uid] != new_order:
+                    visit.visit_order = new_order
+                    self.repo.save(visit)
 
     def get_consecutive_groups(self, study_uid: str) -> list[StudyVisitGroupModel]:
         all_visits = self.repo.find_all_visits_by_study_uid(study_uid)
@@ -1457,15 +1935,16 @@ class StudyVisitService(StudySelectionMixin):
         study_visit_groups: list[StudyVisitGroupModel] = []
 
         for visit in all_visits:
-            if (study_visit_group := visit.study_visit_group) is not None:
-                if study_visit_group.uid not in known_groups:
-                    known_groups.add(study_visit_group.uid)
-                    study_visit_groups.append(
-                        StudyVisitGroupModel(
-                            uid=study_visit_group.uid,
-                            group_name=study_visit_group.group_name,
-                        )
+            if (
+                study_visit_group := visit.study_visit_group
+            ) is not None and study_visit_group.uid not in known_groups:
+                known_groups.add(study_visit_group.uid)
+                study_visit_groups.append(
+                    StudyVisitGroupModel(
+                        uid=study_visit_group.uid,
+                        group_name=study_visit_group.group_name,
                     )
+                )
 
         return study_visit_groups
 
@@ -1502,8 +1981,7 @@ class StudyVisitService(StudySelectionMixin):
                 ).model_dump()
             )
 
-        data = calculate_diffs(selection_history, StudyVisitVersion)
-        return data
+        return calculate_diffs(selection_history, StudyVisitVersion)
 
     @trace_calls
     def audit_trail_all_visits(
@@ -1555,6 +2033,7 @@ class StudyVisitService(StudySelectionMixin):
         self, study_uid: str, consecutive_visit_group_uid: str
     ):
         study_visits = self.repo.find_all_visits_by_study_uid(study_uid=study_uid)
+
         timeline = TimelineAR(study_uid=study_uid, _visits=study_visits)
         ordered_visits = timeline.ordered_study_visits
         for visit in ordered_visits:
@@ -1575,6 +2054,7 @@ class StudyVisitService(StudySelectionMixin):
         validate_only: bool = False,
     ) -> list[StudyVisit]:
         study_visits = self.repo.find_all_visits_by_study_uid(study_uid=study_uid)
+
         timeline = TimelineAR(study_uid=study_uid, _visits=study_visits)
         ordered_visits = timeline.ordered_study_visits
 

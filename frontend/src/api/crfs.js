@@ -1,6 +1,13 @@
 import repository from './repository'
+import i18n from '@/plugins/i18n'
+import { notificationHub } from '@/plugins/notificationHub'
+import { useErrorHandler } from '@/composables/errorHandler'
 
 const resource = 'odms'
+
+function versionParams(version) {
+  return version ? { params: { version } } : undefined
+}
 
 export default {
   get(source, params) {
@@ -22,6 +29,33 @@ export default {
       params
     )
   },
+  // Used by the CRF tree, where a Final parent can show an outdated Final
+  // child although a newer Draft of that child already exists.
+  async newVersionInTree(source, uid) {
+    try {
+      return await repository.post(
+        `${resource}/${source}/${uid}/versions`,
+        null,
+        {
+          ignoreErrors: true,
+        }
+      )
+    } catch (error) {
+      if (
+        error.response?.data?.message ===
+        'New draft version can be created only for FINAL versions.'
+      ) {
+        notificationHub.add({
+          msg: i18n.global.t('CRFTree.new_version_draft_exists'),
+          type: 'warning',
+          timeout: 0,
+        })
+        return null
+      }
+      useErrorHandler(error)
+      throw error
+    }
+  },
   approve(source, uid) {
     return repository.post(`${resource}/${source}/${uid}/approvals`)
   },
@@ -34,8 +68,8 @@ export default {
   updateForm(data, uid) {
     return repository.patch(`${resource}/forms/${uid}`, data)
   },
-  getForm(uid) {
-    return repository.get(`${resource}/forms/${uid}`)
+  getForm(uid, version) {
+    return repository.get(`${resource}/forms/${uid}`, versionParams(version))
   },
   createItemGroup(data) {
     return repository.post(`${resource}/item-groups`, data)
@@ -43,8 +77,11 @@ export default {
   updateItemGroup(data, uid) {
     return repository.patch(`${resource}/item-groups/${uid}`, data)
   },
-  getItemGroup(uid) {
-    return repository.get(`${resource}/item-groups/${uid}`)
+  getItemGroup(uid, version) {
+    return repository.get(
+      `${resource}/item-groups/${uid}`,
+      versionParams(version)
+    )
   },
   getCollectionAuditTrail(uid) {
     return repository.get(`${resource}/study-events/${uid}/versions`)
@@ -64,11 +101,14 @@ export default {
   updateItem(data, uid) {
     return repository.patch(`${resource}/items/${uid}`, data)
   },
-  getItem(uid) {
-    return repository.get(`${resource}/items/${uid}`)
+  getItem(uid, version) {
+    return repository.get(`${resource}/items/${uid}`, versionParams(version))
   },
-  getCollection(uid) {
-    return repository.get(`${resource}/study-events/${uid}`)
+  getCollection(uid, version) {
+    return repository.get(
+      `${resource}/study-events/${uid}`,
+      versionParams(version)
+    )
   },
   createCollection(data) {
     return repository.post(`${resource}/study-events`, data)
@@ -115,6 +155,18 @@ export default {
         },
       }
     )
+  },
+  // Parses an ODM XML file without storing it. Answers with
+  // { forms: [{ form, groups: [{ ref, group, items: [{ ref, item }] }] }] }.
+  parseOdmXml(xmlFile, { mapperFile, exporter } = {}) {
+    const data = new FormData()
+    data.append('xml_file', xmlFile)
+    if (mapperFile) {
+      data.append('mapper_file', mapperFile)
+    }
+    return repository.post(`${resource}/metadata/xmls/parse`, data, {
+      params: exporter ? { exporter } : undefined,
+    })
   },
   getXsl(type) {
     return repository.get(`${resource}/metadata/xmls/stylesheets/${type}`)

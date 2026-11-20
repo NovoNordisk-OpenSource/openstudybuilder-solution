@@ -919,8 +919,8 @@ def test_get_medicinal_products(
     assert list(res.keys()) == ["items", "total", "page", "size"]
     assert len(res["items"]) == expected_result_len
     assert res["total"] == (len(medicinal_products_all) if total_count else 0)
-    assert res["page"] == (page_number if page_number else 1)
-    assert res["size"] == (page_size if page_size else 10)
+    assert res["page"] == (page_number or 1)
+    assert res["size"] == (page_size or 10)
 
     for item in res["items"]:
         assert set(list(item.keys())) == set(MEDICINAL_PRODUCT_FIELDS_ALL)
@@ -1059,6 +1059,7 @@ def test_filtering_exact(
             "external_id",
             ["external_id_AAA-{rand}_0", "external_id_BBB-{rand}_0"],
         ),
+        pytest.param("dose_values.label", ["10 mg"]),
     ],
 )
 def test_get_medicinal_products_headers(
@@ -1081,6 +1082,39 @@ def test_get_medicinal_products_headers(
     ]
     for val in expected_returned_values:
         assert val in res
+
+
+@pytest.mark.parametrize(
+    "label, expect_match",
+    [
+        pytest.param("10 mg", True),
+        # Same value, different unit: the label matches value and unit together
+        pytest.param("10 mL", False),
+    ],
+)
+def test_filtering_by_dose_value_label(api_client, label, expect_match):
+    """
+    SCENARIO: Filter medicinal products by the combined label of a dose value
+    GIVEN medicinal products with a 10 mg dose value exist
+    WHEN GET /concepts/medicinal-products?filters={"dose_values.label": ...} is called
+    THEN 200 is returned; every returned product has a dose value with that value
+    and unit, or no products are returned when no dose value matches
+    """
+    filter_by = json.dumps({"dose_values.label": {"v": [label]}})
+    response = api_client.get(f"{BASE_URL}?filters={filter_by}")
+    res = response.json()
+
+    assert_response_status_code(response, 200)
+    if expect_match:
+        assert len(res["items"]) > 0
+        for row in res["items"]:
+            assert any(
+                dose["value"] == dose_value.value
+                and dose["unit_label"] == dose_value.unit_label
+                for dose in row["dose_values"]
+            )
+    else:
+        assert len(res["items"]) == 0
 
 
 def test_create_and_delete_medicinal_product(api_client):

@@ -13,7 +13,7 @@ from clinical_mdr_api.models.standard_data_models.dataset_class import (
 from common.exceptions import ValidationException
 
 
-class DatasetClassRepository(StandardDataModelRepository):
+class DatasetClassRepository(StandardDataModelRepository[DatasetClassAPIModel]):
     root_class = DatasetClass
     value_class = DatasetClassInstance
     return_model = DatasetClassAPIModel
@@ -21,10 +21,9 @@ class DatasetClassRepository(StandardDataModelRepository):
     def generic_match_clause(self, versioning_relationship: str):
         standard_data_model_label = self.root_class.__label__
         standard_data_model_value_label = self.value_class.__label__
-        query = f"""MATCH (standard_root:{standard_data_model_label})-[:HAS_INSTANCE]->
+        return f"""MATCH (standard_root:{standard_data_model_label})-[:HAS_INSTANCE]->
                 (standard_value:{standard_data_model_value_label})<-[hdc:HAS_DATASET_CLASS]-(data_model_value:DataModelValue)
             """
-        return query
 
     def specific_alias_clause(self) -> str:
         return """
@@ -65,8 +64,8 @@ class DatasetClassRepository(StandardDataModelRepository):
             filter_query_parameters["data_model_name"] = data_model_name
 
             if filter_statements_from_standard != "":
-                filter_statements_to_return = " AND ".join(
-                    [filter_statements_from_standard, filter_by_data_model_name]
+                filter_statements_to_return = (
+                    f"{filter_statements_from_standard} AND {filter_by_data_model_name}"
                 )
             else:
                 filter_statements_to_return = "WHERE " + filter_by_data_model_name

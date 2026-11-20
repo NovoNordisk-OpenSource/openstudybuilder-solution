@@ -211,9 +211,7 @@ class StudyEpochRepository:
         """
         concept_ars = []
         for concept in result_array:
-            concept_dictionary = {}
-            for concept_property, attribute_name in zip(concept, attribute_names):
-                concept_dictionary[attribute_name] = concept_property
+            concept_dictionary = dict(zip(attribute_names, concept))
             concept_ars.append(
                 cls._create_aggregate_root_instance_from_cypher_result(
                     concept_dictionary, audit_trail=audit_trail
@@ -346,10 +344,7 @@ class StudyEpochRepository:
 
         study_epochs, attributes_names = db.cypher_query(query=query, params=params)
 
-        extracted_items = cls._retrieve_concepts_from_cypher_res(
-            study_epochs, attributes_names
-        )
-        return extracted_items
+        return cls._retrieve_concepts_from_cypher_res(study_epochs, attributes_names)
 
     def epoch_specific_has_connected_design_cell(
         self, study_uid: str, epoch_uid: str
@@ -410,10 +405,9 @@ class StudyEpochRepository:
             study_uid=study_uid, study_epoch_uid=uid, audit_trail=True
         )
         study_visits, attributes_names = db.cypher_query(query=query, params=params)
-        extracted_items = cls._retrieve_concepts_from_cypher_res(
+        return cls._retrieve_concepts_from_cypher_res(
             study_visits, attributes_names, audit_trail=True
         )
-        return extracted_items
 
     @staticmethod
     def from_study_epoch_vo_to_history_vo(

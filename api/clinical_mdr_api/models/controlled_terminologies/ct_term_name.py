@@ -54,11 +54,7 @@ class CTTermName(BaseModel):
     def from_ct_term_ar(
         cls, ct_term_name_ar: CTTermNameAR, include_ts_parameters: bool = True
     ) -> Self:
-        catalogue_names = (
-            ct_term_name_ar.ct_term_vo.catalogue_names
-            if ct_term_name_ar.ct_term_vo.catalogue_names
-            else []
-        )
+        catalogue_names = ct_term_name_ar.ct_term_vo.catalogue_names or []
         vo = ct_term_name_ar.ct_term_vo
         ts_kwargs = _build_ts_kwargs(vo) if include_ts_parameters else {}
         return cls(

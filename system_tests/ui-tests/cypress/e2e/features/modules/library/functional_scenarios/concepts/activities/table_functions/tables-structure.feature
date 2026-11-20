@@ -8,6 +8,7 @@ Feature: Library - Concepts - Activities - Tables
 
     Scenario: [TestData] Old placeholder activity workflow feature flag is enabled
         Then [API] The feature flag 'streamline_placeholder_activities' is disabled
+        When [API] The feature flag 'nsvs_library' is enabled
         
     Scenario: [Table][Options] User must be able to see activities table with correct options
         Given The '/library/activities/activities' page is opened
@@ -130,6 +131,15 @@ Feature: Library - Concepts - Activities - Tables
             | Status             |
             | Version            |
 
+    Scenario: [Table][Columns][Names] User must be able to see activities by grouping table with correct columns
+        Given The '/library/activities/activities-by-grouping' page is opened
+        Then A table is visible with following headers
+            | headers                  |
+            | Group/subgroup/activity  |
+            | Modified                 |
+            | Status                   |
+            | Version                  |
+
     Scenario: [Table][Columns][Names] User must be able to see activity instances table with correct columns
         Given The '/library/activities/activity-instances' page is opened
         Then A table is visible with following headers
@@ -194,6 +204,30 @@ Feature: Library - Concepts - Activities - Tables
             | Version          |
             | Status           |
 
+    Scenario: [Table][Columns][Names] User must be able to see non-standard variables table with correct columns
+        Given The '/library/activities/non-standard-variables' page is opened
+        Then A table is visible with following headers
+            | headers            |
+            | NSV code           |
+            | NSV label          |
+            | Name               |
+            | NCI code           |
+            | NCI concept name   |
+            | Multiple           |
+            | CDISC defined      |
+            | Semantic data type |
+            | NSV XML data type  |
+            | Length             |
+            | Codelist codes     |
+            | Origin type        |
+            | Origin source      |
+            | Algorithm          |
+            | Definition         |
+            | Modified           |
+            | Modified by        |
+            | Version            |
+            | Status             |
+
     Scenario: [Table][Columns][Visibility] User must be able to select visibility of columns in the activities table
         Given The '/library/activities/activities' page is opened
         When The first column is selected from Select Columns option for table with actions
@@ -224,6 +258,11 @@ Feature: Library - Concepts - Activities - Tables
         When The first column is selected from Select Columns option for table with actions
         Then The table contain only selected column and actions column
 
+    Scenario: [Table][Columns][Visibility] User must be able to select visibility of columns in the non-standard variables table
+        Given The '/library/activities/non-standard-variables' page is opened
+        When The first column is selected from Select Columns option for table with actions
+        Then The table contain only selected column and actions column
+
     Scenario: [Table][Pagination] User must be able to use activities table pagination
         Given The '/library/activities/activities' page is opened
         When The user switches pages of the table
@@ -238,6 +277,11 @@ Feature: Library - Concepts - Activities - Tables
         Given The '/library/activities/activity-subgroups' page is opened
         When The user switches pages of the table
         Then The table page presents correct data
+    
+    Scenario: [Table][Pagination] User must be able to use activities by groupings table pagination
+        Given The '/library/activities/activities-by-grouping' page is opened
+        When The user switches pages of the table
+        Then The table page presents correct data
 
     Scenario: [Table][Pagination] User must be able to use activity instances table pagination
         Given The '/library/activities/activity-instances' page is opened
@@ -246,5 +290,10 @@ Feature: Library - Concepts - Activities - Tables
 
     Scenario: [Table][Pagination] User must be able to use activity item classes table pagination
         Given The '/library/activities/activity-item-classes' page is opened
+        When The user switches pages of the table
+        Then The table page presents correct data
+
+    Scenario: [Table][Pagination] User must be able to use non-standard variables table pagination
+        Given The '/library/activities/non-standard-variables' page is opened
         When The user switches pages of the table
         Then The table page presents correct data

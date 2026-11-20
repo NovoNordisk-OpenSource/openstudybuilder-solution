@@ -263,6 +263,13 @@ class UnitDefinitionAR(ConceptARBase):
                 author_id=author_id,
                 change_description=normalize_string(change_description),
             )
+            # after _edit_draft so non-draft objects report the draft-status error first
+            BusinessLogicException.raise_if(
+                new_unit_definition_value.unit_dimension_uid
+                != self.concept_vo.unit_dimension_uid
+                and self._item_metadata.major_version != 0,
+                msg=f"The unit dimension of '{self.uid}' cannot be changed because it has already been approved.",
+            )
             if new_unit_definition_value is None:
                 raise BusinessLogicException(msg="UnitDefinitionVO is missing.")
 

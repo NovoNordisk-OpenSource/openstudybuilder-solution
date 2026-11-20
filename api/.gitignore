@@ -30,6 +30,7 @@ linting_report.txt
 /schemathesis-reports
 /consumer_api/reports
 /extensions/reports
+/standards_import/reports
 traceability.html
 Consumer_API_Traceability.html
 neomodel_schema.generated.json

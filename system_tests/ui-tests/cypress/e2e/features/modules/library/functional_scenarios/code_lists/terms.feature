@@ -37,7 +37,6 @@ Feature: Library - Code Lists - Sponsor - Show Terms
             | Attributes status           |
             | Attributes date             |
 
-    @unstable_disabled        
     Scenario: [Table][Pagination] User must be able to use table pagination
         Given The '/library/terms' page is opened
         And User waits for the table

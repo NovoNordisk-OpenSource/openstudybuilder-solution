@@ -81,16 +81,22 @@ Migration and test/verify scripts are dependent on the following environment var
 DATABASE_URL
 DATABASE_NAME
 API_BASE_URL
-API_AUTH_TOKEN
 CREATE_DB
+STAGING_DATABASE_NAME   # migration_ct_import only: CDISC staging database to merge into DATABASE_NAME
+STAGING_DATABASE_URL    # migration_ct_import only, optional: defaults to DATABASE_URL
 ```
+
+API auth is optional. Leave all of these unset for a local API without auth (as in CI); otherwise the first match wins:
+
+- `STUDYBUILDER_API_TOKEN`: used verbatim as the bearer token
+- `CLIENT_ID` + `CLIENT_SECRET` + `TOKEN_ENDPOINT` + `SCOPE`: client credentials
+- `CLIENT_ID` + `AUTH_ENDPOINT` + `TOKEN_ENDPOINT` + `SCOPE`: browser login (SSO), redirecting to `http://localhost:5000/`. Add `offline_access` to `SCOPE` for runs longer than the ~60 minute token lifetime.
 
 Crete an `.env` file in project root locally, for example (see also `.env.example` file):
 ```
 DATABASE_URL=bolt://neo4j:<your-password>@localhost:7687
 DATABASE_NAME=schema.migration.test
 API_BASE_URL=http://localhost:8000
-API_AUTH_TOKEN=
 CREATE_DB=true
 
 MDR_MIGRATION_ACTIVE_SUBSTANCES=migration_data/datafiles/compounds/active_substances.json

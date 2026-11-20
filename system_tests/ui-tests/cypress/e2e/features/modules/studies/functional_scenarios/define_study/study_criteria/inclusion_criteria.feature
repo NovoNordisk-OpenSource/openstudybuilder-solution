@@ -20,6 +20,7 @@ Feature: Studies - Define Study - Study Criteria - Inclusion Criteria
             | #                  |
             | Inclusion Criteria |
             | Guidance text      |
+            | Criteria ID        |
             | Key criteria       |
             | Modified           |
             | Modified by        |
@@ -56,6 +57,18 @@ Feature: Studies - Define Study - Study Criteria - Inclusion Criteria
         And Form continue button is clicked
         And Form save button is clicked
         Then The study criteria is searched and found
+ 
+    @smoke_test
+    Scenario: [Create][From scratch][Criteria ID] User must be able to create the Inclusion Criteria from scratch with a Criteria ID
+        Given The page 'selection_criteria/Inclusion%20Criteria' is opened for current study
+        When User clicks add study criteria button
+        And User selects to create criteria from scratch
+        And Form continue button is clicked
+        When The 'inclusion' criteria is created from scratch
+        And A unique Criteria ID is entered
+        And Form continue button is clicked
+        And Form save button is clicked
+        Then The entered Criteria ID is visible in the table
 
     Scenario: [Create][From studies][By Id] User must be able to select Inclusion Criteria from other existing studies by study id
         And User selects study with id 'CDISC DEV-0'

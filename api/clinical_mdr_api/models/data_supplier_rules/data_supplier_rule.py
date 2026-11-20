@@ -98,6 +98,36 @@ class DataSupplierRuleActivityGrouping(BaseModel):
             }
         ),
     ] = None
+    activity_grouping_uid: Annotated[
+        str | None,
+        Field(
+            json_schema_extra={
+                "source": "has_latest_value.has_activity_grouping.uid",
+                "nullable": True,
+            }
+        ),
+    ] = None
+    is_activity_retired: Annotated[
+        bool,
+        Field(description="Whether the activity is retired."),
+    ] = False
+    is_activity_group_retired: Annotated[
+        bool,
+        Field(description="Whether the activity group is retired."),
+    ] = False
+    is_activity_subgroup_retired: Annotated[
+        bool,
+        Field(description="Whether the activity subgroup is retired."),
+    ] = False
+    grouping_exists: Annotated[
+        bool,
+        Field(
+            description=(
+                "Whether the latest final version of the activity still has a "
+                "grouping to the same activity group and subgroup."
+            )
+        ),
+    ] = True
 
 
 class DataSupplierRule(VersionProperties):
@@ -181,6 +211,11 @@ class DataSupplierRule(VersionProperties):
                     activity_group_name=grouping.activity_group_name,
                     activity_subgroup_uid=grouping.activity_subgroup_uid,
                     activity_subgroup_name=grouping.activity_subgroup_name,
+                    activity_grouping_uid=grouping.activity_grouping_uid,
+                    is_activity_retired=grouping.is_activity_retired,
+                    is_activity_group_retired=grouping.is_activity_group_retired,
+                    is_activity_subgroup_retired=grouping.is_activity_subgroup_retired,
+                    grouping_exists=grouping.grouping_exists,
                 )
                 for grouping in data_supplier_rule_ar.data_supplier_rule_vo.activity_groupings
             ],

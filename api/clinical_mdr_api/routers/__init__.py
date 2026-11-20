@@ -173,6 +173,12 @@ from clinical_mdr_api.routers.studies.study_activity_instructions import (
 from clinical_mdr_api.routers.studies.study_activity_schedule import (
     router as study_activity_schedule_router,
 )
+from clinical_mdr_api.routers.studies.study_auxiliary_devices import (
+    router as study_auxiliary_device_router,
+)
+from clinical_mdr_api.routers.studies.study_comparison import (
+    router as study_comparison_router,
+)
 from clinical_mdr_api.routers.studies.study_compound_dosing import (
     router as study_compound_dosing_router,
 )
@@ -185,6 +191,9 @@ from clinical_mdr_api.routers.studies.study_design_classes import (
 )
 from clinical_mdr_api.routers.studies.study_design_figure import (
     router as study_design_figure,
+)
+from clinical_mdr_api.routers.studies.study_design_populations import (
+    router as study_design_populations_router,
 )
 from clinical_mdr_api.routers.studies.study_disease_milestones import (
     router as study_disease_milestone_router,
@@ -354,11 +363,14 @@ __all__ = [
     "studies_router",
     "study_activity_instructions_router",
     "study_activity_schedule_router",
+    "study_auxiliary_device_router",
+    "study_comparison_router",
     "study_compound_dosing_router",
     "study_days_router",
     "study_design_cell_router",
     "study_design_classes_router",
     "study_design_figure",
+    "study_design_populations_router",
     "study_disease_milestone_router",
     "study_duration_days_router",
     "study_duration_weeks_router",

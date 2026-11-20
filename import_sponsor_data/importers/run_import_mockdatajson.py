@@ -851,7 +851,7 @@ class MockdataJson(BaseImporter):
         items = data.get(key, [])
         if items:
             for item in items:
-                name = item["name"]
+                name = self.update_name(item["name"], codelist_name)
                 uid = self.lookup_ct_term_uid(codelist_name, name)
                 if uid:
                     self.log.info(
@@ -962,7 +962,9 @@ class MockdataJson(BaseImporter):
             default={},
         )
 
-        self.fill_general_term(metadata, "control_type_code", CODELIST_CONTROL_TYPE)
+        self.fill_general_term_list(
+            metadata, "control_type_codes", CODELIST_CONTROL_TYPE
+        )
         self.fill_general_term(
             metadata, "intervention_model_code", CODELIST_INTERVENTION_MODEL
         )

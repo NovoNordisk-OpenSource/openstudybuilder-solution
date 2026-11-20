@@ -13,8 +13,7 @@ from clinical_mdr_api.tests.integration.utils.factory_visit import *  # noqa: F4
 
 def generate_study_root():
     StudyRoot.generate_node_uids_if_not_present()
-    study = StudyRoot.nodes.all()[0]
-    return study
+    return StudyRoot.nodes.all()[0]
 
 
 def create_library_data():

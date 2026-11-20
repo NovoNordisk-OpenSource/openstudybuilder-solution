@@ -20,7 +20,7 @@ from clinical_mdr_api.models.dictionaries.dictionary_codelist import (
 )
 from clinical_mdr_api.models.utils import GenericFilteringReturn
 from clinical_mdr_api.repositories._utils import FilterOperator
-from clinical_mdr_api.services._meta_repository import MetaRepository  # type: ignore
+from clinical_mdr_api.services._meta_repository import MetaRepository
 from clinical_mdr_api.services._utils import calculate_diffs, is_library_editable
 from clinical_mdr_api.utils import is_attribute_in_model, normalize_string
 from common.auth.user import user
@@ -127,7 +127,7 @@ class DictionaryCodelistGenericService:
 
         dictionary_type = self.get_dictionary_type(library=library)
 
-        header_values = self.repository.get_distinct_headers(
+        return self.repository.get_distinct_headers(
             library=dictionary_type,
             field_name=field_name,
             search_string=search_string,
@@ -135,7 +135,6 @@ class DictionaryCodelistGenericService:
             filter_operator=filter_operator,
             page_size=page_size,
         )
-        return header_values
 
     @db.transaction
     def get_by_uid(self, codelist_uid: str, version: str | None = None) -> BaseModel:

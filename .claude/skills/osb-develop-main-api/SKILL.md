@@ -1,6 +1,6 @@
 ---
 name: osb-develop-main-api
-description: "Implement new or update existing API endpoints in the main Clinical MDR API by leveraging the specialized endpoint implementation agent. Scopes strictly to api/clinical_mdr_api/ and its three-layer DDD architecture."
+description: "Use when adding or changing endpoints, services, repositories, or domain logic in the main Clinical MDR API (api/clinical_mdr_api/, port 8000). For api/consumer_api/ use /osb-develop-consumer-api; for api/extensions/ use /osb-develop-extensions-api."
 ---
 
 # Develop Main API
@@ -70,9 +70,9 @@ What the caller needs from you, as the last section of your response:
 
 ## Verification
 
-The agent runs the fast scoped checks itself (format, ruff, sblint) and converges before returning. You run what it deliberately cannot: the unscoped type-check and the tests. The OpenAPI spec is a separate case — it is not a check, it mutates committed files, so you ASK before regenerating it and never do so on your own initiative. Every branch below ends by referring back here.
+The agent runs the fast scoped checks itself (format, ruff, sblint) and converges before returning. You run what it deliberately cannot: the unscoped type-check and the tests. The OpenAPI spec is a separate case — it is not a check, it mutates committed files, so you ASK before regenerating it and never do so on your own initiative. The invocation below ends by referring back here.
 
-**Working directory: every command in this section runs from `api/`**, because they are all `uv run poe` tasks and `pyproject.toml` lives there. Note this differs from the enumeration command in the branches below, whose path is written relative to the repo root — check where you are before pasting either.
+**Working directory: every command in this section runs from `api/`**, because they are all `uv run poe` tasks and `pyproject.toml` lives there. Note this differs from the enumeration command, whose path is written relative to the repo root — check where you are before pasting either.
 
 Work from the agent's CHANGED FILES list; if it did not produce one, recover it with `git status --porcelain` and `git diff --name-only`, filtered to `api/**/*.py`. If that comes back empty, the agent changed nothing: say so and stop rather than running linters against an empty file list.
 
@@ -158,201 +158,47 @@ If they decline, say plainly that the spec is now stale and name the command the
 
 **Reporting.** State plainly what ran, what passed, and what did not. If you skipped a step — integration tests with no database, OpenAPI on a change that touched no routes — say which and why. Do not report a check as passing unless you saw it pass.
 
-## Task type
+## Invoking the specialist
 
-AskUserQuestion({
-  questions: [{
-    question: "What type of main API development do you need?",
-    header: "Task Type",
-    options: [
-      {
-        label: "New endpoint implementation (Recommended)",
-        description: "Create a new endpoint following the three-layer DDD architecture - the agent determines the layer depth and operation type from your description and the existing code"
-      },
-      {
-        label: "Modify existing endpoint",
-        description: "Update or enhance an existing main API endpoint - I'll locate the endpoint and gather the modification details"
-      },
-      {
-        label: "Full feature implementation",
-        description: "Complete feature spanning domain aggregates, repositories, services, routers, and tests - the agent scopes it from your description and the existing aggregates"
-      },
-      {
-        label: "Custom implementation",
-        description: "Work directly with your provided task description for specific main API requirements"
-      }
-    ],
-    multiSelect: false
-  }]
-})
+**Area guard first.** Re-read the user's request against the scope stated at the top of this file. If it targets `api/consumer_api/` or `api/extensions/` — it names one of those apps, a route only they serve, or port 8008/8009 — stop and point the user at `/osb-develop-consumer-api` or `/osb-develop-extensions-api` instead of invoking the specialist.
 
-Match on the label PREFIX in every mapping below — the "(Recommended)" suffix may or may not be present.
+There is no task-type question. Whether this is a new endpoint, a modification, or a full feature is clear from the request, and the specialist settles layer depth and scope by reading the code.
 
-**Before invoking any agent, apply the area guard.** Re-read the user's request against the scope stated at the top of this file. If it targets `api/consumer_api/` or `api/extensions/` — it names one of those apps, a route only they serve, or port 8008/8009 — stop and point the user at `/osb-develop-consumer-api` or `/osb-develop-extensions-api` instead of invoking the specialist. This is the only place that guard is enforced; past this point every branch writes into `clinical_mdr_api/`.
-
-Note on options: `AskUserQuestion` accepts a maximum of 4 options per question and always offers an "Other" free-text choice automatically. The task-type question above is the only one this skill asks up front — every branch below proceeds without a follow-up. If a branch does end up needing to ask (the modify branch, when the target is genuinely ambiguous), keep it to 4 real candidates and do not add an "Other …" option of your own; the built-in one already covers it.
-
-"Custom implementation" above is deliberately a real option rather than a duplicate of that escape hatch: it selects a distinct agent prompt, not just free text.
-
----
-
-**If "New endpoint implementation" is selected:**
-
-Do not ask a follow-up question. How far down the DDD layers the endpoint reaches, and which HTTP operation it is, are determinations to be made by reading the request against the existing code — the specialist agent is better placed to make them than the user is, and asking would force the user to guess at an architecture decision before anyone has looked at the relevant aggregate.
-
-Invoke the endpoint implementation specialist directly:
-
-```
-Agent({
-  description: "New main API endpoint implementation",
-  subagent_type: "endpoint-implementation-specialist",
-  prompt: "I need help implementing a new endpoint in the main Clinical MDR API. Please analyze the user's request and implement the necessary changes following these guidelines:
-
-DEVELOPMENT CONTEXT:
-- Task: New endpoint implementation
-
-{MAIN_API_CONTEXT}
-
-IMPLEMENTATION REQUIREMENTS:
-1. **Read before writing**: Enumerate the mounted prefixes, then read the nearest comparable endpoint end to end — its router, service, repository, and domain aggregate — as a worked example.
-2. **Determine the layer depth yourself, then state it**: Decide from the request and the existing code whether this is (a) service-layer only, reusing an existing aggregate and repository, (b) an existing aggregate needing a new repository query or persistence method, or (c) a new domain aggregate built from scratch. State which one you concluded and why BEFORE you start writing, so the user can correct you early. If the request is genuinely ambiguous between these, ask the user rather than guessing.
-3. **Build inside-out**: Implement in domain → repository → service order, to whatever depth you determined. Do not start at the router.
-4. **Match the operation to the conventions**: Derive the HTTP verb and status from what the endpoint does, per api/.claude/rules/api-conventions.md — GET/200 for reads, POST/201, PATCH/200, DELETE/204. A paginated listing must follow the existing pagination, filtering, and sorting conventions rather than a hand-rolled scheme; a write operation engages versioning, optimistic locking, and domain validation.
-5. **Confirm the auth dependency against a neighbour**: Do not infer the rbac dependency from the verb. Use the dependency on the nearest comparable route in clinical_mdr_api/routers/.
-6. **Keep business logic in the domain layer**: Services orchestrate and translate; they do not decide business rules. Repositories persist; they do not validate.
-7. **Define models**: Add Pydantic request/response models under clinical_mdr_api/models/, matching the naming of the surrounding area.
-8. **Wire the router**: Perform all three wiring edits described under ROUTER WIRING above. A router missing any of the three serves no traffic.
-9. **Use the project's exception types**: `from common.exceptions import NotFoundException, ValidationException` and friends, picking the most specific type per the table in api-conventions.md — never generic exceptions.
-10. **Create tests**: Unit tests under clinical_mdr_api/tests/unit/ for domain logic, integration tests under clinical_mdr_api/tests/integration/ for anything hitting Neo4j. Reuse fixtures from tests/fixtures/.
-11. **Close with the handoff**: End with CHANGED FILES, ROUTES TOUCHED, and LAYERS TOUCHED as described above. Do not run or claim to run any verification.
-
-The user's main API endpoint request follows:
-
-{USER_REQUEST}"
-})
-```
-
-When the agent returns, run the checks in **## Verification** above.
-
----
-
-**If "Modify existing endpoint" is selected:**
-
-Do NOT use a hardcoded list of endpoints — it goes stale, and the main API mounts far too many routers for such a list to be usable anyway. Enumerate what is actually served first:
+If the request is to modify an existing endpoint, find it before invoking the agent. Do NOT use a hardcoded list of endpoints; enumerate what is mounted (from the REPO ROOT):
 
 ```bash
-# from the REPO ROOT — not from api/, where this relative path does not resolve
 grep -oE 'prefix="[^"]*"' api/clinical_mdr_api/main.py | sed 's/prefix="//;s/"$//' | sort -u
 ```
 
-That returns many dozens of distinct prefixes — vastly more than the four options `AskUserQuestion` allows, so a picker is not an option. The default is therefore to infer, not to ask:
-
-- If the user's task description names a path, resource, or area that matches the enumeration, skip the question entirely. State which endpoint you matched and proceed.
-- If the description is ambiguous, narrow it yourself first — grep the enumeration for the nouns in the user's description, and grep `clinical_mdr_api/routers/` for the operation they described.
-- Only ask if that still leaves genuine ambiguity, and then offer at most the 4 most plausible candidates as concrete paths. Say in the question text that the list is filtered to the closest matches so the user knows to use the built-in "Other" choice.
+- If the request names a path, resource, or area that matches, state which endpoint you matched and proceed.
+- If it is ambiguous, grep the enumeration for the nouns in the request and `clinical_mdr_api/routers/` for the operation described. Only if that still leaves genuine ambiguity, ask with at most 4 concrete candidate paths, and say the list is filtered so the user knows to use the built-in "Other".
 - If nothing matches, do not guess. Report what you searched for and ask the user to name the endpoint.
 
-`{TARGET_ENDPOINT}` = the matched or selected endpoint path.
-
-Then invoke the endpoint implementation specialist:
+`{TARGET}` = the matched endpoint path, or `none` for new work.
 
 ```
 Agent({
-  description: "Modify existing main API endpoint",
+  description: "Main API implementation",
   subagent_type: "endpoint-implementation-specialist",
-  prompt: "I need help modifying an existing endpoint in the main Clinical MDR API. Please analyze the user's request and implement the necessary changes following these guidelines:
+  prompt: "Implement the user's request in the main Clinical MDR API.
 
 DEVELOPMENT CONTEXT:
-- Task: Modify existing endpoint
-- Target: {TARGET_ENDPOINT}
-- Modification Type: Enhancement or bug fix to existing functionality
+- Target endpoint (when modifying): {TARGET}
 
 {MAIN_API_CONTEXT}
 
 IMPLEMENTATION REQUIREMENTS:
-1. **Locate the target**: Find the mounted route, then follow it down through its service, repository, and domain aggregate before changing anything. If the route is not in the enumeration, stop and report what is actually mounted rather than guessing.
-2. **Place the change in the right layer FIRST**: Decide which layer actually owns the behaviour being changed. A validation rule belongs in the domain, not the service; a query change belongs in the repository, not the service. Getting this wrong is the most common way these changes go bad.
-3. **Follow existing patterns**: Match the surrounding code's style and structure rather than importing conventions from another area of the codebase.
-4. **Respect the versioning model**: If the change touches version pointers or status transitions, re-read api/.claude/rules/database.md and preserve every LATEST_DRAFT / LATEST_FINAL / LATEST_RETIRED pointer.
-5. **Check the response contract**: If the change alters an existing response shape, call that out explicitly to the user — the frontend consumes this spec.
-6. **Update tests**: Modify or add unit and integration tests covering the changed behaviour.
-7. **Close with the handoff**: End with CHANGED FILES, ROUTES TOUCHED, and LAYERS TOUCHED as described above. Do not run or claim to run any verification.
+1. **Read before writing**: Enumerate the mounted prefixes, then read the nearest comparable endpoint or feature end to end — its router, service, repository, and domain aggregate — as a worked example. When modifying, locate the target route and follow it down through every layer before changing anything; if it is not mounted, stop and report what is rather than guessing.
+2. **State the scope before writing**: Decide from the request and the existing code whether this is (a) service-layer only, reusing an existing aggregate and repository, (b) an existing aggregate needing a new repository query or persistence method, (c) a new domain aggregate, or (d) a cross-cutting feature spanning several domains. Say which layer owns each part of the change — a validation rule belongs in the domain, a query change in the repository. For (c) or (d), also state the aggregate boundaries and the interfaces between layers. Give this BEFORE you start writing, so the user can correct you early. If the request is genuinely ambiguous between these, ask the user rather than guessing.
+3. **Build inside-out**: domain → repository → service → router, to whatever depth you determined. Services orchestrate and translate; they do not decide business rules. Repositories persist; they do not validate. domains/ must not import from domain_repositories/ or services/.
+4. **Match the conventions**: Derive the HTTP verb and status from what the endpoint does, per api/.claude/rules/api-conventions.md — GET/200, POST/201, PATCH/200, DELETE/204. A paginated listing follows the existing pagination, filtering, and sorting conventions. Take the rbac dependency from the nearest comparable route in clinical_mdr_api/routers/, not from the verb. Use the most specific type from `common.exceptions`, never generic exceptions.
+5. **Define models**: Pydantic request/response models under clinical_mdr_api/models/, matching the naming of the surrounding area. If an existing response shape changes, call that out explicitly — the frontend consumes this spec.
+6. **Respect the versioning model**: If the work touches version pointers, status transitions, or versioned entities, follow api/.claude/rules/database.md exactly, including optimistic locking, and preserve every LATEST_DRAFT / LATEST_FINAL / LATEST_RETIRED pointer.
+7. **Wire every new router**: All three edits described under ROUTER WIRING above.
+8. **Create tests**: Unit tests under clinical_mdr_api/tests/unit/ for domain logic, integration tests under clinical_mdr_api/tests/integration/ for anything hitting Neo4j. Reuse fixtures from tests/fixtures/.
+9. **Close with the handoff**: End with CHANGED FILES, ROUTES TOUCHED, and LAYERS TOUCHED as described above.
 
-The user's endpoint modification request follows:
-
-{USER_REQUEST}"
-})
-```
-
-When the agent returns, run the checks in **## Verification** above.
-
----
-
-**If "Full feature implementation" is selected:**
-
-Do not ask a follow-up question. Whether the feature is a new domain aggregate, an extension of an existing one, or cross-cutting is a conclusion drawn from reading the request against the existing aggregates — the specialist agent is better placed to reach it than the user is, and it is the first thing the agent does anyway when it designs the domain.
-
-Invoke the endpoint implementation specialist directly:
-
-```
-Agent({
-  description: "Full main API feature implementation",
-  subagent_type: "endpoint-implementation-specialist",
-  prompt: "I need help implementing a complete feature in the main Clinical MDR API. Please analyze the user's request and implement the necessary changes following these guidelines:
-
-DEVELOPMENT CONTEXT:
-- Task: Full feature implementation
-- Implementation Type: Complete feature spanning multiple DDD layers
-
-{MAIN_API_CONTEXT}
-
-IMPLEMENTATION REQUIREMENTS:
-1. **Read before writing**: Enumerate the mounted prefixes, then read the closest existing feature end to end across all three layers as a worked example.
-2. **Determine the feature's scope yourself, then state it**: Decide from the request and the existing aggregates whether this is (a) a new domain aggregate with its own root, repository, services, and routers, (b) an extension of an existing area such as studies, concepts, controlled terminologies, syntax templates, or ODMs, or (c) a cross-cutting feature spanning several domains, such as a new filter, export format, audit trail, or listing. State which one you concluded and why. If the request is genuinely ambiguous between these, ask the user rather than guessing — the answer changes how much gets built.
-3. **Design the domain first**: Identify the aggregate roots and their boundaries, and define the public interfaces between layers, BEFORE writing any code. Present that design in your summary alongside the scope conclusion, so the user can correct both before implementation goes far.
-4. **Implement inside-out**: domain → repository → service → router, with tests at each layer. Do not write the router first and back-fill the domain.
-5. **Keep the dependency direction clean**: domains/ must not import from domain_repositories/ or services/. Verify this before finishing.
-6. **Respect the versioning model**: If the feature introduces versioned entities, follow the Root/Value + HAS_VERSION model in api/.claude/rules/database.md exactly, including optimistic locking in the repository.
-7. **Wire every router**: Apply all three edits from ROUTER WIRING above to each new router, not just the first.
-8. **Create a comprehensive test suite**: Unit tests for domain logic, integration tests for persistence and endpoints, covering happy paths and error cases.
-9. **Close with the handoff**: End with CHANGED FILES, ROUTES TOUCHED, and LAYERS TOUCHED as described above. Do not run or claim to run any verification.
-
-The user's full feature request follows:
-
-{USER_REQUEST}"
-})
-```
-
-When the agent returns, run the checks in **## Verification** above.
-
----
-
-**If "Custom implementation" is selected:**
-
-Invoke the endpoint implementation specialist directly:
-
-```
-Agent({
-  description: "Custom main API implementation",
-  subagent_type: "endpoint-implementation-specialist",
-  prompt: "I need help with a custom implementation in the main Clinical MDR API. Please analyze the user's request and implement the necessary changes following these guidelines:
-
-DEVELOPMENT CONTEXT:
-- Task: Custom implementation based on user's specific requirements
-- Implementation Type: User-defined main API task
-
-{MAIN_API_CONTEXT}
-
-IMPLEMENTATION REQUIREMENTS:
-1. **Read before writing**: Enumerate the mounted prefixes and read the relevant parts of clinical_mdr_api/ before deciding on an approach.
-2. **Identify the owning layer**: Work out which layer each part of the change belongs in before editing, and keep business logic in the domain layer.
-3. **Follow conventions**: Match existing code style, naming conventions, and architectural patterns.
-4. **Respect the versioning model**: If the work touches version pointers or status transitions, re-read api/.claude/rules/database.md first.
-5. **Implement changes**: Create or modify domain logic, repositories, services, models, and routers as needed, applying all three ROUTER WIRING edits to any new router.
-6. **Create tests**: Add unit and/or integration tests appropriate to the layers touched.
-7. **Close with the handoff**: End with CHANGED FILES, ROUTES TOUCHED, and LAYERS TOUCHED as described above. Do not run or claim to run any verification.
-
-The user's custom main API development request follows:
+The user's request follows:
 
 {USER_REQUEST}"
 })

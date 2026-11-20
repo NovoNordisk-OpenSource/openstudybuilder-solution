@@ -22,20 +22,22 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import study from '@/api/study'
 import StudyMetadataSummary from './StudyMetadataSummary.vue'
 import StudyDefineForm from './StudyDefineForm.vue'
 import { useStudiesGeneralStore } from '@/stores/studies-general'
+import { useFeatureFlagsStore } from '@/stores/feature-flags'
 
 const { t } = useI18n()
 const studiesGeneralStore = useStudiesGeneralStore()
+const featureFlagsStore = useFeatureFlagsStore()
 
 const metadata = ref({})
 const loading = ref(false)
 
-const params = [
+const typeParams = [
   {
     label: t('StudyDefineForm.studytype'),
     name: 'study_type_code',
@@ -81,6 +83,24 @@ const params = [
     valuesDisplay: 'yesno',
   },
 ]
+const migrationParams = [
+  {
+    label: t('StudyDefineForm.migrated_study_indicator'),
+    name: 'migrated_study_indicator',
+    valuesDisplay: 'yesno',
+    readOnly: true,
+  },
+  {
+    label: t('StudyDefineForm.migrated_study_comment'),
+    name: 'migrated_study_comment',
+    readOnly: true,
+  },
+]
+const params = computed(() =>
+  featureFlagsStore.getFeatureFlag('study_migration_details')
+    ? [...typeParams, ...migrationParams]
+    : typeParams
+)
 
 onMounted(() => {
   studiesGeneralStore.fetchUnits()
@@ -102,7 +122,18 @@ function fetchMetadata() {
   study
     .getHighLevelStudyDesignMetadata(studiesGeneralStore.selectedStudy.uid)
     .then((resp) => {
-      metadata.value = resp.data.current_metadata.high_level_study_design
+      // The migration fields live in identification metadata, which this
+      // response includes by default
+      const { high_level_study_design, identification_metadata } =
+        resp.data.current_metadata
+      metadata.value = {
+        ...high_level_study_design,
+        // Not set means not migrated, so show No rather than blank
+        migrated_study_indicator: Boolean(
+          identification_metadata?.migrated_study_indicator
+        ),
+        migrated_study_comment: identification_metadata?.migrated_study_comment,
+      }
     })
     .finally(() => {
       loading.value = false

@@ -1,6 +1,6 @@
 from datetime import UTC, datetime
 from time import time
-from typing import Any, ClassVar
+from typing import Any, ClassVar, Protocol
 from xml.dom.minidom import Document
 from xml.sax.saxutils import quoteattr
 
@@ -8,7 +8,7 @@ from fastapi import UploadFile
 from lxml import etree
 from weasyprint import HTML
 
-from clinical_mdr_api.domains._utils import get_iso_lang_data
+from clinical_mdr_api.domains._utils import get_iso_lang_value
 from clinical_mdr_api.domains.enums import OdmTranslatedTextTypeEnum
 from clinical_mdr_api.domains.odms.utils import EN_LANGUAGE, TargetType
 from clinical_mdr_api.domains.odms.xml_definition import (
@@ -56,6 +56,10 @@ from clinical_mdr_api.services.odms.data_extractor import OdmDataExtractor
 from clinical_mdr_api.services.odms.xml_stylesheets import OdmXmlStylesheetService
 from clinical_mdr_api.services.utils.odm_xml_mapper import map_xml
 from common.exceptions import BusinessLogicException
+
+
+class _VendorElement(Protocol):
+    _custom_element_name: str
 
 
 class OdmXmlExporterService:
@@ -161,12 +165,12 @@ class OdmXmlExporterService:
         rs = doc.toprettyxml(encoding="utf-8")
 
         if self.pdf:
-            try:
-                if self.stylesheet is None:
-                    raise BusinessLogicException(
-                        msg="Stylesheet is required for PDF generation."
-                    )
+            if self.stylesheet is None:
+                raise BusinessLogicException(
+                    msg="Stylesheet is required for PDF generation."
+                )
 
+            try:
                 stylesheet_filename = OdmXmlStylesheetService.get_xml_filename_by_name(
                     self.stylesheet
                 )
@@ -285,7 +289,9 @@ class OdmXmlExporterService:
                 rs.append(elm)
         return rs
 
-    def return_if_vendor_element_is_allowed(self, element) -> Element | None:
+    def return_if_vendor_element_is_allowed[T: _VendorElement](
+        self, element: T
+    ) -> T | None:
         """
         Returns the given ODM element if its namespace is allowed by `self.allowed_namespaces`.
         """
@@ -416,7 +422,7 @@ class OdmXmlExporterService:
                                 translated_text.text,
                                 lang=Attribute(
                                     self.XML_LANG,
-                                    get_iso_lang_data(  # type: ignore[arg-type]
+                                    get_iso_lang_value(
                                         query=translated_text.language or EN_LANGUAGE
                                     ),
                                 ),
@@ -433,7 +439,7 @@ class OdmXmlExporterService:
                                     translated_text.text,
                                     lang=Attribute(
                                         self.XML_LANG,
-                                        get_iso_lang_data(  # type: ignore[arg-type]
+                                        get_iso_lang_value(
                                             query=translated_text.language
                                             or EN_LANGUAGE,
                                         ),
@@ -452,7 +458,7 @@ class OdmXmlExporterService:
                                     translated_text.text,
                                     lang=Attribute(
                                         self.XML_LANG,
-                                        get_iso_lang_data(  # type: ignore[arg-type]
+                                        get_iso_lang_value(
                                             query=translated_text.language
                                             or EN_LANGUAGE,
                                         ),
@@ -472,7 +478,7 @@ class OdmXmlExporterService:
                                     translated_text.text,
                                     lang=Attribute(
                                         self.XML_LANG,
-                                        get_iso_lang_data(  # type: ignore[arg-type]
+                                        get_iso_lang_value(
                                             query=translated_text.language
                                             or EN_LANGUAGE,
                                         ),
@@ -565,7 +571,7 @@ class OdmXmlExporterService:
                                 translated_text.text,
                                 lang=Attribute(
                                     self.XML_LANG,
-                                    get_iso_lang_data(  # type: ignore[arg-type]
+                                    get_iso_lang_value(
                                         query=translated_text.language or EN_LANGUAGE,
                                     ),
                                 ),
@@ -582,7 +588,7 @@ class OdmXmlExporterService:
                                     translated_text.text,
                                     lang=Attribute(
                                         self.XML_LANG,
-                                        get_iso_lang_data(  # type: ignore[arg-type]
+                                        get_iso_lang_value(
                                             query=translated_text.language
                                             or EN_LANGUAGE,
                                         ),
@@ -602,7 +608,7 @@ class OdmXmlExporterService:
                                     translated_text.text,
                                     lang=Attribute(
                                         self.XML_LANG,
-                                        get_iso_lang_data(  # type: ignore[arg-type]
+                                        get_iso_lang_value(
                                             query=translated_text.language
                                             or EN_LANGUAGE,
                                         ),
@@ -622,7 +628,7 @@ class OdmXmlExporterService:
                                     translated_text.text,
                                     lang=Attribute(
                                         self.XML_LANG,
-                                        get_iso_lang_data(  # type: ignore[arg-type]
+                                        get_iso_lang_value(
                                             query=translated_text.language
                                             or EN_LANGUAGE,
                                         ),
@@ -743,7 +749,7 @@ class OdmXmlExporterService:
                                     translated_text.text,
                                     lang=Attribute(
                                         self.XML_LANG,
-                                        get_iso_lang_data(  # type: ignore[arg-type]
+                                        get_iso_lang_value(
                                             query=translated_text.language
                                             or EN_LANGUAGE,
                                         ),
@@ -760,7 +766,7 @@ class OdmXmlExporterService:
                                     translated_text.text,
                                     lang=Attribute(
                                         self.XML_LANG,
-                                        get_iso_lang_data(  # type: ignore[arg-type]
+                                        get_iso_lang_value(
                                             query=translated_text.language
                                             or EN_LANGUAGE,
                                         ),
@@ -804,7 +810,7 @@ class OdmXmlExporterService:
                                         translated_text.text,
                                         lang=Attribute(
                                             self.XML_LANG,
-                                            get_iso_lang_data(  # type: ignore[arg-type]
+                                            get_iso_lang_value(
                                                 query=translated_text.language
                                                 or EN_LANGUAGE,
                                             ),
@@ -824,7 +830,7 @@ class OdmXmlExporterService:
                                         translated_text.text,
                                         lang=Attribute(
                                             self.XML_LANG,
-                                            get_iso_lang_data(  # type: ignore[arg-type]
+                                            get_iso_lang_value(
                                                 query=translated_text.language
                                                 or EN_LANGUAGE,
                                             ),
@@ -844,7 +850,7 @@ class OdmXmlExporterService:
                                         translated_text.text,
                                         lang=Attribute(
                                             self.XML_LANG,
-                                            get_iso_lang_data(  # type: ignore[arg-type]
+                                            get_iso_lang_value(
                                                 query=translated_text.language
                                                 or EN_LANGUAGE,
                                             ),
@@ -921,7 +927,7 @@ class OdmXmlExporterService:
                                 translated_text.text,
                                 lang=Attribute(
                                     self.XML_LANG,
-                                    get_iso_lang_data(  # type: ignore[arg-type]
+                                    get_iso_lang_value(
                                         query=translated_text.language or EN_LANGUAGE,
                                     ),
                                 ),
@@ -938,7 +944,7 @@ class OdmXmlExporterService:
                                     translated_text.text,
                                     lang=Attribute(
                                         self.XML_LANG,
-                                        get_iso_lang_data(  # type: ignore[arg-type]
+                                        get_iso_lang_value(
                                             query=translated_text.language
                                             or EN_LANGUAGE,
                                         ),
@@ -958,7 +964,7 @@ class OdmXmlExporterService:
                                     translated_text.text,
                                     lang=Attribute(
                                         self.XML_LANG,
-                                        get_iso_lang_data(  # type: ignore[arg-type]
+                                        get_iso_lang_value(
                                             query=translated_text.language
                                             or EN_LANGUAGE,
                                         ),
@@ -978,7 +984,7 @@ class OdmXmlExporterService:
                                     translated_text.text,
                                     lang=Attribute(
                                         self.XML_LANG,
-                                        get_iso_lang_data(  # type: ignore[arg-type]
+                                        get_iso_lang_value(
                                             query=translated_text.language
                                             or EN_LANGUAGE,
                                         ),
@@ -1024,7 +1030,7 @@ class OdmXmlExporterService:
                                 translated_text.text,
                                 lang=Attribute(
                                     self.XML_LANG,
-                                    get_iso_lang_data(  # type: ignore[arg-type]
+                                    get_iso_lang_value(
                                         query=translated_text.language or EN_LANGUAGE,
                                     ),
                                 ),
@@ -1041,7 +1047,7 @@ class OdmXmlExporterService:
                                     translated_text.text,
                                     lang=Attribute(
                                         self.XML_LANG,
-                                        get_iso_lang_data(  # type: ignore[arg-type]
+                                        get_iso_lang_value(
                                             query=translated_text.language
                                             or EN_LANGUAGE,
                                         ),
@@ -1061,7 +1067,7 @@ class OdmXmlExporterService:
                                     translated_text.text,
                                     lang=Attribute(
                                         self.XML_LANG,
-                                        get_iso_lang_data(  # type: ignore[arg-type]
+                                        get_iso_lang_value(
                                             query=translated_text.language
                                             or EN_LANGUAGE,
                                         ),
@@ -1081,7 +1087,7 @@ class OdmXmlExporterService:
                                     translated_text.text,
                                     lang=Attribute(
                                         self.XML_LANG,
-                                        get_iso_lang_data(  # type: ignore[arg-type]
+                                        get_iso_lang_value(
                                             query=translated_text.language
                                             or EN_LANGUAGE,
                                         ),
@@ -1151,7 +1157,7 @@ class OdmXmlExporterService:
                                             or codelist_item["nci_preferred_name"],
                                             Attribute(
                                                 self.XML_LANG,
-                                                get_iso_lang_data(query=EN_LANGUAGE),  # type: ignore[arg-type]
+                                                get_iso_lang_value(query=EN_LANGUAGE),
                                             ),
                                         )
                                     ),
@@ -1209,7 +1215,7 @@ class OdmXmlExporterService:
                             TranslatedText(
                                 unit_definition.name,
                                 lang=Attribute(
-                                    self.XML_LANG, get_iso_lang_data(query=EN_LANGUAGE)  # type: ignore[arg-type]
+                                    self.XML_LANG, get_iso_lang_value(query=EN_LANGUAGE)
                                 ),
                             )
                         ),
